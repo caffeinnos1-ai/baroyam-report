@@ -991,7 +991,7 @@
   .settings-overlay{position:fixed;inset:0;background:rgba(20,14,10,.5);display:flex;align-items:center;justify-content:center;
     padding:20px;z-index:80}
   .settings-overlay[hidden]{display:none}
-  .settings-panel{width:100%;max-width:560px;height:min(580px,86vh);background:var(--paper);border-radius:20px;
+  .settings-panel{width:100%;max-width:640px;height:min(580px,86vh);background:var(--paper);border-radius:20px;
     box-shadow:0 30px 70px -20px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;
     border:1px solid var(--line)}
   .settings-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
@@ -1002,7 +1002,7 @@
   .settings-body{flex:1;display:flex;min-height:0}
   /* 설정창 왼쪽 탭 · 사이드바(--sb-bg)보다 한 단계 밝은 중분류 톤(--sn-bg)을 써서
      바깥 사이드바 → 설정창 탭 → 본문(paper) 순으로 밝아지게 맞췄다 */
-  .mini-sidebar{flex:none;width:150px;background:var(--sn-bg);border-right:1px solid var(--sn-line);padding:14px;
+  .mini-sidebar{flex:none;width:186px;background:var(--sn-bg);border-right:1px solid var(--sn-line);padding:14px;
     display:flex;flex-direction:column;gap:4px}
   .mini-sb-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:9px;width:100%;padding:10px 11px;
     border-radius:11px;color:var(--sb-ink);font-size:13px;font-weight:700;letter-spacing:-.2px;cursor:pointer;
@@ -1014,6 +1014,14 @@
   .mini-sb-item.active{background:var(--indigo);color:#fff;box-shadow:0 8px 18px -10px rgba(var(--indigo-rgb),.85)}
   .mini-sb-item.active svg{opacity:1}
   .settings-content{flex:1;padding:20px 22px;overflow-y:auto;background:var(--paper)}
+  /* 폰 폭 · 왼쪽 탭이 본문을 반이나 차지하지 않게 위쪽 가로줄로 올린다 */
+  @media (max-width:620px){
+    .settings-body{flex-direction:column}
+    .mini-sidebar{width:auto;flex-direction:row;overflow-x:auto;padding:10px;
+      border-right:0;border-bottom:1px solid var(--sn-line)}
+    .mini-sb-item{width:auto;flex:none;white-space:nowrap}
+    .settings-content{padding:16px}
+  }
   .settings-view[hidden]{display:none}
   .settings-view{height:100%}
   .theme-switch{all:unset;box-sizing:border-box;flex:none;width:46px;height:27px;border-radius:999px;background:var(--line);
@@ -1042,6 +1050,36 @@
   .member-badge .m-del{all:unset;box-sizing:border-box;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;
     cursor:pointer;font-size:10px;line-height:1;color:#fff;background:rgba(255,255,255,.22)}
   .member-badge .m-del:hover{background:rgba(255,255,255,.4)}
+
+  /* 설정 · 메뉴얼가이드 목차(중분류/항목) 추가·이름수정·삭제 */
+  .settings-view[data-settings-panel="manual"]{height:auto}
+  .mg-manager{display:flex;flex-direction:column;gap:12px}
+  .mg-hint{font-size:12px;font-weight:600;color:var(--mute);line-height:1.5;margin-top:-4px}
+  .mg-list{display:flex;flex-direction:column;gap:10px}
+  .mg-empty{padding:28px 12px;text-align:center;color:var(--mute);font-size:13px;font-weight:600}
+  .mg-group{border:1px solid var(--line);border-radius:14px;padding:8px;background:var(--bg)}
+  .mg-row{display:flex;align-items:center;gap:6px}
+  .mg-no{flex:none;width:22px;height:22px;border-radius:7px;background:var(--indigo);color:#fff;
+    font-size:11px;font-weight:800;display:grid;place-items:center}
+  .mg-name{flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:1px solid transparent;background:transparent;
+    color:var(--ink);font:800 13.5px 'Pretendard',sans-serif;letter-spacing:-.2px;transition:background .15s,border-color .15s}
+  .mg-name:hover{background:var(--paper);border-color:var(--line)}
+  .mg-name:focus{outline:none;background:var(--paper);border-color:var(--indigo)}
+  .mg-items{margin:4px 0 2px 11px;padding-left:9px;border-left:1.5px solid var(--sn-rail);
+    display:flex;flex-direction:column;gap:1px}
+  .mg-items .mg-name{font-size:13px;font-weight:600}
+  .mg-del{all:unset;box-sizing:border-box;flex:none;display:grid;place-items:center;width:26px;height:26px;
+    border-radius:8px;color:var(--mute);font-size:12px;cursor:pointer;transition:background .12s,color .12s}
+  .mg-del:hover{background:var(--neg-soft);color:var(--neg)}
+  .mg-del:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:1px}
+  .mg-add-item{display:flex;gap:6px;margin-top:4px}
+  .mg-add-item input{flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:1px dashed var(--line);
+    background:transparent;color:var(--ink);font:600 12.5px 'Pretendard',sans-serif;letter-spacing:-.2px}
+  .mg-add-item input::placeholder{color:var(--mute)}
+  .mg-add-item input:focus{outline:none;border-style:solid;border-color:var(--indigo);background:var(--paper)}
+  .mg-add-item button{all:unset;box-sizing:border-box;flex:none;padding:7px 13px;border-radius:9px;
+    background:var(--indigo-soft);color:var(--indigo);font-size:12px;font-weight:800;cursor:pointer}
+  .mg-add-item button:hover{background:var(--indigo);color:#fff}
 
 
   .empty-state{border:1px dashed var(--line);border-radius:18px;padding:64px 30px;display:flex;flex-direction:column;
@@ -1092,19 +1130,6 @@
   .sb-subnav-item:hover{background:var(--indigo-soft);color:var(--indigo)}
   .sb-subnav-item.active{background:var(--indigo-soft);color:var(--indigo);font-weight:800;
     box-shadow:inset 3px 0 0 var(--indigo)}
-  /* 목차 추가·삭제 · 그룹/항목 행에 붙는 ✕ 버튼과, 목록 아래 "+ 새 항목/중분류" 줄 */
-  .sb-subnav-group-row{display:flex;align-items:center;gap:1px}
-  .sb-subnav-group-row .sb-subnav-group{flex:1;min-width:0}
-  .sb-subnav-item-row{display:flex;align-items:center;gap:1px}
-  .sb-subnav-item-row .sb-subnav-item{flex:1;min-width:0}
-  .sb-subnav-del{all:unset;box-sizing:border-box;flex:none;display:grid;place-items:center;
-    width:22px;height:22px;border-radius:7px;color:var(--mute);font-size:12px;cursor:pointer;
-    transition:background .12s,color .12s}
-  .sb-subnav-del:hover{background:var(--neg-soft);color:var(--neg)}
-  .sb-subnav-addrow{all:unset;box-sizing:border-box;display:block;width:100%;padding:7px 9px;
-    border-radius:8px;color:var(--mute);font-size:12px;font-weight:700;letter-spacing:-.2px;
-    cursor:pointer;transition:background .15s,color .15s}
-  .sb-subnav-addrow:hover{background:var(--indigo-soft);color:var(--indigo)}
   /* 메뉴얼가이드 본문 · 사이드탭에서 고른 문서 하나를 보여준다 */
   .man{padding:34px 48px 48px}
   /* 메뉴얼 화면의 가로 여백은 회의안건 크게보기와 똑같이 기본값(.wrap 1120px, 좌우 48px)을 쓴다 ·
@@ -1418,6 +1443,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7.2l8.3 8.3a1.6 1.6 0 0 1 0 2.3l-4.9 4.9a1.6 1.6 0 0 1-2.3 0L4 11.2V4Z"/><circle cx="8.5" cy="8.5" r="1.3"/></svg>
               <span>카테고리설정</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="manual" id="mgSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
+              <span>메뉴얼가이드설정</span>
+            </button>
           </nav>
           <div class="settings-content">
             <section class="settings-view active" data-settings-panel="members">
@@ -1436,6 +1465,16 @@
                   <button type="submit">추가</button>
                 </form>
                 <div class="member-list" id="categoryList"></div>
+              </div>
+            </section>
+            <section class="settings-view" data-settings-panel="manual" hidden>
+              <div class="mg-manager">
+                <form class="member-add-form" id="mgGroupAddForm">
+                  <input type="text" id="mgGroupNameInput" placeholder="새 중분류 이름 입력" maxlength="40" autocomplete="off">
+                  <button type="submit">추가</button>
+                </form>
+                <p class="mg-hint">이름을 눌러 바로 고칠 수 있어요. 바꾼 목차는 구글시트에 저장돼 다른 기기에도 반영됩니다.</p>
+                <div class="mg-list" id="mgList"></div>
               </div>
             </section>
           </div>
@@ -3828,23 +3867,15 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
       const open=openGroups.has(g.id);
       const hasActive=g.items.some(it=>it.id===activeDoc);
       html+='<div class="sb-subnav-block'+(open?' is-open':'')+(hasActive?' has-active':'')+'">'+
-        '<div class="sb-subnav-group-row">'+
-          '<button type="button" class="sb-subnav-group" data-group="'+g.id+'" aria-expanded="'+open+'">'+
-            '<span class="sb-subnav-gname">'+esc(g.name)+'</span>'+
-            '<svg class="sb-subnav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'+
-          '</button>'+
-          '<button type="button" class="sb-subnav-del" data-del-group="'+g.id+'" title="이 중분류 삭제" aria-label="이 중분류 삭제">✕</button>'+
-        '</div>'+
+        '<button type="button" class="sb-subnav-group" data-group="'+g.id+'" aria-expanded="'+open+'">'+
+          '<span class="sb-subnav-gname">'+esc(g.name)+'</span>'+
+          '<svg class="sb-subnav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'+
+        '</button>'+
         '<div class="sb-subnav-items">'+g.items.map(it=>
-          '<div class="sb-subnav-item-row">'+
-            '<button type="button" class="sb-subnav-item'+(it.id===activeDoc?' active':'')+'" data-doc="'+it.id+'">'+esc(it.name)+'</button>'+
-            '<button type="button" class="sb-subnav-del" data-del-item="'+it.id+'" data-group="'+g.id+'" title="이 항목 삭제" aria-label="이 항목 삭제">✕</button>'+
-          '</div>'
+          '<button type="button" class="sb-subnav-item'+(it.id===activeDoc?' active':'')+'" data-doc="'+it.id+'">'+esc(it.name)+'</button>'
         ).join('')+
-        '<button type="button" class="sb-subnav-addrow" data-add-item="'+g.id+'">+ 새 항목</button>'+
         '</div></div>';
     });
-    html+='<button type="button" class="sb-subnav-addrow" data-add-group="1" style="margin-top:6px">+ 새 중분류</button>';
     listEl.innerHTML=html;
     subnav.scrollTop=keepScroll;
   }
@@ -3960,24 +3991,58 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     persistGuideLocal();
     pushGuideToSheet();
   }
-  function addGroup_(){
-    const name=(window.prompt('새 중분류 이름을 입력하세요.')||'').trim();
+  /* 목차 편집은 설정창의 '메뉴얼가이드설정' 탭에서만 한다 · 사이드탭은 보기 전용 */
+  /* 목차가 바뀐 뒤 사이드탭·전체 목차·열린 문서 제목·설정창 목록을 한꺼번에 다시 그린다 ·
+     이름 수정 때는 설정창 목록을 다시 그리지 않는다 — 다른 이름칸을 눌러서 저장된 경우
+     목록을 새로 그리면 방금 누른 칸의 커서가 날아간다 */
+  function refreshAfterGuideChange(keepSettingsList){
+    renderSubnav();
+    if(!activeDoc) renderHome();
+    else{
+      const d=findDoc(activeDoc);   /* 본문 편집기는 건드리지 않고 제목줄만 새 이름으로 */
+      if(d){ tagEl.textContent=d.groupNo+'. '+d.group.name; titleEl.textContent=d.name; }
+    }
+    if(!keepSettingsList) renderGuideSettings();
+  }
+  function addGroup_(name){
+    name=String(name||'').trim();
     if(!name) return;
     MANUAL_GUIDE.push({id:'grp_'+newId(), name, items:[]});
     saveGuideChange();
-    renderSubnav();
-    if(!activeDoc) renderHome();
+    refreshAfterGuideChange();
   }
-  function addItemTo_(groupId){
+  function addItemTo_(groupId,name){
     const g=MANUAL_GUIDE.find(x=>x.id===groupId);
-    if(!g) return;
-    const name=(window.prompt('새 항목 이름을 입력하세요.')||'').trim();
-    if(!name) return;
+    name=String(name||'').trim();
+    if(!g||!name) return;
     g.items.push({id:'itm_'+newId(), name});
     openGroups.add(groupId);
     saveGuideChange();
-    renderSubnav();
-    if(!activeDoc) renderHome();
+    refreshAfterGuideChange();
+  }
+  /* 이름 수정 · 저장된(또는 되돌린) 최종 이름을 돌려준다 — 비워두면 원래 이름을 그대로 둔다 */
+  function renameGroup_(groupId,name){
+    const g=MANUAL_GUIDE.find(x=>x.id===groupId);
+    if(!g) return null;
+    name=String(name||'').trim();
+    if(name&&g.name!==name){
+      g.name=name;
+      saveGuideChange();
+      refreshAfterGuideChange(true);
+    }
+    return g.name;
+  }
+  function renameItem_(groupId,itemId,name){
+    const g=MANUAL_GUIDE.find(x=>x.id===groupId);
+    const it=g&&g.items.find(x=>x.id===itemId);
+    if(!it) return null;
+    name=String(name||'').trim();
+    if(name&&it.name!==name){
+      it.name=name;
+      saveGuideChange();
+      refreshAfterGuideChange(true);
+    }
+    return it.name;
   }
   function deleteGroup_(groupId){
     const idx=MANUAL_GUIDE.findIndex(x=>x.id===groupId);
@@ -3989,7 +4054,7 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     openGroups.delete(groupId);
     saveGuideChange();
     if(hadActive) showDoc('');
-    else{ renderSubnav(); if(!activeDoc) renderHome(); }
+    refreshAfterGuideChange();
   }
   function deleteItem_(groupId,itemId){
     const g=MANUAL_GUIDE.find(x=>x.id===groupId);
@@ -4000,7 +4065,81 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     g.items.splice(idx,1);
     saveGuideChange();
     if(activeDoc===itemId) showDoc('');
-    else{ renderSubnav(); if(!activeDoc) renderHome(); }
+    refreshAfterGuideChange();
+  }
+
+  /* ---------- 설정창 · 메뉴얼가이드설정 탭 ---------- */
+  const mgList=document.getElementById('mgList');
+  const mgGroupForm=document.getElementById('mgGroupAddForm');
+  const mgGroupInput=document.getElementById('mgGroupNameInput');
+  function renderGuideSettings(){
+    if(!mgList) return;
+    if(!MANUAL_GUIDE.length){
+      mgList.innerHTML='<div class="mg-empty">아직 중분류가 없어요.<br>위 입력란에 이름을 넣고 추가해보세요.</div>';
+      return;
+    }
+    mgList.innerHTML=MANUAL_GUIDE.map((g,gi)=>
+      '<div class="mg-group" data-group="'+g.id+'">'+
+        '<div class="mg-row">'+
+          '<span class="mg-no">'+(gi+1)+'</span>'+
+          '<input class="mg-name" type="text" maxlength="40" value="'+esc(g.name)+'" data-rename-group="'+g.id+'" aria-label="중분류 이름">'+
+          '<button type="button" class="mg-del" data-mg-del-group="'+g.id+'" title="이 중분류 삭제" aria-label="'+esc(g.name)+' 중분류 삭제">✕</button>'+
+        '</div>'+
+        '<div class="mg-items">'+
+          g.items.map(it=>
+            '<div class="mg-row">'+
+              '<input class="mg-name" type="text" maxlength="40" value="'+esc(it.name)+'" data-rename-item="'+it.id+'" data-group="'+g.id+'" aria-label="항목 이름">'+
+              '<button type="button" class="mg-del" data-mg-del-item="'+it.id+'" data-group="'+g.id+'" title="이 항목 삭제" aria-label="'+esc(it.name)+' 항목 삭제">✕</button>'+
+            '</div>'
+          ).join('')+
+          '<form class="mg-add-item" data-add-item="'+g.id+'">'+
+            '<input type="text" maxlength="40" placeholder="새 항목 이름" autocomplete="off" aria-label="'+esc(g.name)+'에 새 항목 추가">'+
+            '<button type="submit">추가</button>'+
+          '</form>'+
+        '</div>'+
+      '</div>'
+    ).join('');
+  }
+  if(mgList){
+    mgGroupForm.addEventListener('submit',e=>{
+      e.preventDefault();
+      addGroup_(mgGroupInput.value);
+      mgGroupInput.value='';
+      mgGroupInput.focus();
+    });
+    mgList.addEventListener('submit',e=>{
+      const f=e.target.closest('.mg-add-item');
+      if(!f) return;
+      e.preventDefault();
+      const gid=f.dataset.addItem;
+      addItemTo_(gid,f.querySelector('input').value);
+      /* 다시 그려진 같은 그룹 입력칸에 커서를 돌려놔 연달아 추가할 수 있게 */
+      const again=mgList.querySelector('.mg-add-item[data-add-item="'+gid+'"] input');
+      if(again) again.focus();
+    });
+    mgList.addEventListener('click',e=>{
+      const delGroup=e.target.closest('[data-mg-del-group]');
+      if(delGroup){ deleteGroup_(delGroup.dataset.mgDelGroup); return; }
+      const delItem=e.target.closest('[data-mg-del-item]');
+      if(delItem) deleteItem_(delItem.dataset.group,delItem.dataset.mgDelItem);
+    });
+    /* 이름칸은 Enter를 치거나 다른 곳을 누르면(change) 저장 · 비워두면 원래 이름으로 되돌린다 */
+    mgList.addEventListener('change',e=>{
+      const inp=e.target;
+      let saved=null;
+      if(inp.dataset.renameGroup) saved=renameGroup_(inp.dataset.renameGroup,inp.value);
+      else if(inp.dataset.renameItem) saved=renameItem_(inp.dataset.group,inp.dataset.renameItem,inp.value);
+      else return;
+      if(saved===null) renderGuideSettings();   /* 다른 기기에서 이미 지워진 항목이었다면 */
+      else inp.value=saved;
+    });
+    mgList.addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&e.target.classList.contains('mg-name')){ e.preventDefault(); e.target.blur(); }
+    });
+    /* 탭을 열 때마다 최신 목차(다른 기기에서 바뀐 것 포함)로 다시 그린다 */
+    const mgTab=document.getElementById('mgSettingsTab');
+    if(mgTab) mgTab.addEventListener('click',renderGuideSettings);
+    renderGuideSettings();
   }
 
   /* 톱니바퀴로 여닫는 수정 모드 · 읽기 모드에서는 편집도, 안내문도, 서식바도 나오지 않는다 */
@@ -4132,8 +4271,9 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
       if(changed) persistLocal();
       if(structChanged){
         if(activeDoc && !findDoc(activeDoc)) activeDoc=null;   /* 다른 기기에서 지운 문서를 보고 있었다면 */
-        renderSubnav();
-        if(!activeDoc) renderHome();
+        /* 설정창에서 이름을 치고 있는 중이면 목록은 그대로 둔다 (탭을 다시 열 때 최신으로 그려진다) */
+        const typing=mgList && mgList.contains(document.activeElement);
+        refreshAfterGuideChange(typing);
       }
       /* 지금 열려 있는 문서라면 화면도 새로 받은 내용으로 바꾼다 */
       const ed=document.getElementById('manEditor');
@@ -4763,14 +4903,6 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   btn.addEventListener('click',()=>{ open(); window.activateView('manual'); });
   homeBtn.addEventListener('click',()=>{ window.activateView('manual'); showDoc(''); });
   listEl.addEventListener('click',e=>{
-    const delGroup=e.target.closest('[data-del-group]');
-    if(delGroup){ deleteGroup_(delGroup.dataset.delGroup); return; }
-    const delItem=e.target.closest('[data-del-item]');
-    if(delItem){ deleteItem_(delItem.dataset.group,delItem.dataset.delItem); return; }
-    const addItemBtn=e.target.closest('[data-add-item]');
-    if(addItemBtn){ addItemTo_(addItemBtn.dataset.addItem); return; }
-    const addGroupBtn=e.target.closest('[data-add-group]');
-    if(addGroupBtn){ addGroup_(); return; }
     const group=e.target.closest('.sb-subnav-group');
     if(group){
       const gid=group.dataset.group;
