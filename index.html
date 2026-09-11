@@ -1031,6 +1031,15 @@
   .theme-switch.active{background:var(--indigo)}
   .theme-switch.active .theme-switch-knob{transform:translateX(19px)}
 
+  /* 설정 잠금 · 설정 버튼을 누르면 관리자 비밀번호부터 묻는다 (배경은 .settings-overlay를 그대로 쓴다) */
+  .pw-panel{width:100%;max-width:360px;background:var(--paper);border-radius:20px;border:1px solid var(--line);
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.6);padding:22px;display:flex;flex-direction:column;gap:12px}
+  .pw-panel .settings-head{padding:0;border:0}
+  .pw-hint{font-size:12.5px;font-weight:600;color:var(--mute);line-height:1.5;margin-top:-4px}
+  .pw-error{min-height:17px;font-size:12px;font-weight:700;color:var(--neg)}
+  .pw-panel.is-shake{animation:pwShake .32s}
+  @keyframes pwShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
 
   /* 회원관리 */
   .member-manager{display:flex;flex-direction:column;gap:16px;height:100%}
@@ -1426,6 +1435,21 @@
       <div class="sb-subnav-sep"></div>
       <div id="sbManualSubnavList"></div>
     </nav>
+
+    <div class="settings-overlay" id="settingsPwOverlay" hidden>
+      <div class="pw-panel" role="dialog" aria-modal="true" aria-labelledby="settingsPwTitle">
+        <div class="settings-head">
+          <h2 id="settingsPwTitle">관리자 확인</h2>
+          <button class="settings-close" type="button" id="settingsPwCloseBtn" aria-label="닫기">✕</button>
+        </div>
+        <p class="pw-hint">설정은 관리자만 들어갈 수 있어요. 관리자 비밀번호를 입력하세요.</p>
+        <form class="member-add-form" id="settingsPwForm" autocomplete="off">
+          <input type="password" id="settingsPwInput" inputmode="numeric" placeholder="비밀번호" aria-label="관리자 비밀번호" aria-describedby="settingsPwError">
+          <button type="submit">확인</button>
+        </form>
+        <div class="pw-error" id="settingsPwError" role="alert"></div>
+      </div>
+    </div>
 
     <div class="settings-overlay" id="settingsOverlay" hidden>
       <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
@@ -3514,7 +3538,68 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   }
   function onKeydown(e){ if(e.key==='Escape') closeSettings(); }
 
-  openBtn.addEventListener('click',openSettings);
+  /* 설정 잠금 · 이 파일은 공개 저장소(GitHub Pages)에 그대로 올라가므로 비밀번호 원문은 두지 않고
+     PBKDF2 해시만 둔다 · 한 번 맞히면 이 탭을 닫기 전까지(sessionStorage)는 다시 묻지 않는다.
+     화면 진입만 막는 잠금이라, 시트 API 자체를 막아주지는 않는다 */
+  const PW_SALT='baroyam-settings-v1', PW_ITER=200000;
+  const PW_HASH='87e4ebdd8f864937981a8ecfd063c2fcc8e8fce24b9303b5290a1631ece8ede3';
+  const UNLOCK_KEY='baroyam_settings_unlocked_v1';
+  const pwOverlay=document.getElementById('settingsPwOverlay');
+  const pwPanel=pwOverlay.querySelector('.pw-panel');
+  const pwForm=document.getElementById('settingsPwForm');
+  const pwInput=document.getElementById('settingsPwInput');
+  const pwError=document.getElementById('settingsPwError');
+  const pwSubmit=pwForm.querySelector('button[type="submit"]');
+  let unlocked=false, pwBusy=false;
+  try{ unlocked=sessionStorage.getItem(UNLOCK_KEY)==='1'; }catch(e){}
+
+  async function hashPw(pw){
+    const enc=new TextEncoder();
+    const key=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']);
+    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(PW_SALT),iterations:PW_ITER,hash:'SHA-256'},key,256);
+    return Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  function openPw(){
+    pwInput.value='';
+    pwError.textContent='';
+    pwOverlay.hidden=false;
+    openBtn.setAttribute('aria-expanded','true');
+    pwInput.focus();
+    document.addEventListener('keydown',onPwKeydown);
+  }
+  function closePw(returnFocus){
+    pwOverlay.hidden=true;
+    document.removeEventListener('keydown',onPwKeydown);
+    if(returnFocus){ openBtn.setAttribute('aria-expanded','false'); openBtn.focus(); }
+  }
+  function onPwKeydown(e){ if(e.key==='Escape') closePw(true); }
+  function pwFail(msg){
+    pwError.textContent=msg;
+    pwPanel.classList.remove('is-shake');
+    void pwPanel.offsetWidth;   /* 틀릴 때마다 흔들림이 다시 재생되게 */
+    pwPanel.classList.add('is-shake');
+    pwInput.select();
+  }
+  pwForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    if(pwBusy) return;
+    const v=pwInput.value.trim();
+    if(!v){ pwFail('비밀번호를 입력하세요.'); return; }
+    if(!(window.crypto&&crypto.subtle)){ pwFail('이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'); return; }
+    pwBusy=true; pwSubmit.disabled=true;
+    hashPw(v).then(h=>{
+      if(h!==PW_HASH){ pwFail('비밀번호가 맞지 않아요.'); return; }
+      unlocked=true;
+      try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(err){}
+      closePw(false);
+      openSettings();
+    }).catch(err=>{ console.error(err); pwFail('확인 중 오류가 났어요. 다시 시도해 주세요.'); })
+      .finally(()=>{ pwBusy=false; pwSubmit.disabled=false; });
+  });
+  document.getElementById('settingsPwCloseBtn').addEventListener('click',()=>closePw(true));
+  pwOverlay.addEventListener('click',e=>{ if(e.target===pwOverlay) closePw(true); });
+
+  openBtn.addEventListener('click',()=>{ if(unlocked) openSettings(); else openPw(); });
   closeBtn.addEventListener('click',closeSettings);
   overlay.addEventListener('click',(e)=>{ if(e.target===overlay) closeSettings(); });
   panel.addEventListener('click',(e)=>e.stopPropagation());
