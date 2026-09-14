@@ -233,6 +233,17 @@
   .rev-daily-hit{cursor:pointer}
   .rev-daily-pt{transition:r .12s}
   .rev-daily-pt.hover{r:7;stroke-width:3}
+  /* 개선 필요 상품 TOP · 부정 리뷰 비율을 막대로 같이 보여준다 */
+  #revTopTable td:nth-child(2),#revTopTable th:nth-child(2){text-align:left}
+  #revTopTable td:nth-child(3),#revTopTable th:nth-child(3){text-align:left;min-width:180px}
+  .rev-rank{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:8px;
+    background:var(--bg);color:var(--mute);font-size:12px;font-weight:800}
+  .rev-rank.top{background:var(--neg-soft);color:var(--neg)}
+  .rev-negbar{display:flex;align-items:center;gap:10px}
+  .rev-negbar-track{flex:1;min-width:80px;height:9px;border-radius:999px;background:var(--bg);overflow:hidden}
+  .rev-negbar-fill{height:100%;border-radius:999px;background:var(--neg)}
+  .rev-negbar-v{flex:none;width:50px;text-align:right;font-size:12.5px;font-weight:800;color:var(--neg)}
+  .rev-avg{color:var(--mute);font-weight:700;margin-left:5px}
   #revRecentTable td:nth-child(2),#revRecentTable th:nth-child(2){text-align:left}
   #revRecentTable td:nth-child(3),#revRecentTable th:nth-child(3){text-align:center}
   #revRecentTable td:nth-child(4),#revRecentTable th:nth-child(4){text-align:center}
@@ -682,17 +693,9 @@
   .sidebar.is-collapsed .sb-bottom-row{flex-direction:column;gap:6px}
   .sidebar.is-collapsed .sb-bottom-row .sb-item{flex:none;width:100%}
   .sidebar.is-collapsed .sb-theme{align-self:center}
-  /* 리뷰수집 채널 탭 · 리뷰 대시보드 배너 바로 아래 가로줄로 놓인다 ·
-     예전엔 사이드바 옆에 붙는 컬럼(중분류 사이드탭)이었고, 그 전엔 대시보드 상단 채널 아이콘 3개였다 */
-  .rev-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:18px}
-  .rev-tab{all:unset;box-sizing:border-box;cursor:pointer;font-size:13px;font-weight:800;
-    padding:9px 19px;border-radius:999px;color:var(--body);background:var(--bg);
-    border:1.5px solid var(--line);letter-spacing:-.2px;transition:background .15s,color .15s,border-color .15s}
-  .rev-tab:hover{border-color:var(--indigo);color:var(--indigo)}
-  .rev-tab.active{background:var(--indigo-lite);color:#fff;border-color:var(--indigo-lite);
-    box-shadow:0 8px 18px -8px rgba(194,106,65,.3)}
-  /* 판매처 탭 아래 기간 선택줄 · 고른 기간이 배너 요약·일별 차트·리뷰 목록에 모두 적용된다 */
-  .rev-daterow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px}
+  /* 배너 아래 기간 선택줄 · 고른 기간이 배너 요약·일별 차트·리뷰 목록에 모두 적용된다 ·
+     판매처 고르기는 왼쪽 사이드탭이 맡는다(예전엔 여기 가로 탭줄, 그 전엔 상단 채널 아이콘 3개였다) */
+  .rev-daterow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:18px}
   .rev-daterow-label{font-size:11.5px;font-weight:800;color:var(--mute);letter-spacing:.04em;margin-right:2px}
   .rev-date-input{box-sizing:border-box;font-family:inherit;font-size:12.5px;font-weight:700;
     color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;
@@ -707,6 +710,7 @@
   html[data-theme="dark"] .rev-date-input::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.6)}
   /* 최근 수집 리뷰 안의 브랜드 선택줄 · 고른 판매처에 리뷰가 있는 브랜드만 목록에 나온다 ·
      CSV를 올렸는데 브랜드 열이 없으면 줄 자체가 숨는다 */
+  .rev-search{min-width:200px;flex:1;max-width:280px;margin-left:4px}
   .rev-brandbar{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;margin:12px 0 2px}
   .rev-brandbar[hidden]{display:none}
   .rev-brandbar-label{font-size:11.5px;font-weight:800;color:var(--mute);letter-spacing:.04em;margin-right:2px}
@@ -1117,6 +1121,7 @@
   .sb-subnav-home svg{width:15px;height:15px;flex:none}
   .sb-subnav-home:hover{background:var(--indigo-soft);color:var(--indigo)}
   .sb-subnav-home.active{background:var(--indigo);color:#fff}
+  .sb-subnav-home+.sb-subnav-home{margin-top:3px}
   .sb-subnav-sep{height:1px;background:var(--sn-line);margin:10px 4px}
   /* 중분류 블록 · 헤더를 누르면 접었다 폈다 하고, 열린 그룹만 문서를 보여준다 */
   .sb-subnav-block{border-radius:12px;transition:background .18s}
@@ -1139,6 +1144,17 @@
   .sb-subnav-item:hover{background:var(--indigo-soft);color:var(--indigo)}
   .sb-subnav-item.active{background:var(--indigo-soft);color:var(--indigo);font-weight:800;
     box-shadow:inset 3px 0 0 var(--indigo)}
+  /* 리뷰수집 사이드탭 · 중분류 없이 판매처만 한 줄씩 놓는 평평한 목록(앞에 판매처 색 점) */
+  .sb-subnav-flat{display:flex;flex-direction:column;gap:2px}
+  .sb-subnav-flat .sb-subnav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;font-weight:700}
+  .sb-subnav-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--mute)}
+  .sb-subnav-dot.is-naver{background:var(--naver)}
+  .sb-subnav-dot.is-cafe24{background:var(--self)}
+  .sb-subnav-dot.is-coupang{background:var(--coupang)}
+  .sb-subnav-dot.is-toss{background:#1f6fe0}
+  .sb-subnav-dot.is-alwayz{background:#6b4fc9}
+  html[data-theme="dark"] .sb-subnav-dot.is-toss{background:#5c9bf0}
+  html[data-theme="dark"] .sb-subnav-dot.is-alwayz{background:#a48ce8}
   /* 메뉴얼가이드 본문 · 사이드탭에서 고른 문서 하나를 보여준다 */
   .man{padding:34px 48px 48px}
   /* 메뉴얼 화면의 가로 여백은 회의안건 크게보기와 똑같이 기본값(.wrap 1120px, 좌우 48px)을 쓴다 ·
@@ -1397,7 +1413,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg>
           <span>트렌드분석</span>
         </button>
-        <button class="sb-item" type="button" data-view="review" id="sbReviewBtn">
+        <button class="sb-item" type="button" data-view="review" id="sbReviewBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M12 8.4l1.1 2.2 2.45.35-1.77 1.72.42 2.43L12 13.98l-2.2 1.12.42-2.43-1.77-1.72 2.45-.35L12 8.4Z"/></svg>
           <span>리뷰수집</span>
         </button>
@@ -1421,6 +1437,29 @@
             <span class="theme-switch-knob"></span>
           </button>
         </div>
+      </div>
+    </nav>
+
+    <nav class="sb-subnav" id="sbReviewSubnav" hidden aria-label="리뷰수집 판매처">
+      <div class="sb-subnav-head">
+        <div class="sb-subnav-title">리뷰수집</div>
+      </div>
+      <button type="button" class="sb-subnav-home active" id="sbReviewHome" data-platform="">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+        <span>통계 및 인사이트</span>
+      </button>
+      <!-- 판매처를 가리지 않고 모든 리뷰를 한 목록에서 보는 화면 -->
+      <button type="button" class="sb-subnav-home" id="sbReviewMaster">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="2.2" cy="6" r=".9" fill="currentColor"/><circle cx="2.2" cy="12" r=".9" fill="currentColor"/><circle cx="2.2" cy="18" r=".9" fill="currentColor"/></svg>
+        <span>리뷰마스터</span>
+      </button>
+      <div class="sb-subnav-sep"></div>
+      <div class="sb-subnav-flat" id="sbReviewSubnavList">
+        <button type="button" class="sb-subnav-item" data-platform="naver"><i class="sb-subnav-dot is-naver"></i>네이버리뷰</button>
+        <button type="button" class="sb-subnav-item" data-platform="cafe24"><i class="sb-subnav-dot is-cafe24"></i>카페24리뷰</button>
+        <button type="button" class="sb-subnav-item" data-platform="coupang"><i class="sb-subnav-dot is-coupang"></i>쿠팡리뷰</button>
+        <button type="button" class="sb-subnav-item" data-platform="toss"><i class="sb-subnav-dot is-toss"></i>토스리뷰</button>
+        <button type="button" class="sb-subnav-item" data-platform="alwayz"><i class="sb-subnav-dot is-alwayz"></i>올웨이즈리뷰</button>
       </div>
     </nav>
 
@@ -1940,7 +1979,7 @@
           <div class="plan-hero" id="revHero">
             <div class="ptag">FEEDBACK</div>
             <div class="plan-hero-head">
-              <div class="ptitle" id="revHeroTitle">전체리뷰통계 - VOC</div>
+              <div class="ptitle" id="revHeroTitle">통계 및 인사이트 - VOC</div>
               <div style="text-align:right">
                 <input type="file" id="revCsvInput" accept=".csv,text/csv" style="display:none">
                 <button type="button" class="rev-csv-btn" id="revCsvBtn" title="채널,브랜드,내용,별점,수집일 열을 가진 CSV 파일을 불러와요 (브랜드는 선택)">
@@ -1954,15 +1993,7 @@
             <p class="psub" id="revHeroSub">쇼핑몰·앱·커뮤니티의 리뷰와 고객의 소리를 한곳에 모아봅니다</p>
           </div>
 
-          <div class="rev-tabs" id="revTabs" role="tablist" aria-label="리뷰 채널">
-            <button type="button" class="rev-tab active" data-platform="">전체리뷰통계</button>
-            <button type="button" class="rev-tab" data-platform="naver">네이버리뷰</button>
-            <button type="button" class="rev-tab" data-platform="cafe24">카페24리뷰</button>
-            <button type="button" class="rev-tab" data-platform="coupang">쿠팡리뷰</button>
-            <button type="button" class="rev-tab" data-platform="toss">토스리뷰</button>
-            <button type="button" class="rev-tab" data-platform="alwayz">올웨이즈리뷰</button>
-          </div>
-
+          <!-- 판매처 고르기는 왼쪽 사이드탭(#sbReviewSubnav)이 맡는다 · 예전 가로 탭줄은 없앴다 -->
           <div class="rev-daterow" id="revDateRow">
             <span class="rev-daterow-label">기간</span>
             <input type="date" class="rev-date-input" id="revDateFrom" aria-label="시작일">
@@ -1974,7 +2005,7 @@
             <button type="button" class="rev-date-quick" data-days="0">전체 기간</button>
           </div>
 
-          <div class="panel" style="margin-top:22px">
+          <div class="panel" id="revDailyPanel" style="margin-top:22px">
             <h3 id="revDailyTitle">전체 상품 리뷰 현황</h3>
             <div class="unit" id="revDailyUnit">8월 1일 – 31일 · 일별 수집 리뷰 및 부정 비율</div>
             <div class="legend" style="margin-top:10px">
@@ -1996,9 +2027,28 @@
               <span class="rev-brandbar-label">상품브랜드</span>
               <div class="rev-brand-list" id="revBrandList"></div>
             </div>
-            <div style="overflow-x:auto;margin-top:4px">
+            <!-- 리뷰마스터에서만 나오는 감정·검색 줄 (판매처와 상관없이 전체 리뷰를 훑는 화면이라) -->
+            <div class="rev-brandbar" id="revMasterFilter" hidden>
+              <span class="rev-brandbar-label">감정</span>
+              <button type="button" class="rev-date-quick active" data-sent="">전체</button>
+              <button type="button" class="rev-date-quick" data-sent="pos">긍정</button>
+              <button type="button" class="rev-date-quick" data-sent="neu">중립</button>
+              <button type="button" class="rev-date-quick" data-sent="neg">부정</button>
+              <input type="search" class="rev-date-input rev-search" id="revSearch" placeholder="내용·채널·브랜드 검색" aria-label="리뷰 검색">
+            </div>
+            <div id="revRecentWrap" style="overflow-x:auto;margin-top:4px">
               <table id="revRecentTable">
                 <thead><tr><th>채널</th><th>브랜드</th><th>내용</th><th>별점</th><th>감정</th><th>수집일</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="revMoreWrap" hidden style="margin-top:14px;text-align:center">
+              <button type="button" class="rev-csv-btn" id="revMoreBtn">더 보기</button>
+            </div>
+            <!-- 전체리뷰통계에서만 최근 리뷰 목록 대신 이 순위표가 나온다 -->
+            <div id="revTopWrap" hidden style="overflow-x:auto;margin-top:4px">
+              <table id="revTopTable">
+                <thead><tr><th>순위</th><th>상품브랜드</th><th>부정 리뷰 비율</th><th>부정 리뷰</th><th>평균 별점</th><th>리뷰수</th></tr></thead>
                 <tbody></tbody>
               </table>
             </div>
@@ -2007,11 +2057,15 @@
           /* 리뷰 CSV 업로드 · 채널,브랜드,내용,별점,수집일 열(또는 같은 뜻의 헤더)을 읽어
              일별 현황 차트와 최근 리뷰 표를 실제 값으로 다시 그린다 ·
              브랜드 열은 없어도 되고, 있으면 그 값으로 상품브랜드 버튼이 만들어진다 */
-          var revState={rows:null, demoRows:null, activePlatform:null, activeBrand:null, dateFrom:null, dateTo:null};
+          /* master는 판매처를 가리지 않고 모든 리뷰를 한 목록으로 보는 '리뷰마스터' 화면 ·
+             sentiment/keyword/limit은 그 화면에서만 쓰는 필터와 '더 보기' 상태다 */
+          var revState={rows:null, demoRows:null, activePlatform:null, activeBrand:null, dateFrom:null, dateTo:null,
+                        master:false, sentiment:'', keyword:'', limit:50};
+          var REV_PAGE=50;
 
           /* 판매처(채널)별 화면 문구 · 탭을 바꾸면 배너 제목/설명과 각 패널 제목이 함께 바뀐다 */
           var REV_CHANNEL_INFO={
-            '':{name:'전체', heroTitle:'전체리뷰통계 - VOC', dailyTitle:'전체 상품 리뷰 현황',
+            '':{name:'전체', heroTitle:'통계 및 인사이트 - VOC', dailyTitle:'전체 상품 리뷰 현황',
                 recentTitle:'최근 수집 리뷰',
                 sub:'쇼핑몰·앱·커뮤니티의 리뷰와 고객의 소리를 한곳에 모아봅니다'},
             naver:{name:'네이버', heroTitle:'네이버리뷰 - VOC', dailyTitle:'네이버 리뷰 현황',
@@ -2394,27 +2448,122 @@
             var label=s==='pos'?'긍정':(s==='neg'?'부정':'중립');
             return '<span class="sentic '+s+'">'+label+'</span>';
           }
+          function revRowHtml(r){
+            return '<tr><td>'+revEscapeHtml(r.channel)+'</td>'+
+              '<td>'+revEscapeHtml(r.brand||'-')+'</td>'+
+              '<td>'+revEscapeHtml(r.content)+'</td>'+
+              '<td class="rev-stars">'+revStarsHtml(r.rating)+'</td>'+
+              '<td>'+revSentBadge(r.sentiment)+'</td>'+
+              '<td>'+revFmtMD(r.date)+'</td></tr>';
+          }
+          function revEmptyTable(msg){
+            document.getElementById('revRecentUnit').textContent=msg;
+            document.querySelector('#revRecentTable tbody').innerHTML=
+              '<tr><td colspan="6" style="text-align:center;color:var(--mute)">선택한 조건에 맞는 리뷰가 없습니다</td></tr>';
+            document.getElementById('revMoreWrap').hidden=true;
+          }
           function renderRevRecentTable(rows){
             var tbody=document.querySelector('#revRecentTable tbody');
             var unitEl=document.getElementById('revRecentUnit');
-            if(!rows.length){
+            document.getElementById('revMoreWrap').hidden=true;
+            if(!rows.length){ revEmptyTable('표시할 리뷰가 없습니다'); return; }
+            var recent=rows.slice().sort(function(a,b){return b.date-a.date}).slice(0,20);
+            unitEl.textContent=revScopeLabel()+' · 최신순 '+recent.length+'건 (전체 '+rows.length.toLocaleString()+'건)';
+            tbody.innerHTML=recent.map(revRowHtml).join('');
+          }
+          /* ---------- 리뷰마스터 ----------
+             네이버부터 올웨이즈까지 모든 판매처 리뷰를 한 목록에서 본다 ·
+             기간·상품브랜드에 더해 감정과 검색어로도 좁히고, 긴 목록은 '더 보기'로 끊어 보여준다 */
+          function revMasterRows(){
+            var kw=revState.keyword.trim().toLowerCase();
+            return revChannelRows().filter(function(r){
+              if(revState.activeBrand&&(r.brand||'')!==revState.activeBrand) return false;
+              if(revState.sentiment&&r.sentiment!==revState.sentiment) return false;
+              if(kw){
+                var hay=((r.content||'')+' '+(r.channel||'')+' '+(r.brand||'')).toLowerCase();
+                if(hay.indexOf(kw)<0) return false;
+              }
+              return true;
+            });
+          }
+          function renderRevMasterTable(rows){
+            var tbody=document.querySelector('#revRecentTable tbody');
+            var unitEl=document.getElementById('revRecentUnit');
+            var moreWrap=document.getElementById('revMoreWrap');
+            if(!rows.length){ revEmptyTable('조건에 맞는 리뷰가 없습니다'); return; }
+            var sorted=rows.slice().sort(function(a,b){return b.date-a.date});
+            var shown=sorted.slice(0,revState.limit);
+            var parts=['전체 판매처'];
+            if(revState.activeBrand) parts.push(revState.activeBrand);
+            if(revState.sentiment) parts.push(revSentLabel(revState.sentiment)+' 리뷰');
+            if(revState.keyword.trim()) parts.push('"'+revState.keyword.trim()+'" 검색');
+            unitEl.textContent=parts.join(' · ')+' · 최신순 '+shown.length.toLocaleString()+
+              '건 (조건에 맞는 '+sorted.length.toLocaleString()+'건)';
+            tbody.innerHTML=shown.map(revRowHtml).join('');
+            moreWrap.hidden=shown.length>=sorted.length;
+            if(!moreWrap.hidden){
+              document.getElementById('revMoreBtn').textContent=
+                '더 보기 (남은 '+(sorted.length-shown.length).toLocaleString()+'건)';
+            }
+          }
+          function revSentLabel(s){ return s==='pos'?'긍정':(s==='neg'?'부정':'중립'); }
+          /* ---------- 개선 필요 상품 TOP ----------
+             전체리뷰통계에서만 최근 수집 리뷰 대신 나온다 · 판매처를 고르면 다시 리뷰 목록으로 돌아간다 ·
+             부정 리뷰(별점 2점 이하) 비율이 높은 상품 순 · 리뷰가 두세 건뿐인 상품은 비율이 튀므로
+             최소 건수를 넘긴 상품끼리 줄 세우고, 그런 상품이 하나도 없을 때만 전부를 놓고 줄 세운다 */
+          var REV_TOP_MIN=5, REV_TOP_N=8;
+          function revBrandStats(rows){
+            var by={};
+            rows.forEach(function(r){
+              var b=String(r.brand||'').trim();
+              if(!b) return;
+              var s=by[b]||(by[b]={name:b,total:0,neg:0,ratingSum:0});
+              s.total++;
+              s.ratingSum+=r.rating;
+              if(r.sentiment==='neg') s.neg++;
+            });
+            return Object.keys(by).map(function(k){
+              var s=by[k];
+              s.negRatio=s.total?s.neg/s.total*100:0;
+              s.avg=s.total?s.ratingSum/s.total:0;
+              return s;
+            });
+          }
+          /* 브랜드 열이 없는 CSV(또는 빈 화면)에서는 순위를 만들 수 없으니 원래 리뷰 목록을 그대로 쓴다 */
+          function revShowTop(rows){
+            return !revState.master && !revState.activePlatform && revBrandStats(rows).length>0;
+          }
+          function renderRevTopTable(rows){
+            var tbody=document.querySelector('#revTopTable tbody');
+            var unitEl=document.getElementById('revRecentUnit');
+            var stats=revBrandStats(rows);
+            var enough=stats.filter(function(s){return s.total>=REV_TOP_MIN});
+            var pool=enough.length?enough:stats;
+            var list=pool.slice().sort(function(a,b){
+              return (b.negRatio-a.negRatio)||(b.neg-a.neg)||a.name.localeCompare(b.name);
+            }).slice(0,REV_TOP_N);
+            if(!list.length){
               unitEl.textContent='표시할 리뷰가 없습니다';
               tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--mute)">선택한 조건에 맞는 리뷰가 없습니다</td></tr>';
               return;
             }
-            var recent=rows.slice().sort(function(a,b){return b.date-a.date}).slice(0,20);
-            unitEl.textContent=revScopeLabel()+' · 최신순 '+recent.length+'건 (전체 '+rows.length.toLocaleString()+'건)';
-            tbody.innerHTML=recent.map(function(r){
-              return '<tr><td>'+revEscapeHtml(r.channel)+'</td>'+
-                '<td>'+revEscapeHtml(r.brand||'-')+'</td>'+
-                '<td>'+revEscapeHtml(r.content)+'</td>'+
-                '<td class="rev-stars">'+revStarsHtml(r.rating)+'</td>'+
-                '<td>'+revSentBadge(r.sentiment)+'</td>'+
-                '<td>'+revFmtMD(r.date)+'</td></tr>';
+            unitEl.textContent='전체 판매처 · 부정 리뷰 비율 높은 순 '+list.length+'개'+
+              (enough.length?' · 리뷰 '+REV_TOP_MIN+'건 이상인 상품':'')+
+              ' (전체 '+rows.length.toLocaleString()+'건)';
+            var max=list[0].negRatio||100;   /* 1위를 꽉 찬 막대로 두고 나머지를 견준다 */
+            tbody.innerHTML=list.map(function(s,i){
+              return '<tr><td><span class="rev-rank'+(i<3?' top':'')+'">'+(i+1)+'</span></td>'+
+                '<td>'+revEscapeHtml(s.name)+'</td>'+
+                '<td><div class="rev-negbar"><span class="rev-negbar-track">'+
+                  '<span class="rev-negbar-fill" style="display:block;width:'+(s.negRatio/max*100).toFixed(1)+'%"></span>'+
+                  '</span><span class="rev-negbar-v">'+s.negRatio.toFixed(1)+'%</span></div></td>'+
+                '<td>'+s.neg.toLocaleString()+'개</td>'+
+                '<td class="rev-stars">'+revStarsHtml(s.avg)+'<span class="rev-avg">'+s.avg.toFixed(1)+'</span></td>'+
+                '<td>'+s.total.toLocaleString()+'개</td></tr>';
             }).join('');
           }
           /* 배너 색·제목과 각 패널 제목을 선택한 판매처(+브랜드)에 맞춘다 · 카페24는 기본 주황 배너를 그대로 쓴다 */
-          function renderRevChrome(){
+          function renderRevChrome(showTop){
             var key=revChannelKey(), info=REV_CHANNEL_INFO[key]||REV_CHANNEL_INFO[''];
             var brand=revState.activeBrand;
             var hero=document.getElementById('revHero');
@@ -2424,14 +2573,22 @@
               hero.classList.toggle('is-toss',key==='toss');
               hero.classList.toggle('is-alwayz',key==='alwayz');
             }
-            document.getElementById('revHeroTitle').textContent=info.heroTitle;
-            document.getElementById('revHeroSub').textContent=info.sub;
+            var master=!!revState.master;
+            document.getElementById('revHeroTitle').textContent=master?'리뷰마스터 - VOC':info.heroTitle;
+            document.getElementById('revHeroSub').textContent=master
+              ?'네이버·카페24·쿠팡·토스·올웨이즈 리뷰를 판매처 구분 없이 한 목록에서 봅니다'
+              :info.sub;
             document.getElementById('revDailyTitle').textContent=info.dailyTitle;
-            document.getElementById('revRecentTitle').textContent=brand?info.recentTitle+' · '+brand:info.recentTitle;
+            document.getElementById('revRecentTitle').textContent=
+              master?'전체 판매처 리뷰 목록'
+              :(showTop?'개선 필요 상품 TOP'
+              :(brand?info.recentTitle+' · '+brand:info.recentTitle));
           }
           /* 브랜드 선택줄 · 판매처를 바꿔 지금 고른 브랜드가 사라지면 자동으로 전체로 되돌린다 */
-          function renderRevBrands(){
+          function renderRevBrands(showTop){
             var bar=document.getElementById('revBrandBar');
+            /* 개선 필요 상품 TOP은 상품별 순위 자체라서 브랜드 고르는 줄이 필요 없다 */
+            if(showTop){ bar.hidden=true; return; }
             var list=revBrandList();
             if(!list.length){
               revState.activeBrand=null;
@@ -2480,15 +2637,51 @@
           }
           function renderRevAll(){
             revSyncBrand();
-            renderRevChrome();
-            renderRevDateRow();
-            renderRevBrands();
             /* 배너·일별 차트는 판매처 전체 기준, 아래 리뷰 목록만 고른 상품브랜드로 좁힌다 */
             var chRows=revChannelRows();
+            var master=!!revState.master;
+            var showTop=revShowTop(chRows);
+            renderRevChrome(showTop);
+            renderRevDateRow();
+            renderRevBrands(showTop);
             renderRevHeader(chRows);
             renderRevDaily(chRows);
-            renderRevRecentTable(revFilteredRows());
+            /* 리뷰마스터는 목록만 보는 화면이라 일별 차트 패널은 접어둔다 */
+            document.getElementById('revDailyPanel').hidden=master;
+            document.getElementById('revMasterFilter').hidden=!master;
+            /* 통계 및 인사이트에서는 최근 수집 리뷰 자리에 개선 필요 상품 TOP을 놓는다 */
+            document.getElementById('revTopWrap').hidden=!showTop;
+            document.getElementById('revRecentWrap').hidden=showTop;
+            if(showTop) renderRevTopTable(chRows);
+            else if(master) renderRevMasterTable(revMasterRows());
+            else renderRevRecentTable(revFilteredRows());
           }
+          /* 리뷰마스터 필터 · 감정 고르기, 검색어, 더 보기 */
+          document.getElementById('revMasterFilter').addEventListener('click',function(e){
+            var b=e.target.closest('button[data-sent]');
+            if(!b) return;
+            revState.sentiment=b.dataset.sent||'';
+            revState.limit=REV_PAGE;
+            document.querySelectorAll('#revMasterFilter button[data-sent]').forEach(function(x){
+              x.classList.toggle('active',(x.dataset.sent||'')===revState.sentiment);
+            });
+            renderRevAll();
+          });
+          (function(){
+            var input=document.getElementById('revSearch'), t=null;
+            input.addEventListener('input',function(){
+              clearTimeout(t);
+              t=setTimeout(function(){
+                revState.keyword=input.value;
+                revState.limit=REV_PAGE;
+                renderRevAll();
+              },200);
+            });
+          })();
+          document.getElementById('revMoreBtn').addEventListener('click',function(){
+            revState.limit+=REV_PAGE;
+            renderRevAll();
+          });
           /* 최근 N일은 오늘이 아니라 데이터의 마지막 날을 기준으로 잡는다(샘플·과거 CSV도 맞게 걸리도록) */
           document.getElementById('revDateRow').addEventListener('click',function(e){
             var btn=e.target.closest('.rev-date-quick');
@@ -5141,27 +5334,60 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   window.openAgenda=()=>setOpen(true);
 })();
 
-/* 리뷰수집 채널 탭 · 리뷰 대시보드 배너 바로 아래에서 전체리뷰통계/네이버/카페24/쿠팡을 고른다 ·
-   예전엔 사이드바 옆에 붙는 컬럼이었고, 그 전엔 대시보드 상단 채널 아이콘 3개였다 */
+/* 리뷰수집 채널 고르기 · 사이드바 아이콘을 누르면 메뉴얼가이드처럼 사이드탭이 열리고,
+   거기서 전체리뷰통계와 판매처를 고른다 · 대시보드 안에는 판매처 버튼을 두지 않는다 */
 (function(){
-  const tabs=document.getElementById('revTabs');
-  if(!tabs) return;
-  tabs.querySelectorAll('.rev-tab').forEach(item=>{
-    item.addEventListener('click',()=>{
-      window.activateView('review');
-      revSetActivePlatform(item.dataset.platform||null);
-    });
+  const btn=document.getElementById('sbReviewBtn');
+  const subnav=document.getElementById('sbReviewSubnav');
+  const listEl=document.getElementById('sbReviewSubnavList');
+  const homeBtn=document.getElementById('sbReviewHome');
+  if(!btn||!subnav||!listEl||!homeBtn) return;
+
+  function open(){ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); }
+  function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
+  function pick(platform,master){
+    window.activateView('review');
+    revSetActivePlatform(platform||null,master);
+  }
+  btn.addEventListener('click',()=>{ open(); window.activateView('review'); });
+  homeBtn.addEventListener('click',()=>pick('',false));
+  const masterBtn=document.getElementById('sbReviewMaster');
+  if(masterBtn) masterBtn.addEventListener('click',()=>pick('',true));
+  listEl.addEventListener('click',e=>{
+    const item=e.target.closest('.sb-subnav-item');
+    if(item) pick(item.dataset.platform,false);
   });
+  /* 다른 대분류로 넘어가면 사이드탭을 닫는다 */
+  document.querySelectorAll('.sb-item[data-view]').forEach(other=>{
+    if(other!==btn) other.addEventListener('click',close);
+  });
+  const salesToggleBtn=document.getElementById('sbSalesToggle');
+  if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
 })();
 
-/* 탭 활성 표시만 맡고, 배너 색·제목과 패널 내용은 renderRevAll()이 판매처에 맞춰 다시 그린다 */
-function revSetActivePlatform(platform){
+/* 사이드탭 활성 표시만 맡고, 배너 색·제목과 패널 내용은 renderRevAll()이 판매처에 맞춰 다시 그린다 */
+function revSetActivePlatform(platform,master){
   if(typeof revState==='undefined') return;
+  master=!!master;
   if((platform||null)!==revState.activePlatform) revState.activeBrand=null;
+  /* 화면을 옮기면 리뷰마스터의 감정·검색·더 보기 상태는 처음으로 되돌린다 */
+  if(master!==revState.master||(platform||null)!==revState.activePlatform){
+    revState.sentiment=''; revState.keyword=''; revState.limit=REV_PAGE;
+    const searchEl=document.getElementById('revSearch');
+    if(searchEl) searchEl.value='';
+    document.querySelectorAll('#revMasterFilter button[data-sent]').forEach(b=>{
+      b.classList.toggle('active',!b.dataset.sent);
+    });
+  }
+  revState.master=master;
   revState.activePlatform=platform||null;
-  document.querySelectorAll('#revTabs .rev-tab').forEach(b=>{
-    b.classList.toggle('active',(b.dataset.platform||null)===revState.activePlatform);
+  document.querySelectorAll('#sbReviewSubnavList .sb-subnav-item').forEach(b=>{
+    b.classList.toggle('active',!master&&(b.dataset.platform||null)===revState.activePlatform);
   });
+  const revHomeBtn=document.getElementById('sbReviewHome');
+  if(revHomeBtn) revHomeBtn.classList.toggle('active',!master&&!revState.activePlatform);
+  const revMasterBtn=document.getElementById('sbReviewMaster');
+  if(revMasterBtn) revMasterBtn.classList.toggle('active',master);
   renderRevAll();
 }
 
