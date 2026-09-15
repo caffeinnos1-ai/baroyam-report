@@ -53,10 +53,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- automation-status.json; then
+          git add automation-status.json
+          # git diff --quiet는 아직 한 번도 커밋 안 된(untracked) 파일은 "변경 없음"으로 잘못 판단하므로,
+          # 반드시 add 먼저 하고 --cached로 비교한다.
+          if git diff --cached --quiet; then
             echo "변경 없음"
           else
-            git add automation-status.json
             git commit -m "자동화 현황 데이터 갱신 ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
             git push
           fi
