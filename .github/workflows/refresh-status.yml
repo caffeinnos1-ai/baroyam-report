@@ -24,24 +24,29 @@ jobs:
           build_repo_json() {
             local repo="$1"
             local label="$2"
+            shift 2
+            local wanted_names=("$@")
             local runs
-            runs=$(gh run list --repo "$repo" --limit 15 --json workflowName,conclusion,url,createdAt,status \
+            runs=$(gh run list --repo "$repo" --limit 20 --json workflowName,conclusion,url,createdAt,status \
               | jq -c '[.[] | select(.status=="completed")]')
-            local names
-            names=$(echo "$runs" | jq -r '[.[].workflowName] | unique | .[]')
             local workflows="[]"
-            while IFS= read -r name; do
-              [ -z "$name" ] && continue
+            for name in "${wanted_names[@]}"; do
               local latest
-              latest=$(echo "$runs" | jq -c --arg n "$name" '[.[] | select(.workflowName==$n)] | sort_by(.createdAt) | last | {name, conclusion, url, createdAt}')
+              latest=$(echo "$runs" | jq -c --arg n "$name" \
+                '[.[] | select(.workflowName==$n)] | sort_by(.createdAt) | last | {name: .workflowName, conclusion, url, createdAt}')
+              [ "$latest" = "null" ] && continue
               workflows=$(echo "$workflows" | jq -c --argjson w "$latest" '. + [$w]')
-            done <<< "$names"
+            done
             jq -n --arg repo "$repo" --arg label "$label" --argjson workflows "$workflows" \
               '{repo:$repo, label:$label, workflows:$workflows}'
           }
 
-          TREND=$(build_repo_json "caffeinnos1-ai/baroyam-trend" "baroyam-trend")
-          AUTOMATION=$(build_repo_json "caffeinnos1-ai/caffeinnos-automation" "caffeinnos-automation")
+          # 추적 대상 워크플로우를 이름으로 못박아 둔다 — 예전에 지운 테스트용 워크플로우의
+          # 실행 기록이 남아있어도(gh run list에는 계속 뜬다) 여기 섞여 들어오지 않게 하기 위함.
+          TREND=$(build_repo_json "caffeinnos1-ai/baroyam-trend" "baroyam-trend" \
+            "구글트렌드 수집" "네이버데이터랩 수집")
+          AUTOMATION=$(build_repo_json "caffeinnos1-ai/caffeinnos-automation" "caffeinnos-automation" \
+            "당일판매분요약표 (Slack)")
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
           jq -n --argjson repos "[$TREND, $AUTOMATION]" --arg checkedAt "$NOW" \
