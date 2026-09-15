@@ -1,0 +1,62 @@
+name: 자동화 현황 데이터 갱신
+
+on:
+  schedule:
+    # KST 10:00 / 15:00 / 17:00 == UTC 01:00 / 06:00 / 08:00
+    - cron: '0 1,6,8 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.STATUS_CHECK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 두 저장소의 최신 워크플로우 상태를 JSON으로 저장
+        run: |
+          set -e
+
+          build_repo_json() {
+            local repo="$1"
+            local label="$2"
+            local runs
+            runs=$(gh run list --repo "$repo" --limit 15 --json workflowName,conclusion,url,createdAt,status \
+              | jq -c '[.[] | select(.status=="completed")]')
+            local names
+            names=$(echo "$runs" | jq -r '[.[].workflowName] | unique | .[]')
+            local workflows="[]"
+            while IFS= read -r name; do
+              [ -z "$name" ] && continue
+              local latest
+              latest=$(echo "$runs" | jq -c --arg n "$name" '[.[] | select(.workflowName==$n)] | sort_by(.createdAt) | last | {name, conclusion, url, createdAt}')
+              workflows=$(echo "$workflows" | jq -c --argjson w "$latest" '. + [$w]')
+            done <<< "$names"
+            jq -n --arg repo "$repo" --arg label "$label" --argjson workflows "$workflows" \
+              '{repo:$repo, label:$label, workflows:$workflows}'
+          }
+
+          TREND=$(build_repo_json "caffeinnos1-ai/baroyam-trend" "baroyam-trend")
+          AUTOMATION=$(build_repo_json "caffeinnos1-ai/caffeinnos-automation" "caffeinnos-automation")
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          jq -n --argjson repos "[$TREND, $AUTOMATION]" --arg checkedAt "$NOW" \
+            '{ok:true, checkedAt:$checkedAt, repos:$repos}' > automation-status.json
+
+          cat automation-status.json
+
+      - name: 변경됐을 때만 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- automation-status.json; then
+            echo "변경 없음"
+          else
+            git add automation-status.json
+            git commit -m "자동화 현황 데이터 갱신 ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
+            git push
+          fi
