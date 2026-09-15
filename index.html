@@ -1095,12 +1095,7 @@
   .mg-add-item button:hover{background:var(--indigo);color:#fff}
 
   /* 자동화현황 — GitHub Actions 워크플로우 최근 실행 상태(초록/빨강 점) */
-  .automation-page{max-width:640px;padding:36px 48px}
-  .automation-page-head{margin-bottom:22px}
-  .automation-page-head h2{font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin:0 0 6px}
-  .automation-page-head p{font-size:13.5px;font-weight:500;color:var(--mute);line-height:1.6;margin:0;max-width:52ch}
   .automation-page-hint{font-size:12px;font-weight:600;color:var(--mute);line-height:1.6;margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line)}
-  @media (max-width:640px){ .automation-page{padding:24px 20px} }
   .automation-status{display:flex;flex-direction:column;gap:18px}
   .automation-loading,.automation-error{padding:28px 12px;text-align:center;color:var(--mute);font-size:13px;font-weight:600}
   .automation-error{color:var(--neg)}
@@ -1456,10 +1451,6 @@
         <button class="sb-item" type="button" data-view="manual" id="sbManualBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
           <span>메뉴얼가이드</span>
-        </button>
-        <button class="sb-item" type="button" data-view="automation">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="4"/><circle cx="12" cy="7.3" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="16.7" r="1.15" fill="currentColor" stroke="none"/></svg>
-          <span>자동화현황</span>
         </button>
       </div>
       <div class="sb-bottom">
@@ -2867,19 +2858,6 @@
         </button>
       </div>
 
-      <div id="view-automation" style="display:none">
-        <div class="automation-page">
-          <div class="automation-page-head">
-            <h2>자동화현황</h2>
-            <p>트렌드 수집·슬랙 리포트가 GitHub Actions에서 정해진 시간마다 자동으로 돌아갑니다. 하루 세 번(10·15·17시) 이 화면의 데이터도 자동으로 갱신됩니다.</p>
-          </div>
-          <div class="automation-status" id="automationStatusBox">
-            <p class="automation-loading">불러오는 중…</p>
-          </div>
-          <p class="automation-page-hint" id="automationPageHint">데이터는 하루 세 번(10:00·15:00·17:00 KST) 자동으로 갱신됩니다. 지금 바로 최신 상태를 보고 싶으면 GitHub Actions 페이지에서 직접 확인하실 수도 있어요.</p>
-        </div>
-      </div>
-
       <!-- 사이드탭 '회의안건' 크게보기 자리 · 우측 패널(보조용)과 회의안건 DOM 하나를 나눠 쓴다 -->
       <div id="view-agenda-host" style="display:none"></div>
 
@@ -4189,11 +4167,9 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     document.getElementById('view-manual').style.display=v==='manual'?'':'none';
     document.body.classList.toggle('view-is-manual',v==='manual');
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
-    document.getElementById('view-automation').style.display=v==='automation'?'':'none';
-    if(v==='automation'&&window.loadAutomationStatus) window.loadAutomationStatus();
     /* 회의안건은 DOM이 하나뿐이라, 크게보기로 들어올 때 우측 패널에서 본문으로 옮겨온다 */
     if(v==='agenda'&&window.mountAgendaMain) window.mountAgendaMain();
-    const hideHero=(v==='home'||v==='goal'||v==='trend'||v==='review'||v==='manual'||v==='agenda'||v==='automation');
+    const hideHero=(v==='home'||v==='goal'||v==='trend'||v==='review'||v==='manual'||v==='agenda');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
