@@ -1094,7 +1094,9 @@
     background:var(--indigo-soft);color:var(--indigo);font-size:12px;font-weight:800;cursor:pointer}
   .mg-add-item button:hover{background:var(--indigo);color:#fff}
 
-  /* 자동화현황 — GitHub Actions 워크플로우 최근 실행 상태(초록/빨강 점) */
+  /* 자동화현황 — 로컬 자동화 실행 성공/실패 상태(초록/빨강 점) · 비밀번호 없이 바로 열리는 패널 */
+  .automation-panel{max-width:420px;height:auto;max-height:min(560px,86vh)}
+  .automation-panel .settings-content{padding:18px 20px 20px;overflow-y:auto}
   .automation-page-hint{font-size:12px;font-weight:600;color:var(--mute);line-height:1.6;margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line)}
   .automation-status{display:flex;flex-direction:column;gap:18px}
   .automation-loading,.automation-error{padding:28px 12px;text-align:center;color:var(--mute);font-size:13px;font-weight:600}
@@ -1452,6 +1454,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
           <span>메뉴얼가이드</span>
         </button>
+        <button class="sb-item" type="button" id="automationStatusBtn" aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="4"/><circle cx="12" cy="7.3" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="16.7" r="1.15" fill="currentColor" stroke="none"/></svg>
+          <span>자동화현황</span>
+        </button>
       </div>
       <div class="sb-bottom">
         <button class="sb-item sb-import" type="button" id="importDataBtn" title="구글시트에서 최신 데이터를 가져와요">
@@ -1541,10 +1547,6 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
               <span>메뉴얼가이드설정</span>
             </button>
-            <button class="mini-sb-item" type="button" data-settings-view="automation" id="automationSettingsTab">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="4"/><circle cx="12" cy="7.3" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="16.7" r="1.15" fill="currentColor" stroke="none"/></svg>
-              <span>워크플로우</span>
-            </button>
           </nav>
           <div class="settings-content">
             <section class="settings-view active" data-settings-panel="members">
@@ -1575,13 +1577,22 @@
                 <div class="mg-list" id="mgList"></div>
               </div>
             </section>
-            <section class="settings-view" data-settings-panel="automation" hidden>
-              <div class="automation-status" id="automationStatusBoxSettings">
-                <p class="automation-loading">불러오는 중…</p>
-              </div>
-              <p class="automation-page-hint">하루 세 번(10:00·15:00·17:00 KST) 자동으로 갱신됩니다.</p>
-            </section>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-overlay" id="automationOverlay" hidden>
+      <div class="settings-panel automation-panel" role="dialog" aria-modal="true" aria-labelledby="automationOverlayTitle">
+        <div class="settings-head">
+          <h2 id="automationOverlayTitle">자동화현황</h2>
+          <button class="settings-close" type="button" id="automationCloseBtn" aria-label="닫기">✕</button>
+        </div>
+        <div class="settings-content">
+          <div class="automation-status" id="automationStatusBoxSidebar">
+            <p class="automation-loading">불러오는 중…</p>
+          </div>
+          <p class="automation-page-hint">하루 세 번(10:00·15:00·17:00 KST) 자동으로 갱신됩니다.</p>
         </div>
       </div>
     </div>
@@ -3847,10 +3858,39 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
         sec.hidden=sec.dataset.settingsPanel!==v;
         sec.classList.toggle('active',sec.dataset.settingsPanel===v);
       });
-      if(v==='automation'&&window.loadAutomationStatus) window.loadAutomationStatus();
     });
   });
 
+})();
+
+/* 자동화현황 패널 열기/닫기 · 비밀번호 없이 바로 열림 — 실행 성공/실패만 보여주는
+   읽기 전용 정보라 회원설정 등 진짜 민감한 설정과 달리 잠글 필요가 없다 */
+(function(){
+  const openBtn=document.getElementById('automationStatusBtn');
+  const overlay=document.getElementById('automationOverlay');
+  if(!openBtn||!overlay) return;
+  const closeBtn=document.getElementById('automationCloseBtn');
+  const panel=overlay.querySelector('.settings-panel');
+
+  function open(){
+    overlay.hidden=false;
+    openBtn.setAttribute('aria-expanded','true');
+    closeBtn.focus();
+    document.addEventListener('keydown',onKeydown);
+    if(window.loadAutomationStatus) window.loadAutomationStatus(true);
+  }
+  function close(){
+    overlay.hidden=true;
+    openBtn.setAttribute('aria-expanded','false');
+    openBtn.focus();
+    document.removeEventListener('keydown',onKeydown);
+  }
+  function onKeydown(e){ if(e.key==='Escape') close(); }
+
+  openBtn.addEventListener('click',open);
+  closeBtn.addEventListener('click',close);
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) close(); });
+  panel.addEventListener('click',e=>e.stopPropagation());
 })();
 
 /* 자동화현황 — automation-status.json(baroyam-report 저장소, GitHub Actions가 하루 세 번
@@ -3873,8 +3913,8 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   }
 
   function render(data){
-    // 사이드바 큰 화면(#automationStatusBox)과 설정 다이얼로그 안 탭(#automationStatusBoxSettings)
-    // 둘 다 같은 class="automation-status"라서, 지금 DOM에 있는 것 전부에 똑같이 그려준다.
+    // #automationStatusBoxSidebar(사이드바 → 자동화현황 패널, 비밀번호 없이 열림) 안에만 있지만,
+    // class="automation-status"인 DOM 전부에 그려주는 범용 렌더러라 그대로 둔다.
     const boxes=document.querySelectorAll('.automation-status');
     if(!boxes.length) return;
     if(!data || data.ok===false || !data.repos){
