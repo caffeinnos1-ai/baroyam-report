@@ -7,6 +7,44 @@
 <meta name="robots" content="noindex, nofollow">
 <title>바로얌 매출·광고 성과 보고서 · 7월 vs 8월(8/1-8/8)</title>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('baroyam_theme')==='dark'?'dark':'light'}catch(e){}</script>
+<!-- 구글 로그인 게이트 · 허용된 이메일로 로그인해야 화면이 보인다.
+     공개 저장소라 코드/시트 주소를 알면 우회할 수 있는 "화면 가림" 수준의 보호다.
+     이메일은 원문 대신 SHA-256 해시로만 적어 둔다(소문자·앞뒤 공백 제거 후 해시). -->
+<script>
+window.BAROYAM_AUTH={
+  clientId:'118330296556-uq56i77gkis417ku2jiup6vlibkv963a.apps.googleusercontent.com',        /* Google Cloud Console > 사용자 인증 정보 > OAuth 클라이언트 ID(웹) */
+  allowedHashes:['752601c57a347392cdfe495bec1949d0642a4fb865590ae6854d6de2e7ec3fc3'], /* sha256(email.toLowerCase().trim()) 16진수 */
+  sessionDays:7,
+  lsKey:'baroyam_auth_v1'
+};
+document.documentElement.classList.add('auth-locked','auth-checking');
+window.baroyamAuthHash=async function(email){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(email).toLowerCase().trim()));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+};
+(async function(){
+  const A=window.BAROYAM_AUTH, root=document.documentElement;
+  try{
+    const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
+    if(s && s.until>Date.now() && A.allowedHashes.includes(s.h)) root.classList.remove('auth-locked');
+  }catch(e){}
+  root.classList.remove('auth-checking');
+})();
+</script>
+<style>
+  html.auth-locked body>*:not(#authGate){display:none!important}
+  #authGate{display:none}
+  html.auth-locked #authGate{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;
+    padding:16px;background:var(--bg,#f4f1eb)}
+  html.auth-checking #authGate .auth-card{visibility:hidden}
+  #authGate .auth-card{width:100%;max-width:380px;background:var(--paper,#fff);border:1px solid var(--line,#ece5dc);
+    border-radius:18px;padding:32px 28px;text-align:center;box-shadow:0 24px 60px -28px rgba(0,0,0,.25)}
+  #authGate .auth-title{margin:0 0 6px;font-size:20px;font-weight:800;color:var(--ink,#241a14)}
+  #authGate .auth-sub{margin:0 0 22px;font-size:14px;color:var(--mute,#786c64)}
+  #authGate .auth-btn{display:flex;justify-content:center;min-height:44px}
+  #authGate .auth-msg{margin:16px 0 0;font-size:13px;color:var(--neg,#c0392b);min-height:1em}
+  #authGate .auth-msg:empty{display:none}
+</style>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 <style>
@@ -751,6 +789,17 @@
   .hero-view-tab:hover{border-color:var(--indigo);color:var(--indigo)}
   .hero-view-tab.active{background:var(--indigo-lite);color:#fff;border-color:var(--indigo-lite);
     box-shadow:0 8px 18px -8px rgba(194,106,65,.3)}
+  /* 전환 탭이 없는 대시보드도 매출·트렌드처럼 배너 위에 탭 줄 높이만큼 여백을 둔다 ·
+     섹션에 inline padding-top:0이 걸려 있어 padding 대신 margin으로 띄운다 */
+  #view-goal > .section:first-child,
+  #view-review > .section:first-child,
+  #view-collector > .section:first-child,
+  #view-admin > .section:first-child,
+  #view-agenda-host #view-agenda > .section:first-child{margin-top:69px}
+  @media print{
+    #view-goal > .section:first-child,#view-review > .section:first-child,#view-collector > .section:first-child,
+    #view-admin > .section:first-child,#view-agenda-host #view-agenda > .section:first-child{margin-top:0}
+  }
   /* 트렌드분석 대시보드 */
   /* 배너(.plan-hero) 기본 배경은 주황색인데, 트렌드분석은 선택된 플랫폼 브랜드 색으로 바꾼다 ·
      기본값(구글)은 구글 블루, 네이버를 고르면 .is-naver가 붙어 네이버 그린으로 바뀐다 */
@@ -765,7 +814,7 @@
   html[data-theme="dark"] #revHero.is-alwayz{--hero-accent:#a48ce8}
   /* 플랫폼 전환 탭 · 월간/주간 탭(.hero-view-tab)과 같은 알약 모양에 브랜드 아이콘을 앞에 붙인다 */
   .trend-platform-icon{display:inline-flex;align-items:center;gap:8px}
-  .trend-platform-icon svg{width:16px;height:16px;display:block;flex:none}
+  .trend-platform-icon svg{width:16px;height:16px;display:block;flex:none;margin:-1px 0}
   .trend-platform-icon.active svg{filter:drop-shadow(0 0 1.5px #fff)}
   /* 네이버 카테고리(식품/냉동간편식) 전환 · 네이버가 활성일 때만 새로고침과 같은 줄에 나타난다 ·
      이 화면에서만 쓰는 컴포넌트라 사이트 기본 인디고 대신 네이버 브랜드 그린을 쓴다 */
@@ -1420,6 +1469,55 @@
 </style>
 </head>
 <body>
+<div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="auth-card">
+    <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
+    <p class="auth-sub">허용된 구글 계정으로 로그인해 주세요</p>
+    <div class="auth-btn" id="authBtn"></div>
+    <p class="auth-msg" id="authMsg"></p>
+  </div>
+</div>
+<script>
+(function(){
+  const A=window.BAROYAM_AUTH, root=document.documentElement;
+  const msg=document.getElementById('authMsg');
+  window.baroyamSignOut=function(){
+    try{ localStorage.removeItem(A.lsKey); }catch(e){}
+    if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect();
+    location.reload();
+  };
+  if(!root.classList.contains('auth-locked')) return;
+  if(!A.clientId){ msg.textContent='로그인 설정(클라이언트 ID)이 아직 없습니다.'; return; }
+  function decodeJwt(t){
+    const b=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const bin=atob(b+'='.repeat((4-b.length%4)%4));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
+  }
+  async function onCredential(res){
+    msg.textContent='';
+    try{
+      const p=decodeJwt(res.credential);
+      const h=await window.baroyamAuthHash(p.email||'');
+      if(p.aud!==A.clientId || !p.email_verified || p.exp*1000<Date.now() || !A.allowedHashes.includes(h)){
+        google.accounts.id.disableAutoSelect();
+        msg.textContent=(p.email||'이 계정')+'은(는) 접근 권한이 없습니다.';
+        return;
+      }
+      localStorage.setItem(A.lsKey,JSON.stringify({h,until:Date.now()+A.sessionDays*864e5}));
+      location.reload();
+    }catch(err){ console.error(err); msg.textContent='로그인 처리 중 오류가 발생했습니다.'; }
+  }
+  const s=document.createElement('script');
+  s.src='https://accounts.google.com/gsi/client'; s.async=true;
+  s.onload=function(){
+    google.accounts.id.initialize({client_id:A.clientId,callback:onCredential,auto_select:true});
+    google.accounts.id.renderButton(document.getElementById('authBtn'),{theme:'outline',size:'large',text:'signin_with',locale:'ko'});
+    google.accounts.id.prompt();
+  };
+  s.onerror=function(){ msg.textContent='구글 로그인 스크립트를 불러오지 못했습니다.'; };
+  document.head.appendChild(s);
+})();
+</script>
 <template id="__bundler_thumbnail" data-bg-color="#e07234">
   <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
     <rect width="1200" height="800" fill="#e07234"/>
@@ -1492,6 +1590,10 @@
             <span class="theme-switch-knob"></span>
           </button>
         </div>
+        <button class="sb-item sb-logout" type="button" id="authLogoutBtn" title="로그아웃" onclick="window.baroyamSignOut&&window.baroyamSignOut()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          <span>로그아웃</span>
+        </button>
       </div>
     </nav>
 
