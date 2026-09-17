@@ -752,7 +752,6 @@
   .hero-view-tab.active{background:var(--indigo-lite);color:#fff;border-color:var(--indigo-lite);
     box-shadow:0 8px 18px -8px rgba(194,106,65,.3)}
   /* 트렌드분석 대시보드 */
-  .trend-platform-icons{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:10px;margin:26px 0 16px}
   /* 배너(.plan-hero) 기본 배경은 주황색인데, 트렌드분석은 선택된 플랫폼 브랜드 색으로 바꾼다 ·
      기본값(구글)은 구글 블루, 네이버를 고르면 .is-naver가 붙어 네이버 그린으로 바뀐다 */
   .trend-hero{--hero-accent:#2f77cc}
@@ -764,13 +763,10 @@
   html[data-theme="dark"] .trend-hero{--hero-accent:#6aa5ea}
   html[data-theme="dark"] #revHero.is-toss{--hero-accent:#5c9bf0}
   html[data-theme="dark"] #revHero.is-alwayz{--hero-accent:#a48ce8}
-  .trend-platform-icon{position:relative;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;
-    border:1.5px solid var(--line);background:var(--paper)}
-  .trend-platform-icon svg{width:18px;height:18px;display:block}
-  .trend-platform-icon.active{border-color:var(--indigo);box-shadow:0 0 0 2px rgba(194,106,65,.16)}
-  .trend-platform-icon.disabled{cursor:not-allowed;opacity:.55}
-  .trend-platform-icon[data-platform]{cursor:pointer}
-  .trend-platform-icon[data-platform]:not(.active):hover{border-color:var(--indigo)}
+  /* 플랫폼 전환 탭 · 월간/주간 탭(.hero-view-tab)과 같은 알약 모양에 브랜드 아이콘을 앞에 붙인다 */
+  .trend-platform-icon{display:inline-flex;align-items:center;gap:8px}
+  .trend-platform-icon svg{width:16px;height:16px;display:block;flex:none}
+  .trend-platform-icon.active svg{filter:drop-shadow(0 0 1.5px #fff)}
   /* 네이버 카테고리(식품/냉동간편식) 전환 · 네이버가 활성일 때만 새로고침과 같은 줄에 나타난다 ·
      이 화면에서만 쓰는 컴포넌트라 사이트 기본 인디고 대신 네이버 브랜드 그린을 쓴다 */
   .trend-naver-subcat{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
@@ -787,12 +783,10 @@
     box-shadow:0 6px 14px -6px rgba(3,199,90,.55)}
   html[data-theme="dark"] .trend-naver-subcat{background:rgba(3,199,90,.14)}
   html[data-theme="dark"] .trend-naver-subcat-label{color:#3fdb8f}
-  .trend-platform-icon[data-tip]:hover::after,
   .trend-cloud-word[data-tip]:hover::after{
     content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
     background:var(--panel-dark);color:#fff;font-size:11.5px;font-weight:700;padding:6px 10px;
     border-radius:8px;white-space:nowrap;box-shadow:0 8px 18px -8px rgba(0,0,0,.4);z-index:10;pointer-events:none}
-  .trend-platform-icon[data-tip]:hover::before,
   .trend-cloud-word[data-tip]:hover::before{
     content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
     border:5px solid transparent;border-top-color:var(--panel-dark);z-index:10;pointer-events:none}
@@ -1970,23 +1964,21 @@
 
 
       <div id="view-trend" style="display:none">
+        <div class="hero-view-tabs trend-platform-icons" id="trendPlatformIcons">
+          <button type="button" class="hero-view-tab trend-platform-icon active" data-platform="google">
+            <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.68 9c0-.593.102-1.17.284-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg>
+            <span class="trend-platform-label">구글트렌드</span>
+          </button>
+          <button type="button" class="hero-view-tab trend-platform-icon" data-platform="naver">
+            <svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#6bbf90"/><path fill="#fff" d="M14.5 6.5v6L9.7 6.5H6.5v11h3.3v-6l4.8 6H17.5v-11h-3z"/></svg>
+            <span class="trend-platform-label">네이버트렌드</span>
+          </button>
+        </div>
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero trend-hero" id="trendHero">
             <div class="ptag">ANALYTICS</div>
             <div class="ptitle" id="trendHeroTitle">구글 트렌드 분석</div>
             <p class="psub" id="trendHeroSub">구글 트렌드 실시간 인기 검색어를 한눈에 확인하세요</p>
-          </div>
-
-          <div class="trend-platform-icons" id="trendPlatformIcons">
-            <span class="trend-platform-icon active" data-platform="google" data-tip="사용 중">
-              <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.68 9c0-.593.102-1.17.284-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg>
-            </span>
-            <span class="trend-platform-icon" data-platform="naver" data-tip="전환">
-              <svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#6bbf90"/><path fill="#fff" d="M14.5 6.5v6L9.7 6.5H6.5v11h3.3v-6l4.8 6H17.5v-11h-3z"/></svg>
-            </span>
-            <span class="trend-platform-icon disabled" data-tip="준비중">
-              <svg viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-            </span>
           </div>
 
           <div class="ag-toolbar" style="margin-top:22px">
@@ -5997,7 +5989,7 @@ function revSetActivePlatform(platform,master){
     }
   }
 
-  /* 플랫폼 아이콘 전환 · disabled(준비중)가 아닌 아이콘만 클릭 가능 */
+  /* 플랫폼 탭 전환 (구글트렌드/네이버트렌드) */
   platformIcons.forEach(icon=>{
     icon.addEventListener('click',()=>{
       if(icon.classList.contains('disabled')) return;
@@ -6007,7 +5999,6 @@ function revSetActivePlatform(platform,master){
       platformIcons.forEach(i=>{
         const isActive=i===icon;
         i.classList.toggle('active',isActive);
-        i.dataset.tip=isActive?'사용 중':'전환';
       });
       naverSubcatEl.hidden=platform!=='naver';
       heroEl.classList.toggle('is-naver',platform==='naver');
