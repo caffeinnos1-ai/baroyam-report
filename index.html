@@ -35,15 +35,27 @@ window.baroyamAuthHash=async function(email){
   html.auth-locked body>*:not(#authGate){display:none!important}
   #authGate{display:none}
   html.auth-locked #authGate{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;
-    padding:16px;background:var(--bg,#f4f1eb)}
+    padding:24px 16px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;
+    background:radial-gradient(900px 520px at 50% -10%,rgba(232,98,30,.16),transparent 70%),var(--bg,#f4f1eb)}
   html.auth-checking #authGate .auth-card{visibility:hidden}
-  #authGate .auth-card{width:100%;max-width:380px;background:var(--paper,#fff);border:1px solid var(--line,#ece5dc);
-    border-radius:18px;padding:32px 28px;text-align:center;box-shadow:0 24px 60px -28px rgba(0,0,0,.25)}
-  #authGate .auth-title{margin:0 0 6px;font-size:20px;font-weight:800;color:var(--ink,#241a14)}
-  #authGate .auth-sub{margin:0 0 22px;font-size:14px;color:var(--mute,#786c64)}
+  #authGate .auth-card{width:100%;max-width:400px;background:var(--paper,#fff);border:1px solid var(--line,#ece5dc);
+    border-radius:24px;padding:44px 32px 28px;text-align:center;
+    box-shadow:0 30px 70px -36px rgba(80,40,20,.35),0 2px 6px rgba(80,40,20,.04);animation:authIn .45s ease-out both}
+  @keyframes authIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  #authGate .auth-logo{width:84px;height:84px;margin:0 auto 22px;border-radius:22px;display:block;
+    background:linear-gradient(135deg,#ee6a1a,#e24e16);box-shadow:0 14px 30px -12px rgba(226,78,22,.55)}
+  #authGate .auth-logo[src]{background:none}
+  #authGate .auth-eyebrow{margin:0 0 8px;font-size:11.5px;font-weight:700;letter-spacing:.18em;color:var(--indigo,#cd6428)}
+  #authGate .auth-title{margin:0;font-size:24px;font-weight:800;letter-spacing:-.4px;color:var(--ink,#241a14)}
+  #authGate .auth-sub{margin:10px 0 30px;font-size:14.5px;line-height:1.6;color:var(--mute,#786c64)}
   #authGate .auth-btn{display:flex;justify-content:center;min-height:44px}
-  #authGate .auth-msg{margin:16px 0 0;font-size:13px;color:var(--neg,#c0392b);min-height:1em}
+  #authGate .auth-msg{margin:18px 0 0;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;
+    color:var(--neg,#cf5a50);background:var(--neg-soft,#fbeae8)}
   #authGate .auth-msg:empty{display:none}
+  #authGate .auth-foot{display:flex;align-items:center;justify-content:center;gap:6px;margin:28px -32px 0;padding:18px 32px 0;
+    border-top:1px solid var(--line,#ece5dc);font-size:12.5px;color:var(--mute,#786c64)}
+  #authGate .auth-foot svg{width:14px;height:14px;flex:none}
+  @media (max-width:420px){ #authGate .auth-card{padding:36px 22px 24px} #authGate .auth-foot{margin:24px -22px 0;padding:16px 22px 0} }
 </style>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
@@ -1471,16 +1483,27 @@ window.baroyamAuthHash=async function(email){
 <body>
 <div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="auth-card">
+    <img class="auth-logo" id="authLogo" alt="바로얌">
+    <p class="auth-eyebrow">BAROYAM DASHBOARD</p>
     <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
-    <p class="auth-sub">허용된 구글 계정으로 로그인해 주세요</p>
+    <p class="auth-sub">매출·광고 성과 보고서를 보려면<br>구글 계정으로 로그인해 주세요</p>
     <div class="auth-btn" id="authBtn"></div>
     <p class="auth-msg" id="authMsg"></p>
+    <div class="auth-foot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>허용된 계정만 접근할 수 있어요</span>
+    </div>
   </div>
 </div>
 <script>
 (function(){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
   const msg=document.getElementById('authMsg');
+  /* 로고 이미지는 사이드바(.sb-logo)에 이미 들어 있는 것을 그대로 빌려 쓴다 · 큰 base64를 두 번 넣지 않기 위해 */
+  document.addEventListener('DOMContentLoaded',function(){
+    const src=document.querySelector('.sb-logo');
+    if(src&&src.src) document.getElementById('authLogo').src=src.src;
+  });
   window.baroyamSignOut=function(){
     try{ localStorage.removeItem(A.lsKey); }catch(e){}
     if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect();
@@ -1511,7 +1534,7 @@ window.baroyamAuthHash=async function(email){
   s.src='https://accounts.google.com/gsi/client'; s.async=true;
   s.onload=function(){
     google.accounts.id.initialize({client_id:A.clientId,callback:onCredential,auto_select:true});
-    google.accounts.id.renderButton(document.getElementById('authBtn'),{theme:'outline',size:'large',text:'signin_with',locale:'ko'});
+    google.accounts.id.renderButton(document.getElementById('authBtn'),{theme:root.dataset.theme==='dark'?'filled_black':'outline',size:'large',shape:'pill',text:'signin_with',logo_alignment:'center',width:300,locale:'ko'});
     google.accounts.id.prompt();
   };
   s.onerror=function(){ msg.textContent='구글 로그인 스크립트를 불러오지 못했습니다.'; };
