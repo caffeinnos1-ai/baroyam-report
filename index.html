@@ -15,7 +15,9 @@ window.BAROYAM_AUTH={
   clientId:'118330296556-uq56i77gkis417ku2jiup6vlibkv963a.apps.googleusercontent.com',        /* Google Cloud Console > 사용자 인증 정보 > OAuth 클라이언트 ID(웹) */
   allowedHashes:['752601c57a347392cdfe495bec1949d0642a4fb865590ae6854d6de2e7ec3fc3'], /* sha256(email.toLowerCase().trim()) 16진수 */
   sessionDays:7,
-  lsKey:'baroyam_auth_v1'
+  lsKey:'baroyam_auth_v1',
+  /* 관리자 비밀번호 로그인 · 원문 대신 PBKDF2-SHA256(1000000회) 결과만 적어 둔다 */
+  admin:{salt:'d57f48686d06ae036842d37b0f1e8172',hash:'f320aaa7d149e58c538e6b2d1db13ec1f0b6430b2780e4ba017ea022971ac9d5',iterations:1000000}
 };
 document.documentElement.classList.add('auth-locked','auth-checking');
 window.baroyamAuthHash=async function(email){
@@ -26,7 +28,7 @@ window.baroyamAuthHash=async function(email){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
   try{
     const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
-    if(s && s.until>Date.now() && A.allowedHashes.includes(s.h)) root.classList.remove('auth-locked');
+    if(s && s.until>Date.now() && (A.allowedHashes.includes(s.h) || s.h===A.admin.hash)) root.classList.remove('auth-locked');
   }catch(e){}
   root.classList.remove('auth-checking');
 })();
@@ -52,6 +54,28 @@ window.baroyamAuthHash=async function(email){
   #authGate .auth-msg{margin:18px 0 0;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;
     color:var(--neg,#cf5a50);background:var(--neg-soft,#fbeae8)}
   #authGate .auth-msg:empty{display:none}
+  #authGate .auth-or{display:flex;align-items:center;gap:12px;margin:22px 0 16px;font-size:12px;color:var(--mute,#786c64)}
+  #authGate .auth-or::before,#authGate .auth-or::after{content:"";flex:1;height:1px;background:var(--line,#ece5dc)}
+  #authGate .auth-admin-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:300px;max-width:100%;height:40px;
+    border-radius:999px;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--ink,#241a14);
+    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,background-color .15s,color .15s}
+  #authGate .auth-admin-btn:hover{border-color:var(--indigo,#cd6428);color:var(--indigo,#cd6428);background:var(--indigo-soft,#fdefe4)}
+  #authGate .auth-admin-btn svg{width:17px;height:17px;flex:none}
+  #authGate .auth-admin-form{display:flex;flex-direction:column;gap:10px;width:300px;max-width:100%;margin:0 auto}
+  #authGate .auth-admin-form[hidden]{display:none}
+  #authGate .auth-admin-btn[hidden]{display:none}
+  #authGate .auth-admin-field{position:relative}
+  #authGate .auth-admin-field svg{position:absolute;left:14px;top:50%;width:17px;height:17px;transform:translateY(-50%);color:var(--mute,#786c64);pointer-events:none}
+  #authGate .auth-admin-input{width:100%;height:44px;box-sizing:border-box;padding:0 14px 0 42px;border-radius:12px;
+    border:1px solid var(--line,#ece5dc);background:var(--bg,#f4f1eb);color:var(--ink,#241a14);font-family:inherit;font-size:15px;font-weight:500;outline:none}
+  #authGate .auth-admin-input:focus{border-color:var(--indigo,#cd6428);box-shadow:0 0 0 3px rgba(205,100,40,.15);background:var(--paper,#fff)}
+  #authGate .auth-admin-actions{display:flex;gap:8px}
+  #authGate .auth-admin-actions button{flex:1;height:42px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:6px}
+  #authGate .auth-admin-submit{border:0;background:var(--indigo,#cd6428);color:#fff}
+  #authGate .auth-admin-submit:disabled{opacity:.6;cursor:wait}
+  #authGate .auth-admin-submit svg{width:16px;height:16px}
+  #authGate .auth-admin-cancel{flex:0 0 84px!important;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--mute,#786c64)}
   #authGate .auth-foot{display:flex;align-items:center;justify-content:center;gap:6px;margin:28px -32px 0;padding:18px 32px 0;
     border-top:1px solid var(--line,#ece5dc);font-size:12.5px;color:var(--mute,#786c64)}
   #authGate .auth-foot svg{width:14px;height:14px;flex:none}
@@ -1488,6 +1512,24 @@ window.baroyamAuthHash=async function(email){
     <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
     <p class="auth-sub">매출·광고 성과 보고서를 보려면<br>구글 계정으로 로그인해 주세요</p>
     <div class="auth-btn" id="authBtn"></div>
+    <div class="auth-or">또는</div>
+    <button type="button" class="auth-admin-btn" id="authAdminBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+      <span>관리자 로그인</span>
+    </button>
+    <form class="auth-admin-form" id="authAdminForm" hidden autocomplete="off">
+      <label class="auth-admin-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3"/><path d="M17 6l3 3"/><path d="M15 8l2 2"/></svg>
+        <input class="auth-admin-input" id="authAdminPw" type="password" placeholder="관리자 비밀번호" aria-label="관리자 비밀번호">
+      </label>
+      <div class="auth-admin-actions">
+        <button type="button" class="auth-admin-cancel" id="authAdminCancel">취소</button>
+        <button type="submit" class="auth-admin-submit" id="authAdminSubmit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+          <span>입장</span>
+        </button>
+      </div>
+    </form>
     <p class="auth-msg" id="authMsg"></p>
     <div class="auth-foot">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
@@ -1510,6 +1552,40 @@ window.baroyamAuthHash=async function(email){
     location.reload();
   };
   if(!root.classList.contains('auth-locked')) return;
+
+  /* 관리자 비밀번호 로그인 · 입력값을 같은 salt/반복횟수로 PBKDF2 해서 저장된 값과 비교한다 */
+  const adminBtn=document.getElementById('authAdminBtn');
+  const adminForm=document.getElementById('authAdminForm');
+  const adminPw=document.getElementById('authAdminPw');
+  const adminSubmit=document.getElementById('authAdminSubmit');
+  async function adminHash(pw){
+    const hex=A.admin.salt.match(/../g).map(h=>parseInt(h,16));
+    const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new Uint8Array(hex),iterations:A.admin.iterations},key,256);
+    return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  function showAdmin(on){
+    adminForm.hidden=!on; adminBtn.hidden=on; msg.textContent='';
+    if(on) adminPw.focus(); else adminPw.value='';
+  }
+  adminBtn.addEventListener('click',()=>showAdmin(true));
+  document.getElementById('authAdminCancel').addEventListener('click',()=>showAdmin(false));
+  adminForm.addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(!adminPw.value){ adminPw.focus(); return; }
+    adminSubmit.disabled=true; msg.textContent='';
+    try{
+      if(await adminHash(adminPw.value)===A.admin.hash){
+        localStorage.setItem(A.lsKey,JSON.stringify({h:A.admin.hash,until:Date.now()+A.sessionDays*864e5}));
+        location.reload();
+        return;
+      }
+      msg.textContent='비밀번호가 올바르지 않습니다.';
+      adminPw.select();
+    }catch(err){ console.error(err); msg.textContent='로그인 처리 중 오류가 발생했습니다.'; }
+    adminSubmit.disabled=false;
+  });
+
   if(!A.clientId){ msg.textContent='로그인 설정(클라이언트 ID)이 아직 없습니다.'; return; }
   function decodeJwt(t){
     const b=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
@@ -4859,6 +4935,15 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
       document.execCommand('insertText',false,raw);
     });
     ed.addEventListener('blur',flushSave);
+    /* 본문 링크는 대시보드를 떠나지 않도록 항상 새 탭으로 연다 · 저장된 본문(target 속성)은 건드리지 않고 클릭에서 처리한다 ·
+       수정 모드에서는 그냥 클릭하면 커서만 놓이고, Ctrl(⌘)+클릭하면 새 탭으로 열린다 */
+    ed.addEventListener('click',e=>{
+      const a=e.target.closest&&e.target.closest('a[href]');
+      if(!a||!ed.contains(a)) return;
+      e.preventDefault();
+      if(editMode&&!(e.ctrlKey||e.metaKey)) return;
+      window.open(a.href,'_blank','noopener,noreferrer');
+    });
   }
 
   /* 시트에서 받아온 설정을 문서 본문에 반영 · loadSettings가 불러준다 */
