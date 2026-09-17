@@ -791,15 +791,22 @@
     padding:9px 20px;border-radius:10px;color:#fff;background:var(--pos)}
   .rev-inbox-btn-submit:hover{filter:brightness(1.06)}
   .rev-inbox-btn-submit:disabled{opacity:.42;cursor:not-allowed;filter:none}
-  /* 리뷰마스터 · 기간·브랜드·감정을 한 상자로 묶고, 검색은 그 아래 큼직하게 따로 두고,
-     리뷰는 줄이지 않고 카드로 크게 보여준다 */
-  .rev-master{display:flex;flex-direction:column;gap:16px}
+  /* 리뷰마스터 · 배너 바로 아래 붙지 않도록 위쪽 여백을 두고, 기간·브랜드·감정을
+     한 상자에 모으되 구분선+칩 라벨로 서로 잘 구분되게 하고, 검색은 그 아래 큼직하게
+     따로 두고, 리뷰는 줄이지 않고 카드로 크게 보여준다 */
+  .rev-master{display:flex;flex-direction:column;gap:18px;margin-top:26px}
   .rev-master[hidden]{display:none}
-  .rev-master-filterbar{border:1px solid var(--line);border-radius:16px;background:var(--paper);
-    padding:18px 22px;display:flex;flex-direction:column;gap:14px}
-  .rev-master-filter-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  .rev-master-filter-label{flex:none;width:44px;font-size:11.5px;font-weight:800;color:var(--mute);
-    letter-spacing:.04em}
+  .rev-master-filterbar{border:1px solid var(--line);border-radius:18px;background:var(--paper);
+    padding:22px 24px;display:flex;flex-direction:column}
+  .rev-master-filterbar-head{margin-bottom:12px}
+  .rev-master-filterbar-eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--indigo)}
+  .rev-master-filterbar-head h3{font-size:16px;font-weight:800;letter-spacing:-.2px;
+    margin-top:3px;color:var(--ink)}
+  .rev-master-filter-row{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;padding:13px 0}
+  .rev-master-filter-row+.rev-master-filter-row{border-top:1px solid var(--line)}
+  .rev-master-filter-label{flex:none;width:66px;display:inline-flex;align-items:center;gap:7px;
+    padding-top:7px;font-size:12.5px;font-weight:800;color:var(--ink);letter-spacing:.01em}
+  .rev-master-filter-dot{width:6px;height:6px;border-radius:50%;background:var(--indigo);flex:none}
   .rev-master-filter-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
   .rev-master-searchbar{position:relative;display:flex;align-items:center}
   .rev-master-searchbar svg{position:absolute;left:18px;width:19px;height:19px;color:var(--mute);pointer-events:none}
@@ -2295,8 +2302,12 @@
                리뷰 카드는 내용을 줄이지 않고 그대로 보여준다(긴 글도 읽히도록) -->
           <div class="rev-master" id="revMasterPanel" hidden>
             <div class="rev-master-filterbar">
+              <div class="rev-master-filterbar-head">
+                <div class="rev-master-filterbar-eyebrow">FILTER</div>
+                <h3>리뷰 필터</h3>
+              </div>
               <div class="rev-master-filter-row">
-                <span class="rev-master-filter-label">기간</span>
+                <span class="rev-master-filter-label"><i class="rev-master-filter-dot"></i>기간</span>
                 <div class="rev-master-filter-controls">
                   <input type="date" class="rev-date-input" id="revMasterDateFrom" aria-label="시작일">
                   <span class="rev-date-sep">~</span>
@@ -2308,11 +2319,11 @@
                 </div>
               </div>
               <div class="rev-master-filter-row">
-                <span class="rev-master-filter-label">브랜드</span>
+                <span class="rev-master-filter-label"><i class="rev-master-filter-dot"></i>브랜드</span>
                 <div class="rev-master-filter-controls" id="revMasterBrandList"></div>
               </div>
               <div class="rev-master-filter-row">
-                <span class="rev-master-filter-label">감정</span>
+                <span class="rev-master-filter-label"><i class="rev-master-filter-dot"></i>감정</span>
                 <div class="rev-master-filter-controls" id="revMasterSentRow">
                   <button type="button" class="rev-date-quick active" data-sent="">전체</button>
                   <button type="button" class="rev-date-quick" data-sent="pos">긍정</button>
