@@ -233,6 +233,20 @@
   .rev-daily-hit{cursor:pointer}
   .rev-daily-pt{transition:r .12s}
   .rev-daily-pt.hover{r:7;stroke-width:3}
+  /* 개선 필요 상품 TOP · 부정 리뷰 비율을 막대로 같이 보여준다 */
+  #revTopTable td:nth-child(2),#revTopTable th:nth-child(2){text-align:left}
+  #revTopTable td:nth-child(3),#revTopTable th:nth-child(3){text-align:left;min-width:180px}
+  .rev-rank{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:8px;
+    background:var(--bg);color:var(--mute);font-size:12px;font-weight:800}
+  .rev-rank.top{background:var(--neg-soft);color:var(--neg)}
+  .rev-negbar{display:flex;align-items:center;gap:10px}
+  .rev-negbar-track{flex:1;min-width:80px;height:9px;border-radius:999px;background:var(--bg);overflow:hidden}
+  .rev-negbar-fill{height:100%;border-radius:999px;background:var(--neg)}
+  .rev-negbar-v{flex:none;width:50px;text-align:right;font-size:12.5px;font-weight:800;color:var(--neg)}
+  .rev-avg{color:var(--mute);font-weight:700;margin-left:5px}
+  #revRecentTable td:nth-child(2),#revRecentTable th:nth-child(2){text-align:left}
+  #revRecentTable td:nth-child(3),#revRecentTable th:nth-child(3){text-align:center}
+  #revRecentTable td:nth-child(4),#revRecentTable th:nth-child(4){text-align:center}
   .tbars{display:flex;align-items:flex-end;gap:16px;height:280px;margin-top:24px;padding:0 4px;border-bottom:2px solid var(--line)}
   .tcol{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:10px}
   .ttot{font-size:14px;font-weight:800;letter-spacing:-.4px;color:var(--ink);white-space:nowrap}
@@ -682,7 +696,6 @@
   /* 배너 아래 기간 선택줄 · 고른 기간이 배너 요약·일별 차트·리뷰 목록에 모두 적용된다 ·
      판매처 고르기는 왼쪽 사이드탭이 맡는다(예전엔 여기 가로 탭줄, 그 전엔 상단 채널 아이콘 3개였다) */
   .rev-daterow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:18px}
-  .rev-daterow[hidden]{display:none}
   .rev-daterow-label{font-size:11.5px;font-weight:800;color:var(--mute);letter-spacing:.04em;margin-right:2px}
   .rev-date-input{box-sizing:border-box;font-family:inherit;font-size:12.5px;font-weight:700;
     color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;
@@ -695,8 +708,13 @@
   .rev-date-quick:hover{border-color:var(--indigo);color:var(--indigo)}
   .rev-date-quick.active{background:var(--indigo);color:#fff;border-color:var(--indigo)}
   html[data-theme="dark"] .rev-date-input::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.6)}
-  /* 리뷰마스터 브랜드 필터 칩 · 고른 판매처에 리뷰가 있는 브랜드만 목록에 나온다 ·
-     CSV를 올렸는데 브랜드 열이 없으면 줄 자체가 숨는다(renderRevMasterBrands) */
+  /* 최근 수집 리뷰 안의 브랜드 선택줄 · 고른 판매처에 리뷰가 있는 브랜드만 목록에 나온다 ·
+     CSV를 올렸는데 브랜드 열이 없으면 줄 자체가 숨는다 */
+  .rev-search{min-width:200px;flex:1;max-width:280px;margin-left:4px}
+  .rev-brandbar{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px;margin:12px 0 2px}
+  .rev-brandbar[hidden]{display:none}
+  .rev-brandbar-label{font-size:11.5px;font-weight:800;color:var(--mute);letter-spacing:.04em;margin-right:2px}
+  .rev-brand-list{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
   .rev-brand{all:unset;box-sizing:border-box;cursor:pointer;font-size:12.5px;font-weight:700;
     padding:6px 14px;border-radius:999px;color:var(--bc,var(--body));background:var(--bs,var(--paper));
     border:1.5px solid var(--bc,var(--line));letter-spacing:-.2px;
@@ -705,231 +723,6 @@
   .rev-brand.active{background:var(--bc,var(--indigo));color:#fff;border-color:var(--bc,var(--indigo))}
   .rev-brand.empty{opacity:.42}
   .rev-brand-n{margin-left:6px;opacity:.62;font-weight:700}
-  /* 네이버리뷰 전용 리뷰 인박스 · 왼쪽 목록 + 오른쪽 상세/답글 2단 화면 */
-  .rev-inbox{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:16px;align-items:start;margin-top:16px}
-  .rev-inbox[hidden]{display:none}
-  @media (max-width:980px){ .rev-inbox:not([hidden]){grid-template-columns:1fr} }
-  .rev-inbox-list,.rev-inbox-detail{border:1px solid var(--line);border-radius:18px;background:var(--paper);
-    box-sizing:border-box}
-  .rev-inbox-list{padding:20px;display:flex;flex-direction:column;gap:12px}
-  .rev-inbox-list-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-  .rev-inbox-eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--indigo)}
-  .rev-inbox-list-head h3{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-top:3px}
-  .rev-inbox-count{font-size:12.5px;font-weight:800;color:var(--mute);white-space:nowrap;padding-top:2px}
-  .rev-inbox-tabs{display:flex;flex-wrap:wrap;gap:6px}
-  .rev-inbox-tabs button b{font-weight:800;opacity:.7;margin-left:2px}
-  .rev-inbox-filters{display:flex;gap:8px}
-  .rev-inbox-search-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:center}
-  .rev-inbox-search-wrap svg{position:absolute;left:11px;width:15px;height:15px;color:var(--mute);pointer-events:none}
-  .rev-inbox-search-wrap input{box-sizing:border-box;width:100%;font-family:inherit;font-size:12.5px;
-    font-weight:700;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);
-    border-radius:10px;padding:7px 12px 7px 33px;outline:none;transition:border-color .15s}
-  .rev-inbox-search-wrap input:focus{border-color:var(--indigo)}
-  .rev-inbox-filters #revInboxStarSel{flex:none;width:96px}
-  .rev-inbox-cards{display:flex;flex-direction:column;gap:9px;max-height:520px;overflow-y:auto;padding-right:2px;margin-top:2px}
-  .rev-inbox-card{all:unset;box-sizing:border-box;display:block;cursor:pointer;padding:12px 13px;
-    border:1.5px solid var(--line);border-radius:13px;background:var(--paper);transition:border-color .15s,box-shadow .15s}
-  .rev-inbox-card:hover{border-color:var(--indigo)}
-  .rev-inbox-card.neg{border-left-width:3px;border-left-color:var(--neg)}
-  .rev-inbox-card.active{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-soft)}
-  .rev-inbox-card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-  .rev-inbox-shop{font-size:12.5px;font-weight:800;color:var(--ink)}
-  .rev-inbox-card-stars{font-size:11.5px;color:var(--warn);letter-spacing:1px}
-  .rev-inbox-card-tags{margin-left:auto;display:flex;gap:5px}
-  .rev-inbox-pill{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
-  .rev-inbox-pill.neg{background:var(--neg-soft);color:var(--neg)}
-  .rev-inbox-pill.pending{background:var(--warn-soft);color:var(--warn)}
-  .rev-inbox-pill.done{background:var(--pos-soft);color:var(--pos)}
-  .rev-inbox-card-content{font-size:12.5px;color:var(--body);line-height:1.5;margin-bottom:8px;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .rev-inbox-card-foot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11.5px}
-  .rev-inbox-card-product{font-weight:700;color:var(--ink);text-decoration:underline;
-    text-decoration-color:var(--line);text-underline-offset:2px;overflow:hidden;text-overflow:ellipsis;
-    white-space:nowrap;min-width:0}
-  .rev-inbox-card-meta{color:var(--mute);white-space:nowrap;flex:none}
-  .rev-inbox-pager{display:flex;align-items:center;justify-content:center;gap:14px;padding-top:6px;
-    border-top:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--mute)}
-  .rev-inbox-pager .rev-date-quick:disabled{opacity:.4;cursor:not-allowed}
-  .rev-inbox-empty{text-align:center;color:var(--mute);font-size:13px;padding:50px 10px}
-  .rev-inbox-detail{padding:26px 28px}
-  .rev-inbox-detail-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .rev-inbox-detail-tags{display:flex;align-items:center;gap:8px}
-  .rev-inbox-detail-date{font-size:12.5px;color:var(--mute);font-weight:600}
-  .rev-inbox-detail-title{font-size:20px;font-weight:800;letter-spacing:-.4px;margin-top:14px;line-height:1.35}
-  .rev-inbox-detail-sub{font-size:13px;color:var(--mute);margin-top:3px;font-weight:600}
-  .rev-inbox-detail-stars{margin-top:12px;font-size:16px;color:var(--warn);letter-spacing:1px}
-  .rev-inbox-detail-stars b{margin-left:8px;font-size:13px;color:var(--ink);font-weight:800}
-  .rev-inbox-section-label{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--mute);
-    margin:22px 0 8px}
-  .rev-inbox-quote{background:var(--indigo-soft);border-left:3px solid var(--indigo);border-radius:0 12px 12px 0;
-    padding:14px 16px;font-size:13.5px;line-height:1.65;color:var(--ink)}
-  .rev-inbox-quote .dim{color:var(--mute);font-weight:600}
-  .rev-inbox-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px;margin-top:18px}
-  .rev-inbox-meta-grid .lab{font-size:10.5px;font-weight:800;color:var(--mute);letter-spacing:.05em}
-  .rev-inbox-meta-grid .val{font-size:13.5px;font-weight:700;color:var(--ink);margin-top:3px}
-  .rev-inbox-pagelink{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;
-    color:var(--mute);margin-top:16px}
-  .rev-inbox-divider{height:1px;background:var(--line);margin:22px 0}
-  .rev-inbox-reply-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .rev-inbox-reply-shop{font-size:13.5px;font-weight:800;color:var(--ink)}
-  .rev-inbox-saved{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--pos-soft);
-    color:var(--ink);font-size:13px;line-height:1.55}
-  .rev-inbox-saved b{color:var(--pos);font-weight:800}
-  .rev-inbox-textarea{width:100%;box-sizing:border-box;min-height:100px;resize:vertical;font-family:inherit;
-    font-size:13.5px;line-height:1.5;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
-    background:var(--paper);color:var(--ink);outline:none;margin-top:10px;transition:border-color .15s}
-  .rev-inbox-textarea:focus{border-color:var(--indigo)}
-  .rev-inbox-reply-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;
-    flex-wrap:wrap;gap:10px}
-  .rev-inbox-reply-hint{font-size:11.5px;color:var(--mute)}
-  .rev-inbox-char-count{font-size:11.5px;color:var(--mute);font-weight:700}
-  .rev-inbox-reply-actions{display:flex;align-items:center;gap:10px}
-  .rev-inbox-btn-reset{all:unset;box-sizing:border-box;cursor:pointer;font-size:12.5px;font-weight:700;
-    padding:8px 16px;border-radius:10px;color:var(--body);background:var(--paper);border:1.5px solid var(--line)}
-  .rev-inbox-btn-reset:hover{border-color:var(--indigo);color:var(--indigo)}
-  .rev-inbox-btn-submit{all:unset;box-sizing:border-box;cursor:pointer;font-size:13px;font-weight:800;
-    padding:9px 20px;border-radius:10px;color:#fff;background:var(--pos)}
-  .rev-inbox-btn-submit:hover{filter:brightness(1.06)}
-  .rev-inbox-btn-submit:disabled{opacity:.42;cursor:not-allowed;filter:none}
-  /* 리뷰마스터 · 배너 바로 아래 붙지 않도록 위쪽 여백을 두고, 기간·브랜드·감정을
-     한 상자에 모으되 구분선+칩 라벨로 서로 잘 구분되게 하고, 검색은 그 아래 큼직하게
-     따로 두고, 리뷰는 줄이지 않고 카드로 크게 보여준다 */
-  .rev-master{display:flex;flex-direction:column;gap:18px;margin-top:26px}
-  .rev-master[hidden]{display:none}
-  .rev-master-filterbar{border:1px solid var(--line);border-radius:18px;background:var(--paper);
-    padding:22px 24px;display:flex;flex-direction:column}
-  .rev-master-filterbar-head{margin-bottom:12px}
-  .rev-master-filterbar-eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--indigo)}
-  .rev-master-filterbar-head h3{font-size:16px;font-weight:800;letter-spacing:-.2px;
-    margin-top:3px;color:var(--ink)}
-  .rev-master-filter-row{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;padding:13px 0}
-  .rev-master-filter-row+.rev-master-filter-row{border-top:1px solid var(--line)}
-  .rev-master-filter-label{flex:none;width:66px;display:inline-flex;align-items:center;gap:7px;
-    padding-top:7px;font-size:12.5px;font-weight:800;color:var(--ink);letter-spacing:.01em}
-  .rev-master-filter-dot{width:6px;height:6px;border-radius:50%;background:var(--indigo);flex:none}
-  .rev-master-filter-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
-  .rev-master-searchbar{position:relative;display:flex;align-items:center}
-  .rev-master-searchbar svg{position:absolute;left:18px;width:19px;height:19px;color:var(--mute);pointer-events:none}
-  .rev-master-searchbar input{box-sizing:border-box;width:100%;font-family:inherit;font-size:15px;
-    font-weight:600;color:var(--ink);background:var(--indigo-soft);border:1.5px solid transparent;
-    border-radius:14px;padding:16px 18px 16px 50px;outline:none;transition:border-color .15s,background .15s}
-  .rev-master-searchbar input:focus{border-color:var(--indigo);background:var(--paper)}
-  .rev-master-searchbar input::placeholder{color:var(--mute)}
-  .rev-master-feed{display:flex;flex-direction:column;gap:12px}
-  .rev-master-card{all:unset;box-sizing:border-box;display:block;width:100%;text-align:left;cursor:pointer;
-    border:1px solid var(--line);border-radius:16px;background:var(--paper);
-    padding:18px 22px;transition:border-color .15s,box-shadow .15s}
-  .rev-master-card:hover{border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-soft)}
-  .rev-master-card.neg{border-left-width:3px;border-left-color:var(--neg)}
-  .rev-master-card-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-  .rev-master-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--mute)}
-  .rev-master-dot.is-naver{background:var(--naver)}
-  .rev-master-dot.is-cafe24{background:var(--self)}
-  .rev-master-dot.is-coupang{background:var(--coupang)}
-  .rev-master-dot.is-toss{background:#1f6fe0}
-  .rev-master-dot.is-alwayz{background:#6b4fc9}
-  html[data-theme="dark"] .rev-master-dot.is-toss{background:#5c9bf0}
-  html[data-theme="dark"] .rev-master-dot.is-alwayz{background:#a48ce8}
-  .rev-master-channel{font-size:13px;font-weight:800;color:var(--ink)}
-  .rev-master-brand{font-size:12.5px;font-weight:700;color:var(--mute)}
-  .rev-master-card-top .rev-stars{font-size:13px}
-  .rev-master-date{margin-left:auto;font-size:12px;color:var(--mute);font-weight:600;white-space:nowrap}
-  .rev-master-card-product{font-size:12.5px;font-weight:700;color:var(--indigo);margin-bottom:8px}
-  .rev-master-card-content{box-sizing:border-box;font-size:14.5px;line-height:1.75;color:var(--ink);
-    white-space:pre-wrap;word-break:break-word;border:1.5px solid var(--line);border-radius:12px;
-    padding:12px 14px;min-height:88px}
-  .rev-master-card-content.neg{border-color:var(--neg)}
-  .rev-master-card-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;
-    margin-top:12px;padding-top:10px;border-top:1px solid var(--line);
-    font-size:11.5px;color:var(--mute);font-weight:600}
-  .rev-master-card-link{color:var(--mute)}
-  .rev-master-more{text-align:center}
-  .rev-master-empty{text-align:center;color:var(--mute);font-size:13px;padding:50px 10px;
-    border:1px solid var(--line);border-radius:16px;background:var(--paper)}
-  /* 리뷰마스터 카드를 누르면 뜨는 리뷰 상세 팝업 · 같은 구조(rev-master-card-top 등)를
-     재사용하되, 본문 글자만 훨씬 크고 넉넉하게 키운다 */
-  .rev-master-modal-panel{max-width:640px;height:min(600px,84vh)}
-  .rev-master-modal-body{flex:1;overflow-y:auto;padding:24px 26px 28px}
-  .rev-master-modal-content{box-sizing:border-box;font-size:17px;line-height:1.9;color:var(--ink);
-    white-space:pre-wrap;word-break:break-word;margin:16px 0;border:1.5px solid var(--line);
-    border-radius:14px;padding:16px 18px;min-height:160px}
-  .rev-master-modal-content.neg{border-color:var(--neg)}
-  /* '통합 리뷰 수집기' 홈 화면의 리뷰 수집 설정(REVIEW SYNC) ·
-     입력칸·선택칸·버튼(기본/보조) 네 가지가 한 줄에 섞여 나오는 곳이 많아서,
-     높이가 서로 어긋나면 바로 "따로 노는" 느낌이 난다 — border(1.5px, 기본 버튼은 투명 테두리로
-     같은 두께를 맞춤)·세로 padding(10px)·font-size(13px)를 넷 다 그대로 맞춰 한 줄에서 나란히 서게 했다 */
-  .rev-sync{display:flex;flex-direction:column;gap:18px}
-  .rev-sync[hidden]{display:none}
-  .rev-sync-topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .rev-sync-eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--indigo)}
-  .rev-sync-card{border:1px solid var(--line);border-radius:18px;background:var(--paper);
-    padding:24px;box-sizing:border-box}
-  .rev-sync-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-  .rev-sync-card-head h3{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-top:4px}
-  .rev-sync-desc{font-size:12.5px;color:var(--mute);line-height:1.6;margin-top:8px;max-width:580px}
-  .rev-sync-status{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
-    color:var(--warn);white-space:nowrap;padding-top:6px}
-  .rev-sync-dot{width:7px;height:7px;border-radius:50%;background:var(--warn);flex:none}
-  .rev-sync-note{font-size:12px;color:var(--mute);font-weight:600;white-space:nowrap;padding-top:6px}
-  .rev-sync-input{box-sizing:border-box;height:40px;font-family:inherit;font-size:13px;font-weight:600;
-    color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;
-    padding:0 12px;outline:none;transition:border-color .15s}
-  .rev-sync-input:focus{border-color:var(--indigo)}
-  .rev-sync-ai-row{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
-  .rev-sync-ai-row .rev-sync-input:first-child{flex:1;min-width:220px}
-  .rev-sync-ai-mode{flex:none;width:160px}
-  .rev-sync-hint{font-size:11.5px;color:var(--mute);margin-top:10px}
-  .rev-sync-btn-primary,.rev-sync-btn-outline{all:unset;box-sizing:border-box;height:40px;cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;
-    padding:0 20px;border-radius:10px;border:1.5px solid transparent;white-space:nowrap}
-  .rev-sync-btn-primary{color:#fff;background:var(--pos)}
-  .rev-sync-btn-primary:not(:disabled):hover{filter:brightness(1.06)}
-  .rev-sync-btn-primary:disabled{opacity:.4;cursor:not-allowed;background:var(--mute)}
-  .rev-sync-btn-outline{font-weight:700;color:var(--body);background:var(--paper);border-color:var(--line)}
-  .rev-sync-btn-outline:not(:disabled):hover{border-color:var(--indigo);color:var(--indigo)}
-  .rev-sync-btn-outline:disabled{opacity:.4;cursor:not-allowed}
-  .rev-sync-collect-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:16px}
-  .rev-sync-field{display:flex;flex-direction:column;gap:6px}
-  .rev-sync-field label{font-size:11px;font-weight:800;color:var(--mute);letter-spacing:.04em}
-  .rev-sync-shops-field{margin-top:16px}
-  .rev-sync-shops{display:flex;gap:8px;flex-wrap:wrap}
-  .rev-sync-shop{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:5px;
-    padding:9px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);
-    min-width:104px;transition:border-color .15s,background .15s}
-  .rev-sync-shop:hover{border-color:var(--pos)}
-  .rev-sync-shop.active{border-color:var(--pos);background:var(--pos-soft)}
-  .rev-sync-shop-top{display:flex;align-items:center;gap:6px}
-  .rev-sync-shop-icon{width:18px;height:18px;border-radius:6px;flex:none;display:inline-grid;place-items:center;
-    font-size:10px;font-weight:800;color:#fff}
-  .rev-sync-shop-icon.is-naver{background:var(--naver)}
-  .rev-sync-shop-icon.is-coupang{background:var(--coupang)}
-  .rev-sync-shop-icon.is-alwayz{background:#6b4fc9}
-  .rev-sync-shop-icon.is-toss{background:#1f6fe0}
-  .rev-sync-shop-icon.is-cafe24{background:var(--self)}
-  html[data-theme="dark"] .rev-sync-shop-icon.is-alwayz{background:#a48ce8}
-  html[data-theme="dark"] .rev-sync-shop-icon.is-toss{background:#5c9bf0}
-  .rev-sync-shop-name{font-size:12.5px;font-weight:800;color:var(--ink)}
-  .rev-sync-shop-desc{font-size:10.5px;color:var(--mute);line-height:1.35}
-  /* 수집 범위 필드(날짜·쇼핑몰)는 높이가 서로 달라 한 줄에 버튼까지 같이 두면 붕 뜬다 ·
-     그래서 버튼은 필드 줄 아래로 내려 별도 줄에서 오른쪽 정렬한다 */
-  .rev-sync-collect-actions{display:flex;justify-content:flex-end;margin-top:16px}
-  .rev-sync-meta{font-size:12px;color:var(--mute);font-weight:600;margin-top:6px}
-  .rev-sync-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  .rev-sync-stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
-  .rev-sync-stat-main{flex:1;min-width:150px;border:1px solid var(--line);border-radius:14px;
-    padding:16px;background:var(--paper);box-sizing:border-box}
-  .rev-sync-stat-main.warn{background:var(--neg-soft);border-color:var(--neg-soft)}
-  .rev-sync-stat-lab{font-size:11px;font-weight:800;color:var(--mute);letter-spacing:.03em}
-  .rev-sync-stat-val{font-size:26px;font-weight:800;color:var(--ink);margin-top:6px;letter-spacing:-.5px}
-  .rev-sync-stat-sub{font-size:11px;color:var(--mute);margin-top:3px;font-weight:600}
-  .rev-sync-chstats{flex:2;min-width:260px;display:flex;gap:18px;align-items:center;justify-content:space-around;
-    flex-wrap:wrap;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--paper);
-    box-sizing:border-box}
-  .rev-sync-chstat{display:flex;flex-direction:column;align-items:center;gap:6px}
-  .rev-sync-chstat-top{display:flex;align-items:center;gap:5px}
-  .rev-sync-shop-icon.sm{width:16px;height:16px;font-size:9px}
-  .rev-sync-chstat-top .nm{font-size:11px;font-weight:700;color:var(--mute)}
-  .rev-sync-chstat .v{font-size:15px;font-weight:800;color:var(--ink)}
   /* 상품브랜드마다 다른 색 · 평소엔 옅은 배경에 브랜드 색 글자/테두리, 고르면 그 색으로 채운다 ·
      버튼이 8개를 넘으면 c1부터 다시 돌려 쓴다 (전체 버튼만 무채색) */
   .rev-brand.call{--bc:var(--ink);--bs:var(--bg)}
@@ -958,9 +751,8 @@
   .hero-view-tab:hover{border-color:var(--indigo);color:var(--indigo)}
   .hero-view-tab.active{background:var(--indigo-lite);color:#fff;border-color:var(--indigo-lite);
     box-shadow:0 8px 18px -8px rgba(194,106,65,.3)}
-  /* 트렌드분석 대시보드 · 매출데이터 대시보드의 월간/주간 탭(.hero-view-tabs)과 같은 자리·같은 형태로
-     배너 위에 놓이는 플랫폼 전환 탭 바 */
-  .trend-platform-icons{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:10px;padding:20px 48px 14px}
+  /* 트렌드분석 대시보드 */
+  .trend-platform-icons{display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:10px;margin:26px 0 16px}
   /* 배너(.plan-hero) 기본 배경은 주황색인데, 트렌드분석은 선택된 플랫폼 브랜드 색으로 바꾼다 ·
      기본값(구글)은 구글 블루, 네이버를 고르면 .is-naver가 붙어 네이버 그린으로 바뀐다 */
   .trend-hero{--hero-accent:#2f77cc}
@@ -972,18 +764,13 @@
   html[data-theme="dark"] .trend-hero{--hero-accent:#6aa5ea}
   html[data-theme="dark"] #revHero.is-toss{--hero-accent:#5c9bf0}
   html[data-theme="dark"] #revHero.is-alwayz{--hero-accent:#a48ce8}
-  /* 아이콘만 있던 버튼을 .hero-view-tab과 같은 필(pill) 모양으로, 아이콘+텍스트 라벨로 확장 */
-  .trend-platform-icon{all:unset;box-sizing:border-box;position:relative;display:inline-flex;align-items:center;
-    gap:8px;cursor:pointer;font-size:13px;font-weight:800;padding:8px 18px 8px 14px;border-radius:999px;
-    color:var(--body);background:var(--bg);border:1.5px solid var(--line);letter-spacing:-.2px;
-    transition:background .15s,color .15s,border-color .15s}
-  .trend-platform-icon svg{width:18px;height:18px;flex:none;display:block}
-  .trend-platform-label{white-space:nowrap}
-  .trend-platform-icon.active{background:var(--indigo-lite);color:#fff;border-color:var(--indigo-lite);
-    box-shadow:0 8px 18px -8px rgba(194,106,65,.3)}
+  .trend-platform-icon{position:relative;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;
+    border:1.5px solid var(--line);background:var(--paper)}
+  .trend-platform-icon svg{width:18px;height:18px;display:block}
+  .trend-platform-icon.active{border-color:var(--indigo);box-shadow:0 0 0 2px rgba(194,106,65,.16)}
   .trend-platform-icon.disabled{cursor:not-allowed;opacity:.55}
   .trend-platform-icon[data-platform]{cursor:pointer}
-  .trend-platform-icon[data-platform]:not(.active):hover{border-color:var(--indigo);color:var(--indigo)}
+  .trend-platform-icon[data-platform]:not(.active):hover{border-color:var(--indigo)}
   /* 네이버 카테고리(식품/냉동간편식) 전환 · 네이버가 활성일 때만 새로고침과 같은 줄에 나타난다 ·
      이 화면에서만 쓰는 컴포넌트라 사이트 기본 인디고 대신 네이버 브랜드 그린을 쓴다 */
   .trend-naver-subcat{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
@@ -1000,10 +787,12 @@
     box-shadow:0 6px 14px -6px rgba(3,199,90,.55)}
   html[data-theme="dark"] .trend-naver-subcat{background:rgba(3,199,90,.14)}
   html[data-theme="dark"] .trend-naver-subcat-label{color:#3fdb8f}
+  .trend-platform-icon[data-tip]:hover::after,
   .trend-cloud-word[data-tip]:hover::after{
     content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
     background:var(--panel-dark);color:#fff;font-size:11.5px;font-weight:700;padding:6px 10px;
     border-radius:8px;white-space:nowrap;box-shadow:0 8px 18px -8px rgba(0,0,0,.4);z-index:10;pointer-events:none}
+  .trend-platform-icon[data-tip]:hover::before,
   .trend-cloud-word[data-tip]:hover::before{
     content:"";position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);
     border:5px solid transparent;border-top-color:var(--panel-dark);z-index:10;pointer-events:none}
@@ -1305,37 +1094,6 @@
     background:var(--indigo-soft);color:var(--indigo);font-size:12px;font-weight:800;cursor:pointer}
   .mg-add-item button:hover{background:var(--indigo);color:#fff}
 
-  /* 자동화현황 — GitHub Actions 워크플로우 최근 실행 상태(초록/빨강 점) */
-  .automation-page-hint{font-size:12px;font-weight:600;color:var(--mute);line-height:1.6;margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line)}
-  .automation-status{display:flex;flex-direction:column;gap:18px}
-  .automation-loading,.automation-error{padding:28px 12px;text-align:center;color:var(--mute);font-size:13px;font-weight:600}
-  .automation-error{color:var(--neg)}
-  .automation-summary{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:13px;
-    background:var(--pos-soft);border:1px solid transparent}
-  .automation-summary.has-issue{background:var(--neg-soft)}
-  .automation-summary .a-dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--pos);
-    box-shadow:0 0 0 4px rgba(15,148,99,.16)}
-  .automation-summary.has-issue .a-dot{background:var(--neg);box-shadow:0 0 0 4px rgba(207,90,80,.16)}
-  .automation-summary-text{font-size:13.5px;font-weight:800;color:var(--pos);letter-spacing:-.2px}
-  .automation-summary.has-issue .automation-summary-text{color:var(--neg)}
-  .automation-summary-sub{font-size:11.5px;font-weight:600;color:var(--mute);margin-top:1px}
-  .automation-repo{border:1px solid var(--line);border-radius:14px;background:var(--bg);overflow:hidden}
-  .automation-repo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:10px 14px;border-bottom:1px solid var(--line)}
-  .automation-repo-name{font-size:12px;font-weight:800;color:var(--ink);letter-spacing:-.1px}
-  .automation-repo-link{font-size:11.5px;font-weight:700;color:var(--indigo);text-decoration:none}
-  .automation-repo-link:hover{text-decoration:underline}
-  .automation-row{display:flex;align-items:center;gap:11px;padding:11px 14px}
-  .automation-row+.automation-row{border-top:1px solid var(--line)}
-  .automation-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--pos)}
-  .automation-dot.fail{background:var(--neg)}
-  .automation-dot.warn{background:var(--warn)}
-  .automation-row-main{flex:1;min-width:0}
-  .automation-row-name{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
-  .automation-row-meta{font-size:11.5px;font-weight:600;color:var(--mute);margin-top:1px;font-variant-numeric:tabular-nums}
-  .automation-row-link{flex:none;font-size:11.5px;font-weight:700;color:var(--indigo);text-decoration:none}
-  .automation-row-link:hover{text-decoration:underline}
-
 
   .empty-state{border:1px dashed var(--line);border-radius:18px;padding:64px 30px;display:flex;flex-direction:column;
     align-items:center;text-align:center;gap:14px;color:var(--mute)}
@@ -1364,6 +1122,17 @@
   .sb-subnav-home:hover{background:var(--indigo-soft);color:var(--indigo)}
   .sb-subnav-home.active{background:var(--indigo);color:#fff}
   .sb-subnav-home+.sb-subnav-home{margin-top:3px}
+  .sb-subnav-home:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+  .sb-subnav-home .sb-subnav-external{width:12px;height:12px;margin-left:auto;opacity:.65}
+  .sb-subnav-caption{padding:2px 10px 7px;font-size:10.5px;font-weight:800;color:var(--mute);letter-spacing:.02em}
+  .collector-frame{display:block;width:100%;height:calc(100vh - 260px);min-height:560px;margin-top:22px;border:0;background:transparent;overflow:hidden}
+  .collector-hint{margin-top:10px;font-size:12px;color:var(--mute);line-height:1.6;word-break:keep-all}
+  .collector-status{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--mute);white-space:nowrap}
+  .collector-status i{width:8px;height:8px;border-radius:50%;background:var(--prev-ink)}
+  .collector-status.is-online i{background:var(--pos)}
+  .collector-status.is-working i{background:var(--warn);animation:collector-pulse 1s ease-in-out infinite alternate}
+  @keyframes collector-pulse{to{opacity:.45;transform:scale(.78)}}
+  .sb-subnav-note{padding:5px 10px 2px;font-size:10.5px;color:var(--mute);line-height:1.55;word-break:keep-all}
   .sb-subnav-sep{height:1px;background:var(--sn-line);margin:10px 4px}
   /* 중분류 블록 · 헤더를 누르면 접었다 폈다 하고, 열린 그룹만 문서를 보여준다 */
   .sb-subnav-block{border-radius:12px;transition:background .18s}
@@ -1600,12 +1369,58 @@
   .man-empty{padding:26px;border-radius:12px;border:1.5px dashed var(--line);
     text-align:center;font-size:13px;font-weight:700;color:var(--mute);letter-spacing:-.2px}
   @media (max-width:820px){ .man{padding:26px 22px 36px} }
+
+  /* 자동화 · 기존 운영 도구를 대시보드 안에서 한 번에 여는 화면 */
+  .admin-section{padding-top:0;padding-bottom:42px}
+  .admin-hero{--hero-accent:var(--indigo)}
+  .admin-tools-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-top:28px;margin-bottom:14px}
+  .admin-tools-head h3{font-size:20px;font-weight:800;letter-spacing:-.55px;color:var(--ink)}
+  .admin-tools-head p{font-size:12.5px;font-weight:600;color:var(--mute);letter-spacing:-.2px;text-align:right}
+  .admin-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .admin-tool-card[hidden],.admin-local-note[hidden]{display:none}
+  .admin-tool-card{--tool-accent:var(--indigo);position:relative;min-height:210px;padding:22px 22px 20px;
+    display:flex;flex-direction:column;overflow:hidden;text-decoration:none;color:inherit;
+    background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+  .admin-tool-card::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--tool-accent);opacity:.9}
+  .admin-tool-card:hover{transform:translateY(-2px);border-color:var(--tool-accent);box-shadow:0 16px 32px -24px rgba(40,24,14,.55)}
+  .admin-tool-card:focus-visible{outline:3px solid var(--tool-accent);outline-offset:3px}
+  .admin-tool-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+  .admin-tool-icon{width:42px;height:42px;display:grid;place-items:center;flex:none;border-radius:13px;
+    color:var(--tool-accent);background:rgba(194,106,65,.09)}
+  .admin-tool-icon svg{width:21px;height:21px;display:block}
+  .admin-tool-badge{display:inline-flex;align-items:center;min-height:25px;padding:0 9px;border-radius:999px;
+    background:var(--bg);border:1px solid var(--line);color:var(--mute);
+    font-size:10.5px;font-weight:800;letter-spacing:.03em;white-space:nowrap}
+  .admin-tool-card h4{margin-top:18px;font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.55px}
+  .admin-tool-card p{margin-top:8px;max-width:42ch;font-size:13px;font-weight:500;color:var(--body);
+    line-height:1.65;letter-spacing:-.22px;word-break:keep-all}
+  .admin-tool-open{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:19px;
+    color:var(--tool-accent);font-size:12.5px;font-weight:800;letter-spacing:-.15px}
+  .admin-tool-open svg{width:17px;height:17px;transition:transform .18s ease}
+  .admin-tool-card:hover .admin-tool-open svg{transform:translate(2px,-2px)}
+  .admin-tool-card.is-automation{--tool-accent:#8b62d8}
+  .admin-tool-card.is-keyword{--tool-accent:#168b64}
+  .admin-tool-card.is-automation .admin-tool-icon{background:rgba(139,98,216,.10)}
+  .admin-tool-card.is-keyword .admin-tool-icon{background:rgba(22,139,100,.10)}
+  .admin-local-note{display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:13px 15px;
+    border-radius:12px;background:var(--bg);border:1px solid var(--line);color:var(--body);
+    font-size:12px;font-weight:600;line-height:1.55;letter-spacing:-.15px}
+  .admin-local-note svg{width:17px;height:17px;flex:none;margin-top:1px;color:var(--indigo)}
+  html[data-theme="dark"] .admin-tool-card:hover{box-shadow:0 18px 38px -24px rgba(0,0,0,.78)}
+  @media (max-width:760px){
+    .admin-section{padding-left:22px;padding-right:22px}
+    .admin-section > .plan-hero{margin-left:-22px;margin-right:-22px;padding-left:22px;padding-right:22px}
+    .admin-tool-grid{grid-template-columns:1fr}
+    .admin-tools-head{align-items:flex-start;flex-direction:column;gap:5px}
+    .admin-tools-head p{text-align:left}
+  }
   @media print{
     *,*::before,*::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
     @page{size:A4 portrait;margin:9mm}
     body{background:#fff;background-image:none} .wrap{padding:0;max-width:none} .paper{box-shadow:none;border-radius:0}
     .section,.ach,.panel,.reco,.chcard,.ins,table,.hero,.donut-wrap,.roasbars{break-inside:avoid}
-    .sidebar{display:none} .hero-view-tabs{display:none} .trend-platform-icons{display:none} .topbar{display:none}
+    .sidebar{display:none} .hero-view-tabs{display:none} .topbar{display:none}
     .settings-overlay{display:none}
   }
 </style>
@@ -1663,6 +1478,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
           <span>메뉴얼가이드</span>
         </button>
+        <a class="sb-item" id="sbAutomationLink" href="https://n8n.reflowguide.com/workflow/cafeinnos-review-pipeline" target="_blank" rel="noopener noreferrer" aria-label="자동화 (새 탭)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="13" rx="2.5"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3.5 12h17M10 12v2h4v-2"/></svg>
+          <span>자동화</span>
+        </a>
       </div>
       <div class="sb-bottom">
         <button class="sb-item sb-import" type="button" id="importDataBtn" title="구글시트에서 최신 데이터를 가져와요">
@@ -1682,18 +1501,35 @@
       </div>
     </nav>
 
-    <nav class="sb-subnav" id="sbReviewSubnav" hidden aria-label="리뷰수집 판매처">
+    <nav class="sb-subnav" id="sbReviewSubnav" hidden aria-label="리뷰수집 하위 메뉴">
       <div class="sb-subnav-head">
         <div class="sb-subnav-title">리뷰수집</div>
       </div>
       <button type="button" class="sb-subnav-home active" id="sbReviewHome" data-platform="">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
-        <span>통합 리뷰 수집기</span>
+        <span>통계 및 인사이트</span>
+      </button>
+      <!-- 판매처를 가리지 않고 모든 리뷰를 한 목록에서 보는 화면 -->
+      <button type="button" class="sb-subnav-home" id="sbReviewMaster">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="2.2" cy="6" r=".9" fill="currentColor"/><circle cx="2.2" cy="12" r=".9" fill="currentColor"/><circle cx="2.2" cy="18" r=".9" fill="currentColor"/></svg>
+        <span>리뷰마스터</span>
       </button>
       <div class="sb-subnav-sep"></div>
+      <div class="sb-subnav-caption">리뷰 운영</div>
+      <!-- 리뷰 수집기(127.0.0.1:4317)를 새 창 대신 대시보드 본문(#view-collector) 안에 띄운다 -->
+      <button type="button" class="sb-subnav-home" id="sbReviewCollector" title="이 PC에서 리뷰 수집기를 실행한 뒤 열어주세요">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12.5h5"/></svg>
+        <span>전체 리뷰 확인</span>
+      </button>
+      <a class="sb-subnav-home" id="sbReviewReport" href="https://drive.google.com/drive/folders/1O4-5BV94lUQ1mqB6ZU-pYOSZ_JHayUsx" target="_blank" rel="noopener noreferrer" aria-label="주간 분석 보고서 (새 탭)" title="Google Drive 보고서 폴더 열기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+        <span>주간 분석 보고서</span>
+        <svg class="sb-subnav-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M10 14 19 5M19 14v5H5V5h5"/></svg>
+      </a>
+      <p class="sb-subnav-note">전체 리뷰 확인은 이 PC에서 리뷰 수집기를 실행한 뒤 대시보드 안에서 바로 볼 수 있어요.</p>
+      <div class="sb-subnav-sep"></div>
+      <div class="sb-subnav-caption">판매처별 리뷰</div>
       <div class="sb-subnav-flat" id="sbReviewSubnavList">
-        <!-- 판매처를 가리지 않고 모든 리뷰를 한 목록에서 보는 화면 · 이 목록의 메인 진입점이다 -->
-        <button type="button" class="sb-subnav-item" id="sbReviewMasterList" data-master="1"><i class="sb-subnav-dot"></i>리뷰마스터</button>
         <button type="button" class="sb-subnav-item" data-platform="naver"><i class="sb-subnav-dot is-naver"></i>네이버리뷰</button>
         <button type="button" class="sb-subnav-item" data-platform="cafe24"><i class="sb-subnav-dot is-cafe24"></i>카페24리뷰</button>
         <button type="button" class="sb-subnav-item" data-platform="coupang"><i class="sb-subnav-dot is-coupang"></i>쿠팡리뷰</button>
@@ -1749,10 +1585,6 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
               <span>메뉴얼가이드설정</span>
             </button>
-            <button class="mini-sb-item" type="button" data-settings-view="automation" id="automationSettingsTab">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="4"/><circle cx="12" cy="7.3" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="16.7" r="1.15" fill="currentColor" stroke="none"/></svg>
-              <span>워크플로우</span>
-            </button>
           </nav>
           <div class="settings-content">
             <section class="settings-view active" data-settings-panel="members">
@@ -1782,12 +1614,6 @@
                 <p class="mg-hint">이름을 눌러 바로 고칠 수 있어요. 바꾼 목차는 구글시트에 저장돼 다른 기기에도 반영됩니다.</p>
                 <div class="mg-list" id="mgList"></div>
               </div>
-            </section>
-            <section class="settings-view" data-settings-panel="automation" hidden>
-              <div class="automation-status" id="automationStatusBoxSettings">
-                <p class="automation-loading">불러오는 중…</p>
-              </div>
-              <p class="automation-page-hint">하루 세 번(10:00·15:00·17:00 KST) 자동으로 갱신됩니다.</p>
             </section>
           </div>
         </div>
@@ -2144,25 +1970,23 @@
 
 
       <div id="view-trend" style="display:none">
-        <div class="trend-platform-icons" id="trendPlatformIcons">
-          <button type="button" class="trend-platform-icon active" data-platform="google">
-            <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.68 9c0-.593.102-1.17.284-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg>
-            <span class="trend-platform-label">구글트렌드</span>
-          </button>
-          <button type="button" class="trend-platform-icon" data-platform="naver">
-            <svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#6bbf90"/><path fill="#fff" d="M14.5 6.5v6L9.7 6.5H6.5v11h3.3v-6l4.8 6H17.5v-11h-3z"/></svg>
-            <span class="trend-platform-label">네이버트렌드</span>
-          </button>
-          <button type="button" class="trend-platform-icon disabled">
-            <svg viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-            <span class="trend-platform-label">페이스북</span>
-          </button>
-        </div>
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero trend-hero" id="trendHero">
             <div class="ptag">ANALYTICS</div>
             <div class="ptitle" id="trendHeroTitle">구글 트렌드 분석</div>
             <p class="psub" id="trendHeroSub">구글 트렌드 실시간 인기 검색어를 한눈에 확인하세요</p>
+          </div>
+
+          <div class="trend-platform-icons" id="trendPlatformIcons">
+            <span class="trend-platform-icon active" data-platform="google" data-tip="사용 중">
+              <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.68 9c0-.593.102-1.17.284-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg>
+            </span>
+            <span class="trend-platform-icon" data-platform="naver" data-tip="전환">
+              <svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#6bbf90"/><path fill="#fff" d="M14.5 6.5v6L9.7 6.5H6.5v11h3.3v-6l4.8 6H17.5v-11h-3z"/></svg>
+            </span>
+            <span class="trend-platform-icon disabled" data-tip="준비중">
+              <svg viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+            </span>
           </div>
 
           <div class="ag-toolbar" style="margin-top:22px">
@@ -2225,12 +2049,39 @@
         </section>
       </div><!-- /view-trend -->
 
+      <!-- 전체 리뷰 확인 · 로컬 리뷰 수집기를 대시보드 안에 그대로 띄운다 -->
+      <div id="view-collector" style="display:none">
+        <section class="section" style="padding-top:0;padding-bottom:16px">
+          <div class="plan-hero">
+            <div class="ptag">REVIEWS</div>
+            <div class="plan-hero-head">
+              <div class="ptitle">전체 리뷰 확인</div>
+              <div style="text-align:right">
+                <button type="button" class="rev-csv-btn" id="collectorReloadBtn" title="리뷰 수집기 화면을 다시 불러와요">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5"/><path d="M4.6 9a7.5 7.5 0 1 1 .9 6.5"/></svg>
+                  <span>새로고침</span>
+                </button>
+                <!-- 수집기 상단바에 있던 연결 상태를 배너로 옮겨 보여준다 -->
+                <div class="collector-status" id="collectorStatus"><i></i><span>상태 확인 중</span></div>
+              </div>
+            </div>
+            <p class="psub">이 PC에서 실행 중인 리뷰 수집기로 판매처 리뷰를 수집하고 확인합니다</p>
+          </div>
+          <!-- 수집기가 보내주는 내용 높이만큼 늘려서 안쪽 스크롤바 없이 대시보드와 한 화면처럼 보이게 한다 -->
+          <iframe id="collectorFrame" class="collector-frame" title="리뷰 수집기" scrolling="no" allow="local-network-access; loopback-network; local-network"></iframe>
+          <div class="collector-hint" id="collectorHint">
+            화면이 비어 있으면 이 PC에서 리뷰 수집기(http://127.0.0.1:4317)를 실행한 뒤 새로고침을 눌러주세요 ·
+            브라우저가 로컬 네트워크 접근 허용을 물으면 허용을 눌러주세요
+          </div>
+        </section>
+      </div><!-- /view-collector -->
+
       <div id="view-review" style="display:none">
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero" id="revHero">
             <div class="ptag">FEEDBACK</div>
             <div class="plan-hero-head">
-              <div class="ptitle" id="revHeroTitle">통합 리뷰 수집기 - VOC</div>
+              <div class="ptitle" id="revHeroTitle">통계 및 인사이트 - VOC</div>
               <div style="text-align:right">
                 <input type="file" id="revCsvInput" accept=".csv,text/csv" style="display:none">
                 <button type="button" class="rev-csv-btn" id="revCsvBtn" title="채널,브랜드,내용,별점,수집일 열을 가진 CSV 파일을 불러와요 (브랜드는 선택)">
@@ -2271,204 +2122,39 @@
             </div>
             <div class="ach-stats" id="revDailyStats" style="margin-top:8px"></div>
           </div>
-          <!-- 판매처(네이버~올웨이즈) 전용 인박스 · 리뷰현황(차트) 아래를 표 대신 문의응대용
-               좌우 2단 화면으로 보여준다 · 왼쪽은 검색·필터로 리뷰를 추리는 목록,
-               오른쪽은 고른 리뷰의 상세와 답글 작성창 -->
-          <div class="rev-inbox" id="revInboxPanel" hidden>
-            <div class="rev-inbox-list">
-              <div class="rev-inbox-list-head">
-                <div>
-                  <div class="rev-inbox-eyebrow">TRIAGE</div>
-                  <h3>리뷰 인박스</h3>
-                </div>
-                <div class="rev-inbox-count" id="revInboxCount">0건</div>
-              </div>
-              <div class="rev-inbox-tabs" id="revInboxTabs">
-                <button type="button" class="rev-date-quick active" data-tab="all">전체 <b id="revInboxCntAll">0</b></button>
-                <button type="button" class="rev-date-quick" data-tab="neg">부정우선 <b id="revInboxCntNeg">0</b></button>
-                <button type="button" class="rev-date-quick" data-tab="pos">긍정 <b id="revInboxCntPos">0</b></button>
-                <button type="button" class="rev-date-quick" data-tab="pending">답글대기 <b id="revInboxCntPending">0</b></button>
-              </div>
-              <div class="rev-inbox-filters">
-                <div class="rev-inbox-search-wrap">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-                  <input type="search" id="revInboxSearch" placeholder="상품명, 리뷰 내용, 작성자 검색" aria-label="리뷰 인박스 검색">
-                </div>
-                <select class="rev-date-input" id="revInboxStarSel" aria-label="별점">
-                  <option value="">전체 별점</option>
-                  <option value="5">5점</option><option value="4">4점</option><option value="3">3점</option><option value="2">2점</option><option value="1">1점</option>
-                </select>
-              </div>
-              <div class="rev-inbox-cards" id="revInboxCards"></div>
-              <div class="rev-inbox-pager">
-                <button type="button" class="rev-date-quick" id="revInboxPrev">이전</button>
-                <span id="revInboxPageLabel">1 / 1</span>
-                <button type="button" class="rev-date-quick" id="revInboxNext">다음</button>
-              </div>
+          <div class="panel" style="margin-top:16px">
+            <h3 id="revRecentTitle">최근 수집 리뷰</h3>
+            <div class="unit" id="revRecentUnit">최신순 20건</div>
+            <div class="rev-brandbar" id="revBrandBar">
+              <span class="rev-brandbar-label">상품브랜드</span>
+              <div class="rev-brand-list" id="revBrandList"></div>
             </div>
-            <div class="rev-inbox-detail" id="revInboxDetail"></div>
-          </div>
-
-          <!-- 리뷰마스터 · 통합 리뷰 수집기에 모인 전체 판매처 리뷰를 크게 훑어보는 화면 ·
-               기간·브랜드·감정 필터를 한 상자에 모으고, 검색은 그 아래 따로 크게 두고,
-               리뷰 카드는 내용을 줄이지 않고 그대로 보여준다(긴 글도 읽히도록) -->
-          <div class="rev-master" id="revMasterPanel" hidden>
-            <div class="rev-master-filterbar">
-              <div class="rev-master-filterbar-head">
-                <div class="rev-master-filterbar-eyebrow">FILTER</div>
-                <h3>리뷰 필터</h3>
-              </div>
-              <div class="rev-master-filter-row">
-                <span class="rev-master-filter-label"><i class="rev-master-filter-dot"></i>기간</span>
-                <div class="rev-master-filter-controls">
-                  <input type="date" class="rev-date-input" id="revMasterDateFrom" aria-label="시작일">
-                  <span class="rev-date-sep">~</span>
-                  <input type="date" class="rev-date-input" id="revMasterDateTo" aria-label="종료일">
-                  <button type="button" class="rev-date-quick" data-days="7">최근 7일</button>
-                  <button type="button" class="rev-date-quick" data-days="14">최근 14일</button>
-                  <button type="button" class="rev-date-quick" data-days="30">최근 30일</button>
-                  <button type="button" class="rev-date-quick active" data-days="0">전체 기간</button>
-                </div>
-              </div>
-              <div class="rev-master-filter-row">
-                <span class="rev-master-filter-label"><i class="rev-master-filter-dot"></i>브랜드</span>
-                <div class="rev-master-filter-controls" id="revMasterBrandList"></div>
-              </div>
-              <div class="rev-master-filter-row">
-                <span class="rev-master-filter-label"><i class="rev-master-filter-dot"></i>감정</span>
-                <div class="rev-master-filter-controls" id="revMasterSentRow">
-                  <button type="button" class="rev-date-quick active" data-sent="">전체</button>
-                  <button type="button" class="rev-date-quick" data-sent="pos">긍정</button>
-                  <button type="button" class="rev-date-quick" data-sent="neu">중립</button>
-                  <button type="button" class="rev-date-quick" data-sent="neg">부정</button>
-                </div>
-              </div>
+            <!-- 리뷰마스터에서만 나오는 감정·검색 줄 (판매처와 상관없이 전체 리뷰를 훑는 화면이라) -->
+            <div class="rev-brandbar" id="revMasterFilter" hidden>
+              <span class="rev-brandbar-label">감정</span>
+              <button type="button" class="rev-date-quick active" data-sent="">전체</button>
+              <button type="button" class="rev-date-quick" data-sent="pos">긍정</button>
+              <button type="button" class="rev-date-quick" data-sent="neu">중립</button>
+              <button type="button" class="rev-date-quick" data-sent="neg">부정</button>
+              <input type="search" class="rev-date-input rev-search" id="revSearch" placeholder="내용·채널·브랜드 검색" aria-label="리뷰 검색">
             </div>
-            <div class="rev-master-searchbar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-              <input type="search" id="revMasterSearch" placeholder="리뷰 내용·채널·브랜드로 검색">
+            <div id="revRecentWrap" style="overflow-x:auto;margin-top:4px">
+              <table id="revRecentTable">
+                <thead><tr><th>채널</th><th>브랜드</th><th>내용</th><th>별점</th><th>감정</th><th>수집일</th></tr></thead>
+                <tbody></tbody>
+              </table>
             </div>
-            <div class="unit" id="revMasterUnit">최신순 50건</div>
-            <div class="rev-master-feed" id="revMasterFeed"></div>
-            <div class="rev-master-more" id="revMasterMoreWrap" hidden>
-              <button type="button" class="rev-csv-btn" id="revMasterMoreBtn">더 보기</button>
+            <div id="revMoreWrap" hidden style="margin-top:14px;text-align:center">
+              <button type="button" class="rev-csv-btn" id="revMoreBtn">더 보기</button>
+            </div>
+            <!-- 전체리뷰통계에서만 최근 리뷰 목록 대신 이 순위표가 나온다 -->
+            <div id="revTopWrap" hidden style="overflow-x:auto;margin-top:4px">
+              <table id="revTopTable">
+                <thead><tr><th>순위</th><th>상품브랜드</th><th>부정 리뷰 비율</th><th>부정 리뷰</th><th>평균 별점</th><th>리뷰수</th></tr></thead>
+                <tbody></tbody>
+              </table>
             </div>
           </div>
-
-          <!-- '통합 리뷰 수집기' 홈 화면 전용 · 판매처에 로그인해 리뷰를 가져오는 수집 설정 화면 ·
-               지금은 실제 로그인·AI 자동응답 연동이 없는 화면 구성만 먼저 만든 상태라
-               실제 백엔드가 필요한 버튼(로그인, AI 연결, 전체 리뷰 가져오기, 보고서류)은
-               모두 비활성화(준비 중)로 두고, 날짜·쇼핑몰 선택과 통계 카드만 실제 동작한다 -->
-          <div class="rev-sync" id="revSyncPanel" hidden>
-            <div class="rev-sync-topbar">
-              <div class="rev-sync-eyebrow">REVIEW SYNC</div>
-              <button type="button" class="rev-sync-btn-outline" disabled title="실제 판매처 로그인 연동은 준비 중이에요">최초 로그인 / 로그인 확인</button>
-            </div>
-
-            <div class="rev-sync-card">
-              <div class="rev-sync-card-head">
-                <div>
-                  <div class="rev-sync-eyebrow">SECURE AI</div>
-                  <h3>AI 답글 보안 연결</h3>
-                  <p class="rev-sync-desc">관리자가 이 PC에서 한 번만 연결하면 네이버 답글과 분석 보고서가 자동으로 사용합니다. 지금은 화면 구성만 먼저 준비했고, 실제 연동은 준비 중이에요.</p>
-                </div>
-                <div class="rev-sync-status"><i class="rev-sync-dot"></i>최초 1회 연결 필요</div>
-              </div>
-              <div class="rev-sync-ai-row">
-                <input type="password" class="rev-sync-input" placeholder="OpenAI API 키를 최초 1회 입력" autocomplete="off">
-                <select class="rev-sync-input rev-sync-ai-mode">
-                  <option>기본 · 빠른 답글</option>
-                  <option>신중 · 꼼꼼한 답글</option>
-                </select>
-                <button type="button" class="rev-sync-btn-primary" disabled title="실제 AI 자동 답글 연동은 준비 중이에요">안전하게 연결</button>
-              </div>
-              <div class="rev-sync-hint">저장 후 키 원문은 화면에 다시 표시되지 않습니다.</div>
-            </div>
-
-            <div class="rev-sync-card">
-              <div class="rev-sync-card-head">
-                <div>
-                  <div class="rev-sync-eyebrow">COLLECT</div>
-                  <h3>수집 범위</h3>
-                </div>
-                <div class="rev-sync-note">시작일과 종료일을 모두 포함합니다.</div>
-              </div>
-              <div class="rev-sync-collect-row">
-                <div class="rev-sync-field">
-                  <label for="revSyncFrom">시작일</label>
-                  <input type="date" class="rev-sync-input" id="revSyncFrom">
-                </div>
-                <div class="rev-sync-field">
-                  <label for="revSyncTo">종료일</label>
-                  <input type="date" class="rev-sync-input" id="revSyncTo">
-                </div>
-              </div>
-              <div class="rev-sync-field rev-sync-shops-field">
-                <label>쇼핑몰</label>
-                <div class="rev-sync-shops" id="revSyncShops"></div>
-              </div>
-              <div class="rev-sync-collect-actions">
-                <button type="button" class="rev-sync-btn-primary" disabled title="실제 판매처 로그인·수집 연동은 준비 중이에요 (별도 자동화 스크립트가 필요해요)">전체 리뷰 가져오기</button>
-              </div>
-            </div>
-
-            <div class="rev-sync-card">
-              <div class="rev-sync-card-head">
-                <div>
-                  <div class="rev-sync-eyebrow">RESULTS</div>
-                  <h3>리뷰 업무함</h3>
-                  <div class="rev-sync-meta" id="revSyncMeta"></div>
-                </div>
-                <div class="rev-sync-actions">
-                  <button type="button" class="rev-sync-btn-primary" disabled title="준비 중이에요">분석 보고서 생성</button>
-                  <button type="button" class="rev-sync-btn-outline" disabled title="준비 중이에요">보고서 PDF</button>
-                  <button type="button" class="rev-sync-btn-outline" disabled title="준비 중이에요">보고서 엑셀</button>
-                  <button type="button" class="rev-sync-btn-outline" disabled title="준비 중이에요">리뷰 엑셀</button>
-                  <button type="button" class="rev-sync-btn-outline" disabled title="준비 중이에요">리뷰 CSV</button>
-                </div>
-              </div>
-              <div class="rev-sync-stats" id="revSyncStats"></div>
-            </div>
-
-            <!-- 리뷰 업무함 아래 전체 판매처 리뷰 인박스 · 네이버리뷰의 인박스와 같은 화면을
-                 그대로 재사용한다(prefix만 revHomeInbox로 다름) · 위 COLLECT의 기간·쇼핑몰
-                 선택에 걸리는 리뷰를 그대로 보여준다(revSyncRows) -->
-            <div class="rev-inbox">
-              <div class="rev-inbox-list">
-                <div class="rev-inbox-list-head">
-                  <div>
-                    <div class="rev-inbox-eyebrow">TRIAGE</div>
-                    <h3>리뷰 인박스</h3>
-                  </div>
-                  <div class="rev-inbox-count" id="revHomeInboxCount">0건</div>
-                </div>
-                <div class="rev-inbox-tabs" id="revHomeInboxTabs">
-                  <button type="button" class="rev-date-quick active" data-tab="all">전체 <b id="revHomeInboxCntAll">0</b></button>
-                  <button type="button" class="rev-date-quick" data-tab="neg">부정우선 <b id="revHomeInboxCntNeg">0</b></button>
-                  <button type="button" class="rev-date-quick" data-tab="pos">긍정 <b id="revHomeInboxCntPos">0</b></button>
-                  <button type="button" class="rev-date-quick" data-tab="pending">답글대기 <b id="revHomeInboxCntPending">0</b></button>
-                </div>
-                <div class="rev-inbox-filters">
-                  <div class="rev-inbox-search-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-                    <input type="search" id="revHomeInboxSearch" placeholder="상품명, 리뷰 내용, 작성자 검색" aria-label="리뷰 인박스 검색">
-                  </div>
-                  <select class="rev-date-input" id="revHomeInboxStarSel" aria-label="별점">
-                    <option value="">전체 별점</option>
-                    <option value="5">5점</option><option value="4">4점</option><option value="3">3점</option><option value="2">2점</option><option value="1">1점</option>
-                  </select>
-                </div>
-                <div class="rev-inbox-cards" id="revHomeInboxCards"></div>
-                <div class="rev-inbox-pager">
-                  <button type="button" class="rev-date-quick" id="revHomeInboxPrev">이전</button>
-                  <span id="revHomeInboxPageLabel">1 / 1</span>
-                  <button type="button" class="rev-date-quick" id="revHomeInboxNext">다음</button>
-                </div>
-              </div>
-              <div class="rev-inbox-detail" id="revHomeInboxDetail"></div>
-            </div>
-          </div>
-
           <script>
           /* 리뷰 CSV 업로드 · 채널,브랜드,내용,별점,수집일 열(또는 같은 뜻의 헤더)을 읽어
              일별 현황 차트와 최근 리뷰 표를 실제 값으로 다시 그린다 ·
@@ -2481,7 +2167,7 @@
 
           /* 판매처(채널)별 화면 문구 · 탭을 바꾸면 배너 제목/설명과 각 패널 제목이 함께 바뀐다 */
           var REV_CHANNEL_INFO={
-            '':{name:'전체', heroTitle:'통합 리뷰 수집기 - VOC', dailyTitle:'전체 상품 리뷰 현황',
+            '':{name:'전체', heroTitle:'통계 및 인사이트 - VOC', dailyTitle:'전체 상품 리뷰 현황',
                 recentTitle:'최근 수집 리뷰',
                 sub:'쇼핑몰·앱·커뮤니티의 리뷰와 고객의 소리를 한곳에 모아봅니다'},
             naver:{name:'네이버', heroTitle:'네이버리뷰 - VOC', dailyTitle:'네이버 리뷰 현황',
@@ -2601,6 +2287,11 @@
           function revIsDemo(){ return !revState.rows; }
           /* CSV를 올리면 그 데이터, 아직이면 샘플 데이터를 쓰고 · 어느 쪽이든 판매처+브랜드로 거른다 */
           function revBaseRows(){ return revState.rows||revState.demoRows||[]; }
+          function revFilteredRows(){
+            return revChannelRows().filter(function(r){
+              return !revState.activeBrand||(r.brand||'')===revState.activeBrand;
+            });
+          }
           /* 고른 기간 안인지 · 시작일만, 종료일만 골라도 그쪽만 걸린다 */
           function revInDateRange(d){
             if(revState.dateFrom && d<revState.dateFrom) return false;
@@ -2636,6 +2327,12 @@
             order.sort(function(x,y){return counts[y]-counts[x]||x.localeCompare(y)});
             return order.map(function(b){return {name:b,count:counts[b]}});
           }
+          /* 지금 화면이 어느 범위인지 · 배너와 패널 제목에 함께 쓴다 */
+          function revScopeLabel(){
+            var name=(REV_CHANNEL_INFO[revChannelKey()]||REV_CHANNEL_INFO['']).name;
+            return revState.activeBrand?name+' · '+revState.activeBrand:name;
+          }
+
           /* ---- CSV 파싱 ---- */
           var REV_HEADER_MAP={
             channel:['채널','플랫폼','channel','platform'],
@@ -2729,13 +2426,20 @@
             var subEl=document.getElementById('revDateRangeSub');
             var unitEl=document.getElementById('revDailyUnit');
             if(!rows.length){
-              dateEl.textContent=revBaseRows().length?'선택한 기간에 리뷰가 없어요':'업로드된 데이터 없음';
-              subEl.textContent=revBaseRows().length?'기간을 넓히거나 전체 기간을 눌러보세요':'CSV를 불러와 주세요';
+              /* 판매처에 리뷰가 아예 없는 것과, 고른 기간에만 없는 것을 나눠 안내한다 */
+              var channelHas=revBaseRows().some(function(r){return revChannelMatches(r.channel)});
+              if(!channelHas&&revState.source==='collector'){
+                dateEl.textContent='아직 수집된 리뷰가 없어요';
+                subEl.textContent='전체 리뷰 확인에서 '+(REV_CHANNEL_INFO[revChannelKey()]||REV_CHANNEL_INFO['']).name+' 리뷰를 수집하면 여기에 들어와요';
+                return;
+              }
+              dateEl.textContent=channelHas?'선택한 기간에 리뷰가 없어요':'업로드된 데이터 없음';
+              subEl.textContent=channelHas?'기간을 넓히거나 전체 기간을 눌러보세요':'CSV를 불러와 주세요';
               return;
             }
             var min=rows[0].date, max=rows[rows.length-1].date;
             dateEl.textContent=revFmtYMD(min)+' ~ '+revFmtYMD(max);
-            subEl.textContent=(revIsDemo()?'샘플 데이터':'CSV 업로드')+' · '+(REV_CHANNEL_INFO[revChannelKey()]||REV_CHANNEL_INFO['']).name+' '+rows.length.toLocaleString()+'건';
+            subEl.textContent=(revIsDemo()?'샘플 데이터':(revState.source==='collector'?'리뷰 수집기':'CSV 업로드'))+' · '+(REV_CHANNEL_INFO[revChannelKey()]||REV_CHANNEL_INFO['']).name+' '+rows.length.toLocaleString()+'건';
             unitEl.textContent=revFmtMD(min)+' – '+revFmtMD(max)+' · 일별 수집 리뷰 및 부정 비율';
           }
           function renderRevDaily(rows){
@@ -2853,7 +2557,30 @@
             var label=s==='pos'?'긍정':(s==='neg'?'부정':'중립');
             return '<span class="sentic '+s+'">'+label+'</span>';
           }
-          /* ---------- 리뷰마스터 (리뷰 전체 목록) ----------
+          function revRowHtml(r){
+            return '<tr><td>'+revEscapeHtml(r.channel)+'</td>'+
+              '<td>'+revEscapeHtml(r.brand||'-')+'</td>'+
+              '<td>'+revEscapeHtml(r.content)+'</td>'+
+              '<td class="rev-stars">'+revStarsHtml(r.rating)+'</td>'+
+              '<td>'+revSentBadge(r.sentiment)+'</td>'+
+              '<td>'+revFmtMD(r.date)+'</td></tr>';
+          }
+          function revEmptyTable(msg){
+            document.getElementById('revRecentUnit').textContent=msg;
+            document.querySelector('#revRecentTable tbody').innerHTML=
+              '<tr><td colspan="6" style="text-align:center;color:var(--mute)">선택한 조건에 맞는 리뷰가 없습니다</td></tr>';
+            document.getElementById('revMoreWrap').hidden=true;
+          }
+          function renderRevRecentTable(rows){
+            var tbody=document.querySelector('#revRecentTable tbody');
+            var unitEl=document.getElementById('revRecentUnit');
+            document.getElementById('revMoreWrap').hidden=true;
+            if(!rows.length){ revEmptyTable('표시할 리뷰가 없습니다'); return; }
+            var recent=rows.slice().sort(function(a,b){return b.date-a.date}).slice(0,20);
+            unitEl.textContent=revScopeLabel()+' · 최신순 '+recent.length+'건 (전체 '+rows.length.toLocaleString()+'건)';
+            tbody.innerHTML=recent.map(revRowHtml).join('');
+          }
+          /* ---------- 리뷰마스터 ----------
              네이버부터 올웨이즈까지 모든 판매처 리뷰를 한 목록에서 본다 ·
              기간·상품브랜드에 더해 감정과 검색어로도 좁히고, 긴 목록은 '더 보기'로 끊어 보여준다 */
           function revMasterRows(){
@@ -2868,60 +2595,11 @@
               return true;
             });
           }
-          function revSentLabel(s){ return s==='pos'?'긍정':(s==='neg'?'부정':'중립'); }
-          /* ---------- 리뷰마스터 카드 피드 ----------
-             기간·브랜드·감정 필터는 revMasterPanel 안 자기 컨트롤을 쓰지만 값은
-             revState(dateFrom/dateTo/activeBrand/sentiment/keyword/limit)를 그대로 같이 쓴다 ·
-             그래서 필터 로직(revMasterRows)은 손대지 않고 보여주는 방식(표→카드)만 바꿨다 */
-          /* 카드와 팝업(상세) 둘 다 같은 정보를 보여주므로 공통 부분을 여기서 만든다 ·
-             본문 칸 클래스만 달라서(카드는 작게, 팝업은 크게) 인자로 받는다 · 상품명·작성자는
-             실제 수집 데이터에 없는 항목이라, 리뷰 인박스와 같은 방식(내용 기반 해시)으로 만든
-             표시용 값을 그대로 재사용한다 · 상품 페이지 링크도 실제 URL이 없어 인박스 상세와
-             같이 눌리지 않는 안내 텍스트로만 둔다 */
-          function revMasterDetailHtml(r,contentClass){
-            var key=revInboxChannelKey(r.channel);
-            var meta=revInboxMetaFor(r);
-            var reviewer=revInboxReviewerLabel(r);
-            return '<div class="rev-master-card-top">'+
-                '<span class="rev-master-dot'+(key?' is-'+key:'')+'"></span>'+
-                '<span class="rev-master-channel">'+revEscapeHtml(r.channel)+'</span>'+
-                (r.brand?'<span class="rev-master-brand">'+revEscapeHtml(r.brand)+'</span>':'')+
-                '<span class="rev-stars">'+revStarsHtml(r.rating)+'</span>'+
-                revSentBadge(r.sentiment)+
-                '<span class="rev-master-date">'+revFmtYMD(r.date)+'</span>'+
-              '</div>'+
-              '<div class="rev-master-card-product">'+revEscapeHtml(meta.title)+'</div>'+
-              '<div class="'+contentClass+(r.sentiment==='neg'?' neg':'')+'">'+revEscapeHtml(r.content)+'</div>'+
-              '<div class="rev-master-card-foot">'+
-                '<span>'+reviewer+'</span>'+
-                '<span class="rev-master-card-link">상품 페이지 열기 ↗</span>'+
-              '</div>';
-          }
-          function revMasterCardHtml(r,idx){
-            return '<button type="button" class="rev-master-card'+(r.sentiment==='neg'?' neg':'')+'" data-idx="'+idx+'">'+
-              revMasterDetailHtml(r,'rev-master-card-content')+
-            '</button>';
-          }
-          /* 카드를 누르면 같은 내용을 팝업으로 더 크게 보여준다(리뷰내용을 더 잘 보이게 하기 위함) ·
-             revMasterShownRows는 지금 화면에 그려진 카드 순서를 그대로 기억해뒀다가
-             data-idx로 눌린 카드가 어느 리뷰인지 찾는 용도다 */
-          var revMasterShownRows=[];
-          function revMasterOpenModal(r){
-            document.getElementById('revMasterModalBody').innerHTML=
-              revMasterDetailHtml(r,'rev-master-modal-content');
-            if(typeof window.revMasterModalSetOpen==='function') window.revMasterModalSetOpen(true);
-          }
-          function renderRevMasterFeed(rows){
-            var feedEl=document.getElementById('revMasterFeed');
-            var unitEl=document.getElementById('revMasterUnit');
-            var moreWrap=document.getElementById('revMasterMoreWrap');
-            if(!rows.length){
-              unitEl.textContent='조건에 맞는 리뷰가 없습니다';
-              feedEl.innerHTML='<div class="rev-master-empty">선택한 조건에 맞는 리뷰가 없습니다</div>';
-              moreWrap.hidden=true;
-              revMasterShownRows=[];
-              return;
-            }
+          function renderRevMasterTable(rows){
+            var tbody=document.querySelector('#revRecentTable tbody');
+            var unitEl=document.getElementById('revRecentUnit');
+            var moreWrap=document.getElementById('revMoreWrap');
+            if(!rows.length){ revEmptyTable('조건에 맞는 리뷰가 없습니다'); return; }
             var sorted=rows.slice().sort(function(a,b){return b.date-a.date});
             var shown=sorted.slice(0,revState.limit);
             var parts=['전체 판매처'];
@@ -2930,69 +2608,73 @@
             if(revState.keyword.trim()) parts.push('"'+revState.keyword.trim()+'" 검색');
             unitEl.textContent=parts.join(' · ')+' · 최신순 '+shown.length.toLocaleString()+
               '건 (조건에 맞는 '+sorted.length.toLocaleString()+'건)';
-            revMasterShownRows=shown;
-            feedEl.innerHTML=shown.map(function(r,i){return revMasterCardHtml(r,i)}).join('');
+            tbody.innerHTML=shown.map(revRowHtml).join('');
             moreWrap.hidden=shown.length>=sorted.length;
             if(!moreWrap.hidden){
-              document.getElementById('revMasterMoreBtn').textContent=
+              document.getElementById('revMoreBtn').textContent=
                 '더 보기 (남은 '+(sorted.length-shown.length).toLocaleString()+'건)';
             }
           }
-          document.getElementById('revMasterFeed').addEventListener('click',function(e){
-            var card=e.target.closest('.rev-master-card');
-            if(!card) return;
-            var row=revMasterShownRows[+card.dataset.idx];
-            if(row) revMasterOpenModal(row);
-          });
-          /* 리뷰마스터 전용 기간줄 · #revDateRow와 같은 값(revState.dateFrom/dateTo)을 쓰지만
-             화면(입력칸·버튼)은 필터 상자 안에 따로 둔다 */
-          function renderRevMasterDateRow(){
-            var fromEl=document.getElementById('revMasterDateFrom'), toEl=document.getElementById('revMasterDateTo');
-            var range=revDataRange();
-            if(range){
-              fromEl.min=toEl.min=revInputYMD(range.min);
-              fromEl.max=toEl.max=revInputYMD(range.max);
-            }
-            fromEl.value=revState.dateFrom?revInputYMD(revState.dateFrom):'';
-            toEl.value=revState.dateTo?revInputYMD(revState.dateTo):'';
-            var whole=!revState.dateFrom&&!revState.dateTo;
-            document.querySelectorAll('#revMasterPanel .rev-master-filter-row .rev-date-quick[data-days]').forEach(function(b){
-              b.classList.toggle('active',whole&&b.dataset.days==='0');
+          function revSentLabel(s){ return s==='pos'?'긍정':(s==='neg'?'부정':'중립'); }
+          /* ---------- 개선 필요 상품 TOP ----------
+             전체리뷰통계에서만 최근 수집 리뷰 대신 나온다 · 판매처를 고르면 다시 리뷰 목록으로 돌아간다 ·
+             부정 리뷰(별점 2점 이하) 비율이 높은 상품 순 · 리뷰가 두세 건뿐인 상품은 비율이 튀므로
+             최소 건수를 넘긴 상품끼리 줄 세우고, 그런 상품이 하나도 없을 때만 전부를 놓고 줄 세운다 */
+          var REV_TOP_MIN=5, REV_TOP_N=8;
+          function revBrandStats(rows){
+            var by={};
+            rows.forEach(function(r){
+              var b=String(r.brand||'').trim();
+              if(!b) return;
+              var s=by[b]||(by[b]={name:b,total:0,neg:0,ratingSum:0});
+              s.total++;
+              s.ratingSum+=r.rating;
+              if(r.sentiment==='neg') s.neg++;
+            });
+            return Object.keys(by).map(function(k){
+              var s=by[k];
+              s.negRatio=s.total?s.neg/s.total*100:0;
+              s.avg=s.total?s.ratingSum/s.total:0;
+              return s;
             });
           }
-          /* 리뷰마스터 전용 브랜드줄 · revBrandList()가 만드는 값은 같고 담는 그릇만 다르다 */
-          function renderRevMasterBrands(){
-            var list=revBrandList();
-            var box=document.getElementById('revMasterBrandList');
+          /* 브랜드 열이 없는 CSV(또는 빈 화면)에서는 순위를 만들 수 없으니 원래 리뷰 목록을 그대로 쓴다 */
+          function revShowTop(rows){
+            return !revState.master && !revState.activePlatform && revBrandStats(rows).length>0;
+          }
+          function renderRevTopTable(rows){
+            var tbody=document.querySelector('#revTopTable tbody');
+            var unitEl=document.getElementById('revRecentUnit');
+            var stats=revBrandStats(rows);
+            var enough=stats.filter(function(s){return s.total>=REV_TOP_MIN});
+            var pool=enough.length?enough:stats;
+            var list=pool.slice().sort(function(a,b){
+              return (b.negRatio-a.negRatio)||(b.neg-a.neg)||a.name.localeCompare(b.name);
+            }).slice(0,REV_TOP_N);
             if(!list.length){
-              revState.activeBrand=null;
-              box.innerHTML='<span style="font-size:12.5px;color:var(--mute)">브랜드 정보가 없습니다</span>';
+              unitEl.textContent='표시할 리뷰가 없습니다';
+              tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--mute)">선택한 조건에 맞는 리뷰가 없습니다</td></tr>';
               return;
             }
-            var total=revChannelRows().length;
-            var html='<button type="button" class="rev-brand call'+(revState.activeBrand?'':' active')+'" data-brand="">'+
-              '전체<span class="rev-brand-n">'+total.toLocaleString()+'</span></button>';
-            html+=list.map(function(x,i){
-              return '<button type="button" class="rev-brand c'+(i%8+1)+
-                (revState.activeBrand===x.name?' active':'')+(x.count?'':' empty')+
-                '" data-brand="'+revEscapeHtml(x.name)+'">'+revEscapeHtml(x.name)+
-                '<span class="rev-brand-n">'+x.count.toLocaleString()+'</span></button>';
+            unitEl.textContent='전체 판매처 · 부정 리뷰 비율 높은 순 '+list.length+'개'+
+              (enough.length?' · 리뷰 '+REV_TOP_MIN+'건 이상인 상품':'')+
+              ' (전체 '+rows.length.toLocaleString()+'건)';
+            var max=list[0].negRatio||100;   /* 1위를 꽉 찬 막대로 두고 나머지를 견준다 */
+            tbody.innerHTML=list.map(function(s,i){
+              return '<tr><td><span class="rev-rank'+(i<3?' top':'')+'">'+(i+1)+'</span></td>'+
+                '<td>'+revEscapeHtml(s.name)+'</td>'+
+                '<td><div class="rev-negbar"><span class="rev-negbar-track">'+
+                  '<span class="rev-negbar-fill" style="display:block;width:'+(s.negRatio/max*100).toFixed(1)+'%"></span>'+
+                  '</span><span class="rev-negbar-v">'+s.negRatio.toFixed(1)+'%</span></div></td>'+
+                '<td>'+s.neg.toLocaleString()+'개</td>'+
+                '<td class="rev-stars">'+revStarsHtml(s.avg)+'<span class="rev-avg">'+s.avg.toFixed(1)+'</span></td>'+
+                '<td>'+s.total.toLocaleString()+'개</td></tr>';
             }).join('');
-            box.innerHTML=html;
-          }
-          function renderRevMasterPanel(){
-            renderRevMasterDateRow();
-            renderRevMasterBrands();
-            document.querySelectorAll('#revMasterSentRow button[data-sent]').forEach(function(b){
-              b.classList.toggle('active',(b.dataset.sent||'')===revState.sentiment);
-            });
-            var searchEl=document.getElementById('revMasterSearch');
-            if(document.activeElement!==searchEl) searchEl.value=revState.keyword;
-            renderRevMasterFeed(revMasterRows());
           }
           /* 배너 색·제목과 각 패널 제목을 선택한 판매처(+브랜드)에 맞춘다 · 카페24는 기본 주황 배너를 그대로 쓴다 */
-          function renderRevChrome(){
+          function renderRevChrome(showTop){
             var key=revChannelKey(), info=REV_CHANNEL_INFO[key]||REV_CHANNEL_INFO[''];
+            var brand=revState.activeBrand;
             var hero=document.getElementById('revHero');
             if(hero){
               hero.classList.toggle('is-naver',key==='naver');
@@ -3006,6 +2688,34 @@
               ?'네이버·카페24·쿠팡·토스·올웨이즈 리뷰를 판매처 구분 없이 한 목록에서 봅니다'
               :info.sub;
             document.getElementById('revDailyTitle').textContent=info.dailyTitle;
+            document.getElementById('revRecentTitle').textContent=
+              master?'전체 판매처 리뷰 목록'
+              :(showTop?'개선 필요 상품 TOP'
+              :(brand?info.recentTitle+' · '+brand:info.recentTitle));
+          }
+          /* 브랜드 선택줄 · 판매처를 바꿔 지금 고른 브랜드가 사라지면 자동으로 전체로 되돌린다 */
+          function renderRevBrands(showTop){
+            var bar=document.getElementById('revBrandBar');
+            /* 개선 필요 상품 TOP은 상품별 순위 자체라서 브랜드 고르는 줄이 필요 없다 */
+            if(showTop){ bar.hidden=true; return; }
+            var list=revBrandList();
+            if(!list.length){
+              revState.activeBrand=null;
+              bar.hidden=true;
+              document.getElementById('revBrandList').innerHTML='';
+              return;
+            }
+            bar.hidden=false;
+            var total=revChannelRows().length;
+            var html='<button type="button" class="rev-brand call'+(revState.activeBrand?'':' active')+'" data-brand="">'+
+              '전체<span class="rev-brand-n">'+total.toLocaleString()+'</span></button>';
+            html+=list.map(function(x,i){
+              return '<button type="button" class="rev-brand c'+(i%8+1)+
+                (revState.activeBrand===x.name?' active':'')+(x.count?'':' empty')+
+                '" data-brand="'+revEscapeHtml(x.name)+'">'+revEscapeHtml(x.name)+
+                '<span class="rev-brand-n">'+x.count.toLocaleString()+'</span></button>';
+            }).join('');
+            document.getElementById('revBrandList').innerHTML=html;
           }
           function revInputYMD(d){
             return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -3036,388 +2746,38 @@
           }
           function renderRevAll(){
             revSyncBrand();
-            /* 배너·일별 차트는 판매처 전체 기준 */
+            /* 배너·일별 차트는 판매처 전체 기준, 아래 리뷰 목록만 고른 상품브랜드로 좁힌다 */
             var chRows=revChannelRows();
             var master=!!revState.master;
-            /* 판매처를 하나 골랐을 때(네이버~올웨이즈 전부)는 리뷰 인박스를 보여준다 ·
-               리뷰마스터·'통합 리뷰 수집기' 홈만 각자 전용 화면을 쓴다 */
-            var isChannelInbox=!master&&!!revState.activePlatform;
-            var isHomeSync=!master&&!revState.activePlatform;
-            renderRevChrome();
+            var showTop=revShowTop(chRows);
+            renderRevChrome(showTop);
             renderRevDateRow();
+            renderRevBrands(showTop);
             renderRevHeader(chRows);
             renderRevDaily(chRows);
-            /* 리뷰마스터는 목록만 보는 화면이라 일별 차트 패널은 접어둔다 ·
-               '통합 리뷰 수집기' 홈 화면은 차트 대신 리뷰 수집 설정(REVIEW SYNC)을 보여준다 */
-            document.getElementById('revDailyPanel').hidden=master||isHomeSync;
-            document.getElementById('revDateRow').hidden=isHomeSync||master;
-            document.getElementById('revInboxPanel').hidden=!isChannelInbox;
-            document.getElementById('revSyncPanel').hidden=!isHomeSync;
-            document.getElementById('revMasterPanel').hidden=!master;
-            if(isChannelInbox){ renderRevInbox(revInboxChannel); return; }
-            if(isHomeSync){ renderRevSync(); return; }
-            renderRevMasterPanel();
+            /* 리뷰마스터는 목록만 보는 화면이라 일별 차트 패널은 접어둔다 */
+            document.getElementById('revDailyPanel').hidden=master;
+            document.getElementById('revMasterFilter').hidden=!master;
+            /* 통계 및 인사이트에서는 최근 수집 리뷰 자리에 개선 필요 상품 TOP을 놓는다 */
+            document.getElementById('revTopWrap').hidden=!showTop;
+            document.getElementById('revRecentWrap').hidden=showTop;
+            if(showTop) renderRevTopTable(chRows);
+            else if(master) renderRevMasterTable(revMasterRows());
+            else renderRevRecentTable(revFilteredRows());
           }
-
-          /* ---------- 네이버리뷰 리뷰 인박스 ----------
-             네이버 채널을 고르면 리뷰현황(차트) 아래가 문의응대용 좌우 2단 화면으로 바뀐다 ·
-             왼쪽 목록에서 리뷰를 고르면 오른쪽에 상세와 답글 작성창이 뜬다 · 답글은 이 브라우저에만
-             저장된다(백엔드 없음) · 상품명·상품번호·리뷰번호·작성 시각은 실제 수집 데이터에 없는
-             항목이라, 리뷰 내용을 바탕으로 화면마다 항상 같은 값이 나오게 만든 표시용 값이다 */
-          var REV_INBOX_REPLY_KEY='baroyam_review_replies_v1';
-          function revInboxLoadReplies(){
-            try{ return JSON.parse(localStorage.getItem(REV_INBOX_REPLY_KEY)||'{}'); }catch(e){ return {}; }
-          }
-          function revInboxSaveReplies(map){
-            try{ localStorage.setItem(REV_INBOX_REPLY_KEY,JSON.stringify(map)); }catch(e){}
-          }
-          var revInboxReplies=revInboxLoadReplies();
-
-          function revHashInt(str){
-            var h=5381;
-            for(var i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))|0;
-            return Math.abs(h);
-          }
-          var REV_INBOX_TITLE_WORDS=['골라담기 비밀링크','모음전 반값특가','정성 담은 구성 세트','베스트 인기 구성'];
-          var REV_INBOX_TITLE_PREFIX=['[시크릿할인] ','[비밀특가] ','',''];
-          function revInboxMetaFor(row){
-            if(row.__inbox) return row.__inbox;
-            var seed=revHashInt((row.channel||'')+'|'+(row.brand||'')+'|'+(row.content||'')+'|'+row.date.getTime());
-            var h=seed%24, m=Math.floor(seed/24)%60, s=Math.floor(seed/1440)%60;
-            var brandName=row.brand||'바로얌';
-            var title=REV_INBOX_TITLE_PREFIX[seed%4]+brandName+' '+REV_INBOX_TITLE_WORDS[Math.floor(seed/4)%4];
-            row.__inbox={id:'rv'+seed, h:h, m:m, s:s, productNo:100+(seed%900), reviewId:10000000+(seed%89999999), title:title};
-            return row.__inbox;
-          }
-          function revInboxAmPm(h){ return h<12?'오전':'오후'; }
-          function revInboxHour12(h){ var x=h%12; return x===0?12:x; }
-          function revInboxHM(h,m){ return revInboxAmPm(h)+' '+revInboxHour12(h)+':'+(m<10?'0'+m:m); }
-          function revFmtKoreanDT(date,h,m){
-            return date.getFullYear()+'. '+(date.getMonth()+1)+'. '+date.getDate()+'. '+revInboxHM(h,m);
-          }
-          function revFmtLogTs(date,h,m,s){
-            function p2(n){return n<10?'0'+n:''+n}
-            return date.getFullYear()+'-'+p2(date.getMonth()+1)+'-'+p2(date.getDate())+' '+p2(h)+':'+p2(m)+':'+p2(s);
-          }
-          /* 채널별 매장·구매자 표기 · 리뷰마스터/홈 인박스처럼 여러 채널이 섞이는 화면에서도
-             카드마다 실제 채널에 맞는 이름이 나오게 한다 */
-          function revInboxChannelKey(channel){
-            return Object.keys(REV_CHANNEL_NAME).find(function(k){return REV_CHANNEL_NAME[k]===channel});
-          }
-          var REV_INBOX_REVIEWER_LABEL={naver:'네이버 페이 구매자', cafe24:'카페24 구매자', coupang:'쿠팡 구매자', toss:'토스 구매자', alwayz:'올웨이즈 구매자'};
-          /* 판매처 이름만 그대로 보여준다 · 앞에 '카페이노스' 같은 매장 브랜드를 붙이면
-             화면이 온통 같은 말로 시작해 오히려 헷갈린다는 피드백으로 단순화함 ·
-             CSV로 올린 값일 수 있어 여기서 이스케이프해서 돌려준다(호출부에서 그대로 innerHTML에 꽂음) */
-          function revInboxShopLabel(row){ return revEscapeHtml(row.channel); }
-          function revInboxReviewerLabel(row){ return REV_INBOX_REVIEWER_LABEL[revInboxChannelKey(row.channel)]||(revEscapeHtml(row.channel)+' 구매자'); }
-
-          /* 리뷰 인박스는 네이버리뷰(네이버 채널만)와 통합 리뷰 수집기 홈(수집범위에 걸리는 전체
-             채널) 두 곳에서 쓴다 · id 접두사(prefix)와 보여줄 행을 고르는 함수(rowsFn)만 다른
-             '인스턴스'로 만들어서 같은 렌더링 코드를 그대로 재사용한다 · 답글(revInboxReplies)은
-             두 화면이 같은 저장소를 공유한다(같은 리뷰면 어디서 봐도 같은 답글) */
-          function revInboxCreate(prefix, rowsFn){
-            return {prefix:prefix, rowsFn:rowsFn, tab:'all', keyword:'', star:'', page:0, selectedId:null};
-          }
-          function revInboxEl(inst, suffix){ return document.getElementById(inst.prefix+suffix); }
-
-          function revInboxItems(rows){
-            return rows.map(function(row){
-              var meta=revInboxMetaFor(row);
-              return {row:row, meta:meta, reply:revInboxReplies[meta.id]||null};
-            });
-          }
-          function revInboxSearchStarFiltered(items, inst){
-            var kw=inst.keyword.trim().toLowerCase(), star=inst.star;
-            return items.filter(function(it){
-              if(star&&String(it.row.rating)!==star) return false;
-              if(kw){
-                var hay=((it.row.content||'')+' '+(it.row.brand||'')+' '+it.meta.title).toLowerCase();
-                if(hay.indexOf(kw)<0) return false;
-              }
-              return true;
-            });
-          }
-          function revInboxByTab(items,tab){
-            if(tab==='neg') return items.filter(function(it){return it.row.sentiment==='neg'});
-            if(tab==='pos') return items.filter(function(it){return it.row.sentiment==='pos'});
-            if(tab==='pending') return items.filter(function(it){return !it.reply});
-            return items;
-          }
-          function revInboxCardHtml(it, inst){
-            var row=it.row, meta=it.meta;
-            var tags=row.sentiment==='neg'?'<span class="rev-inbox-pill neg">부정</span>':'';
-            tags+=it.reply?'<span class="rev-inbox-pill done">답변완료</span>':'<span class="rev-inbox-pill pending">답글대기</span>';
-            return '<button type="button" class="rev-inbox-card'+(row.sentiment==='neg'?' neg':'')+(meta.id===inst.selectedId?' active':'')+'" data-id="'+meta.id+'">'+
-              '<div class="rev-inbox-card-top">'+
-                '<span class="rev-inbox-shop">'+revInboxShopLabel(row)+'</span>'+
-                '<span class="rev-inbox-card-stars rev-stars">'+revStarsHtml(row.rating)+'</span>'+
-                '<span class="rev-inbox-card-tags">'+tags+'</span>'+
-              '</div>'+
-              '<div class="rev-inbox-card-content">'+revEscapeHtml(row.content)+'</div>'+
-              '<div class="rev-inbox-card-foot">'+
-                '<span class="rev-inbox-card-product">'+revEscapeHtml(meta.title)+'</span>'+
-                '<span class="rev-inbox-card-meta">'+revInboxReviewerLabel(row)+' · '+revFmtMD(row.date)+' '+revInboxHM(meta.h,meta.m)+'</span>'+
-              '</div>'+
-            '</button>';
-          }
-          function renderRevInboxDetail(it, inst){
-            var el=revInboxEl(inst,'Detail');
-            if(!it){ el.innerHTML='<div class="rev-inbox-empty">조건에 맞는 리뷰가 없습니다</div>'; return; }
-            var row=it.row, meta=it.meta;
-            var dt=revFmtKoreanDT(row.date,meta.h,meta.m);
-            var logTs=revFmtLogTs(row.date,meta.h,meta.m,meta.s);
-            var tags=row.sentiment==='neg'?'<span class="rev-inbox-pill neg">부정</span>':'';
-            var reviewerLabel=revInboxReviewerLabel(row);
-            var shopLabel=revInboxShopLabel(row);
-            var savedHtml=it.reply?('<div class="rev-inbox-saved"><b>등록된 답글</b> · '+
-              revEscapeHtml(new Date(it.reply.at).toLocaleString('ko-KR'))+'<br>'+revEscapeHtml(it.reply.text)+'</div>'):'';
-            var draftText=it.reply?it.reply.text:'';
-            el.innerHTML=
-              '<div class="rev-inbox-detail-top">'+
-                '<div class="rev-inbox-detail-tags"><span class="rev-inbox-shop">'+shopLabel+'</span>'+tags+'</div>'+
-                '<div class="rev-inbox-detail-date">'+dt+'</div>'+
-              '</div>'+
-              '<div class="rev-inbox-detail-title">'+revEscapeHtml(meta.title)+'</div>'+
-              '<div class="rev-inbox-detail-sub">상품 '+meta.productNo+'</div>'+
-              '<div class="rev-inbox-detail-stars rev-stars">'+revStarsHtml(row.rating)+'<b>'+row.rating+'점</b></div>'+
-              '<div class="rev-inbox-section-label">고객 리뷰</div>'+
-              '<div class="rev-inbox-quote">'+revEscapeHtml(row.content)+' <span class="dim">('+logTs+' 에 등록된 '+reviewerLabel.replace(/구매자$/,'구매평')+')</span></div>'+
-              '<div class="rev-inbox-meta-grid">'+
-                '<div><div class="lab">작성자</div><div class="val">'+reviewerLabel+'</div></div>'+
-                '<div><div class="lab">리뷰 구분</div><div class="val">'+revEscapeHtml(row.channel)+' 리뷰</div></div>'+
-                '<div><div class="lab">리뷰 번호</div><div class="val">'+meta.reviewId+'</div></div>'+
-                '<div><div class="lab">작성일</div><div class="val">'+dt+'</div></div>'+
-              '</div>'+
-              '<div class="rev-inbox-pagelink">상품 페이지 열기 ↗</div>'+
-              '<div class="rev-inbox-divider"></div>'+
-              '<div class="rev-inbox-section-label" style="margin-bottom:10px">SELLER REPLY</div>'+
-              '<div class="rev-inbox-reply-head"><span class="rev-inbox-reply-shop">'+shopLabel+' 답글</span>'+
-                '<span class="rev-inbox-pill '+(it.reply?'done':'pending')+'">'+(it.reply?'답변완료':'미답변')+'</span></div>'+
-              savedHtml+
-              '<div class="rev-inbox-section-label">새 답글 작성</div>'+
-              '<textarea class="rev-inbox-textarea" id="'+inst.prefix+'ReplyText" maxlength="5000" placeholder="고객에게 전달할 답글을 입력해 주세요.">'+revEscapeHtml(draftText)+'</textarea>'+
-              '<div class="rev-inbox-reply-foot">'+
-                '<span class="rev-inbox-reply-hint">저장하면 고객에게 바로 공개됩니다.</span>'+
-                '<div class="rev-inbox-reply-actions">'+
-                  '<span class="rev-inbox-char-count" id="'+inst.prefix+'CharCount">'+draftText.length+' / 5,000</span>'+
-                  '<button type="button" class="rev-inbox-btn-reset" id="'+inst.prefix+'ResetBtn">되돌리기</button>'+
-                  '<button type="button" class="rev-inbox-btn-submit" id="'+inst.prefix+'SubmitBtn"'+(draftText.trim()?'':' disabled')+'>답글 등록</button>'+
-                '</div>'+
-              '</div>';
-            var ta=revInboxEl(inst,'ReplyText');
-            function syncSubmitState(){
-              revInboxEl(inst,'CharCount').textContent=ta.value.length+' / 5,000';
-              revInboxEl(inst,'SubmitBtn').disabled=!ta.value.trim();
-            }
-            ta.addEventListener('input',syncSubmitState);
-            revInboxEl(inst,'ResetBtn').addEventListener('click',function(){
-              ta.value=draftText;
-              syncSubmitState();
-            });
-            revInboxEl(inst,'SubmitBtn').addEventListener('click',function(){
-              var text=ta.value.trim();
-              if(!text) return;
-              revInboxReplies[meta.id]={text:text, at:Date.now()};
-              revInboxSaveReplies(revInboxReplies);
-              renderRevInbox(inst);
-            });
-          }
-          function renderRevInbox(inst){
-            var chRows=inst.rowsFn();
-            var all=revInboxItems(chRows);
-            var base=revInboxSearchStarFiltered(all, inst);
-            var counts={
-              all:base.length,
-              neg:base.filter(function(it){return it.row.sentiment==='neg'}).length,
-              pos:base.filter(function(it){return it.row.sentiment==='pos'}).length,
-              pending:base.filter(function(it){return !it.reply}).length
-            };
-            revInboxEl(inst,'CntAll').textContent=counts.all;
-            revInboxEl(inst,'CntNeg').textContent=counts.neg;
-            revInboxEl(inst,'CntPos').textContent=counts.pos;
-            revInboxEl(inst,'CntPending').textContent=counts.pending;
-            revInboxEl(inst,'Count').textContent=counts.all.toLocaleString()+'건';
-
-            var tabbed=revInboxByTab(base,inst.tab).slice().sort(function(a,b){return b.row.date-a.row.date});
-            var pages=Math.max(1,Math.ceil(tabbed.length/REV_PAGE));
-            if(inst.page>=pages) inst.page=pages-1;
-            if(inst.page<0) inst.page=0;
-            var pageItems=tabbed.slice(inst.page*REV_PAGE,inst.page*REV_PAGE+REV_PAGE);
-
-            revInboxEl(inst,'PageLabel').textContent=(tabbed.length?inst.page+1:1)+' / '+pages;
-            revInboxEl(inst,'Prev').disabled=inst.page<=0;
-            revInboxEl(inst,'Next').disabled=inst.page>=pages-1;
-
-            var cardsEl=revInboxEl(inst,'Cards');
-            if(!pageItems.length){
-              cardsEl.innerHTML='<div class="rev-inbox-empty">조건에 맞는 리뷰가 없습니다</div>';
-            }else{
-              if(!pageItems.some(function(it){return it.meta.id===inst.selectedId})) inst.selectedId=pageItems[0].meta.id;
-              cardsEl.innerHTML=pageItems.map(function(it){return revInboxCardHtml(it, inst)}).join('');
-            }
-            renderRevInboxDetail(pageItems.find(function(it){return it.meta.id===inst.selectedId})||pageItems[0]||null, inst);
-          }
-          function revInboxWireEvents(inst, onChange){
-            revInboxEl(inst,'Tabs').addEventListener('click',function(e){
-              var b=e.target.closest('button[data-tab]');
-              if(!b) return;
-              inst.tab=b.dataset.tab;
-              inst.page=0;
-              revInboxEl(inst,'Tabs').querySelectorAll('button[data-tab]').forEach(function(x){
-                x.classList.toggle('active',x.dataset.tab===inst.tab);
-              });
-              onChange();
-            });
-            (function(){
-              var input=revInboxEl(inst,'Search'), t=null;
-              input.addEventListener('input',function(){
-                clearTimeout(t);
-                t=setTimeout(function(){
-                  inst.keyword=input.value;
-                  inst.page=0;
-                  onChange();
-                },200);
-              });
-            })();
-            revInboxEl(inst,'StarSel').addEventListener('change',function(e){
-              inst.star=e.target.value;
-              inst.page=0;
-              onChange();
-            });
-            revInboxEl(inst,'Prev').addEventListener('click',function(){
-              inst.page=Math.max(0,inst.page-1);
-              onChange();
-            });
-            revInboxEl(inst,'Next').addEventListener('click',function(){
-              inst.page+=1;
-              onChange();
-            });
-            revInboxEl(inst,'Cards').addEventListener('click',function(e){
-              var btn=e.target.closest('.rev-inbox-card');
-              if(!btn) return;
-              inst.selectedId=btn.dataset.id;
-              onChange();
-            });
-          }
-          /* revChannelRows()는 revState.activePlatform이 가리키는 판매처를 그대로 따라가므로
-             인스턴스 하나로 네이버~올웨이즈 다섯 채널 모두를 커버한다(판매처를 바꾸면 이 인스턴스가
-             보여주는 행도 자동으로 바뀐다 · 화면 전환 때 탭/검색/페이지 상태를 되돌리는 건
-             revSetActivePlatform가 한다) */
-          var revInboxChannel=revInboxCreate('revInbox', revChannelRows);
-          revInboxWireEvents(revInboxChannel, function(){ renderRevAll(); });
-
-          /* ---------- '통합 리뷰 수집기' 홈 화면 리뷰 수집 설정(REVIEW SYNC) ----------
-             로그인·AI 자동응답·실제 수집은 모두 별도 백엔드/자동화 스크립트가 있어야 하는
-             기능이라(브라우저 웹앱 혼자서는 불가능) 관련 버튼은 HTML에 disabled로 이미 박아뒀다 ·
-             여기서는 날짜·쇼핑몰 선택과, 그 선택에 맞춰 이미 불러온 리뷰 데이터를 집계하는
-             통계 카드만 실제로 움직인다 */
-          var revSync={dateFrom:null, dateTo:null, shops:{naver:true, coupang:true, alwayz:true, toss:true, cafe24:true}};
-          var REV_SYNC_SHOPS=[
-            {key:'naver', code:'N', name:'네이버', desc:'리뷰 수집 · 답글 작성/수정'},
-            {key:'coupang', code:'C', name:'쿠팡', desc:'리뷰 수집 · 답글 기능 없음'},
-            {key:'alwayz', code:'A', name:'올웨이즈', desc:'리뷰 수집 · 새 글 작성'},
-            {key:'toss', code:'T', name:'토스', desc:'리뷰 수집 · 답글 기능 없음'},
-            {key:'cafe24', code:'K', name:'카페이노스', desc:'답글 작성/수정 · 자동 수집 제외'}
-          ];
-          function revSyncRows(){
-            return revBaseRows().filter(function(r){
-              var key=Object.keys(REV_CHANNEL_NAME).find(function(k){return REV_CHANNEL_NAME[k]===r.channel});
-              if(key&&!revSync.shops[key]) return false;
-              if(revSync.dateFrom&&r.date<revSync.dateFrom) return false;
-              if(revSync.dateTo&&r.date>revSync.dateTo) return false;
-              return true;
-            });
-          }
-          function renderRevSyncShops(){
-            document.getElementById('revSyncShops').innerHTML=REV_SYNC_SHOPS.map(function(s){
-              return '<button type="button" class="rev-sync-shop'+(revSync.shops[s.key]?' active':'')+'" data-shop="'+s.key+'">'+
-                '<span class="rev-sync-shop-top"><span class="rev-sync-shop-icon is-'+s.key+'">'+s.code+'</span>'+
-                '<span class="rev-sync-shop-name">'+s.name+'</span></span>'+
-                '<span class="rev-sync-shop-desc">'+s.desc+'</span>'+
-              '</button>';
-            }).join('');
-          }
-          function renderRevSyncStats(){
-            var rows=revSyncRows();
-            var neg=rows.filter(function(r){return r.rating<=2}).length;
-            var pos=rows.length-neg;
-            var chHtml=REV_SYNC_SHOPS.map(function(s){
-              var n=rows.filter(function(r){return r.channel===REV_CHANNEL_NAME[s.key]}).length;
-              return '<div class="rev-sync-chstat"><div class="rev-sync-chstat-top">'+
-                '<span class="rev-sync-shop-icon sm is-'+s.key+'">'+s.code+'</span><span class="nm">'+s.name+'</span></div>'+
-                '<span class="v">'+n.toLocaleString()+'</span></div>';
-            }).join('');
-            document.getElementById('revSyncStats').innerHTML=
-              '<div class="rev-sync-stat-main"><div class="rev-sync-stat-lab">전체 리뷰</div>'+
-                '<div class="rev-sync-stat-val">'+rows.length.toLocaleString()+'</div>'+
-                '<div class="rev-sync-stat-sub">수집 범위 전체</div></div>'+
-              '<div class="rev-sync-stat-main warn"><div class="rev-sync-stat-lab">확인할 부정 리뷰</div>'+
-                '<div class="rev-sync-stat-val">'+neg.toLocaleString()+'</div>'+
-                '<div class="rev-sync-stat-sub">1~2점 우선 처리</div></div>'+
-              '<div class="rev-sync-stat-main"><div class="rev-sync-stat-lab">긍정 리뷰</div>'+
-                '<div class="rev-sync-stat-val">'+pos.toLocaleString()+'</div>'+
-                '<div class="rev-sync-stat-sub">3~5점</div></div>'+
-              '<div class="rev-sync-chstats">'+chHtml+'</div>';
-          }
-          function renderRevSyncMeta(){
-            var range=revDataRange();
-            var el=document.getElementById('revSyncMeta');
-            if(!range){ el.textContent='불러온 리뷰 데이터가 없습니다'; return; }
-            el.textContent=revFmtYMD(revSync.dateFrom||range.min)+' ~ '+revFmtYMD(revSync.dateTo||range.max)+
-              ' · '+(revIsDemo()?'샘플 데이터':'CSV 업로드')+' 기준';
-          }
-          function renderRevSync(){
-            var range=revDataRange();
-            var fromEl=document.getElementById('revSyncFrom'), toEl=document.getElementById('revSyncTo');
-            if(range){
-              if(revSync.dateFrom===null) revSync.dateFrom=range.min;
-              if(revSync.dateTo===null) revSync.dateTo=range.max;
-              fromEl.min=toEl.min=revInputYMD(range.min);
-              fromEl.max=toEl.max=revInputYMD(range.max);
-            }
-            fromEl.value=revSync.dateFrom?revInputYMD(revSync.dateFrom):'';
-            toEl.value=revSync.dateTo?revInputYMD(revSync.dateTo):'';
-            renderRevSyncShops();
-            renderRevSyncStats();
-            renderRevSyncMeta();
-            renderRevInbox(revInboxHome);
-          }
-          document.getElementById('revSyncFrom').addEventListener('change',function(){
-            var v=revParseInputDate(this.value);
-            if(v) revSync.dateFrom=v;
-            renderRevSyncStats(); renderRevSyncMeta(); renderRevInbox(revInboxHome);
-          });
-          document.getElementById('revSyncTo').addEventListener('change',function(){
-            var v=revParseInputDate(this.value);
-            if(v) revSync.dateTo=v;
-            renderRevSyncStats(); renderRevSyncMeta(); renderRevInbox(revInboxHome);
-          });
-          document.getElementById('revSyncShops').addEventListener('click',function(e){
-            var btn=e.target.closest('.rev-sync-shop');
-            if(!btn) return;
-            revSync.shops[btn.dataset.shop]=!revSync.shops[btn.dataset.shop];
-            renderRevSyncShops();
-            renderRevSyncStats();
-            renderRevInbox(revInboxHome);
-          });
-          /* 리뷰 업무함 아래 붙는 전체 판매처 인박스 · 판매처별 화면의 revInboxChannel과 같은 코드를
-             prefix만 바꿔 재사용하고, 보여주는 행은 위 COLLECT 선택(revSyncRows)을 그대로 따른다 */
-          var revInboxHome=revInboxCreate('revHomeInbox', revSyncRows);
-          revInboxWireEvents(revInboxHome, function(){ renderRevInbox(revInboxHome); });
-
-          /* 리뷰마스터 필터 상자 · 감정 고르기, 검색어, 기간, 브랜드, 더 보기 */
-          document.getElementById('revMasterSentRow').addEventListener('click',function(e){
+          /* 리뷰마스터 필터 · 감정 고르기, 검색어, 더 보기 */
+          document.getElementById('revMasterFilter').addEventListener('click',function(e){
             var b=e.target.closest('button[data-sent]');
             if(!b) return;
             revState.sentiment=b.dataset.sent||'';
             revState.limit=REV_PAGE;
-            document.querySelectorAll('#revMasterSentRow button[data-sent]').forEach(function(x){
+            document.querySelectorAll('#revMasterFilter button[data-sent]').forEach(function(x){
               x.classList.toggle('active',(x.dataset.sent||'')===revState.sentiment);
             });
             renderRevAll();
           });
           (function(){
-            var input=document.getElementById('revMasterSearch'), t=null;
+            var input=document.getElementById('revSearch'), t=null;
             input.addEventListener('input',function(){
               clearTimeout(t);
               t=setTimeout(function(){
@@ -3427,39 +2787,8 @@
               },200);
             });
           })();
-          document.getElementById('revMasterMoreBtn').addEventListener('click',function(){
+          document.getElementById('revMoreBtn').addEventListener('click',function(){
             revState.limit+=REV_PAGE;
-            renderRevAll();
-          });
-          document.querySelector('#revMasterPanel .rev-master-filter-row .rev-master-filter-controls').addEventListener('click',function(e){
-            var btn=e.target.closest('.rev-date-quick[data-days]');
-            if(!btn) return;
-            var days=+btn.dataset.days;
-            revState.limit=REV_PAGE;
-            if(!days){ revState.dateFrom=null; revState.dateTo=null; renderRevAll(); return; }
-            var range=revDataRange();
-            if(!range) return;
-            var to=range.max;
-            var from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-(days-1));
-            revState.dateFrom=from<range.min?range.min:from;
-            revState.dateTo=to;
-            renderRevAll();
-          });
-          ['revMasterDateFrom','revMasterDateTo'].forEach(function(id){
-            document.getElementById(id).addEventListener('change',function(){
-              var from=revParseInputDate(document.getElementById('revMasterDateFrom').value);
-              var to=revParseInputDate(document.getElementById('revMasterDateTo').value);
-              if(from&&to&&from>to){ var t=from; from=to; to=t; }
-              revState.dateFrom=from; revState.dateTo=to;
-              revState.limit=REV_PAGE;
-              renderRevAll();
-            });
-          });
-          document.getElementById('revMasterBrandList').addEventListener('click',function(e){
-            var btn=e.target.closest('.rev-brand');
-            if(!btn) return;
-            revState.activeBrand=btn.dataset.brand||null;
-            revState.limit=REV_PAGE;
             renderRevAll();
           });
           /* 최근 N일은 오늘이 아니라 데이터의 마지막 날을 기준으로 잡는다(샘플·과거 CSV도 맞게 걸리도록) */
@@ -3486,6 +2815,13 @@
               renderRevAll();
             });
           });
+          document.getElementById('revBrandList').addEventListener('click',function(e){
+            var btn=e.target.closest('.rev-brand');
+            if(!btn) return;
+            revState.activeBrand=btn.dataset.brand||null;
+            renderRevAll();
+          });
+
           /* ---- CSV 버튼 연결 ---- */
           document.getElementById('revCsvBtn').addEventListener('click',function(){
             document.getElementById('revCsvInput').click();
@@ -3505,6 +2841,7 @@
                 throw new Error('CSV에서 유효한 리뷰 행을 찾지 못했습니다.\n열은 채널,내용,별점,수집일 순서(또는 같은 이름의 헤더)를 사용해주세요.\n브랜드별로 나눠 보려면 브랜드 열을 추가하면 됩니다.');
               }
               revState.rows=result.rows;
+              revState.source='csv';
               revState.activeBrand=null;
               revState.dateFrom=null; revState.dateTo=null;
               revSetActivePlatform(null);
@@ -3520,12 +2857,106 @@
             });
           });
 
-          /* 첫 진입 화면 · CSV를 올리기 전에는 샘플 데이터로 전체리뷰통계를 그린다 */
+          /* ---- 리뷰 수집기 연동 ----
+             전체 리뷰 확인(리뷰 수집기)이 수집을 마치면 dashboard-embed.js가 리뷰를 보내준다 ·
+             수집기는 마지막 수집분만 들고 있으므로, 여기서 리뷰 id 기준으로 누적해 이 브라우저에 저장한다 ·
+             그래서 네이버만 다시 수집해도 앞서 받은 쿠팡·토스 리뷰가 판매처별 리뷰에서 사라지지 않는다 */
+          var REV_COLLECTOR_KEY='baroyam_collector_reviews_v1';
+          /* 수집기 platform → 판매처별 리뷰 채널 이름 (카페이노스 공식몰은 카페24 자사몰) */
+          var REV_COLLECTOR_CHANNEL={naver:'네이버', caffeinnos:'카페24', coupang:'쿠팡', toss:'토스', alwayz:'올웨이즈'};
+          var REV_COLLECTOR_SENT={positive:'pos', negative:'neg', neutral:'neu'};
+          function revLoadCollector(){
+            try{ return JSON.parse(localStorage.getItem(REV_COLLECTOR_KEY)||'null'); }catch(e){ return null; }
+          }
+          function revCollectorRows(store){
+            var rows=[];
+            ((store&&store.reviews)||[]).forEach(function(r){
+              var date=revParseFlexDate(r.date);
+              var channel=REV_COLLECTOR_CHANNEL[r.platform];
+              if(!date||!channel||!r.content) return;
+              var rating=Math.min(5,Math.max(1,Number(r.rating)||3));
+              rows.push({channel:channel, brand:r.brand||'', content:r.content, rating:rating, date:date,
+                sentiment:REV_COLLECTOR_SENT[r.sentiment]||(rating>=4?'pos':(rating<=2?'neg':'neu'))});
+            });
+            rows.sort(function(a,b){return a.date-b.date});
+            return rows;
+          }
+          function revUseCollector(store){
+            var rows=revCollectorRows(store);
+            if(!rows.length) return false;
+            /* 샘플·CSV에서 넘어올 때는 이전 기간 선택이 새 데이터를 가리지 않게 풀어준다 */
+            if(revState.source!=='collector'){ revState.dateFrom=null; revState.dateTo=null; revState.activeBrand=null; }
+            revState.rows=rows;
+            revState.source='collector';
+            return true;
+          }
+          window.revApplyCollector=function(payload){
+            if(!payload||!Array.isArray(payload.reviews)) return;
+            var prev=revLoadCollector();
+            /* 이미 받은 수집분이면 무시한다 · 그 사이 CSV를 올렸다면 CSV 화면을 덮어쓰지 않는다 */
+            if(prev&&prev.collectedAt===payload.collectedAt) return;
+            var byId={};
+            ((prev&&prev.reviews)||[]).forEach(function(r){ if(r&&r.id) byId[r.id]=r; });
+            payload.reviews.forEach(function(r){ if(r&&r.id) byId[r.id]=r; });
+            var store={collectedAt:payload.collectedAt, reviews:Object.keys(byId).map(function(k){return byId[k]})};
+            try{ localStorage.setItem(REV_COLLECTOR_KEY,JSON.stringify(store)); }
+            catch(e){ console.warn('수집 리뷰를 브라우저에 저장하지 못했습니다',e); }
+            if(revUseCollector(store)) renderRevAll();
+          };
+
+          /* 첫 진입 화면 · 저장된 수집 리뷰가 있으면 그걸로, 없으면 샘플 데이터로 전체리뷰통계를 그린다 */
           revState.demoRows=revBuildDemoRows();
+          revUseCollector(revLoadCollector());
           renderRevAll();
           </script>
         </section>
       </div><!-- /view-review -->
+
+      <div id="view-admin" style="display:none">
+        <section class="section admin-section" aria-labelledby="adminViewTitle">
+          <div class="plan-hero admin-hero">
+            <div class="ptag">AUTOMATION</div>
+            <div class="ptitle" id="adminViewTitle">자동화</div>
+            <p class="psub">바로얌 리뷰 수집·분석 자동화의 실행 상태를 확인하세요.</p>
+          </div>
+
+          <div class="admin-tools-head">
+            <h3>운영 도구</h3>
+            <p>도구를 선택하면 새 탭에서 열립니다.</p>
+          </div>
+          <div class="admin-tool-grid">
+            <a class="admin-tool-card is-automation" id="adminAutomationTool" href="https://n8n.reflowguide.com/workflow/cafeinnos-review-pipeline" target="_blank" rel="noopener noreferrer" aria-label="자동화 관리 열기 (새 탭)">
+              <div class="admin-tool-card-head">
+                <span class="admin-tool-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="7" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="m8.2 7.2 7.5-.1M7.4 8.1l3.4 7.7M16.8 9l-3.5 6.8"/></svg>
+                </span>
+                <span class="admin-tool-badge">N8N</span>
+              </div>
+              <h4>자동화 관리</h4>
+              <p>리뷰 수집·분석 파이프라인의 실행 상태와 워크플로를 관리합니다.</p>
+              <span class="admin-tool-open">워크플로 열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M10 14 19 5M19 14v5H5V5h5"/></svg></span>
+            </a>
+
+            <!-- 실시간 키워드: 요청에 따라 숨김. 다시 사용할 때 hidden과 메뉴 검색 항목을 복원한다. -->
+            <a class="admin-tool-card is-keyword" id="adminKeywordTool" hidden href="http://127.0.0.1:4317/trends.html" target="_blank" rel="noopener noreferrer" aria-label="실시간 키워드 열기 (새 탭)">
+              <div class="admin-tool-card-head">
+                <span class="admin-tool-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 4.2 4.2M7.5 12.5l2.1-2.2 1.8 1.5 2.4-3"/></svg>
+                </span>
+                <span class="admin-tool-badge">LIVE · 1회 호출</span>
+              </div>
+              <h4>실시간 키워드</h4>
+              <p>페이지를 열 때 한 번 최신 검색어를 불러옵니다. 네이버 키가 연결된 경우 네이버 데이터도 함께 확인할 수 있습니다.</p>
+              <span class="admin-tool-open">실시간 키워드 열기<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M10 14 19 5M19 14v5H5V5h5"/></svg></span>
+            </a>
+          </div>
+
+          <div class="admin-local-note" role="note" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
+            <span><b>이용 안내</b> · 실시간 키워드는 이 PC에서 리뷰 수집기가 실행 중일 때 사용할 수 있습니다.</span>
+          </div>
+        </section>
+      </div><!-- /view-admin -->
 
       <div id="view-manual" style="display:none">
         <section class="section man">
@@ -3806,18 +3237,6 @@
     </div>
   </div>
   <script>document.getElementById('consoleLogo').src=document.querySelector('.sb-logo').src;</script>
-
-  <!-- 리뷰마스터 카드 클릭하면 뜨는 리뷰 상세 팝업 · 설정창과 같은 방식, 리뷰 하나에 집중해서
-       더 큰 글자로 읽을 수 있게 한다 -->
-  <div class="settings-overlay" id="revMasterModal" hidden>
-    <div class="settings-panel rev-master-modal-panel" role="dialog" aria-modal="true" aria-labelledby="revMasterModalTitle">
-      <div class="settings-head">
-        <h2 id="revMasterModalTitle">리뷰 상세</h2>
-        <button class="settings-close" type="button" id="revMasterModalCloseBtn" aria-label="리뷰 상세 닫기" title="닫기">✕</button>
-      </div>
-      <div class="rev-master-modal-body" id="revMasterModalBody"></div>
-    </div>
-  </div>
 
 <script>
 /* ===== 상수/헬퍼 ===== */
@@ -4444,29 +3863,6 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   window.openConsole=()=>setOpen(true);
 })();
 
-/* 리뷰마스터 리뷰 상세 팝업 · 콘솔창과 같은 방식(바깥 클릭·Esc로 닫힘) ·
-   리뷰마스터 쪽 스크립트가 window.revMasterModalOpen(row)을 호출해서 연다 */
-(function(){
-  const ov=document.getElementById('revMasterModal');
-  const closeBtn=document.getElementById('revMasterModalCloseBtn');
-  if(!ov) return;
-  const panel=ov.querySelector('.settings-panel');
-
-  function setOpen(on){
-    ov.hidden=!on;
-    document.body.style.overflow=on?'hidden':'';
-    if(on){ if(closeBtn) closeBtn.focus(); }
-  }
-
-  if(closeBtn) closeBtn.addEventListener('click',()=>setOpen(false));
-  ov.addEventListener('click',e=>{ if(e.target===ov) setOpen(false); });
-  if(panel) panel.addEventListener('click',e=>e.stopPropagation());
-  document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'&&!ov.hidden) setOpen(false);
-  });
-  window.revMasterModalSetOpen=setOpen;
-})();
-
 /* 사이드바 접기 · 접힌 상태는 이 브라우저에 기억해 다음에 열 때도 그대로 둔다 */
 (function(){
   const KEY='baroyam_sidebar_collapsed';
@@ -4614,80 +4010,9 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
         sec.hidden=sec.dataset.settingsPanel!==v;
         sec.classList.toggle('active',sec.dataset.settingsPanel===v);
       });
-      if(v==='automation'&&window.loadAutomationStatus) window.loadAutomationStatus();
     });
   });
 
-})();
-
-/* 자동화현황 — automation-status.json(baroyam-report 저장소, GitHub Actions가 하루 세 번
-   자동으로 갱신)을 브라우저에서 직접 fetch해서 보여준다. Apps Script를 거치지 않으므로
-   권한 승인 문제와 무관하다. */
-(function(){
-  const STATUS_URL='https://raw.githubusercontent.com/caffeinnos1-ai/baroyam-report/main/automation-status.json';
-  const SCHEDULE_LABEL={
-    '구글트렌드 수집':'매일 09·12·15·18시(KST)',
-    '네이버데이터랩 수집':'매일 09시(KST)',
-    '당일판매분요약표 (Slack)':'평일 16:15(KST)'
-  };
-  let loaded=false;
-
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  function fmtKST(iso){
-    if(!iso) return '';
-    return new Date(iso).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
-  }
-
-  function render(data){
-    // 설정 다이얼로그 안 "워크플로우" 탭(#automationStatusBoxSettings)에만 있지만,
-    // class="automation-status"인 DOM 전부에 그려주는 범용 렌더러라 그대로 둔다.
-    const boxes=document.querySelectorAll('.automation-status');
-    if(!boxes.length) return;
-    if(!data || data.ok===false || !data.repos){
-      boxes.forEach(box=>{ box.innerHTML='<p class="automation-error">자동화 현황을 불러오지 못했습니다.</p>'; });
-      return;
-    }
-    let okCount=0, total=0;
-    const reposHtml=data.repos.map(r=>{
-      const rowsHtml=(r.workflows||[]).map(w=>{
-        total++;
-        const ok=w.conclusion==='success';
-        if(ok) okCount++;
-        const sched=SCHEDULE_LABEL[w.name]||'';
-        return '<div class="automation-row">'+
-          '<span class="automation-dot '+(ok?'':'fail')+'"></span>'+
-          '<div class="automation-row-main"><div class="automation-row-name">'+escapeHtml(w.name)+'</div>'+
-          '<div class="automation-row-meta">'+escapeHtml(sched)+(sched?' · ':'')+(ok?'':escapeHtml(w.conclusion||'')+' · ')+escapeHtml(fmtKST(w.createdAt))+(ok?' 성공':' 확인 필요')+'</div></div>'+
-          '<a class="automation-row-link" href="'+w.url+'" target="_blank" rel="noopener">로그 ↗</a>'+
-        '</div>';
-      }).join('');
-      return '<div class="automation-repo"><div class="automation-repo-head">'+
-        '<span class="automation-repo-name">'+escapeHtml(r.label)+'</span>'+
-        '<a class="automation-repo-link" href="https://github.com/'+escapeHtml(r.repo)+'/actions" target="_blank" rel="noopener">Actions ↗</a>'+
-        '</div>'+rowsHtml+'</div>';
-    }).join('');
-
-    const allOk=total>0 && okCount===total;
-    const summaryHtml='<div class="automation-summary'+(allOk?'':' has-issue')+'">'+
-      '<span class="a-dot"></span><div><div class="automation-summary-text">'+okCount+' / '+total+' 정상 작동 중</div>'+
-      '<div class="automation-summary-sub">기준: '+escapeHtml(fmtKST(data.checkedAt))+' KST</div></div></div>';
-
-    boxes.forEach(box=>{ box.innerHTML=summaryHtml+reposHtml; });
-  }
-
-  window.loadAutomationStatus=function(force){
-    if(loaded && !force) return;
-    loaded=true;
-    fetch(STATUS_URL+'?_='+Date.now(),{cache:'no-store'})
-      .then(res=>res.json())
-      .then(render)
-      .catch(()=>{
-        document.querySelectorAll('.automation-status').forEach(box=>{
-          box.innerHTML='<p class="automation-error">네트워크 오류로 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>';
-        });
-      });
-  };
 })();
 
 /* 회원관리 · 회원 추가/삭제 (이 브라우저에 자동 저장) */
@@ -4924,19 +4249,22 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
 
   function activateView(v){
     document.querySelectorAll('.sb-item[data-view],.hero-view-tab[data-view]').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('[data-view="'+v+'"]').forEach(b=>b.classList.add('active'));
+    /* 전체 리뷰 확인은 리뷰수집 아래 화면이라 사이드바에서는 리뷰수집 아이콘을 켠다 */
+    document.querySelectorAll('[data-view="'+(v==='collector'?'review':v)+'"]').forEach(b=>b.classList.add('active'));
     document.getElementById('view-home').style.display=v==='home'?'':'none';
     document.getElementById('view-week').style.display=v==='week'?'':'none';
     document.getElementById('view-month').style.display=v==='month'?'':'none';
     document.getElementById('view-goal').style.display=v==='goal'?'':'none';
     document.getElementById('view-trend').style.display=v==='trend'?'':'none';
     document.getElementById('view-review').style.display=v==='review'?'':'none';
+    document.getElementById('view-collector').style.display=v==='collector'?'':'none';
+    document.getElementById('view-admin').style.display=v==='admin'?'':'none';
     document.getElementById('view-manual').style.display=v==='manual'?'':'none';
     document.body.classList.toggle('view-is-manual',v==='manual');
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의안건은 DOM이 하나뿐이라, 크게보기로 들어올 때 우측 패널에서 본문으로 옮겨온다 */
     if(v==='agenda'&&window.mountAgendaMain) window.mountAgendaMain();
-    const hideHero=(v==='home'||v==='goal'||v==='trend'||v==='review'||v==='manual'||v==='agenda');
+    const hideHero=(v==='home'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='agenda');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
@@ -4958,6 +4286,18 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   /* 처음 들어오면 홈 · 마크업의 초기 표시와 한 번 맞춰 둔다 */
   activateView('home');
   window.activateLastSales=()=>activateView(lastSalesView);
+})();
+
+/* 로컬 도구에 이 대시보드의 복귀 주소를 전달한다. */
+(function(){
+  ['adminKeywordTool'].forEach(id=>{
+    const link=document.getElementById(id);
+    if(!link) return;
+    const returnUrl=new URL(window.location.pathname,window.location.origin);
+    const toolUrl=new URL(link.href);
+    toolUrl.searchParams.set('returnTo',returnUrl.href);
+    link.href=toolUrl.href;
+  });
 })();
 
 
@@ -6099,13 +5439,27 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   const resEl=document.getElementById('tbSearchRes');
   const clearBtn=document.getElementById('tbSearchClear');
 
+  const goTool=(view,id)=>()=>{
+    document.querySelector('.sb-item[data-view="'+view+'"]').click();
+    requestAnimationFrame(()=>{
+      const card=document.getElementById(id);
+      if(!card) return;
+      card.focus({preventScroll:true});
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  };
+
   const VIEWS=[
     {name:'주간 데이터 보고서', kind:'매출데이터', go:()=>window.activateView('week')},
     {name:'월간 성과보고서',   kind:'매출데이터', go:()=>window.activateView('month')},
     {name:'목표설정',          kind:'메뉴',       go:()=>window.activateView('goal')},
     {name:'트렌드분석',        kind:'메뉴',       go:()=>window.activateView('trend')},
     {name:'리뷰수집',          kind:'메뉴',       go:()=>window.activateView('review')},
-    {name:'메뉴얼가이드',      kind:'메뉴',       go:()=>window.activateView('manual')}
+    {name:'메뉴얼가이드',      kind:'메뉴',       go:()=>window.activateView('manual')},
+    {name:'자동화',            kind:'메뉴 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()},
+    {name:'전체 리뷰 확인',    kind:'리뷰수집',   go:()=>{ document.getElementById('sbReviewBtn').click(); document.getElementById('sbReviewCollector').click(); }},
+    {name:'주간 분석 보고서',  kind:'리뷰수집',   go:goTool('review','sbReviewReport')},
+    {name:'자동화 관리',       kind:'자동화 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()}
   ];
   const ESC={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'};
   const esc=t=>String(t).split('').map(c=>ESC[c]||c).join('');
@@ -6224,17 +5578,59 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
 
   function open(){ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); }
   function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
+  const collectorBtn=document.getElementById('sbReviewCollector');
   function pick(platform,master){
+    if(collectorBtn) collectorBtn.classList.remove('active');
     window.activateView('review');
     revSetActivePlatform(platform||null,master);
   }
-  btn.addEventListener('click',()=>{ open(); window.activateView('review'); });
+  /* 리뷰수집을 열면 수집기도 뒤에서 미리 불러온다 · 전체 리뷰 확인에 들어가지 않아도
+     최근 수집분이 판매처별 리뷰(네이버~올웨이즈)에 들어온다 */
+  btn.addEventListener('click',()=>{ open(); if(collectorBtn) collectorBtn.classList.remove('active'); window.activateView('review'); loadCollector(false); });
+
+  /* 전체 리뷰 확인 · 새 창으로 나가지 않고 본문에 리뷰 수집기를 띄운다 ·
+     처음 열 때만 불러온다 · 미리 fetch로 연결을 확인하면 GitHub Pages 등에서 브라우저의
+     로컬 네트워크 차단에 걸려 실제로는 열리는데도 실패로 보이므로, iframe에 바로 넣는다 */
+  const COLLECTOR_URL='http://127.0.0.1:4317/';
+  const frame=document.getElementById('collectorFrame');
+  function loadCollector(force){
+    if(!frame) return;
+    if(frame.getAttribute('src')&&!force) return;
+    frame.src=COLLECTOR_URL+'?embed=1&t='+Date.now();
+  }
+  /* 수집기(dashboard-embed.js)가 알려주는 내용 높이와 연결 상태를 받는다 */
+  const hintEl=document.getElementById('collectorHint');
+  const statusEl=document.getElementById('collectorStatus');
+  window.addEventListener('message',e=>{
+    if(!frame||e.source!==frame.contentWindow) return;
+    const d=e.data;
+    if(!d||d.source!=='review-collector') return;
+    if(d.type==='height'&&d.height>0){
+      frame.style.height=d.height+'px';
+      frame.style.minHeight='0';
+      if(hintEl) hintEl.hidden=true;
+    }else if(d.type==='reviews'){
+      if(window.revApplyCollector) window.revApplyCollector(d);
+    }else if(d.type==='status'&&statusEl){
+      statusEl.querySelector('span').textContent=d.text||'';
+      statusEl.classList.toggle('is-online',!!d.online);
+      statusEl.classList.toggle('is-working',!!d.working);
+    }
+  });
+  if(collectorBtn) collectorBtn.addEventListener('click',()=>{
+    window.activateView('collector');
+    subnav.querySelectorAll('.sb-subnav-home,.sb-subnav-item').forEach(b=>b.classList.remove('active'));
+    collectorBtn.classList.add('active');
+    loadCollector(false);
+  });
+  const reloadBtn=document.getElementById('collectorReloadBtn');
+  if(reloadBtn) reloadBtn.addEventListener('click',()=>loadCollector(true));
   homeBtn.addEventListener('click',()=>pick('',false));
+  const masterBtn=document.getElementById('sbReviewMaster');
+  if(masterBtn) masterBtn.addEventListener('click',()=>pick('',true));
   listEl.addEventListener('click',e=>{
     const item=e.target.closest('.sb-subnav-item');
-    if(!item) return;
-    if(item.dataset.master) pick('',true);
-    else pick(item.dataset.platform,false);
+    if(item) pick(item.dataset.platform,false);
   });
   /* 다른 대분류로 넘어가면 사이드탭을 닫는다 */
   document.querySelectorAll('.sb-item[data-view]').forEach(other=>{
@@ -6242,45 +5638,33 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
   });
   const salesToggleBtn=document.getElementById('sbSalesToggle');
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+  /* 로컬 도구에서 돌아오면 리뷰 메뉴를 다시 펼친다. */
+  if(window.location.hash==='#review') btn.click();
 })();
 
 /* 사이드탭 활성 표시만 맡고, 배너 색·제목과 패널 내용은 renderRevAll()이 판매처에 맞춰 다시 그린다 */
 function revSetActivePlatform(platform,master){
   if(typeof revState==='undefined') return;
   master=!!master;
-  if((platform||null)!==revState.activePlatform){
-    revState.activeBrand=null;
-    /* 판매처를 바꾸면 리뷰 인박스의 탭·검색·페이지·선택도 처음으로 되돌린다(다른 채널 화면인데
-       이전 채널에서 고르던 리뷰가 그대로 선택돼 있으면 어색하다) */
-    if(typeof revInboxChannel!=='undefined'){
-      revInboxChannel.tab='all'; revInboxChannel.keyword=''; revInboxChannel.star='';
-      revInboxChannel.page=0; revInboxChannel.selectedId=null;
-      const chSearchEl=document.getElementById('revInboxSearch');
-      if(chSearchEl) chSearchEl.value='';
-      const chStarEl=document.getElementById('revInboxStarSel');
-      if(chStarEl) chStarEl.value='';
-      document.querySelectorAll('#revInboxTabs button[data-tab]').forEach(b=>{
-        b.classList.toggle('active',b.dataset.tab==='all');
-      });
-    }
-  }
+  if((platform||null)!==revState.activePlatform) revState.activeBrand=null;
   /* 화면을 옮기면 리뷰마스터의 감정·검색·더 보기 상태는 처음으로 되돌린다 */
   if(master!==revState.master||(platform||null)!==revState.activePlatform){
     revState.sentiment=''; revState.keyword=''; revState.limit=REV_PAGE;
-    const searchEl=document.getElementById('revMasterSearch');
+    const searchEl=document.getElementById('revSearch');
     if(searchEl) searchEl.value='';
-    document.querySelectorAll('#revMasterSentRow button[data-sent]').forEach(b=>{
+    document.querySelectorAll('#revMasterFilter button[data-sent]').forEach(b=>{
       b.classList.toggle('active',!b.dataset.sent);
     });
   }
   revState.master=master;
   revState.activePlatform=platform||null;
   document.querySelectorAll('#sbReviewSubnavList .sb-subnav-item').forEach(b=>{
-    if(b.dataset.master){ b.classList.toggle('active',master); return; }
     b.classList.toggle('active',!master&&(b.dataset.platform||null)===revState.activePlatform);
   });
   const revHomeBtn=document.getElementById('sbReviewHome');
   if(revHomeBtn) revHomeBtn.classList.toggle('active',!master&&!revState.activePlatform);
+  const revMasterBtn=document.getElementById('sbReviewMaster');
+  if(revMasterBtn) revMasterBtn.classList.toggle('active',master);
   renderRevAll();
 }
 
@@ -6621,7 +6005,9 @@ function revSetActivePlatform(platform,master){
       if(platform===activePlatform) return;
       activePlatform=platform;
       platformIcons.forEach(i=>{
-        i.classList.toggle('active',i===icon);
+        const isActive=i===icon;
+        i.classList.toggle('active',isActive);
+        i.dataset.tip=isActive?'사용 중':'전환';
       });
       naverSubcatEl.hidden=platform!=='naver';
       heroEl.classList.toggle('is-naver',platform==='naver');
