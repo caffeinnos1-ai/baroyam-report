@@ -1204,7 +1204,9 @@ window.baroyamAuthHash=async function(email){
   .sb-subnav-home:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
   .sb-subnav-home .sb-subnav-external{width:12px;height:12px;margin-left:auto;opacity:.65}
   .sb-subnav-caption{padding:2px 10px 7px;font-size:10.5px;font-weight:800;color:var(--mute);letter-spacing:.02em}
-  .collector-frame{display:block;width:100%;height:calc(100vh - 260px);min-height:560px;margin-top:22px;border:0;background:transparent;overflow:hidden}
+  /* 수집기가 높이를 알려주면(dashboard-embed.js) 그 높이로 딱 맞춘다 · 파일이 옛날 버전인 PC는 높이를 안 알려주므로
+     기본 높이를 넉넉히 잡고, 안쪽 스크롤(scrolling 속성 없음)로 나머지를 볼 수 있게 해 잘리지 않게 한다 */
+  .collector-frame{display:block;width:100%;height:calc(100vh - 120px);min-height:900px;margin-top:22px;border:0;background:transparent}
   .collector-hint{margin-top:10px;font-size:12px;color:var(--mute);line-height:1.6;word-break:keep-all}
   .collector-status{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--mute);white-space:nowrap}
   .collector-status i{width:8px;height:8px;border-radius:50%;background:var(--prev-ink)}
@@ -2261,7 +2263,69 @@ window.baroyamAuthHash=async function(email){
             <p class="psub">이 PC에서 실행 중인 리뷰 수집기로 판매처 리뷰를 수집하고 확인합니다</p>
           </div>
           <!-- 수집기가 보내주는 내용 높이만큼 늘려서 안쪽 스크롤바 없이 대시보드와 한 화면처럼 보이게 한다 -->
-          <iframe id="collectorFrame" class="collector-frame" title="리뷰 수집기" scrolling="no" allow="local-network-access; loopback-network; local-network"></iframe>
+          <iframe id="collectorFrame" class="collector-frame" title="리뷰 수집기" allow="local-network-access; loopback-network; local-network"></iframe>
+          <!-- 수집기 화면 디자인 · 수집기의 dashboard-embed.js로 보내 적용한다 ·
+               디자인은 여기서만 고치면 수집기가 설치된 모든 PC에 똑같이 반영된다 -->
+          <script type="text/plain" id="collectorEmbedCss">
+  html.is-embedded {
+    --ink: #241a14; --muted: #786c64; --line: #ece5dc; --line-strong: #e0d6cb;
+    --paper: #ffffff; --canvas: transparent;
+    --green: #cd6428; --green-dark: #a94f1c; --green-soft: #fdefe4; --green-faint: #fffaf5;
+    --shadow: none;
+    scroll-behavior: auto; overflow: hidden;
+  }
+  html.is-embedded body { background: transparent; font-family: "Pretendard", system-ui, sans-serif; }
+  html.is-embedded .topbar { display: none; }
+  html.is-embedded .shell { width: 100%; margin: 0; }
+  html.is-embedded .card { border: 1px solid var(--line); border-radius: 18px; box-shadow: none; }
+  html.is-embedded .ai-config { border-color: var(--line); background: linear-gradient(120deg, #fffaf5, #fff 62%); }
+  html.is-embedded .review-list-item.is-selected { background: #fdf4ec; }
+  html.is-embedded .stats article:not(.stat--positive):not(.stat--negative),
+  html.is-embedded .platform-summary, html.is-embedded .pagination { background: #fcfaf7; }
+  html.is-embedded .stats .stat--total { border-color: var(--line-strong); }
+  html.is-embedded button:focus-visible, html.is-embedded a:focus-visible,
+  html.is-embedded input:focus-visible, html.is-embedded select:focus-visible,
+  html.is-embedded textarea:focus-visible { outline-color: rgba(205, 100, 40, .2); }
+  /* 리뷰 인박스 · 대시보드 안에서는 폭이 좁아(약 900px) 목록 칸이 잘리며 가로 스크롤이 생겼다 ·
+     목록과 상세를 반반으로 나누고, 검색창은 한 줄 전체·필터 두 개는 아래 줄로 내리고,
+     카드 안 배지는 줄바꿈되게 해서 어떤 칸도 가로로 넘치지 않게 한다 */
+  html.is-embedded .review-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  html.is-embedded .filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  html.is-embedded .filters .search-field { grid-column: 1 / -1; }
+  html.is-embedded .filters select, html.is-embedded .filters input { min-width: 0; width: 100%; }
+  html.is-embedded .review-list { overflow-x: hidden; }
+  html.is-embedded .review-list-item, html.is-embedded .review-list-item > * { min-width: 0; }
+  html.is-embedded .review-list-item__top { flex-wrap: wrap; row-gap: 6px; }
+  html.is-embedded .review-list-item__flags { flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+  html.is-embedded .review-list-item__product { min-width: 0; flex: 1 1 auto; }
+  html.is-embedded .review-list-item__meta { flex: none; }
+  /* 리뷰 업무함 오른쪽 버튼 5개 · 41px 큰 버튼이 두 줄로 넘어가 간격이 들쭉날쭉했다 ·
+     한 줄 툴바로 줄이고, 주 버튼(분석 보고서 생성) 뒤에 세로 구분선을 두고
+     나머지 4개는 다운로드 아이콘이 붙은 작은 보조 버튼으로 통일한다 */
+  html.is-embedded .section-heading--results > div:first-child { min-width: 0; }
+  html.is-embedded .results-actions { flex: none; flex-wrap: nowrap; gap: 6px; }
+  html.is-embedded .results-actions .button {
+    min-height: 34px; padding: 0 12px; border-radius: 8px; gap: 5px;
+    font-size: .76rem; font-weight: 750; letter-spacing: -.02em; white-space: nowrap;
+  }
+  html.is-embedded .results-actions .button:hover:not(:disabled):not(.is-disabled) { transform: none; box-shadow: none; }
+  html.is-embedded .results-actions .button--primary { margin-right: 7px; box-shadow: 0 4px 10px -4px rgba(205, 100, 40, .45); }
+  html.is-embedded .results-actions .button--primary + .button { position: relative; margin-left: 7px; }
+  html.is-embedded .results-actions .button--primary + .button::after {
+    content: ""; position: absolute; left: -14px; top: 7px; bottom: 7px; width: 1px; background: var(--line-strong);
+  }
+  html.is-embedded .results-actions .button--secondary {
+    border-color: var(--line-strong); background: #fff; color: #5b4e45; padding-left: 10px;
+  }
+  html.is-embedded .results-actions .button--secondary:hover { border-color: var(--green); color: var(--green-dark); background: var(--green-faint); }
+  html.is-embedded .results-actions .button--secondary::before {
+    content: ""; width: 13px; height: 13px; flex: none; background: currentColor; opacity: .75;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11'/%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3Cpath d='M5 20h14'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11'/%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3Cpath d='M5 20h14'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  html.is-embedded .results-actions .button.is-disabled { opacity: .5; background: #faf7f3; }
+
+          </script>
           <div class="collector-hint" id="collectorHint">
             화면이 비어 있으면 이 PC에서 리뷰 수집기(http://127.0.0.1:4317)를 실행한 뒤 새로고침을 눌러주세요 ·
             브라우저가 로컬 네트워크 접근 허용을 물으면 허용을 눌러주세요
@@ -5795,10 +5859,29 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
      로컬 네트워크 차단에 걸려 실제로는 열리는데도 실패로 보이므로, iframe에 바로 넣는다 */
   const COLLECTOR_URL='http://127.0.0.1:4317/';
   const frame=document.getElementById('collectorFrame');
+  /* 높이를 알려주지 않는 옛 수집기(dashboard-embed.js 미적용 PC)는 불러온 뒤 2초 안에 높이가 안 오면
+     수집기 화면 전체 길이만큼 늘려 둔다 · 넘치는 부분은 안쪽 스크롤로 볼 수 있다 */
+  const COLLECTOR_FALLBACK_HEIGHT=2100;
+  let collectorHeightReported=false, collectorFallbackTimer=null;
+  if(frame) frame.addEventListener('load',()=>{
+    clearTimeout(collectorFallbackTimer);
+    collectorFallbackTimer=setTimeout(()=>{
+      if(!collectorHeightReported) frame.style.height=COLLECTOR_FALLBACK_HEIGHT+'px';
+    },2000);
+  });
   function loadCollector(force){
     if(!frame) return;
     if(frame.getAttribute('src')&&!force) return;
+    collectorHeightReported=false;
+    frame.style.height='';
+    frame.style.minHeight='';
     frame.src=COLLECTOR_URL+'?embed=1&t='+Date.now();
+  }
+  /* 수집기 화면 디자인은 대시보드가 들고 있다가, 수집기가 준비됐다고(ready) 알리면 보내준다 */
+  const collectorCssEl=document.getElementById('collectorEmbedCss');
+  function sendCollectorStyle(){
+    if(!frame||!frame.contentWindow||!collectorCssEl) return;
+    frame.contentWindow.postMessage({source:'baroyam-dashboard',type:'style',css:collectorCssEl.textContent},COLLECTOR_URL.replace(/\/$/,''));
   }
   /* 수집기(dashboard-embed.js)가 알려주는 내용 높이와 연결 상태를 받는다 */
   const hintEl=document.getElementById('collectorHint');
@@ -5807,7 +5890,10 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     if(!frame||e.source!==frame.contentWindow) return;
     const d=e.data;
     if(!d||d.source!=='review-collector') return;
-    if(d.type==='height'&&d.height>0){
+    if(d.type==='ready'){
+      sendCollectorStyle();
+    }else if(d.type==='height'&&d.height>0){
+      collectorHeightReported=true;
       frame.style.height=d.height+'px';
       frame.style.minHeight='0';
       if(hintEl) hintEl.hidden=true;
