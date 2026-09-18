@@ -6,7 +6,8 @@
 <!-- GitHub Pages는 공개 사이트라 검색엔진 색인을 막아 둔다 -->
 <meta name="robots" content="noindex, nofollow">
 <title>바로얌 매출·광고 성과 보고서 · 7월 vs 8월(8/1-8/8)</title>
-<script>try{document.documentElement.dataset.theme=localStorage.getItem('baroyam_theme')==='dark'?'dark':'light'}catch(e){}</script>
+<!-- 관리자 모드(설정 잠금 해제)면 저장된 테마와 상관없이 다크로 시작한다 · 관리자 비밀번호 로그인은 아래 로그인 게이트에서 처리 -->
+<script>try{document.documentElement.dataset.theme=(localStorage.getItem('baroyam_theme')==='dark'||sessionStorage.getItem('baroyam_settings_unlocked_v1')==='1')?'dark':'light'}catch(e){}</script>
 <!-- 구글 로그인 게이트 · 허용된 이메일로 로그인해야 화면이 보인다.
      공개 저장소라 코드/시트 주소를 알면 우회할 수 있는 "화면 가림" 수준의 보호다.
      이메일은 원문 대신 SHA-256 해시로만 적어 둔다(소문자·앞뒤 공백 제거 후 해시). -->
@@ -29,6 +30,7 @@ window.baroyamAuthHash=async function(email){
   try{
     const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
     if(s && s.until>Date.now() && (A.allowedHashes.includes(s.h) || s.h===A.admin.hash)) root.classList.remove('auth-locked');
+    if(s && s.h===A.admin.hash) root.dataset.theme='dark';   /* 관리자 계정으로 접속하면 다크 모드 */
   }catch(e){}
   root.classList.remove('auth-checking');
 })();
@@ -4840,7 +4842,7 @@ window.CsGuide=(function(){
 
   function apply(on){
     sb.classList.toggle('is-collapsed',on);
-    const tip=on?'사이드바 펼치기':'사이드바 접기';
+    const tip=on?'사이드바 펼치기 (Q)':'사이드바 접기 (Q)';
     btn.title=tip;
     btn.setAttribute('aria-label',tip);
     btn.setAttribute('aria-expanded',on?'false':'true');
@@ -4867,6 +4869,37 @@ window.CsGuide=(function(){
   });
 })();
 
+/* 키보드 단축키 · Q 사이드바 접기/펼치기, W/S 사이드탭 위·아래 메뉴로 이동(바로 그 대시보드로 전환) ·
+   한글 자판에서도 되도록 e.key 대신 자판 위치(e.code)로 본다 ·
+   글을 쓰는 중이거나 창·메뉴가 떠 있을 때는 건드리지 않는다 */
+(function(){
+  const collapseBtn=document.getElementById('sbCollapseBtn');
+  /* 새 탭으로 여는 링크(자동화)는 W/S 이동에서 뺀다 */
+  const items=()=>[...document.querySelectorAll('.sidebar .sb-nav button.sb-item')].filter(b=>b.offsetParent!==null);
+  function typing(el){
+    return !!el&&(el.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+  }
+  function blocked(){
+    if(document.documentElement.classList.contains('auth-locked')) return true;
+    return !!document.querySelector('.settings-overlay:not([hidden]),.tb-menu:not([hidden]),.tb-search-res:not([hidden])');
+  }
+  document.addEventListener('keydown',e=>{
+    if(e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||e.isComposing) return;
+    if(e.code!=='KeyQ'&&e.code!=='KeyW'&&e.code!=='KeyS') return;
+    if(typing(e.target)||typing(document.activeElement)||blocked()) return;
+    e.preventDefault();
+    if(e.code==='KeyQ'){ if(!e.repeat&&collapseBtn) collapseBtn.click(); return; }
+    const list=items();
+    if(!list.length) return;
+    let i=list.findIndex(b=>b.classList.contains('active'));
+    if(i<0) i=0;
+    const next=list[Math.max(0,Math.min(list.length-1,i+(e.code==='KeyS'?1:-1)))];
+    if(next===list[i]&&list[i].classList.contains('active')) return;   /* 맨 위/맨 아래에서는 멈춘다 */
+    next.click();
+    next.scrollIntoView({block:'nearest'});
+  });
+})();
+
 /* 다크모드 토글 · 사이드바 맨 아래 '설정' 오른쪽에 있다 (예전엔 설정창 안에 있었다) */
 (function(){
   const THEME_KEY='baroyam_theme';
@@ -4878,11 +4911,21 @@ window.CsGuide=(function(){
     sw.setAttribute('aria-checked',t==='dark'?'true':'false');
     sw.title=t==='dark'?'밝은 모드로 전환':'다크 모드로 전환';
   }
+  /* 관리자로 접속했거나(비밀번호 로그인) 관리자 모드를 켜면 다크 모드로 바꾼다 ·
+     사용자가 고른 테마는 그대로 저장해 두고, 관리자 모드를 끄면 그 테마로 돌아간다 */
+  const A=window.BAROYAM_AUTH;
+  function adminLogin(){ try{ const s=JSON.parse(localStorage.getItem(A.lsKey)||'null'); return !!s&&s.h===A.admin.hash; }catch(e){ return false; } }
+  function adminOn(){ try{ if(sessionStorage.getItem('baroyam_settings_unlocked_v1')==='1') return true; }catch(e){} return adminLogin(); }
+  function saved(){ try{ return localStorage.getItem(THEME_KEY)==='dark'?'dark':'light'; }catch(e){ return 'light'; } }
   applyTheme(document.documentElement.dataset.theme==='dark'?'dark':'light');
   sw.addEventListener('click',()=>{
     const next=document.documentElement.dataset.theme==='dark'?'light':'dark';
     applyTheme(next);
-    try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+    /* 관리자 모드 중에 잠깐 바꾼 건 이번 화면에만 적용하고 저장하지 않는다 */
+    if(!adminOn()) try{localStorage.setItem(THEME_KEY,next);}catch(e){}
+  });
+  document.addEventListener('baroyam:adminmode',e=>{
+    applyTheme(e.detail&&e.detail.on||adminLogin()?'dark':saved());
   });
 })();
 
