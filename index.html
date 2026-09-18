@@ -92,7 +92,7 @@ window.baroyamAuthHash=async function(email){
     --prev:#e0d6cb; --prev-ink:#a99a8d; --curr:#e07234;
     --pos:#0f9463; --pos-soft:#e3f4ec; --warn:#a97b12; --warn-soft:#f9efdc;
     --neg:#cf5a50; --neg-soft:#fbeae8;
-    --c1:#c8622e; --c2:#e28e56; --c3:#f5c9a6;
+    --c1:#c8622e; --c2:#e28e56; --c3:#f5c9a6; --chip-flat:#f0ece5;
     --coupang:#2f77cc; --naver:#00734d; --self:#e07234;
     --panel-dark:#241a14; --indigo-rgb:205,100,40; --indigo-lite:#e5824a;
     /* 은은한 그라데이션 표면 · 대시보드 배경과 사이드바 */
@@ -108,24 +108,33 @@ window.baroyamAuthHash=async function(email){
     --glass-bg:rgba(255,255,255,.72); --glass-line:rgba(38,38,46,.08);
     --tb-bg:rgba(251,251,252,.88);
   }
+  /* 다크 모드 · 모든 면을 한 계열(살짝 따뜻한 차콜)로 맞춘다 ·
+     예전엔 사이드바·배너는 갈색, 본문·카드는 무채색 회색이라 화면마다 톤이 따로 놀았다 */
   html[data-theme="dark"]{
-    --bg:#1a1a1a; --paper:#232323; --ink:#e6e6e6; --body:#b0b0b0; --mute:#7d7d7d;
-    --line:#3a3a3a; --indigo:#d4844f; --indigo-soft:#33281f;
-    --prev:#3a3a3a; --prev-ink:#8a8a8a; --curr:#d5762e;
-    --coupang:#4189e0; --naver:#007a50; --self:#d5762e;
+    --bg:#1a1817; --paper:#242120; --ink:#ebe6e1; --body:#b5ada6; --mute:#857d76;
+    --line:#37322e; --indigo:#d4844f; --indigo-soft:#3a2a1f;
+    --prev:#3a3531; --prev-ink:#8c847d; --curr:#d5762e;
+    --coupang:#4189e0; --naver:#159a68; --self:#d5762e;
     --pos:#3fbe8b; --pos-soft:#163024; --warn:#d9a24f; --warn-soft:#332c19;
     --neg:#e07a72; --neg-soft:#331f1e;
-    --panel-dark:#161616; --indigo-rgb:212,132,79; --indigo-lite:#e09a63;
-    --app-bg:linear-gradient(168deg,#232323 0%,#1c1c1c 45%,#161616 100%);
-    --sb-bg:linear-gradient(186deg,#3d352f 0%,#352d28 48%,#2c2521 100%);
-    --sb-ink:#c6bcb4; --sb-ink-hi:#faf7f4; --sb-mute:#9f958e; --sb-item-ink:#aaa098;
-    --sb-hover:rgba(255,255,255,.08); --sb-line:#453d37;
-    --sn-bg:linear-gradient(186deg,#292624 0%,#252220 55%,#201e1c 100%);
-    --sn-line:#3b3531; --sn-open:rgba(255,255,255,.035); --sn-rail:rgba(201,138,103,.28);
-    --hero-bg:linear-gradient(158deg,#2c2622 0%,#262120 100%); --hero-line:#3a332e;
-    --glass-bg:rgba(255,255,255,.07); --glass-line:rgba(255,255,255,.12);
-    --tb-bg:rgba(31,29,27,.86);
+    --c1:#c9692f; --c2:#dc8a55; --c3:#a8795a; --chip-flat:rgba(255,255,255,.08);
+    --panel-dark:#151312; --indigo-rgb:212,132,79; --indigo-lite:#e09a63;
+    --app-bg:linear-gradient(168deg,#1f1c1a 0%,#1a1817 45%,#161413 100%);
+    --sb-bg:linear-gradient(186deg,#221f1c 0%,#1f1c1a 48%,#1c1917 100%);
+    --sb-ink:#c2bab3; --sb-ink-hi:#f5f1ed; --sb-mute:#8f8780; --sb-item-ink:#aaa199;
+    --sb-hover:rgba(255,255,255,.06); --sb-line:#34302c;
+    --sn-bg:linear-gradient(186deg,#262320 0%,#24211e 55%,#211e1c 100%);
+    --sn-line:#37322e; --sn-open:rgba(255,255,255,.035); --sn-rail:rgba(212,132,79,.28);
+    --hero-bg:linear-gradient(158deg,#2b2622 0%,#252220 100%); --hero-line:#37322e;
+    --glass-bg:rgba(255,255,255,.06); --glass-line:rgba(255,255,255,.1);
+    --tb-bg:rgba(28,25,23,.86);
   }
+  /* 라이트 모드 색이 코드에 박혀 있던 곳들 · 다크에서는 같은 계열로 바꾼다 */
+  html[data-theme="dark"] .rbrow .rtrack{background:rgba(255,255,255,.07)}
+  html[data-theme="dark"] .dgcard{background:rgba(255,255,255,.035)}
+  html[data-theme="dark"] .gd-cat{background:var(--indigo-soft);color:var(--indigo)}
+  html[data-theme="dark"] .gv-cats button.on{background:var(--indigo);border-color:var(--indigo);color:#fff}
+  html[data-theme="dark"] .gv-cats button.on b{color:#fff}
   html[data-theme="dark"] .astat,
   html[data-theme="dark"] tbody tr.sum td,
   html[data-theme="dark"] .ins{background:rgba(255,255,255,.045)}
@@ -246,7 +255,7 @@ window.baroyamAuthHash=async function(email){
   .vtot{font-size:15px;font-weight:800;letter-spacing:-.4px;color:var(--ink);white-space:nowrap}
   .vbar{width:100%;max-width:74px;border-radius:8px 8px 0 0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
   .vbar .seg-new{background:linear-gradient(180deg,#ec9151,#e07234)}
-  .vbar .seg-re{background:#c3bff4}
+  .vbar .seg-re{background:var(--c3)}
   .vx{display:flex;gap:20px;padding:11px 6px 0}
   .vx span{flex:1;text-align:center;font-size:15px;font-weight:700;color:var(--body)}
   .vx span small{display:block;font-size:11.5px;color:var(--mute);font-weight:600}
@@ -435,7 +444,12 @@ window.baroyamAuthHash=async function(email){
   /* 마이홈 대시보드 · 프로젝트 현황 카드 + 시계 / 퀵링크 · 간편 기록노트 · 진행중 프로젝트 달성률 ·
      본문 흰 종이(.paper)를 걷어내고 카드들이 배경 위에 바로 놓인다 */
   :root{--mh-accent:#7c6fe0;--mh-accent-soft:rgba(124,111,224,.12);--mh-card-shadow:0 1px 3px rgba(38,38,46,.05)}
-  html[data-theme="dark"]{--mh-accent:#9d92f0;--mh-accent-soft:rgba(157,146,240,.16);--mh-card-shadow:none}
+  /* 다크에서는 마이홈·프로젝트도 다른 화면과 같은 주황 강조색을 쓴다 (보라가 혼자 튀었다) */
+  html[data-theme="dark"]{--mh-accent:#d4844f;--mh-accent-soft:rgba(212,132,79,.16);--mh-card-shadow:none}
+  html[data-theme="dark"] .mh-clock{background:linear-gradient(135deg,#3a291d 0%,#2a211b 100%);
+    box-shadow:inset 0 0 0 1px rgba(212,132,79,.22)}
+  html[data-theme="dark"] .mh-clock-tile,html[data-theme="dark"] .mh-clock-ap{background:rgba(255,255,255,.08);color:#f0b98f}
+  html[data-theme="dark"] .mh-clock-date{color:#d8c7ba}
   body.view-is-wide .wrap{max-width:1720px;padding:24px 24px 48px}
   body.view-is-wide .paper{background:none;box-shadow:none;border-radius:0;overflow:visible}
   .mh{display:flex;flex-direction:column;gap:22px}
@@ -4083,7 +4097,7 @@ const pct=(a,b)=>b?Math.round((a-b)/b*100):0;
 function achChip(p,ok){
   return `<span class="achip" style="background:${ok?'var(--pos-soft)':'var(--warn-soft)'};color:${ok?'var(--pos)':'var(--warn)'}">${p}%</span>`;}
 function achipDelta(p){
-  return `<span class="achip" style="background:${p>0?'var(--pos-soft)':(p<0?'var(--warn-soft)':'#f0ece5')};color:${p>0?'var(--pos)':(p<0?'var(--warn)':'var(--mute)')}">${p>0?'+':''}${p}%</span>`;}
+  return `<span class="achip" style="background:${p>0?'var(--pos-soft)':(p<0?'var(--warn-soft)':'var(--chip-flat)')};color:${p>0?'var(--pos)':(p<0?'var(--warn)':'var(--mute)')}">${p>0?'+':''}${p}%</span>`;}
 function lineChart(vals,labels,fmt){
   const W=620,H=200,pX=54,pT=22,pB=32,iW=W-pX*2,iH=H-pT-pB,L=vals.length-1;
   const mn=Math.min(...vals),mx=Math.max(...vals),r=(mx-mn)||1;
@@ -9148,5 +9162,6 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 #adCards >div:nth-child(3) >.roas-big { color: rgb(240, 200, 92) !important }
 #adCards >div:nth-child(3) >.roas-big { color: rgb(240, 97, 92) !important }
 #adCards >div:nth-child(3) { border-color: rgb(231, 231, 240) !important }
+html[data-theme="dark"] #adCards >div:nth-child(3) { border-color: var(--line) !important }
 </style>
 
