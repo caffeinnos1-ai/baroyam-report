@@ -551,36 +551,43 @@ window.baroyamAuthHash=async function(email){
   html[data-theme="dark"] .pj-pop-date input{color-scheme:dark}
   .pj-pop-foot{display:flex;justify-content:flex-end;padding:6px 6px 2px;border-top:1px solid var(--line);margin-top:6px}
   .pj-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:14px;border-radius:20px;
-    background:var(--paper);box-shadow:var(--mh-card-shadow);min-height:calc(100vh - 170px)}
+    background:var(--paper);box-shadow:var(--mh-card-shadow);
+    /* 보드를 화면 높이에 맞춰 페이지 전체가 스크롤되지 않게 하고, 카드가 많으면 칸 안에서만 스크롤한다 */
+    height:calc(100vh - 174px);min-height:420px}
   /* 노트북 폭에서도 5개 칸이 한 화면에 들어오도록 폭을 나눠 쓴다(더 좁으면 가로 스크롤) */
-  .pj-col{flex:1 1 0;min-width:180px;max-width:340px;display:flex;flex-direction:column;gap:10px;padding:12px 10px 14px;border-radius:14px;
-    background:var(--bg);min-height:calc(100vh - 200px);transition:box-shadow .15s}
+  .pj-col{flex:1 1 0;min-width:200px;display:flex;flex-direction:column;align-self:stretch;min-height:0;overflow:hidden;
+    border-radius:14px;background:var(--bg);transition:box-shadow .15s}
+  .pj-col-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px 9px 12px;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .pj-col.is-over{box-shadow:inset 0 0 0 2px var(--mh-accent)}
-  .pj-col-head{display:flex;align-items:center;gap:7px;padding:4px 6px 6px}
+  .pj-col-head{flex:none;display:flex;align-items:center;gap:7px;padding:12px 14px 9px}
   .pj-col-dot{width:7px;height:7px;border-radius:50%;flex:none}
   .pj-col-name{flex:1;font-size:13px;font-weight:800;color:var(--ink)}
   .pj-col-count{min-width:18px;padding:0 6px;border-radius:99px;background:var(--paper);font-size:11px;font-weight:700;line-height:18px;text-align:center;color:var(--mute)}
   .pj-col-add{all:unset;cursor:pointer;width:20px;height:20px;display:grid;place-items:center;border-radius:6px;color:var(--mute);font-size:16px;line-height:1}
   .pj-col-add:hover{background:var(--paper);color:var(--mh-accent)}
   .pj-col-empty{padding:14px 0;text-align:center;font-size:12px;color:var(--mute)}
-  .pj-card{cursor:pointer;padding:14px 13px 12px;border-radius:12px;background:var(--paper);box-shadow:var(--mh-card-shadow);
+  .pj-card{flex:none;cursor:pointer;padding:12px 12px 10px;border-radius:11px;background:var(--paper);box-shadow:var(--mh-card-shadow);
     border:1px solid transparent;transition:border-color .15s}
   .pj-card:hover{border-color:var(--mh-accent-soft)}
   .pj-card.is-dragging{opacity:.4}
   .pj-card-title{display:flex;gap:7px;font-size:13px;font-weight:800;color:var(--ink);line-height:1.35;word-break:break-all}
   .pj-card-title svg{width:12px;height:12px;flex:none;margin-top:2px;color:var(--mh-accent)}
-  .pj-card-due{margin-top:9px;font-size:12px;color:var(--mute)}
+  .pj-card-due{margin-top:7px;font-size:12px;color:var(--mute)}
   .pj-card-due.is-late{color:#e84855;font-weight:700}
   .pj-card-made{margin-top:2px;font-size:11px;color:var(--mute);opacity:.85}
-  .pj-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
-  .pj-tag{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;background:var(--tag-bg);color:var(--tag-fg)}
-  .pj-card-prog{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .pj-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+  .pj-tag{padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700;background:var(--tag-bg);color:var(--tag-fg)}
+  .pj-card-prog{display:flex;align-items:center;gap:10px;margin-top:10px}
   .pj-card-prog .mh-proj-bar{flex:1;margin:0;height:4px}
   .pj-card-prog b{font-size:10.5px;font-weight:800;color:var(--body);min-width:30px;text-align:right}
-  .pj-card-foot{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--body)}
+  .pj-card-foot{display:flex;align-items:center;gap:6px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--body)}
   .pj-card-foot i{width:5px;height:5px;border-radius:50%;flex:none}
   .mh-field select{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:14px;font-weight:500;outline:none}
   @media(max-width:760px){
+    .pj-board{height:auto}
+    .pj-col{min-width:240px}
+    .pj-col-body{overflow:visible}
     .pj-head{flex-wrap:wrap;gap:12px}
     .pj-filters{margin-left:0;flex-wrap:wrap}
   }
@@ -8037,7 +8044,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         <div class="pj-col-head"><i class="pj-col-dot" style="background:${s.c}"></i><span class="pj-col-name">${s.k}</span>
           <span class="pj-col-count">${items.length}</span>
           <button type="button" class="pj-col-add" data-add="${s.k}" aria-label="${s.k}에 프로젝트 추가">+</button></div>
-        ${items.length?items.map(cardHtml).join(''):'<div class="pj-col-empty">카드가 없습니다</div>'}
+        <div class="pj-col-body">${items.length?items.map(cardHtml).join(''):'<div class="pj-col-empty">카드가 없습니다</div>'}</div>
       </div>`;
     }).join('');
     document.querySelectorAll('#pjFilters .pj-filter').forEach(b=>{
