@@ -417,6 +417,189 @@ window.baroyamAuthHash=async function(email){
     opacity:0;transition:opacity .55s ease .2s}
   .home-tip svg{width:16px;height:16px;flex:none;color:var(--indigo)}
   .home-hero.is-done .home-tip{opacity:1}
+  /* 마이홈 대시보드 · 프로젝트 현황 카드 + 시계 / 퀵링크 · 간편 기록노트 · 진행중 프로젝트 달성률 ·
+     본문 흰 종이(.paper)를 걷어내고 카드들이 배경 위에 바로 놓인다 */
+  :root{--mh-accent:#7c6fe0;--mh-accent-soft:rgba(124,111,224,.12);--mh-card-shadow:0 1px 3px rgba(38,38,46,.05)}
+  html[data-theme="dark"]{--mh-accent:#9d92f0;--mh-accent-soft:rgba(157,146,240,.16);--mh-card-shadow:none}
+  body.view-is-wide .wrap{max-width:1720px;padding:24px 24px 48px}
+  body.view-is-wide .paper{background:none;box-shadow:none;border-radius:0;overflow:visible}
+  .mh{display:flex;flex-direction:column;gap:22px}
+  .mh-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(260px,.7fr);gap:14px 14px}
+  .mh-stat{display:flex;align-items:center;gap:13px;padding:16px 14px;min-height:74px;background:var(--paper);
+    border-radius:16px;box-shadow:var(--mh-card-shadow)}
+  .mh-stat-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}
+  .mh-stat-ic svg{width:19px;height:19px}
+  .mh-stat-label{font-size:12.5px;font-weight:500;color:var(--mute);letter-spacing:-.2px}
+  .mh-stat-num{margin-top:4px;font-size:20px;font-weight:800;color:var(--ink);line-height:1}
+  .mh-stat.is-red .mh-stat-ic{background:rgba(232,72,85,.12);color:#e84855}
+  .mh-stat.is-red .mh-stat-num{color:#e84855}
+  .mh-stat.is-blue .mh-stat-ic{background:rgba(59,130,246,.12);color:#3b82f6}
+  .mh-stat.is-teal .mh-stat-ic{background:rgba(20,184,166,.13);color:#14a896}
+  .mh-stat.is-orange .mh-stat-ic{background:rgba(245,130,32,.14);color:#f08a24}
+  .mh-stat.is-orange .mh-stat-num{color:#f08a24}
+  .mh-stat.is-purple .mh-stat-ic{background:var(--mh-accent-soft);color:var(--mh-accent)}
+  .mh-stat.is-green .mh-stat-ic{background:rgba(34,160,90,.12);color:#22a05a}
+  .mh-clock{grid-column:4;grid-row:1 / span 2;border-radius:20px;padding:22px 24px 20px;color:#fff;
+    background:linear-gradient(135deg,#7a70dc 0%,#a58ae4 100%);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px -14px rgba(106,92,210,.7)}
+  .mh-clock-row{display:flex;align-items:center;gap:7px}
+  .mh-clock-tile{min-width:56px;padding:4px 6px 5px;border-radius:9px;background:#fff;color:#6a5fd4;
+    font-size:34px;font-weight:800;line-height:1.15;text-align:center;font-variant-numeric:tabular-nums;
+    box-shadow:0 3px 0 rgba(58,44,150,.25)}
+  .mh-clock-sep{font-size:24px;font-weight:800;opacity:.9}
+  .mh-clock-ap{margin-left:6px;padding:3px 9px;border-radius:7px;background:#fff;color:#6a5fd4;font-size:14px;font-weight:800}
+  .mh-clock-date{align-self:flex-end;font-size:12.5px;font-weight:700;opacity:.95}
+  .mh-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.95fr) minmax(0,1.4fr);gap:18px;align-items:stretch}
+  .mh-card{background:var(--paper);border-radius:20px;padding:22px 20px 24px;min-height:500px;box-shadow:var(--mh-card-shadow);min-width:0}
+  .mh-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .mh-card-title{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+  .mh-card-title svg{width:15px;height:15px;color:var(--body)}
+  .mh-card-sub{margin-top:9px;font-size:12.5px;color:var(--mute)}
+  .mh-text-btn{all:unset;cursor:pointer;font-size:12.5px;font-weight:700;color:var(--mute);padding:3px 4px;border-radius:6px}
+  .mh-text-btn:hover{color:var(--mh-accent)}
+  .mh-icon-btn{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:var(--mute);flex:none}
+  .mh-icon-btn svg{width:12px;height:12px}
+  .mh-icon-btn:hover{background:var(--line);color:var(--ink)}
+  .mh-empty{margin-top:18px;padding:22px 12px;text-align:center;font-size:13px;line-height:1.6;color:var(--mute);
+    border:1px dashed var(--line);border-radius:12px}
+  /* 퀵링크 */
+  .mh-links-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+  .mh-link{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;background:var(--bg)}
+  .mh-link.is-dragging{opacity:.4}
+  .mh-link.is-over{box-shadow:inset 0 2px 0 var(--mh-accent)}
+  .mh-link-grip{cursor:grab;color:var(--mute);display:grid;place-items:center;flex:none}
+  .mh-link-grip svg{width:12px;height:12px}
+  .mh-link-dot{width:5px;height:5px;border-radius:50%;background:var(--mh-accent);flex:none}
+  .mh-link-name{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--ink);text-decoration:none;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mh-link-name:hover{color:var(--mh-accent)}
+  /* 간편 기록노트 */
+  .mh-note-form{margin-top:16px;display:flex;gap:10px;align-items:stretch}
+  .mh-note-input{flex:1;min-width:0;min-height:54px;resize:vertical;padding:11px 13px;border-radius:10px;
+    border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:13px;line-height:1.5;outline:none}
+  .mh-note-input:focus{border-color:var(--mh-accent)}
+  .mh-note-add{all:unset;cursor:pointer;flex:none;width:82px;display:grid;place-items:center;border-radius:10px;
+    background:var(--mh-accent);color:#fff;font-size:13px;font-weight:800;opacity:.85}
+  .mh-note-add:hover{opacity:1}
+  .mh-notes-list{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+  .mh-note{position:relative;padding:12px 60px 13px 14px;border-radius:10px;background:var(--bg)}
+  .mh-note-date{font-size:12px;font-weight:600;color:var(--mh-accent)}
+  .mh-note-text{margin-top:4px;font-size:13px;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-all}
+  .mh-note-tools{position:absolute;top:10px;right:10px;display:flex;gap:4px}
+  .mh-note-edit{width:100%;margin-top:6px;min-height:60px;resize:vertical;padding:8px 10px;border-radius:8px;
+    border:1px solid var(--mh-accent);background:var(--paper);color:var(--ink);font:inherit;font-size:13px;line-height:1.6;outline:none}
+  /* 진행중 프로젝트 달성률 */
+  .mh-proj-list{margin-top:14px;display:flex;flex-direction:column}
+  .mh-proj{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 4px;
+    border-bottom:1px solid var(--line)}
+  .mh-proj:last-child{border-bottom:0}
+  .mh-proj:hover .mh-proj-name{color:var(--mh-accent)}
+  .mh-proj-rank{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;
+    font-size:11.5px;font-weight:800;background:var(--bg);color:var(--mute)}
+  .mh-proj-rank.r1{background:#fdf3d4;color:#b98a0e}
+  .mh-proj-rank.r3{background:#fde6da;color:#c8643a}
+  html[data-theme="dark"] .mh-proj-rank.r1{background:rgba(234,179,8,.18);color:#e6bd4a}
+  html[data-theme="dark"] .mh-proj-rank.r3{background:rgba(234,110,60,.18);color:#ec8a60}
+  .mh-proj-main{flex:1;min-width:0;display:block}
+  .mh-proj-name{display:block;font-size:13px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mh-proj-due{margin-left:6px;font-size:11.5px;font-weight:600;color:var(--mute)}
+  .mh-proj-due.is-late{color:#e84855}
+  .mh-proj-bar{margin-top:8px;height:5px;border-radius:99px;background:var(--bg);overflow:hidden}
+  .mh-proj-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7a70dc,#a58ae4)}
+  .mh-proj-pct{flex:none;width:44px;text-align:right;font-size:13px;font-weight:800;color:var(--ink)}
+  /* 편집 대화상자 · 설정창 틀(.settings-overlay/.settings-panel)을 그대로 빌려 쓴다 */
+  /* 프로젝트 칸반 보드 · 상태별 열(예정/진행중/보류/완료/종료), 카드를 끌어 다른 열에 놓으면 상태가 바뀐다 ·
+     마이홈과 같은 프로젝트 목록을 쓴다 */
+  .pj-head{position:relative;display:flex;align-items:center;gap:22px;padding:4px 0 18px}
+  .pj-title{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.4px}
+  .pj-title svg{width:18px;height:18px;color:var(--body)}
+  .pj-search{display:flex;align-items:center;gap:7px;flex:1;max-width:320px;color:var(--mute)}
+  .pj-search svg{width:13px;height:13px;flex:none}
+  .pj-search input{all:unset;flex:1;min-width:0;font-size:13px;color:var(--ink)}
+  .pj-search input::placeholder{color:var(--mute)}
+  .pj-filters{margin-left:auto;display:flex;gap:8px;position:relative}
+  .pj-filter{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:9px;
+    background:var(--paper);box-shadow:var(--mh-card-shadow);font-size:12.5px;font-weight:800;color:var(--ink)}
+  .pj-filter svg{width:12px;height:12px}
+  .pj-filter.is-on{color:var(--mh-accent);box-shadow:inset 0 0 0 1px var(--mh-accent)}
+  .pj-filter-n:not(:empty){min-width:16px;padding:0 4px;border-radius:99px;background:var(--mh-accent);color:#fff;font-size:10.5px;line-height:16px;text-align:center}
+  .pj-pop{position:absolute;top:calc(100% + 6px);right:0;z-index:30;min-width:200px;padding:8px;border-radius:12px;
+    background:var(--paper);border:1px solid var(--line);box-shadow:0 12px 30px -10px rgba(20,14,10,.3)}
+  .pj-pop[hidden]{display:none}
+  .pj-opt{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+  .pj-opt:hover{background:var(--bg)}
+  .pj-opt input{accent-color:var(--mh-accent)}
+  .pj-opt i{width:7px;height:7px;border-radius:50%;flex:none}
+  .pj-pop-date{display:flex;flex-direction:column;gap:8px;padding:6px}
+  .pj-pop-date label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--body)}
+  .pj-pop-date input{padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:13px}
+  html[data-theme="dark"] .pj-pop-date input{color-scheme:dark}
+  .pj-pop-foot{display:flex;justify-content:flex-end;padding:6px 6px 2px;border-top:1px solid var(--line);margin-top:6px}
+  .pj-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:14px;border-radius:20px;
+    background:var(--paper);box-shadow:var(--mh-card-shadow);min-height:calc(100vh - 170px)}
+  .pj-col{flex:0 0 270px;display:flex;flex-direction:column;gap:10px;padding:12px 10px 14px;border-radius:14px;
+    background:var(--bg);min-height:calc(100vh - 200px);transition:box-shadow .15s}
+  .pj-col.is-over{box-shadow:inset 0 0 0 2px var(--mh-accent)}
+  .pj-col-head{display:flex;align-items:center;gap:7px;padding:4px 6px 6px}
+  .pj-col-dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .pj-col-name{flex:1;font-size:13px;font-weight:800;color:var(--ink)}
+  .pj-col-count{min-width:18px;padding:0 6px;border-radius:99px;background:var(--paper);font-size:11px;font-weight:700;line-height:18px;text-align:center;color:var(--mute)}
+  .pj-col-add{all:unset;cursor:pointer;width:20px;height:20px;display:grid;place-items:center;border-radius:6px;color:var(--mute);font-size:16px;line-height:1}
+  .pj-col-add:hover{background:var(--paper);color:var(--mh-accent)}
+  .pj-col-empty{padding:14px 0;text-align:center;font-size:12px;color:var(--mute)}
+  .pj-card{cursor:pointer;padding:14px 13px 12px;border-radius:12px;background:var(--paper);box-shadow:var(--mh-card-shadow);
+    border:1px solid transparent;transition:border-color .15s}
+  .pj-card:hover{border-color:var(--mh-accent-soft)}
+  .pj-card.is-dragging{opacity:.4}
+  .pj-card-title{display:flex;gap:7px;font-size:13px;font-weight:800;color:var(--ink);line-height:1.35;word-break:break-all}
+  .pj-card-title svg{width:12px;height:12px;flex:none;margin-top:2px;color:var(--mh-accent)}
+  .pj-card-due{margin-top:9px;font-size:12px;color:var(--mute)}
+  .pj-card-due.is-late{color:#e84855;font-weight:700}
+  .pj-card-made{margin-top:2px;font-size:11px;color:var(--mute);opacity:.85}
+  .pj-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+  .pj-tag{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;background:var(--tag-bg);color:var(--tag-fg)}
+  .pj-card-prog{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .pj-card-prog .mh-proj-bar{flex:1;margin:0;height:4px}
+  .pj-card-prog b{font-size:10.5px;font-weight:800;color:var(--body);min-width:30px;text-align:right}
+  .pj-card-foot{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--body)}
+  .pj-card-foot i{width:5px;height:5px;border-radius:50%;flex:none}
+  .mh-field select{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:14px;font-weight:500;outline:none}
+  @media(max-width:760px){
+    .pj-head{flex-wrap:wrap;gap:12px}
+    .pj-filters{margin-left:0;flex-wrap:wrap}
+  }
+  .settings-panel.mh-dialog{max-width:420px;height:auto}
+  .mh-form{padding:18px 22px 22px;display:flex;flex-direction:column;gap:12px}
+  .mh-field{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:700;color:var(--body)}
+  .mh-field input[type=text],.mh-field input[type=url],.mh-field input[type=date]{padding:10px 12px;border-radius:10px;
+    border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:14px;font-weight:500;outline:none}
+  html[data-theme="dark"] .mh-field input[type=date]{color-scheme:dark}
+  .mh-field input:focus{border-color:var(--mh-accent)}
+  .mh-field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mh-range-row{display:flex;align-items:center;gap:10px}
+  .mh-range-row input{flex:1;accent-color:var(--mh-accent)}
+  .mh-range-row output{width:44px;text-align:right;font-size:14px;font-weight:800;color:var(--ink)}
+  .mh-check{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--body)}
+  .mh-check input{accent-color:var(--mh-accent);width:16px;height:16px}
+  .mh-form-actions{display:flex;gap:8px;margin-top:6px}
+  .mh-btn{all:unset;cursor:pointer;flex:1;text-align:center;padding:11px 0;border-radius:10px;font-size:14px;font-weight:800}
+  .mh-btn.primary{background:var(--mh-accent);color:#fff}
+  .mh-btn.ghost{background:var(--bg);color:var(--body)}
+  .mh-btn.danger{flex:none;padding:11px 16px;color:#e84855;background:rgba(232,72,85,.1)}
+  .mh-btn[hidden]{display:none}
+  @media(max-width:1180px){
+    .mh-top{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .mh-clock{grid-column:1 / -1;grid-row:auto}
+    .mh-grid{grid-template-columns:1fr 1fr}
+    .mh-notes{grid-column:1 / -1;order:-1}
+  }
+  @media(max-width:760px){
+    body.view-is-wide .wrap{padding:16px 16px 40px}
+    .mh-top{grid-template-columns:1fr 1fr}
+    .mh-grid{grid-template-columns:1fr}
+    .mh-card{min-height:0}
+    .mh-clock-tile{min-width:46px;font-size:28px}
+  }
   @media(max-width:760px){
     .section > .plan-hero.home-hero{min-height:auto;padding:56px 0}
     .home-hero .ptitle{max-width:none}
@@ -728,6 +911,7 @@ window.baroyamAuthHash=async function(email){
   .sb-cap{font-size:9px;font-weight:800;letter-spacing:.12em;color:var(--sb-mute);
     padding:0 12px;margin-bottom:9px;user-select:none}
   .sb-nav{display:flex;flex-direction:column;gap:3px;width:100%}
+  .sb-sep{height:1px;background:var(--sb-line);margin:6px 4px;flex:none}
   .sb-item{all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:row;align-items:center;gap:11px;
     width:100%;padding:10px 12px;border-radius:11px;color:var(--sb-ink);cursor:pointer;text-align:left;
     font-size:13px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;
@@ -743,16 +927,29 @@ window.baroyamAuthHash=async function(email){
   /* 설정 버튼과 다크모드 스위치를 한 줄에 나란히 */
   .sb-bottom-row{display:flex;align-items:center;gap:8px;width:100%}
   .sb-bottom-row .sb-item{flex:1;min-width:0}
-  .sb-theme{flex:none;background:var(--sb-line)}
+  /* 라이트/다크 전환 · 두 칸짜리 버튼 · 지금 모드 칸만 색을 채워서 한눈에 보이게 한다 */
+  .sb-theme{all:unset;box-sizing:border-box;flex:1;display:flex;gap:3px;padding:3px;border-radius:12px;cursor:pointer;
+    background:var(--sb-hover);box-shadow:inset 0 0 0 1px var(--sb-line)}
   .sb-theme:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:2px}
+  .ts-seg{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;height:30px;border-radius:9px;
+    font-size:12px;font-weight:800;letter-spacing:-.2px;color:var(--sb-mute);transition:background .18s,color .18s,box-shadow .18s}
+  .ts-seg svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .sb-theme:hover .ts-seg{color:var(--sb-ink)}
+  /* 라이트 모드 · 흰 칸에 주황 해 */
+  .sb-theme:not(.active) .ts-light{background:#fff;color:#2b1d14;box-shadow:0 2px 6px -2px rgba(80,40,20,.3)}
+  .sb-theme:not(.active) .ts-light svg{color:#f08a12}
+  /* 다크 모드 · 남색(브랜드 강조색) 칸에 노란 달 */
+  .sb-theme.active .ts-dark{background:#2c2f4a;color:#fff;box-shadow:0 2px 8px -2px rgba(0,0,0,.5)}
+  .sb-theme.active .ts-dark svg{color:#ffd35c;fill:#ffd35c}
 
   /* 사이드바 접기 · 아이콘만 남기고 폭을 줄인다 ·
      .main이 flex:1이라 줄어든 만큼 본문이 저절로 넓어진다 */
   .sb-collapse{all:unset;box-sizing:border-box;flex:none;margin-left:auto;width:28px;height:28px;border-radius:9px;
-    display:grid;place-items:center;color:var(--sb-ink);cursor:pointer;
-    transition:background .16s,color .16s,transform .18s}
+    display:grid;place-items:center;color:var(--sb-ink-hi);cursor:pointer;
+    background:var(--paper);box-shadow:inset 0 0 0 1px var(--sb-line),0 1px 3px rgba(80,40,20,.08);
+    transition:background .16s,color .16s,transform .18s,box-shadow .16s}
   .sb-collapse svg{width:17px;height:17px;display:block}
-  .sb-collapse:hover{background:var(--sb-hover);color:var(--sb-ink-hi)}
+  .sb-collapse:hover{background:var(--indigo);color:#fff;box-shadow:0 4px 10px -4px rgba(var(--indigo-rgb),.8)}
   .sb-collapse:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:2px}
 
   .sidebar.is-collapsed{width:64px}
@@ -766,7 +963,9 @@ window.baroyamAuthHash=async function(email){
   .sidebar.is-collapsed .sb-synctime{display:none}
   .sidebar.is-collapsed .sb-bottom-row{flex-direction:column;gap:6px}
   .sidebar.is-collapsed .sb-bottom-row .sb-item{flex:none;width:100%}
-  .sidebar.is-collapsed .sb-theme{align-self:center}
+  .sidebar.is-collapsed .sb-theme{flex:none;width:40px;align-self:center}
+  .sidebar.is-collapsed .ts-seg span{display:none}
+  .sidebar.is-collapsed .sb-theme:not(.active) .ts-dark,.sidebar.is-collapsed .sb-theme.active .ts-light{display:none}
   /* 배너 아래 기간 선택줄 · 고른 기간이 배너 요약·일별 차트·리뷰 목록에 모두 적용된다 ·
      판매처 고르기는 왼쪽 사이드탭이 맡는다(예전엔 여기 가로 탭줄, 그 전엔 상단 채널 아이콘 3개였다) */
   .rev-daterow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:18px}
@@ -934,7 +1133,6 @@ window.baroyamAuthHash=async function(email){
   .sb-item.sb-import span{display:flex;align-items:center;text-align:left}
   .sb-synctime{font-size:9.5px;color:var(--sb-mute);font-weight:600;text-align:left;
     padding:1px 12px 3px;line-height:1.45;white-space:pre-line;min-height:1px}
-  .sb-item.sb-settings{margin-top:0}
   .main{flex:1;min-width:0}
 
   /* 최상단 바 · 왼쪽 검색 하나만 두고 나머지는 비워 둔다 */
@@ -950,6 +1148,60 @@ window.baroyamAuthHash=async function(email){
   .tb-mail-btn:hover{background:var(--sb-hover);border-color:var(--indigo);transform:translateY(-1px)}
   .tb-mail-btn:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:2px}
   .tb-mail-btn svg{width:19px;height:19px;display:block}
+
+  /* 최상단 바 · 로그인 프로필 · 누르면 계정 정보 / 관리자 모드 / 로그아웃 메뉴가 열린다 */
+  .tb-profile{position:relative;margin-left:4px;padding-left:10px;border-left:1px solid var(--sb-line)}
+  .tb-avatar-btn{all:unset;box-sizing:border-box;position:relative;display:grid;place-items:center;width:30px;height:30px;
+    border-radius:50%;cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .tb-avatar-btn:hover{transform:translateY(-1px);box-shadow:0 0 0 3px var(--sb-hover)}
+  .tb-avatar-btn:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:2px}
+  .tb-avatar-btn[aria-expanded="true"]{box-shadow:0 0 0 3px rgba(var(--indigo-rgb),.25)}
+  .tb-avatar{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;overflow:hidden;
+    background:linear-gradient(135deg,#ee6a1a,#e24e16);color:#fff;font-size:12.5px;font-weight:800;letter-spacing:-.2px}
+  .tb-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .tb-avatar svg{width:16px;height:16px}
+  /* 관리자 모드일 때 아바타 오른쪽 아래에 작은 방패 배지 */
+  .tb-avatar-badge{position:absolute;right:-3px;bottom:-3px;display:grid;place-items:center;width:15px;height:15px;
+    border-radius:50%;background:var(--indigo);color:#fff;box-shadow:0 0 0 2px var(--paper)}
+  .tb-avatar-badge svg{width:9px;height:9px}
+  .tb-avatar-badge[hidden]{display:none}
+
+  .tb-menu{position:absolute;top:calc(100% + 10px);right:0;z-index:40;width:264px;padding:8px;border-radius:16px;
+    background:var(--paper);border:1px solid var(--sb-line);
+    box-shadow:0 22px 48px -22px rgba(60,30,10,.38),0 2px 6px rgba(60,30,10,.05);
+    transform-origin:top right;animation:tbMenuIn .16s ease-out both}
+  .tb-menu[hidden]{display:none}
+  @keyframes tbMenuIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}
+  .tb-menu-head{display:flex;align-items:center;gap:11px;padding:10px 10px 12px}
+  .tb-menu-head .tb-avatar{width:40px;height:40px;flex:none;font-size:15px}
+  .tb-menu-head .tb-avatar svg{width:20px;height:20px}
+  .tb-menu-id{min-width:0;flex:1}
+  .tb-menu-name{font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb-menu-mail{margin-top:2px;font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb-menu-role{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:2px 8px;border-radius:999px;
+    font-size:10.5px;font-weight:800;letter-spacing:-.1px;background:var(--sb-hover);color:var(--mute)}
+  .tb-menu-role.is-admin{background:var(--indigo-soft);color:var(--indigo)}
+  .tb-menu-role::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
+  .tb-menu-sep{height:1px;margin:4px 6px;background:var(--sb-line)}
+  .tb-menu-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;
+    border-radius:10px;font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-.15px;cursor:pointer;
+    transition:background .14s,color .14s}
+  .tb-menu-item:hover{background:var(--sb-hover)}
+  .tb-menu-item:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:-2px}
+  .tb-menu-item > svg{width:17px;height:17px;flex:none;color:var(--mute)}
+  .tb-menu-item .tb-menu-label{flex:1;min-width:0}
+  .tb-menu-item .tb-menu-hint{display:block;margin-top:1px;font-size:11px;font-weight:600;color:var(--mute)}
+  .tb-menu-item.is-danger{color:var(--neg,#cf5a50)}
+  .tb-menu-item.is-danger > svg{color:currentColor}
+  .tb-menu-item.is-danger:hover{background:var(--neg-soft,#fbeae8)}
+  /* 관리자 모드 스위치 */
+  .tb-switch{position:relative;flex:none;width:32px;height:18px;border-radius:999px;background:var(--sb-line);transition:background .18s}
+  .tb-switch::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .18s}
+  .tb-menu-item[aria-checked="true"] .tb-switch{background:var(--indigo)}
+  .tb-menu-item[aria-checked="true"] .tb-switch::after{transform:translateX(14px)}
+  .tb-menu-item[aria-checked="true"] > svg{color:var(--indigo)}
   .tb-search{position:relative;width:240px;max-width:48vw}
   .tb-search-box{display:flex;align-items:center;gap:7px;height:30px;padding:0 10px;border-radius:9px;
     background:var(--paper);border:1px solid var(--sb-line);transition:border-color .15s,box-shadow .15s}
@@ -1604,7 +1856,9 @@ window.baroyamAuthHash=async function(email){
         msg.textContent=(p.email||'이 계정')+'은(는) 접근 권한이 없습니다.';
         return;
       }
-      localStorage.setItem(A.lsKey,JSON.stringify({h,until:Date.now()+A.sessionDays*864e5}));
+      /* 상단 프로필 메뉴에 띄울 이름·이메일·사진도 같이 적어 둔다 (이 브라우저에만 남는다) */
+      localStorage.setItem(A.lsKey,JSON.stringify({h,until:Date.now()+A.sessionDays*864e5,
+        name:p.name||'',email:p.email||'',picture:p.picture||''}));
       location.reload();
     }catch(err){ console.error(err); msg.textContent='로그인 처리 중 오류가 발생했습니다.'; }
   }
@@ -1638,15 +1892,20 @@ window.baroyamAuthHash=async function(email){
           <span class="sb-brand-sub">DASHBOARD</span>
         </div>
         <button class="sb-collapse" type="button" id="sbCollapseBtn" aria-controls="sbMain" aria-expanded="true" aria-label="사이드바 접기" title="사이드바 접기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 7 9.5 12l5 5"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 7l-5 5 5 5M17.5 7l-5 5 5 5"/></svg>
         </button>
       </div>
       <div class="sb-cap">메뉴</div>
       <div class="sb-nav">
         <button class="sb-item active" type="button" data-view="home">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-4v-6h-6v6H5A1.5 1.5 0 0 1 3.5 19Z"/></svg>
-          <span>홈</span>
+          <span>마이홈</span>
         </button>
+        <button class="sb-item" type="button" data-view="project" id="sbProjectBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.2c0-.9.7-1.7 1.7-1.7h4.1l2 2.2h7.5c.9 0 1.7.8 1.7 1.7v8.3c0 .9-.8 1.7-1.7 1.7H5.2c-1 0-1.7-.8-1.7-1.7Z"/><path d="M3.5 10.5h17"/></svg>
+          <span>프로젝트</span>
+        </button>
+        <div class="sb-sep" role="separator"></div>
         <button class="sb-item" type="button" id="sbSalesToggle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-8M4 20h16"/></svg>
           <span>매출데이터</span>
@@ -1683,18 +1942,11 @@ window.baroyamAuthHash=async function(email){
         </button>
         <div class="sb-synctime" id="sbSyncTime"></div>
         <div class="sb-bottom-row">
-          <button class="sb-item sb-settings" type="button" id="settingsBtn" title="설정" aria-haspopup="dialog" aria-expanded="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span>설정</span>
-          </button>
-          <button class="theme-switch sb-theme" type="button" id="themeSwitch" role="switch" aria-checked="false" aria-label="다크모드 전환" title="다크 모드">
-            <span class="theme-switch-knob"></span>
+          <button class="sb-theme" type="button" id="themeSwitch" role="switch" aria-checked="false" aria-label="다크모드 전환" title="다크 모드">
+            <span class="ts-seg ts-light"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg><span>라이트</span></span>
+            <span class="ts-seg ts-dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5Z"/></svg><span>다크</span></span>
           </button>
         </div>
-        <button class="sb-item sb-logout" type="button" id="authLogoutBtn" title="로그아웃" onclick="window.baroyamSignOut&&window.baroyamSignOut()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-          <span>로그아웃</span>
-        </button>
       </div>
     </nav>
 
@@ -1851,6 +2103,40 @@ window.baroyamAuthHash=async function(email){
             <path fill="#EA4335" d="M5.6 5.5 12 10.1l6.4-4.6v3.1L12 13.2 5.6 8.6V5.5Z"/>
           </svg>
         </a>
+        <div class="tb-profile" id="tbProfile">
+          <button class="tb-avatar-btn" type="button" id="tbProfileBtn" aria-haspopup="menu" aria-expanded="false"
+                  aria-controls="tbProfileMenu" title="내 계정" aria-label="내 계정 메뉴">
+            <span class="tb-avatar" data-avatar></span>
+            <span class="tb-avatar-badge" id="tbAdminBadge" hidden aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></svg>
+            </span>
+          </button>
+          <div class="tb-menu" id="tbProfileMenu" role="menu" aria-labelledby="tbProfileBtn" hidden>
+            <div class="tb-menu-head">
+              <span class="tb-avatar" data-avatar></span>
+              <div class="tb-menu-id">
+                <div class="tb-menu-name" id="tbProfileName"></div>
+                <div class="tb-menu-mail" id="tbProfileMail"></div>
+                <span class="tb-menu-role" id="tbProfileRole"></span>
+              </div>
+            </div>
+            <div class="tb-menu-sep" role="separator"></div>
+            <button class="tb-menu-item" type="button" role="menuitemcheckbox" aria-checked="false" id="tbAdminToggle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+              <span class="tb-menu-label">관리자 모드<span class="tb-menu-hint" id="tbAdminHint">비밀번호 확인 후 켜져요</span></span>
+              <span class="tb-switch" aria-hidden="true"></span>
+            </button>
+            <button class="tb-menu-item" type="button" role="menuitem" id="tbOpenSettings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+              <span class="tb-menu-label">설정</span>
+            </button>
+            <div class="tb-menu-sep" role="separator"></div>
+            <button class="tb-menu-item is-danger" type="button" role="menuitem" id="tbSignOut">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+              <span class="tb-menu-label">로그아웃</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="wrap" id="mainWrap">
@@ -1869,19 +2155,82 @@ window.baroyamAuthHash=async function(email){
       </header>
 
       <div id="view-home">
-        <section class="section" style="padding-top:0;padding-bottom:16px">
-          <div class="plan-hero home-hero" id="homeHero">
-            <div class="home-date" id="homeDate"></div>
-            <div class="ptitle">
-              <span id="homeQuoteText"></span><span class="home-tw-caret" aria-hidden="true"></span>
+        <div class="mh" id="myHome">
+          <div class="mh-top">
+            <div class="mh-stat is-red"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><div><div class="mh-stat-label">지연된 프로젝트</div><div class="mh-stat-num num" id="mhStatLate">0</div></div></div>
+            <div class="mh-stat is-blue"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M16.5 7.5c-.6-1.3-2.3-2.2-4.5-2.2-2.6 0-4.3 1.3-4.3 3.1 0 4.3 8.8 2.2 8.8 6.6 0 1.8-1.8 3.2-4.5 3.2-2.3 0-4.1-1-4.7-2.5"/></svg></span><div><div class="mh-stat-label">마감 3일 이내 프로젝트</div><div class="mh-stat-num num" id="mhStatSoon">0</div></div></div>
+            <div class="mh-stat is-teal"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M12 13v4M10 15h4"/></svg></span><div><div class="mh-stat-label">예정 프로젝트</div><div class="mh-stat-num num" id="mhStatPlanned">0</div></div></div>
+            <div class="mh-clock" aria-live="off">
+              <div class="mh-clock-row">
+                <span class="mh-clock-tile" id="mhClockH">00</span><span class="mh-clock-sep">:</span>
+                <span class="mh-clock-tile" id="mhClockM">00</span><span class="mh-clock-sep">:</span>
+                <span class="mh-clock-tile" id="mhClockS">00</span>
+                <span class="mh-clock-ap" id="mhClockAp">AM</span>
+              </div>
+              <div class="mh-clock-date" id="mhClockDate"></div>
             </div>
-            <div class="home-quote-who" id="homeQuoteWho"></div>
-            <p class="home-tip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .9 1.6h5.4c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3Z"/></svg>
-              <span id="homeTip"></span>
-            </p>
+            <div class="mh-stat is-orange"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><div class="mh-stat-label">긴급 프로젝트</div><div class="mh-stat-num num" id="mhStatUrgent">0</div></div></div>
+            <div class="mh-stat is-purple"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/></svg></span><div><div class="mh-stat-label">미완료 프로젝트</div><div class="mh-stat-num num" id="mhStatOpen">0</div></div></div>
+            <div class="mh-stat is-green"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4.5" rx="1.2"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></span><div><div class="mh-stat-label">이번달 종료 프로젝트</div><div class="mh-stat-num num" id="mhStatMonthEnd">0</div></div></div>
           </div>
-        </section>
+
+          <div class="mh-grid">
+            <section class="mh-card mh-links">
+              <div class="mh-card-head">
+                <div class="mh-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3.1-3.1a4 4 0 0 0-5.7-5.7L11.6 6.7"/><path d="M14 10a4 4 0 0 0-5.7 0l-3.1 3.1a4 4 0 0 0 5.7 5.7l1.5-1.5"/></svg>퀵링크</div>
+                <button type="button" class="mh-text-btn" id="mhLinkAddBtn">+ 링크 추가</button>
+              </div>
+              <div class="mh-links-list" id="mhLinks"></div>
+            </section>
+
+            <section class="mh-card mh-notes">
+              <div class="mh-card-head">
+                <div class="mh-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8L14 3.5z"/><path d="M14 3.5V8h4.5M9 13h6M9 16.5h4"/></svg>간편 기록노트</div>
+              </div>
+              <div class="mh-card-sub">짧은 미팅 기록을 남기는 공간입니다</div>
+              <form class="mh-note-form" id="mhNoteForm">
+                <textarea class="mh-note-input" id="mhNoteInput" rows="2" placeholder="(Ctrl+Enter로 빠르게 추가)"></textarea>
+                <button type="submit" class="mh-note-add">기록 추가</button>
+              </form>
+              <div class="mh-notes-list" id="mhNotes"></div>
+            </section>
+
+            <section class="mh-card mh-progress">
+              <div class="mh-card-head">
+                <div class="mh-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 19v-6M12 19V6M19 19v-9"/></svg>진행중 프로젝트 달성률</div>
+                <button type="button" class="mh-text-btn" id="mhProjAddBtn">+ 프로젝트 추가</button>
+              </div>
+              <div class="mh-proj-list" id="mhProjects"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-project" style="display:none">
+        <div class="pj">
+          <div class="pj-head">
+            <div class="pj-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg>프로젝트</div>
+            <label class="pj-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input type="search" id="pjSearch" placeholder="프로젝트 검색..." autocomplete="off"></label>
+            <div class="pj-filters" id="pjFilters">
+              <button type="button" class="pj-filter" data-filter="status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5L4 5z"/></svg>상태<span class="pj-filter-n"></span></button>
+              <button type="button" class="pj-filter" data-filter="owner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5L4 5z"/></svg>담당자<span class="pj-filter-n"></span></button>
+              <button type="button" class="pj-filter" data-filter="channel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16l-6 7.5V19l-4-2v-4.5L4 5z"/></svg>경로<span class="pj-filter-n"></span></button>
+              <button type="button" class="pj-filter" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>날짜<span class="pj-filter-n"></span></button>
+              <div class="pj-pop" id="pjPop" hidden></div>
+            </div>
+          </div>
+          <div class="pj-board" id="pjBoard"></div>
+        </div>
+      </div>
+
+      <div class="settings-overlay" id="mhDialog" hidden>
+        <div class="settings-panel mh-dialog" role="dialog" aria-modal="true" aria-labelledby="mhDialogTitle">
+          <div class="settings-head">
+            <h2 id="mhDialogTitle"></h2>
+            <button class="settings-close" type="button" id="mhDialogClose" aria-label="닫기" title="닫기">✕</button>
+          </div>
+          <form class="mh-form" id="mhDialogForm"></form>
+        </div>
       </div>
 
       <div id="view-week" style="display:none">
@@ -4178,20 +4527,19 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
 
 /* 설정 패널 열기/닫기 + 미니사이드탭 전환 */
 (function(){
-  const openBtn=document.getElementById('settingsBtn');
+  /* 사이드바의 설정 버튼은 없앴다 · 이제 상단 프로필 메뉴에서만 연다. 닫으면 포커스는 프로필 버튼으로 돌려준다 */
+  const openBtn=document.getElementById('tbProfileBtn');
   const closeBtn=document.getElementById('settingsCloseBtn');
   const overlay=document.getElementById('settingsOverlay');
   const panel=overlay.querySelector('.settings-panel');
 
   function openSettings(){
     overlay.hidden=false;
-    openBtn.setAttribute('aria-expanded','true');
     closeBtn.focus();
     document.addEventListener('keydown',onKeydown);
   }
   function closeSettings(){
     overlay.hidden=true;
-    openBtn.setAttribute('aria-expanded','false');
     openBtn.focus();
     document.removeEventListener('keydown',onKeydown);
   }
@@ -4222,14 +4570,13 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     pwInput.value='';
     pwError.textContent='';
     pwOverlay.hidden=false;
-    openBtn.setAttribute('aria-expanded','true');
     pwInput.focus();
     document.addEventListener('keydown',onPwKeydown);
   }
   function closePw(returnFocus){
     pwOverlay.hidden=true;
     document.removeEventListener('keydown',onPwKeydown);
-    if(returnFocus){ openBtn.setAttribute('aria-expanded','false'); openBtn.focus(); }
+    if(returnFocus) openBtn.focus();
   }
   function onPwKeydown(e){ if(e.key==='Escape') closePw(true); }
   function pwFail(msg){
@@ -4239,6 +4586,20 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     pwPanel.classList.add('is-shake');
     pwInput.select();
   }
+  /* 비밀번호가 맞았을 때 할 일 · 설정 버튼이면 설정을 열고, 프로필 메뉴의 관리자 모드면 모드만 켠다 */
+  let pwThen=openSettings;
+  function emitAdmin(){ document.dispatchEvent(new CustomEvent('baroyam:adminmode',{detail:{on:unlocked}})); }
+  window.baroyamAdminMode={
+    isOn:()=>unlocked,
+    turnOn(){ if(unlocked) return; pwThen=emitAdmin; openPw(); },
+    turnOff(){
+      unlocked=false;
+      try{ sessionStorage.removeItem(UNLOCK_KEY); }catch(e){}
+      if(!overlay.hidden) closeSettings();
+      emitAdmin();
+    },
+    openSettings(){ pwThen=openSettings; if(unlocked) openSettings(); else openPw(); }
+  };
   pwForm.addEventListener('submit',e=>{
     e.preventDefault();
     if(pwBusy) return;
@@ -4251,14 +4612,14 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
       unlocked=true;
       try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(err){}
       closePw(false);
-      openSettings();
+      emitAdmin();
+      if(pwThen!==emitAdmin) pwThen();
     }).catch(err=>{ console.error(err); pwFail('확인 중 오류가 났어요. 다시 시도해 주세요.'); })
       .finally(()=>{ pwBusy=false; pwSubmit.disabled=false; });
   });
   document.getElementById('settingsPwCloseBtn').addEventListener('click',()=>closePw(true));
   pwOverlay.addEventListener('click',e=>{ if(e.target===pwOverlay) closePw(true); });
 
-  openBtn.addEventListener('click',()=>{ if(unlocked) openSettings(); else openPw(); });
   closeBtn.addEventListener('click',closeSettings);
   overlay.addEventListener('click',(e)=>{ if(e.target===overlay) closeSettings(); });
   panel.addEventListener('click',(e)=>e.stopPropagation());
@@ -4275,6 +4636,91 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     });
   });
 
+})();
+
+/* 최상단 바 프로필 · 로그인한 계정을 보여주고, 관리자 모드 켜기/끄기 · 설정 · 로그아웃을 모아 둔다 */
+(function(){
+  const btn=document.getElementById('tbProfileBtn');
+  const menu=document.getElementById('tbProfileMenu');
+  const toggle=document.getElementById('tbAdminToggle');
+  const AM=window.baroyamAdminMode;
+  if(!btn||!menu||!AM) return;
+
+  /* 계정 정보 · 구글 로그인은 이름/이메일/사진을, 관리자 비밀번호 로그인은 "관리자 계정"으로 보여준다.
+     이 기능 전에 로그인한 세션에는 프로필이 없어서, 다시 로그인하기 전까지는 기본 아이콘으로 둔다 */
+  const A=window.BAROYAM_AUTH;
+  let s={};
+  try{ s=JSON.parse(localStorage.getItem(A.lsKey)||'null')||{}; }catch(e){}
+  const isAdminLogin=s.h===A.admin.hash;
+  const name=isAdminLogin?'관리자':(s.name||(s.email?s.email.split('@')[0]:'구글 계정'));
+  const mail=isAdminLogin?'비밀번호로 로그인':(s.email||'다시 로그인하면 프로필이 표시돼요');
+  const personIc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>';
+  const shieldIc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></svg>';
+  document.querySelectorAll('#tbProfile [data-avatar]').forEach(el=>{
+    if(!isAdminLogin&&s.picture){
+      const img=new Image();
+      img.alt=''; img.referrerPolicy='no-referrer'; img.src=s.picture;
+      img.onerror=()=>{ el.textContent=(s.name||'').trim().charAt(0)||''; if(!el.textContent) el.innerHTML=personIc; };
+      el.appendChild(img);
+    }else if(isAdminLogin){ el.innerHTML=shieldIc; }
+    else if(s.name){ el.textContent=s.name.trim().charAt(0); }
+    else el.innerHTML=personIc;
+  });
+  document.getElementById('tbProfileName').textContent=name;
+  document.getElementById('tbProfileMail').textContent=mail;
+  btn.title=s.email?name+' · '+s.email:name;
+
+  const role=document.getElementById('tbProfileRole');
+  const badge=document.getElementById('tbAdminBadge');
+  const hint=document.getElementById('tbAdminHint');
+  function render(){
+    const on=AM.isOn();
+    toggle.setAttribute('aria-checked',on?'true':'false');
+    hint.textContent=on?'이 탭을 닫으면 자동으로 꺼져요':'비밀번호 확인 후 켜져요';
+    role.textContent=on?'관리자 모드':'일반 모드';
+    role.classList.toggle('is-admin',on);
+    badge.hidden=!on;
+  }
+  render();
+  document.addEventListener('baroyam:adminmode',render);
+
+  function items(){ return [...menu.querySelectorAll('.tb-menu-item')]; }
+  function open(){
+    menu.hidden=false;
+    btn.setAttribute('aria-expanded','true');
+    items()[0].focus();
+    document.addEventListener('pointerdown',onOutside,true);
+    document.addEventListener('keydown',onKey);
+  }
+  function close(returnFocus){
+    if(menu.hidden) return;
+    menu.hidden=true;
+    btn.setAttribute('aria-expanded','false');
+    document.removeEventListener('pointerdown',onOutside,true);
+    document.removeEventListener('keydown',onKey);
+    if(returnFocus) btn.focus();
+  }
+  function onOutside(e){ if(!e.target.closest('#tbProfile')) close(false); }
+  function onKey(e){
+    if(e.key==='Escape'){ close(true); return; }
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();
+      const list=items(), i=list.indexOf(document.activeElement);
+      list[(i+(e.key==='ArrowDown'?1:-1)+list.length)%list.length].focus();
+    }
+  }
+  btn.addEventListener('click',()=>{ menu.hidden?open():close(true); });
+
+  toggle.addEventListener('click',()=>{
+    if(AM.isOn()){ AM.turnOff(); return; }
+    close(false);
+    AM.turnOn();   /* 비밀번호 창이 뜨고, 맞으면 baroyam:adminmode 이벤트로 다시 그려진다 */
+  });
+  document.getElementById('tbOpenSettings').addEventListener('click',()=>{ close(false); AM.openSettings(); });
+  document.getElementById('tbSignOut').addEventListener('click',()=>{
+    try{ sessionStorage.removeItem('baroyam_settings_unlocked_v1'); }catch(e){}
+    window.baroyamSignOut&&window.baroyamSignOut();
+  });
 })();
 
 /* 회원관리 · 회원 추가/삭제 (이 브라우저에 자동 저장) */
@@ -4523,10 +4969,13 @@ document.getElementById('importDataBtn').addEventListener('click',async()=>{
     document.getElementById('view-admin').style.display=v==='admin'?'':'none';
     document.getElementById('view-manual').style.display=v==='manual'?'':'none';
     document.body.classList.toggle('view-is-manual',v==='manual');
+    document.getElementById('view-project').style.display=v==='project'?'':'none';
+    /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project');
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의안건은 DOM이 하나뿐이라, 크게보기로 들어올 때 우측 패널에서 본문으로 옮겨온다 */
     if(v==='agenda'&&window.mountAgendaMain) window.mountAgendaMain();
-    const hideHero=(v==='home'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='agenda');
+    const hideHero=(v==='home'||v==='project'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='agenda');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
@@ -6617,8 +7066,523 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       renderSection01();
       if(window.__weekplanSync) window.__weekplanSync.apply(settings.weekplan);
       if(window.__manualSync) window.__manualSync.apply(settings);
+      if(window.__myhomeSync) window.__myhomeSync.apply(settings);
     }catch(err){ console.error(err); }
   })();
+})();
+
+/* 마이홈 대시보드 · 퀵링크 / 간편 기록노트 / 프로젝트(마감일·진행률)를 한 묶음으로 저장한다 ·
+   이 브라우저(localStorage)에 바로 쓰고, 구글시트 설정(key='myhome')에도 올려 기기 간에 맞춘다 ·
+   상단 현황 카드 숫자는 전부 프로젝트 목록에서 계산한다 */
+(function(){
+  const root=document.getElementById('myHome');
+  if(!root) return;
+  const LS_KEY='baroyam_myhome_v1';
+  const $=id=>document.getElementById(id);
+  const STATUSES=[
+    {k:'예정',c:'#6b5fe0'},{k:'진행중',c:'#3b82f6'},{k:'보류',c:'#f08a24'},{k:'완료',c:'#22a05a'},{k:'종료',c:'#4b5563'}];
+  const STATUS_KEYS=STATUSES.map(x=>x.k);
+  const CHANNELS=[
+    {k:'자사몰',c:'#ef4f6b'},{k:'스마트스토어',c:'#7c6fe0'},{k:'쿠팡',c:'#3b82f6'},{k:'톡딜',c:'#3b82f6'},
+    {k:'오픈몰',c:'#14a896'},{k:'기타',c:'#ef4f6b'}];
+  function kstToday(){
+    const d=new Date(Date.now()+9*3600*1000);
+    return d.toISOString().slice(0,10);
+  }
+  let state=load();
+
+  function load(){
+    try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const s=JSON.parse(raw); return normalize(s); } }catch(e){}
+    return normalize({});
+  }
+  function normalize(s){
+    const projects=(Array.isArray(s.projects)?s.projects:[]).map(p=>{
+      /* 상태가 생기기 전에 저장된 프로젝트는 진행률·시작일로 상태를 채워 준다 */
+      if(!STATUS_KEYS.includes(p.status)) p.status=(+p.progress||0)>=100?'완료':(p.start&&p.start>kstToday()?'예정':'진행중');
+      if(!p.created) p.created=kstToday();
+      return p;
+    });
+    return {links:Array.isArray(s.links)?s.links:[],notes:Array.isArray(s.notes)?s.notes:[],
+      projects,updatedAt:s.updatedAt||0};
+  }
+  let pushTimer=null;
+  function save(){
+    state.updatedAt=Date.now();
+    try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){}
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(()=>{
+      if(typeof AGENDA_API_URL==='undefined'||!/^https:/.test(AGENDA_API_URL)) return;
+      fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'settingsSave',key:'myhome',value:JSON.stringify(state)})})
+        .catch(err=>console.error(err));
+    },700);
+    render();
+  }
+  /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 */
+  window.__myhomeSync={apply(settings){
+    if(!settings||!settings.myhome) return;
+    try{
+      const remote=normalize(JSON.parse(settings.myhome));
+      if(remote.updatedAt>state.updatedAt){
+        state=remote;
+        try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){}
+        render();
+      }
+    }catch(err){ console.error(err); }
+  }};
+
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const pad=n=>String(n).padStart(2,'0');
+  const ICON_EDIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
+  const ICON_DEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const ICON_GRIP='<svg viewBox="0 0 12 12" fill="currentColor"><circle cx="3.5" cy="2" r="1.2"/><circle cx="8.5" cy="2" r="1.2"/><circle cx="3.5" cy="6" r="1.2"/><circle cx="8.5" cy="6" r="1.2"/><circle cx="3.5" cy="10" r="1.2"/><circle cx="8.5" cy="10" r="1.2"/></svg>';
+
+  /* 날짜는 전부 한국시간 기준 'YYYY-MM-DD' 문자열로 다룬다 (kstToday는 위에 있다) */
+  function dayDiff(a,b){ return Math.round((Date.parse(b)-Date.parse(a))/86400000); }
+
+  /* ---------- 상단 현황 ---------- */
+  function renderStats(){
+    const today=kstToday();
+    const month=today.slice(0,7);
+    const open=state.projects.filter(p=>p.status==='예정'||p.status==='진행중'||p.status==='보류');
+    const planned=open.filter(p=>p.status==='예정');
+    const active=open.filter(p=>p.status==='진행중');
+    const late=active.filter(p=>p.due&&p.due<today);
+    const soon=active.filter(p=>p.due&&p.due>=today&&dayDiff(today,p.due)<=3);
+    const urgent=active.filter(p=>p.urgent);
+    const monthEnd=state.projects.filter(p=>p.due&&p.due.slice(0,7)===month);
+    $('mhStatLate').textContent=late.length;
+    $('mhStatSoon').textContent=soon.length;
+    $('mhStatPlanned').textContent=planned.length;
+    $('mhStatUrgent').textContent=urgent.length;
+    $('mhStatOpen').textContent=open.length;
+    $('mhStatMonthEnd').textContent=monthEnd.length;
+  }
+
+  /* ---------- 시계 ---------- */
+  const fmtParts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,weekday:'short',month:'short',day:'numeric'});
+  let lastDay='';
+  function tick(){
+    const p={};
+    fmtParts.formatToParts(new Date()).forEach(x=>{p[x.type]=x.value;});
+    $('mhClockH').textContent=pad(+p.hour%12||12);
+    $('mhClockM').textContent=p.minute;
+    $('mhClockS').textContent=p.second;
+    $('mhClockAp').textContent=(p.dayPeriod||'AM').toUpperCase();
+    $('mhClockDate').textContent=`${p.weekday}, ${p.month} ${p.day} · KST`;
+    /* 자정이 지나면 지연·마감 숫자가 바뀌므로 다시 센다 */
+    const today=kstToday();
+    if(today!==lastDay){ lastDay=today; renderStats(); }
+  }
+
+  /* ---------- 퀵링크 ---------- */
+  function normUrl(u){
+    u=String(u||'').trim();
+    if(!u) return '';
+    return /^[a-z][a-z0-9+.-]*:/i.test(u)?u:'https://'+u;
+  }
+  function safeHref(u){ return /^(https?:|mailto:)/i.test(u)?u:'#'; }
+  function renderLinks(){
+    const el=$('mhLinks');
+    if(!state.links.length){
+      el.innerHTML='<div class="mh-empty">자주 여는 페이지를 등록해 두세요.<br>오른쪽 위 “+ 링크 추가”</div>';
+      return;
+    }
+    el.innerHTML=state.links.map(l=>
+      `<div class="mh-link" draggable="true" data-id="${esc(l.id)}">
+        <span class="mh-link-grip" aria-hidden="true">${ICON_GRIP}</span>
+        <span class="mh-link-dot"></span>
+        <a class="mh-link-name" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.name)}</a>
+        <button type="button" class="mh-icon-btn" data-act="edit" aria-label="${esc(l.name)} 수정">${ICON_EDIT}</button>
+        <button type="button" class="mh-icon-btn" data-act="del" aria-label="${esc(l.name)} 삭제">${ICON_DEL}</button>
+      </div>`).join('');
+  }
+  $('mhLinkAddBtn').addEventListener('click',()=>openLinkDialog(null));
+  $('mhLinks').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-act]');
+    if(!btn) return;
+    const id=btn.closest('.mh-link').dataset.id;
+    const link=state.links.find(l=>l.id===id);
+    if(!link) return;
+    if(btn.dataset.act==='edit') openLinkDialog(link);
+    else if(confirm(`'${link.name}' 링크를 삭제할까요?`)){ state.links=state.links.filter(l=>l.id!==id); save(); }
+  });
+  /* 끌어서 순서 바꾸기 */
+  let dragId=null;
+  $('mhLinks').addEventListener('dragstart',e=>{
+    const row=e.target.closest('.mh-link'); if(!row) return;
+    dragId=row.dataset.id; row.classList.add('is-dragging');
+    e.dataTransfer.effectAllowed='move';
+    try{ e.dataTransfer.setData('text/plain',dragId); }catch(err){}
+  });
+  $('mhLinks').addEventListener('dragover',e=>{
+    const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
+    e.preventDefault();
+    document.querySelectorAll('.mh-link.is-over').forEach(r=>r.classList.remove('is-over'));
+    if(row.dataset.id!==dragId) row.classList.add('is-over');
+  });
+  $('mhLinks').addEventListener('drop',e=>{
+    const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
+    e.preventDefault();
+    const from=state.links.findIndex(l=>l.id===dragId);
+    const to=state.links.findIndex(l=>l.id===row.dataset.id);
+    if(from>-1&&to>-1&&from!==to){
+      const [m]=state.links.splice(from,1);
+      state.links.splice(to,0,m);
+      save();
+    }
+  });
+  $('mhLinks').addEventListener('dragend',()=>{
+    dragId=null;
+    document.querySelectorAll('.mh-link.is-dragging,.mh-link.is-over').forEach(r=>r.classList.remove('is-dragging','is-over'));
+  });
+
+  /* ---------- 간편 기록노트 ---------- */
+  function fmtStamp(ts){
+    const d=new Date(ts+9*3600*1000);
+    return `${d.getUTCFullYear()}.${pad(d.getUTCMonth()+1)}.${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  }
+  let editingNote=null;
+  function renderNotes(){
+    const el=$('mhNotes');
+    if(!state.notes.length){ el.innerHTML='<div class="mh-empty">아직 기록이 없어요.</div>'; return; }
+    el.innerHTML=state.notes.map(n=>{
+      const editing=n.id===editingNote;
+      return `<div class="mh-note" data-id="${esc(n.id)}">
+        <div class="mh-note-date">${fmtStamp(n.ts)}</div>
+        ${editing
+          ?`<textarea class="mh-note-edit" data-edit>${esc(n.text)}</textarea>`
+          :`<div class="mh-note-text">${esc(n.text)}</div>`}
+        <div class="mh-note-tools">
+          ${editing
+            ?`<button type="button" class="mh-text-btn" data-act="save">저장</button><button type="button" class="mh-text-btn" data-act="cancel">취소</button>`
+            :`<button type="button" class="mh-icon-btn" data-act="edit" aria-label="기록 수정">${ICON_EDIT}</button><button type="button" class="mh-icon-btn" data-act="del" aria-label="기록 삭제">${ICON_DEL}</button>`}
+        </div>
+      </div>`;
+    }).join('');
+    const ta=el.querySelector('[data-edit]');
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); }
+  }
+  function addNote(){
+    const input=$('mhNoteInput');
+    const text=input.value.trim();
+    if(!text){ input.focus(); return; }
+    state.notes.unshift({id:uid(),ts:Date.now(),text});
+    input.value='';
+    save();
+  }
+  $('mhNoteForm').addEventListener('submit',e=>{ e.preventDefault(); addNote(); });
+  $('mhNoteInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); addNote(); }
+  });
+  function commitNoteEdit(row){
+    const n=state.notes.find(x=>x.id===row.dataset.id);
+    const text=row.querySelector('[data-edit]').value.trim();
+    editingNote=null;
+    if(n&&text){ n.text=text; save(); } else renderNotes();
+  }
+  $('mhNotes').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-act]'); if(!btn) return;
+    const row=btn.closest('.mh-note');
+    const id=row.dataset.id;
+    const act=btn.dataset.act;
+    if(act==='edit'){ editingNote=id; renderNotes(); }
+    else if(act==='cancel'){ editingNote=null; renderNotes(); }
+    else if(act==='save') commitNoteEdit(row);
+    else if(act==='del'&&confirm('이 기록을 삭제할까요?')){ state.notes=state.notes.filter(n=>n.id!==id); save(); }
+  });
+  $('mhNotes').addEventListener('keydown',e=>{
+    if(!e.target.matches('[data-edit]')) return;
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); commitNoteEdit(e.target.closest('.mh-note')); }
+    else if(e.key==='Escape'){ e.stopPropagation(); editingNote=null; renderNotes(); }
+  });
+
+  /* ---------- 진행중 프로젝트 달성률 ---------- */
+  function renderProjects(){
+    const el=$('mhProjects');
+    const today=kstToday();
+    const list=state.projects.filter(p=>p.status==='진행중')
+      .sort((a,b)=>(+b.progress||0)-(+a.progress||0)||String(a.due||'9').localeCompare(String(b.due||'9')));
+    if(!list.length){
+      el.innerHTML='<div class="mh-empty">진행중인 프로젝트가 없어요.<br>“+ 프로젝트 추가”로 마감일과 진행률을 등록하면<br>위 현황 카드도 함께 계산돼요.</div>';
+      return;
+    }
+    el.innerHTML=list.map((p,i)=>{
+      const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
+      let due='';
+      if(p.due){
+        const d=dayDiff(today,p.due);
+        due=`<span class="mh-proj-due${d<0?' is-late':''}">${d<0?`${-d}일 지연`:d===0?'오늘 마감':`D-${d}`}</span>`;
+      }
+      return `<button type="button" class="mh-proj" data-id="${esc(p.id)}">
+        <span class="mh-proj-rank${i<3?' r'+(i+1):''}">${i+1}</span>
+        <span class="mh-proj-main">
+          <span class="mh-proj-name">${esc(p.name)}${due}</span>
+          <span class="mh-proj-bar" style="display:block"><i style="width:${pct}%"></i></span>
+        </span>
+        <span class="mh-proj-pct num">${pct}%</span>
+      </button>`;
+    }).join('');
+  }
+  $('mhProjAddBtn').addEventListener('click',()=>openProjectDialog(null));
+  $('mhProjects').addEventListener('click',e=>{
+    const row=e.target.closest('.mh-proj'); if(!row) return;
+    const p=state.projects.find(x=>x.id===row.dataset.id);
+    if(p) openProjectDialog(p);
+  });
+
+  /* ---------- 편집 대화상자 ---------- */
+  const dlg=$('mhDialog'), form=$('mhDialogForm');
+  let onSubmit=null, lastFocus=null;
+  function openDialog(title,html,submit){
+    lastFocus=document.activeElement;
+    $('mhDialogTitle').textContent=title;
+    form.innerHTML=html;
+    onSubmit=submit;
+    dlg.hidden=false;
+    const first=form.querySelector('input');
+    if(first) first.focus();
+  }
+  function closeDialog(){
+    dlg.hidden=true; onSubmit=null; form.innerHTML='';
+    if(lastFocus&&lastFocus.focus) lastFocus.focus();
+  }
+  form.addEventListener('submit',e=>{ e.preventDefault(); if(onSubmit&&onSubmit(new FormData(form))!==false) closeDialog(); });
+  form.addEventListener('click',e=>{
+    const b=e.target.closest('[data-act]'); if(!b) return;
+    if(b.dataset.act==='cancel') closeDialog();
+    else if(b.dataset.act==='delete'&&form.__onDelete&&form.__onDelete()!==false) closeDialog();
+  });
+  form.addEventListener('input',e=>{
+    if(e.target.name==='progress'){ const o=form.querySelector('output'); if(o) o.textContent=e.target.value+'%'; }
+  });
+  $('mhDialogClose').addEventListener('click',closeDialog);
+  dlg.addEventListener('click',e=>{ if(e.target===dlg) closeDialog(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!dlg.hidden) closeDialog(); });
+
+  function actions(canDelete){
+    return `<div class="mh-form-actions">
+      ${canDelete?'<button type="button" class="mh-btn danger" data-act="delete">삭제</button>':''}
+      <button type="button" class="mh-btn ghost" data-act="cancel">취소</button>
+      <button type="submit" class="mh-btn primary">저장</button>
+    </div>`;
+  }
+  function openLinkDialog(link){
+    form.__onDelete=link?()=>{
+      if(!confirm(`'${link.name}' 링크를 삭제할까요?`)) return false;
+      state.links=state.links.filter(l=>l.id!==link.id); save();
+    }:null;
+    openDialog(link?'링크 수정':'링크 추가',
+      `<label class="mh-field">이름<input type="text" name="name" required maxlength="60" value="${esc(link?link.name:'')}" placeholder="예) 자사몰 기획전"></label>
+       <label class="mh-field">주소<input type="text" name="url" required value="${esc(link?link.url:'')}" placeholder="https://"></label>
+       ${actions(!!link)}`,
+      fd=>{
+        const name=String(fd.get('name')).trim(), url=normUrl(fd.get('url'));
+        if(!name||!url) return false;
+        if(link){ link.name=name; link.url=url; }
+        else state.links.push({id:uid(),name,url});
+        save();
+      });
+  }
+  function readMembers(){
+    try{ const m=JSON.parse(localStorage.getItem('baroyam_members_v1')||'[]'); if(Array.isArray(m)) return m; }catch(e){}
+    return [];
+  }
+  function memberColor(name){
+    const m=readMembers().find(x=>x.name===name);
+    return m&&m.color||'#6b7280';
+  }
+  function opts(list,cur,empty){
+    return (empty!=null?`<option value="">${esc(empty)}</option>`:'')+
+      list.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('');
+  }
+  function openProjectDialog(p,preset){
+    form.__onDelete=p?()=>{
+      if(!confirm(`'${p.name}' 프로젝트를 삭제할까요?`)) return false;
+      state.projects=state.projects.filter(x=>x.id!==p.id); save();
+    }:null;
+    const cur=p||Object.assign({status:'진행중',progress:0},preset||{});
+    const prog=Math.round(+cur.progress||0);
+    const members=readMembers().map(m=>m.name);
+    if(cur.owner&&!members.includes(cur.owner)) members.push(cur.owner);
+    openDialog(p?'프로젝트 수정':'프로젝트 추가',
+      `<label class="mh-field">프로젝트명<input type="text" name="name" required maxlength="80" value="${esc(cur.name||'')}" placeholder="예) 자사몰_상세페이지_개선"></label>
+       <div class="mh-field-row">
+         <label class="mh-field">상태<select name="status">${opts(STATUS_KEYS,cur.status)}</select></label>
+         <label class="mh-field">우선순위<select name="urgent">${opts(['보통','긴급'],cur.urgent?'긴급':'보통')}</select></label>
+       </div>
+       <div class="mh-field-row">
+         <label class="mh-field">담당자<select name="owner">${opts(members,cur.owner||'','없음')}</select></label>
+         <label class="mh-field">경로<select name="channel">${opts(CHANNELS.map(c=>c.k),cur.channel||'','없음')}</select></label>
+       </div>
+       <div class="mh-field-row">
+         <label class="mh-field">시작일<input type="date" name="start" value="${esc(cur.start||'')}"></label>
+         <label class="mh-field">마감일<input type="date" name="due" value="${esc(cur.due||'')}"></label>
+       </div>
+       <label class="mh-field">진행률
+         <span class="mh-range-row"><input type="range" name="progress" min="0" max="100" step="5" value="${prog}"><output>${prog}%</output></span>
+       </label>
+       ${actions(!!p)}`,
+      fd=>{
+        const data={name:String(fd.get('name')).trim(),status:String(fd.get('status')),urgent:fd.get('urgent')==='긴급',
+          owner:String(fd.get('owner')||''),channel:String(fd.get('channel')||''),
+          start:String(fd.get('start')||''),due:String(fd.get('due')||''),progress:+fd.get('progress')||0};
+        if(!data.name) return false;
+        if(p) Object.assign(p,data);
+        else state.projects.push(Object.assign({id:uid(),created:kstToday()},data));
+        save();
+      });
+  }
+  /* 상태를 완료로 고르면 진행률을 100%로 맞춰 준다 */
+  form.addEventListener('change',e=>{
+    if(e.target.name!=='status'||e.target.value!=='완료') return;
+    const r=form.querySelector('input[name=progress]');
+    if(r){ r.value=100; const o=form.querySelector('output'); if(o) o.textContent='100%'; }
+  });
+
+  /* ---------- 프로젝트 칸반 보드 ---------- */
+  const board=$('pjBoard');
+  const pf={status:new Set(),owner:new Set(),channel:new Set(),from:'',to:'',q:''};
+  const STATUS_TAG={'예정':['rgba(124,111,224,.14)','#6b5fe0'],'진행중':['rgba(59,130,246,.12)','#2f6fd6'],
+    '보류':['rgba(240,138,36,.14)','#d9731a'],'완료':['rgba(34,160,90,.13)','#1d8a4d'],'종료':['rgba(107,114,128,.14)','#4b5563']};
+  const tag=(t,bg,fg)=>`<span class="pj-tag" style="--tag-bg:${bg};--tag-fg:${fg}">${esc(t)}</span>`;
+  function fmtKDate(d){ const [y,m,dd]=d.split('-'); return `${y}년 ${+m}월 ${+dd}일`; }
+  function pjVisible(p){
+    if(pf.owner.size&&!pf.owner.has(p.owner||'')) return false;
+    if(pf.channel.size&&!pf.channel.has(p.channel||'')) return false;
+    if(pf.from&&!(p.due&&p.due>=pf.from)) return false;
+    if(pf.to&&!(p.due&&p.due<=pf.to)) return false;
+    if(pf.q){
+      const hay=[p.name,p.owner,p.channel,p.status].join(' ').toLowerCase();
+      if(!hay.includes(pf.q)) return false;
+    }
+    return true;
+  }
+  function cardHtml(p){
+    const today=kstToday();
+    const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
+    const late=p.due&&p.due<today&&(p.status==='진행중'||p.status==='예정');
+    const st=STATUS_TAG[p.status]||STATUS_TAG['진행중'];
+    const ch=CHANNELS.find(c=>c.k===p.channel);
+    const oc=p.owner?memberColor(p.owner):'';
+    return `<div class="pj-card" draggable="true" data-id="${esc(p.id)}">
+      <div class="pj-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>${esc(p.name)}</span></div>
+      ${p.due?`<div class="pj-card-due${late?' is-late':''}">마감 ${fmtKDate(p.due)}${late?' · 지연':''}</div>`:''}
+      <div class="pj-card-made">작성 ${esc((p.created||'').replace(/-/g,'.'))}</div>
+      <div class="pj-tags">
+        ${tag(p.status,st[0],st[1])}
+        ${p.urgent?tag('긴급','rgba(232,72,85,.12)','#e0394a'):tag('보통','rgba(59,130,246,.12)','#2f6fd6')}
+        ${p.owner?tag(p.owner,`color-mix(in srgb,${oc} 14%,transparent)`,oc):''}
+      </div>
+      <div class="pj-card-prog"><span class="mh-proj-bar"><i style="width:${pct}%"></i></span><b class="num">${pct}%</b></div>
+      ${p.channel?`<div class="pj-card-foot"><i style="background:${ch?ch.c:'#9ca3af'}"></i>${esc(p.channel)}</div>`:''}
+    </div>`;
+  }
+  function renderBoard(){
+    if(!board) return;
+    const cols=STATUSES.filter(s=>!pf.status.size||pf.status.has(s.k));
+    board.innerHTML=cols.map(s=>{
+      const items=state.projects.filter(p=>p.status===s.k&&pjVisible(p))
+        .sort((a,b)=>String(a.due||'9999').localeCompare(String(b.due||'9999')));
+      return `<div class="pj-col" data-status="${s.k}">
+        <div class="pj-col-head"><i class="pj-col-dot" style="background:${s.c}"></i><span class="pj-col-name">${s.k}</span>
+          <span class="pj-col-count">${items.length}</span>
+          <button type="button" class="pj-col-add" data-add="${s.k}" aria-label="${s.k}에 프로젝트 추가">+</button></div>
+        ${items.length?items.map(cardHtml).join(''):'<div class="pj-col-empty">카드가 없습니다</div>'}
+      </div>`;
+    }).join('');
+    document.querySelectorAll('#pjFilters .pj-filter').forEach(b=>{
+      const k=b.dataset.filter;
+      const n=k==='date'?(pf.from||pf.to?1:0):pf[k].size;
+      b.classList.toggle('is-on',n>0);
+      b.querySelector('.pj-filter-n').textContent=n||'';
+    });
+  }
+  if(board){
+    board.addEventListener('click',e=>{
+      const add=e.target.closest('[data-add]');
+      if(add){ openProjectDialog(null,{status:add.dataset.add,progress:add.dataset.add==='완료'?100:0}); return; }
+      const card=e.target.closest('.pj-card');
+      if(card){ const p=state.projects.find(x=>x.id===card.dataset.id); if(p) openProjectDialog(p); }
+    });
+    /* 카드를 다른 열로 끌어 놓으면 상태가 바뀐다 */
+    let dragCard=null;
+    board.addEventListener('dragstart',e=>{
+      const c=e.target.closest('.pj-card'); if(!c) return;
+      dragCard=c.dataset.id; c.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed='move';
+      try{ e.dataTransfer.setData('text/plain',dragCard); }catch(err){}
+    });
+    board.addEventListener('dragover',e=>{
+      const col=e.target.closest('.pj-col'); if(!col||!dragCard) return;
+      e.preventDefault();
+      board.querySelectorAll('.pj-col.is-over').forEach(x=>{ if(x!==col) x.classList.remove('is-over'); });
+      col.classList.add('is-over');
+    });
+    board.addEventListener('drop',e=>{
+      const col=e.target.closest('.pj-col'); if(!col||!dragCard) return;
+      e.preventDefault();
+      const p=state.projects.find(x=>x.id===dragCard);
+      dragCard=null;
+      if(p&&p.status!==col.dataset.status){
+        p.status=col.dataset.status;
+        if(p.status==='완료') p.progress=100;
+        save();
+      }else renderBoard();
+    });
+    board.addEventListener('dragend',()=>{
+      dragCard=null;
+      board.querySelectorAll('.is-dragging,.is-over').forEach(x=>x.classList.remove('is-dragging','is-over'));
+    });
+    $('pjSearch').addEventListener('input',e=>{ pf.q=e.target.value.trim().toLowerCase(); renderBoard(); });
+
+    /* 필터 팝업 · 상태/담당자/경로는 복수 선택, 날짜는 마감일 범위 */
+    const pop=$('pjPop');
+    let popFor='';
+    function popOptions(k){
+      if(k==='status') return STATUSES.map(s=>({v:s.k,c:s.c}));
+      if(k==='channel') return CHANNELS.map(c=>({v:c.k,c:c.c}));
+      const names=readMembers().map(m=>({v:m.name,c:m.color}));
+      state.projects.forEach(p=>{ if(p.owner&&!names.some(n=>n.v===p.owner)) names.push({v:p.owner,c:'#6b7280'}); });
+      return names;
+    }
+    function renderPop(){
+      if(popFor==='date'){
+        pop.innerHTML=`<div class="pj-pop-date">
+          <label>마감일 시작<input type="date" data-date="from" value="${esc(pf.from)}"></label>
+          <label>마감일 끝<input type="date" data-date="to" value="${esc(pf.to)}"></label></div>
+          <div class="pj-pop-foot"><button type="button" class="mh-text-btn" data-clear>초기화</button></div>`;
+      }else{
+        const set=pf[popFor];
+        pop.innerHTML=popOptions(popFor).map(o=>
+          `<label class="pj-opt"><input type="checkbox" value="${esc(o.v)}"${set.has(o.v)?' checked':''}><i style="background:${esc(o.c)}"></i>${esc(o.v)}</label>`).join('')+
+          `<div class="pj-pop-foot"><button type="button" class="mh-text-btn" data-clear>초기화</button></div>`;
+      }
+    }
+    $('pjFilters').addEventListener('click',e=>{
+      const b=e.target.closest('.pj-filter');
+      if(b){
+        if(!pop.hidden&&popFor===b.dataset.filter){ pop.hidden=true; return; }
+        popFor=b.dataset.filter; renderPop(); pop.hidden=false; return;
+      }
+      if(e.target.closest('[data-clear]')){
+        if(popFor==='date'){ pf.from=''; pf.to=''; } else pf[popFor].clear();
+        renderPop(); renderBoard();
+      }
+    });
+    pop.addEventListener('change',e=>{
+      const t=e.target;
+      if(t.dataset.date){ pf[t.dataset.date]=t.value; }
+      else if(t.type==='checkbox'){ t.checked?pf[popFor].add(t.value):pf[popFor].delete(t.value); }
+      renderBoard();
+    });
+    document.addEventListener('click',e=>{ if(!pop.hidden&&!e.target.closest('#pjFilters')) pop.hidden=true; });
+  }
+
+  function render(){ renderStats(); renderLinks(); renderNotes(); renderProjects(); renderBoard(); }
+  render();
+  tick();
+  setInterval(tick,1000);
 })();
 
 /* 회의 안건 메모 · 직접 수정 + 자동 저장 + 회의 기록 저장/불러오기 + PNG 공유 */
