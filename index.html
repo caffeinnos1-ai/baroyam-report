@@ -2267,6 +2267,11 @@ window.baroyamAuthHash=async function(email){
           <!-- 수집기 화면 디자인 · 수집기의 dashboard-embed.js로 보내 적용한다 ·
                디자인은 여기서만 고치면 수집기가 설치된 모든 PC에 똑같이 반영된다 -->
           <script type="text/plain" id="collectorEmbedCss">
+  @font-face {
+    font-family: "Pretendard"; font-weight: 45 920; font-style: normal; font-display: swap;
+    src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2-variations");
+  }
+  html.is-embedded :is(button, input, select, textarea) { font-family: inherit; }
   html.is-embedded {
     --ink: #241a14; --muted: #786c64; --line: #ece5dc; --line-strong: #e0d6cb;
     --paper: #ffffff; --canvas: transparent;
