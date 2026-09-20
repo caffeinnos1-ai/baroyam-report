@@ -944,6 +944,13 @@ window.BAROYAM_PROFILES=(function(){
   .pj-card{flex:none;cursor:pointer;padding:12px 12px 10px;border-radius:11px;background:var(--paper);box-shadow:var(--mh-card-shadow);
     border:1px solid transparent;transition:border-color .15s}
   .pj-card:hover{border-color:var(--mh-accent-soft)}
+  /* 한 번 누른 카드 · 테두리에 은은한 빛을 둘러 '골랐다'고 알리고, 한 번 더 눌러야 수정창이 열린다 */
+  .pj-card.is-picked{border-color:var(--mh-accent);animation:pjPickGlow 1.7s ease-in-out infinite}
+  @keyframes pjPickGlow{
+    0%,100%{box-shadow:0 0 0 3px rgba(var(--indigo-rgb),.16),0 8px 20px -12px rgba(var(--indigo-rgb),.45)}
+    50%{box-shadow:0 0 0 5px rgba(var(--indigo-rgb),.09),0 10px 26px -12px rgba(var(--indigo-rgb),.6)}}
+  @media (prefers-reduced-motion:reduce){
+    .pj-card.is-picked{animation:none;box-shadow:0 0 0 3px rgba(var(--indigo-rgb),.2)}}
   .pj-card.is-dragging{opacity:.4}
   .pj-card-title{display:flex;gap:7px;font-size:13px;font-weight:800;color:var(--ink);line-height:1.35;word-break:break-all}
   .pj-card-title svg{width:12px;height:12px;flex:none;margin-top:2px;color:var(--mh-accent)}
@@ -972,6 +979,51 @@ window.BAROYAM_PROFILES=(function(){
     .pj-col{flex:0 0 240px;width:240px}
   }
   .settings-panel.mh-dialog{max-width:420px;height:auto}
+  /* 프로젝트 수정창 · 상태와 우선순위를 펼침목록 대신 색 칩으로 고르고, 마감일 옆에 D-day를 띄운다 ·
+     링크 추가 같은 다른 대화상자는 예전 모습 그대로 쓰고 이 화면만 넓게 연다 */
+  .settings-panel.mh-dialog.is-project{max-width:660px}
+  .mh-dialog.is-project .settings-head{background:var(--mh-accent);border-bottom:none;padding:15px 20px}
+  .mh-dialog.is-project .settings-head h2{display:flex;align-items:center;gap:9px;color:#fff}
+  .mh-dialog.is-project .settings-head h2 svg{width:16px;height:16px;flex:none}
+  .mh-dialog.is-project .settings-close{color:#fff;opacity:.9}
+  .mh-dialog.is-project .settings-close:hover{opacity:1}
+  .mh-dialog.is-project .mh-form{gap:0;padding:16px 24px 22px}
+  .mh-dialog.is-project .mh-form-actions{margin-top:18px}
+  /* 이름은 딱지를 달지 않고 제목처럼 크게 · 그 자리에서 바로 고쳐 쓴다 */
+  .pjf-top{padding-bottom:13px;border-bottom:1px solid var(--line)}
+  .pjf-name{width:100%;padding:3px 2px 7px;border:0;border-bottom:2px solid transparent;background:none;
+    color:var(--ink);font:inherit;font-size:21px;font-weight:800;letter-spacing:-.5px;outline:none}
+  .pjf-name::placeholder{color:var(--mute);font-weight:700}
+  .pjf-name:focus{border-bottom-color:var(--mh-accent)}
+  .pjf-meta{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:12px;font-weight:600;color:var(--mute)}
+  .pjf-dday{padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:800;background:var(--bg);color:var(--body)}
+  .pjf-dday.is-soon{background:var(--warn-soft);color:var(--warn)}
+  .pjf-dday.is-late{background:var(--neg-soft);color:var(--neg)}
+  .pjf-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;padding:15px 0 2px}
+  .pjf-col{display:flex;flex-direction:column;gap:9px;min-width:0}
+  .pjf-label{font-size:12px;font-weight:800;color:var(--mute);letter-spacing:-.2px}
+  .pjf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+  .pjf-chip input{position:absolute;width:0;height:0;opacity:0}
+  .pjf-chip span{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:99px;cursor:pointer;
+    font-size:12.5px;font-weight:700;color:var(--body);background:var(--bg);border:1px solid transparent;
+    transition:background .15s,color .15s,border-color .15s}
+  .pjf-chip i{width:7px;height:7px;border-radius:50%;background:var(--chip-c);flex:none}
+  .pjf-chip span:hover{border-color:var(--chip-c)}
+  .pjf-chip input:checked+span{background:color-mix(in srgb,var(--chip-c) 15%,transparent);
+    color:var(--chip-c);border-color:var(--chip-c)}
+  .pjf-chip input:focus-visible+span{outline:2px solid var(--chip-c);outline-offset:2px}
+  /* 담당자·경로 · 고른 값의 색을 왼쪽 점으로 함께 보여 준다 */
+  .pjf-pick{position:relative;display:block}
+  .pjf-pick select{width:100%;padding-left:30px}
+  .pjf-dot{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:9px;height:9px;
+    border-radius:50%;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+  /* 진행도 · 숫자를 크게 둬서 카드의 막대와 바로 이어 읽힌다 */
+  .pjf-prog{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+  .pjf-prog-row{display:flex;align-items:center;gap:14px;margin-top:8px}
+  .pjf-prog-row input{flex:1;accent-color:var(--mh-accent)}
+  .pjf-prog-row output{flex:none;width:64px;text-align:right;font-size:24px;font-weight:800;
+    letter-spacing:-.8px;color:var(--mh-accent);font-variant-numeric:tabular-nums}
+  @media(max-width:620px){ .pjf-body{grid-template-columns:1fr;gap:14px} }
   /* 프로필 사진 대화상자 · 규격을 먼저 보여주고 사진을 고르게 한다 */
   .settings-panel.av-panel{max-width:620px;height:auto;--av-box:208px}
   .av-body{padding:18px 22px 6px;display:flex;flex-direction:column;gap:14px}
@@ -1408,6 +1460,8 @@ window.BAROYAM_PROFILES=(function(){
   .sb-item.active{background:#fff;color:var(--indigo);box-shadow:0 8px 18px -10px rgba(60,20,0,.5)}
   html[data-theme="dark"] .sb-item.active{background:#1f6feb;color:#fff;box-shadow:none}
   .sb-item.active svg{opacity:1}
+  /* 판매채널은 관리자만 본다 · 일반 회원에게는 JS가 hidden을 걸어 통째로 감춘다 */
+  .sb-group[hidden]{display:none}
   /* 판매채널 그룹 · 머리 오른쪽 화살표로 접고 펴며, 하위 채널은 아이콘 없이 들여쓴 글자만 둔다 */
   .sb-group-head .sb-group-chev{width:14px;height:14px;margin-left:auto;opacity:.75;transition:transform .18s}
   .sb-group.is-closed .sb-group-chev{transform:rotate(-90deg)}
@@ -2659,7 +2713,6 @@ window.BAROYAM_PROFILES=(function(){
             <button class="sb-subitem" type="button" data-channel="톡딜">톡딜</button>
           </div>
         </div>
-        <div class="sb-sep" role="separator"></div>
         <button class="sb-item" type="button" id="sbSalesToggle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-8M4 20h16"/></svg>
           <span>매출데이터</span>
@@ -6501,6 +6554,33 @@ window.CsGuide=(function(){
   if(!group||!head) return;
   const subs=[...group.querySelectorAll('.sb-subitem')];
 
+  /* 판매채널은 관리자만 본다 · 일반 회원(구글 계정)에게는 사이드탭에 나오지 않는다 ·
+     관리자 기준은 프로필의 관리자 칩과 같다 ·
+     비밀번호로 들어왔거나, 구글 계정이라도 설정에서 비밀번호를 통과한 동안 */
+  function isAdmin(){
+    try{
+      const A=window.BAROYAM_AUTH;
+      const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
+      if(s && A.admin && s.h===A.admin.hash) return true;
+    }catch(e){}
+    const AM=window.baroyamAdminMode;
+    return !!(AM&&AM.isOn());
+  }
+  function syncVisible(){
+    const on=isAdmin();
+    group.hidden=!on;
+    /* 관리자 모드가 풀리는 동안 채널 화면을 보고 있었다면 마이홈으로 돌려보낸다 ·
+       채널 화면이 켜져 있으면 머리에 has-active가 붙어 있다 */
+    if(!on&&head.classList.contains('has-active')){
+      if(window.clearChannelActive) window.clearChannelActive();
+      const home=document.querySelector('.sb-item[data-view="home"]');
+      if(home) home.click();
+    }
+  }
+  syncVisible();
+  /* 설정에서 비밀번호를 통과하거나 풀리면 바로 따라 그린다 */
+  document.addEventListener('baroyam:adminmode',syncVisible);
+
   function setOpen(open){
     group.classList.toggle('is-closed',!open);
     head.setAttribute('aria-expanded',open?'true':'false');
@@ -9180,10 +9260,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
   /* ---------- 편집 대화상자 ---------- */
   const dlg=$('mhDialog'), form=$('mhDialogForm');
+  const dlgPanel=dlg.querySelector('.settings-panel');
   let onSubmit=null, lastFocus=null;
-  function openDialog(title,html,submit){
+  /* conf.icon: 머리말에 놓을 아이콘 · conf.project: 프로젝트용 넓은 모양으로 연다 */
+  function openDialog(title,html,submit,conf){
+    conf=conf||{};
     lastFocus=document.activeElement;
-    $('mhDialogTitle').textContent=title;
+    $('mhDialogTitle').innerHTML=(conf.icon||'')+esc(title);
+    dlgPanel.classList.toggle('is-project',!!conf.project);
     form.innerHTML=html;
     onSubmit=submit;
     dlg.hidden=false;
@@ -9249,6 +9333,32 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     return (empty!=null?`<option value="">${esc(empty)}</option>`:'')+
       list.map(v=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(v)}</option>`).join('');
   }
+  /* ---- 프로젝트 수정창에서 쓰는 조각들 ---- */
+  const ICON_PENCIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
+  const PRIORITIES=[{k:'보통',c:'#3b82f6'},{k:'긴급',c:'#e0394a'}];
+  /* 펼침목록 대신 색이 보이는 칩 한 줄 · 값은 라디오라 폼에서 그대로 읽힌다 */
+  function chipRow(name,list,cur){
+    return '<div class="pjf-chips">'+list.map(o=>
+      `<label class="pjf-chip" style="--chip-c:${o.c}">
+        <input type="radio" name="${name}" value="${esc(o.k)}"${o.k===cur?' checked':''}>
+        <span><i></i>${esc(o.k)}</span>
+      </label>`).join('')+'</div>';
+  }
+  /* 담당자·경로 왼쪽 점 색 · 고르지 않았으면 색을 비운다 */
+  function pjPickColor(kind,v){
+    if(!v) return 'transparent';
+    if(kind==='owner') return memberColor(v);
+    const c=CHANNELS.find(x=>x.k===v);
+    return c?c.c:'var(--mute)';
+  }
+  /* 마감일 옆 딱지 · 지난 날짜면 빨강, 사흘 안이면 주황 */
+  function pjDdayHtml(due){
+    if(!due) return '';
+    const d=dayDiff(kstToday(),due);
+    const cls=d<0?' is-late':(d<=3?' is-soon':'');
+    const txt=d<0?`${-d}일 지연`:(d===0?'오늘 마감':`D-${d}`);
+    return `<span class="pjf-dday${cls}">${txt}</span>`;
+  }
   function openProjectDialog(p,preset){
     form.__onDelete=p?()=>{
       if(!confirm(`'${p.name}' 프로젝트를 삭제할까요?`)) return false;
@@ -9259,22 +9369,47 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const members=readMembers().map(m=>m.name);
     if(cur.owner&&!members.includes(cur.owner)) members.push(cur.owner);
     openDialog(p?'프로젝트 수정':'프로젝트 추가',
-      `<label class="mh-field">프로젝트명<input type="text" name="name" required maxlength="80" value="${esc(cur.name||'')}" placeholder="예) 자사몰_상세페이지_개선"></label>
-       <div class="mh-field-row">
-         <label class="mh-field">상태<select name="status">${opts(STATUS_KEYS,cur.status)}</select></label>
-         <label class="mh-field">우선순위<select name="urgent">${opts(['보통','긴급'],cur.urgent?'긴급':'보통')}</select></label>
+      `<div class="pjf-top">
+         <input class="pjf-name" type="text" name="name" required maxlength="80" autocomplete="off"
+                value="${esc(cur.name||'')}" placeholder="예) 자사몰_상세페이지_개선" aria-label="프로젝트명">
+         <div class="pjf-meta">
+           <span>${cur.created?'작성 '+esc(String(cur.created).replace(/-/g,'.')):'새 프로젝트'}</span>
+           <span data-dday>${pjDdayHtml(cur.due)}</span>
+         </div>
        </div>
-       <div class="mh-field-row">
-         <label class="mh-field">담당자<select name="owner">${opts(members,cur.owner||'','없음')}</select></label>
-         <label class="mh-field">경로<select name="channel">${opts(CHANNELS.map(c=>c.k),cur.channel||'','없음')}</select></label>
+       <div class="pjf-body">
+         <div class="pjf-col">
+           <div class="pjf-label">상태</div>
+           ${chipRow('status',STATUSES,cur.status)}
+           <div class="pjf-label">우선순위</div>
+           ${chipRow('urgent',PRIORITIES,cur.urgent?'긴급':'보통')}
+         </div>
+         <div class="pjf-col">
+           <label class="mh-field">담당자
+             <span class="pjf-pick">
+               <i class="pjf-dot" data-dot="owner" style="background:${pjPickColor('owner',cur.owner)}"></i>
+               <select name="owner">${opts(members,cur.owner||'','없음')}</select>
+             </span>
+           </label>
+           <label class="mh-field">경로
+             <span class="pjf-pick">
+               <i class="pjf-dot" data-dot="channel" style="background:${pjPickColor('channel',cur.channel)}"></i>
+               <select name="channel">${opts(CHANNELS.map(c=>c.k),cur.channel||'','없음')}</select>
+             </span>
+           </label>
+           <div class="mh-field-row">
+             <label class="mh-field">시작일<input type="date" name="start" value="${esc(cur.start||'')}"></label>
+             <label class="mh-field">마감일<input type="date" name="due" value="${esc(cur.due||'')}"></label>
+           </div>
+         </div>
        </div>
-       <div class="mh-field-row">
-         <label class="mh-field">시작일<input type="date" name="start" value="${esc(cur.start||'')}"></label>
-         <label class="mh-field">마감일<input type="date" name="due" value="${esc(cur.due||'')}"></label>
+       <div class="pjf-prog">
+         <div class="pjf-label">진행도</div>
+         <div class="pjf-prog-row">
+           <input type="range" name="progress" min="0" max="100" step="5" value="${prog}" aria-label="진행률">
+           <output>${prog}%</output>
+         </div>
        </div>
-       <label class="mh-field">진행률
-         <span class="mh-range-row"><input type="range" name="progress" min="0" max="100" step="5" value="${prog}"><output>${prog}%</output></span>
-       </label>
        ${actions(!!p)}`,
       fd=>{
         const data={name:String(fd.get('name')).trim(),status:String(fd.get('status')),urgent:fd.get('urgent')==='긴급',
@@ -9284,17 +9419,36 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         if(p) Object.assign(p,data);
         else state.projects.push(Object.assign({id:uid(),created:kstToday()},data));
         save();
-      });
+      },{project:true,icon:ICON_PENCIL});
   }
-  /* 상태를 완료로 고르면 진행률을 100%로 맞춰 준다 */
+  /* 고른 값에 맞춰 창 안을 바로 고쳐 준다 ·
+     완료로 바꾸면 진행률 100%, 담당자·경로는 점 색, 마감일은 옆의 D-day */
   form.addEventListener('change',e=>{
-    if(e.target.name!=='status'||e.target.value!=='완료') return;
-    const r=form.querySelector('input[name=progress]');
-    if(r){ r.value=100; const o=form.querySelector('output'); if(o) o.textContent='100%'; }
+    const n=e.target.name;
+    if(n==='status'&&e.target.value==='완료'){
+      const r=form.querySelector('input[name=progress]');
+      if(r){ r.value=100; const o=form.querySelector('output'); if(o) o.textContent='100%'; }
+    }else if(n==='owner'||n==='channel'){
+      const dot=form.querySelector('[data-dot="'+n+'"]');
+      if(dot) dot.style.background=pjPickColor(n,e.target.value);
+    }else if(n==='due'){
+      const slot=form.querySelector('[data-dday]');
+      if(slot) slot.innerHTML=pjDdayHtml(e.target.value);
+    }
   });
 
   /* ---------- 프로젝트 칸반 보드 ---------- */
   const board=$('pjBoard');
+  /* 한 번 눌러 고른 카드 · 두 번째 누름에서 수정창을 연다 (아래 보드 클릭 처리 참고) */
+  let pickedCard=null;
+  function pickCard(id){
+    pickedCard=id||null;
+    if(!board) return;
+    board.querySelectorAll('.pj-card.is-picked').forEach(c=>c.classList.remove('is-picked'));
+    if(!pickedCard) return;
+    const el=board.querySelector('.pj-card[data-id="'+pickedCard+'"]');
+    if(el) el.classList.add('is-picked'); else pickedCard=null;
+  }
   const pf={status:new Set(),owner:new Set(),channel:new Set(),from:'',to:'',q:''};
   const STATUS_TAG={'예정':['rgba(124,111,224,.14)','#6b5fe0'],'진행중':['rgba(59,130,246,.12)','#2f6fd6'],
     '보류':['rgba(240,138,36,.14)','#d9731a'],'완료':['rgba(34,160,90,.13)','#1d8a4d'],'종료':['rgba(107,114,128,.14)','#4b5563']};
@@ -9411,6 +9565,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         <div class="pj-col-body">${items.length?items.map(cardHtml).join(''):'<div class="pj-col-empty">카드가 없습니다</div>'}</div>
       </div>`;
     }).join('');
+    if(pickedCard) pickCard(pickedCard);
     document.querySelectorAll('#pjFilters .pj-filter[data-filter]').forEach(b=>{
       const k=b.dataset.filter;
       /* 마감일 버튼에는 고른 기간을 그대로 보여 준다(9.14~9.20) */
@@ -9425,12 +9580,21 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     renderFacets();
   }
   if(board){
+    /* 카드는 두 번 눌러야 열린다 · 첫 번째는 고르기(테두리에 은은한 빛), 두 번째에 수정창 ·
+       옮기려다 창이 뜨는 일이 없고, 지금 어느 카드를 보고 있는지도 드러난다 */
     board.addEventListener('click',e=>{
       const add=e.target.closest('[data-add]');
-      if(add){ openProjectDialog(null,{status:add.dataset.add,progress:add.dataset.add==='완료'?100:0}); return; }
+      if(add){ pickCard(null); openProjectDialog(null,{status:add.dataset.add,progress:add.dataset.add==='완료'?100:0}); return; }
       const card=e.target.closest('.pj-card');
-      if(card){ const p=state.projects.find(x=>x.id===card.dataset.id); if(p) openProjectDialog(p); }
+      if(!card){ pickCard(null); return; }
+      if(pickedCard!==card.dataset.id){ pickCard(card.dataset.id); return; }
+      pickCard(null);
+      const p=state.projects.find(x=>x.id===card.dataset.id);
+      if(p) openProjectDialog(p);
     });
+    /* 카드가 아닌 곳을 누르면 고른 표시를 푼다 · 카드 클릭은 위에서 이미 처리한 뒤 여기로 올라온다 */
+    document.addEventListener('click',e=>{ if(!e.target.closest('.pj-card')) pickCard(null); });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') pickCard(null); });
     /* 카드를 다른 열로 끌어 놓으면 상태가 바뀐다 */
     let dragCard=null;
     board.addEventListener('dragstart',e=>{
