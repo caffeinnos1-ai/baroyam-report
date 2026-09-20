@@ -8535,7 +8535,18 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 (function(){
   const root=document.getElementById('myHome');
   if(!root) return;
-  const LS_KEY='baroyam_myhome_v1';
+  /* 저장을 두 몫으로 나눈다 ·
+     공용(회사명·프로젝트)은 프로젝트 보드와 같은 목록이라 모두가 함께 보고,
+     개인(퀵링크·간편 기록노트)은 로그인해서 고른 회원마다 따로 담는다 ·
+     시트도 같은 모양으로 나눠 올린다(myhomeShared / myhome:<회원id>) ·
+     한 칸에 뭉쳐 두면 링크만 고쳐도 남이 방금 만든 프로젝트를 되돌릴 수 있어서다 */
+  const LS_LEGACY='baroyam_myhome_v1';        /* 쪼개기 전 공용 뭉치 · 되돌릴 여지를 두려고 지우지 않는다 */
+  const LS_SHARED='baroyam_myhome_shared_v1';
+  const LS_MINE='baroyam_myhome_me_v1:';      /* + 회원id */
+  const SHEET_SHARED='myhomeShared';
+  const SHEET_MINE='myhome:';                 /* + 회원id */
+  const SHEET_LEGACY='myhome';
+  const ADMIN_SLOT='__admin__';               /* 관리자로 들어왔거나 회원을 고르지 않았을 때 쓰는 칸 */
   const $=id=>document.getElementById(id);
   const STATUSES=[
     {k:'예정',c:'#6b5fe0'},{k:'진행중',c:'#3b82f6'},{k:'보류',c:'#f08a24'},{k:'완료',c:'#22a05a'},{k:'종료',c:'#4b5563'}];
@@ -8547,46 +8558,99 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const d=new Date(Date.now()+9*3600*1000);
     return d.toISOString().slice(0,10);
   }
-  let state=load();
-
-  function load(){
-    try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const s=JSON.parse(raw); return normalize(s); } }catch(e){}
-    return normalize({});
+  /* 지금 화면을 보는 사람의 개인 칸 이름 ·
+     "나"를 고르지 않았거나 관리자 비밀번호로 들어오면 관리자 칸을 쓴다 */
+  function slot(){
+    try{ const P=window.BAROYAM_PROFILES; return (P&&P.meId())||ADMIN_SLOT; }catch(e){ return ADMIN_SLOT; }
   }
-  function normalize(s){
+  /* 내 담당 판정은 이름으로 한다 · 프로젝트의 owner에 회원 "이름"이 들어가기 때문이다.
+     회원을 고르지 않았으면(관리자) 빈 값이고, 그때는 거르지 않고 팀 전체를 보여 준다 */
+  function myName(){
+    try{ const P=window.BAROYAM_PROFILES, m=P&&P.meMember(); return m?m.name:''; }catch(e){ return ''; }
+  }
+  function myProjects(){
+    const n=myName();
+    return n?state.projects.filter(p=>p.owner===n):state.projects;
+  }
+  function readJson(key){ try{ const raw=localStorage.getItem(key); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+  function writeJson(key,v){ try{ localStorage.setItem(key,JSON.stringify(v)); }catch(e){} }
+
+  function normShared(s){
+    s=s||{};
     const projects=(Array.isArray(s.projects)?s.projects:[]).map(p=>{
       /* 상태가 생기기 전에 저장된 프로젝트는 진행률·시작일로 상태를 채워 준다 */
       if(!STATUS_KEYS.includes(p.status)) p.status=(+p.progress||0)>=100?'완료':(p.start&&p.start>kstToday()?'예정':'진행중');
       if(!p.created) p.created=kstToday();
       return p;
     });
-    return {company:typeof s.company==='string'?s.company:'',
-      links:Array.isArray(s.links)?s.links:[],notes:Array.isArray(s.notes)?s.notes:[],
-      projects,updatedAt:s.updatedAt||0};
+    return {company:typeof s.company==='string'?s.company:'',projects,updatedAt:s.updatedAt||0};
   }
-  let pushTimer=null;
-  function save(){
-    state.updatedAt=Date.now();
-    try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){}
-    clearTimeout(pushTimer);
-    pushTimer=setTimeout(()=>{
-      if(typeof AGENDA_API_URL==='undefined'||!/^https:/.test(AGENDA_API_URL)) return;
-      fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'settingsSave',key:'myhome',value:JSON.stringify(state)})})
+  function normMine(s){
+    s=s||{};
+    return {links:Array.isArray(s.links)?s.links:[],notes:Array.isArray(s.notes)?s.notes:[],updatedAt:s.updatedAt||0};
+  }
+  /* 쪼개기 전 뭉치는 새 칸이 아직 없을 때만 씨앗으로 쓴다 ·
+     그래서 퀵링크·노트는 회원마다 처음 열 때 예전 내용을 그대로 물려받는다 */
+  function loadShared(){ return normShared(readJson(LS_SHARED)||readJson(LS_LEGACY)); }
+  function loadMine(){ return normMine(readJson(LS_MINE+slot())||readJson(LS_LEGACY)); }
+
+  let sharedPart=loadShared(), myPart=loadMine();
+  /* 화면 코드는 그대로 state.links / state.projects를 고친다 · 저장할 때 두 몫으로 갈라 담는다 */
+  function merge(){ return {company:sharedPart.company,links:myPart.links,notes:myPart.notes,projects:sharedPart.projects}; }
+  let state=merge();
+  /* state는 두 몫의 배열을 "같은 것"으로 들고 있어서, 링크를 고치면 myPart.links도 같이 바뀐다 ·
+     그래서 무엇이 바뀌었는지는 마지막으로 저장한 내용을 문자열로 따로 떠 두고 비교한다 */
+  function stampShared(){ return JSON.stringify([state.company,state.projects]); }
+  function stampMine(){ return JSON.stringify([state.links,state.notes]); }
+  let lastShared=stampShared(), lastMine=stampMine();
+
+  const pushTimers={};
+  function queuePush(key,value){
+    if(typeof AGENDA_API_URL==='undefined'||!/^https:/.test(AGENDA_API_URL)) return;
+    clearTimeout(pushTimers[key]);
+    pushTimers[key]=setTimeout(()=>{
+      fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'settingsSave',key:key,value:JSON.stringify(value)})})
         .catch(err=>console.error(err));
     },700);
+  }
+  /* 실제로 바뀐 몫에만 새 시각을 달고 올린다 ·
+     링크를 고쳤다고 프로젝트를 다시 올리면 남의 최신 프로젝트를 되돌릴 수 있다 */
+  function save(){
+    const now=Date.now();
+    const nowShared=stampShared();
+    if(nowShared!==lastShared){
+      sharedPart={company:state.company,projects:state.projects,updatedAt:now};
+      lastShared=nowShared;
+      writeJson(LS_SHARED,sharedPart); queuePush(SHEET_SHARED,sharedPart);
+    }
+    const nowMine=stampMine();
+    if(nowMine!==lastMine){
+      myPart={links:state.links,notes:state.notes,updatedAt:now};
+      lastMine=nowMine;
+      writeJson(LS_MINE+slot(),myPart); queuePush(SHEET_MINE+slot(),myPart);
+    }
     render();
   }
-  /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 */
+  /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 · 두 몫을 따로 본다.
+     새 키가 아직 없으면 옛 키(myhome)를 씨앗으로 읽는다 */
   window.__myhomeSync={apply(settings){
-    if(!settings||!settings.myhome) return;
+    if(!settings) return;
+    let hit=false;
     try{
-      const remote=normalize(JSON.parse(settings.myhome));
-      if(remote.updatedAt>state.updatedAt){
-        state=remote;
-        try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){}
-        render();
+      const raw=settings[SHEET_SHARED]||settings[SHEET_LEGACY];
+      if(raw){
+        const r=normShared(JSON.parse(raw));
+        if(r.updatedAt>sharedPart.updatedAt){ sharedPart=r; writeJson(LS_SHARED,sharedPart); hit=true; }
       }
     }catch(err){ console.error(err); }
+    try{
+      const raw=settings[SHEET_MINE+slot()]||settings[SHEET_LEGACY];
+      if(raw){
+        const r=normMine(JSON.parse(raw));
+        if(r.updatedAt>myPart.updatedAt){ myPart=r; writeJson(LS_MINE+slot(),myPart); hit=true; }
+      }
+    }catch(err){ console.error(err); }
+    if(hit){ state=merge(); lastShared=stampShared(); lastMine=stampMine(); render(); }
   }};
 
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8603,13 +8667,15 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function renderStats(){
     const today=kstToday();
     const month=today.slice(0,7);
-    const open=state.projects.filter(p=>p.status==='예정'||p.status==='진행중'||p.status==='보류');
+    /* 마이홈은 내 작업공간이라 내 담당만 센다 · 팀 전체는 프로젝트 보드에서 본다 */
+    const mineList=myProjects();
+    const open=mineList.filter(p=>p.status==='예정'||p.status==='진행중'||p.status==='보류');
     const planned=open.filter(p=>p.status==='예정');
     const active=open.filter(p=>p.status==='진행중');
     const late=active.filter(p=>p.due&&p.due<today);
     const soon=active.filter(p=>p.due&&p.due>=today&&dayDiff(today,p.due)<=3);
     const urgent=active.filter(p=>p.urgent);
-    const monthEnd=state.projects.filter(p=>p.due&&p.due.slice(0,7)===month);
+    const monthEnd=mineList.filter(p=>p.due&&p.due.slice(0,7)===month);
     $('mhStatLate').textContent=late.length;
     $('mhStatSoon').textContent=soon.length;
     $('mhStatPlanned').textContent=planned.length;
@@ -8760,10 +8826,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function renderProjects(){
     const el=$('mhProjects');
     const today=kstToday();
-    const list=state.projects.filter(p=>p.status==='진행중')
+    const list=myProjects().filter(p=>p.status==='진행중')
       .sort((a,b)=>(+b.progress||0)-(+a.progress||0)||String(a.due||'9').localeCompare(String(b.due||'9')));
     if(!list.length){
-      el.innerHTML='<div class="mh-empty">진행중인 프로젝트가 없어요.<br>“+ 프로젝트 추가”로 마감일과 진행률을 등록하면<br>위 현황 카드도 함께 계산돼요.</div>';
+      /* 내 담당만 보여 주므로, 회원을 고른 사람에게는 그 사실을 알려 준다 */
+      el.innerHTML=myName()
+        ?'<div class="mh-empty">내가 맡은 진행중 프로젝트가 없어요.<br>“+ 프로젝트 추가”로 등록하면 담당자가 나로 잡혀요.<br>팀 전자는 ‘프로젝트’ 탭에서 볼 수 있어요.</div>'
+        :'<div class="mh-empty">진행중인 프로젝트가 없어요.<br>“+ 프로젝트 추가”로 마감일과 진행률을 등록하면<br>위 현황 카드도 함께 계산돼요.</div>';
       return;
     }
     el.innerHTML=list.map((p,i)=>{
@@ -8783,7 +8852,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       </button>`;
     }).join('');
   }
-  $('mhProjAddBtn').addEventListener('click',()=>openProjectDialog(null));
+  /* 마이홈에서 만드는 프로젝트는 담당자를 나로 미리 잡아 준다 ·
+     담당자가 비면 내 담당 목록에 안 잡혀서 방금 만든 것이 사라진 것처럼 보인다 */
+  $('mhProjAddBtn').addEventListener('click',()=>openProjectDialog(null,{owner:myName()}));
   $('mhProjects').addEventListener('click',e=>{
     const row=e.target.closest('.mh-proj'); if(!row) return;
     const p=state.projects.find(x=>x.id===row.dataset.id);
