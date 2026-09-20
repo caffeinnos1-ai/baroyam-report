@@ -180,7 +180,14 @@ window.BAROYAM_PROFILES=(function(){
          그대로 두면 없는 회원으로 잡혀서 관리자 칸 마이홈이 보인다 */
       const P0=window.BAROYAM_PROFILES, meRaw=P0.me();
       const picked=!!(meRaw && window.BAROYAM_MEMBERS.byId(meRaw));
-      if(s.h!==A.admin.hash && !picked){
+      /* 관리자가 "회원 바꾸기"를 누른 경우 · 표시는 여기서 한 번 쓰고 지운다 ·
+         그래서 그냥 새로고침하면 회원 없이 관리자로 들어가는 길이 남는다 */
+      let wantPick=false;
+      try{
+        wantPick=sessionStorage.getItem('baroyam_pick_member_v1')==='1';
+        if(wantPick) sessionStorage.removeItem('baroyam_pick_member_v1');
+      }catch(e){}
+      if((s.h!==A.admin.hash && !picked) || (wantPick && !picked)){
         if(meRaw) P0.setMe('');   /* 지워진 회원이나 옛 건너뛰기 값을 비운다 */
         root.classList.add('member-locked');
       }
@@ -1696,13 +1703,6 @@ window.BAROYAM_PROFILES=(function(){
   .tb-menu-item.is-danger{color:var(--neg,#cf5a50)}
   .tb-menu-item.is-danger > svg{color:currentColor}
   .tb-menu-item.is-danger:hover{background:var(--neg-soft,#fbeae8)}
-  /* 관리자 모드 스위치 */
-  .tb-switch{position:relative;flex:none;width:32px;height:18px;border-radius:999px;background:var(--sb-line);transition:background .18s}
-  .tb-switch::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;
-    box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .18s}
-  .tb-menu-item[aria-checked="true"] .tb-switch{background:var(--indigo)}
-  .tb-menu-item[aria-checked="true"] .tb-switch::after{transform:translateX(14px)}
-  .tb-menu-item[aria-checked="true"] > svg{color:var(--indigo)}
   .tb-search{position:relative;width:300px;max-width:48vw}
   .tb-search-box{display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;
     background:var(--paper);border:1px solid var(--sb-line);transition:border-color .15s,box-shadow .15s}
@@ -1732,8 +1732,8 @@ window.BAROYAM_PROFILES=(function(){
      회의안건 패널이 열리면 둘 다 패널 폭만큼 왼쪽으로 비켜선다 */
   .memo-fab{all:unset;box-sizing:border-box;position:fixed;right:24px;bottom:114px;width:56px;height:56px;
     border-radius:50%;background:var(--indigo);color:#fff;display:grid;place-items:center;cursor:pointer;z-index:70;
-    box-shadow:0 12px 26px -8px rgba(194,106,65,.65);transition:transform .18s,box-shadow .18s,background .18s}
-  .memo-fab:hover{background:var(--indigo-lite);transform:translateY(-2px);box-shadow:0 18px 32px -10px rgba(194,106,65,.75)}
+    box-shadow:0 12px 26px -8px rgba(var(--indigo-rgb),.6);transition:transform .18s,box-shadow .18s,background .18s}
+  .memo-fab:hover{background:var(--indigo-lite);transform:translateY(-2px);box-shadow:0 18px 32px -10px rgba(var(--indigo-rgb),.7)}
   .memo-fab:active{transform:translateY(0)}
   .memo-fab:focus-visible{outline:2px solid var(--indigo);outline-offset:3px}
   .memo-fab svg{width:24px;height:24px}
@@ -1742,19 +1742,24 @@ window.BAROYAM_PROFILES=(function(){
   /* 바로얌 로고 버튼 · 노트보다 한 치수 크고 색은 같은 계열 */
   .logo-fab{all:unset;box-sizing:border-box;position:fixed;right:24px;bottom:24px;width:76px;height:76px;
     border-radius:50%;background:var(--indigo);color:#fff;display:block;cursor:pointer;z-index:70;
-    box-shadow:0 12px 26px -8px rgba(194,106,65,.65);transition:transform .18s,box-shadow .18s,background .18s}
-  .logo-fab:hover{background:var(--indigo-lite);transform:translateY(-2px);box-shadow:0 18px 32px -10px rgba(194,106,65,.75)}
+    box-shadow:0 12px 26px -8px rgba(var(--indigo-rgb),.6);transition:transform .18s,box-shadow .18s,background .18s}
+  .logo-fab:hover{background:var(--indigo-lite);transform:translateY(-2px);box-shadow:0 18px 32px -10px rgba(var(--indigo-rgb),.7)}
   .logo-fab:active{transform:translateY(0)}
   .logo-fab:focus-visible{outline:2px solid var(--indigo);outline-offset:3px}
   /* 정사각 로고를 버튼에 꽉 채우고 원형으로 깎는다 · 로고에 투명한 부분이 있으면 뒤의 주황이 비친다 */
   .logo-fab img{width:100%;height:100%;border-radius:50%;display:block;object-fit:cover}
   /* 로딩 스피너처럼 계속 돌아가는 테두리 · 버튼 바깥에 띄우므로 overflow를 열어둔다 */
   .logo-fab::after{content:'';position:absolute;inset:-7px;border-radius:50%;pointer-events:none;
-    border:3px solid rgba(194,106,65,.22);border-top-color:var(--indigo-lite);
+    border:3px solid rgba(var(--indigo-rgb),.22);border-top-color:var(--indigo-lite);
     animation:logoFabSpin 1.1s linear infinite}
   @keyframes logoFabSpin{to{transform:rotate(360deg)}}
   /* 회전 테두리와 겹치지 않게 선택 표시를 한 칸 밖으로 */
   .logo-fab.is-active{outline:3px solid var(--indigo-lite);outline-offset:10px}
+  /* 다크모드 · 원본 로고는 주황 판이라 파랗게 바뀐 노트 버튼과 따로 논다 ·
+     그래서 어두울 때는 글자만 남긴 흰색 누끼 로고로 바꿔 단다(원의 배경색은 그대로) */
+  .logo-fab .logo-fab-white{display:none}
+  html[data-theme="dark"] .logo-fab #logoFabImg{display:none}
+  html[data-theme="dark"] .logo-fab .logo-fab-white{display:block}
   /* 노트북처럼 작은 화면에서는 오른쪽 아래 떠 있는 버튼 두 개가 본문 버튼을 가리지 않게 작게 */
   @media (max-width:1280px),(max-height:720px){
     .logo-fab{right:18px;bottom:18px;width:58px;height:58px}
@@ -2874,11 +2879,6 @@ window.BAROYAM_PROFILES=(function(){
               </div>
             </div>
             <div class="tb-menu-sep" role="separator"></div>
-            <button class="tb-menu-item" type="button" role="menuitemcheckbox" aria-checked="false" id="tbAdminToggle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
-              <span class="tb-menu-label">관리자 모드<span class="tb-menu-hint" id="tbAdminHint">비밀번호 확인 후 켜져요</span></span>
-              <span class="tb-switch" aria-hidden="true"></span>
-            </button>
             <button class="tb-menu-item" type="button" role="menuitem" id="tbOpenSettings">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
               <span class="tb-menu-label">관리자 설정</span>
@@ -4779,6 +4779,8 @@ window.BAROYAM_PROFILES=(function(){
 
   <button type="button" class="logo-fab" id="logoFab" aria-label="바로얌 홈" title="바로얌 홈">
     <img id="logoFabImg" alt="" aria-hidden="true">
+    <!-- 다크모드에서만 보이는 흰색 누끼 로고 · 원본에서 글자만 남겨 만든 그림이다 -->
+    <img class="logo-fab-white" src="data:image/png;base64,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" alt="" aria-hidden="true">
   </button>
   <script>document.getElementById('logoFabImg').src=document.querySelector('.sb-logo').src;</script>
 
@@ -5912,6 +5914,14 @@ window.CsGuide=(function(){
   const pwSubmit=pwForm.querySelector('button[type="submit"]');
   let unlocked=false, pwBusy=false;
   try{ unlocked=sessionStorage.getItem(UNLOCK_KEY)==='1'; }catch(e){}
+  /* 관리자 비밀번호로 들어온 사람은 이미 그 비밀번호를 통과했다 ·
+     설정에 들어갈 때 같은 비밀번호를 또 묻지 않는다 ·
+     구글 계정으로 들어온 사람은 종전대로 묻는다 */
+  try{
+    const A=window.BAROYAM_AUTH;
+    const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
+    if(s && A.admin && s.h===A.admin.hash) unlocked=true;
+  }catch(e){}
 
   async function hashPw(pw){
     const enc=new TextEncoder();
@@ -5939,19 +5949,12 @@ window.CsGuide=(function(){
     pwPanel.classList.add('is-shake');
     pwInput.select();
   }
-  /* 비밀번호가 맞았을 때 할 일 · 설정 버튼이면 설정을 열고, 프로필 메뉴의 관리자 모드면 모드만 켠다 */
-  let pwThen=openSettings;
+  /* 비밀번호가 맞으면 설정을 연다 · 프로필 메뉴의 관리자 모드 토글은 없앴다면 모드만 켠다 */
+  /* 관리자 모드 칩을 다시 그리게 알린다 · 설정에서 비밀번호를 통과한 뒤에 쓴다 */
   function emitAdmin(){ document.dispatchEvent(new CustomEvent('baroyam:adminmode',{detail:{on:unlocked}})); }
   window.baroyamAdminMode={
     isOn:()=>unlocked,
-    turnOn(){ if(unlocked) return; pwThen=emitAdmin; openPw(); },
-    turnOff(){
-      unlocked=false;
-      try{ sessionStorage.removeItem(UNLOCK_KEY); }catch(e){}
-      if(!overlay.hidden) closeSettings();
-      emitAdmin();
-    },
-    openSettings(){ pwThen=openSettings; if(unlocked) openSettings(); else openPw(); }
+    openSettings(){ if(unlocked) openSettings(); else openPw(); }
   };
   pwForm.addEventListener('submit',e=>{
     e.preventDefault();
@@ -5966,7 +5969,7 @@ window.CsGuide=(function(){
       try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(err){}
       closePw(false);
       emitAdmin();
-      if(pwThen!==emitAdmin) pwThen();
+      openSettings();   /* 비밀번호를 묻는 길은 설정 열기 하나뿐이다 */
     }).catch(err=>{ console.error(err); pwFail('확인 중 오류가 났어요. 다시 시도해 주세요.'); })
       .finally(()=>{ pwBusy=false; pwSubmit.disabled=false; });
   });
@@ -6048,7 +6051,6 @@ window.CsGuide=(function(){
 (function(){
   const btn=document.getElementById('tbProfileBtn');
   const menu=document.getElementById('tbProfileMenu');
-  const toggle=document.getElementById('tbAdminToggle');
   const AM=window.baroyamAdminMode;
   if(!btn||!menu||!AM) return;
 
@@ -6089,11 +6091,10 @@ window.CsGuide=(function(){
 
   const role=document.getElementById('tbProfileRole');
   const badge=document.getElementById('tbAdminBadge');
-  const hint=document.getElementById('tbAdminHint');
+  /* 관리자 표시 기준 · 비밀번호로 들어왔으면 늘 관리자다 ·
+     구글 계정으로 들어온 사람은 설정에서 비밀번호를 통과한 동안만 관리자로 보인다 */
   function render(){
-    const on=AM.isOn();
-    toggle.setAttribute('aria-checked',on?'true':'false');
-    hint.textContent=on?'이 탭을 닫으면 자동으로 꺼져요':'비밀번호 확인 후 켜져요';
+    const on=isAdminLogin||AM.isOn();
     role.textContent=on?'관리자 모드':'일반 모드';
     role.classList.toggle('is-admin',on);
     badge.hidden=!on;
@@ -6128,18 +6129,15 @@ window.CsGuide=(function(){
   }
   btn.addEventListener('click',()=>{ menu.hidden?open():close(true); });
 
-  toggle.addEventListener('click',()=>{
-    if(AM.isOn()){ AM.turnOff(); return; }
-    close(false);
-    AM.turnOn();   /* 비밀번호 창이 뜨고, 맞으면 baroyam:adminmode 이벤트로 다시 그려진다 */
-  });
   document.getElementById('tbOpenSettings').addEventListener('click',()=>{ close(false); AM.openSettings(); });
   /* 회원 바꾸기 · "나"를 비우면 새로고침할 때 회원 선택 화면이 다시 뜬다 ·
-     비밀번호로 들어온 관리자는 선택 화면 자체가 없어서 감춘다 */
+     비밀번호로 들어온 관리자에게는 선택 화면이 원래 안 뜨므로, 눌렀다는 표시를
+     한 번만 남겨 그때만 띄운다(표시는 화면이 뜨는 순간 지워진다) ·
+     회원을 골라도 관리자 권한은 그대로다 · 로그인 방식이 바뀌는 게 아니라서다 */
   const changeMemberBtn=document.getElementById('tbChangeMember');
-  changeMemberBtn.hidden=isAdminLogin;
   changeMemberBtn.addEventListener('click',()=>{
     P.setMe('');
+    try{ sessionStorage.setItem('baroyam_pick_member_v1','1'); }catch(e){}
     location.reload();
   });
   document.getElementById('tbSignOut').addEventListener('click',()=>{
