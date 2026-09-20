@@ -116,7 +116,9 @@ window.BAROYAM_ROLES=[
    '나'(me)는 이 브라우저에서만 쓰는 값이라 올리지 않는다 — 공용 PC에서 남의 계정으로 잡히지 않도록 */
 window.BAROYAM_PROFILES=(function(){
   const LS_KEY='baroyam_member_profiles_v1', ME_KEY='baroyam_me_v1', SHEET_PREFIX='memberProfile:';
-  const SKIP='__skip__';   /* 목록에 없어서 건너뛴 경우 · 선택 화면을 다시 띄우지 않기 위한 표시 */
+  /* 옛 버전의 "건너뛰기"가 남긴 값 · 지금은 건너뛸 수 없다 ·
+     이 값이 남아 있으면 회원 선택 화면을 다시 띄워 고르게 한다 */
+  const SKIP='__skip__';
   function all(){
     try{ const o=JSON.parse(localStorage.getItem(LS_KEY)||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; }
   }
@@ -172,14 +174,14 @@ window.BAROYAM_PROFILES=(function(){
     const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
     if(s && s.until>Date.now() && (A.allowedHashes.includes(s.h) || s.h===A.admin.hash)){
       root.classList.remove('auth-locked');
-      /* 구글 계정으로 들어왔는데 아직 "나"를 고른 적이 없으면 회원 선택 화면을 먼저 띄운다 ·
-         골라 둔 회원이 회원설정에서 지워진 경우에도 다시 고르게 한다 ·
-         그대로 두면 없는 회원으로 잡혀서 관리자 칸 마이홈이 보인다 ·
-         건너뛰기(SKIP)를 누른 사람은 다시 묻지 않는다 */
+      /* 구글 계정으로 들어왔으면 "나"가 회원설정에 실제로 있는 회원이어야 한다 ·
+         고른 적이 없거나, 골라 둔 회원이 지워졌거나, 옛 버전에서 건너뛰기를
+         눌러 둔 경우 모두 선택 화면을 띄운다 ·
+         그대로 두면 없는 회원으로 잡혀서 관리자 칸 마이홈이 보인다 */
       const P0=window.BAROYAM_PROFILES, meRaw=P0.me();
-      const gone=!!(meRaw && meRaw!==P0.SKIP && !window.BAROYAM_MEMBERS.byId(meRaw));
-      if(s.h!==A.admin.hash && (!meRaw || gone)){
-        if(gone) P0.setMe('');
+      const picked=!!(meRaw && window.BAROYAM_MEMBERS.byId(meRaw));
+      if(s.h!==A.admin.hash && !picked){
+        if(meRaw) P0.setMe('');   /* 지워진 회원이나 옛 건너뛰기 값을 비운다 */
         root.classList.add('member-locked');
       }
     }
@@ -270,9 +272,8 @@ window.BAROYAM_PROFILES=(function(){
   #memberGate .mp-empty{margin:0;padding:26px 8px;text-align:center;font-size:13px;font-weight:600;line-height:1.6;color:var(--mute,#786c64)}
   #memberGate .mp-foot{display:flex;align-items:center;justify-content:center;gap:6px;margin:20px -26px 0;padding:16px 26px 0;
     border-top:1px solid var(--line,#ece5dc)}
-  #memberGate .mp-skip{all:unset;box-sizing:border-box;padding:6px 10px;border-radius:9px;cursor:pointer;
-    font-size:12.5px;font-weight:700;color:var(--mute,#786c64)}
-  #memberGate .mp-skip:hover,#memberGate .mp-skip:focus-visible{color:var(--indigo,#cd6428);background:var(--indigo-soft,#fdefe4)}
+  #memberGate .mp-note{margin:0;font-size:12.5px;font-weight:600;line-height:1.5;
+    color:var(--mute,#786c64);text-align:center}
   @media (max-width:420px){ #memberGate .mp-card{padding:30px 18px 16px} #memberGate .mp-foot{margin:18px -18px 0;padding:14px 18px 0} }
 </style>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -763,28 +764,28 @@ window.BAROYAM_PROFILES=(function(){
   /* 편집 대화상자 · 설정창 틀(.settings-overlay/.settings-panel)을 그대로 빌려 쓴다 */
   /* 프로젝트 칸반 보드 · 상태별 열(예정/진행중/보류/완료/종료), 카드를 끌어 다른 열에 놓으면 상태가 바뀐다 ·
      마이홈과 같은 프로젝트 목록을 쓴다 */
-  .pj-head{position:relative;display:flex;align-items:center;gap:22px;padding:4px 0 18px}
-  .pj-title{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.4px}
-  .pj-title svg{width:18px;height:18px;color:var(--body)}
+  .pj-head{position:relative;display:flex;align-items:center;gap:22px;padding:4px 0 20px}
+  .pj-title{display:flex;align-items:center;gap:11px;font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.5px}
+  .pj-title svg{width:20px;height:20px;color:var(--body)}
   /* 상세 필터 · 검색칸 한 줄 + 프로젝트/상태/회원 칩 줄(전체 칩을 누르면 그 줄만 초기화) */
-  .pj-facets{display:flex;flex-direction:column;gap:9px;margin:0 0 16px}
-  .pj-facet-rows{display:flex;flex-direction:column;gap:9px}
-  .pj-searchbar{display:flex;align-items:center;gap:11px;padding:14px 20px;border-radius:16px;
+  .pj-facets{display:flex;flex-direction:column;gap:12px;margin:0 0 20px}
+  .pj-facet-rows{display:flex;flex-direction:column;gap:12px}
+  .pj-searchbar{display:flex;align-items:center;gap:13px;padding:19px 26px;border-radius:18px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);color:var(--mute)}
-  .pj-searchbar svg{width:15px;height:15px;flex:none}
-  .pj-searchbar input{all:unset;flex:1;min-width:0;font-size:13.5px;color:var(--ink)}
+  .pj-searchbar svg{width:18px;height:18px;flex:none}
+  .pj-searchbar input{all:unset;flex:1;min-width:0;font-size:15px;color:var(--ink)}
   .pj-searchbar input::placeholder{color:var(--mute)}
-  .pj-facet-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:7px 10px;border-radius:16px;
+  .pj-facet-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px;border-radius:18px;
     background:var(--paper);box-shadow:var(--mh-card-shadow)}
-  .pj-facet-cap{flex:none;width:46px;padding-left:4px;font-size:11px;font-weight:800;color:var(--mute);letter-spacing:-.2px}
-  .pj-chip{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
-    padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:700;color:var(--body);white-space:nowrap;
+  .pj-facet-cap{flex:none;width:58px;padding-left:4px;font-size:12.5px;font-weight:800;color:var(--mute);letter-spacing:-.2px}
+  .pj-chip{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:9px;
+    padding:11px 20px;border-radius:99px;font-size:14px;font-weight:700;color:var(--body);white-space:nowrap;
     transition:background .15s ease,color .15s ease}
   .pj-chip:hover{background:var(--bg)}
   .pj-chip:focus-visible{outline:2px solid var(--mh-accent);outline-offset:1px}
-  .pj-chip-dot{width:7px;height:7px;border-radius:50%;flex:none}
-  .pj-chip-n{min-width:18px;padding:0 6px;border-radius:99px;background:var(--bg);color:var(--mute);
-    font-size:11px;font-weight:800;line-height:18px;text-align:center}
+  .pj-chip-dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .pj-chip-n{min-width:22px;padding:0 7px;border-radius:99px;background:var(--bg);color:var(--mute);
+    font-size:12px;font-weight:800;line-height:21px;text-align:center}
   .pj-chip.is-on{background:var(--mh-accent);color:#fff}
   .pj-chip.is-on .pj-chip-n{background:rgba(255,255,255,.24);color:#fff}
   .pj-chip.is-on .pj-chip-dot{background:#fff!important}
@@ -792,11 +793,11 @@ window.BAROYAM_PROFILES=(function(){
   .pj-filters{margin-left:auto;display:flex;gap:8px;position:relative}
   .pj-filter-reset[hidden]{display:none}
   .pj-filter-reset{color:var(--body)}
-  .pj-filter{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:9px;
-    background:var(--paper);box-shadow:var(--mh-card-shadow);font-size:12.5px;font-weight:800;color:var(--ink)}
-  .pj-filter svg{width:12px;height:12px}
+  .pj-filter{all:unset;cursor:pointer;display:flex;align-items:center;gap:7px;padding:11px 17px;border-radius:11px;
+    background:var(--paper);box-shadow:var(--mh-card-shadow);font-size:13.5px;font-weight:800;color:var(--ink)}
+  .pj-filter svg{width:14px;height:14px}
   .pj-filter.is-on{color:var(--mh-accent);box-shadow:inset 0 0 0 1px var(--mh-accent)}
-  .pj-filter-n:not(:empty){min-width:16px;padding:0 4px;border-radius:99px;background:var(--mh-accent);color:#fff;font-size:10.5px;line-height:16px;text-align:center}
+  .pj-filter-n:not(:empty){min-width:18px;padding:0 6px;border-radius:99px;background:var(--mh-accent);color:#fff;font-size:11.5px;line-height:18px;text-align:center}
   .pj-pop{position:absolute;top:calc(100% + 6px);right:0;z-index:30;min-width:200px;padding:8px;border-radius:12px;
     background:var(--paper);border:1px solid var(--line);box-shadow:0 12px 30px -10px rgba(20,14,10,.3)}
   .pj-pop[hidden]{display:none}
@@ -847,12 +848,13 @@ window.BAROYAM_PROFILES=(function(){
   .ch-view-cap{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--mute)}
   .ch-view-title{margin:6px 0 0;font-size:26px;font-weight:800;letter-spacing:-.6px;color:var(--ink)}
   /* 프로젝트 보드는 화면을 꽉 채우지 않도록 폭을 좁히고 위아래 여백을 둔다 */
-  body.view-is-project .wrap{max-width:1440px;padding:36px 40px 56px}
+  /* 프로젝트 화면은 가운데로 모으지 않고 화면 왼쪽부터 넓게 쓴다 */
+  body.view-is-project .wrap{max-width:none;margin:0;padding:36px 40px 56px}
   .pj-board{display:flex;gap:18px;align-items:flex-start;overflow-x:auto;padding:18px;border-radius:20px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);
     /* 보드를 화면 높이에 맞춰 페이지 전체가 스크롤되지 않게 하고, 카드가 많으면 칸 안에서만 스크롤한다 */
-    /* 위에 붙은 상세 필터 높이(--pj-facets-h)만큼 빼서 보드가 화면 밖으로 밀려나지 않게 한다 */
-    height:calc(100vh - 260px - var(--pj-facets-h,0px));min-height:360px}
+    /* 실제 높이는 화면에 들어온 뒤 JS가 보드 시작 위치를 재서 맞춘다(아래는 그 전까지 쓰는 값) */
+    height:calc(100vh - 480px);min-height:360px}
   /* 노트북 폭에서도 5개 칸이 한 화면에 들어오도록 폭을 나눠 쓴다(더 좁으면 가로 스크롤) */
   .pj-col{flex:1 1 0;min-width:200px;display:flex;flex-direction:column;align-self:stretch;min-height:0;overflow:hidden;
     border-radius:14px;background:var(--bg);transition:box-shadow .15s}
@@ -889,9 +891,10 @@ window.BAROYAM_PROFILES=(function(){
     .pj-col-body{overflow:visible}
     .pj-head{flex-wrap:wrap;gap:12px}
     .pj-filters{margin-left:0;flex-wrap:wrap}
-    .pj-facet-row{gap:2px;padding:6px}
-    .pj-facet-cap{width:100%;padding:2px 6px 0}
-    .pj-chip{padding:7px 11px;font-size:12px}
+    .pj-facet-row{gap:4px;padding:8px}
+    .pj-facet-cap{width:100%;padding:2px 6px 2px}
+    .pj-chip{padding:9px 14px;font-size:13px}
+    .pj-searchbar{padding:15px 18px}
   }
   .settings-panel.mh-dialog{max-width:420px;height:auto}
   /* 프로필 사진 대화상자 · 규격을 먼저 보여주고 사진을 고르게 한다 */
@@ -2488,7 +2491,7 @@ window.BAROYAM_PROFILES=(function(){
     <p class="mp-sub">내 이름을 골라 주세요.<br>고른 회원으로 대시보드 프로필이 맞춰집니다.</p>
     <div class="mp-list" id="mpList"></div>
     <div class="mp-foot">
-      <button type="button" class="mp-skip" id="mpSkip">목록에 없어요 · 건너뛰기</button>
+      <p class="mp-note">내 이름이 없으면 관리자에게 회원 추가를 요청해 주세요.</p>
     </div>
   </div>
 </div>
@@ -2506,7 +2509,7 @@ window.BAROYAM_PROFILES=(function(){
   function render(){
     const members=MEM.load();
     if(!members.length){
-      list.innerHTML='<p class="mp-empty">등록된 회원이 없어요.<br>건너뛰기를 누르고 관리자 설정 &gt; 회원설정에서 추가해 주세요.</p>';
+      list.innerHTML='<p class="mp-empty">등록된 회원이 없어요.<br>관리자가 관리자 설정 &gt; 회원설정에서 이름을 추가하면<br>여기에서 고를 수 있어요.</p>';
       return;
     }
     list.innerHTML=members.map(m=>{
@@ -2527,10 +2530,6 @@ window.BAROYAM_PROFILES=(function(){
     const item=e.target.closest('.mp-item');
     if(!item) return;
     P.setMe(item.dataset.id);
-    location.reload();
-  });
-  document.getElementById('mpSkip').addEventListener('click',()=>{
-    P.setMe(P.SKIP);
     location.reload();
   });
 })();
@@ -9171,10 +9170,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }).join('');
     syncBoardHeight();
   }
-  /* 필터 줄이 길어져도 보드가 화면 아래로 밀리지 않도록 높이를 알려 준다 */
+  /* 필터 줄이 길어져도 보드가 화면 아래로 밀리지 않게, 보드가 시작하는 자리부터 화면 끝까지로 높이를 맞춘다 */
   function syncBoardHeight(){
-    const pj=document.querySelector('.pj'), fa=document.querySelector('.pj-facets');
-    if(pj&&fa) pj.style.setProperty('--pj-facets-h',(fa.offsetHeight+16)+'px');
+    const b=$('pjBoard');
+    if(!b||!b.offsetParent) return;            /* 화면에 안 보이면 잴 수 없다 */
+    if(window.innerWidth<=760){ b.style.height=''; return; }   /* 좁은 화면은 그냥 늘어나게 둔다 */
+    const top=b.getBoundingClientRect().top+(window.scrollY||0);
+    b.style.height=Math.max(360,window.innerHeight-top-40)+'px';
   }
   window.addEventListener('resize',syncBoardHeight);
   window.pjSyncBoardHeight=syncBoardHeight;
