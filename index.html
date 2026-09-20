@@ -693,7 +693,11 @@ window.BAROYAM_PROFILES=(function(){
     transition:box-shadow .15s,transform .15s}
   button.mh-stat:hover{transform:translateY(-1px);box-shadow:0 10px 22px -14px rgba(var(--indigo-rgb),.5)}
   button.mh-stat:focus-visible{outline:2px solid var(--mh-accent);outline-offset:2px}
-  button.mh-stat[aria-expanded="true"]{box-shadow:0 0 0 2px var(--mh-accent) inset}
+  /* 열린 카드 · 안을 살짝 물들이고 테두리는 가늘게 둔다 ·
+     2px 강조색 테두리는 눈에 너무 따가워서 은은한 쪽으로 바꿨다 */
+  button.mh-stat[aria-expanded="true"]{
+    background:color-mix(in srgb,var(--mh-accent) 5%,var(--paper));
+    box-shadow:0 0 0 1px rgba(var(--indigo-rgb),.25) inset,0 10px 22px -14px rgba(var(--indigo-rgb),.4)}
   /* 현황 카드 목록 · 화면 기준(fixed)으로 띄워 카드 바로 아래에 놓는다 */
   .mh-statpop{position:fixed;z-index:60;width:320px;max-width:calc(100vw - 24px);
     background:var(--paper);border:1px solid var(--line);border-radius:14px;
@@ -1068,12 +1072,17 @@ window.BAROYAM_PROFILES=(function(){
   .pjf-chips{display:flex;flex-wrap:wrap;gap:6px}
   /* 고르는 칸(담당자·경로·마감기한) · 브라우저 기본 모양을 걷어내고 화살표를 직접 그린다 ·
      테두리·모서리·글자 굵기를 칩과 맞춰 한 벌로 보이게 한다 */
-  .pjf-rc input[type=date]{flex:1;min-width:0;padding:10px 12px;border-radius:11px;
-    border:1px solid var(--line);background:var(--paper);color:var(--ink);
-    font:inherit;font-size:13.5px;font-weight:600;outline:none;
-    transition:border-color .15s,box-shadow .15s}
-  .pjf-rc input[type=date]:hover{border-color:color-mix(in srgb,var(--mh-accent) 45%,var(--line))}
-  .pjf-rc input[type=date]:focus{border-color:var(--mh-accent);box-shadow:0 0 0 3px rgba(var(--indigo-rgb),.14)}
+  /* 마감기한 · 브라우저 달력 대신 회의안건에서 쓰던 달력(.ag-calendar)을 그대로 띄운다 */
+  .pjf-date{position:relative;display:block;flex:1;min-width:0}
+  .pjf-datebtn{padding-right:12px}
+  .pjf-datebtn svg{width:14px;height:14px;flex:none;color:var(--mute)}
+  .pjf-datebtn[aria-expanded="true"] svg{color:var(--mh-accent)}
+  .pjf-cal{top:calc(100% + 8px);width:258px}
+  .pjf-cal[hidden]{display:none}
+  .pjf-cal-foot{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .pjf-cal-btn{all:unset;box-sizing:border-box;flex:1;text-align:center;cursor:pointer;padding:7px 0;
+    border-radius:9px;font-size:12px;font-weight:700;color:var(--body);background:var(--bg)}
+  .pjf-cal-btn:hover{background:color-mix(in srgb,var(--mh-accent) 14%,transparent);color:var(--mh-accent)}
   .pjf-chip input{position:absolute;width:0;height:0;opacity:0}
   .pjf-chip span{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:99px;cursor:pointer;
     font-size:12.5px;font-weight:700;color:var(--body);background:var(--bg);border:1px solid transparent;
@@ -1347,12 +1356,12 @@ window.BAROYAM_PROFILES=(function(){
   .ag-cal-title{font-size:13.5px;font-weight:800;color:var(--ink)}
   .ag-cal-nav{all:unset;box-sizing:border-box;cursor:pointer;width:26px;height:26px;border-radius:8px;
     display:grid;place-items:center;color:var(--mute);font-size:16px;font-weight:700}
-  .ag-cal-nav:hover{background:rgba(194,106,65,.08);color:var(--indigo)}
+  .ag-cal-nav:hover{background:rgba(var(--indigo-rgb),.08);color:var(--indigo)}
   .ag-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
   .ag-cal-dow{font-size:11px;font-weight:700;color:var(--mute);text-align:center;padding-bottom:6px}
   .ag-cal-day{all:unset;box-sizing:border-box;width:100%;aspect-ratio:1;display:grid;place-items:center;
     font-size:12.5px;font-weight:600;color:var(--ink);border-radius:9px;cursor:pointer;text-align:center}
-  .ag-cal-day:hover{background:rgba(194,106,65,.1)}
+  .ag-cal-day:hover{background:rgba(var(--indigo-rgb),.1)}
   .ag-cal-day.muted{color:var(--mute);opacity:.4;cursor:default}
   .ag-cal-day.today{box-shadow:inset 0 0 0 1.5px var(--indigo)}
   .ag-cal-day.selected{background:var(--indigo);color:#fff;font-weight:800}
@@ -9611,6 +9620,67 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const txt=d<0?`${-d}일 지연`:(d===0?'오늘 마감':`D-${d}`);
     return `<span class="pjf-dday${cls}">${txt}</span>`;
   }
+  /* 마감기한 고르기 · 브라우저 달력은 손댈 수 없어, 다른 화면에서 쓰던 달력을 그대로 띄운다 */
+  const PJ_DOW=['일','월','화','수','목','금','토'];
+  const ICON_CAL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3.5V6M15 3.5V6"/></svg>';
+  let pjCalY=0, pjCalM=0;                 /* 지금 펼쳐 놓은 달 */
+  function pjFmtDate(iso){
+    if(!iso) return '날짜 없음';
+    const [y,m,d]=iso.split('-').map(Number);
+    return `${y}년 ${m}월 ${d}일`;
+  }
+  function pjDateField(name,cur){
+    return `<span class="pjf-date" data-date="${name}">
+      <input type="hidden" name="${name}" value="${esc(cur||'')}">
+      <button type="button" class="pjf-sel pjf-datebtn" aria-haspopup="dialog" aria-expanded="false">
+        ${ICON_CAL}<span class="pjf-sel-t">${esc(pjFmtDate(cur))}</span>
+      </button>
+      <div class="ag-calendar pjf-cal" hidden>
+        <div class="ag-cal-head">
+          <button type="button" class="ag-cal-nav" data-cal="prev" aria-label="이전 달">‹</button>
+          <div class="ag-cal-title"></div>
+          <button type="button" class="ag-cal-nav" data-cal="next" aria-label="다음 달">›</button>
+        </div>
+        <div class="ag-cal-grid"></div>
+        <div class="pjf-cal-foot">
+          <button type="button" class="pjf-cal-btn" data-cal="today">오늘</button>
+          <button type="button" class="pjf-cal-btn" data-cal="clear">지우기</button>
+        </div>
+      </div>
+    </span>`;
+  }
+  function pjCalRender(wrap){
+    const cal=wrap.querySelector('.pjf-cal');
+    const cur=wrap.querySelector('input[type=hidden]').value;
+    const today=kstToday();
+    cal.querySelector('.ag-cal-title').textContent=`${pjCalY}년 ${pjCalM+1}월`;
+    const start=new Date(Date.UTC(pjCalY,pjCalM,1)).getUTCDay();
+    const days=new Date(Date.UTC(pjCalY,pjCalM+1,0)).getUTCDate();
+    let h=PJ_DOW.map(d=>`<div class="ag-cal-dow">${d}</div>`).join('');
+    for(let i=0;i<start;i++) h+='<div></div>';
+    for(let d=1;d<=days;d++){
+      const iso=pjCalY+'-'+String(pjCalM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const cls='ag-cal-day'+(iso===today?' today':'')+(iso===cur?' selected':'');
+      h+=`<button type="button" class="${cls}" data-day="${iso}">${d}</button>`;
+    }
+    cal.querySelector('.ag-cal-grid').innerHTML=h;
+  }
+  function pjSetDate(wrap,iso){
+    wrap.querySelector('input[type=hidden]').value=iso;
+    wrap.querySelector('.pjf-sel-t').textContent=pjFmtDate(iso);
+    const slot=form.querySelector('[data-dday]');
+    if(slot) slot.innerHTML=pjDdayHtml(iso);
+    closeDateCals(null);
+    flushProjectSave();
+  }
+  function closeDateCals(except){
+    form.querySelectorAll('.pjf-date').forEach(w=>{
+      if(w===except) return;
+      const c=w.querySelector('.pjf-cal'); if(c) c.hidden=true;
+      const b=w.querySelector('.pjf-datebtn'); if(b) b.setAttribute('aria-expanded','false');
+    });
+  }
+
   /* 담당자·경로 고르기 한 벌 · 고른 값은 숨은 칸(name=...)에 담기므로 저장 코드는 그대로다 */
   function pickList(name,list,cur){
     const rows=[{v:'',t:'없음'}].concat(list.map(v=>({v:v,t:v})));
@@ -9637,17 +9707,45 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     });
   }
   form.addEventListener('click',e=>{
+    /* 달력 여닫기 · 날짜 단추도 .pjf-sel이라 이쪽을 먼저 본다 */
+    const dbtn=e.target.closest('.pjf-datebtn');
+    if(dbtn){
+      const wrap=dbtn.closest('.pjf-date'), cal=wrap.querySelector('.pjf-cal');
+      const willOpen=cal.hidden;
+      closePickMenus(null); closeDateCals(wrap);
+      if(willOpen){
+        const v=wrap.querySelector('input[type=hidden]').value||kstToday();
+        const [y,m]=v.split('-').map(Number);
+        pjCalY=y; pjCalM=m-1;
+        pjCalRender(wrap);
+      }
+      cal.hidden=!willOpen;
+      dbtn.setAttribute('aria-expanded',willOpen?'true':'false');
+      return;
+    }
+    const nav=e.target.closest('[data-cal]');
+    if(nav){
+      const wrap=nav.closest('.pjf-date'), k=nav.dataset.cal;
+      if(k==='prev'||k==='next'){
+        pjCalM+=(k==='prev'?-1:1);
+        if(pjCalM<0){ pjCalM=11; pjCalY--; } else if(pjCalM>11){ pjCalM=0; pjCalY++; }
+        pjCalRender(wrap);
+      }else pjSetDate(wrap,k==='today'?kstToday():'');
+      return;
+    }
+    const day=e.target.closest('.ag-cal-day[data-day]');
+    if(day){ pjSetDate(day.closest('.pjf-date'),day.dataset.day); return; }
     const sel=e.target.closest('.pjf-sel');
     if(sel){
       const wrap=sel.closest('.pjf-pick'), menu=wrap.querySelector('.pjf-menu');
       const willOpen=menu.hidden;
-      closePickMenus(wrap);
+      closePickMenus(wrap); closeDateCals(null);
       menu.hidden=!willOpen;
       sel.setAttribute('aria-expanded',willOpen?'true':'false');
       return;
     }
     const opt=e.target.closest('.pjf-opt');
-    if(!opt){ closePickMenus(null); return; }
+    if(!opt){ closePickMenus(null); closeDateCals(null); return; }
     const wrap=opt.closest('.pjf-pick'), name=wrap.dataset.pick, v=opt.dataset.v;
     wrap.querySelector('input[type=hidden]').value=v;
     wrap.querySelector('.pjf-sel-t').textContent=v||'없음';
@@ -9691,7 +9789,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
            </div>
            <div class="pjf-row"><span class="pjf-rl">마감기한</span>
              <div class="pjf-rc">
-               <input type="date" name="due" value="${esc(cur.due||'')}">
+               ${pjDateField('due',cur.due)}
                <span data-dday>${pjDdayHtml(cur.due)}</span>
              </div>
            </div>
