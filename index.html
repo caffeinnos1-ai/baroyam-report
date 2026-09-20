@@ -1042,6 +1042,12 @@ window.BAROYAM_PROFILES=(function(){
     border-radius:22px;overflow:visible;
     background:linear-gradient(180deg,color-mix(in srgb,var(--mh-accent) 7%,var(--paper)) 0,var(--paper) 190px);
     box-shadow:0 30px 70px -30px rgba(var(--indigo-rgb),.5),0 2px 10px rgba(0,0,0,.08)}
+  /* 바깥을 한 번 눌렀을 때 · 닫히지 않는다는 것을 살짝 흔들어 알린다 */
+  .mh-dialog.is-project.is-nudge{animation:pjNudge .34s ease}
+  @keyframes pjNudge{
+    0%,100%{transform:scale(1);box-shadow:0 30px 70px -30px rgba(var(--indigo-rgb),.5),0 2px 10px rgba(0,0,0,.08)}
+    45%{transform:scale(.984);box-shadow:0 0 0 4px rgba(var(--indigo-rgb),.2),0 30px 70px -30px rgba(var(--indigo-rgb),.5)}}
+  @media (prefers-reduced-motion:reduce){ .mh-dialog.is-project.is-nudge{animation:none} }
   .mh-dialog.is-project .settings-head{border-bottom:none;padding:15px 20px;border-radius:21px 21px 0 0;
     background:linear-gradient(120deg,var(--mh-accent) 0%,var(--indigo-lite) 100%)}
   .mh-dialog.is-project .settings-head h2{display:flex;align-items:center;gap:9px;color:#fff}
@@ -5006,7 +5012,7 @@ window.BAROYAM_PROFILES=(function(){
             <label class="cg-label" for="cgQuery">고객 문의</label>
             <button type="button" class="cg-manage" id="cgManageBtn">상담가이드 관리 →</button>
           </div>
-          <textarea class="cg-query" id="cgQuery" placeholder="고객이 보낸 문의를 붙여넣거나 입력하세요 · 예) 주문한 지 3일 됐는데 아직 안 와요"></textarea>
+          <textarea class="cg-query" id="cgQuery" placeholder="고객이 보낸 문의를 붙여넣거나 입력하세요"></textarea>
           <div class="cg-hint" id="cgHint" aria-live="polite"></div>
         </div>
         <div class="cg-results" id="cgResults"></div>
@@ -9533,6 +9539,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     dlgPanel.classList.toggle('is-project',!!conf.project);
     form.innerHTML=html;
     onSubmit=submit;
+    backdropArmed=false;
+    dlgPanel.classList.remove('is-nudge');
     dlg.hidden=false;
     const first=form.querySelector('input');
     if(first) first.focus();
@@ -9588,13 +9596,21 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   });
   $('mhDialogClose').addEventListener('click',closeDialog);
   /* 창 바깥(어두운 바탕)을 눌렀을 때 ·
-     프로젝트 창은 이걸로 닫지 않는다 · 값을 고르다 바깥을 스치면 창이 사라져 흐름이 끊겨서다 ·
-     대신 열려 있던 목록·달력만 닫고, 창은 Esc나 ✕로만 닫는다 */
+     프로젝트 창은 한 번에 닫지 않는다 · 값을 고르다 바깥을 스치면 창이 사라져 흐름이 끊겨서다 ·
+     첫 번째는 펼쳐 둔 목록·달력만 닫고 창을 살짝 흔들어 알리고, 한 번 더 누르면 나간다 */
+  let backdropArmed=false;
   dlg.addEventListener('click',e=>{
     if(e.target!==dlg) return;
-    if(dlgPanel.classList.contains('is-project')){ closePickMenus(null); closeDateCals(null); return; }
-    closeDialog();
+    if(!dlgPanel.classList.contains('is-project')){ closeDialog(); return; }
+    closePickMenus(null); closeDateCals(null);
+    if(backdropArmed){ closeDialog(); return; }
+    backdropArmed=true;
+    dlgPanel.classList.remove('is-nudge');
+    void dlgPanel.offsetWidth;          /* 흔들림을 다시 돌리려고 한 번 끊어 준다 */
+    dlgPanel.classList.add('is-nudge');
   });
+  /* 창 안을 다시 누르면 '한 번 더 누르면 나감' 상태를 푼다 */
+  dlgPanel.addEventListener('click',()=>{ backdropArmed=false; });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!dlg.hidden) closeDialog(); });
 
   function actions(canDelete){
