@@ -180,14 +180,7 @@ window.BAROYAM_PROFILES=(function(){
          그대로 두면 없는 회원으로 잡혀서 관리자 칸 마이홈이 보인다 */
       const P0=window.BAROYAM_PROFILES, meRaw=P0.me();
       const picked=!!(meRaw && window.BAROYAM_MEMBERS.byId(meRaw));
-      /* 관리자가 "회원 바꾸기"를 누른 경우 · 표시는 여기서 한 번 쓰고 지운다 ·
-         그래서 그냥 새로고침하면 회원 없이 관리자로 들어가는 길이 남는다 */
-      let wantPick=false;
-      try{
-        wantPick=sessionStorage.getItem('baroyam_pick_member_v1')==='1';
-        if(wantPick) sessionStorage.removeItem('baroyam_pick_member_v1');
-      }catch(e){}
-      if((s.h!==A.admin.hash && !picked) || (wantPick && !picked)){
+      if(s.h!==A.admin.hash && !picked){
         if(meRaw) P0.setMe('');   /* 지워진 회원이나 옛 건너뛰기 값을 비운다 */
         root.classList.add('member-locked');
       }
@@ -917,8 +910,9 @@ window.BAROYAM_PROFILES=(function(){
   .ch-alert-tag.is-urgent{background:var(--ch-violet-soft);color:var(--ch-violet)}
   @media(max-width:1180px){ .ch-kpis{grid-template-columns:1fr 1fr} .ch-grid{grid-template-columns:1fr 1fr} }
   @media(max-width:760px){ .ch-kpis{grid-template-columns:1fr} .ch-grid{grid-template-columns:1fr} }
-  /* 프로젝트 보드는 화면을 꽉 채우지 않도록 폭을 좁히고 위아래 여백을 둔다 */
-  /* 프로젝트 화면은 가운데로 모으지 않고 화면 왼쪽부터 넓게 쓴다 */
+  /* 프로젝트 화면은 가운데로 모으지 않고 화면 왼쪽부터 끝까지 쓴다 ·
+     흰 보드판이 화면 끝에서 잘리지 않게 폭을 막지 않는다 ·
+     대신 칸(.pj-col)에 최대폭을 둬서, 축소해도 칸만 끝없이 커지지 않게 한다 */
   body.view-is-project .wrap{max-width:none;margin:0;padding:20px 24px 16px}
   .pj-board{display:flex;--pj-gap:16px;--pj-cols:5;gap:var(--pj-gap);align-items:flex-start;overflow-x:auto;padding:16px;border-radius:20px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);
@@ -929,10 +923,11 @@ window.BAROYAM_PROFILES=(function(){
        높이를 고정값으로 잡으면 브라우저 줌(마우스휠 확대)에서 화면을 넘어가 아래가 잘린다 ·
        줌은 innerHeight(CSS px)를 바꾸므로 화면 기준으로 재야 배율이 달라져도 맞는다 */
     height:calc(100vh - 300px);min-height:280px}
-  /* 칸 폭은 '상태 칸 수(--pj-cols)로 나눈 값'에 고정한다 · 다섯 칸이 다 있을 때 화면 폭을 꽉 채우고,
-     상태 필터로 칸이 줄어도 남은 칸이 늘어나지 않는다(폭은 그대로, 오른쪽이 빈다) ·
-     좁은 화면에서는 최소폭이 걸려 보드가 가로로 스크롤된다 */
-  .pj-col{--pj-col-w:calc((100% - (var(--pj-cols) - 1) * var(--pj-gap)) / var(--pj-cols));
+  /* 칸 폭은 '상태 칸 수(--pj-cols)로 나눈 값'으로 잡되 220~320px 사이에서만 움직인다 ·
+     - 상태 필터로 칸이 줄어도 남은 칸이 늘어나지 않는다(폭은 그대로, 오른쪽이 흰 여백으로 남는다)
+     - 브라우저를 축소해 화면이 넓어져도 320px에서 멈춘다(예전엔 칸만 끝없이 커졌다)
+     - 좁은 화면에서는 220px이 걸려 보드가 가로로 스크롤된다 */
+  .pj-col{--pj-col-w:clamp(220px,calc((100% - (var(--pj-cols) - 1) * var(--pj-gap)) / var(--pj-cols)),320px);
     flex:0 0 var(--pj-col-w);width:var(--pj-col-w);min-width:220px;
     display:flex;flex-direction:column;align-self:stretch;min-height:0;overflow:hidden;
     border-radius:14px;background:var(--bg);transition:box-shadow .15s}
@@ -6131,13 +6126,11 @@ window.CsGuide=(function(){
 
   document.getElementById('tbOpenSettings').addEventListener('click',()=>{ close(false); AM.openSettings(); });
   /* 회원 바꾸기 · "나"를 비우면 새로고침할 때 회원 선택 화면이 다시 뜬다 ·
-     비밀번호로 들어온 관리자에게는 선택 화면이 원래 안 뜨므로, 눌렀다는 표시를
-     한 번만 남겨 그때만 띄운다(표시는 화면이 뜨는 순간 지워진다) ·
-     회원을 골라도 관리자 권한은 그대로다 · 로그인 방식이 바뀌는 게 아니라서다 */
+     비밀번호로 들어온 관리자는 회원 개념을 쓰지 않으므로 감춘다 */
   const changeMemberBtn=document.getElementById('tbChangeMember');
+  changeMemberBtn.hidden=isAdminLogin;
   changeMemberBtn.addEventListener('click',()=>{
     P.setMe('');
-    try{ sessionStorage.setItem('baroyam_pick_member_v1','1'); }catch(e){}
     location.reload();
   });
   document.getElementById('tbSignOut').addEventListener('click',()=>{
