@@ -29,7 +29,7 @@ window.baroyamAuthHash=async function(email){
 /* 회원 목록 · 관리자 설정>회원설정과 로그인 직후 "누구신가요?" 화면이 같은 목록을 나눠 쓴다.
    로그인 게이트보다 먼저 필요하므로 여기(머리말)에 둔다 */
 window.BAROYAM_MEMBERS=(function(){
-  const LS_KEY='baroyam_members_v1';
+  const LS_KEY='baroyam_members_v1', SHEET_KEY='members';
   const COLORS=['#2f77cc','#e07234','#00734d','#a97b12','#cc5f8c','#6b4fc9','#008e9b','#c8433f','#8a5a2b','#4a6f80'];
   const DEFAULTS=[
     {id:'default-1',name:'김태섭',color:COLORS[0]},
@@ -39,19 +39,63 @@ window.BAROYAM_MEMBERS=(function(){
     {id:'default-5',name:'윤예은',color:COLORS[4]},
     {id:'default-6',name:'이미리내',color:COLORS[5]},
   ];
-  function save(list){ try{ localStorage.setItem(LS_KEY,JSON.stringify(list)); }catch(e){} }
+  /* 저장 형태 · 옛 버전은 배열만 담았다 · 지금은 {list,updatedAt}으로 감싸
+     기기 사이에서 어느 쪽이 더 새 목록인지 가린다 */
+  function unwrap(raw){
+    if(Array.isArray(raw)) return {list:raw,updatedAt:0};
+    if(raw&&typeof raw==='object'&&Array.isArray(raw.list)) return {list:raw.list,updatedAt:+raw.updatedAt||0};
+    return null;
+  }
+  function readBox(){
+    try{ const raw=localStorage.getItem(LS_KEY); if(raw) return unwrap(JSON.parse(raw)); }catch(e){}
+    return null;
+  }
+  function writeBox(box){ try{ localStorage.setItem(LS_KEY,JSON.stringify(box)); }catch(e){} }
+  /* AGENDA_API_URL은 문서 아래쪽에서 선언되므로(최상위 const) 쓰는 시점에 꺼내 온다 */
+  function apiUrl(){ try{ return typeof AGENDA_API_URL==='string'?AGENDA_API_URL:''; }catch(e){ return ''; } }
+  let pushTimer=null;
+  function push(box){
+    const url=apiUrl();
+    if(!/^https:/.test(url)) return;
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(()=>{
+      fetch(url,{method:'POST',body:JSON.stringify({action:'settingsSave',key:SHEET_KEY,value:JSON.stringify(box)})})
+        .catch(err=>console.error(err));
+    },700);
+  }
+  /* 회원설정에서 목록을 바꿀 때마다 이 브라우저에 쓰고 시트에도 올린다 ·
+     회원 이름이 곧 마이홈이라, 목록이 기기마다 다르면 마이홈도 다르게 생긴다 */
+  function save(list){
+    const box={list:Array.isArray(list)?list:[],updatedAt:Date.now()};
+    writeBox(box); push(box);
+  }
   /* 기본 회원은 이 브라우저에 목록이 "아직 없을 때" 한 번만 넣는다 ·
      부를 때마다 빠진 기본 회원을 채워 넣으면, 회원설정에서 ✕로 지운 사람이
      바로 뒤따르는 render()의 load()에서 되살아난다 ·
-     목록이 빈 배열([])인 것은 "전원 지웠다"는 뜻이라 그대로 둔다 */
+     목록이 빈 배열([])인 것은 "전원 지웠다"는 뜻이라 그대로 둔다 ·
+     씨앗은 updatedAt을 0으로 두고 시트에 올리지도 않는다 ·
+     그래야 새 PC에서 기본값이 시트에 올라 있는 진짜 목록을 이기지 않는다 */
   function load(){
-    let list=null;
-    try{ const raw=localStorage.getItem(LS_KEY); if(raw) list=JSON.parse(raw); }catch(e){}
-    if(!Array.isArray(list)){ save(DEFAULTS); return DEFAULTS.slice(); }
-    return list;
+    const box=readBox();
+    if(box) return box.list;
+    const seed={list:DEFAULTS.slice(),updatedAt:0};
+    writeBox(seed);
+    return seed.list;
+  }
+  function stamp(){ const box=readBox(); return box?box.updatedAt:0; }
+  /* 시트에서 받은 목록이 이 브라우저 것보다 새로울 때만 덮어쓴다 */
+  function applyRemote(settings){
+    if(!settings||!settings[SHEET_KEY]) return;
+    try{
+      const box=unwrap(JSON.parse(settings[SHEET_KEY]));
+      if(box&&box.updatedAt>stamp()){
+        writeBox(box);
+        document.dispatchEvent(new CustomEvent('baroyam:members'));
+      }
+    }catch(err){ console.error(err); }
   }
   function byId(id){ return id?(load().find(m=>m.id===id)||null):null; }
-  return {COLORS,DEFAULTS,load,save,byId};
+  return {COLORS,DEFAULTS,load,save,byId,applyRemote};
 })();
 
 /* 역할 · 각자 마이홈 프로필 창에서 고르고, 회원 선택 화면·상단바·회원설정에 아이콘으로 같이 보인다 */
@@ -128,8 +172,16 @@ window.BAROYAM_PROFILES=(function(){
     const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
     if(s && s.until>Date.now() && (A.allowedHashes.includes(s.h) || s.h===A.admin.hash)){
       root.classList.remove('auth-locked');
-      /* 구글 계정으로 들어왔는데 아직 "나"를 고른 적이 없으면 회원 선택 화면을 먼저 띄운다 */
-      if(s.h!==A.admin.hash && !window.BAROYAM_PROFILES.me()) root.classList.add('member-locked');
+      /* 구글 계정으로 들어왔는데 아직 "나"를 고른 적이 없으면 회원 선택 화면을 먼저 띄운다 ·
+         골라 둔 회원이 회원설정에서 지워진 경우에도 다시 고르게 한다 ·
+         그대로 두면 없는 회원으로 잡혀서 관리자 칸 마이홈이 보인다 ·
+         건너뛰기(SKIP)를 누른 사람은 다시 묻지 않는다 */
+      const P0=window.BAROYAM_PROFILES, meRaw=P0.me();
+      const gone=!!(meRaw && meRaw!==P0.SKIP && !window.BAROYAM_MEMBERS.byId(meRaw));
+      if(s.h!==A.admin.hash && (!meRaw || gone)){
+        if(gone) P0.setMe('');
+        root.classList.add('member-locked');
+      }
     }
   }catch(e){}
   root.classList.remove('auth-checking');
@@ -2470,6 +2522,7 @@ window.BAROYAM_PROFILES=(function(){
   }
   render();
   document.addEventListener('baroyam:profiles',render);
+  document.addEventListener('baroyam:members',render);   /* 시트에서 목록이 늦게 내려와도 따라 그린다 */
   list.addEventListener('click',e=>{
     const item=e.target.closest('.mp-item');
     if(!item) return;
@@ -5991,28 +6044,58 @@ window.CsGuide=(function(){
   function escapeHtml(s){
     return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+  /* 이름을 넣으면 그 회원의 마이홈이 새로 생긴다 · 넣었으면 true를 돌려준다 */
   function addMember(name){
     const trimmed=name.trim();
-    if(!trimmed) return;
+    if(!trimmed) return false;
     const members=load();
-    members.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),name:trimmed,color:COLORS[members.length%COLORS.length]});
+    /* 이름이 겹치면 막는다 · 프로젝트 담당자를 이름으로 판정하기 때문에
+       동명이인이 생기면 두 사람 마이홈에 같은 프로젝트가 잡힌다 */
+    if(members.some(m=>String(m.name).trim()===trimmed)){
+      alert("'"+trimmed+"' 회원이 이미 있어요. 다른 이름으로 넣어 주세요.");
+      return false;
+    }
+    /* created가 붙은 회원은 새로 만든 마이홈이라, 쪼개기 전 공용 퀵링크를 물려받지 않는다 */
+    members.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),name:trimmed,color:COLORS[members.length%COLORS.length],created:Date.now()});
     save(members);
     render();
     announce();
+    return true;
   }
+  /* 회원설정의 이름이 곧 마이홈이라, 이름을 지우면 그 마이홈도 사라진다 ·
+     퀵링크·간편 기록노트·프로필 사진을 이 브라우저와 시트에서 같이 지운다 ·
+     담당이던 프로젝트는 팀 자산이라 그대로 남긴다 */
   function removeMember(id){
-    save(load().filter(m=>m.id!==id));
+    const m=MEM.byId(id), label=m?m.name:'이 회원';
+    if(!confirm("'"+label+"' 회원을 지울까요?\n\n이 회원의 퀵링크·간편 기록노트·프로필 사진도 함께 지워지고 되돌릴 수 없어요.\n담당이던 프로젝트는 그대로 남습니다.")) return;
+    save(load().filter(x=>x.id!==id));
+    purgeMyHome(id);
+    /* 지운 회원이 이 브라우저의 "나"였으면 비워서 다음 새로고침에 선택 화면이 뜨게 한다 */
+    if(P.meId()===id) P.setMe('');
     render();
     announce();
+  }
+  /* 시트에는 행 삭제가 없어서 빈 값으로 덮어쓴다 · 읽는 쪽이 빈 값을 건너뛴다 */
+  function purgeMyHome(id){
+    try{
+      localStorage.removeItem('baroyam_myhome_me_v1:'+id);
+      localStorage.removeItem('baroyam_myhome_avatar_v1:'+id);
+    }catch(e){}
+    P.set(id,{avatar:'',role:''});   /* 시트의 프로필 사진·역할도 비운다 */
+    let url='';
+    try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
+    if(!/^https:/.test(url)) return;
+    fetch(url,{method:'POST',body:JSON.stringify({action:'settingsSave',key:'myhome:'+id,value:''})})
+      .catch(err=>console.error(err));
   }
   /* 회원이 늘거나 줄면 프로젝트 화면의 회원 필터도 같이 다시 그리게 알린다 */
   function announce(){ document.dispatchEvent(new CustomEvent('baroyam:members')); }
   document.addEventListener('baroyam:profiles',render);
+  document.addEventListener('baroyam:members',render);
 
   form.addEventListener('submit',(e)=>{
     e.preventDefault();
-    addMember(input.value);
-    input.value='';
+    if(addMember(input.value)) input.value='';   /* 막혔을 때는 적은 이름을 남겨 둔다 */
     input.focus();
   });
   list.addEventListener('click',(e)=>{
@@ -8557,6 +8640,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       renderSection01();
       if(window.__weekplanSync) window.__weekplanSync.apply(settings.weekplan);
       if(window.__manualSync) window.__manualSync.apply(settings);
+      /* 회원 목록을 먼저 맞춘다 · 마이홈이 "내 담당" 판정에 이 목록을 쓴다 */
+      if(window.BAROYAM_MEMBERS) window.BAROYAM_MEMBERS.applyRemote(settings);
       if(window.__myhomeSync) window.__myhomeSync.apply(settings);
       if(window.BAROYAM_PROFILES) window.BAROYAM_PROFILES.applyRemote(settings);
     }catch(err){ console.error(err); }
@@ -8625,10 +8710,19 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     s=s||{};
     return {links:Array.isArray(s.links)?s.links:[],notes:Array.isArray(s.notes)?s.notes:[],updatedAt:s.updatedAt||0};
   }
+  /* 회원설정에서 새로 추가한 회원(created가 붙은 회원)은 새 마이홈이라,
+     쪼개기 전 공용 뭉치를 물려받지 않고 빈 상태로 시작한다 */
+  function isNewMember(){
+    try{ const P=window.BAROYAM_PROFILES, m=P&&P.meMember(); return !!(m&&m.created); }catch(e){ return false; }
+  }
   /* 쪼개기 전 뭉치는 새 칸이 아직 없을 때만 씨앗으로 쓴다 ·
-     그래서 퀵링크·노트는 회원마다 처음 열 때 예전 내용을 그대로 물려받는다 */
+     그래서 예전부터 있던 회원은 처음 열 때 예전 퀵링크·노트를 그대로 물려받는다 */
   function loadShared(){ return normShared(readJson(LS_SHARED)||readJson(LS_LEGACY)); }
-  function loadMine(){ return normMine(readJson(LS_MINE+slot())||readJson(LS_LEGACY)); }
+  function loadMine(){
+    const own=readJson(LS_MINE+slot());
+    if(own) return normMine(own);
+    return normMine(isNewMember()?null:readJson(LS_LEGACY));
+  }
 
   let sharedPart=loadShared(), myPart=loadMine();
   /* 화면 코드는 그대로 state.links / state.projects를 고친다 · 저장할 때 두 몫으로 갈라 담는다 */
@@ -8680,7 +8774,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       }
     }catch(err){ console.error(err); }
     try{
-      const raw=settings[SHEET_MINE+slot()]||settings[SHEET_LEGACY];
+      const raw=settings[SHEET_MINE+slot()]||(isNewMember()?'':settings[SHEET_LEGACY]);
       if(raw){
         const r=normMine(JSON.parse(raw));
         if(r.updatedAt>myPart.updatedAt){ myPart=r; writeJson(LS_MINE+slot(),myPart); hit=true; }
@@ -9085,7 +9179,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   window.addEventListener('resize',syncBoardHeight);
   window.pjSyncBoardHeight=syncBoardHeight;
   /* 관리자 설정에서 회원을 더하거나 지우면 회원 칩 줄을 바로 맞춰 준다 */
-  document.addEventListener('baroyam:members',()=>renderBoard());
+  /* 회원 목록이 바뀌면 "내 담당" 판정과 담당자 칩이 같이 바뀌므로 전체를 다시 그린다 */
+  document.addEventListener('baroyam:members',()=>render());
   function cardHtml(p){
     const today=kstToday();
     const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
