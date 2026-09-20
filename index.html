@@ -40,14 +40,14 @@ window.BAROYAM_MEMBERS=(function(){
     {id:'default-6',name:'이미리내',color:COLORS[5]},
   ];
   function save(list){ try{ localStorage.setItem(LS_KEY,JSON.stringify(list)); }catch(e){} }
-  /* 기본 회원은 이 브라우저에 목록이 이미 있어도 빠져있으면 자동으로 다시 채워 넣는다 */
+  /* 기본 회원은 이 브라우저에 목록이 "아직 없을 때" 한 번만 넣는다 ·
+     부를 때마다 빠진 기본 회원을 채워 넣으면, 회원설정에서 ✕로 지운 사람이
+     바로 뒤따르는 render()의 load()에서 되살아난다 ·
+     목록이 빈 배열([])인 것은 "전원 지웠다"는 뜻이라 그대로 둔다 */
   function load(){
     let list=null;
     try{ const raw=localStorage.getItem(LS_KEY); if(raw) list=JSON.parse(raw); }catch(e){}
     if(!Array.isArray(list)){ save(DEFAULTS); return DEFAULTS.slice(); }
-    let changed=false;
-    DEFAULTS.forEach(d=>{ if(!list.some(m=>m.id===d.id||m.name===d.name)){ list.push(d); changed=true; } });
-    if(changed) save(list);
     return list;
   }
   function byId(id){ return id?(load().find(m=>m.id===id)||null):null; }
