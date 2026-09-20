@@ -853,6 +853,63 @@ window.BAROYAM_PROFILES=(function(){
   .ch-view{padding:8px 4px}
   .ch-view-cap{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--mute)}
   .ch-view-title{margin:6px 0 0;font-size:26px;font-weight:800;letter-spacing:-.6px;color:var(--ink)}
+  /* 판매채널 화면 · 위에 KPI 네 칸, 아래에 퀵링크 / 판매처 기록노트 / 프로젝트 달성률 / 마감 알림 ·
+     카드 생김새는 마이홈(.mh-card·.mh-link·.mh-note·.mh-proj)을 그대로 빌려 쓰고,
+     여기서는 배치와 KPI 칸, 페이지 넘김, 알림 줄만 더한다 */
+  :root{--ch-violet:#6d4ae0;--ch-violet-soft:rgba(109,74,224,.12);
+    --ch-blue:#2f77cc;--ch-blue-soft:rgba(47,119,204,.12)}
+  html[data-theme="dark"]{--ch-violet:#9d86f0;--ch-violet-soft:rgba(157,134,240,.16);
+    --ch-blue:#58a6ff;--ch-blue-soft:rgba(88,166,255,.16)}
+  .ch-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+  .ch-head-sub{margin:7px 0 0;font-size:13px;color:var(--mute)}
+  /* 기간 단추 · 당일과 이번달 누적을 번갈아 본다 */
+  .ch-period{all:unset;box-sizing:border-box;cursor:pointer;flex:none;display:inline-flex;align-items:center;gap:7px;
+    padding:9px 15px;border-radius:11px;background:var(--paper);box-shadow:var(--mh-card-shadow);
+    font-size:13px;font-weight:700;color:var(--body)}
+  .ch-period svg{width:15px;height:15px;color:var(--mute)}
+  .ch-period:hover,.ch-period:hover svg{color:var(--mh-accent)}
+  .ch-period:focus-visible{outline:2px solid var(--mh-accent);outline-offset:2px}
+  .ch-kpis{margin-top:20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+  .ch-kpi{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:18px;
+    background:var(--paper);box-shadow:var(--mh-card-shadow);min-width:0}
+  .ch-kpi-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none}
+  .ch-kpi-ic svg{width:21px;height:21px}
+  .ch-kpi-label{font-size:13px;font-weight:600;color:var(--mute)}
+  /* 0에서 올라가는 동안 자릿수가 바뀌어도 글자가 덜 흔들리게 고정폭 숫자를 쓴다 */
+  .ch-kpi-num{margin-top:5px;font-size:23px;font-weight:800;color:var(--ink);line-height:1.15;
+    letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .ch-kpi.is-cost .ch-kpi-ic{background:var(--neg-soft);color:var(--neg)}
+  .ch-kpi.is-rev .ch-kpi-ic{background:var(--pos-soft);color:var(--pos)}
+  .ch-kpi.is-roas .ch-kpi-ic{background:var(--ch-violet-soft);color:var(--ch-violet)}
+  .ch-kpi.is-sales .ch-kpi-ic{background:var(--ch-blue-soft);color:var(--ch-blue)}
+  .ch-grid{margin-top:18px;display:grid;align-items:stretch;gap:18px;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.9fr) minmax(0,1.6fr) minmax(0,1.05fr)}
+  /* 기록노트 · 페이지 넘김을 카드 맨 아래에 붙인다 */
+  .ch-notes{display:flex;flex-direction:column}
+  .ch-notes .mh-notes-list{flex:1}
+  .ch-pager{margin-top:14px;display:flex;align-items:center;justify-content:center;gap:4px}
+  .ch-page{all:unset;box-sizing:border-box;cursor:pointer;min-width:26px;height:26px;padding:0 7px;
+    display:grid;place-items:center;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--mute)}
+  .ch-page:hover{background:var(--bg);color:var(--ink)}
+  .ch-page.is-on{background:var(--mh-accent);color:#fff}
+  .ch-page[disabled]{opacity:.35;cursor:default}
+  .ch-page[disabled]:hover{background:none;color:var(--mute)}
+  /* 마감 임박 · 긴급 알림 */
+  .ch-badge{flex:none;padding:4px 10px;border-radius:99px;background:var(--bg);
+    font-size:11.5px;font-weight:800;color:var(--mute)}
+  .ch-badge.is-on{background:var(--neg-soft);color:var(--neg)}
+  .ch-alerts{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .ch-alert{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:9px;
+    padding:11px 12px;border-radius:10px;background:var(--bg)}
+  .ch-alert:hover .ch-alert-name{color:var(--mh-accent)}
+  .ch-alert-name{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ch-alert-tag{flex:none;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:800}
+  .ch-alert-tag.is-late{background:var(--neg-soft);color:var(--neg)}
+  .ch-alert-tag.is-soon{background:var(--warn-soft);color:var(--warn)}
+  .ch-alert-tag.is-urgent{background:var(--ch-violet-soft);color:var(--ch-violet)}
+  @media(max-width:1180px){ .ch-kpis{grid-template-columns:1fr 1fr} .ch-grid{grid-template-columns:1fr 1fr} }
+  @media(max-width:760px){ .ch-kpis{grid-template-columns:1fr} .ch-grid{grid-template-columns:1fr} }
   /* 프로젝트 보드는 화면을 꽉 채우지 않도록 폭을 좁히고 위아래 여백을 둔다 */
   /* 프로젝트 화면은 가운데로 모으지 않고 화면 왼쪽부터 넓게 쓴다 */
   body.view-is-project .wrap{max-width:none;margin:0;padding:20px 24px 16px}
@@ -2914,9 +2971,76 @@ window.BAROYAM_PROFILES=(function(){
       <!-- 판매채널 · 사이드바에서 고른 채널 이름을 제목으로 쓰는 화면 (채널별 내용은 아직 준비 중) -->
       <div id="view-channel" style="display:none">
         <section class="ch-view">
-          <div class="ch-view-cap">판매채널</div>
-          <h2 class="ch-view-title" id="channelViewTitle">쿠팡</h2>
-          <div class="mh-empty">이 채널 화면은 준비 중이에요.</div>
+          <div class="ch-head">
+            <div>
+              <h2 class="ch-view-title" id="channelViewTitle">쿠팡</h2>
+              <p class="ch-head-sub" id="channelViewSub"></p>
+            </div>
+            <!-- 당일 ↔ 이번달 누적 · 누를 때마다 위 숫자가 0에서 다시 올라간다 -->
+            <button type="button" class="ch-period" id="chPeriodBtn" title="당일과 이번달 누적을 번갈아 봅니다">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3.5V6M15 3.5V6"/></svg>
+              <span id="chPeriodLabel">당일</span>
+            </button>
+          </div>
+
+          <!-- 상단 숫자 네 칸 · 화면에 들어오거나 채널·기간을 바꾸면 0에서부터 올라간다 -->
+          <div class="ch-kpis">
+            <div class="ch-kpi is-cost">
+              <span class="ch-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6"/><path d="M18.3 6.4a8 8 0 0 1 0 11.2"/></svg></span>
+              <div><div class="ch-kpi-label">광고비</div><div class="ch-kpi-num num" id="chKpiCost">0원</div></div>
+            </div>
+            <div class="ch-kpi is-rev">
+              <span class="ch-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19v-6M12 19V5M19 19v-9"/></svg></span>
+              <div><div class="ch-kpi-label">광고매출</div><div class="ch-kpi-num num" id="chKpiRev">0원</div></div>
+            </div>
+            <div class="ch-kpi is-roas">
+              <span class="ch-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg></span>
+              <div><div class="ch-kpi-label">ROAS</div><div class="ch-kpi-num num" id="chKpiRoas">0%</div></div>
+            </div>
+            <div class="ch-kpi is-sales">
+              <span class="ch-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M3.5 10.2h17M7 14.5h3"/></svg></span>
+              <div><div class="ch-kpi-label">전체매출</div><div class="ch-kpi-num num" id="chKpiSales">0원</div></div>
+            </div>
+          </div>
+
+          <div class="ch-grid">
+            <section class="mh-card">
+              <div class="mh-card-head">
+                <div class="mh-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3.1-3.1a4 4 0 0 0-5.7-5.7L11.6 6.7"/><path d="M14 10a4 4 0 0 0-5.7 0l-3.1 3.1a4 4 0 0 0 5.7 5.7l1.5-1.5"/></svg>퀵링크</div>
+                <button type="button" class="mh-text-btn" id="chLinkAddBtn">+ 링크 추가</button>
+              </div>
+              <div class="mh-links-list" id="chLinks"></div>
+            </section>
+
+            <section class="mh-card ch-notes">
+              <div class="mh-card-head">
+                <div class="mh-card-title" id="chNoteTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8L14 3.5z"/><path d="M14 3.5V8h4.5M9 13h6M9 16.5h4"/></svg><span id="chNoteTitleText"></span></div>
+              </div>
+              <div class="mh-card-sub" id="chNoteSub"></div>
+              <form class="mh-note-form" id="chNoteForm">
+                <textarea class="mh-note-input" id="chNoteInput" rows="2" placeholder="(Ctrl+Enter로 빠르게 추가)"></textarea>
+                <button type="submit" class="mh-note-add">기록 추가</button>
+              </form>
+              <div class="mh-notes-list" id="chNotes"></div>
+              <div class="ch-pager" id="chNotePager"></div>
+            </section>
+
+            <section class="mh-card">
+              <div class="mh-card-head">
+                <div class="mh-card-title" id="chProjTitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19v-6M12 19V6M19 19v-9"/></svg><span id="chProjTitleText"></span></div>
+                <button type="button" class="mh-text-btn" id="chProjAddBtn">+ 프로젝트 추가</button>
+              </div>
+              <div class="mh-proj-list" id="chProjects"></div>
+            </section>
+
+            <section class="mh-card">
+              <div class="mh-card-head">
+                <div class="mh-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.6V12l2.9 1.9"/></svg>마감 임박 · 긴급 알림</div>
+                <span class="ch-badge" id="chAlertCount">0건</span>
+              </div>
+              <div class="ch-alerts" id="chAlerts"></div>
+            </section>
+          </div>
         </section>
       </div>
 
@@ -4822,6 +4946,64 @@ const DEFAULT_DATA={
   members:[3331,4014,5821,9592,10490,11766,13075,15026],
 };
 
+/* ===== 숫자 카운트업 =====
+   보고서의 값(.num이 붙은 달성률·광고비·광고매출·ROAS 등)을 0에서 올린다 ·
+   글자 구조는 건드리지 않고 숫자가 든 텍스트 조각만 바꿔서, <small>원</small> 같은
+   꼬리표와 색·굵기가 그대로 남는다 · 천단위 쉼표와 소수 자릿수도 원래 모양을 따라간다 */
+const COUNTUP_MS=900;
+const countUpOff=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const COUNTUP_RE=/^([^0-9-]*)(-?[0-9][0-9,]*(?:\.[0-9]+)?)([\s\S]*)$/;
+/* 한 값 안에 든 숫자 조각 · 하나도 없으면 그 값은 건너뛴다 */
+function countUpParts(el){
+  const out=[];
+  const walk=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null);
+  let node;
+  while((node=walk.nextNode())){
+    const m=COUNTUP_RE.exec(node.nodeValue||'');
+    if(!m) continue;
+    const raw=m[2], dot=raw.indexOf('.');
+    out.push({node:node,head:m[1],tail:m[3],to:parseFloat(raw.replace(/,/g,'')),
+      grouped:raw.indexOf(',')>=0, decimals:dot<0?0:raw.length-dot-1});
+  }
+  return out;
+}
+function countUpText(part,v){
+  const fixed=v.toFixed(part.decimals);
+  return part.head+(part.grouped?Number(fixed).toLocaleString('ko-KR',
+    {minimumFractionDigits:part.decimals,maximumFractionDigits:part.decimals}):fixed)+part.tail;
+}
+/* root 안의 .num을 한꺼번에 올린다 · .num 안에 또 .num이 있으면 바깥 것만 맡는다 */
+function countUpIn(root){
+  if(!root) return;
+  const els=[...root.querySelectorAll('.num:not([data-nocount])')]
+    .filter(el=>!(el.parentElement&&el.parentElement.closest('.num')));
+  els.forEach(el=>{
+    if(el.__countRaf){ cancelAnimationFrame(el.__countRaf); el.__countRaf=0; }
+    const parts=countUpParts(el);
+    if(!parts.length) return;
+    if(countUpOff||!window.requestAnimationFrame){
+      parts.forEach(pt=>{ pt.node.nodeValue=countUpText(pt,pt.to); });
+      return;
+    }
+    const t0=performance.now();
+    const step=now=>{
+      const q=Math.min(1,(now-t0)/COUNTUP_MS);
+      const e=1-Math.pow(1-q,3);   /* 끝에서 부드럽게 멈춘다 */
+      parts.forEach(pt=>{ pt.node.nodeValue=countUpText(pt,pt.to*e); });
+      if(q<1) el.__countRaf=requestAnimationFrame(step); else el.__countRaf=0;
+    };
+    parts.forEach(pt=>{ pt.node.nodeValue=countUpText(pt,0); });
+    el.__countRaf=requestAnimationFrame(step);
+  });
+}
+/* 지금 열려 있는 보고서만 다시 센다 · 숨어 있는 화면은 열 때 activateView가 부른다 */
+function countUpVisibleReport(){
+  ['view-week','view-month'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&el.style.display!=='none') countUpIn(el);
+  });
+}
+
 /* ===== 전체 리포트 렌더링 (기본 데이터 / 구글시트 데이터 공용) ===== */
 let lastReportData=null;
 function renderReport(data){
@@ -4965,7 +5147,7 @@ function renderReport(data){
   const best=monthTotal.indexOf(Math.max(...monthTotal));
   document.getElementById('mTrendKpis').innerHTML=
     `<div class="kpi"><div class="k-label">월평균 매출</div><div class="k-val num">${wonRaw(Math.round(grand/MONTHS.length))}<small>원</small></div><div class="k-sub">${MONTHS.length}개월 평균</div></div>`+
-    `<div class="kpi"><div class="k-label">최고 매출 월</div><div class="k-val num">${MONTHS[best]} · ${eok(monthTotal[best])}<small>원</small></div><div class="k-sub">${wonRaw(monthTotal[best])}원</div></div>`+
+    `<div class="kpi"><div class="k-label">최고 매출 월</div><div class="k-val num" data-nocount>${MONTHS[best]} · ${eok(monthTotal[best])}<small>원</small></div><div class="k-sub">${wonRaw(monthTotal[best])}원</div></div>`+
     `<div class="kpi"><div class="k-label">${MONTHS[CURR]} 매출</div><div class="k-val num">${wonRaw(totMCurr)}<small>원</small></div><div class="k-sub">전월 대비 ${pct(totMCurr,totMPrev)>0?'+':''}${pct(totMCurr,totMPrev)}%</div></div>`;
 
   /* M01 trend stacked bars */
@@ -5002,9 +5184,9 @@ function renderReport(data){
     let h=`<thead><tr><th>매체(플랫폼)</th><th>광고비</th><th>광고매출</th><th>ROAS</th></tr></thead><tbody>`;
     CH.forEach(c=>{const a=AD[c][key];
       h+=`<tr><td><span class="ch-dot" style="background:${CH_COLOR[c]}"></span>${c}</td>
-        <td>${wonRaw(a.cost)}</td><td>${wonRaw(a.rev)}</td><td class="colhi">${roasPct(a.rev,a.cost)}%</td></tr>`;});
+        <td class="num">${wonRaw(a.cost)}</td><td class="num">${wonRaw(a.rev)}</td><td class="colhi num">${roasPct(a.rev,a.cost)}%</td></tr>`;});
     const tc=CH.reduce((s,c)=>s+AD[c][key].cost,0), tr=CH.reduce((s,c)=>s+AD[c][key].rev,0);
-    h+=`<tr class="sum"><td>합계</td><td>${wonRaw(tc)}</td><td>${wonRaw(tr)}</td><td>${roasPct(tr,tc)}%</td></tr></tbody>`;
+    h+=`<tr class="sum"><td>합계</td><td class="num">${wonRaw(tc)}</td><td class="num">${wonRaw(tr)}</td><td class="num">${roasPct(tr,tc)}%</td></tr></tbody>`;
     return h;
   }
   document.getElementById('mAdTablePrev').innerHTML=adTable('prev');
@@ -5053,6 +5235,7 @@ function renderReport(data){
   document.getElementById('mFoot').innerHTML=
     `<b>산식</b> · ROAS = 광고매출 ÷ 광고비 × 100 (정수 %) · 전체매출 = 플랫폼(쿠팡·네이버·자사몰) 합산 · 증감률 = (${MONTHS[CURR]}−${MONTHS[PREV]}) ÷ ${MONTHS[PREV]} × 100<br>`+
     `<b>주석</b> · 금액 단위: 원. 억 표기는 소수 첫째 자리 반올림. ${data.currLabel}은 진행 중(1~${data.currDay}일 잠정치)으로 월간 추이·비교·누적에 반영했으며, 최신 ${data.currLabel} 스냅샷은 좌측 주간데이터 탭에서도 확인할 수 있습니다. 출처: 바로얌 매출 보고서 구글시트.`;
+  countUpVisibleReport();
 }
 
 /* 목표설정(월+채널별 금액)이 바뀔 때마다 계획표/달성률 대시보드/01 제목을 함께 갱신 ·
@@ -6281,7 +6464,7 @@ window.CsGuide=(function(){
     document.getElementById('view-channel').style.display=v==='channel'?'':'none';
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project');
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel');
     document.body.classList.toggle('view-is-project',v==='project');
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
@@ -6295,6 +6478,8 @@ window.CsGuide=(function(){
     document.getElementById('heroTag').textContent=v==='month'?'MONTHLY REPORT':'WEEKLY REPORT';
 
 
+    /* 매출데이터로 들어오면 그 보고서의 숫자를 0에서부터 올린다 */
+    if(v==='week'||v==='month') countUpIn(document.getElementById('view-'+v));
     const isSales=(v==='month'||v==='week');
     salesToggle.classList.toggle('active',isSales);
     if(isSales) lastSalesView=v;
@@ -6349,6 +6534,7 @@ window.CsGuide=(function(){
     subs.forEach(b=>b.classList.toggle('active',b===btn));
     head.classList.add('has-active');
     document.getElementById('channelViewTitle').textContent=btn.dataset.channel;
+    if(window.showChannelView) window.showChannelView(btn.dataset.channel);
   }));
 })();
 
@@ -8688,7 +8874,21 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     return normMine(isNewMember()?null:readJson(LS_LEGACY));
   }
 
-  let sharedPart=loadShared(), myPart=loadMine();
+  /* 판매채널 화면의 퀵링크·판매처 기록노트 · 채널마다 한 벌씩 두고 팀이 같이 본다 ·
+     프로젝트·개인 몫과 또 따로 담아서, 채널 링크를 고쳐도 남의 프로젝트나 내 마이홈을 건드리지 않는다 */
+  const LS_CH='baroyam_channels_v1';
+  const SHEET_CH='channels';
+  function normCh(s){
+    s=s||{};
+    const src=(s.data&&typeof s.data==='object')?s.data:{};
+    const data={};
+    Object.keys(src).forEach(k=>{
+      const v=src[k]||{};
+      data[k]={links:Array.isArray(v.links)?v.links:[],notes:Array.isArray(v.notes)?v.notes:[]};
+    });
+    return {data:data,updatedAt:s.updatedAt||0};
+  }
+  let sharedPart=loadShared(), myPart=loadMine(), chPart=normCh(readJson(LS_CH));
   /* 화면 코드는 그대로 state.links / state.projects를 고친다 · 저장할 때 두 몫으로 갈라 담는다 */
   function merge(){ return {company:sharedPart.company,links:myPart.links,notes:myPart.notes,projects:sharedPart.projects}; }
   let state=merge();
@@ -8696,7 +8896,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      그래서 무엇이 바뀌었는지는 마지막으로 저장한 내용을 문자열로 따로 떠 두고 비교한다 */
   function stampShared(){ return JSON.stringify([state.company,state.projects]); }
   function stampMine(){ return JSON.stringify([state.links,state.notes]); }
-  let lastShared=stampShared(), lastMine=stampMine();
+  function stampCh(){ return JSON.stringify(chPart.data); }
+  let lastShared=stampShared(), lastMine=stampMine(), lastCh=stampCh();
 
   const pushTimers={};
   function queuePush(key,value){
@@ -8723,6 +8924,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       lastMine=nowMine;
       writeJson(LS_MINE+slot(),myPart); queuePush(SHEET_MINE+slot(),myPart);
     }
+    const nowCh=stampCh();
+    if(nowCh!==lastCh){
+      chPart.updatedAt=now;
+      lastCh=nowCh;
+      writeJson(LS_CH,chPart); queuePush(SHEET_CH,chPart);
+    }
     render();
   }
   /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 · 두 몫을 따로 본다.
@@ -8744,7 +8951,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         if(r.updatedAt>myPart.updatedAt){ myPart=r; writeJson(LS_MINE+slot(),myPart); hit=true; }
       }
     }catch(err){ console.error(err); }
-    if(hit){ state=merge(); lastShared=stampShared(); lastMine=stampMine(); render(); }
+    try{
+      const raw=settings[SHEET_CH];
+      if(raw){
+        const r=normCh(JSON.parse(raw));
+        if(r.updatedAt>chPart.updatedAt){ chPart=r; writeJson(LS_CH,chPart); hit=true; }
+      }
+    }catch(err){ console.error(err); }
+    if(hit){ state=merge(); lastShared=stampShared(); lastMine=stampMine(); lastCh=stampCh(); render(); }
   }};
 
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8801,60 +9015,74 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     return /^[a-z][a-z0-9+.-]*:/i.test(u)?u:'https://'+u;
   }
   function safeHref(u){ return /^(https?:|mailto:)/i.test(u)?u:'#'; }
-  function renderLinks(){
-    const el=$('mhLinks');
-    if(!state.links.length){
-      el.innerHTML='<div class="mh-empty">자주 여는 페이지를 등록해 두세요.<br>오른쪽 위 “+ 링크 추가”</div>';
-      return;
+  /* 퀵링크 한 벌 · 마이홈(회원 개인 목록)과 판매채널(채널 공용 목록)이 같은 코드를 쓴다 ·
+     scope.get()이 지금 고칠 목록을 돌려주고, scope.set()으로 바뀐 목록을 돌려준다 */
+  const LINKS_MINE={
+    host:'mhLinks', add:'mhLinkAddBtn',
+    get:()=>state.links, set:v=>{ state.links=v; },
+    empty:'자주 여는 페이지를 등록해 두세요.<br>오른쪽 위 “+ 링크 추가”'};
+  const LINKS_CH={
+    host:'chLinks', add:'chLinkAddBtn',
+    get:()=>chBucket().links, set:v=>{ chBucket().links=v; },
+    empty:'이 채널에서 자주 여는 페이지를 등록해 두세요.<br>오른쪽 위 “+ 링크 추가”'};
+  function bindLinks(scope){
+    const host=$(scope.host);
+    function render(){
+      const list=scope.get();
+      if(!list.length){ host.innerHTML=`<div class="mh-empty">${scope.empty}</div>`; return; }
+      host.innerHTML=list.map(l=>
+        `<div class="mh-link" draggable="true" data-id="${esc(l.id)}">
+          <span class="mh-link-grip" aria-hidden="true">${ICON_GRIP}</span>
+          <span class="mh-link-dot"></span>
+          <a class="mh-link-name" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.name)}</a>
+          <button type="button" class="mh-icon-btn" data-act="edit" aria-label="${esc(l.name)} 수정">${ICON_EDIT}</button>
+          <button type="button" class="mh-icon-btn" data-act="del" aria-label="${esc(l.name)} 삭제">${ICON_DEL}</button>
+        </div>`).join('');
     }
-    el.innerHTML=state.links.map(l=>
-      `<div class="mh-link" draggable="true" data-id="${esc(l.id)}">
-        <span class="mh-link-grip" aria-hidden="true">${ICON_GRIP}</span>
-        <span class="mh-link-dot"></span>
-        <a class="mh-link-name" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.name)}</a>
-        <button type="button" class="mh-icon-btn" data-act="edit" aria-label="${esc(l.name)} 수정">${ICON_EDIT}</button>
-        <button type="button" class="mh-icon-btn" data-act="del" aria-label="${esc(l.name)} 삭제">${ICON_DEL}</button>
-      </div>`).join('');
+    $(scope.add).addEventListener('click',()=>openLinkDialog(null,scope));
+    host.addEventListener('click',e=>{
+      const btn=e.target.closest('[data-act]');
+      if(!btn) return;
+      const id=btn.closest('.mh-link').dataset.id;
+      const link=scope.get().find(l=>l.id===id);
+      if(!link) return;
+      if(btn.dataset.act==='edit') openLinkDialog(link,scope);
+      else if(confirm(`'${link.name}' 링크를 삭제할까요?`)){ scope.set(scope.get().filter(l=>l.id!==id)); save(); }
+    });
+    /* 끌어서 순서 바꾸기 */
+    let dragId=null;
+    host.addEventListener('dragstart',e=>{
+      const row=e.target.closest('.mh-link'); if(!row) return;
+      dragId=row.dataset.id; row.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed='move';
+      try{ e.dataTransfer.setData('text/plain',dragId); }catch(err){}
+    });
+    host.addEventListener('dragover',e=>{
+      const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
+      e.preventDefault();
+      host.querySelectorAll('.mh-link.is-over').forEach(r=>r.classList.remove('is-over'));
+      if(row.dataset.id!==dragId) row.classList.add('is-over');
+    });
+    host.addEventListener('drop',e=>{
+      const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
+      e.preventDefault();
+      const list=scope.get();
+      const from=list.findIndex(l=>l.id===dragId);
+      const to=list.findIndex(l=>l.id===row.dataset.id);
+      if(from>-1&&to>-1&&from!==to){
+        const [m]=list.splice(from,1);
+        list.splice(to,0,m);
+        save();
+      }
+    });
+    host.addEventListener('dragend',()=>{
+      dragId=null;
+      host.querySelectorAll('.mh-link.is-dragging,.mh-link.is-over').forEach(r=>r.classList.remove('is-dragging','is-over'));
+    });
+    return render;
   }
-  $('mhLinkAddBtn').addEventListener('click',()=>openLinkDialog(null));
-  $('mhLinks').addEventListener('click',e=>{
-    const btn=e.target.closest('[data-act]');
-    if(!btn) return;
-    const id=btn.closest('.mh-link').dataset.id;
-    const link=state.links.find(l=>l.id===id);
-    if(!link) return;
-    if(btn.dataset.act==='edit') openLinkDialog(link);
-    else if(confirm(`'${link.name}' 링크를 삭제할까요?`)){ state.links=state.links.filter(l=>l.id!==id); save(); }
-  });
-  /* 끌어서 순서 바꾸기 */
-  let dragId=null;
-  $('mhLinks').addEventListener('dragstart',e=>{
-    const row=e.target.closest('.mh-link'); if(!row) return;
-    dragId=row.dataset.id; row.classList.add('is-dragging');
-    e.dataTransfer.effectAllowed='move';
-    try{ e.dataTransfer.setData('text/plain',dragId); }catch(err){}
-  });
-  $('mhLinks').addEventListener('dragover',e=>{
-    const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
-    e.preventDefault();
-    document.querySelectorAll('.mh-link.is-over').forEach(r=>r.classList.remove('is-over'));
-    if(row.dataset.id!==dragId) row.classList.add('is-over');
-  });
-  $('mhLinks').addEventListener('drop',e=>{
-    const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
-    e.preventDefault();
-    const from=state.links.findIndex(l=>l.id===dragId);
-    const to=state.links.findIndex(l=>l.id===row.dataset.id);
-    if(from>-1&&to>-1&&from!==to){
-      const [m]=state.links.splice(from,1);
-      state.links.splice(to,0,m);
-      save();
-    }
-  });
-  $('mhLinks').addEventListener('dragend',()=>{
-    dragId=null;
-    document.querySelectorAll('.mh-link.is-dragging,.mh-link.is-over').forEach(r=>r.classList.remove('is-dragging','is-over'));
-  });
+  const renderLinks=bindLinks(LINKS_MINE);
+  const renderChLinks=bindLinks(LINKS_CH);
 
   /* ---------- 간편 기록노트 ---------- */
   function fmtStamp(ts){
@@ -8991,10 +9219,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       <button type="submit" class="mh-btn primary">저장</button>
     </div>`;
   }
-  function openLinkDialog(link){
+  function openLinkDialog(link,scope){
+    scope=scope||LINKS_MINE;
     form.__onDelete=link?()=>{
       if(!confirm(`'${link.name}' 링크를 삭제할까요?`)) return false;
-      state.links=state.links.filter(l=>l.id!==link.id); save();
+      scope.set(scope.get().filter(l=>l.id!==link.id)); save();
     }:null;
     openDialog(link?'링크 수정':'링크 추가',
       `<label class="mh-field">이름<input type="text" name="name" required maxlength="60" value="${esc(link?link.name:'')}" placeholder="예) 자사몰 기획전"></label>
@@ -9004,7 +9233,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         const name=String(fd.get('name')).trim(), url=normUrl(fd.get('url'));
         if(!name||!url) return false;
         if(link){ link.name=name; link.url=url; }
-        else state.links.push({id:uid(),name,url});
+        else scope.get().push({id:uid(),name,url});
         save();
       });
   }
@@ -9602,7 +9831,217 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     closeAvatarDialog();
   });
 
-  function render(){ renderAvatar(); renderStats(); renderLinks(); renderNotes(); renderProjects(); renderBoard(); }
+  /* ---------- 판매채널 화면 ----------
+     사이드바 판매채널에서 고른 채널의 대시보드 ·
+     퀵링크와 판매처 기록노트는 채널마다 한 벌(chPart)이라 팀이 같이 보고,
+     프로젝트 달성률·마감 알림은 프로젝트 보드와 같은 목록(state.projects)에서 그 채널 것만 뽑는다 */
+  const CH_VIEWS=['쿠팡','자사몰','스마트스토어','톡딜'];
+  const CH_OPEN=['예정','진행중','보류'];
+  const CH_NOTES_PER_PAGE=5;
+  let chActive=CH_VIEWS[0], chPeriod='day', chNotePage=1, chEditingNote=null;
+  function chBucket(){
+    if(!chPart.data[chActive]) chPart.data[chActive]={links:[],notes:[]};
+    return chPart.data[chActive];
+  }
+
+  /* 상단 네 칸은 아직 가상 숫자다 · 한 달치로 적어 두고 '당일'은 30으로 나눠 보여 준다 ·
+     나중에 매출데이터(lastReportData)를 붙일 때 이 표와 chKpi()만 갈아 끼우면 된다 */
+  const CH_KPI_DEMO={
+    '쿠팡':{cost:1240000,rev:5860000,sales:18320000},
+    '자사몰':{cost:3880000,rev:15510000,sales:62800000},
+    '스마트스토어':{cost:415000,rev:1196000,sales:44100000},
+    '톡딜':{cost:180000,rev:620000,sales:3450000}};
+  function chKpi(){
+    const m=CH_KPI_DEMO[chActive]||{cost:0,rev:0,sales:0};
+    const div=chPeriod==='day'?30:1;
+    const cost=Math.round(m.cost/div), rev=Math.round(m.rev/div);
+    return {cost:cost,rev:rev,sales:Math.round(m.sales/div),roas:cost?Math.round(rev/cost*100):0};
+  }
+  /* 0에서 올라가는 숫자 · 화면에 들어올 때와 채널·기간을 바꿀 때만 다시 센다 ·
+     동작 줄이기를 켠 사람에게는 애니메이션 없이 최종값을 바로 보여 준다 */
+  const chLessMotion=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function chCountUp(el,to,suffix,animate){
+    if(!el) return;
+    const put=v=>{ el.textContent=v.toLocaleString()+suffix; };
+    if(el.__raf){ cancelAnimationFrame(el.__raf); el.__raf=0; }
+    if(!animate||chLessMotion||!window.requestAnimationFrame){ put(to); return; }
+    const dur=900, t0=performance.now();
+    const step=now=>{
+      const q=Math.min(1,(now-t0)/dur);
+      put(Math.round(to*(1-Math.pow(1-q,3))));   /* 끝에서 부드럽게 멈춘다 */
+      if(q<1) el.__raf=requestAnimationFrame(step); else el.__raf=0;
+    };
+    put(0);
+    el.__raf=requestAnimationFrame(step);
+  }
+
+  /* 이 채널의 열린 프로젝트(예정·진행중·보류) · 달성률과 마감 알림이 같은 목록을 본다 */
+  function chOpenProjects(){
+    return state.projects.filter(p=>(p.channel||'')===chActive&&CH_OPEN.includes(p.status));
+  }
+  function renderChProjects(){
+    const el=$('chProjects');
+    const list=chOpenProjects().sort((a,b)=>
+      (+b.progress||0)-(+a.progress||0)||String(a.due||'9').localeCompare(String(b.due||'9')));
+    if(!list.length){
+      el.innerHTML=`<div class="mh-empty">${esc(chActive)} 채널의 예정·진행중·보류 프로젝트가 없어요.<br>“+ 프로젝트 추가”로 등록하면 프로젝트 페이지에도 함께 올라와요.</div>`;
+      return;
+    }
+    const today=kstToday();
+    el.innerHTML=list.map((p,i)=>{
+      const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
+      let due='';
+      if(p.due){
+        const d=dayDiff(today,p.due);
+        due=`<span class="mh-proj-due${d<0?' is-late':''}">${d<0?`${-d}일 지연`:d===0?'오늘 마감':`D-${d}`}</span>`;
+      }
+      return `<button type="button" class="mh-proj" data-id="${esc(p.id)}">
+        <span class="mh-proj-rank${i<3?' r'+(i+1):''}">${i+1}</span>
+        <span class="mh-proj-main">
+          <span class="mh-proj-name">${esc(p.name)}${due}</span>
+          <span class="mh-proj-bar" style="display:block"><i style="width:${pct}%"></i></span>
+        </span>
+        <span class="mh-proj-pct num">${pct}%</span>
+      </button>`;
+    }).join('');
+  }
+  /* 마감 임박·긴급 · 지연 → 오늘 마감 → D-3 이내 → 긴급 순으로 줄 세운다 */
+  function renderChAlerts(){
+    const today=kstToday(), el=$('chAlerts'), badge=$('chAlertCount');
+    const list=chOpenProjects().map(p=>{
+      const d=p.due?dayDiff(today,p.due):null;
+      let tag=null;
+      if(d!=null&&d<0) tag={c:'is-late',t:`${-d}일 지연`};
+      else if(d===0) tag={c:'is-soon',t:'오늘 마감'};
+      else if(d!=null&&d<=3) tag={c:'is-soon',t:`D-${d}`};
+      else if(p.urgent) tag={c:'is-urgent',t:'긴급'};
+      return tag?{p:p,tag:tag,order:d==null?9999:d}:null;
+    }).filter(Boolean).sort((a,b)=>a.order-b.order);
+    badge.textContent=list.length+'건';
+    badge.classList.toggle('is-on',list.length>0);
+    if(!list.length){ el.innerHTML='<div class="mh-empty">마감 임박·긴급 프로젝트가 없습니다</div>'; return; }
+    el.innerHTML=list.map(x=>
+      `<button type="button" class="ch-alert" data-id="${esc(x.p.id)}">
+        <span class="ch-alert-name">${esc(x.p.name)}</span>
+        <span class="ch-alert-tag ${x.tag.c}">${esc(x.tag.t)}</span>
+      </button>`).join('');
+  }
+  /* 판매처 기록노트 · 기록이 쌓이면 다섯 개씩 끊어 쪽으로 넘긴다 */
+  function renderChNotes(){
+    const list=chBucket().notes, host=$('chNotes'), pager=$('chNotePager');
+    const pages=Math.max(1,Math.ceil(list.length/CH_NOTES_PER_PAGE));
+    if(chNotePage>pages) chNotePage=pages;
+    if(!list.length){
+      host.innerHTML=`<div class="mh-empty">아직 ${esc(chActive)} 기록이 없어요.<br>위 칸에 적고 “기록 추가”를 눌러보세요.</div>`;
+      pager.innerHTML='';
+      return;
+    }
+    const start=(chNotePage-1)*CH_NOTES_PER_PAGE;
+    host.innerHTML=list.slice(start,start+CH_NOTES_PER_PAGE).map(n=>{
+      const editing=n.id===chEditingNote;
+      return `<div class="mh-note" data-id="${esc(n.id)}">
+        <div class="mh-note-date">${fmtStamp(n.ts)}</div>
+        ${editing
+          ?`<textarea class="mh-note-edit" data-edit>${esc(n.text)}</textarea>`
+          :`<div class="mh-note-text">${esc(n.text)}</div>`}
+        <div class="mh-note-tools">
+          ${editing
+            ?`<button type="button" class="mh-text-btn" data-act="save">저장</button><button type="button" class="mh-text-btn" data-act="cancel">취소</button>`
+            :`<button type="button" class="mh-icon-btn" data-act="edit" aria-label="기록 수정">${ICON_EDIT}</button><button type="button" class="mh-icon-btn" data-act="del" aria-label="기록 삭제">${ICON_DEL}</button>`}
+        </div>
+      </div>`;
+    }).join('');
+    const ta=host.querySelector('[data-edit]');
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); }
+    let html=`<button type="button" class="ch-page" data-page="${chNotePage-1}"${chNotePage<=1?' disabled':''} aria-label="이전 쪽">&lsaquo;</button>`;
+    for(let i=1;i<=pages;i++) html+=`<button type="button" class="ch-page${i===chNotePage?' is-on':''}" data-page="${i}">${i}</button>`;
+    html+=`<button type="button" class="ch-page" data-page="${chNotePage+1}"${chNotePage>=pages?' disabled':''} aria-label="다음 쪽">&rsaquo;</button>`;
+    pager.innerHTML=html;
+  }
+  function addChNote(){
+    const input=$('chNoteInput');
+    const text=input.value.trim();
+    if(!text){ input.focus(); return; }
+    chBucket().notes.unshift({id:uid(),ts:Date.now(),text:text});
+    input.value='';
+    chNotePage=1;   /* 새 기록은 맨 앞이라 첫 쪽으로 돌아간다 */
+    save();
+  }
+  $('chNoteForm').addEventListener('submit',e=>{ e.preventDefault(); addChNote(); });
+  $('chNoteInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); addChNote(); }
+  });
+  function commitChNoteEdit(row){
+    const n=chBucket().notes.find(x=>x.id===row.dataset.id);
+    const text=row.querySelector('[data-edit]').value.trim();
+    chEditingNote=null;
+    if(n&&text){ n.text=text; save(); } else renderChNotes();
+  }
+  $('chNotes').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-act]'); if(!btn) return;
+    const row=btn.closest('.mh-note'), id=row.dataset.id, act=btn.dataset.act;
+    if(act==='edit'){ chEditingNote=id; renderChNotes(); }
+    else if(act==='cancel'){ chEditingNote=null; renderChNotes(); }
+    else if(act==='save') commitChNoteEdit(row);
+    else if(act==='del'&&confirm('이 기록을 삭제할까요?')){
+      chBucket().notes=chBucket().notes.filter(n=>n.id!==id); save();
+    }
+  });
+  $('chNotes').addEventListener('keydown',e=>{
+    if(!e.target.matches('[data-edit]')) return;
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); commitChNoteEdit(e.target.closest('.mh-note')); }
+    else if(e.key==='Escape'){ e.stopPropagation(); chEditingNote=null; renderChNotes(); }
+  });
+  $('chNotePager').addEventListener('click',e=>{
+    const btn=e.target.closest('.ch-page'); if(!btn||btn.disabled) return;
+    chNotePage=Math.max(1,+btn.dataset.page||1);
+    chEditingNote=null;
+    renderChNotes();
+  });
+
+  /* 이 채널에서 만드는 프로젝트는 경로를 이 채널로 미리 잡아 준다 */
+  $('chProjAddBtn').addEventListener('click',()=>openProjectDialog(null,{channel:chActive,owner:myName()}));
+  $('chProjects').addEventListener('click',e=>{
+    const row=e.target.closest('.mh-proj'); if(!row) return;
+    const p=state.projects.find(x=>x.id===row.dataset.id);
+    if(p) openProjectDialog(p);
+  });
+  $('chAlerts').addEventListener('click',e=>{
+    const row=e.target.closest('.ch-alert'); if(!row) return;
+    const p=state.projects.find(x=>x.id===row.dataset.id);
+    if(p) openProjectDialog(p);
+  });
+  $('chPeriodBtn').addEventListener('click',()=>{
+    chPeriod=chPeriod==='day'?'month':'day';
+    renderChannel(true);
+  });
+
+  function renderChannel(animate){
+    $('channelViewTitle').textContent=chActive;
+    $('channelViewSub').textContent=chActive+' 채널의 프로젝트 달성률(예정·진행중·보류)을 확인하세요 (프로젝트 페이지와 연동됩니다)';
+    $('chPeriodLabel').textContent=chPeriod==='day'?'당일':'이번달';
+    $('chNoteTitleText').textContent=chActive+' 판매처 기록노트';
+    $('chNoteSub').textContent=chActive+' 채널 관련 짧은 기록을 남기는 공간입니다';
+    $('chProjTitleText').textContent=chActive+' 프로젝트 달성률';
+    const k=chKpi();
+    chCountUp($('chKpiCost'),k.cost,'원',animate);
+    chCountUp($('chKpiRev'),k.rev,'원',animate);
+    chCountUp($('chKpiRoas'),k.roas,'%',animate);
+    chCountUp($('chKpiSales'),k.sales,'원',animate);
+    renderChLinks();
+    renderChNotes();
+    renderChProjects();
+    renderChAlerts();
+  }
+  /* 사이드바에서 채널을 고르면 그 채널로 갈아 끼우고 숫자를 처음부터 다시 센다 */
+  window.showChannelView=function(name){
+    if(CH_VIEWS.indexOf(name)>=0&&name!==chActive){
+      chActive=name; chNotePage=1; chEditingNote=null;
+    }
+    renderChannel(true);
+  };
+
+  function render(){ renderAvatar(); renderStats(); renderLinks(); renderNotes(); renderProjects(); renderBoard(); renderChannel(false); }
   render();
   tick();
   setInterval(tick,1000);
