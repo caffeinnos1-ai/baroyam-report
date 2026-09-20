@@ -3547,6 +3547,34 @@ window.BAROYAM_PROFILES=(function(){
           };
           var REV_CHANNEL_NAME={naver:'네이버', cafe24:'카페24', coupang:'쿠팡', toss:'토스', alwayz:'올웨이즈'};
 
+          /* 판매처 별칭 · 들어오는 이름이 곳마다 달라서(수집기 platform=caffeinnos,
+             CSV·엑셀의 쇼핑몰 칸='카페이노스 공식몰', 매출 화면='자사몰') 짧은 이름으로 맞춰준다 ·
+             네이버·쿠팡·토스·올웨이즈는 긴 이름 안에 짧은 이름이 들어 있어 그냥 걸렸지만
+             카페24만 '카페24'라는 글자가 어디에도 없어 혼자 빈 화면이 됐다 */
+          var REV_CHANNEL_ALIASES={
+            naver:['네이버','스마트스토어','naver','smartstore'],
+            cafe24:['카페24','cafe24','카페이노스','caffeinnos','자사몰','공식몰','알파리뷰'],
+            coupang:['쿠팡','coupang','wing'],
+            toss:['토스','toss'],
+            alwayz:['올웨이즈','alwayz']
+          };
+          /* 아무 이름이나 받아 판매처 키(naver/cafe24/...)를 찾아준다 · 못 찾으면 빈 값 */
+          function revChannelKeyOf(channel){
+            var text=String(channel||'').toLowerCase();
+            if(!text) return '';
+            var keys=Object.keys(REV_CHANNEL_ALIASES);
+            for(var i=0;i<keys.length;i++){
+              var words=REV_CHANNEL_ALIASES[keys[i]];
+              for(var j=0;j<words.length;j++) if(text.indexOf(words[j])>=0) return keys[i];
+            }
+            return '';
+          }
+          /* 목록·표에 찍을 짧은 판매처 이름 · 모르는 값은 원래 글자를 그대로 둔다 */
+          function revChannelName(channel){
+            var key=revChannelKeyOf(channel);
+            return key?REV_CHANNEL_NAME[key]:String(channel||'').trim();
+          }
+
           /* CSV를 올리기 전 보여주는 샘플 · 판매처마다 물량과 부정 비율 흐름이 다르다
              (네이버=물량 많고 부정 적음 / 카페24=CS 이슈로 중순 부정 증가 / 쿠팡=배송 이슈로 부정 비율 높음)
              전체리뷰통계 탭은 세 판매처를 합친 값이다 · [긍정·중립, 부정] */
@@ -3637,10 +3665,12 @@ window.BAROYAM_PROFILES=(function(){
           function revEscapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
           function revDayKey(d){return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()}
 
+          /* 글자 그대로 비교하지 않고 별칭으로 판매처를 알아낸 뒤 맞춘다 ·
+             그래야 '카페이노스 공식몰'·'자사몰'로 들어온 리뷰도 카페24 탭에 담긴다 */
           function revChannelMatches(channel){
             if(!revState.activePlatform) return true;
-            var name=REV_CHANNEL_NAME[revState.activePlatform];
-            return !name || (channel||'').indexOf(name)>=0;
+            if(!REV_CHANNEL_ALIASES[revState.activePlatform]) return true;
+            return revChannelKeyOf(channel)===revState.activePlatform;
           }
           function revChannelKey(){ return revState.activePlatform||''; }
           function revIsDemo(){ return !revState.rows; }
@@ -3694,7 +3724,7 @@ window.BAROYAM_PROFILES=(function(){
 
           /* ---- CSV 파싱 ---- */
           var REV_HEADER_MAP={
-            channel:['채널','플랫폼','channel','platform'],
+            channel:['채널','플랫폼','쇼핑몰','판매처','판매채널','마켓','channel','platform','mall'],
             brand:['브랜드','상품','상품명','제품','제품명','brand','product'],
             content:['내용','리뷰','리뷰내용','리뷰본문','content','review'],
             rating:['별점','평점','점수','rating','star'],
@@ -3764,7 +3794,7 @@ window.BAROYAM_PROFILES=(function(){
               if(isNaN(rating)) rating=3;
               rating=Math.min(5,Math.max(1,rating));
               var sentiment=rating>=4?'pos':(rating<=2?'neg':'neu');
-              rows.push({channel:channel||'기타',brand:brand,content:content,rating:rating,date:date,sentiment:sentiment});
+              rows.push({channel:revChannelName(channel)||'기타',brand:brand,content:content,rating:rating,date:date,sentiment:sentiment});
             });
             rows.sort(function(a,b){return a.date-b.date});
             return {rows:rows,skipped:skipped};
@@ -4221,8 +4251,12 @@ window.BAROYAM_PROFILES=(function(){
              수집기는 마지막 수집분만 들고 있으므로, 여기서 리뷰 id 기준으로 누적해 이 브라우저에 저장한다 ·
              그래서 네이버만 다시 수집해도 앞서 받은 쿠팡·토스 리뷰가 판매처별 리뷰에서 사라지지 않는다 */
           var REV_COLLECTOR_KEY='baroyam_collector_reviews_v1';
-          /* 수집기 platform → 판매처별 리뷰 채널 이름 (카페이노스 공식몰은 카페24 자사몰) */
+          /* 수집기 platform → 판매처별 리뷰 채널 이름 (카페이노스 공식몰은 카페24 자사몰) ·
+             표에 없는 값(cafe24 등)으로 와도 별칭표로 한 번 더 찾아본다 */
           var REV_COLLECTOR_CHANNEL={naver:'네이버', caffeinnos:'카페24', coupang:'쿠팡', toss:'토스', alwayz:'올웨이즈'};
+          function revCollectorChannel(platform){
+            return REV_COLLECTOR_CHANNEL[platform]||REV_CHANNEL_NAME[revChannelKeyOf(platform)]||'';
+          }
           var REV_COLLECTOR_SENT={positive:'pos', negative:'neg', neutral:'neu'};
           function revLoadCollector(){
             try{ return JSON.parse(localStorage.getItem(REV_COLLECTOR_KEY)||'null'); }catch(e){ return null; }
@@ -4231,7 +4265,7 @@ window.BAROYAM_PROFILES=(function(){
             var rows=[];
             ((store&&store.reviews)||[]).forEach(function(r){
               var date=revParseFlexDate(r.date);
-              var channel=REV_COLLECTOR_CHANNEL[r.platform];
+              var channel=revCollectorChannel(r.platform);
               if(!date||!channel||!r.content) return;
               var rating=Math.min(5,Math.max(1,Number(r.rating)||3));
               rows.push({channel:channel, brand:r.brand||'', content:r.content, rating:rating, date:date,
@@ -8529,9 +8563,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   })();
 })();
 
-/* 마이홈 대시보드 · 퀵링크 / 간편 기록노트 / 프로젝트(마감일·진행률)를 한 묶음으로 저장한다 ·
-   이 브라우저(localStorage)에 바로 쓰고, 구글시트 설정(key='myhome')에도 올려 기기 간에 맞춘다 ·
-   상단 현황 카드 숫자는 전부 프로젝트 목록에서 계산한다 */
+/* 마이홈 대시보드 · 퀵링크 / 간편 기록노트 / 프로젝트(마감일·진행률) ·
+   퀵링크·간편 기록노트·프로필 사진은 로그인해서 고른 회원마다 따로 담고,
+   프로젝트는 프로젝트 보드와 같은 공용 목록을 쓴다 ·
+   이 브라우저(localStorage)에 바로 쓰고 구글시트 설정에도 올려 기기 간에 맞춘다 ·
+   상단 현황 카드 숫자는 내 담당 프로젝트에서 계산한다 */
 (function(){
   const root=document.getElementById('myHome');
   if(!root) return;
@@ -9270,7 +9306,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   })();
   /* 프로필 사진 · 동그라미를 누르면 규격 안내 창이 열리고 거기서 사진을 고른다.
      사진은 용량이 커서 서버로 올리는 state에 넣지 않고 이 브라우저(localStorage)에만 담는다 */
-  const AVATAR_KEY='baroyam_myhome_avatar_v1';
+  const AVATAR_KEY='baroyam_myhome_avatar_v1';   /* 회원 구분 없이 한 칸만 쓰던 옛 키 */
+  function avatarKey(){ return AVATAR_KEY+':'+slot(); }
+  /* 옛 키에는 회원 구분이 없어서, 한 브라우저에서 누가 넣은 사진이 다른 회원에게도 보였다 ·
+     누구 것인지 알 수 없으니 특정 회원에게 물려주지 않고 한 번 지운다 ·
+     각자 시트에 올려 둔 회원 사진(160px)이 남아 있어 자기 사진은 계속 보인다 */
+  try{ localStorage.removeItem(AVATAR_KEY); }catch(e){}
   const AV_MAX_BYTES=5*1024*1024, AV_MIN_PX=240, AV_SAVE_PX=320;
   const AVATAR_PERSON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>';
   const avatarBtn=$('mhAvatar'), avatarBox=$('mhAvatarImg');
@@ -9288,7 +9329,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     return {member:mem,shared:shared,picture:isAdminLogin?'':(a.picture||''),
       initial:isAdminLogin?'':((mem?mem.name:(a.name||'')).trim().charAt(0)||'')};
   }
-  function readAvatar(){ try{ return localStorage.getItem(AVATAR_KEY)||''; }catch(e){ return ''; } }
+  function readAvatar(){ try{ return localStorage.getItem(avatarKey())||''; }catch(e){ return ''; } }
   /* 내가 넣은 사진 → 시트에 올려 둔 내 회원 사진 → 구글 로그인 사진 → 이름 첫 글자 → 사람 아이콘 */
   function paintAvatar(el){
     const info=loginInfo(), src=readAvatar()||info.shared||info.picture;
@@ -9435,7 +9476,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(f) takeAvatarFile(f);
   });
   avClear.addEventListener('click',()=>{
-    try{ localStorage.removeItem(AVATAR_KEY); }catch(e){}
+    try{ localStorage.removeItem(avatarKey()); }catch(e){}
     const mem=PROF.meMember();
     if(mem) PROF.set(mem.id,{avatar:''});   /* 시트에 올려 둔 공유 사진도 같이 지운다 */
     renderAvatar();
@@ -9486,7 +9527,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!cropImg) return closeAvatarDialog();
     clampCrop();
     const r=cropRectSize();
-    try{ localStorage.setItem(AVATAR_KEY,cropToDataUrl(AV_SAVE_PX,r,.9)); }
+    try{ localStorage.setItem(avatarKey(),cropToDataUrl(AV_SAVE_PX,r,.9)); }
     catch(err){ return avSay('이 브라우저 저장 공간이 부족해서 담지 못했어요'); }
     const mem=PROF.meMember(), share=mem?shareDataUrl(r):'';
     if(mem&&!share) return avSay('사진을 줄이지 못했어요. 조금 더 단순한 사진으로 해 볼까요?');
