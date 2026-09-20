@@ -855,16 +855,18 @@ window.BAROYAM_PROFILES=(function(){
   .ch-view-title{margin:6px 0 0;font-size:26px;font-weight:800;letter-spacing:-.6px;color:var(--ink)}
   /* 프로젝트 보드는 화면을 꽉 채우지 않도록 폭을 좁히고 위아래 여백을 둔다 */
   /* 프로젝트 화면은 가운데로 모으지 않고 화면 왼쪽부터 넓게 쓴다 */
-  body.view-is-project .wrap{max-width:none;margin:0;padding:28px 40px 24px}
-  .pj-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:14px;border-radius:20px;
+  body.view-is-project .wrap{max-width:none;margin:0;padding:20px 24px 16px}
+  .pj-board{display:flex;gap:16px;align-items:flex-start;overflow-x:auto;padding:16px;border-radius:20px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);
-    /* 칸 폭이 정해져 있으므로 보드도 칸 수만큼만 넓어지고(화면보다 넓으면 가로 스크롤) 왼쪽에 붙는다 */
-    width:max-content;max-width:100%;
-    /* 보드를 화면 높이에 맞춰 페이지 전체가 스크롤되지 않게 하고, 카드가 많으면 칸 안에서만 스크롤한다 ·
-       실제 높이는 화면에 들어온 뒤 JS가 보드 시작 위치를 재서 맞춘다(아래는 그 전까지 쓰는 값) */
-    height:calc(100vh - 420px);min-height:420px}
-  /* 칸은 넓게 퍼지지 않도록 폭을 고정한다 */
-  .pj-col{flex:0 0 236px;width:236px;display:flex;flex-direction:column;align-self:stretch;min-height:0;overflow:hidden;
+    /* 칸이 화면 폭을 나눠 갖도록 보드는 폭을 꽉 쓴다 · 칸 최소폭 때문에 넘치면 가로 스크롤 */
+    width:100%;
+    /* 카드가 많으면 칸 안에서 스크롤한다 ·
+       실제 높이는 화면에 들어온 뒤 JS가 보드 시작 위치를 재서 맞춘다(아래는 그 전까지 쓰는 값) ·
+       min-height가 화면보다 크면 페이지가 스크롤되면서 칸을 더 내려볼 수 있다 ·
+       노트북(높이 768 등)에서는 이 값이 걸려 칸이 화면보다 길어진다 */
+    height:calc(100vh - 300px);min-height:720px}
+  /* 칸은 화면 폭을 고루 나눠 갖는다 · 너무 좁아지지 않게 최소폭만 둔다 */
+  .pj-col{flex:1 1 0;min-width:220px;display:flex;flex-direction:column;align-self:stretch;min-height:0;overflow:hidden;
     border-radius:14px;background:var(--bg);transition:box-shadow .15s}
   .pj-col-body{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px 9px 12px;
     scrollbar-width:thin;scrollbar-color:var(--line) transparent}
@@ -1318,11 +1320,13 @@ window.BAROYAM_PROFILES=(function(){
   /* 접기 버튼을 로고 위에 두고, 로고 옆 글자 없이 로고만 보여준다 */
   .sb-brand{display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:0 8px;margin-bottom:22px}
   .sb-logo{width:34px;height:34px;border-radius:10px;display:block;flex:none;box-shadow:0 4px 12px -3px rgba(80,40,20,.3)}
-  /* 펼친 사이드바는 흰색 워드마크 로고를 쓰고, 접으면 폭이 좁아 기존 정사각 아이콘으로 돌아간다 ·
+  /* 펼친 사이드바는 흰색 워드마크 로고만 쓰고, 접으면 로고를 아예 보여주지 않는다 ·
      .sb-logo는 파비콘·로그인 화면 등에서 src를 빌려 쓰므로 지우지 않고 숨기기만 한다 */
   .sb-wordmark{width:54px;height:auto;display:block;flex:none;align-self:center;user-select:none;-webkit-user-drag:none}
-  .sidebar:not(.is-collapsed):not(.is-compact) .sb-logo{display:none}
+  .sidebar .sb-logo{display:none}
   .sidebar:is(.is-collapsed,.is-compact) .sb-wordmark{display:none}
+  /* is-compact는 접기 버튼까지 숨는 상태라, 로고도 빠지면 브랜드 칸이 빈 채로 여백만 남는다 */
+  .sidebar.is-compact .sb-brand{display:none}
   /* 섹션 캡션 */
   .sb-cap{font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--sb-mute);
     padding:0 12px;margin-bottom:9px;user-select:none}
@@ -1433,6 +1437,8 @@ window.BAROYAM_PROFILES=(function(){
   .rev-brand.active{background:var(--bc,var(--indigo));color:#fff;border-color:var(--bc,var(--indigo))}
   .rev-brand.empty{opacity:.42}
   .rev-brand-n{margin-left:6px;opacity:.62;font-weight:700}
+  /* 아직 수집된 상품브랜드가 없을 때 · 줄 자체는 남기고 안내 글만 놓는다 */
+  .rev-brand-empty{font-size:12.5px;font-weight:600;color:var(--mute)}
   /* 상품브랜드마다 다른 색 · 평소엔 옅은 배경에 브랜드 색 글자/테두리, 고르면 그 색으로 채운다 ·
      버튼이 8개를 넘으면 c1부터 다시 돌려 쓴다 (전체 버튼만 무채색) */
   .rev-brand.call{--bc:var(--ink);--bs:var(--bg)}
@@ -3761,6 +3767,37 @@ window.BAROYAM_PROFILES=(function(){
             return revState.activeBrand?name+' · '+revState.activeBrand:name;
           }
 
+          /* ---- 리뷰가 0건일 때 ----
+             아직 수집하지 않은 판매처라도 차트·통계·브랜드줄이 사라지지 않게,
+             빈 화면에서 쓸 문구와 기간을 여기서 한 번만 만들어 모두가 나눠 쓴다 */
+          /* 왜 비었는지 알려주는 한 줄 · 배너·차트·표·브랜드줄이 같은 문구를 쓴다 */
+          function revEmptyNote(){
+            var name=(REV_CHANNEL_INFO[revChannelKey()]||REV_CHANNEL_INFO['']).name;
+            var channelHas=revBaseRows().some(function(r){return revChannelMatches(r.channel)});
+            if(!channelHas&&revState.source==='collector')
+              return {head:'아직 수집된 리뷰가 없어요',
+                      sub:'통합리뷰수집에서 '+name+' 리뷰를 수집하면 여기에 들어와요'};
+            if(channelHas) return {head:'선택한 기간에 리뷰가 없어요', sub:'기간을 넓히거나 전체 기간을 눌러보세요'};
+            return {head:'업로드된 데이터 없음', sub:'CSV를 불러와 주세요'};
+          }
+          function revDayOnly(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+          /* 리뷰가 하나도 없어도 일별 차트의 가로축을 세울 기준 기간 ·
+             고른 기간 → 수집된 전체 기간 → 최근 30일 순으로 잡는다 ·
+             다른 판매처와 같은 기간을 깔아 두어야 빈 차트도 같은 모양으로 보인다 */
+          function revEmptySpan(){
+            var range=revDataRange();
+            var from=revState.dateFrom||(range&&range.min)||null;
+            var to=revState.dateTo||(range&&range.max)||null;
+            if(!from&&!to){
+              var today=revDayOnly(new Date());
+              return {from:new Date(today.getFullYear(),today.getMonth(),today.getDate()-29), to:today};
+            }
+            if(!from) from=to;
+            if(!to) to=from;
+            if(from>to){ var t=from; from=to; to=t; }
+            return {from:revDayOnly(from), to:revDayOnly(to)};
+          }
+
           /* ---- CSV 파싱 ---- */
           var REV_HEADER_MAP={
             channel:['채널','플랫폼','쇼핑몰','판매처','판매채널','마켓','channel','platform','mall'],
@@ -3854,15 +3891,12 @@ window.BAROYAM_PROFILES=(function(){
             var subEl=document.getElementById('revDateRangeSub');
             var unitEl=document.getElementById('revDailyUnit');
             if(!rows.length){
-              /* 판매처에 리뷰가 아예 없는 것과, 고른 기간에만 없는 것을 나눠 안내한다 */
-              var channelHas=revBaseRows().some(function(r){return revChannelMatches(r.channel)});
-              if(!channelHas&&revState.source==='collector'){
-                dateEl.textContent='아직 수집된 리뷰가 없어요';
-                subEl.textContent='통합리뷰수집에서 '+(REV_CHANNEL_INFO[revChannelKey()]||REV_CHANNEL_INFO['']).name+' 리뷰를 수집하면 여기에 들어와요';
-                return;
-              }
-              dateEl.textContent=channelHas?'선택한 기간에 리뷰가 없어요':'업로드된 데이터 없음';
-              subEl.textContent=channelHas?'기간을 넓히거나 전체 기간을 눌러보세요':'CSV를 불러와 주세요';
+              /* 판매처에 리뷰가 아예 없는 것과, 고른 기간에만 없는 것을 나눠 안내한다 ·
+                 설명줄도 함께 다시 써서 앞서 보던 판매처의 기간이 남지 않게 한다 */
+              var note=revEmptyNote(), span=revEmptySpan();
+              dateEl.textContent=note.head;
+              subEl.textContent=note.sub;
+              unitEl.textContent=revFmtMD(span.from)+' – '+revFmtMD(span.to)+' · 리뷰 0건 · 일별 수집 리뷰 및 부정 비율';
               return;
             }
             var min=rows[0].date, max=rows[rows.length-1].date;
@@ -3870,15 +3904,57 @@ window.BAROYAM_PROFILES=(function(){
             subEl.textContent=(revIsDemo()?'샘플 데이터':(revState.source==='collector'?'리뷰 수집기':'CSV 업로드'))+' · '+(REV_CHANNEL_INFO[revChannelKey()]||REV_CHANNEL_INFO['']).name+' '+rows.length.toLocaleString()+'건';
             unitEl.textContent=revFmtMD(min)+' – '+revFmtMD(max)+' · 일별 수집 리뷰 및 부정 비율';
           }
+          /* 일별 차트 크기 · 데이터가 있을 때와 0건일 때가 같은 틀을 쓴다 */
+          var REV_CHART={W:1160,H:340,pL:50,pR:54,pT:34,pB:44};
+          /* 통계 세 칸 · 0건이어도 칸을 지우지 않고 0으로 채운다 */
+          function revStatsHtml(rows){
+            var analyzed=rows.length;
+            var negCount=rows.filter(function(r){return r.sentiment==='neg'}).length;
+            var negRatio=analyzed?(negCount/analyzed*100).toFixed(1):'0.0';
+            return '<div class="astat"><div class="l">분석된 리뷰수</div><div class="v num">'+analyzed.toLocaleString()+'<small>개</small></div></div>'+
+              '<div class="astat"><div class="l">부정 리뷰 비율</div><div class="v num">'+negRatio+'<small>%</small></div></div>'+
+              '<div class="astat"><div class="l">부정 리뷰 개수</div><div class="v num">'+negCount.toLocaleString()+'<small>개</small></div></div>';
+          }
+          /* 리뷰 0건일 때의 일별 차트 · 막대와 선만 빠지고 축·격자·날짜는 그대로 남긴다 ·
+             가운데에는 왜 비었는지 안내를 놓아 빈 네모로 보이지 않게 한다 */
+          function revEmptyChartSvg(){
+            var W=REV_CHART.W,H=REV_CHART.H,pL=REV_CHART.pL,pR=REV_CHART.pR,pT=REV_CHART.pT,pB=REV_CHART.pB;
+            var iW=W-pL-pR,iH=H-pT-pB;
+            var maxLeft=5,maxRight=10;   /* 데이터가 있을 때의 최소 눈금과 같은 값 */
+            var s='';
+            for(var g=0;g<=5;g++){
+              var v=maxLeft*g/5, yy=pT+iH*(1-v/maxLeft);
+              s+='<line x1="'+pL+'" y1="'+yy+'" x2="'+(W-pR)+'" y2="'+yy+'" stroke="var(--line)"/>';
+              s+='<text x="'+(pL-10)+'" y="'+(yy+4)+'" text-anchor="end" font-size="11" font-weight="600" fill="var(--mute)" font-family="Pretendard">'+Math.round(v)+'개</text>';
+            }
+            for(var g2=0;g2<=10;g2++){
+              var v2=maxRight*g2/10, yy2=pT+iH*(1-v2/maxRight);
+              s+='<text x="'+(W-pR+10)+'" y="'+(yy2+4)+'" text-anchor="start" font-size="11" font-weight="600" fill="var(--mute)" font-family="Pretendard">'+Math.round(v2)+'%</text>';
+            }
+            var span=revEmptySpan();
+            var days=Math.min(366,Math.max(1,Math.round((span.to-span.from)/86400000)+1));
+            var slot=iW/days;
+            var labelStep=days<=15?1:(days<=40?2:Math.ceil(days/25));
+            for(var i=0;i<days;i+=labelStep){
+              var d=new Date(span.from.getFullYear(),span.from.getMonth(),span.from.getDate()+i);
+              s+='<text x="'+(pL+slot*i+slot/2)+'" y="'+(H-pB+22)+'" text-anchor="middle" font-size="11" font-weight="600" fill="var(--mute)" font-family="Pretendard">'+revFmtMD(d)+'</text>';
+            }
+            var note=revEmptyNote(), cx=pL+iW/2, cy=pT+iH/2;
+            s+='<rect x="'+(cx-175)+'" y="'+(cy-31)+'" width="350" height="62" rx="15" fill="var(--paper)" stroke="var(--line)"/>';
+            s+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-size="14" font-weight="800" fill="var(--ink)" font-family="Pretendard">'+revEscapeHtml(note.head)+'</text>';
+            s+='<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--mute)" font-family="Pretendard">'+revEscapeHtml(note.sub)+'</text>';
+            return s;
+          }
           function renderRevDaily(rows){
             var svg=document.getElementById('revDailySvg');
             var statsEl=document.getElementById('revDailyStats');
             var tip=document.getElementById('revDailyTip');
             var wrap=document.getElementById('revDailyWrap');
             if(!rows.length){
-              svg.innerHTML='';
               tip.hidden=true;
-              statsEl.innerHTML='<div class="astat"><div class="l">분석된 리뷰수</div><div class="v num">0<small>개</small></div></div>';
+              svg.setAttribute('viewBox','0 0 '+REV_CHART.W+' '+REV_CHART.H);
+              svg.innerHTML=revEmptyChartSvg();
+              statsEl.innerHTML=revStatsHtml(rows);
               return;
             }
             var byDay={};
@@ -3889,7 +3965,8 @@ window.BAROYAM_PROFILES=(function(){
             });
             var points=Object.keys(byDay).map(function(k){return byDay[k]}).sort(function(a,b){return a.date-b.date});
             var N=points.length;
-            var W=1160,H=340,pL=50,pR=54,pT=34,pB=44,iW=W-pL-pR,iH=H-pT-pB;
+            var W=REV_CHART.W,H=REV_CHART.H,pL=REV_CHART.pL,pR=REV_CHART.pR,pT=REV_CHART.pT,pB=REV_CHART.pB;
+            var iW=W-pL-pR,iH=H-pT-pB;
             var slot=iW/N, barW=Math.min(slot*0.6,34);
             var ratios=points.map(function(p){var t=p.pos+p.neg;return t?p.neg/t*100:0});
             var avg=ratios.reduce(function(a,b){return a+b},0)/N;
@@ -3969,13 +4046,7 @@ window.BAROYAM_PROFILES=(function(){
               tip.hidden=true;
               svg.querySelectorAll('.rev-daily-pt').forEach(function(p){p.classList.remove('hover')});
             }
-            var analyzed=rows.length;
-            var negCount=rows.filter(function(r){return r.sentiment==='neg'}).length;
-            var negRatio=(negCount/analyzed*100).toFixed(1);
-            statsEl.innerHTML=
-              '<div class="astat"><div class="l">분석된 리뷰수</div><div class="v num">'+analyzed.toLocaleString()+'<small>개</small></div></div>'+
-              '<div class="astat"><div class="l">부정 리뷰 비율</div><div class="v num">'+negRatio+'<small>%</small></div></div>'+
-              '<div class="astat"><div class="l">부정 리뷰 개수</div><div class="v num">'+negCount.toLocaleString()+'<small>개</small></div></div>';
+            statsEl.innerHTML=revStatsHtml(rows);
           }
           function revStarsHtml(rating){
             var full=Math.max(0,Math.min(5,Math.round(rating)));
@@ -3994,14 +4065,17 @@ window.BAROYAM_PROFILES=(function(){
               '<td>'+revFmtMD(r.date)+'</td></tr>';
           }
           function revEmptyTable(msg){
+            var note=revEmptyNote();
             document.getElementById('revRecentUnit').textContent=msg;
             document.querySelector('#revRecentTable tbody').innerHTML=
-              '<tr><td colspan="6" style="text-align:center;color:var(--mute)">선택한 조건에 맞는 리뷰가 없습니다</td></tr>';
+              '<tr><td colspan="6" style="text-align:center;color:var(--mute);padding:26px 12px">'+
+              '<div style="font-weight:800;color:var(--body)">'+revEscapeHtml(note.head)+'</div>'+
+              '<div style="margin-top:5px;font-size:12.5px">'+revEscapeHtml(note.sub)+'</div></td></tr>';
           }
           function renderRevRecentTable(rows){
             var tbody=document.querySelector('#revRecentTable tbody');
             var unitEl=document.getElementById('revRecentUnit');
-            if(!rows.length){ revEmptyTable('표시할 리뷰가 없습니다'); return; }
+            if(!rows.length){ revEmptyTable(revScopeLabel()+' · 리뷰 0건'); return; }
             var recent=rows.slice().sort(function(a,b){return b.date-a.date}).slice(0,20);
             unitEl.textContent=revScopeLabel()+' · 최신순 '+recent.length+'건 (전체 '+rows.length.toLocaleString()+'건)';
             tbody.innerHTML=recent.map(revRowHtml).join('');
@@ -4085,10 +4159,13 @@ window.BAROYAM_PROFILES=(function(){
             /* 개선 필요 상품 TOP은 상품별 순위 자체라서 브랜드 고르는 줄이 필요 없다 */
             if(showTop){ bar.hidden=true; return; }
             var list=revBrandList();
+            /* 브랜드가 하나도 없어도 줄은 남긴다 · 판매처를 옮겨 다닐 때 줄이 사라졌다 생겼다 하지 않게 */
             if(!list.length){
               revState.activeBrand=null;
-              bar.hidden=true;
-              document.getElementById('revBrandList').innerHTML='';
+              bar.hidden=false;
+              document.getElementById('revBrandList').innerHTML=
+                '<button type="button" class="rev-brand call active" data-brand="">전체<span class="rev-brand-n">0</span></button>'+
+                '<span class="rev-brand-empty">'+revEscapeHtml(revEmptyNote().head)+'</span>';
               return;
             }
             bar.hidden=false;
@@ -9064,7 +9141,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!b||!b.offsetParent) return;            /* 화면에 안 보이면 잴 수 없다 */
     if(window.innerWidth<=760){ b.style.height=''; return; }   /* 좁은 화면은 그냥 늘어나게 둔다 */
     const top=b.getBoundingClientRect().top+(window.scrollY||0);
-    b.style.height=Math.max(420,window.innerHeight-top-28)+'px';   /* 28 = 아래 여백 */
+    /* 바닥 여백을 줄여 보드를 길게 쓴다 ·
+       창이 낮으면(노트북 등) 720px이 걸려 화면보다 길어지고, 페이지가 스크롤되면서
+       칸을 더 내려볼 수 있다 */
+    b.style.height=Math.max(720,window.innerHeight-top-16)+'px';   /* 16 = 아래 여백 */
   }
   window.addEventListener('resize',syncBoardHeight);
   window.pjSyncBoardHeight=syncBoardHeight;
