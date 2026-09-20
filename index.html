@@ -688,6 +688,34 @@ window.BAROYAM_PROFILES=(function(){
   .mh-stat-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}
   .mh-stat-ic svg{width:19px;height:19px}
   .mh-stat-label{font-size:12.5px;font-weight:500;color:var(--mute);letter-spacing:-.2px}
+  /* 카드는 눌러서 목록을 여는 버튼이다 · 기본 버튼 모양을 지우고 카드 모양만 남긴다 */
+  button.mh-stat{width:100%;text-align:left;font:inherit;border:0;cursor:pointer;
+    transition:box-shadow .15s,transform .15s}
+  button.mh-stat:hover{transform:translateY(-1px);box-shadow:0 10px 22px -14px rgba(var(--indigo-rgb),.5)}
+  button.mh-stat:focus-visible{outline:2px solid var(--mh-accent);outline-offset:2px}
+  button.mh-stat[aria-expanded="true"]{box-shadow:0 0 0 2px var(--mh-accent) inset}
+  /* 현황 카드 목록 · 화면 기준(fixed)으로 띄워 카드 바로 아래에 놓는다 */
+  .mh-statpop{position:fixed;z-index:60;width:320px;max-width:calc(100vw - 24px);
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 22px 44px -22px rgba(80,40,20,.45),0 2px 6px rgba(80,40,20,.06);overflow:hidden}
+  .mh-statpop[hidden]{display:none}
+  .mh-statpop-head{display:flex;align-items:flex-start;gap:10px;padding:13px 14px 11px;border-bottom:1px solid var(--line)}
+  .mh-statpop-title{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .mh-statpop-rule{margin-top:4px;font-size:11.5px;font-weight:500;line-height:1.5;color:var(--mute);word-break:keep-all}
+  .mh-statpop-x{all:unset;flex:none;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;
+    border-radius:6px;font-size:12px;color:var(--mute)}
+  .mh-statpop-x:hover{background:var(--bg);color:var(--ink)}
+  .mh-statpop-list{max-height:256px;overflow-y:auto;padding:6px;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .mh-statpop-item{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:9px;
+    width:100%;padding:9px 8px;border-radius:9px}
+  .mh-statpop-item:hover,.mh-statpop-item:focus-visible{background:var(--bg)}
+  .mh-statpop-name{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mh-statpop-due{flex:none;font-size:11px;font-weight:700;color:var(--mute)}
+  .mh-statpop-due.is-late{color:var(--neg)}
+  .mh-statpop-pct{flex:none;width:34px;text-align:right;font-size:11.5px;font-weight:800;color:var(--body)}
+  .mh-statpop-empty{padding:18px 10px;text-align:center;font-size:12px;color:var(--mute)}
   .mh-stat-num{margin-top:4px;font-size:20px;font-weight:800;color:var(--ink);line-height:1}
   .mh-stat.is-red .mh-stat-ic{background:var(--neg-soft);color:var(--neg)}
   .mh-stat.is-red .mh-stat-num{color:var(--neg)}
@@ -941,10 +969,27 @@ window.BAROYAM_PROFILES=(function(){
   .pj-col-add{all:unset;cursor:pointer;width:20px;height:20px;display:grid;place-items:center;border-radius:6px;color:var(--mute);font-size:16px;line-height:1}
   .pj-col-add:hover{background:var(--paper);color:var(--mh-accent)}
   .pj-col-empty{padding:14px 0;text-align:center;font-size:12px;color:var(--mute)}
-  .pj-card{flex:none;cursor:pointer;padding:12px 12px 10px;border-radius:11px;background:var(--paper);box-shadow:var(--mh-card-shadow);
-    border:1px solid transparent;transition:border-color .15s}
-  .pj-card:hover{border-color:var(--mh-accent-soft)}
-  /* 한 번 누른 카드 · 테두리에 은은한 빛을 둘러 '골랐다'고 알리고, 한 번 더 눌러야 수정창이 열린다 */
+  /* 카드 · 두 번 빠르게 누르면 열리므로 글자가 잡히지 않게 선택을 막는다 ·
+     위쪽에 옅은 흰빛을 깔아 평평한 색 대신 살짝 떠 보이게 한다 */
+  .pj-card{position:relative;flex:none;cursor:pointer;padding:12px 12px 10px;border-radius:12px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--paper) 94%,#fff) 0%,var(--paper) 62%);
+    box-shadow:var(--mh-card-shadow);border:1px solid transparent;user-select:none;
+    transition:border-color .15s,box-shadow .18s,transform .18s}
+  html[data-theme="dark"] .pj-card{background:linear-gradient(180deg,rgba(255,255,255,.045) 0%,transparent 62%),var(--paper)}
+  .pj-card:hover{border-color:var(--mh-accent-soft);transform:translateY(-1px);
+    box-shadow:0 10px 22px -14px rgba(var(--indigo-rgb),.5)}
+  /* 마우스를 댔을 때만 조용히 드러나는 수정·삭제 · 평소에는 자리만 비워 둔다 */
+  .pj-card-tools{position:absolute;top:7px;right:7px;display:flex;gap:2px;opacity:0;
+    transition:opacity .16s;pointer-events:none}
+  .pj-card:hover .pj-card-tools,.pj-card:focus-within .pj-card-tools{opacity:1;pointer-events:auto}
+  .pj-card-tool{all:unset;box-sizing:border-box;cursor:pointer;width:21px;height:21px;display:grid;place-items:center;
+    border-radius:7px;color:var(--mute);background:color-mix(in srgb,var(--bg) 82%,transparent);
+    transition:background .15s,color .15s}
+  .pj-card-tool svg{width:11px;height:11px}
+  .pj-card-tool:hover{background:var(--mh-accent-soft);color:var(--mh-accent)}
+  .pj-card-tool.is-del:hover{background:var(--neg-soft);color:var(--neg)}
+  .pj-card-tool:focus-visible{outline:2px solid var(--mh-accent);outline-offset:1px}
+  /* 한 번 누른 카드 · 테두리에 은은한 빛을 둘러 '골랐다'고 알린다 (열기는 빠르게 두 번) */
   .pj-card.is-picked{border-color:var(--mh-accent);animation:pjPickGlow 1.7s ease-in-out infinite}
   @keyframes pjPickGlow{
     0%,100%{box-shadow:0 0 0 3px rgba(var(--indigo-rgb),.16),0 8px 20px -12px rgba(var(--indigo-rgb),.45)}
@@ -957,6 +1002,12 @@ window.BAROYAM_PROFILES=(function(){
   .pj-card-due{margin-top:7px;font-size:12px;color:var(--mute)}
   .pj-card-due.is-late{color:#e84855;font-weight:700}
   .pj-card-made{margin-top:2px;font-size:11px;color:var(--mute);opacity:.85}
+  /* 카드에 붙는 메모 · 포스트잇처럼 옅은 노란 바탕에 두 줄까지만 보이고 나머지는 접는다 */
+  .pj-card-memo{margin-top:8px;padding:6px 8px 6px 9px;border-radius:8px;font-size:11.5px;line-height:1.55;
+    color:var(--body);white-space:pre-wrap;word-break:break-all;
+    background:color-mix(in srgb,var(--warn) 10%,transparent);
+    border-left:2px solid color-mix(in srgb,var(--warn) 50%,transparent);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .pj-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
   .pj-tag{padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700;background:var(--tag-bg);color:var(--tag-fg)}
   .pj-card-prog{display:flex;align-items:center;gap:10px;margin-top:10px}
@@ -981,8 +1032,14 @@ window.BAROYAM_PROFILES=(function(){
   .settings-panel.mh-dialog{max-width:420px;height:auto}
   /* 프로젝트 수정창 · 상태와 우선순위를 펼침목록 대신 색 칩으로 고르고, 마감일 옆에 D-day를 띄운다 ·
      링크 추가 같은 다른 대화상자는 예전 모습 그대로 쓰고 이 화면만 넓게 연다 */
-  .settings-panel.mh-dialog.is-project{max-width:660px}
-  .mh-dialog.is-project .settings-head{background:var(--mh-accent);border-bottom:none;padding:15px 20px}
+  .settings-panel.mh-dialog.is-project{max-width:720px}
+  /* 겉틀 · 위쪽에 강조색이 아주 옅게 깔리고 아래로 사라진다 · 테두리도 한 줄 둘러 떠 보이게 */
+  .mh-dialog.is-project{border:1px solid color-mix(in srgb,var(--mh-accent) 22%,var(--line));
+    border-radius:22px;overflow:visible;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--mh-accent) 7%,var(--paper)) 0,var(--paper) 190px);
+    box-shadow:0 30px 70px -30px rgba(var(--indigo-rgb),.5),0 2px 10px rgba(0,0,0,.08)}
+  .mh-dialog.is-project .settings-head{border-bottom:none;padding:15px 20px;border-radius:21px 21px 0 0;
+    background:linear-gradient(120deg,var(--mh-accent) 0%,var(--indigo-lite) 100%)}
   .mh-dialog.is-project .settings-head h2{display:flex;align-items:center;gap:9px;color:#fff}
   .mh-dialog.is-project .settings-head h2 svg{width:16px;height:16px;flex:none}
   .mh-dialog.is-project .settings-close{color:#fff;opacity:.9}
@@ -995,14 +1052,28 @@ window.BAROYAM_PROFILES=(function(){
     color:var(--ink);font:inherit;font-size:21px;font-weight:800;letter-spacing:-.5px;outline:none}
   .pjf-name::placeholder{color:var(--mute);font-weight:700}
   .pjf-name:focus{border-bottom-color:var(--mh-accent)}
-  .pjf-meta{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:12px;font-weight:600;color:var(--mute)}
+  /* 마감기한 옆 딱지 · 지난 날짜면 빨강, 사흘 안이면 주황 */
   .pjf-dday{padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:800;background:var(--bg);color:var(--body)}
   .pjf-dday.is-soon{background:var(--warn-soft);color:var(--warn)}
   .pjf-dday.is-late{background:var(--neg-soft);color:var(--neg)}
-  .pjf-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;padding:15px 0 2px}
-  .pjf-col{display:flex;flex-direction:column;gap:9px;min-width:0}
-  .pjf-label{font-size:12px;font-weight:800;color:var(--mute);letter-spacing:-.2px}
-  .pjf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+  /* 본문 · 왼쪽은 메모, 오른쪽은 '라벨 | 값'을 한 줄씩 · 가운데 세로줄로 나눈다 */
+  .pjf-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);min-height:330px}
+  .pjf-side{display:flex;flex-direction:column;min-width:0;padding:16px 20px 6px 0}
+  .pjf-fields{display:flex;flex-direction:column;gap:13px;min-width:0;
+    padding:16px 0 6px 22px;border-left:1px solid var(--line)}
+  .pjf-row{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:12px}
+  .pjf-rl{text-align:right;font-size:12.5px;font-weight:700;color:var(--mute);white-space:nowrap}
+  .pjf-rc{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+  .pjf-rc .pjf-pick,.pjf-rc .pjf-chips{flex:1;min-width:0}
+  .pjf-chips{display:flex;flex-wrap:wrap;gap:6px}
+  /* 고르는 칸(담당자·경로·마감기한) · 브라우저 기본 모양을 걷어내고 화살표를 직접 그린다 ·
+     테두리·모서리·글자 굵기를 칩과 맞춰 한 벌로 보이게 한다 */
+  .pjf-rc input[type=date]{flex:1;min-width:0;padding:10px 12px;border-radius:11px;
+    border:1px solid var(--line);background:var(--paper);color:var(--ink);
+    font:inherit;font-size:13.5px;font-weight:600;outline:none;
+    transition:border-color .15s,box-shadow .15s}
+  .pjf-rc input[type=date]:hover{border-color:color-mix(in srgb,var(--mh-accent) 45%,var(--line))}
+  .pjf-rc input[type=date]:focus{border-color:var(--mh-accent);box-shadow:0 0 0 3px rgba(var(--indigo-rgb),.14)}
   .pjf-chip input{position:absolute;width:0;height:0;opacity:0}
   .pjf-chip span{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:99px;cursor:pointer;
     font-size:12.5px;font-weight:700;color:var(--body);background:var(--bg);border:1px solid transparent;
@@ -1013,17 +1084,55 @@ window.BAROYAM_PROFILES=(function(){
     color:var(--chip-c);border-color:var(--chip-c)}
   .pjf-chip input:focus-visible+span{outline:2px solid var(--chip-c);outline-offset:2px}
   /* 담당자·경로 · 고른 값의 색을 왼쪽 점으로 함께 보여 준다 */
+  /* 담당자·경로 고르기 · 브라우저 기본 목록은 손댈 수 없어 직접 그린다 ·
+     고른 줄은 은은한 강조색(밝은 화면에서는 주황)으로 채워 목록에서 바로 눈에 띈다 */
   .pjf-pick{position:relative;display:block}
-  .pjf-pick select{width:100%;padding-left:30px}
-  .pjf-dot{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:9px;height:9px;
-    border-radius:50%;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
-  /* 진행도 · 숫자를 크게 둬서 카드의 막대와 바로 이어 읽힌다 */
-  .pjf-prog{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
-  .pjf-prog-row{display:flex;align-items:center;gap:14px;margin-top:8px}
-  .pjf-prog-row input{flex:1;accent-color:var(--mh-accent)}
-  .pjf-prog-row output{flex:none;width:64px;text-align:right;font-size:24px;font-weight:800;
-    letter-spacing:-.8px;color:var(--mh-accent);font-variant-numeric:tabular-nums}
-  @media(max-width:620px){ .pjf-body{grid-template-columns:1fr;gap:14px} }
+  .pjf-pick::after{content:'';position:absolute;right:14px;top:50%;width:7px;height:7px;pointer-events:none;
+    transform:translateY(-70%) rotate(45deg);border-right:2px solid var(--mute);border-bottom:2px solid var(--mute)}
+  .pjf-dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+  .pjf-sel{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;cursor:pointer;
+    padding:10px 32px 10px 12px;border-radius:11px;border:1px solid var(--line);background:var(--paper);
+    color:var(--ink);font-size:13.5px;font-weight:600;transition:border-color .15s,box-shadow .15s}
+  .pjf-sel:hover{border-color:color-mix(in srgb,var(--mh-accent) 45%,var(--line))}
+  .pjf-sel[aria-expanded="true"],.pjf-sel:focus-visible{border-color:var(--mh-accent);
+    box-shadow:0 0 0 3px rgba(var(--indigo-rgb),.14)}
+  .pjf-sel-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pjf-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:9;padding:5px;
+    border-radius:13px;border:1px solid var(--line);background:var(--paper);
+    box-shadow:0 20px 40px -20px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.07);
+    max-height:212px;overflow-y:auto}
+  .pjf-menu[hidden]{display:none}
+  .pjf-opt{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:9px;width:100%;cursor:pointer;
+    padding:9px 11px;border-radius:9px;font-size:13px;font-weight:600;color:var(--body);
+    transition:background .12s,color .12s}
+  .pjf-opt i{width:8px;height:8px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+  .pjf-opt:hover{background:color-mix(in srgb,var(--mh-accent) 10%,transparent);color:var(--ink)}
+  .pjf-opt.is-on{background:color-mix(in srgb,var(--mh-accent) 16%,transparent);color:var(--mh-accent);font-weight:800}
+  /* 고른 줄 끝의 체크 표시 */
+  .pjf-opt.is-on::after{content:'';margin-left:auto;flex:none;width:6px;height:10px;
+    border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+    transform:rotate(45deg) translate(-1px,-2px)}
+  /* 메모 · 테두리 없이 종이에 적어 둔 것처럼 두고, 손을 대면 바탕이 살짝 드러난다 */
+  .pjf-memo{flex:1;min-height:240px;resize:none;padding:9px 11px;border-radius:12px;
+    border:1px solid transparent;background:transparent;color:var(--ink);
+    font:inherit;font-size:13px;line-height:1.75;outline:none;transition:background .15s,border-color .15s}
+  .pjf-memo:hover{background:color-mix(in srgb,var(--warn) 7%,transparent)}
+  .pjf-memo:focus{background:color-mix(in srgb,var(--warn) 10%,transparent);
+    border-color:color-mix(in srgb,var(--warn) 38%,transparent)}
+  .pjf-memo::placeholder{color:var(--mute)}
+  /* 아래 한 줄 · 진행도를 창 폭만큼 길게 깐다 */
+  .pjf-prog{display:flex;align-items:center;gap:16px;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
+  .pjf-prog-l{flex:none;font-size:12.5px;font-weight:700;color:var(--mute)}
+  .pjf-prog input{flex:1;min-width:0;accent-color:var(--mh-accent)}
+  .pjf-prog output{flex:none;width:58px;text-align:right;font-size:19px;font-weight:800;
+    letter-spacing:-.6px;color:var(--mh-accent);font-variant-numeric:tabular-nums}
+  @media(max-width:620px){
+    .pjf-body{grid-template-columns:1fr;min-height:0}
+    .pjf-side{padding:14px 0 0}
+    .pjf-fields{padding:14px 0 4px;border-left:0;border-top:1px solid var(--line)}
+    .pjf-memo{min-height:120px}
+    .pjf-row{grid-template-columns:56px minmax(0,1fr)}
+  }
   /* 프로필 사진 대화상자 · 규격을 먼저 보여주고 사진을 고르게 한다 */
   .settings-panel.av-panel{max-width:620px;height:auto;--av-box:208px}
   .av-body{padding:18px 22px 6px;display:flex;flex-direction:column;gap:14px}
@@ -1986,7 +2095,7 @@ window.BAROYAM_PROFILES=(function(){
 
   /* 설정 패널 */
   .settings-overlay{position:fixed;inset:0;background:rgba(20,14,10,.5);display:flex;align-items:center;justify-content:center;
-    padding:20px;z-index:80}
+    padding:20px;z-index:80;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
   .settings-overlay[hidden]{display:none}
   .settings-panel{width:100%;max-width:640px;height:min(580px,86vh);background:var(--paper);border-radius:20px;
     box-shadow:0 30px 70px -20px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;
@@ -2971,9 +3080,9 @@ window.BAROYAM_PROFILES=(function(){
               </div>
               <div class="mh-welcome-hi">반갑습니다.<br><b id="mhWelcomeName"></b>님</div>
             </div>
-            <div class="mh-stat is-red"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><div><div class="mh-stat-label">지연된 프로젝트</div><div class="mh-stat-num num" id="mhStatLate">0</div></div></div>
-            <div class="mh-stat is-blue"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M16.5 7.5c-.6-1.3-2.3-2.2-4.5-2.2-2.6 0-4.3 1.3-4.3 3.1 0 4.3 8.8 2.2 8.8 6.6 0 1.8-1.8 3.2-4.5 3.2-2.3 0-4.1-1-4.7-2.5"/></svg></span><div><div class="mh-stat-label">마감 3일 이내 프로젝트</div><div class="mh-stat-num num" id="mhStatSoon">0</div></div></div>
-            <div class="mh-stat is-teal"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M12 13v4M10 15h4"/></svg></span><div><div class="mh-stat-label">예정 프로젝트</div><div class="mh-stat-num num" id="mhStatPlanned">0</div></div></div>
+            <button type="button" data-stat="late" aria-haspopup="dialog" aria-expanded="false" class="mh-stat is-red"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><div><div class="mh-stat-label">지연된 프로젝트</div><div class="mh-stat-num num" id="mhStatLate">0</div></div></button>
+            <button type="button" data-stat="soon" aria-haspopup="dialog" aria-expanded="false" class="mh-stat is-blue"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M16.5 7.5c-.6-1.3-2.3-2.2-4.5-2.2-2.6 0-4.3 1.3-4.3 3.1 0 4.3 8.8 2.2 8.8 6.6 0 1.8-1.8 3.2-4.5 3.2-2.3 0-4.1-1-4.7-2.5"/></svg></span><div><div class="mh-stat-label">마감 3일 이내 프로젝트</div><div class="mh-stat-num num" id="mhStatSoon">0</div></div></button>
+            <button type="button" data-stat="planned" aria-haspopup="dialog" aria-expanded="false" class="mh-stat is-teal"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M12 13v4M10 15h4"/></svg></span><div><div class="mh-stat-label">예정 프로젝트</div><div class="mh-stat-num num" id="mhStatPlanned">0</div></div></button>
             <div class="mh-clock" aria-live="off">
               <div class="mh-clock-row">
                 <span class="mh-clock-tile" id="mhClockH">00</span><span class="mh-clock-sep">:</span>
@@ -2983,9 +3092,20 @@ window.BAROYAM_PROFILES=(function(){
               </div>
               <div class="mh-clock-date" id="mhClockDate"></div>
             </div>
-            <div class="mh-stat is-orange"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><div class="mh-stat-label">긴급 프로젝트</div><div class="mh-stat-num num" id="mhStatUrgent">0</div></div></div>
-            <div class="mh-stat is-purple"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/></svg></span><div><div class="mh-stat-label">미완료 프로젝트</div><div class="mh-stat-num num" id="mhStatOpen">0</div></div></div>
-            <div class="mh-stat is-green"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4.5" rx="1.2"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></span><div><div class="mh-stat-label">이번달 종료 프로젝트</div><div class="mh-stat-num num" id="mhStatMonthEnd">0</div></div></div>
+            <button type="button" data-stat="urgent" aria-haspopup="dialog" aria-expanded="false" class="mh-stat is-orange"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><div><div class="mh-stat-label">긴급 프로젝트</div><div class="mh-stat-num num" id="mhStatUrgent">0</div></div></button>
+            <button type="button" data-stat="open" aria-haspopup="dialog" aria-expanded="false" class="mh-stat is-purple"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/></svg></span><div><div class="mh-stat-label">미완료 프로젝트</div><div class="mh-stat-num num" id="mhStatOpen">0</div></div></button>
+            <button type="button" data-stat="monthEnd" aria-haspopup="dialog" aria-expanded="false" class="mh-stat is-green"><span class="mh-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="4.5" rx="1.2"/><path d="M5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9.5"/><path d="M10 13h4"/></svg></span><div><div class="mh-stat-label">이번달 종료 프로젝트</div><div class="mh-stat-num num" id="mhStatMonthEnd">0</div></div></button>
+            <!-- 현황 카드를 누르면 뜨는 목록 · 규칙 한 줄과 해당 프로젝트를 보여 준다 -->
+            <div class="mh-statpop" id="mhStatPop" role="dialog" aria-labelledby="mhStatPopTitle" hidden>
+              <div class="mh-statpop-head">
+                <div>
+                  <div class="mh-statpop-title" id="mhStatPopTitle"></div>
+                  <div class="mh-statpop-rule" id="mhStatPopRule"></div>
+                </div>
+                <button type="button" class="mh-statpop-x" id="mhStatPopClose" aria-label="닫기">&#10005;</button>
+              </div>
+              <div class="mh-statpop-list" id="mhStatPopList"></div>
+            </div>
           </div>
 
           <div class="mh-grid">
@@ -9047,25 +9167,124 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function dayDiff(a,b){ return Math.round((Date.parse(b)-Date.parse(a))/86400000); }
 
   /* ---------- 상단 현황 ---------- */
-  function renderStats(){
-    const today=kstToday();
-    const month=today.slice(0,7);
-    /* 마이홈은 내 작업공간이라 내 담당만 센다 · 팀 전체는 프로젝트 보드에서 본다 */
-    const mineList=myProjects();
-    const open=mineList.filter(p=>p.status==='예정'||p.status==='진행중'||p.status==='보류');
-    const planned=open.filter(p=>p.status==='예정');
-    const active=open.filter(p=>p.status==='진행중');
-    const late=active.filter(p=>p.due&&p.due<today);
-    const soon=active.filter(p=>p.due&&p.due>=today&&dayDiff(today,p.due)<=3);
-    const urgent=active.filter(p=>p.urgent);
-    const monthEnd=mineList.filter(p=>p.due&&p.due.slice(0,7)===month);
-    $('mhStatLate').textContent=late.length;
-    $('mhStatSoon').textContent=soon.length;
-    $('mhStatPlanned').textContent=planned.length;
-    $('mhStatUrgent').textContent=urgent.length;
-    $('mhStatOpen').textContent=open.length;
-    $('mhStatMonthEnd').textContent=monthEnd.length;
+  /* 현황 카드 규칙 · 숫자와 목록이 같은 것을 쓰도록 여기 한 곳에만 적는다 ·
+     두 곳에 나눠 적으면 "숫자는 2인데 목록은 3개"처럼 어긋난다 ·
+     대상은 늘 내 담당 프로젝트다(myProjects) */
+  const OPEN_ST=['예정','진행중','보류'];
+  const STAT_DEFS=[
+    {k:'late',id:'mhStatLate',name:'지연된 프로젝트',
+     rule:"상태가 '진행중'이고 마감일이 오늘보다 지난 프로젝트",
+     pick:(list,today)=>list.filter(p=>p.status==='진행중'&&p.due&&p.due<today)},
+    {k:'soon',id:'mhStatSoon',name:'마감 3일 이내 프로젝트',
+     rule:"상태가 '진행중'이고 마감일이 오늘부터 3일 안에 오는 프로젝트",
+     pick:(list,today)=>list.filter(p=>p.status==='진행중'&&p.due&&p.due>=today&&dayDiff(today,p.due)<=3)},
+    {k:'planned',id:'mhStatPlanned',name:'예정 프로젝트',
+     rule:"상태가 '예정'인 프로젝트",
+     pick:(list)=>list.filter(p=>p.status==='예정')},
+    {k:'urgent',id:'mhStatUrgent',name:'긴급 프로젝트',
+     rule:"상태가 '진행중'이면서 우선순위가 '긴급'인 프로젝트",
+     pick:(list)=>list.filter(p=>p.status==='진행중'&&p.urgent)},
+    {k:'open',id:'mhStatOpen',name:'미완료 프로젝트',
+     rule:"상태가 '예정'·'진행중'·'보류'인 프로젝트 (완료·종료 제외)",
+     pick:(list)=>list.filter(p=>OPEN_ST.includes(p.status))},
+    {k:'monthEnd',id:'mhStatMonthEnd',name:'이번달 종료 프로젝트',
+     rule:'마감일이 이번 달에 있는 프로젝트 (상태와 무관)',
+     pick:(list,today)=>list.filter(p=>p.due&&p.due.slice(0,7)===today.slice(0,7))},
+  ];
+  function statDef(k){ return STAT_DEFS.find(d=>d.k===k)||null; }
+  function statRows(k){
+    const d=statDef(k);
+    return d?d.pick(myProjects(),kstToday()):[];
   }
+  /* ---------- 현황 카드 목록 ---------- */
+  /* renderStats가 아래 statPop을 보므로 선언을 먼저 둔다(const는 위에서 쓰면 터진다) */
+  const statPop=$('mhStatPop');
+  let statKey='', statAnchor=null;
+  function renderStats(){
+    const today=kstToday(), mineList=myProjects();
+    STAT_DEFS.forEach(d=>{ $(d.id).textContent=d.pick(mineList,today).length; });
+    if(!statPop.hidden) renderStatPop();   /* 열려 있으면 목록도 같이 맞춘다 */
+  }
+  function statDueText(p,today){
+    if(!p.due) return '';
+    const d=dayDiff(today,p.due);
+    return d<0?`${-d}일 지연`:(d===0?'오늘 마감':`D-${d}`);
+  }
+  function renderStatPop(){
+    const d=statDef(statKey);
+    if(!d) return;
+    const today=kstToday(), rows=statRows(statKey);
+    $('mhStatPopTitle').textContent=`${d.name} ${rows.length}`;
+    $('mhStatPopRule').textContent=d.rule;
+    const list=$('mhStatPopList');
+    if(!rows.length){
+      list.innerHTML='<div class="mh-statpop-empty">해당하는 프로젝트가 없어요.</div>';
+      return;
+    }
+    /* 급한 것부터 · 마감일이 빠른 순, 마감일 없는 것은 뒤로 */
+    list.innerHTML=rows.slice()
+      .sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9')))
+      .map(p=>{
+        const late=p.due&&p.due<today;
+        const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
+        return `<button type="button" class="mh-statpop-item" data-id="${esc(p.id)}">
+          <span class="mh-statpop-name">${esc(p.name)}</span>
+          <span class="mh-statpop-due${late?' is-late':''}">${esc(statDueText(p,today))}</span>
+          <span class="mh-statpop-pct num">${pct}%</span>
+        </button>`;
+      }).join('');
+  }
+  /* 카드 바로 아래에 두되, 화면 밖으로 나가면 위쪽이나 안쪽으로 당긴다
+     (회원설정의 역할 고르기와 같은 방식) */
+  function placeStatPop(){
+    if(!statAnchor) return;
+    const a=statAnchor.getBoundingClientRect(), r=statPop.getBoundingClientRect();
+    let top=a.bottom+8, left=a.left;
+    if(top+r.height>innerHeight-8) top=Math.max(8,a.top-r.height-8);
+    if(left+r.width>innerWidth-8) left=Math.max(8,innerWidth-r.width-8);
+    statPop.style.top=top+'px';
+    statPop.style.left=left+'px';
+  }
+  function closeStatPop(){
+    if(statPop.hidden) return;
+    statPop.hidden=true;
+    if(statAnchor) statAnchor.setAttribute('aria-expanded','false');
+    statKey=''; statAnchor=null;
+    document.removeEventListener('pointerdown',onStatOutside,true);
+    document.removeEventListener('keydown',onStatKey,true);
+    window.removeEventListener('resize',placeStatPop);
+  }
+  function openStatPop(btn){
+    const k=btn.dataset.stat;
+    if(!statPop.hidden&&statKey===k){ closeStatPop(); return; }   /* 같은 카드를 다시 누르면 닫는다 */
+    closeStatPop();
+    statKey=k; statAnchor=btn;
+    renderStatPop();
+    statPop.hidden=false;
+    btn.setAttribute('aria-expanded','true');
+    placeStatPop();
+    document.addEventListener('pointerdown',onStatOutside,true);
+    document.addEventListener('keydown',onStatKey,true);
+    window.addEventListener('resize',placeStatPop);
+  }
+  function onStatOutside(e){
+    if(!e.target.closest('#mhStatPop')&&!e.target.closest('.mh-stat')) closeStatPop();
+  }
+  function onStatKey(e){
+    if(e.key==='Escape'){ e.stopPropagation(); const a=statAnchor; closeStatPop(); if(a) a.focus(); }
+  }
+  root.addEventListener('click',e=>{
+    const btn=e.target.closest('.mh-stat');
+    if(btn) openStatPop(btn);
+  });
+  $('mhStatPopClose').addEventListener('click',()=>{ const a=statAnchor; closeStatPop(); if(a) a.focus(); });
+  $('mhStatPopList').addEventListener('click',e=>{
+    const row=e.target.closest('.mh-statpop-item');
+    if(!row) return;
+    const p=state.projects.find(x=>x.id===row.dataset.id);
+    closeStatPop();
+    if(p) openProjectDialog(p);
+  });
 
   /* ---------- 시계 ---------- */
   const fmtParts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,weekday:'short',month:'short',day:'numeric'});
@@ -9274,8 +9493,40 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const first=form.querySelector('input');
     if(first) first.focus();
   }
+  /* 프로젝트 수정창은 저장·취소 단추가 없다 · 고친 값을 여기서 그때그때 프로젝트에 옮긴다 */
+  let editingProject=null, projSaveTimer=0;
+  function applyProjectForm(){
+    if(!editingProject||!form.querySelector('[name=name]')) return;
+    const fd=new FormData(form);
+    const name=String(fd.get('name')||'').trim();
+    Object.assign(editingProject,{
+      name:name||editingProject.name,     /* 이름을 비워도 카드가 이름 없이 남지 않게 한다 */
+      status:String(fd.get('status')||editingProject.status),
+      urgent:fd.get('urgent')==='긴급',
+      owner:String(fd.get('owner')||''),
+      channel:String(fd.get('channel')||''),
+      start:fd.get('start')==null?(editingProject.start||''):String(fd.get('start')),
+      due:String(fd.get('due')||''),
+      memo:String(fd.get('memo')||''),
+      progress:+fd.get('progress')||0});
+    save();
+  }
+  /* 글자를 칠 때마다 저장하면 화면이 요동치므로 잠깐 모았다가 한 번에 */
+  function queueProjectSave(){
+    if(!editingProject) return;
+    clearTimeout(projSaveTimer);
+    projSaveTimer=setTimeout(()=>{ projSaveTimer=0; applyProjectForm(); },350);
+  }
+  function flushProjectSave(){
+    if(!editingProject) return;
+    clearTimeout(projSaveTimer); projSaveTimer=0;
+    applyProjectForm();
+  }
   function closeDialog(){
+    flushProjectSave();                    /* 창을 닫기 전에 남은 값을 마저 저장한다 */
+    editingProject=null;
     dlg.hidden=true; onSubmit=null; form.innerHTML='';
+    dlgPanel.classList.remove('is-project');
     if(lastFocus&&lastFocus.focus) lastFocus.focus();
   }
   form.addEventListener('submit',e=>{ e.preventDefault(); if(onSubmit&&onSubmit(new FormData(form))!==false) closeDialog(); });
@@ -9286,6 +9537,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   });
   form.addEventListener('input',e=>{
     if(e.target.name==='progress'){ const o=form.querySelector('output'); if(o) o.textContent=e.target.value+'%'; }
+    queueProjectSave();
   });
   $('mhDialogClose').addEventListener('click',closeDialog);
   dlg.addEventListener('click',e=>{ if(e.target===dlg) closeDialog(); });
@@ -9359,67 +9611,112 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const txt=d<0?`${-d}일 지연`:(d===0?'오늘 마감':`D-${d}`);
     return `<span class="pjf-dday${cls}">${txt}</span>`;
   }
+  /* 담당자·경로 고르기 한 벌 · 고른 값은 숨은 칸(name=...)에 담기므로 저장 코드는 그대로다 */
+  function pickList(name,list,cur){
+    const rows=[{v:'',t:'없음'}].concat(list.map(v=>({v:v,t:v})));
+    return `<span class="pjf-pick" data-pick="${name}">
+      <input type="hidden" name="${name}" value="${esc(cur||'')}">
+      <button type="button" class="pjf-sel" aria-haspopup="listbox" aria-expanded="false">
+        <i class="pjf-dot" data-dot="${name}" style="background:${pjPickColor(name,cur)}"></i>
+        <span class="pjf-sel-t">${esc(cur||'없음')}</span>
+      </button>
+      <div class="pjf-menu" role="listbox" hidden>
+        ${rows.map(r=>`<button type="button" class="pjf-opt${r.v===(cur||'')?' is-on':''}" role="option" data-v="${esc(r.v)}">
+          <i style="background:${pjPickColor(name,r.v)}"></i><span>${esc(r.t)}</span>
+        </button>`).join('')}
+      </div>
+    </span>`;
+  }
+  /* 한 목록을 열면 나머지는 닫는다 */
+  function closePickMenus(except){
+    form.querySelectorAll('.pjf-pick').forEach(w=>{
+      if(w===except) return;
+      const m=w.querySelector('.pjf-menu'), b=w.querySelector('.pjf-sel');
+      if(m) m.hidden=true;
+      if(b) b.setAttribute('aria-expanded','false');
+    });
+  }
+  form.addEventListener('click',e=>{
+    const sel=e.target.closest('.pjf-sel');
+    if(sel){
+      const wrap=sel.closest('.pjf-pick'), menu=wrap.querySelector('.pjf-menu');
+      const willOpen=menu.hidden;
+      closePickMenus(wrap);
+      menu.hidden=!willOpen;
+      sel.setAttribute('aria-expanded',willOpen?'true':'false');
+      return;
+    }
+    const opt=e.target.closest('.pjf-opt');
+    if(!opt){ closePickMenus(null); return; }
+    const wrap=opt.closest('.pjf-pick'), name=wrap.dataset.pick, v=opt.dataset.v;
+    wrap.querySelector('input[type=hidden]').value=v;
+    wrap.querySelector('.pjf-sel-t').textContent=v||'없음';
+    wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
+    wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o===opt));
+    wrap.querySelector('.pjf-menu').hidden=true;
+    wrap.querySelector('.pjf-sel').setAttribute('aria-expanded','false');
+    flushProjectSave();
+  });
+
   function openProjectDialog(p,preset){
-    form.__onDelete=p?()=>{
-      if(!confirm(`'${p.name}' 프로젝트를 삭제할까요?`)) return false;
-      state.projects=state.projects.filter(x=>x.id!==p.id); save();
-    }:null;
-    const cur=p||Object.assign({status:'진행중',progress:0},preset||{});
+    /* 저장 단추가 없으니 새 프로젝트도 여는 순간 자리를 만들어 둔다 ·
+       그래야 창을 닫아도 고친 값이 그대로 남는다 (지우기는 카드의 작은 단추가 맡는다) */
+    const isNew=!p;
+    if(isNew){
+      p=Object.assign({id:uid(),created:kstToday(),name:'새 프로젝트',status:'진행중',progress:0},preset||{});
+      state.projects.push(p);
+      save();
+    }
+    form.__onDelete=null;
+    editingProject=p;
+    const cur=p;
     const prog=Math.round(+cur.progress||0);
     const members=readMembers().map(m=>m.name);
     if(cur.owner&&!members.includes(cur.owner)) members.push(cur.owner);
-    openDialog(p?'프로젝트 수정':'프로젝트 추가',
+    openDialog(isNew?'새 프로젝트':'프로젝트 수정',
       `<div class="pjf-top">
          <input class="pjf-name" type="text" name="name" required maxlength="80" autocomplete="off"
                 value="${esc(cur.name||'')}" placeholder="예) 자사몰_상세페이지_개선" aria-label="프로젝트명">
-         <div class="pjf-meta">
-           <span>${cur.created?'작성 '+esc(String(cur.created).replace(/-/g,'.')):'새 프로젝트'}</span>
-           <span data-dday>${pjDdayHtml(cur.due)}</span>
-         </div>
        </div>
        <div class="pjf-body">
-         <div class="pjf-col">
-           <div class="pjf-label">상태</div>
-           ${chipRow('status',STATUSES,cur.status)}
-           <div class="pjf-label">우선순위</div>
-           ${chipRow('urgent',PRIORITIES,cur.urgent?'긴급':'보통')}
+         <div class="pjf-side">
+           <textarea class="pjf-memo" name="memo" maxlength="600" aria-label="메모"
+             placeholder="메모 · 이 프로젝트에 남길 짧은 기록&#10;(예: 업로드 · 캔바작업)">${esc(cur.memo||'')}</textarea>
          </div>
-         <div class="pjf-col">
-           <label class="mh-field">담당자
-             <span class="pjf-pick">
-               <i class="pjf-dot" data-dot="owner" style="background:${pjPickColor('owner',cur.owner)}"></i>
-               <select name="owner">${opts(members,cur.owner||'','없음')}</select>
-             </span>
-           </label>
-           <label class="mh-field">경로
-             <span class="pjf-pick">
-               <i class="pjf-dot" data-dot="channel" style="background:${pjPickColor('channel',cur.channel)}"></i>
-               <select name="channel">${opts(CHANNELS.map(c=>c.k),cur.channel||'','없음')}</select>
-             </span>
-           </label>
-           <div class="mh-field-row">
-             <label class="mh-field">시작일<input type="date" name="start" value="${esc(cur.start||'')}"></label>
-             <label class="mh-field">마감일<input type="date" name="due" value="${esc(cur.due||'')}"></label>
+         <div class="pjf-fields">
+           <div class="pjf-row"><span class="pjf-rl">담당자</span>
+             <div class="pjf-rc">
+               ${pickList('owner',members,cur.owner)}
+             </div>
+           </div>
+           <div class="pjf-row"><span class="pjf-rl">마감기한</span>
+             <div class="pjf-rc">
+               <input type="date" name="due" value="${esc(cur.due||'')}">
+               <span data-dday>${pjDdayHtml(cur.due)}</span>
+             </div>
+           </div>
+           <div class="pjf-row"><span class="pjf-rl">경로</span>
+             <div class="pjf-rc">
+               ${pickList('channel',CHANNELS.map(c=>c.k),cur.channel)}
+             </div>
+           </div>
+           <div class="pjf-row"><span class="pjf-rl">상태</span>
+             <div class="pjf-rc">${chipRow('status',STATUSES,cur.status)}</div>
+           </div>
+           <div class="pjf-row"><span class="pjf-rl">우선순위</span>
+             <div class="pjf-rc">${chipRow('urgent',PRIORITIES,cur.urgent?'긴급':'보통')}</div>
            </div>
          </div>
        </div>
        <div class="pjf-prog">
-         <div class="pjf-label">진행도</div>
-         <div class="pjf-prog-row">
-           <input type="range" name="progress" min="0" max="100" step="5" value="${prog}" aria-label="진행률">
-           <output>${prog}%</output>
-         </div>
-       </div>
-       ${actions(!!p)}`,
-      fd=>{
-        const data={name:String(fd.get('name')).trim(),status:String(fd.get('status')),urgent:fd.get('urgent')==='긴급',
-          owner:String(fd.get('owner')||''),channel:String(fd.get('channel')||''),
-          start:String(fd.get('start')||''),due:String(fd.get('due')||''),progress:+fd.get('progress')||0};
-        if(!data.name) return false;
-        if(p) Object.assign(p,data);
-        else state.projects.push(Object.assign({id:uid(),created:kstToday()},data));
-        save();
-      },{project:true,icon:ICON_PENCIL});
+         <span class="pjf-prog-l">진행도</span>
+         <input type="range" name="progress" min="0" max="100" step="5" value="${prog}" aria-label="진행률">
+         <output>${prog}%</output>
+       </div>`,
+      ()=>{},{project:true,icon:ICON_PENCIL});
+    /* 새로 만든 것은 제목을 통째로 잡아 둬서 바로 덮어쓸 수 있게 한다 */
+    const nameEl=form.querySelector('.pjf-name');
+    if(nameEl&&isNew) nameEl.select();
   }
   /* 고른 값에 맞춰 창 안을 바로 고쳐 준다 ·
      완료로 바꾸면 진행률 100%, 담당자·경로는 점 색, 마감일은 옆의 D-day */
@@ -9435,6 +9732,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const slot=form.querySelector('[data-dday]');
       if(slot) slot.innerHTML=pjDdayHtml(e.target.value);
     }
+    flushProjectSave();                    /* 고르는 값은 미루지 않고 바로 저장한다 */
   });
 
   /* ---------- 프로젝트 칸반 보드 ---------- */
@@ -9538,9 +9836,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const ch=CHANNELS.find(c=>c.k===p.channel);
     const oc=p.owner?memberColor(p.owner):'';
     return `<div class="pj-card" draggable="true" data-id="${esc(p.id)}">
+      <div class="pj-card-tools">
+        <button type="button" class="pj-card-tool" data-act="edit" aria-label="${esc(p.name)} 수정" title="수정">${ICON_EDIT}</button>
+        <button type="button" class="pj-card-tool is-del" data-act="del" aria-label="${esc(p.name)} 삭제" title="삭제">${ICON_DEL}</button>
+      </div>
       <div class="pj-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><span>${esc(p.name)}</span></div>
       ${p.due?`<div class="pj-card-due${late?' is-late':''}">마감 ${fmtKDate(p.due)}${late?' · 지연':''}</div>`:''}
       <div class="pj-card-made">작성 ${esc((p.created||'').replace(/-/g,'.'))}</div>
+      ${p.memo?`<div class="pj-card-memo">${esc(p.memo)}</div>`:''}
       <div class="pj-tags">
         ${tag(p.status,st[0],st[1])}
         ${p.urgent?tag('긴급','rgba(232,72,85,.12)','#e0394a'):tag('보통','rgba(59,130,246,.12)','#2f6fd6')}
@@ -9585,12 +9888,32 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     board.addEventListener('click',e=>{
       const add=e.target.closest('[data-add]');
       if(add){ pickCard(null); openProjectDialog(null,{status:add.dataset.add,progress:add.dataset.add==='완료'?100:0}); return; }
+      /* 카드에 마우스를 대면 나오는 작은 단추 · 수정은 바로 열고, 삭제는 여기서만 한다 */
+      const tool=e.target.closest('.pj-card-tool');
+      if(tool){
+        const id=tool.closest('.pj-card').dataset.id;
+        const t=state.projects.find(x=>x.id===id);
+        if(!t) return;
+        if(tool.dataset.act==='del'){
+          if(!confirm(`'${t.name}' 프로젝트를 삭제할까요?`)) return;
+          pickCard(null);
+          state.projects=state.projects.filter(x=>x.id!==id);
+          save();
+        }else{ pickCard(id); openProjectDialog(t); }
+        return;
+      }
+      /* 한 번 누름은 고르기까지 · 여는 것은 빠르게 두 번 누를 때만 ·
+         이미 고른 카드를 또 누르면 아무것도 하지 않는다(고른 것이 풀려 보이지 않게) */
       const card=e.target.closest('.pj-card');
-      if(!card){ pickCard(null); return; }
-      if(pickedCard!==card.dataset.id){ pickCard(card.dataset.id); return; }
-      pickCard(null);
-      const p=state.projects.find(x=>x.id===card.dataset.id);
-      if(p) openProjectDialog(p);
+      const id=card?card.dataset.id:null;
+      if(id&&id===pickedCard) return;
+      pickCard(id);
+    });
+    board.addEventListener('dblclick',e=>{
+      if(e.target.closest('.pj-card-tool')) return;
+      const card=e.target.closest('.pj-card'); if(!card) return;
+      const t=state.projects.find(x=>x.id===card.dataset.id);
+      if(t){ pickCard(card.dataset.id); openProjectDialog(t); }
     });
     /* 카드가 아닌 곳을 누르면 고른 표시를 푼다 · 카드 클릭은 위에서 이미 처리한 뒤 여기로 올라온다 */
     document.addEventListener('click',e=>{ if(!e.target.closest('.pj-card')) pickCard(null); });
