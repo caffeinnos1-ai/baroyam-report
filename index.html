@@ -2106,6 +2106,31 @@ window.BAROYAM_PROFILES=(function(){
   .settings-overlay{position:fixed;inset:0;background:rgba(20,14,10,.5);display:flex;align-items:center;justify-content:center;
     padding:20px;z-index:80;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
   .settings-overlay[hidden]{display:none}
+  /* 삭제 확인창 · 다른 창(z-index 80) 위에 떠야 해서 90을 준다 ·
+     브라우저 기본 confirm()은 앱과 따로 놀고 창 위에 뜨면 특히 어색해서 대신 쓴다 */
+  .ask{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:rgba(20,14,10,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  .ask[hidden]{display:none}
+  .ask-panel{width:100%;max-width:360px;background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    padding:24px 22px 18px;text-align:center;
+    box-shadow:0 30px 70px -30px rgba(80,40,20,.5),0 2px 8px rgba(80,40,20,.06);
+    animation:askIn .16s ease-out both}
+  @keyframes askIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){ .ask-panel{animation:none} }
+  .ask-ic{width:44px;height:44px;margin:0 auto 14px;border-radius:13px;display:grid;place-items:center;
+    background:var(--neg-soft);color:var(--neg)}
+  .ask-ic svg{width:21px;height:21px}
+  .ask-title{margin:0;font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--ink);word-break:keep-all}
+  .ask-body{margin:9px 0 0;font-size:13px;font-weight:500;line-height:1.6;color:var(--mute);word-break:keep-all}
+  .ask-body:empty{display:none}
+  .ask-btns{display:flex;gap:8px;margin-top:20px}
+  .ask-btn{flex:1;height:42px;border-radius:12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+  .ask-btn.is-cancel{border:1px solid var(--line);background:transparent;color:var(--body)}
+  .ask-btn.is-cancel:hover{background:var(--bg)}
+  .ask-btn.is-del{border:0;background:var(--neg);color:#fff}
+  .ask-btn.is-del:hover{filter:brightness(1.06)}
+  .ask-btn:focus-visible{outline:2px solid var(--mh-accent);outline-offset:2px}
   .settings-panel{width:100%;max-width:640px;height:min(580px,86vh);background:var(--paper);border-radius:20px;
     box-shadow:0 30px 70px -20px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;
     border:1px solid var(--line)}
@@ -9350,7 +9375,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const link=scope.get().find(l=>l.id===id);
       if(!link) return;
       if(btn.dataset.act==='edit') openLinkDialog(link,scope);
-      else if(confirm(`'${link.name}' 링크를 삭제할까요?`)){ scope.set(scope.get().filter(l=>l.id!==id)); save(); }
+      else if(btn.dataset.act==='del'){
+        window.baroyamAsk(`'${link.name}' 링크를 지울까요?`,'지운 링크는 되돌릴 수 없어요.').then(ok=>{
+          if(!ok) return;
+          scope.set(scope.get().filter(l=>l.id!==id)); save();
+        });
+      }
     });
     /* 끌어서 순서 바꾸기 */
     let dragId=null;
@@ -9439,7 +9469,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(act==='edit'){ editingNote=id; renderNotes(); }
     else if(act==='cancel'){ editingNote=null; renderNotes(); }
     else if(act==='save') commitNoteEdit(row);
-    else if(act==='del'&&confirm('이 기록을 삭제할까요?')){ state.notes=state.notes.filter(n=>n.id!==id); save(); }
+    else if(act==='del'){
+      window.baroyamAsk('이 기록을 지울까요?','지운 기록은 되돌릴 수 없어요.').then(ok=>{
+        if(!ok) return;
+        state.notes=state.notes.filter(n=>n.id!==id); save();
+      });
+    }
   });
   $('mhNotes').addEventListener('keydown',e=>{
     if(!e.target.matches('[data-edit]')) return;
@@ -9542,14 +9577,24 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   form.addEventListener('click',e=>{
     const b=e.target.closest('[data-act]'); if(!b) return;
     if(b.dataset.act==='cancel') closeDialog();
-    else if(b.dataset.act==='delete'&&form.__onDelete&&form.__onDelete()!==false) closeDialog();
+    else if(b.dataset.act==='delete'&&form.__onDelete){
+      /* 확인창이 답을 늦게 주므로 기다렸다가 닫는다 · 바로 값을 돌려주는 옛 방식도 그대로 받는다 */
+      Promise.resolve(form.__onDelete()).then(r=>{ if(r!==false) closeDialog(); });
+    }
   });
   form.addEventListener('input',e=>{
     if(e.target.name==='progress'){ const o=form.querySelector('output'); if(o) o.textContent=e.target.value+'%'; }
     queueProjectSave();
   });
   $('mhDialogClose').addEventListener('click',closeDialog);
-  dlg.addEventListener('click',e=>{ if(e.target===dlg) closeDialog(); });
+  /* 창 바깥(어두운 바탕)을 눌렀을 때 ·
+     프로젝트 창은 이걸로 닫지 않는다 · 값을 고르다 바깥을 스치면 창이 사라져 흐름이 끊겨서다 ·
+     대신 열려 있던 목록·달력만 닫고, 창은 Esc나 ✕로만 닫는다 */
+  dlg.addEventListener('click',e=>{
+    if(e.target!==dlg) return;
+    if(dlgPanel.classList.contains('is-project')){ closePickMenus(null); closeDateCals(null); return; }
+    closeDialog();
+  });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!dlg.hidden) closeDialog(); });
 
   function actions(canDelete){
@@ -9561,10 +9606,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   function openLinkDialog(link,scope){
     scope=scope||LINKS_MINE;
-    form.__onDelete=link?()=>{
-      if(!confirm(`'${link.name}' 링크를 삭제할까요?`)) return false;
+    form.__onDelete=link?()=>window.baroyamAsk(`'${link.name}' 링크를 지울까요?`,'지운 링크는 되돌릴 수 없어요.').then(ok=>{
+      if(!ok) return false;   /* false면 창을 닫지 않는다 */
       scope.set(scope.get().filter(l=>l.id!==link.id)); save();
-    }:null;
+    }):null;
     openDialog(link?'링크 수정':'링크 추가',
       `<label class="mh-field">이름<input type="text" name="name" required maxlength="60" value="${esc(link?link.name:'')}" placeholder="예) 자사몰 기획전"></label>
        <label class="mh-field">주소<input type="text" name="url" required value="${esc(link?link.url:'')}" placeholder="https://"></label>
@@ -9609,7 +9654,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function pjPickColor(kind,v){
     if(!v) return 'transparent';
     if(kind==='owner') return memberColor(v);
-    const c=CHANNELS.find(x=>x.k===v);
+    const c=(kind==='status'?STATUSES:CHANNELS).find(x=>x.k===v);
     return c?c.c:'var(--mute)';
   }
   /* 마감일 옆 딱지 · 지난 날짜면 빨강, 사흘 안이면 주황 */
@@ -9682,8 +9727,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
 
   /* 담당자·경로 고르기 한 벌 · 고른 값은 숨은 칸(name=...)에 담기므로 저장 코드는 그대로다 */
-  function pickList(name,list,cur){
-    const rows=[{v:'',t:'없음'}].concat(list.map(v=>({v:v,t:v})));
+  function pickList(name,list,cur,allowEmpty){
+    const rows=(allowEmpty===false?[]:[{v:'',t:'없음'}]).concat(list.map(v=>({v:v,t:v})));
     return `<span class="pjf-pick" data-pick="${name}">
       <input type="hidden" name="${name}" value="${esc(cur||'')}">
       <button type="button" class="pjf-sel" aria-haspopup="listbox" aria-expanded="false">
@@ -9753,6 +9798,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o===opt));
     wrap.querySelector('.pjf-menu').hidden=true;
     wrap.querySelector('.pjf-sel').setAttribute('aria-expanded','false');
+    if(name==='status'&&v==='완료'){
+      const r=form.querySelector('input[name=progress]');
+      if(r){ r.value=100; const o=form.querySelector('output'); if(o) o.textContent='100%'; }
+    }
     flushProjectSave();
   });
 
@@ -9799,7 +9848,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
              </div>
            </div>
            <div class="pjf-row"><span class="pjf-rl">상태</span>
-             <div class="pjf-rc">${chipRow('status',STATUSES,cur.status)}</div>
+             <div class="pjf-rc">${pickList('status',STATUS_KEYS,cur.status,false)}</div>
            </div>
            <div class="pjf-row"><span class="pjf-rl">우선순위</span>
              <div class="pjf-rc">${chipRow('urgent',PRIORITIES,cur.urgent?'긴급':'보통')}</div>
@@ -9993,10 +10042,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         const t=state.projects.find(x=>x.id===id);
         if(!t) return;
         if(tool.dataset.act==='del'){
-          if(!confirm(`'${t.name}' 프로젝트를 삭제할까요?`)) return;
-          pickCard(null);
-          state.projects=state.projects.filter(x=>x.id!==id);
-          save();
+          window.baroyamAsk(`'${t.name}' 프로젝트를 지울까요?`,
+            '프로젝트와 적어 둔 내용이 함께 사라지고 되돌릴 수 없어요.').then(ok=>{
+            if(!ok) return;
+            pickCard(null);
+            state.projects=state.projects.filter(x=>x.id!==id);
+            save();
+          });
         }else{ pickCard(id); openProjectDialog(t); }
         return;
       }
@@ -10571,8 +10623,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(act==='edit'){ chEditingNote=id; renderChNotes(); }
     else if(act==='cancel'){ chEditingNote=null; renderChNotes(); }
     else if(act==='save') commitChNoteEdit(row);
-    else if(act==='del'&&confirm('이 기록을 삭제할까요?')){
-      chBucket().notes=chBucket().notes.filter(n=>n.id!==id); save();
+    else if(act==='del'){
+      window.baroyamAsk('이 기록을 지울까요?','지운 기록은 되돌릴 수 없어요.').then(ok=>{
+        if(!ok) return;
+        chBucket().notes=chBucket().notes.filter(n=>n.id!==id); save();
+      });
     }
   });
   $('chNotes').addEventListener('keydown',e=>{
@@ -11591,6 +11646,58 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
   });
 })();
+</script>
+<!-- 삭제 확인창 · window.baroyamAsk()가 띄운다 (브라우저 기본 confirm 대신) -->
+<div class="ask" id="askDlg" role="dialog" aria-modal="true" aria-labelledby="askTitle" hidden>
+  <div class="ask-panel">
+    <div class="ask-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9.5 7V4.8A.8.8 0 0 1 10.3 4h3.4a.8.8 0 0 1 .8.8V7"/></svg></div>
+    <h2 class="ask-title" id="askTitle"></h2>
+    <p class="ask-body" id="askBody"></p>
+    <div class="ask-btns">
+      <button type="button" class="ask-btn is-cancel" id="askCancel">취소</button>
+      <button type="button" class="ask-btn is-del" id="askOk">삭제</button>
+    </div>
+  </div>
+</div>
+<script>
+/* 삭제 확인창 · 답을 늦게 주므로 Promise<boolean>을 돌려준다 ·
+   실수로 지우는 일을 줄이려고 열릴 때 '취소'에 포커스를 둔다 */
+window.baroyamAsk=function(title,body,okText){
+  const dlg=document.getElementById('askDlg');
+  if(!dlg) return Promise.resolve(window.confirm(title));   /* 창이 없으면 옛 방식으로 */
+  document.getElementById('askTitle').textContent=title||'지울까요?';
+  document.getElementById('askBody').textContent=body||'';
+  const ok=document.getElementById('askOk'), cancel=document.getElementById('askCancel');
+  ok.textContent=okText||'삭제';
+  const before=document.activeElement;
+  dlg.hidden=false;
+  cancel.focus();
+  return new Promise(resolve=>{
+    function done(v){
+      dlg.hidden=true;
+      ok.removeEventListener('click',onOk);
+      cancel.removeEventListener('click',onNo);
+      dlg.removeEventListener('click',onOutside);
+      document.removeEventListener('keydown',onKey,true);
+      if(before&&before.focus) before.focus();
+      resolve(v);
+    }
+    function onOk(){ done(true); }
+    function onNo(){ done(false); }
+    function onOutside(e){ if(e.target===dlg) done(false); }
+    function onKey(e){
+      if(e.key==='Escape'){ e.stopPropagation(); done(false); return; }
+      /* 창 안에서만 탭이 돌게 한다 */
+      if(e.key!=='Tab') return;
+      e.preventDefault();
+      (document.activeElement===cancel?ok:cancel).focus();
+    }
+    ok.addEventListener('click',onOk);
+    cancel.addEventListener('click',onNo);
+    dlg.addEventListener('click',onOutside);
+    document.addEventListener('keydown',onKey,true);
+  });
+};
 </script>
 </body>
 </html>
