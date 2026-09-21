@@ -17,13 +17,20 @@ window.BAROYAM_AUTH={
   allowedHashes:['752601c57a347392cdfe495bec1949d0642a4fb865590ae6854d6de2e7ec3fc3'], /* sha256(email.toLowerCase().trim()) 16진수 */
   sessionDays:7,
   lsKey:'baroyam_auth_v1',
-  /* 관리자 비밀번호 로그인 · 원문 대신 PBKDF2-SHA256(1000000회) 결과만 적어 둔다 */
-  admin:{salt:'d57f48686d06ae036842d37b0f1e8172',hash:'f320aaa7d149e58c538e6b2d1db13ec1f0b6430b2780e4ba017ea022971ac9d5',iterations:1000000}
+  /* 팀장 비밀번호 · 역할이 '팀장'인 회원으로 들어갈 때와 관리자 설정을 열 때 같은 값을 쓴다 ·
+     공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적어 둔다 */
+  lead:{salt:'baroyam-settings-v1',iterations:200000,hash:'07c5a2ec5f29bb6acac450eb60e9c27bd120fa0750f9cfb120b02b5d8b2b9ac2'}
 };
 document.documentElement.classList.add('auth-locked','auth-checking');
 window.baroyamAuthHash=async function(email){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(email).toLowerCase().trim()));
   return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+};
+window.baroyamLeadHash=async function(pw){
+  const L=window.BAROYAM_AUTH.lead, enc=new TextEncoder();
+  const key=await crypto.subtle.importKey('raw',enc.encode(String(pw)),'PBKDF2',false,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(L.salt),iterations:L.iterations,hash:'SHA-256'},key,256);
+  return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
 };
 
 /* 회원 목록 · 관리자 설정>회원설정과 로그인 직후 "누구신가요?" 화면이 같은 목록을 나눠 쓴다.
@@ -168,20 +175,37 @@ window.BAROYAM_PROFILES=(function(){
   return {SKIP,all,get,set,me,meId,meMember,setMe,role,applyRemote,changed};
 })();
 
+/* 팀장 권한(예전의 관리자 권한) · 역할이 '팀장'인 회원으로 들어오면서 비밀번호를 통과한 동안만 켜진다.
+   통과 기록은 '나'(me)와 같이 이 브라우저에만 남기고 시트에 올리지 않는다 —
+   공용 PC에서 남의 권한으로 잡히지 않도록 · 회원을 바꾸거나 로그아웃하면 지운다.
+   공개 저장소라 화면을 가리는 수준의 잠금이다 — 시트 API 자체를 막아주지는 않는다 */
+window.BAROYAM_LEAD=(function(){
+  const KEY='baroyam_lead_v1', ROLE='팀장';
+  function ok(){ try{ return localStorage.getItem(KEY)||''; }catch(e){ return ''; } }
+  function isLeadRole(id){ return !!(id && window.BAROYAM_PROFILES.get(id).role===ROLE); }
+  /* 지금 고른 회원이 팀장이고, 그 회원 id로 비밀번호를 통과해 둔 기록이 있을 때만 참 ·
+     역할을 팀장에서 내리면 기록이 남아 있어도 바로 꺼진다 */
+  function isOn(){ const id=window.BAROYAM_PROFILES.meId(); return !!(id && ok()===id && isLeadRole(id)); }
+  function grant(id){ try{ localStorage.setItem(KEY,id); }catch(e){} }
+  function clear(){ try{ localStorage.removeItem(KEY); }catch(e){} }
+  return {ROLE,isLeadRole,isOn,grant,clear};
+})();
+
 (async function(){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
   try{
     const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
-    if(s && s.until>Date.now() && (A.allowedHashes.includes(s.h) || s.h===A.admin.hash)){
+    if(s && s.until>Date.now() && A.allowedHashes.includes(s.h)){
       root.classList.remove('auth-locked');
       /* 구글 계정으로 들어왔으면 "나"가 회원설정에 실제로 있는 회원이어야 한다 ·
          고른 적이 없거나, 골라 둔 회원이 지워졌거나, 옛 버전에서 건너뛰기를
          눌러 둔 경우 모두 선택 화면을 띄운다 ·
-         그대로 두면 없는 회원으로 잡혀서 관리자 칸 마이홈이 보인다 */
+         그대로 두면 없는 회원으로 잡혀서 빈 칸 마이홈이 보인다 */
       const P0=window.BAROYAM_PROFILES, meRaw=P0.me();
       const picked=!!(meRaw && window.BAROYAM_MEMBERS.byId(meRaw));
-      if(s.h!==A.admin.hash && !picked){
+      if(!picked){
         if(meRaw) P0.setMe('');   /* 지워진 회원이나 옛 건너뛰기 값을 비운다 */
+        window.BAROYAM_LEAD.clear();
         root.classList.add('member-locked');
       }
     }
@@ -210,28 +234,6 @@ window.BAROYAM_PROFILES=(function(){
   #authGate .auth-msg{margin:18px 0 0;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;
     color:var(--neg,#cf5a50);background:var(--neg-soft,#fbeae8)}
   #authGate .auth-msg:empty{display:none}
-  #authGate .auth-or{display:flex;align-items:center;gap:12px;margin:22px 0 16px;font-size:12px;color:var(--mute,#786c64)}
-  #authGate .auth-or::before,#authGate .auth-or::after{content:"";flex:1;height:1px;background:var(--line,#ece5dc)}
-  #authGate .auth-admin-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:300px;max-width:100%;height:40px;
-    border-radius:999px;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--ink,#241a14);
-    font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,background-color .15s,color .15s}
-  #authGate .auth-admin-btn:hover{border-color:var(--indigo,#cd6428);color:var(--indigo,#cd6428);background:var(--indigo-soft,#fdefe4)}
-  #authGate .auth-admin-btn svg{width:17px;height:17px;flex:none}
-  #authGate .auth-admin-form{display:flex;flex-direction:column;gap:10px;width:300px;max-width:100%;margin:0 auto}
-  #authGate .auth-admin-form[hidden]{display:none}
-  #authGate .auth-admin-btn[hidden]{display:none}
-  #authGate .auth-admin-field{position:relative}
-  #authGate .auth-admin-field svg{position:absolute;left:14px;top:50%;width:17px;height:17px;transform:translateY(-50%);color:var(--mute,#786c64);pointer-events:none}
-  #authGate .auth-admin-input{width:100%;height:44px;box-sizing:border-box;padding:0 14px 0 42px;border-radius:12px;
-    border:1px solid var(--line,#ece5dc);background:var(--bg,#f4f1eb);color:var(--ink,#241a14);font-family:inherit;font-size:15px;font-weight:500;outline:none}
-  #authGate .auth-admin-input:focus{border-color:var(--indigo,#cd6428);box-shadow:0 0 0 3px rgba(205,100,40,.15);background:var(--paper,#fff)}
-  #authGate .auth-admin-actions{display:flex;gap:8px}
-  #authGate .auth-admin-actions button{flex:1;height:42px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
-    display:inline-flex;align-items:center;justify-content:center;gap:6px}
-  #authGate .auth-admin-submit{border:0;background:var(--indigo,#cd6428);color:#fff}
-  #authGate .auth-admin-submit:disabled{opacity:.6;cursor:wait}
-  #authGate .auth-admin-submit svg{width:16px;height:16px}
-  #authGate .auth-admin-cancel{flex:0 0 84px!important;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--mute,#786c64)}
   #authGate .auth-foot{display:flex;align-items:center;justify-content:center;gap:6px;margin:28px -32px 0;padding:18px 32px 0;
     border-top:1px solid var(--line,#ece5dc);font-size:12.5px;color:var(--mute,#786c64)}
   #authGate .auth-foot svg{width:14px;height:14px;flex:none}
@@ -270,6 +272,24 @@ window.BAROYAM_PROFILES=(function(){
   #memberGate .mp-go svg{width:17px;height:17px;display:block}
   #memberGate .mp-item:hover .mp-go{color:var(--indigo,#cd6428)}
   #memberGate .mp-empty{margin:0;padding:26px 8px;text-align:center;font-size:13px;font-weight:600;line-height:1.6;color:var(--mute,#786c64)}
+  /* 팀장을 고르면 목록 대신 비밀번호 칸이 나온다 ·
+     .mp-list/.mp-sub는 display를 따로 갖고 있어서 [hidden]만으로는 안 숨는다 */
+  #memberGate .mp-card.is-pw .mp-list,#memberGate .mp-card.is-pw .mp-sub{display:none}
+  #memberGate .mp-pw{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  #memberGate .mp-pw[hidden]{display:none}
+  #memberGate .mp-pw-who{margin:0 0 4px;font-size:13.5px;font-weight:600;line-height:1.6;color:var(--mute,#786c64);text-align:center}
+  #memberGate .mp-pw-who b{color:var(--ink,#241a14)}
+  #memberGate .mp-pw-input{width:100%;height:46px;box-sizing:border-box;padding:0 15px;border-radius:12px;text-align:center;
+    border:1px solid var(--line,#ece5dc);background:var(--bg,#f4f1eb);color:var(--ink,#241a14);
+    font-family:inherit;font-size:16px;font-weight:600;letter-spacing:.25em;outline:none}
+  #memberGate .mp-pw-input:focus{border-color:var(--indigo,#cd6428);box-shadow:0 0 0 3px rgba(205,100,40,.15);background:var(--paper,#fff)}
+  #memberGate .mp-pw-error{margin:0;min-height:17px;font-size:12.5px;font-weight:600;color:var(--neg,#cf5a50);text-align:center}
+  #memberGate .mp-pw-error:empty{min-height:0}
+  #memberGate .mp-pw-actions{display:flex;gap:8px}
+  #memberGate .mp-pw-actions button{flex:1;height:44px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+  #memberGate .mp-pw-submit{border:0;background:var(--indigo,#cd6428);color:#fff}
+  #memberGate .mp-pw-submit:disabled{opacity:.6;cursor:wait}
+  #memberGate .mp-pw-cancel{flex:0 0 84px;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--mute,#786c64)}
   #memberGate .mp-foot{display:flex;flex-direction:column;align-items:center;gap:8px;margin:20px -26px 0;padding:16px 26px 0;
     border-top:1px solid var(--line,#ece5dc)}
   #memberGate .mp-note{margin:0;font-size:12.5px;font-weight:600;line-height:1.5;
@@ -2231,6 +2251,7 @@ window.BAROYAM_PROFILES=(function(){
   .pw-panel .settings-head{padding:0;border:0}
   .pw-hint{font-size:12.5px;font-weight:600;color:var(--mute);line-height:1.5;margin-top:-4px}
   .pw-error{min-height:17px;font-size:12px;font-weight:700;color:var(--neg)}
+  #settingsPwForm[hidden]{display:none}
   .pw-panel.is-shake{animation:pwShake .32s}
   @keyframes pwShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 
@@ -2673,11 +2694,11 @@ window.BAROYAM_PROFILES=(function(){
   .ag-btn.primary,.ag-hist-page.active,.ag-nt-btn.active,.gm-btn.primary,.goal-edit-save,
   .man-editbtn.is-editing,.member-add-form button,.mg-add-item button:hover,.plan-edit-btn:hover,
   .rev-date-quick.active,.sb-subnav-home.active,.mh-btn.primary,.mh-note-add,.hero-view-tab.active,
-  .trend-subcat-btn.active,.mini-sb-item.active,#authGate .auth-admin-submit,
+  .trend-subcat-btn.active,.mini-sb-item.active,#memberGate .mp-pw-submit,
   .gv-cats button.on,html[data-theme="dark"] .gv-cats button.on{
     background:var(--btn);border-color:var(--btn);color:#fff;opacity:1}
   .ag-btn.primary:hover,.gm-btn.primary:hover,.goal-edit-save:hover,.member-add-form button:hover,
-  .mh-btn.primary:hover,.mh-note-add:hover,#authGate .auth-admin-submit:hover{
+  .mh-btn.primary:hover,.mh-note-add:hover,#memberGate .mp-pw-submit:hover{
     background:var(--btn-hover);border-color:var(--btn-hover);opacity:1}
   .gv-cats button.on b,html[data-theme="dark"] .gv-cats button.on b{color:#fff}
   .theme-switch.active{background:var(--btn)}
@@ -2706,24 +2727,6 @@ window.BAROYAM_PROFILES=(function(){
     <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
     <p class="auth-sub">매출·광고 성과 보고서를 보려면<br>구글 계정으로 로그인해 주세요</p>
     <div class="auth-btn" id="authBtn"></div>
-    <div class="auth-or">또는</div>
-    <button type="button" class="auth-admin-btn" id="authAdminBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
-      <span>관리자 로그인</span>
-    </button>
-    <form class="auth-admin-form" id="authAdminForm" hidden autocomplete="off">
-      <label class="auth-admin-field">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3"/><path d="M17 6l3 3"/><path d="M15 8l2 2"/></svg>
-        <input class="auth-admin-input" id="authAdminPw" type="password" placeholder="관리자 비밀번호" aria-label="관리자 비밀번호">
-      </label>
-      <div class="auth-admin-actions">
-        <button type="button" class="auth-admin-cancel" id="authAdminCancel">취소</button>
-        <button type="submit" class="auth-admin-submit" id="authAdminSubmit">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
-          <span>입장</span>
-        </button>
-      </div>
-    </form>
     <p class="auth-msg" id="authMsg"></p>
     <div class="auth-foot">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
@@ -2744,43 +2747,11 @@ window.BAROYAM_PROFILES=(function(){
     /* 로그아웃은 "이 PC를 다른 사람이 쓴다"는 뜻이라, 골라 둔 회원도 같이 비운다 ·
        그냥 새로고침하거나 세션이 살아 있을 때는 선택이 그대로 남아 다시 묻지 않는다 */
     try{ localStorage.removeItem(A.lsKey); localStorage.removeItem('baroyam_me_v1'); }catch(e){}
+    window.BAROYAM_LEAD.clear();
     if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect();
     location.reload();
   };
   if(!root.classList.contains('auth-locked')) return;
-
-  /* 관리자 비밀번호 로그인 · 입력값을 같은 salt/반복횟수로 PBKDF2 해서 저장된 값과 비교한다 */
-  const adminBtn=document.getElementById('authAdminBtn');
-  const adminForm=document.getElementById('authAdminForm');
-  const adminPw=document.getElementById('authAdminPw');
-  const adminSubmit=document.getElementById('authAdminSubmit');
-  async function adminHash(pw){
-    const hex=A.admin.salt.match(/../g).map(h=>parseInt(h,16));
-    const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
-    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new Uint8Array(hex),iterations:A.admin.iterations},key,256);
-    return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
-  }
-  function showAdmin(on){
-    adminForm.hidden=!on; adminBtn.hidden=on; msg.textContent='';
-    if(on) adminPw.focus(); else adminPw.value='';
-  }
-  adminBtn.addEventListener('click',()=>showAdmin(true));
-  document.getElementById('authAdminCancel').addEventListener('click',()=>showAdmin(false));
-  adminForm.addEventListener('submit',async e=>{
-    e.preventDefault();
-    if(!adminPw.value){ adminPw.focus(); return; }
-    adminSubmit.disabled=true; msg.textContent='';
-    try{
-      if(await adminHash(adminPw.value)===A.admin.hash){
-        localStorage.setItem(A.lsKey,JSON.stringify({h:A.admin.hash,until:Date.now()+A.sessionDays*864e5}));
-        location.reload();
-        return;
-      }
-      msg.textContent='비밀번호가 올바르지 않습니다.';
-      adminPw.select();
-    }catch(err){ console.error(err); msg.textContent='로그인 처리 중 오류가 발생했습니다.'; }
-    adminSubmit.disabled=false;
-  });
 
   if(!A.clientId){ msg.textContent='로그인 설정(클라이언트 ID)이 아직 없습니다.'; return; }
   function decodeJwt(t){
@@ -2823,6 +2794,15 @@ window.BAROYAM_PROFILES=(function(){
     <h1 class="mp-title" id="mpTitle">누구신가요?</h1>
     <p class="mp-sub">내 이름을 골라 주세요.<br>고른 회원으로 대시보드 프로필이 맞춰집니다.</p>
     <div class="mp-list" id="mpList"></div>
+    <form class="mp-pw" id="mpPwForm" hidden autocomplete="off">
+      <p class="mp-pw-who"><b id="mpPwName"></b>님은 팀장이에요.<br>팀장 비밀번호를 입력해 주세요.</p>
+      <input class="mp-pw-input" id="mpPwInput" type="password" inputmode="numeric" placeholder="비밀번호" aria-label="팀장 비밀번호" aria-describedby="mpPwError">
+      <p class="mp-pw-error" id="mpPwError" role="alert"></p>
+      <div class="mp-pw-actions">
+        <button type="button" class="mp-pw-cancel" id="mpPwCancel">취소</button>
+        <button type="submit" class="mp-pw-submit" id="mpPwSubmit">입장</button>
+      </div>
+    </form>
     <div class="mp-foot">
       <p class="mp-note">내 이름이 없으면 관리자에게 회원 추가를 요청해 주세요.</p>
       <button type="button" class="mp-back" id="mpBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>로그인 화면으로</button>
@@ -2860,11 +2840,44 @@ window.BAROYAM_PROFILES=(function(){
   render();
   document.addEventListener('baroyam:profiles',render);
   document.addEventListener('baroyam:members',render);   /* 시트에서 목록이 늦게 내려와도 따라 그린다 */
+  /* 팀장은 관리자 권한을 함께 가지므로 비밀번호를 한 번 묻는다 ·
+     다른 역할은 예전처럼 고르면 바로 들어간다 */
+  const LEAD=window.BAROYAM_LEAD;
+  const card=document.querySelector('#memberGate .mp-card');
+  const pwForm=document.getElementById('mpPwForm'), pwInput=document.getElementById('mpPwInput'),
+        pwName=document.getElementById('mpPwName'), pwError=document.getElementById('mpPwError'),
+        pwSubmit=document.getElementById('mpPwSubmit');
+  let pending='', pwBusy=false;
+  function askPw(m){
+    pending=m.id; pwName.textContent=m.name; pwInput.value=''; pwError.textContent='';
+    card.classList.add('is-pw'); pwForm.hidden=false; pwInput.focus();
+  }
+  function cancelPw(){
+    pending=''; pwForm.hidden=true; card.classList.remove('is-pw'); pwInput.value=''; pwError.textContent='';
+  }
+  function enter(id){ P.setMe(id); location.reload(); }
   list.addEventListener('click',e=>{
     const item=e.target.closest('.mp-item');
     if(!item) return;
-    P.setMe(item.dataset.id);
-    location.reload();
+    const id=item.dataset.id;
+    if(!LEAD.isLeadRole(id)){ LEAD.clear(); enter(id); return; }
+    const m=MEM.load().find(x=>x.id===id);
+    if(m) askPw(m);
+  });
+  document.getElementById('mpPwCancel').addEventListener('click',cancelPw);
+  pwForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    if(pwBusy||!pending) return;
+    const v=pwInput.value.trim();
+    if(!v){ pwError.textContent='비밀번호를 입력하세요.'; pwInput.focus(); return; }
+    if(!(window.crypto&&crypto.subtle)){ pwError.textContent='이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'; return; }
+    pwBusy=true; pwSubmit.disabled=true; pwError.textContent='';
+    window.baroyamLeadHash(v).then(h=>{
+      if(h!==window.BAROYAM_AUTH.lead.hash){ pwError.textContent='비밀번호가 맞지 않아요.'; pwInput.select(); return; }
+      LEAD.grant(pending);
+      enter(pending);
+    }).catch(err=>{ console.error(err); pwError.textContent='확인 중 오류가 났어요. 다시 시도해 주세요.'; })
+      .finally(()=>{ pwBusy=false; pwSubmit.disabled=false; });
   });
   /* 뒤로가기 · 로그아웃과 같은 일을 한다 · 세션과 골라 둔 회원을 비우고 로그인 화면으로 */
   document.getElementById('mpBack').addEventListener('click',()=>{
@@ -3005,7 +3018,8 @@ window.BAROYAM_PROFILES=(function(){
           <h2 id="settingsPwTitle">관리자 확인</h2>
           <button class="settings-close" type="button" id="settingsPwCloseBtn" aria-label="닫기">✕</button>
         </div>
-        <p class="pw-hint">설정은 관리자만 들어갈 수 있어요. 관리자 비밀번호를 입력하세요.</p>
+        <p class="pw-hint" id="settingsPwHint">아직 팀장이 없어요. 팀장 비밀번호를 입력하면 들어가서 팀장을 정할 수 있어요.</p>
+        <p class="pw-hint" id="settingsPwDenied" hidden>관리자 설정은 <b>팀장</b>만 들어갈 수 있어요.<br>팀장에게 요청하거나, 로그인 화면에서 팀장으로 다시 들어와 주세요.</p>
         <form class="member-add-form" id="settingsPwForm" autocomplete="off">
           <input type="password" id="settingsPwInput" inputmode="numeric" placeholder="비밀번호" aria-label="관리자 비밀번호" aria-describedby="settingsPwError">
           <button type="submit">확인</button>
@@ -5792,7 +5806,6 @@ async function syncFromSheets(){
   const at=Date.now();
   localStorage.setItem(SHEET_CACHE_KEY,JSON.stringify({data,at}));
   showSyncTime(at);
-  document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
 }
 syncFromSheets().catch(err=>console.error('자동 동기화 실패',err));
 
@@ -6186,8 +6199,6 @@ window.CsGuide=(function(){
   /* 설정 잠금 · 이 파일은 공개 저장소(GitHub Pages)에 그대로 올라가므로 비밀번호 원문은 두지 않고
      PBKDF2 해시만 둔다 · 한 번 맞히면 이 탭을 닫기 전까지(sessionStorage)는 다시 묻지 않는다.
      화면 진입만 막는 잠금이라, 시트 API 자체를 막아주지는 않는다 */
-  const PW_SALT='baroyam-settings-v1', PW_ITER=200000;
-  const PW_HASH='87e4ebdd8f864937981a8ecfd063c2fcc8e8fce24b9303b5290a1631ece8ede3';
   const UNLOCK_KEY='baroyam_settings_unlocked_v1';
   const pwOverlay=document.getElementById('settingsPwOverlay');
   const pwPanel=pwOverlay.querySelector('.pw-panel');
@@ -6197,26 +6208,29 @@ window.CsGuide=(function(){
   const pwSubmit=pwForm.querySelector('button[type="submit"]');
   let unlocked=false, pwBusy=false;
   try{ unlocked=sessionStorage.getItem(UNLOCK_KEY)==='1'; }catch(e){}
-  /* 관리자 비밀번호로 들어온 사람은 이미 그 비밀번호를 통과했다 ·
-     설정에 들어갈 때 같은 비밀번호를 또 묻지 않는다 ·
-     구글 계정으로 들어온 사람은 종전대로 묻는다 */
-  try{
-    const A=window.BAROYAM_AUTH;
-    const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
-    if(s && A.admin && s.h===A.admin.hash) unlocked=true;
-  }catch(e){}
+  /* 팀장으로 들어온 사람은 회원 선택 화면에서 이미 같은 비밀번호를 통과했다 ·
+     설정에 들어갈 때 또 묻지 않는다 · 다른 회원은 종전대로 묻는다 */
+  if(window.BAROYAM_LEAD.isOn()) unlocked=true;
 
-  async function hashPw(pw){
-    const enc=new TextEncoder();
-    const key=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']);
-    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(PW_SALT),iterations:PW_ITER,hash:'SHA-256'},key,256);
-    return Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,'0')).join('');
+  const hashPw=window.baroyamLeadHash;
+  /* 관리자 설정은 팀장만 연다 · 다만 회원 중에 팀장이 아직 한 명도 없으면
+     아무도 들어가서 팀장을 정할 수 없으므로, 그때만 예전처럼 비밀번호로 열어 준다 */
+  const pwTitle=document.getElementById('settingsPwTitle');
+  const pwHint=document.getElementById('settingsPwHint');
+  const pwDenied=document.getElementById('settingsPwDenied');
+  const pwClose=document.getElementById('settingsPwCloseBtn');
+  function anyLead(){
+    try{ return window.BAROYAM_MEMBERS.load().some(m=>window.BAROYAM_LEAD.isLeadRole(m.id)); }
+    catch(e){ return false; }
   }
   function openPw(){
+    const bootstrap=!anyLead();
+    pwTitle.textContent=bootstrap?'팀장 확인':'팀장만 들어갈 수 있어요';
+    pwHint.hidden=!bootstrap; pwForm.hidden=!bootstrap; pwDenied.hidden=bootstrap;
     pwInput.value='';
     pwError.textContent='';
     pwOverlay.hidden=false;
-    pwInput.focus();
+    if(bootstrap) pwInput.focus(); else pwClose.focus();
     document.addEventListener('keydown',onPwKeydown);
   }
   function closePw(returnFocus){
@@ -6247,7 +6261,7 @@ window.CsGuide=(function(){
     if(!(window.crypto&&crypto.subtle)){ pwFail('이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'); return; }
     pwBusy=true; pwSubmit.disabled=true;
     hashPw(v).then(h=>{
-      if(h!==PW_HASH){ pwFail('비밀번호가 맞지 않아요.'); return; }
+      if(h!==window.BAROYAM_AUTH.lead.hash){ pwFail('비밀번호가 맞지 않아요.'); return; }
       unlocked=true;
       try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(err){}
       closePw(false);
@@ -6337,29 +6351,26 @@ window.CsGuide=(function(){
   const AM=window.baroyamAdminMode;
   if(!btn||!menu||!AM) return;
 
-  /* 계정 정보 · 구글 로그인은 이름/이메일/사진을, 관리자 비밀번호 로그인은 "관리자 계정"으로 보여준다.
+  /* 계정 정보 · 구글 로그인의 이름/이메일/사진을 보여준다.
      이 기능 전에 로그인한 세션에는 프로필이 없어서, 다시 로그인하기 전까지는 기본 아이콘으로 둔다 */
   const A=window.BAROYAM_AUTH, P=window.BAROYAM_PROFILES;
   let s={};
   try{ s=JSON.parse(localStorage.getItem(A.lsKey)||'null')||{}; }catch(e){}
-  const isAdminLogin=s.h===A.admin.hash;
   /* 로그인 뒤 고른 회원이 있으면 그 회원의 이름·사진·역할이 구글 계정 정보보다 앞선다 */
-  const me=isAdminLogin?null:P.meMember();
+  const me=P.meMember();
   const meProf=me?P.get(me.id):null;
-  const name=isAdminLogin?'팀장':(me?me.name:(s.name||(s.email?s.email.split('@')[0]:'구글 계정')));
-  const mail=isAdminLogin?'비밀번호로 로그인':(s.email||'다시 로그인하면 프로필이 표시돼요');
-  const face=(meProf&&meProf.avatar)||(isAdminLogin?'':s.picture||'');
+  const name=me?me.name:(s.name||(s.email?s.email.split('@')[0]:'구글 계정'));
+  const mail=s.email||'다시 로그인하면 프로필이 표시돼요';
+  const face=(meProf&&meProf.avatar)||s.picture||'';
   const initial=(me?me.name:(s.name||'')).trim().charAt(0)||'';
   const personIc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>';
-  const shieldIc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></svg>';
   document.querySelectorAll('#tbProfile [data-avatar]').forEach(el=>{
     if(face){
       const img=new Image();
       img.alt=''; img.referrerPolicy='no-referrer'; img.src=face;
       img.onerror=()=>{ el.textContent=initial; if(!el.textContent) el.innerHTML=personIc; };
       el.appendChild(img);
-    }else if(isAdminLogin){ el.innerHTML=shieldIc; }
-    else if(initial){ el.textContent=initial; }
+    }else if(initial){ el.textContent=initial; }
     else el.innerHTML=personIc;
   });
   document.getElementById('tbProfileName').textContent=name;
@@ -6374,10 +6385,9 @@ window.CsGuide=(function(){
 
   const role=document.getElementById('tbProfileRole');
   const badge=document.getElementById('tbAdminBadge');
-  /* 관리자 표시 기준 · 비밀번호로 들어왔으면 늘 관리자다 ·
-     구글 계정으로 들어온 사람은 설정에서 비밀번호를 통과한 동안만 관리자로 보인다 */
+  /* 관리자 표시 기준 · 팀장으로 들어왔거나, 설정에서 비밀번호를 통과한 동안만 관리자로 보인다 */
   function render(){
-    const on=isAdminLogin||AM.isOn();
+    const on=AM.isOn();
     role.textContent=on?'관리자 모드':'일반 모드';
     role.classList.toggle('is-admin',on);
     badge.hidden=!on;
@@ -6414,11 +6424,11 @@ window.CsGuide=(function(){
 
   document.getElementById('tbOpenSettings').addEventListener('click',()=>{ close(false); AM.openSettings(); });
   /* 회원 바꾸기 · "나"를 비우면 새로고침할 때 회원 선택 화면이 다시 뜬다 ·
-     비밀번호로 들어온 관리자는 회원 개념을 쓰지 않으므로 감춘다 */
+     팀장 권한도 같이 비워서, 다음 사람이 그대로 물려받지 않게 한다 */
   const changeMemberBtn=document.getElementById('tbChangeMember');
-  changeMemberBtn.hidden=isAdminLogin;
   changeMemberBtn.addEventListener('click',()=>{
     P.setMe('');
+    window.BAROYAM_LEAD.clear();
     location.reload();
   });
   document.getElementById('tbSignOut').addEventListener('click',()=>{
@@ -6755,6 +6765,8 @@ window.CsGuide=(function(){
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의안건은 DOM이 하나뿐이라, 크게보기로 들어올 때 우측 패널에서 본문으로 옮겨온다 */
     if(v==='agenda'&&window.mountAgendaMain) window.mountAgendaMain();
+    /* 회의 기록은 여기 들어올 때 처음 받아 온다(1MB가 넘어 첫 화면에서는 받지 않는다) */
+    if(v==='agenda') document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
     const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='agenda');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
@@ -6790,15 +6802,10 @@ window.CsGuide=(function(){
   if(!group||!head) return;
   const subs=[...group.querySelectorAll('.sb-subitem')];
 
-  /* 판매채널은 관리자만 본다 · 일반 회원(구글 계정)에게는 사이드탭에 나오지 않는다 ·
-     관리자 기준은 프로필의 관리자 칩과 같다 ·
-     비밀번호로 들어왔거나, 구글 계정이라도 설정에서 비밀번호를 통과한 동안 */
+  /* 판매채널은 관리자만 본다 · 일반 회원에게는 사이드탭에 나오지 않는다 ·
+     관리자 기준은 프로필의 관리자 칩과 같다 — 팀장으로 들어왔거나,
+     설정에서 비밀번호를 통과한 동안 */
   function isAdmin(){
-    try{
-      const A=window.BAROYAM_AUTH;
-      const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
-      if(s && A.admin && s.h===A.admin.hash) return true;
-    }catch(e){}
     const AM=window.baroyamAdminMode;
     return !!(AM&&AM.isOn());
   }
@@ -8304,6 +8311,8 @@ window.CsGuide=(function(){
     const logoFab=document.getElementById('logoFab');
     if(logoFab) logoFab.classList.toggle('is-open',on);
     fab.setAttribute('aria-expanded',on?'true':'false');
+    /* 펼칠 때만 · 회의 기록을 아직 안 받았으면 이때 받아 온다 */
+    if(on) document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
   }
 
   window.mountAgendaMain=()=>{ setOpen(false); mountTo(mainHost); };
@@ -10563,11 +10572,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const A=window.BAROYAM_AUTH, P=window.BAROYAM_PROFILES;
     let s={};
     try{ s=JSON.parse(localStorage.getItem(A&&A.lsKey)||'null')||{}; }catch(e){}
-    const isAdminLogin=!!(A&&A.admin&&s.h===A.admin.hash);
     /* 로그인 뒤 고른 회원이 있으면 그 이름을 쓴다 */
-    const mem=isAdminLogin?null:(P&&P.meMember());
-    $('mhWelcomeName').textContent=isAdminLogin?'팀장'
-      :(mem?mem.name:(s.name||(s.email?s.email.split('@')[0]:'회원')));
+    const mem=P&&P.meMember();
+    $('mhWelcomeName').textContent=mem?mem.name:(s.name||(s.email?s.email.split('@')[0]:'회원'));
   })();
   /* 프로필 사진 · 동그라미를 누르면 규격 안내 창이 열리고 거기서 사진을 고른다.
      사진은 용량이 커서 서버로 올리는 state에 넣지 않고 이 브라우저(localStorage)에만 담는다 */
@@ -10588,11 +10595,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function loginInfo(){
     const A=window.BAROYAM_AUTH, P=window.BAROYAM_PROFILES; let a={};
     try{ a=JSON.parse(localStorage.getItem(A&&A.lsKey)||'null')||{}; }catch(e){}
-    const isAdminLogin=!!(A&&A.admin&&a.h===A.admin.hash);
-    const mem=isAdminLogin?null:(P&&P.meMember());
+    const mem=P&&P.meMember();
     const shared=mem?P.get(mem.id).avatar:'';   /* 시트에 올려 둔, 다른 PC에서도 보이는 사진 */
-    return {member:mem,shared:shared,picture:isAdminLogin?'':(a.picture||''),
-      initial:isAdminLogin?'':((mem?mem.name:(a.name||'')).trim().charAt(0)||'')};
+    return {member:mem,shared:shared,picture:a.picture||'',
+      initial:(mem?mem.name:(a.name||'')).trim().charAt(0)||''};
   }
   function readAvatar(){ try{ return localStorage.getItem(avatarKey())||''; }catch(e){ return ''; } }
   /* 내가 넣은 사진 → 시트에 올려 둔 내 회원 사진 → 구글 로그인 사진 → 이름 첫 글자 → 사람 아이콘 */
@@ -11852,9 +11858,27 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     historyUnitEl.textContent=text;
     setTimeout(()=>{ historyUnitEl.textContent=orig; },2200);
   }
-  async function refreshAgendaFromSheet(){
-    if(!apiReady()) return;
-    showHistLoading();
+  /* 회의 기록에는 메모에 붙여넣은 그림이 섞여 있어 한 번에 1MB가 넘게 오간다 ·
+     그래서 대시보드를 열 때 미리 받지 않고, 회의안건을 펼칠 때 처음 받는다
+     (화면에는 이 브라우저에 담아 둔 기록이 먼저 그려지고, 받아 오면 시트 것으로 바뀐다) ·
+     여는 길이 둘(사이드바 크게보기 · 메모 단추 패널)이라 짧은 사이에 겹쳐 불릴 수 있다 ·
+     이미 받아 오는 중이면 그 결과를 같이 쓰고, 방금 받아 왔으면 다시 받지 않는다 */
+  let agendaPending=null, agendaGotAt=0;
+  const AGENDA_FRESH_MS=20000;
+  function refreshAgendaFromSheet(){
+    if(!apiReady()) return Promise.resolve();
+    if(agendaPending) return agendaPending;
+    if(Date.now()-agendaGotAt<AGENDA_FRESH_MS) return Promise.resolve();
+    agendaPending=(async()=>{
+      showHistLoading();
+      try{
+        await agendaFirstSync();
+        if(await agendaFetchOnce()) agendaGotAt=Date.now();
+      }finally{ hideHistLoading(); }
+    })().finally(()=>{ agendaPending=null; });
+    return agendaPending;
+  }
+  async function agendaFetchOnce(){
     try{
       const json=await apiList();
       saveTrash(newestFirst(json.trash||[]));
@@ -11862,20 +11886,23 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       saveHistory(records);
       renderHistory(); renderTrash(); updateTrashCount();
       flashHistoryUnit('회의 기록을 불러왔습니다 ('+records.length+'건)');
+      return true;
     }catch(err){
       console.error(err);
       flashHistoryUnit('회의 기록을 불러오지 못했습니다 (오프라인이거나 로그인 필요)');
-    }finally{
-      hideHistLoading();
+      return false;                       /* 실패는 '방금 받아 왔다'로 치지 않는다(다음 부름에서 다시 시도) */
     }
   }
-  document.addEventListener('baroyam-agenda-refresh',refreshAgendaFromSheet);
+  /* 이벤트 객체가 인자로 딸려 들어가지 않게 감싸서 넘긴다 ·
+     이 이벤트는 회의안건을 펼칠 때(크게보기 · 메모 단추) 날아온다 */
+  document.addEventListener('baroyam-agenda-refresh',()=>refreshAgendaFromSheet());
 
-  /* 최초 1회: 이 기기에 이미 쌓인 회의 기록을 구글 시트로 올리고, 이후엔 시트를 기준으로 갱신 */
-  (async function syncInit(){
-    if(!apiReady()) return;
-    showHistLoading();
-    try{
+  /* 맨 처음 회의안건을 펼칠 때 딱 한 번 · 이 기기에 이미 쌓인 회의 기록을 구글 시트로 올린다 ·
+     예전에는 대시보드를 열자마자 했는데, 회의안건을 보지도 않는 사람까지 기다리게 했다 */
+  let agendaFirstDone=false;
+  async function agendaFirstSync(){
+    if(agendaFirstDone) return;
+    agendaFirstDone=true;
     if(!localStorage.getItem(MIGRATED_KEY)){
       try{
         const local=loadHistory();
@@ -11900,11 +11927,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         }
       }catch(err){ console.error(err); }
     }
-    await refreshAgendaFromSheet();
-    }finally{
-      hideHistLoading();
-    }
-  })();
+  }
 
   historyEl.addEventListener('click',e=>{
     const row=e.target.closest('.ag-hitem');
