@@ -9290,7 +9290,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const ICON_LINK_CHAIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.6 13.4a3.7 3.7 0 0 0 5.3 0l2.4-2.4a3.7 3.7 0 0 0-5.3-5.3l-1.2 1.2"/><path d="M13.4 10.6a3.7 3.7 0 0 0-5.3 0l-2.4 2.4a3.7 3.7 0 0 0 5.3 5.3l1.2-1.2"/></svg>';
   /* http(s)://... 와 www. 로 시작하는 것만 주소로 본다 ·
      'a.b' 같은 맨 낱말까지 주소로 보면 평범한 글에 엉뚱한 링크가 걸린다 */
-  const PJ_URL_RE=/(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+  /* 두 가지를 함께 찾는다 · [보여 줄 글](주소) 꼴과, 그냥 적어 둔 맨 주소 ·
+     앞엣것은 글을 끌어 고른 뒤 주소를 붙여넣으면 저절로 만들어진다(아래 붙여넣기 처리) */
+  const PJ_URL_RE=/\[([^\]\n]{1,120})\]\((?:https?:\/\/|www\.)[^\s()<>"']+\)|(?:https?:\/\/|www\.)[^\s<>"']+/gi;
   /* 주소 끝에 붙은 마침표·따옴표·닫는 괄호는 주소가 아니라 문장 부호로 본다 ·
      단, 주소 안에서 열린 괄호의 짝이라면 주소에 남긴다(위키 주소 등) */
   function pjTrimUrl(raw){
@@ -9300,29 +9302,37 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
     return raw;
   }
-  /* 글을 '보통 글 → 주소 → 보통 글 → ...' 순서로 훑어 준다 · 마지막에는 url 없이 남은 글만 한 번 더 */
+  /* 글을 '보통 글 → 주소 → 보통 글 → ...' 순서로 훑어 준다 · 마지막에는 url 없이 남은 글만 한 번 더 ·
+     label은 화면에 보일 글이다 · [글](주소) 꼴이면 그 글, 맨 주소면 null(주소를 그대로 보여 준다) */
   function pjEachUrl(text,fn){
     const str=String(text==null?'':text);
     let last=0,m;
     PJ_URL_RE.lastIndex=0;
     while((m=PJ_URL_RE.exec(str))!==null){
+      if(m[1]!==undefined){
+        const inner=m[0].slice(m[1].length+3,-1);      /* '[' + 글 + '](' 뒤부터 ')' 앞까지 */
+        fn(str.slice(last,m.index),inner,m[1]);
+        last=m.index+m[0].length;
+        PJ_URL_RE.lastIndex=last;
+        continue;
+      }
       const url=pjTrimUrl(m[0]);
       if(url.replace(/^(https?:\/\/|www\.)/i,'').length<3){ PJ_URL_RE.lastIndex=m.index+m[0].length; continue; }
-      fn(str.slice(last,m.index),url);
+      fn(str.slice(last,m.index),url,null);
       last=m.index+url.length;
       PJ_URL_RE.lastIndex=last;
     }
-    fn(str.slice(last),null);
+    fn(str.slice(last),null,null);
   }
   function pjLinkCount(text){ let n=0; pjEachUrl(text,(plain,url)=>{ if(url) n++; }); return n; }
   function pjLinkify(text){
     let out='';
-    pjEachUrl(text,(plain,url)=>{
+    pjEachUrl(text,(plain,url,label)=>{
       out+=esc(plain);
       if(!url) return;
       const href=/^www\./i.test(url)?('https://'+url):url;
       out+='<a class="pj-link" href="'+esc(href)+'" target="_blank" rel="noopener noreferrer"'
-        +' title="'+esc(href)+' · 새 탭에서 열기">'+esc(url)+ICON_LINK_OUT+'</a>';
+        +' title="'+esc(href)+' · 새 탭에서 열기">'+esc(label==null?url:label)+ICON_LINK_OUT+'</a>';
     });
     return out;
   }
@@ -9995,6 +10005,45 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const end=m.ta.value.length;
     try{ m.ta.setSelectionRange(end,end); }catch(err){}
   }
+  /* 붙여넣은 것이 '주소 하나'일 때만 고른 글에 링크를 건다 ·
+     괄호가 든 주소는 [글](주소) 꼴을 깨뜨리므로 %28·%29로 바꿔 둔다(주소는 그대로 열린다) */
+  function pjPastedUrl(txt){
+    const t=String(txt||'').trim();
+    if(!t||/\s/.test(t)) return '';
+    if(!/^(https?:\/\/|www\.)/i.test(t)) return '';
+    if(t.replace(/^(https?:\/\/|www\.)/i,'').length<3) return '';
+    return t.replace(/\(/g,'%28').replace(/\)/g,'%29');
+  }
+  /* 적어 둔 글을 끌어 고른 뒤 주소를 붙여넣으면, 주소가 아니라 '고른 글'에 링크가 걸린다 ·
+     메모에는 [고른 글](주소)로 적히므로 저장되는 값은 여전히 보통 글이다 ·
+     고른 것이 없거나, 고른 글에 대괄호·줄바꿈이 섞였거나, 고른 글 자체가 주소면 그냥 붙여넣는다 */
+  form.addEventListener('paste',e=>{
+    const ta=e.target;
+    if(!ta.classList||!ta.classList.contains('pjf-memo')) return;
+    if(!e.clipboardData) return;
+    const url=pjPastedUrl(e.clipboardData.getData('text/plain'));
+    if(!url) return;
+    let a=ta.selectionStart,b=ta.selectionEnd;
+    if(a==null||a===b) return;
+    /* 고를 때 딸려 온 앞뒤 공백은 글이 아니라 사이 여백이므로 링크에서 뺀다 */
+    const raw=ta.value.slice(a,b);
+    a+=raw.length-raw.replace(/^\s+/,'').length;
+    b-=raw.length-raw.replace(/\s+$/,'').length;
+    if(a>=b) return;
+    const label=ta.value.slice(a,b);
+    if(/[\[\]\n]/.test(label)) return;
+    if(/^(https?:\/\/|www\.)/i.test(label)) return;
+    const ins='['+label+']('+url+')';
+    const max=+ta.getAttribute('maxlength')||600;
+    if(ta.value.length-(b-a)+ins.length>max) return;   /* 글자 수를 넘기면 손대지 않는다 */
+    e.preventDefault();
+    ta.setSelectionRange(a,b);
+    let done=false;
+    try{ done=document.execCommand('insertText',false,ins); }catch(err){}
+    if(!done){ ta.setRangeText(ins,a,b,'end'); }       /* 되돌리기는 못 하지만 값은 똑같이 들어간다 */
+    pjMemoSync(ta,true);
+    queueProjectSave();
+  });
   /* 적는 동안에도 주소를 알아보면 안내줄이 바로 켜진다(붙여넣자마자 '걸렸다'는 것이 보이게) */
   form.addEventListener('input',e=>{ if(e.target.classList.contains('pjf-memo')) pjMemoSync(e.target,true); });
   /* 메모에서 손을 떼면 링크가 걸린 모습으로 · 창이 닫히는 중이면 건드리지 않는다 */
@@ -10028,7 +10077,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
          <div class="pjf-side">
            <div class="pjf-memo-wrap">
              <textarea class="pjf-memo" name="memo" maxlength="600" aria-label="메모"
-               placeholder="메모 · 이 프로젝트에 남길 짧은 기록&#10;(예: 업로드 · 캔바작업 · 주소를 붙여넣으면 링크가 걸립니다)">${esc(cur.memo||'')}</textarea>
+               placeholder="메모 · 이 프로젝트에 남길 짧은 기록&#10;(예: 업로드 · 캔바작업)&#10;&#10;주소를 붙여넣으면 링크가 되고,&#10;글을 끌어 고른 뒤 붙여넣으면 그 글에 링크가 걸립니다">${esc(cur.memo||'')}</textarea>
              <div class="pjf-memo-view" role="group" aria-label="메모 · 링크는 새 탭에서 열립니다" hidden></div>
              <p class="pjf-memo-hint" hidden></p>
            </div>
