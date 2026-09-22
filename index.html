@@ -2927,9 +2927,131 @@ window.BAROYAM_DB=(function(){
       return out;
     }catch(err){ console.error(err); return null; }
   }
+  /* ---------- 관계형 테이블 거울 ----------
+     원본은 app_settings 에 담긴 덩어리다(화면 코드가 예전부터 그 모양으로 다룬다).
+     members / projects / quick_links / notes 테이블은 그것을 행으로 펼쳐 둔 거울이라,
+     Supabase Table Editor에서 눈으로 보고 쿼리로 다룰 수 있다.
+     읽기는 덩어리에서만 하므로 두 곳이 서로 덮는 충돌은 생기지 않는다. */
+  function dateOrNull(v){
+    /* 날짜 칸에 빈 문자열을 넣으면 오류가 난다 · 비어 있으면 비운 채로 둔다 */
+    v=String(v==null?'':v).trim();
+    return v?v:null;
+  }
+  async function upsertRows(table,rows){
+    if(!rows||!rows.length) return {ok:0,fail:0};
+    const c=await client();
+    const r=await c.from(table).upsert(rows);
+    if(!r.error) return {ok:rows.length,fail:0};
+    /* 한 행이 걸려 전체가 막히지 않도록, 실패하면 한 줄씩 다시 넣어 본다 ·
+       어느 행이 왜 안 들어갔는지 콘솔에 남긴다 */
+    let ok=0,fail=0;
+    for(let i=0;i<rows.length;i++){
+      const one=await c.from(table).upsert(rows[i]);
+      if(one.error){ fail++; console.warn('['+table+'] 담지 못한 행 '+rows[i].id+' · '+one.error.message); }
+      else ok++;
+    }
+    return {ok:ok,fail:fail};
+  }
+  /* 화면에 없는 행은 거울에서도 지운다 · 회원 몫(channel 비움)만 골라 지운다 */
+  async function pruneMine(table,memberId,ids){
+    const c=await client();
+    let q=c.from(table).delete().eq('member_id',memberId).is('channel',null);
+    if(ids.length) q=q.not('id','in','('+ids.join(',')+')');
+    const r=await q;
+    if(r.error) console.warn('['+table+'] 지우기 실패 · '+r.error.message);
+  }
+  function linkRow(l,memberId,channel,i,now){
+    return {id:String(l.id),member_id:memberId,channel:channel,
+      name:l.name||'',url:l.url||'',sort_order:i,updated_at:now};
+  }
+  function noteRow(n,memberId,channel,now){
+    return {id:String(n.id),member_id:memberId,channel:channel,body:n.text||'',
+      created_at:new Date(n.ts||Date.now()).toISOString(),updated_at:now};
+  }
+  function projectRow(p,now){
+    return {id:String(p.id),name:p.name||'',status:p.status||'',
+      progress:+p.progress||0,memo:p.memo||'',urgent:!!p.urgent,
+      owner:p.owner||'',channel:p.channel||'',
+      due_date:dateOrNull(p.due),start_date:dateOrNull(p.start),updated_at:now};
+  }
+  /* 고른 회원의 퀵링크·기록노트를 거울에 맞춘다 (저장할 때마다 부른다) */
+  async function mirrorMine(memberId,links,notes){
+    if(!memberId) return;
+    if(!(await ensureSession())) return;
+    try{
+      const now=new Date().toISOString();
+      const L=(links||[]).filter(function(l){ return l&&l.id; });
+      const N=(notes||[]).filter(function(n){ return n&&n.id; });
+      await upsertRows('quick_links',L.map(function(l,i){ return linkRow(l,memberId,null,i,now); }));
+      await upsertRows('notes',N.map(function(n){ return noteRow(n,memberId,null,now); }));
+      await pruneMine('quick_links',memberId,L.map(function(l){ return String(l.id); }));
+      await pruneMine('notes',memberId,N.map(function(n){ return String(n.id); }));
+    }catch(err){ console.error(err); }
+  }
+  /* 프로젝트는 팀 공용이라 회원과 상관없이 한 벌이다 */
+  async function mirrorProjects(list){
+    if(!(await ensureSession())) return;
+    try{
+      const now=new Date().toISOString();
+      const P=(list||[]).filter(function(p){ return p&&p.id; });
+      await upsertRows('projects',P.map(function(p){ return projectRow(p,now); }));
+      const ids=P.map(function(p){ return String(p.id); });
+      if(ids.length){
+        const c=await client();
+        const r=await c.from('projects').delete().not('id','in','('+ids.join(',')+')');
+        if(r.error) console.warn('[projects] 지우기 실패 · '+r.error.message);
+      }
+    }catch(err){ console.error(err); }
+  }
+  /* 페이지를 열 때 한 번 · 덩어리 전체를 거울에 펼친다.
+     회원을 고르지 않아도 모든 회원 몫과 채널 몫이 테이블에 나타난다 */
+  async function mirrorAll(settings){
+    if(!settings) return;
+    if(!(await ensureSession())) return;
+    function j(k){ try{ return JSON.parse(settings[k]||'null'); }catch(e){ return null; } }
+    try{
+      const now=new Date().toISOString();
+      const memberRows=[], projectRows=[], linkRows=[], noteRows=[];
+      /* 회원 · 사진과 역할은 memberProfile:<id> 에 따로 담겨 있어 여기서 합친다 */
+      const m=j('members');
+      const list=Array.isArray(m)?m:((m&&m.list)||[]);
+      list.forEach(function(x,i){
+        if(!x||!x.id) return;
+        const prof=j('memberProfile:'+x.id)||{};
+        memberRows.push({id:String(x.id),name:x.name||'',color:x.color||'',
+          role:prof.role||'',avatar_url:prof.avatar||'',sort_order:i,updated_at:now});
+      });
+      /* 프로젝트 */
+      const sh=j('myhomeShared')||{};
+      (sh.projects||[]).forEach(function(p){ if(p&&p.id) projectRows.push(projectRow(p,now)); });
+      /* 퀵링크·기록노트 · 회원 몫과 채널 몫을 같은 함수로 펼친다 */
+      function part(memberId,channel,v){
+        if(!v||typeof v!=='object') return;
+        (v.links||[]).forEach(function(l,i){ if(l&&l.id) linkRows.push(linkRow(l,memberId,channel,i,now)); });
+        (v.notes||[]).forEach(function(n){ if(n&&n.id) noteRows.push(noteRow(n,memberId,channel,now)); });
+      }
+      Object.keys(settings).forEach(function(k){
+        if(k.indexOf('myhome:')!==0) return;
+        part(k.slice(7),null,j(k));
+      });
+      /* 판매채널 몫 · 채널 소유라 member_id 를 비운다 */
+      const ch=j('channels')||{};
+      Object.keys(ch.data||{}).forEach(function(name){ part(null,name,(ch.data||{})[name]); });
+
+      /* 회원을 먼저 담는다 · notes/quick_links 가 회원을 참조할 수 있다 */
+      const r1=await upsertRows('members',memberRows);
+      const r2=await upsertRows('projects',projectRows);
+      const r3=await upsertRows('quick_links',linkRows);
+      const r4=await upsertRows('notes',noteRows);
+      const fail=r1.fail+r2.fail+r3.fail+r4.fail;
+      console.info('[바로얌] 테이블 거울 갱신 · 회원 '+r1.ok+' · 프로젝트 '+r2.ok
+        +' · 퀵링크 '+r3.ok+' · 기록노트 '+r4.ok+(fail?' · 실패 '+fail+'건(위 경고 참고)':''));
+    }catch(err){ console.error('거울 갱신 중 오류',err); }
+  }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
     listNotes:listNotes,syncNotes:syncNotes,
-    saveSetting:saveSetting,loadSettings:loadSettings,migrateFromSheets:migrateFromSheets};
+    saveSetting:saveSetting,loadSettings:loadSettings,migrateFromSheets:migrateFromSheets,
+    mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects};
 })();
 </script>
 
@@ -9315,6 +9437,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(window.BAROYAM_MEMBERS) window.BAROYAM_MEMBERS.applyRemote(settings);
       if(window.__myhomeSync) window.__myhomeSync.apply(settings);
       if(window.BAROYAM_PROFILES) window.BAROYAM_PROFILES.applyRemote(settings);
+      /* 덩어리를 관계형 테이블에 펼쳐 둔다 · Table Editor에서 행으로 보기 위한 거울이다.
+         화면 동작과는 무관하므로 실패해도 대시보드는 그대로 쓴다 */
+      if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorAll(settings);
     }catch(err){ console.error(err); }
   })();
 })();
@@ -9431,9 +9556,6 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   /* 실제로 바뀐 몫에만 새 시각을 달고 올린다 ·
      링크를 고쳤다고 프로젝트를 다시 올리면 남의 최신 프로젝트를 되돌릴 수 있다 */
-  /* 기록노트는 서버(Supabase)에서 한 번이라도 받아온 뒤부터 올린다 ·
-     못 받아온 채로 올리면 이 브라우저의 빈 목록이 서버 기록을 지워 버린다 */
-  let notesPulled=false;
   function save(){
     const now=Date.now();
     const nowShared=stampShared();
@@ -9441,14 +9563,15 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       sharedPart={company:state.company,projects:state.projects,updatedAt:now};
       lastShared=nowShared;
       writeJson(LS_SHARED,sharedPart); queuePush(SHEET_SHARED,sharedPart);
+      if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorProjects(state.projects);
     }
     const nowMine=stampMine();
     if(nowMine!==lastMine){
       myPart={links:state.links,notes:state.notes,updatedAt:now};
       lastMine=nowMine;
       writeJson(LS_MINE+slot(),myPart); queuePush(SHEET_MINE+slot(),myPart);
-      if(notesPulled&&window.BAROYAM_DB)
-        window.BAROYAM_DB.syncNotes(slot(),state.notes).catch(function(err){ console.error(err); });
+      /* 관계형 거울도 같이 맞춘다 · Table Editor에서 바로 보이도록 */
+      if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorMine(slot(),state.links,state.notes);
     }
     const nowCh=stampCh();
     if(nowCh!==lastCh){
@@ -11233,33 +11356,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
   function render(){ renderAvatar(); renderStats(); renderLinks(); renderNotes(); renderProjects(); renderBoard(); renderChannel(false); }
   render();
-  /* 서버에 담긴 기록노트를 받아 화면을 맞춘다 · 받아오지 못하면(로그인 전·연결 실패)
-     이 브라우저에 저장된 내용을 그대로 쓰고, 서버에는 아무것도 올리지 않는다 */
-  (function(){
-    if(!window.BAROYAM_DB) return;
-    window.BAROYAM_DB.listNotes(slot()).then(function(rows){
-      if(!rows) return;
-      notesPulled=true;
-      /* 서버 것과 이 브라우저 것을 합친다 · 같은 id는 이 브라우저 것을 남긴다.
-         통째로 교체하면, 연결이 안 된 동안 적어 둔 기록이 서버의 옛 목록에
-         덮여 사라진다. 합친 결과는 save()가 이 브라우저와 서버에 함께 올린다.
-         (아직 기기 사이 "삭제"는 오가지 않는다 · 지운 기록이 다른 기기의
-          사본에서 다시 올라올 수 있다) */
-      const seen={}, merged=[];
-      state.notes.concat(rows).forEach(function(n){
-        if(!n||!n.id||seen[n.id]) return;
-        seen[n.id]=1; merged.push(n);
-      });
-      merged.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
-      state.notes=merged;
-      save();
-      /* save()는 "바뀐 것"만 올린다 · 서버가 비어 있으면 합친 결과가 이 브라우저
-         것과 같아 변경 없음으로 판단하고 첫 업로드가 영구히 일어나지 않는다.
-         그래서 받아온 직후에는 한 번 무조건 올려 서버를 이 브라우저와 맞춘다 */
-      window.BAROYAM_DB.syncNotes(slot(),state.notes)
-        .catch(function(err){ console.error(err); });
-    }).catch(function(err){ console.error(err); });
-  })();
+  /* 기록노트를 서버에서 따로 받아와 합치던 코드는 걷어냈다 ·
+     원본은 app_settings 한 곳이고 notes 테이블은 거울이라, 양쪽에서 읽으면
+     지운 기록이 되살아나는 등 서로 덮는 문제만 생긴다. 거울 갱신은
+     설정을 읽은 직후의 mirrorAll 과 저장할 때의 mirrorMine 이 맡는다 */
   tick();
   setInterval(tick,1000);
 })();
