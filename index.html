@@ -546,8 +546,13 @@ window.BAROYAM_LEAD=(function(){
       const u=sess.user, meta=u.user_metadata||{};
       const h=await window.baroyamAuthHash(u.email||'');
       if(A.allowedHashes.includes(h)){
+        const before=localStorage.getItem(A.lsKey)||'';
         cache({h:h,name:meta.full_name||meta.name||'',email:u.email||'',
           picture:meta.avatar_url||meta.picture||''});
+        /* 이 판정은 비동기라, 프로필을 이미 그린 뒤에 쪽지가 채워질 수 있다 ·
+           내용이 달라졌으면 다시 그리라고 알린다 */
+        if((localStorage.getItem(A.lsKey)||'')!==before)
+          document.dispatchEvent(new CustomEvent('baroyam:auth'));
         unlocked=true;
       }else{
         cache(null);          /* 허용되지 않은 계정이면 쪽지도 지운다 */
@@ -3146,6 +3151,13 @@ window.BAROYAM_LEAD=(function(){
          되지 않는" 상태가 됐다. 이름·이메일·사진은 새로 열릴 때 세션에서 받는다 */
       msg.textContent='로그인 중...';
       await window.BAROYAM_DB.signInWithGoogle(res.credential);
+      /* 프로필 메뉴에 띄울 이름·이메일·사진을 지금 적어 둔다 · 화면 여러 곳이 이
+         쪽지를 "즉시" 읽는데, 새로 열린 뒤 세션에서 채우면 읽는 시점에 아직
+         비어 있어 프로필이 빈 채로 나온다 */
+      try{
+        localStorage.setItem(A.lsKey,JSON.stringify({h:h,
+          name:p.name||'',email:p.email||'',picture:p.picture||''}));
+      }catch(e){}
       location.reload();
     }catch(err){
       console.error(err);
@@ -6731,34 +6743,42 @@ window.CsGuide=(function(){
   /* 계정 정보 · 구글 로그인의 이름/이메일/사진을 보여준다.
      이 기능 전에 로그인한 세션에는 프로필이 없어서, 다시 로그인하기 전까지는 기본 아이콘으로 둔다 */
   const A=window.BAROYAM_AUTH, P=window.BAROYAM_PROFILES;
-  let s={};
-  try{ s=JSON.parse(localStorage.getItem(A.lsKey)||'null')||{}; }catch(e){}
-  /* 로그인 뒤 고른 회원이 있으면 그 회원의 이름·사진·역할이 구글 계정 정보보다 앞선다 */
-  const me=P.meMember();
-  const meProf=me?P.get(me.id):null;
-  const name=me?me.name:(s.name||(s.email?s.email.split('@')[0]:'구글 계정'));
-  const mail=s.email||'다시 로그인하면 프로필이 표시돼요';
-  const face=(meProf&&meProf.avatar)||s.picture||'';
-  const initial=(me?me.name:(s.name||'')).trim().charAt(0)||'';
   const personIc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>';
-  document.querySelectorAll('#tbProfile [data-avatar]').forEach(el=>{
-    if(face){
-      const img=new Image();
-      img.alt=''; img.referrerPolicy='no-referrer'; img.src=face;
-      img.onerror=()=>{ el.textContent=initial; if(!el.textContent) el.innerHTML=personIc; };
-      el.appendChild(img);
-    }else if(initial){ el.textContent=initial; }
-    else el.innerHTML=personIc;
-  });
-  document.getElementById('tbProfileName').textContent=name;
-  document.getElementById('tbProfileMail').textContent=mail;
-  btn.title=s.email?name+' · '+s.email:name;
+  /* 계정 정보를 다시 그릴 수 있게 함수로 둔다 · 로그인 판정이 비동기라,
+     쪽지(이름·이메일·사진)가 이 자리를 그린 뒤에 채워질 수 있다 */
+  function paintAccount(){
+    let s={};
+    try{ s=JSON.parse(localStorage.getItem(A.lsKey)||'null')||{}; }catch(e){}
+    /* 로그인 뒤 고른 회원이 있으면 그 회원의 이름·사진·역할이 구글 계정 정보보다 앞선다 */
+    const me=P.meMember();
+    const meProf=me?P.get(me.id):null;
+    const name=me?me.name:(s.name||(s.email?s.email.split('@')[0]:'구글 계정'));
+    const mail=s.email||'프로필을 불러오는 중이에요';
+    const face=(meProf&&meProf.avatar)||s.picture||'';
+    const initial=(me?me.name:(s.name||'')).trim().charAt(0)||'';
+    document.querySelectorAll('#tbProfile [data-avatar]').forEach(el=>{
+      el.textContent='';                 /* 다시 그릴 때 사진이 겹쳐 쌓이지 않도록 비운다 */
+      if(face){
+        const img=new Image();
+        img.alt=''; img.referrerPolicy='no-referrer'; img.src=face;
+        img.onerror=()=>{ el.textContent=initial; if(!el.textContent) el.innerHTML=personIc; };
+        el.appendChild(img);
+      }else if(initial){ el.textContent=initial; }
+      else el.innerHTML=personIc;
+    });
+    document.getElementById('tbProfileName').textContent=name;
+    document.getElementById('tbProfileMail').textContent=mail;
+    btn.title=s.email?name+' · '+s.email:name;
 
-  /* 역할 칩 · 마이홈에서 고른 역할이 있을 때만 관리자/일반 모드 칩 앞에 붙는다 */
-  const job=document.getElementById('tbProfileJob');
-  const jobRole=meProf?P.role(meProf.role):null;
-  if(jobRole){ job.innerHTML=jobRole.ic+'<span>'+jobRole.k+'</span>'; job.hidden=false; }
-  else job.hidden=true;
+    /* 역할 칩 · 마이홈에서 고른 역할이 있을 때만 관리자/일반 모드 칩 앞에 붙는다 */
+    const job=document.getElementById('tbProfileJob');
+    const jobRole=meProf?P.role(meProf.role):null;
+    if(jobRole){ job.innerHTML=jobRole.ic+'<span>'+jobRole.k+'</span>'; job.hidden=false; }
+    else job.hidden=true;
+  }
+  paintAccount();
+  document.addEventListener('baroyam:auth',paintAccount);
+  document.addEventListener('baroyam:profiles',paintAccount);
 
   const role=document.getElementById('tbProfileRole');
   const badge=document.getElementById('tbAdminBadge');
@@ -10950,11 +10970,16 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* 인사 카드 · 회원사 이름은 마이홈 묶음에 같이 저장하고, 이름은 최상단 프로필과 같은 로그인 정보에서 가져온다 */
   (function(){
     const A=window.BAROYAM_AUTH, P=window.BAROYAM_PROFILES;
-    let s={};
-    try{ s=JSON.parse(localStorage.getItem(A&&A.lsKey)||'null')||{}; }catch(e){}
-    /* 로그인 뒤 고른 회원이 있으면 그 이름을 쓴다 */
-    const mem=P&&P.meMember();
-    $('mhWelcomeName').textContent=mem?mem.name:(s.name||(s.email?s.email.split('@')[0]:'회원'));
+    /* 로그인 판정이 비동기라 쪽지가 늦게 채워질 수 있어, 알림을 받으면 다시 적는다 */
+    function paintWelcome(){
+      let s={};
+      try{ s=JSON.parse(localStorage.getItem(A&&A.lsKey)||'null')||{}; }catch(e){}
+      /* 로그인 뒤 고른 회원이 있으면 그 이름을 쓴다 */
+      const mem=P&&P.meMember();
+      $('mhWelcomeName').textContent=mem?mem.name:(s.name||(s.email?s.email.split('@')[0]:'회원'));
+    }
+    paintWelcome();
+    document.addEventListener('baroyam:auth',paintWelcome);
   })();
   /* 프로필 사진 · 동그라미를 누르면 규격 안내 창이 열리고 거기서 사진을 고른다.
      사진은 용량이 커서 서버로 올리는 state에 넣지 않고 이 브라우저(localStorage)에만 담는다 */
