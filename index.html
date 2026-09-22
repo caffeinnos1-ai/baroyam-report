@@ -66,7 +66,7 @@ window.BAROYAM_MEMBERS=(function(){
     if(!/^https:/.test(url)) return;
     clearTimeout(pushTimer);
     pushTimer=setTimeout(()=>{
-      fetch(url,{method:'POST',body:JSON.stringify({action:'settingsSave',key:SHEET_KEY,value:JSON.stringify(box)})})
+      window.baroyamSaveSetting(SHEET_KEY,JSON.stringify(box))
         .catch(err=>console.error(err));
     },700);
   }
@@ -151,7 +151,7 @@ window.BAROYAM_PROFILES=(function(){
   function push(id,p){
     const url=apiUrl();
     if(!/^https:/.test(url)) return;
-    fetch(url,{method:'POST',body:JSON.stringify({action:'settingsSave',key:SHEET_PREFIX+id,value:JSON.stringify(p)})})
+    window.baroyamSaveSetting(SHEET_PREFIX+id,JSON.stringify(p))
       .catch(err=>console.error(err));
   }
   /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 (마이홈 동기화와 같은 방식) */
@@ -2744,6 +2744,12 @@ window.BAROYAM_SUPABASE={
   publishableKey:'sb_publishable_M54y_26hXGieZFwGWUhHTA_wD1mxZAk',
   sdk:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'
 };
+/* 설정 저장 · 화면 여러 곳에서 부르므로 짧은 전역 이름을 둔다.
+   Promise를 돌려주므로 기존 .then/.catch 사슬을 그대로 쓸 수 있다 */
+window.baroyamSaveSetting=function(key,value){
+  if(!window.BAROYAM_DB) return Promise.resolve(false);
+  return window.BAROYAM_DB.saveSetting(key,value);
+};
 window.BAROYAM_DB=(function(){
   const CFG=window.BAROYAM_SUPABASE;
   let clientP=null;
@@ -2856,8 +2862,74 @@ window.BAROYAM_DB=(function(){
       if(del.error) console.error(del.error);
     }catch(err){ console.error(err); }
   }
+  /* ---------- 문서형 설정 (app_settings) ----------
+     앱은 구글시트 시절부터 설정을 "키 -> JSON 문자열" 한 벌로 다뤄 왔다.
+     그 모양은 그대로 두고 담는 곳만 Supabase로 바꾼다. */
+  function valueOut(v){
+    /* jsonb에 담긴 것을 앱이 기대하는 문자열로 되돌린다 ·
+       weekplan처럼 원래 문자열이던 값은 문자열로, 객체는 다시 JSON 문자열로 */
+    if(v==null) return '';
+    return typeof v==='string'?v:JSON.stringify(v);
+  }
+  function valueIn(value){
+    /* 앱이 넘기는 값은 객체를 stringify한 JSON 문자열이거나, 그냥 문자열(HTML)이다 */
+    try{ return JSON.parse(value); }catch(e){ return String(value==null?'':value); }
+  }
+  async function saveSetting(key,value){
+    if(!key) return false;
+    if(!(await ensureSession())) return false;
+    try{
+      const c=await client();
+      const r=await c.from('app_settings')
+        .upsert({key:key,value:valueIn(value),updated_at:new Date().toISOString()});
+      if(r.error){ console.error(r.error); return false; }
+      return true;
+    }catch(err){ console.error(err); return false; }
+  }
+  /* 구글시트에 쌓여 있던 설정을 딱 한 번 Supabase로 옮긴다 ·
+     담는 곳만 바꾸면, 이 브라우저에 저장된 것이 없는 기기(집 PC 등)에서는
+     예전 데이터가 사라진 것처럼 보인다. 옮긴 뒤에는 표식을 남겨 다시 옮기지 않는다. */
+  const MIGRATED_KEY='_migratedFromSheets';
+  async function migrateFromSheets(){
+    try{
+      const c=await client();
+      const chk=await c.from('app_settings').select('key').eq('key',MIGRATED_KEY).limit(1);
+      if(chk.error){ console.error(chk.error); return false; }
+      if(chk.data&&chk.data.length) return false;          /* 이미 옮겼다 */
+      let url='';
+      try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
+      if(!/^https:/.test(url)) return false;
+      const res=await fetch(url+'?action=settings&_='+Date.now(),{cache:'no-store'});
+      const settings=(await res.json()).settings;
+      if(!settings) return false;
+      const keys=Object.keys(settings);
+      if(!keys.length) return false;
+      const now=new Date().toISOString();
+      const rows=keys.map(function(k){ return {key:k,value:valueIn(settings[k]),updated_at:now}; });
+      rows.push({key:MIGRATED_KEY,value:{at:now,count:keys.length},updated_at:now});
+      const up=await c.from('app_settings').upsert(rows);
+      if(up.error){ console.error('설정을 옮기지 못했습니다',up.error); return false; }
+      console.info('[바로얌] 구글시트 설정 '+keys.length+'개를 Supabase로 옮겼습니다.');
+      return true;
+    }catch(err){ console.error('설정 이전 중 오류',err); return false; }
+  }
+  /* 설정 한 벌을 읽어온다 · 처음이면 시트에서 옮겨온 뒤 읽는다.
+     로그인/연결이 안 되면 null을 돌려주고, 부르는 쪽은 이 브라우저 것을 그대로 쓴다 */
+  async function loadSettings(){
+    if(!(await ensureSession())) return null;
+    await migrateFromSheets();
+    try{
+      const c=await client();
+      const r=await c.from('app_settings').select('key,value');
+      if(r.error){ console.error(r.error); return null; }
+      const out={};
+      (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
+      return out;
+    }catch(err){ console.error(err); return null; }
+  }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
-    listNotes:listNotes,syncNotes:syncNotes};
+    listNotes:listNotes,syncNotes:syncNotes,
+    saveSetting:saveSetting,loadSettings:loadSettings,migrateFromSheets:migrateFromSheets};
 })();
 </script>
 
@@ -5739,7 +5811,7 @@ renderSection01();
   let pushTimer=null;
   function pushSection01(){
     if(!apiReady()) return;
-    fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'settingsSave',key:'section01',value:JSON.stringify(section01State)})}).catch(err=>console.error(err));
+    window.baroyamSaveSetting('section01',JSON.stringify(section01State)).catch(err=>console.error(err));
   }
   function schedulePush(){ clearTimeout(pushTimer); pushTimer=setTimeout(pushSection01,800); }
 
@@ -6682,7 +6754,7 @@ window.CsGuide=(function(){
     let url='';
     try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
     if(!/^https:/.test(url)) return;
-    fetch(url,{method:'POST',body:JSON.stringify({action:'settingsSave',key:'myhome:'+id,value:''})})
+    window.baroyamSaveSetting('myhome:'+id,'')
       .catch(err=>console.error(err));
   }
   /* 회원이 늘거나 줄면 프로젝트 화면의 회원 필터도 같이 다시 그리게 알린다 */
@@ -7332,9 +7404,7 @@ window.CsGuide=(function(){
   function pushToSheet(id){
     if(!apiReady()){ setSaveState('이 기기에만 저장됨',true); return; }
     setSaveState('저장 중...');
-    fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({
-      action:'settingsSave',key:settingsKey(id),value:docs[id]||''
-    })}).then(()=>setSaveState('저장됨'))
+    window.baroyamSaveSetting(settingsKey(id),docs[id]||'').then(()=>setSaveState('저장됨'))
       .catch(err=>{ console.error(err); setSaveState('시트 저장 실패 · 이 기기에는 저장됨',true); });
   }
   function scheduleSave(id){
@@ -7359,9 +7429,7 @@ window.CsGuide=(function(){
   }
   function pushGuideToSheet(){
     if(!apiReady()) return;
-    fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({
-      action:'settingsSave',key:'manualGuide',value:JSON.stringify(MANUAL_GUIDE)
-    })}).catch(err=>console.error(err));
+    window.baroyamSaveSetting('manualGuide',JSON.stringify(MANUAL_GUIDE)).catch(err=>console.error(err));
   }
   function saveGuideChange(){
     persistGuideLocal();
@@ -9058,7 +9126,7 @@ function revSetActivePlatform(platform){
   let pushTimer=null;
   function pushToSheet(){
     if(!apiReady()) return;
-    fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'settingsSave',key:'weekplan',value:wp.innerHTML})}).catch(err=>console.error(err));
+    window.baroyamSaveSetting('weekplan',wp.innerHTML).catch(err=>console.error(err));
   }
 
   function buildItem(html){
@@ -9213,7 +9281,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const savedMsg=month===goalState.month?'저장됨':`${month}월 목표 저장됨`;
 
     if(apiReady()){
-      fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'settingsSave',key:'goal',value:JSON.stringify(goalPayload())})})
+      window.baroyamSaveSetting('goal',JSON.stringify(goalPayload()))
         .then(()=>showStatus(openBtn,savedMsg))
         .catch(err=>{ console.error(err); showStatus(openBtn,'저장 실패(오프라인?)'); });
     }
@@ -9223,9 +9291,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   (async function loadSettings(){
     if(!apiReady()) return;
     try{
-      const res=await fetch(AGENDA_API_URL+'?action=settings&_='+Date.now(),{cache:'no-store'});
-      const json=await res.json();
-      const settings=json.settings||{};
+      /* 설정은 이제 Supabase(app_settings)에서 읽는다 · 구글시트는 매출데이터 전용으로만 남는다.
+         처음 한 번은 시트에 쌓여 있던 값을 그대로 옮겨 온다(migrateFromSheets).
+         로그인/연결이 안 되면 빈 한 벌이 되고, 아래 apply들은 모두 빈 값을 건너뛴다 */
+      const settings=(window.BAROYAM_DB?(await window.BAROYAM_DB.loadSettings()):null)||{};
       if(settings.goal){
         try{
           const b=goalBookFrom(JSON.parse(settings.goal));
@@ -9356,7 +9425,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(typeof AGENDA_API_URL==='undefined'||!/^https:/.test(AGENDA_API_URL)) return;
     clearTimeout(pushTimers[key]);
     pushTimers[key]=setTimeout(()=>{
-      fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'settingsSave',key:key,value:JSON.stringify(value)})})
+      window.baroyamSaveSetting(key,JSON.stringify(value))
         .catch(err=>console.error(err));
     },700);
   }
