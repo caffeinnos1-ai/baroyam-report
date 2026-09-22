@@ -775,52 +775,25 @@ window.BAROYAM_LEAD=(function(){
 })();
 </script>
 <style>
-  /* ===== 구글 로그인 화면 =====
-     넓은 화면에서는 브랜드 판(왼쪽) + 로그인 판(오른쪽) 두 칸, 좁은 화면에서는 로그인 판만 남는다.
-     색은 전부 테마 변수를 쓰므로 다크 모드에서 자동으로 따라간다 */
+  /* ===== 구글 로그인 화면 · 가운데 카드 하나로 단순하게 ===== */
   html.auth-locked body>*:not(#authGate){display:none!important}
   #authGate{display:none}
   html.auth-locked #authGate{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;
-    padding:28px 16px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;background:var(--bg,#f4f1eb)}
-  /* 카드 뒤 빛무리 둘 · 배경에 브랜드 색을 옅게 흘린다 */
-  html.auth-locked #authGate::before,html.auth-locked #authGate::after{
-    content:'';position:fixed;border-radius:50%;pointer-events:none;filter:blur(90px);opacity:.5}
-  html.auth-locked #authGate::before{width:520px;height:520px;top:-190px;left:-130px;
-    background:radial-gradient(circle,rgba(var(--indigo-rgb,205,100,40),.55),transparent 70%)}
-  html.auth-locked #authGate::after{width:460px;height:460px;right:-150px;bottom:-170px;
-    background:radial-gradient(circle,rgba(var(--indigo-rgb,205,100,40),.3),transparent 70%)}
-  /* 판정이 끝나기 전에는 카드를 감춘다 · 새 껍데기와 옛 이름 둘 다 걸어 둔다 */
-  html.auth-checking #authGate .auth-shell,html.auth-checking #authGate .auth-card{visibility:hidden}
-
-  #authGate .auth-shell{position:relative;z-index:1;display:grid;grid-template-columns:1fr;width:100%;max-width:404px;
-    overflow:hidden;border-radius:26px;border:1px solid var(--line,#ece5dc);background:var(--paper,#fff);
-    box-shadow:0 40px 90px -40px rgba(80,40,20,.42),0 2px 8px rgba(80,40,20,.05);
-    animation:authIn .45s ease-out both}
-  @keyframes authIn{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
-  @media (prefers-reduced-motion:reduce){ #authGate .auth-shell{animation:none} }
-
-  /* 브랜드 판 · 800px 아래에서는 통째로 숨긴다 */
-  #authGate .auth-brand{display:none;position:relative;flex-direction:column;justify-content:space-between;gap:30px;
-    padding:40px 34px;color:#fff;
-    background:linear-gradient(152deg,var(--indigo,#cd6428) 0%,var(--indigo-lite,#e5824a) 52%,var(--panel-dark,#241a14) 100%)}
-  #authGate .auth-brand::after{content:'';position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(420px 230px at 82% -10%,rgba(255,255,255,.24),transparent 62%)}
-  #authGate .auth-brand>*{position:relative;z-index:1}
-  #authGate .auth-brand .auth-logo{width:50px;height:50px;margin:0 0 20px;border-radius:15px;box-shadow:none}
-  #authGate .auth-eyebrow{margin:0;font-size:10.5px;font-weight:800;letter-spacing:.22em;color:rgba(255,255,255,.75)}
-  #authGate .auth-brand-copy{margin:12px 0 0;font-size:25px;font-weight:800;line-height:1.4;letter-spacing:-.6px}
-  #authGate .auth-points{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
-  #authGate .auth-points li{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.92)}
-  #authGate .auth-points svg{width:17px;height:17px;flex:none;opacity:.85}
-
-  /* 로그인 판 */
-  #authGate .auth-card{display:flex;flex-direction:column;justify-content:center;
-    padding:44px 32px 26px;text-align:center;background:var(--paper,#fff)}
-  #authGate .auth-logo{width:74px;height:74px;margin:0 auto 20px;border-radius:21px;display:block;
+    padding:24px 16px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;
+    background:radial-gradient(900px 520px at 50% -10%,rgba(232,98,30,.16),transparent 70%),var(--bg,#f4f1eb)}
+  html.auth-checking #authGate .auth-card{visibility:hidden}
+  /* margin:auto 로 가운데에 둔다 · align-items:center 만 쓰면 카드가 화면보다 길 때 위쪽이 잘려 스크롤해도 안 보인다 */
+  #authGate .auth-card{margin:auto;width:100%;max-width:400px;background:var(--paper,#fff);border:1px solid var(--line,#ece5dc);
+    border-radius:24px;padding:44px 32px 28px;text-align:center;
+    box-shadow:0 30px 70px -36px rgba(80,40,20,.35),0 2px 6px rgba(80,40,20,.04);animation:authIn .45s ease-out both}
+  @keyframes authIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){ #authGate .auth-card{animation:none} }
+  #authGate .auth-logo{width:84px;height:84px;margin:0 auto 22px;border-radius:22px;display:block;
     background:linear-gradient(135deg,#ee6a1a,#e24e16);box-shadow:0 14px 30px -12px rgba(226,78,22,.55)}
   #authGate .auth-logo[src]{background:none}
-  #authGate .auth-title{margin:0;font-size:23px;font-weight:800;letter-spacing:-.5px;color:var(--ink,#241a14)}
-  #authGate .auth-sub{margin:10px 0 28px;font-size:14px;line-height:1.65;color:var(--mute,#786c64)}
+  #authGate .auth-eyebrow{margin:0 0 8px;font-size:11.5px;font-weight:700;letter-spacing:.18em;color:var(--indigo,#cd6428)}
+  #authGate .auth-title{margin:0;font-size:24px;font-weight:800;letter-spacing:-.4px;color:var(--ink,#241a14)}
+  #authGate .auth-sub{margin:10px 0 30px;font-size:14.5px;line-height:1.6;color:var(--mute,#786c64)}
   #authGate .auth-btn{display:flex;justify-content:center;min-height:44px}
   #authGate .auth-msg{margin:18px 0 0;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;
     color:var(--neg,#cf5a50);background:var(--neg-soft,#fbeae8)}
@@ -828,13 +801,6 @@ window.BAROYAM_LEAD=(function(){
   #authGate .auth-foot{display:flex;align-items:center;justify-content:center;gap:6px;margin:28px -32px 0;padding:18px 32px 0;
     border-top:1px solid var(--line,#ece5dc);font-size:12.5px;color:var(--mute,#786c64)}
   #authGate .auth-foot svg{width:14px;height:14px;flex:none}
-  @media (min-width:800px){
-    #authGate .auth-shell{grid-template-columns:1.02fr .98fr;max-width:860px}
-    #authGate .auth-brand{display:flex}
-    #authGate .auth-card{padding:52px 44px 30px}
-    #authGate .auth-card .auth-logo{display:none}   /* 로고는 브랜드 판에만 둔다 */
-    #authGate .auth-foot{margin:28px -44px 0;padding:18px 44px 0}
-  }
   @media (max-width:420px){ #authGate .auth-card{padding:36px 22px 24px} #authGate .auth-foot{margin:24px -22px 0;padding:16px 22px 0} }
 
   /* ===== 로그인 직후 프로필(회원) 선택 =====
@@ -847,7 +813,7 @@ window.BAROYAM_LEAD=(function(){
     margin-left:-310px;border-radius:50%;pointer-events:none;filter:blur(100px);opacity:.45;
     background:radial-gradient(circle,rgba(var(--indigo-rgb,205,100,40),.5),transparent 70%)}
   html.auth-checking #memberGate .mp-card{visibility:hidden}
-  #memberGate .mp-card{position:relative;z-index:1;width:100%;max-width:560px;background:var(--paper,#fff);
+  #memberGate .mp-card{position:relative;z-index:1;margin:auto;width:100%;max-width:560px;background:var(--paper,#fff);
     border:1px solid var(--line,#ece5dc);border-radius:26px;padding:40px 30px 22px;
     box-shadow:0 40px 90px -40px rgba(80,40,20,.42),0 2px 8px rgba(80,40,20,.05);animation:authIn .45s ease-out both}
   @media (prefers-reduced-motion:reduce){ #memberGate .mp-card{animation:none} }
@@ -882,7 +848,8 @@ window.BAROYAM_LEAD=(function(){
   /* 팀장을 고르면 목록 대신 비밀번호 칸이 나온다 ·
      .mp-list/.mp-sub는 display를 따로 갖고 있어서 [hidden]만으로는 안 숨는다 */
   #memberGate .mp-card.is-pw .mp-list,#memberGate .mp-card.is-pw .mp-sub{display:none}
-  #memberGate .mp-pw{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  /* 목록은 560px 폭을 다 쓰지만 비밀번호 칸까지 그만큼 넓으면 허전하다 · 가운데로 모아 둔다 */
+  #memberGate .mp-pw{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin:4px auto 0}
   #memberGate .mp-pw[hidden]{display:none}
   #memberGate .mp-pw-who{margin:0 0 4px;font-size:13.5px;font-weight:600;line-height:1.6;color:var(--mute,#786c64);text-align:center}
   #memberGate .mp-pw-who b{color:var(--ink,#241a14)}
@@ -897,7 +864,9 @@ window.BAROYAM_LEAD=(function(){
   #memberGate .mp-pw-actions button{flex:1;height:46px;border-radius:13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
   #memberGate .mp-pw-submit{border:0;background:var(--indigo,#cd6428);color:#fff}
   #memberGate .mp-pw-submit:disabled{opacity:.6;cursor:wait}
-  #memberGate .mp-pw-cancel{flex:0 0 84px;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--mute,#786c64)}
+  /* 바로 위 `.mp-pw-actions button` 규칙이 선택자가 더 강해 flex:1 을 이긴다 ·
+     취소를 좁게 두려면 같은 무게로 적어야 한다 */
+  #memberGate .mp-pw-actions .mp-pw-cancel{flex:0 0 92px;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--mute,#786c64)}
   #memberGate .mp-foot{display:flex;flex-direction:column;align-items:center;gap:8px;margin:22px -30px 0;padding:16px 30px 0;
     border-top:1px solid var(--line,#ece5dc)}
   #memberGate .mp-note{margin:0;font-size:12.5px;font-weight:600;line-height:1.5;color:var(--mute,#786c64);text-align:center}
@@ -907,7 +876,11 @@ window.BAROYAM_LEAD=(function(){
     font-size:12.5px;font-weight:700;color:var(--mute,#786c64);transition:opacity .15s,color .15s,background-color .15s}
   #memberGate .mp-back:hover,#memberGate .mp-back:focus-visible{opacity:1;color:var(--indigo,#cd6428);background:var(--indigo-soft,#fdefe4)}
   #memberGate .mp-back svg{width:14px;height:14px;flex:none}
-  @media (max-width:460px){ #memberGate .mp-list{grid-template-columns:repeat(2,1fr)} }
+  /* 좁은 화면 · 두 칸으로 줄이고 목록 안쪽 스크롤을 없앤다 ·
+     안쪽에서 자르면 타일이 반만 보여 "깨진 것"처럼 읽힌다 · 카드째로 스크롤시킨다 */
+  @media (max-width:460px){
+    #memberGate .mp-list{grid-template-columns:repeat(2,1fr);max-height:none;overflow:visible}
+  }
   @media (max-width:420px){ #memberGate .mp-card{padding:32px 18px 16px} #memberGate .mp-foot{margin:18px -18px 0;padding:14px 18px 0} }
 </style>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -3327,31 +3300,18 @@ window.BAROYAM_LEAD=(function(){
 </style>
 </head>
 <body>
-<!-- 구글 로그인 · 넓은 화면은 브랜드 판 + 로그인 판 두 칸, 좁은 화면은 로그인 판만 보인다 -->
+<!-- 구글 로그인 · 허용된 계정만 들어올 수 있다 -->
 <div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-  <div class="auth-shell">
-    <div class="auth-brand">
-      <div>
-        <img class="auth-logo" id="authLogo" alt="">
-        <p class="auth-eyebrow">BAROYAM DASHBOARD</p>
-        <p class="auth-brand-copy">매출과 광고 성과를<br>한 화면에서.</p>
-      </div>
-      <ul class="auth-points">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19H2"/></svg>주간·월간 매출과 판매처별 흐름</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/><path d="m9 12 2.5 2.5L21 5"/></svg>회의안건·실행계획·상담 가이드</li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M4.2 7.5 6.8 9"/><path d="M17.2 15 19.8 16.5"/><path d="M4.2 16.5 6.8 15"/><path d="M17.2 9 19.8 7.5"/><circle cx="12" cy="12" r="3.4"/></svg>검색 트렌드와 자동화 현황</li>
-      </ul>
-    </div>
-    <div class="auth-card">
-      <img class="auth-logo" id="authLogoSm" alt="바로얌">
-      <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
-      <p class="auth-sub">보고서를 보려면<br>구글 계정으로 로그인해 주세요</p>
-      <div class="auth-btn" id="authBtn"></div>
-      <p class="auth-msg" id="authMsg"></p>
-      <div class="auth-foot">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        <span>허용된 계정만 접근할 수 있어요</span>
-      </div>
+  <div class="auth-card">
+    <img class="auth-logo" id="authLogo" alt="바로얌">
+    <p class="auth-eyebrow">BAROYAM DASHBOARD</p>
+    <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
+    <p class="auth-sub">매출·광고 성과 보고서를 보려면<br>구글 계정으로 로그인해 주세요</p>
+    <div class="auth-btn" id="authBtn"></div>
+    <p class="auth-msg" id="authMsg"></p>
+    <div class="auth-foot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>허용된 계정만 접근할 수 있어요</span>
     </div>
   </div>
 </div>
@@ -3359,11 +3319,10 @@ window.BAROYAM_LEAD=(function(){
 (function(){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
   const msg=document.getElementById('authMsg');
-  /* 로고 이미지는 사이드바(.sb-logo)에 이미 들어 있는 것을 그대로 빌려 쓴다 · 큰 base64를 두 번 넣지 않기 위해 ·
-     브랜드 판과 좁은 화면용, 두 자리에 같이 넣는다(한쪽은 화면 폭에 따라 숨는다) */
+  /* 로고 이미지는 사이드바(.sb-logo)에 이미 들어 있는 것을 그대로 빌려 쓴다 · 큰 base64를 두 번 넣지 않기 위해 */
   document.addEventListener('DOMContentLoaded',function(){
     const src=document.querySelector('.sb-logo');
-    if(src&&src.src) document.querySelectorAll('#authGate .auth-logo').forEach(function(el){ el.src=src.src; });
+    if(src&&src.src) document.getElementById('authLogo').src=src.src;
   });
   window.baroyamSignOut=async function(){
     /* 로그아웃은 "이 PC를 다른 사람이 쓴다"는 뜻이라, 골라 둔 회원도 같이 비운다 ·
@@ -6961,21 +6920,22 @@ window.CsGuide=(function(){
       const ok=run&&run.conclusion==='success';
       const badge=!run?'<span class="wf-status">기록 없음</span>'
         :`<span class="wf-status ${ok?'is-ok':'is-fail'}">${ok?'정상':'실패'}</span>`;
-      /* 실행 이력 · 왼쪽이 최신이고, 점마다 시각과 결과가 붙는다.
-         몇 번 중 몇 번 실패했는지는 점을 보면 알 수 있어 따로 적지 않는다 */
+      /* 실행 이력을 한 문장으로 적는다 · 점으로 보여 주던 것을 글로 바꿨다.
+         점은 색만으로 말해서 무슨 뜻인지 바로 와닿지 않았다 */
       const recent=hist.slice(0,HIST_MAX);
-      const dots=recent.map(r=>{
-        const good=r.conclusion==='success';
-        return `<i title="${esc(fmt(r.run_at))} · ${esc(r.conclusion||'알 수 없음')}" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(${good?'--pos':'--neg'})"></i>`;
-      }).join('');
+      const fails=recent.filter(r=>r.conclusion!=='success');
+      let histText='';
+      if(!recent.length) histText='실행 기록 없음';
+      else if(!fails.length) histText=`최근 ${recent.length}회 모두 정상`;
+      else histText=`최근 ${recent.length}회 중 <b>${fails.length}회 실패</b> · 마지막 실패 ${esc(fmt(fails[0].run_at))}`;
       const last=run
-        ? `<span>최근 <b>${esc(fmt(run.run_at))}</b>${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록 보기</a>`:''}</span>`
-        : '<span>실행 기록 없음</span>';
+        ? `<span>마지막 실행 <b>${esc(fmt(run.run_at))}</b>${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록 보기</a>`:''}</span>`
+        : '';
       /* 다음 실행은 칩을 강조해서 보여 주므로 따로 적지 않는다 */
       return `<div class="wf-card">
         <div class="wf-top"><div class="wf-name">${esc(w.name)}</div>${badge}</div>
         <div class="wf-times"><span class="wf-times-label">매일</span>${w.times.map(t=>`<span class="wf-time${t===nx.time?' is-next':''}"${t===nx.time?` title="다음 실행 · ${esc(nx.label)}"`:''}>${t}</span>`).join('')}</div>
-        <div class="wf-meta" style="align-items:center">${dots?`<span style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${dots}</span>`:''}${last}</div>
+        <div class="wf-meta"><span>${histText}</span>${last}</div>
       </div>`;
     }).join('');
     if(byName===false){ checked.textContent='최근 실행 기록을 불러오지 못했어요.'; return; }
