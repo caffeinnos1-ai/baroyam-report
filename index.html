@@ -2857,7 +2857,7 @@ window.BAROYAM_DB=(function(){
         if(up.error){ console.error(up.error); return; }
       }
       let q=c.from('notes').delete().eq('member_id',memberId).is('channel',null);
-      if(list.length) q=q.not('id','in','('+list.map(function(n){ return n.id; }).join(',')+')');
+      if(list.length) q=q.not('id','in',inList(list.map(function(n){ return n.id; })));
       const del=await q;
       if(del.error) console.error(del.error);
     }catch(err){ console.error(err); }
@@ -2953,10 +2953,14 @@ window.BAROYAM_DB=(function(){
     return {ok:ok,fail:fail};
   }
   /* 화면에 없는 행은 거울에서도 지운다 · 회원 몫(channel 비움)만 골라 지운다 */
+  function inList(ids){
+    /* id 에 쉼표나 괄호가 섞여도 목록이 깨지지 않도록 따옴표로 감싼다 */
+    return '("'+ids.map(function(v){ return String(v).replace(/"/g,'""'); }).join('","')+'")';
+  }
   async function pruneMine(table,memberId,ids){
     const c=await client();
     let q=c.from(table).delete().eq('member_id',memberId).is('channel',null);
-    if(ids.length) q=q.not('id','in','('+ids.join(',')+')');
+    if(ids.length) q=q.not('id','in',inList(ids));
     const r=await q;
     if(r.error) console.warn('['+table+'] 지우기 실패 · '+r.error.message);
   }
@@ -2975,8 +2979,18 @@ window.BAROYAM_DB=(function(){
       due_date:dateOrNull(p.due),start_date:dateOrNull(p.start),updated_at:now};
   }
   /* 고른 회원의 퀵링크·기록노트를 거울에 맞춘다 (저장할 때마다 부른다) */
+  function isKnownMember(id){
+    /* notes.member_id 에 외래키가 걸려 있어, 회원 목록에 없는 칸(__admin__,
+       지워진 회원)을 담으려 하면 거부된다. 원본은 app_settings 에 그대로
+       남으니, 거울에는 실재하는 회원 몫만 올린다 */
+    try{
+      const MEM=window.BAROYAM_MEMBERS;
+      if(!MEM||!MEM.load) return false;
+      return MEM.load().some(function(m){ return m&&String(m.id)===String(id); });
+    }catch(e){ return false; }
+  }
   async function mirrorMine(memberId,links,notes){
-    if(!memberId) return;
+    if(!memberId||!isKnownMember(memberId)) return;
     if(!(await ensureSession())) return;
     try{
       const now=new Date().toISOString();
@@ -2998,7 +3012,7 @@ window.BAROYAM_DB=(function(){
       const ids=P.map(function(p){ return String(p.id); });
       if(ids.length){
         const c=await client();
-        const r=await c.from('projects').delete().not('id','in','('+ids.join(',')+')');
+        const r=await c.from('projects').delete().not('id','in',inList(ids));
         if(r.error) console.warn('[projects] 지우기 실패 · '+r.error.message);
       }
     }catch(err){ console.error(err); }
@@ -3030,9 +3044,15 @@ window.BAROYAM_DB=(function(){
         (v.links||[]).forEach(function(l,i){ if(l&&l.id) linkRows.push(linkRow(l,memberId,channel,i,now)); });
         (v.notes||[]).forEach(function(n){ if(n&&n.id) noteRows.push(noteRow(n,memberId,channel,now)); });
       }
+      const known={};
+      list.forEach(function(x){ if(x&&x.id) known[String(x.id)]=1; });
+      let skipped=0;
       Object.keys(settings).forEach(function(k){
         if(k.indexOf('myhome:')!==0) return;
-        part(k.slice(7),null,j(k));
+        const id=k.slice(7);
+        /* 회원 목록에 없는 칸은 외래키에 걸려 거부되므로 아예 담지 않는다 */
+        if(!known[id]){ skipped++; return; }
+        part(id,null,j(k));
       });
       /* 판매채널 몫 · 채널 소유라 member_id 를 비운다 */
       const ch=j('channels')||{};
@@ -3045,7 +3065,9 @@ window.BAROYAM_DB=(function(){
       const r4=await upsertRows('notes',noteRows);
       const fail=r1.fail+r2.fail+r3.fail+r4.fail;
       console.info('[바로얌] 테이블 거울 갱신 · 회원 '+r1.ok+' · 프로젝트 '+r2.ok
-        +' · 퀵링크 '+r3.ok+' · 기록노트 '+r4.ok+(fail?' · 실패 '+fail+'건(위 경고 참고)':''));
+        +' · 퀵링크 '+r3.ok+' · 기록노트 '+r4.ok
+        +(skipped?' · 회원 목록에 없어 건너뜀 '+skipped+'칸':'')
+        +(fail?' · 실패 '+fail+'건(위 경고 참고)':''));
     }catch(err){ console.error('거울 갱신 중 오류',err); }
   }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
