@@ -11253,6 +11253,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       merged.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
       state.notes=merged;
       save();
+      /* save()는 "바뀐 것"만 올린다 · 서버가 비어 있으면 합친 결과가 이 브라우저
+         것과 같아 변경 없음으로 판단하고 첫 업로드가 영구히 일어나지 않는다.
+         그래서 받아온 직후에는 한 번 무조건 올려 서버를 이 브라우저와 맞춘다 */
+      window.BAROYAM_DB.syncNotes(slot(),state.notes)
+        .catch(function(err){ console.error(err); });
     }).catch(function(err){ console.error(err); });
   })();
   tick();
