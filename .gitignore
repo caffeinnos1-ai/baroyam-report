@@ -1,0 +1,7 @@
+# 내부 메모·설정은 공개 저장소에 두지 않는다 · 비공개 baroyam-week 에 백업한다
+supabase/
+.clasp.json
+.claspignore
+Code.js
+appsscript.json
+daily_report_log.txt
