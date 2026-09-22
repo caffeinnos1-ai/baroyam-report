@@ -469,7 +469,54 @@ window.BAROYAM_DB=(function(){
     console.info('[바로얌] 앱스크립트에서 옮김 · 회의안건 '+moved.agenda
       +'건(휴지통 '+moved.trash+') · 상담 가이드 '+moved.guide+'건');
   }
+  /* ---------- 트렌드 (trend_google / trend_naver) ----------
+     화면이 쓰던 모양 그대로 돌려준다 · {collectedAt, rank, keyword, link, newsTitle}.
+     예전에는 구글시트를 gviz(JSONP)로 읽었는데, 날짜가 "Date(2026,7,25,...)" 같은
+     글자로 오고 옛 행은 HYPERLINK() 수식이라 링크를 못 읽는 문제가 있었다.
+     여기서는 칸 종류가 그대로 오므로 그런 손질이 필요 없다. */
+  async function trendGoogle(limit){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('trend_google')
+      .select('collected_at,rank,keyword,news_url,news_title')
+      .order('collected_at',{ascending:false}).limit(limit||5000);
+    if(r.error) throw r.error;
+    return (r.data||[]).map(function(x){
+      const link=String(x.news_url||'');
+      return {collectedAt:new Date(x.collected_at),rank:+x.rank||99,
+        keyword:x.keyword||'',link:/^https?:\/\//.test(link)?link:'',
+        newsTitle:x.news_title||''};
+    }).filter(function(x){ return x.keyword&&!isNaN(x.collectedAt); });
+  }
+  /* 네이버는 "언제 모았는가"가 아니라 "그 순위가 매겨진 날짜"를 기준으로 본다 */
+  async function trendNaver(category,gender,limit){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('trend_naver')
+      .select('date,rank,keyword')
+      .eq('category',category).eq('gender',gender)
+      .order('date',{ascending:false}).limit(limit||5000);
+    if(r.error) throw r.error;
+    return (r.data||[]).map(function(x){
+      return {collectedAt:new Date(String(x.date)+'T00:00:00'),rank:+x.rank||99,
+        keyword:x.keyword||'',link:'',newsTitle:''};
+    }).filter(function(x){ return x.keyword&&!isNaN(x.collectedAt); });
+  }
+
+  /* ---------- 자동화 실행 이력 (automation_runs) ----------
+     예전 automation-status.json 은 워크플로우별 "최신 1건"만 담은 스냅샷이라
+     언제부터 실패했는지 알 수 없었다. 여기서는 최신순 이력을 그대로 돌려준다 */
+  async function automationRuns(limit){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('automation_runs')
+      .select('workflow,conclusion,url,run_at')
+      .order('run_at',{ascending:false}).limit(limit||300);
+    if(r.error) throw r.error;
+    return r.data||[];
+  }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
+    trendGoogle:trendGoogle,trendNaver:trendNaver,automationRuns:automationRuns,
     agendaList:agendaList,agendaUpsert:agendaUpsert,agendaSetTrashed:agendaSetTrashed,
     agendaPurge:agendaPurge,guideList:guideList,guideSave:guideSave,guideDelete:guideDelete,
     migrateAgendaAndGuide:migrateAgendaAndGuide,
@@ -6819,15 +6866,16 @@ window.CsGuide=(function(){
 
 /* 관리자 설정 · 워크플로우 · 회사 PC 작업 스케줄러로 돌리는 자동화 3가지의 실행 시각과 최근 결과 ·
    실행 시각은 스케줄러에만 있어 실제 실행 기록(9/16~)을 보고 적어 둔다. 시각이 바뀌면 WORKFLOWS만 고친다 ·
-   최근 결과는 baroyam-report의 refresh-status 워크플로우가 만드는 automation-status.json(같은 사이트)에서 읽는다 */
+   실행 기록은 Supabase automation_runs 에서 읽는다 · baroyam-report의 refresh-status
+   워크플로우가 하루 세 번 GitHub Actions 실행 결과를 그 표에 쌓는다 */
 (function(){
   const tab=document.getElementById('wfSettingsTab');
   const list=document.getElementById('wfList');
   const checked=document.getElementById('wfChecked');
   if(!tab||!list) return;
   const WORKFLOWS=[
-    {name:'구글트렌드 수집', desc:'구글 트렌드 키워드 관심도를 모아 트렌드 구글시트에 저장', times:['09:00','12:00','15:00','18:00']},
-    {name:'네이버데이터랩 수집', desc:'네이버 데이터랩 검색어 트렌드를 모아 트렌드 구글시트에 저장', times:['09:00']},
+    {name:'구글트렌드 수집', desc:'구글 트렌드 키워드 관심도를 모아 Supabase에 저장', times:['09:00','12:00','15:00','18:00']},
+    {name:'네이버데이터랩 수집', desc:'네이버 데이터랩 검색어 트렌드를 모아 Supabase에 저장', times:['09:00']},
     {name:'당일판매분요약표 (Slack)', desc:'이지어드민에서 당일 판매분을 받아 요약표를 Slack으로 전송', times:['16:15']}
   ];
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -6842,30 +6890,54 @@ window.CsGuide=(function(){
     const t=times.find(x=>x>cur);
     return t?{time:t,label:'오늘 '+t}:{time:times[0],label:'내일 '+times[0]};
   }
-  let status=null;
+  /* null=아직 안 읽음 · false=읽지 못함 · 객체=워크플로우 이름별 실행 이력(최신순) */
+  let byName=null;
+  const HIST_MAX=12;      /* 카드에 점으로 보여 줄 최근 실행 수 */
   function render(){
-    const runs={};
-    (status&&status.repos||[]).forEach(r=>(r.workflows||[]).forEach(w=>{ runs[w.name]=w; }));
+    const by=(byName&&typeof byName==='object')?byName:{};
     list.innerHTML=WORKFLOWS.map(w=>{
-      const run=runs[w.name], nx=nextRun(w.times);
+      const hist=by[w.name]||[], run=hist[0], nx=nextRun(w.times);
       const ok=run&&run.conclusion==='success';
       const badge=!run?'<span class="wf-status">기록 없음</span>'
         :`<span class="wf-status ${ok?'is-ok':'is-fail'}">${ok?'정상':'실패'}</span>`;
-      const last=run?`<span>최근 실행 <b>${esc(fmt(run.createdAt))}</b>${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록 보기</a>`:''}</span>`:'';
+      const last=run?`<span>최근 실행 <b>${esc(fmt(run.run_at))}</b>${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록 보기</a>`:''}</span>`:'';
+      /* 실행 이력 · 왼쪽이 최신이다. 예전에는 최신 한 건만 알 수 있어서
+         "언제부터 실패하기 시작했는지"를 볼 수 없었다 */
+      const recent=hist.slice(0,HIST_MAX);
+      const fails=recent.filter(r=>r.conclusion!=='success').length;
+      const dots=recent.map(r=>{
+        const good=r.conclusion==='success';
+        return `<i title="${esc(fmt(r.run_at))} · ${esc(r.conclusion||'알 수 없음')}" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(${good?'--pos':'--neg'})"></i>`;
+      }).join('');
+      const histRow=recent.length
+        ? `<div class="wf-meta" style="align-items:center;gap:8px">
+             <span style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${dots}</span>
+             <span>최근 ${recent.length}회 중 실패 <b>${fails}</b>회</span>
+           </div>`
+        : '';
       return `<div class="wf-card">
         <div class="wf-top"><div><div class="wf-name">${esc(w.name)}</div><div class="wf-desc">${esc(w.desc)}</div></div>${badge}</div>
         <div class="wf-times"><span class="wf-times-label">매일</span>${w.times.map(t=>`<span class="wf-time${t===nx.time?' is-next':''}">${t}</span>`).join('')}</div>
         <div class="wf-meta"><span>다음 실행 <b>${nx.label}</b></span>${last}</div>
+        ${histRow}
       </div>`;
     }).join('');
-    checked.textContent=status&&status.checkedAt?`실행 기록 확인 시각 ${fmt(status.checkedAt)}`:(status===false?'최근 실행 기록을 불러오지 못했어요.':'');
+    if(byName===false){ checked.textContent='최근 실행 기록을 불러오지 못했어요.'; return; }
+    if(!byName){ checked.textContent=''; return; }
+    let total=0, newest='';
+    Object.keys(by).forEach(k=>{ total+=by[k].length; if(by[k][0]&&(!newest||by[k][0].run_at>newest)) newest=by[k][0].run_at; });
+    checked.textContent=total?`실행 기록 ${total}건 · 가장 최근 ${fmt(newest)}`:'쌓인 실행 기록이 아직 없어요.';
   }
+  /* 실행 이력은 Supabase(automation_runs)에서 읽는다 ·
+     예전에는 워크플로우가 만든 automation-status.json(최신 1건짜리 스냅샷)을 읽었다 */
   function load(){
     render();
-    fetch('automation-status.json?_='+Date.now(),{cache:'no-store'})
-      .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
-      .then(j=>{ status=j; render(); })
-      .catch(()=>{ status=false; render(); });
+    if(!window.BAROYAM_DB){ byName=false; render(); return; }
+    window.BAROYAM_DB.automationRuns().then(rows=>{
+      const by={};
+      (rows||[]).forEach(r=>{ (by[r.workflow]=by[r.workflow]||[]).push(r); });
+      byName=by; render();
+    }).catch(err=>{ console.error(err); byName=false; render(); });
   }
   tab.addEventListener('click',load);
 })();
@@ -8971,13 +9043,7 @@ function revSetActivePlatform(platform){
 
 /* 트렌드분석 · 구글트렌드_수집.py가 쌓아둔 시트를 읽어와 워드클라우드+순위표로 표시 */
 (function(){
-  const TREND_SHEET_ID='1GHdEIhd7JiM_LG3C6qVWKhZMoJgVxn9xWfpvs-AkxWk';
-  const TREND_GID=1505985680;
   /* 네이버 데이터랩 카테고리×성별 워크시트 gid · 네이버데이터랩_수집.py의 CATEGORIES와 짝이 맞아야 한다 */
-  const NAVER_GIDS={
-    food:{ all:761049115, f:468254438, m:190306065 },
-    frozen:{ all:498155273, f:2094775177, m:1169083995 },
-  };
   const TREND_CACHE_KEY='baroyam_trend_sheet_cache_v1';
   const CLOUD_COLORS=['var(--indigo)','var(--coupang)','var(--naver)','var(--self)','var(--warn)','#6b4fc9'];
 
@@ -9045,57 +9111,10 @@ function revSetActivePlatform(platform){
   let calViewYear=new Date().getFullYear();
   let calViewMonth=new Date().getMonth();
 
-  function gvizFetchTrend(gid){
-    return new Promise((resolve,reject)=>{
-      const cbName='__gvizTrendCb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
-      const timer=setTimeout(()=>{cleanup();reject(new Error('시간이 초과되었습니다'));},15000);
-      function cleanup(){clearTimeout(timer);delete window[cbName];script.remove();}
-      window[cbName]=json=>{cleanup();resolve(json);};
-      const script=document.createElement('script');
-      script.src=`https://docs.google.com/spreadsheets/d/${TREND_SHEET_ID}/gviz/tq?gid=${gid}&tqx=responseHandler:${cbName}`;
-      script.onerror=()=>{cleanup();reject(new Error('트렌드 시트를 불러오지 못했습니다'));};
-      document.body.appendChild(script);
-    });
-  }
-  function cellStr(cell){ return cell&&cell.v!=null?String(cell.v).trim():''; }
-  /* gviz는 날짜/시각 셀을 "2026-08-25 ..." 같은 텍스트가 아니라
-     "Date(2026,7,25,0,34,48)"(월은 0부터 시작) 형태로 돌려준다 */
-  function parseGvizDateCell(cell){
-    if(!cell||cell.v==null) return null;
-    const m=String(cell.v).match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)$/);
-    if(!m) return null;
-    return new Date(+m[1],+m[2],+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0));
-  }
-  function parseRows(json){
-    return (json.table.rows||[]).map(r=>{
-      const c=r.c||[];
-      /* 예전에 수집된 행은 F열이 HYPERLINK() 수식이라 gviz가 링크텍스트만 돌려준다 ·
-         진짜 URL(http로 시작)일 때만 링크로 인정한다 */
-      const rawLink=cellStr(c[5]);
-      return {
-        collectedAt:parseGvizDateCell(c[0]),
-        rank:+cellStr(c[1])||99,
-        keyword:cellStr(c[2]),
-        link:/^https?:\/\//.test(rawLink)?rawLink:'',
-        newsTitle:cellStr(c[6]),
-      };
-    }).filter(r=>r.keyword&&r.collectedAt);
-  }
-  /* 네이버_식품_일간인기검색어 탭은 [수집시각, 날짜, 순위, 키워드] 4컬럼뿐이라
-     (관련기사 링크 없음) 별도 파서를 쓴다 · 집계 기준일은 실행시각이 아니라
-     실제 순위가 매겨진 "날짜"(B열)를 쓴다 */
-  function parseNaverRows(json){
-    return (json.table.rows||[]).map(r=>{
-      const c=r.c||[];
-      return {
-        collectedAt:parseGvizDateCell(c[1])||parseGvizDateCell(c[0]),
-        rank:+cellStr(c[2])||99,
-        keyword:cellStr(c[3]),
-        link:'',
-        newsTitle:'',
-      };
-    }).filter(r=>r.keyword&&r.collectedAt);
-  }
+  /* 트렌드는 Supabase(trend_google · trend_naver)에서 읽는다.
+     예전에는 구글시트를 gviz(JSONP)로 읽으면서 날짜 글자("Date(2026,7,25,...)")를
+     따로 풀고, 옛 행의 HYPERLINK() 수식 때문에 링크를 가려내야 했다.
+     칸 종류가 그대로 오는 지금은 그 손질이 필요 없어 파서를 걷어냈다 */
 
   function periodRange(){
     const s=new Date(rangeFrom+'T00:00:00');
@@ -9283,9 +9302,9 @@ function revSetActivePlatform(platform){
       const platform=activePlatform;
       const naverCategory=activeNaverCategory;
       const naverGender=activeNaverGender;
-      const gid=platform==='naver'?NAVER_GIDS[naverCategory][naverGender]:TREND_GID;
-      const json=await gvizFetchTrend(gid);
-      const parsed=platform==='naver'?parseNaverRows(json):parseRows(json);
+      const parsed=platform==='naver'
+        ? await window.BAROYAM_DB.trendNaver(naverCategory,naverGender)
+        : await window.BAROYAM_DB.trendGoogle();
       /* 응답 오는 사이 다른 플랫폼·카테고리·성별로 전환된 경우 이 응답은 버린다 */
       if(platform!==activePlatform||(platform==='naver'&&(naverCategory!==activeNaverCategory||naverGender!==activeNaverGender))) return;
       rows=parsed;
@@ -9294,7 +9313,7 @@ function revSetActivePlatform(platform){
       render();
     }catch(err){
       console.error(err);
-      setCloudUnit('트렌드 데이터를 불러오지 못했습니다 (오프라인이거나 시트 공유 설정을 확인해주세요)');
+      setCloudUnit('트렌드 데이터를 불러오지 못했습니다 (오프라인이거나 로그인이 필요합니다)');
     }
   }
 
