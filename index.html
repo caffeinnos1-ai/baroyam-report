@@ -2734,6 +2734,95 @@ window.BAROYAM_LEAD=(function(){
     </div>
   </div>
 </div>
+<!-- Supabase · 마이홈 기록노트(notes)를 이 브라우저가 아니라 서버에 담아 기기 사이에서 같이 본다.
+     publishableKey는 브라우저에 드러나도 되는 공개 키다 · 실제 차단은 Supabase RLS 정책이 한다
+     (로그인한 사람만 읽고 쓸 수 있음 · 정책 SQL은 supabase/notes-rls.sql).
+     로그인은 바로 아래 구글 게이트가 받은 ID 토큰을 그대로 넘겨 쓰므로 또 묻지 않는다. -->
+<script>
+window.BAROYAM_SUPABASE={
+  url:'https://cbwoybtltebmiizzeojn.supabase.co',
+  publishableKey:'sb_publishable_M54y_26hXGieZFwGWUhHTA_wD1mxZAk',
+  sdk:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'
+};
+window.BAROYAM_DB=(function(){
+  const CFG=window.BAROYAM_SUPABASE;
+  let clientP=null;
+  /* SDK는 실제로 쓸 때 한 번만 내려받는다 · 로그인 화면이 이걸 기다리느라 늦어지지 않도록 */
+  function loadSdk(){
+    return new Promise(function(resolve,reject){
+      if(window.supabase&&window.supabase.createClient) return resolve(window.supabase);
+      const s=document.createElement('script');
+      s.src=CFG.sdk; s.async=true;
+      s.onload=function(){
+        if(window.supabase&&window.supabase.createClient) resolve(window.supabase);
+        else reject(new Error('Supabase SDK를 불러오지 못했습니다'));
+      };
+      s.onerror=function(){ reject(new Error('Supabase SDK를 불러오지 못했습니다')); };
+      document.head.appendChild(s);
+    });
+  }
+  function client(){
+    if(!clientP) clientP=loadSdk().then(function(sb){
+      return sb.createClient(CFG.url,CFG.publishableKey,
+        {auth:{persistSession:true,autoRefreshToken:true,storageKey:'baroyam_sb_auth_v1'}});
+    });
+    return clientP;
+  }
+  /* 구글 게이트가 받은 ID 토큰을 그대로 Supabase 로그인에 쓴다 */
+  async function signInWithGoogle(idToken){
+    const c=await client();
+    const r=await c.auth.signInWithIdToken({provider:'google',token:idToken});
+    if(r.error) throw r.error;
+  }
+  async function session(){
+    try{
+      const c=await client();
+      const r=await c.auth.getSession();
+      return (r.data&&r.data.session)||null;
+    }catch(err){ return null; }
+  }
+  /* 서버에 담기는 모양: id · member_id · channel(마이홈은 비움) · body · created_at
+     화면이 쓰는 모양: {id, ts, text} */
+  function toNote(row){ return {id:row.id,ts:Date.parse(row.created_at)||Date.now(),text:row.body||''}; }
+  function toRow(n,memberId){
+    return {id:n.id,member_id:memberId,channel:null,body:n.text||'',
+      created_at:new Date(n.ts||Date.now()).toISOString(),updated_at:new Date().toISOString()};
+  }
+  /* 서버 것을 받아온다 · 로그인이 안 돼 있거나 연결이 안 되면 null을 돌려주고,
+     부르는 쪽은 이 브라우저에 저장해 둔 내용을 그대로 쓴다 */
+  async function listNotes(memberId){
+    if(!memberId) return null;
+    if(!(await session())) return null;
+    try{
+      const c=await client();
+      const r=await c.from('notes').select('id,body,created_at')
+        .eq('member_id',memberId).is('channel',null).order('created_at',{ascending:false});
+      if(r.error){ console.error(r.error); return null; }
+      return (r.data||[]).map(toNote);
+    }catch(err){ console.error(err); return null; }
+  }
+  /* 화면에 있는 목록에 서버를 맞춘다 · 지운 기록은 서버에서도 지운다.
+     한 번이라도 서버에서 받아온 뒤에만 부른다(빈 목록으로 서버를 지우지 않도록) */
+  async function syncNotes(memberId,notes){
+    if(!memberId) return;
+    if(!(await session())) return;
+    try{
+      const c=await client();
+      const list=Array.isArray(notes)?notes:[];
+      if(list.length){
+        const up=await c.from('notes').upsert(list.map(function(n){ return toRow(n,memberId); }));
+        if(up.error){ console.error(up.error); return; }
+      }
+      let q=c.from('notes').delete().eq('member_id',memberId).is('channel',null);
+      if(list.length) q=q.not('id','in','('+list.map(function(n){ return n.id; }).join(',')+')');
+      const del=await q;
+      if(del.error) console.error(del.error);
+    }catch(err){ console.error(err); }
+  }
+  return {signInWithGoogle:signInWithGoogle,session:session,listNotes:listNotes,syncNotes:syncNotes};
+})();
+</script>
+
 <script>
 (function(){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
@@ -2772,6 +2861,10 @@ window.BAROYAM_LEAD=(function(){
       /* 상단 프로필 메뉴에 띄울 이름·이메일·사진도 같이 적어 둔다 (이 브라우저에만 남는다) */
       localStorage.setItem(A.lsKey,JSON.stringify({h,until:Date.now()+A.sessionDays*864e5,
         name:p.name||'',email:p.email||'',picture:p.picture||''}));
+      /* 같은 구글 ID 토큰으로 Supabase에도 로그인해 둔다 · 기록노트를 서버에서 읽고 쓰는 데 쓴다.
+         Supabase 쪽 설정이 아직이어도 대시보드 로그인 자체는 막지 않는다 */
+      try{ if(window.BAROYAM_DB) await window.BAROYAM_DB.signInWithGoogle(res.credential); }
+      catch(err){ console.error('Supabase 로그인 실패',err); }
       location.reload();
     }catch(err){ console.error(err); msg.textContent='로그인 처리 중 오류가 발생했습니다.'; }
   }
@@ -9231,6 +9324,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   /* 실제로 바뀐 몫에만 새 시각을 달고 올린다 ·
      링크를 고쳤다고 프로젝트를 다시 올리면 남의 최신 프로젝트를 되돌릴 수 있다 */
+  /* 기록노트는 서버(Supabase)에서 한 번이라도 받아온 뒤부터 올린다 ·
+     못 받아온 채로 올리면 이 브라우저의 빈 목록이 서버 기록을 지워 버린다 */
+  let notesPulled=false;
   function save(){
     const now=Date.now();
     const nowShared=stampShared();
@@ -9244,6 +9340,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       myPart={links:state.links,notes:state.notes,updatedAt:now};
       lastMine=nowMine;
       writeJson(LS_MINE+slot(),myPart); queuePush(SHEET_MINE+slot(),myPart);
+      if(notesPulled&&window.BAROYAM_DB)
+        window.BAROYAM_DB.syncNotes(slot(),state.notes).catch(function(err){ console.error(err); });
     }
     const nowCh=stampCh();
     if(nowCh!==lastCh){
@@ -11028,6 +11126,19 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
   function render(){ renderAvatar(); renderStats(); renderLinks(); renderNotes(); renderProjects(); renderBoard(); renderChannel(false); }
   render();
+  /* 서버에 담긴 기록노트를 받아 화면을 맞춘다 · 받아오지 못하면(로그인 전·연결 실패)
+     이 브라우저에 저장된 내용을 그대로 쓰고, 서버에는 아무것도 올리지 않는다 */
+  (function(){
+    if(!window.BAROYAM_DB) return;
+    window.BAROYAM_DB.listNotes(slot()).then(function(rows){
+      if(!rows) return;
+      notesPulled=true;
+      state.notes=rows; myPart.notes=rows;
+      lastMine=stampMine();
+      writeJson(LS_MINE+slot(),myPart);
+      renderNotes();
+    }).catch(function(err){ console.error(err); });
+  })();
   tick();
   setInterval(tick,1000);
 })();
