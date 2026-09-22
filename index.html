@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- GitHub Pages는 공개 사이트라 검색엔진 색인을 막아 둔다 -->
 <meta name="robots" content="noindex, nofollow">
-<title>바로얌 매출·광고 성과 보고서 · 7월 vs 8월(8/1-8/8)</title>
+<title>Baroyam ERP</title>
 <!-- 저장된 테마로 시작한다 · 관리자 모드/관리자 계정이어도 테마는 바꾸지 않는다 -->
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('baroyam_theme')==='dark'?'dark':'light'}catch(e){}</script>
 <!-- Supabase · 마이홈 기록노트(notes)를 이 브라우저가 아니라 서버에 담아 기기 사이에서 같이 본다.
@@ -3368,6 +3368,8 @@ window.BAROYAM_LEAD=(function(){
   }
   async function onCredential(res){
     msg.textContent='';
+    /* 혹시 떠 있을지 모르는 원탭 팝업을 먼저 닫는다 · 로그인이 끝나도 저 혼자 남아 있었다 */
+    try{ google.accounts.id.cancel(); }catch(e){}
     try{
       const p=decodeJwt(res.credential);
       const h=await window.baroyamAuthHash(p.email||'');
@@ -3398,9 +3400,10 @@ window.BAROYAM_LEAD=(function(){
   const s=document.createElement('script');
   s.src='https://accounts.google.com/gsi/client'; s.async=true;
   s.onload=function(){
-    google.accounts.id.initialize({client_id:A.clientId,callback:onCredential,auto_select:true});
+    google.accounts.id.initialize({client_id:A.clientId,callback:onCredential,auto_select:false,cancel_on_tap_outside:false});
     google.accounts.id.renderButton(document.getElementById('authBtn'),{theme:root.dataset.theme==='dark'?'filled_black':'outline',size:'large',shape:'pill',text:'signin_with',logo_alignment:'center',width:300,locale:'ko'});
-    google.accounts.id.prompt();
+    /* 우상단 원탭(One Tap) 팝업은 띄우지 않는다 · 가운데 카드 버튼과 둘이 같이 떠서
+       "어디서 로그인해야 하나" 헷갈리고, 버튼으로 로그인해도 팝업은 저 혼자 남는다 */
   };
   s.onerror=function(){ msg.textContent='구글 로그인 스크립트를 불러오지 못했습니다.'; };
   document.head.appendChild(s);
