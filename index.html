@@ -782,6 +782,17 @@ window.BAROYAM_LEAD=(function(){
     padding:24px 16px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;
     background:radial-gradient(900px 520px at 50% -10%,rgba(232,98,30,.16),transparent 70%),var(--bg,#f4f1eb)}
   html.auth-checking #authGate .auth-card{visibility:hidden}
+  /* 판정이 끝나기 전에는 카드 대신 기다림 표시를 둔다 · 예전에는 둘 다 감춰서
+     세션을 확인하는 몇 초 동안 아무것도 없는 화면이 보였다 ·
+     카드는 visibility 로만 감춘다(자리를 남겨야 구글 버튼이 제대로 그려진다) ·
+     그래서 기다림 표시는 자리를 차지하지 않도록 화면에 겹쳐 띄운다 */
+  #authGate .auth-wait{display:none;position:fixed;inset:0;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;font-size:13.5px;font-weight:600;color:var(--mute,#786c64)}
+  html.auth-checking #authGate .auth-wait{display:flex}
+  #authGate .auth-wait-spin{width:30px;height:30px;border-radius:50%;
+    border:3px solid var(--line,#ece5dc);border-top-color:var(--indigo,#cd6428);animation:authSpin .8s linear infinite}
+  @keyframes authSpin{to{transform:rotate(1turn)}}
+  @media (prefers-reduced-motion:reduce){ #authGate .auth-wait-spin{animation-duration:2.4s} }
   /* margin:auto 로 가운데에 둔다 · align-items:center 만 쓰면 카드가 화면보다 길 때 위쪽이 잘려 스크롤해도 안 보인다 */
   #authGate .auth-card{margin:auto;width:100%;max-width:400px;background:var(--paper,#fff);border:1px solid var(--line,#ece5dc);
     border-radius:24px;padding:44px 32px 28px;text-align:center;
@@ -3302,6 +3313,7 @@ window.BAROYAM_LEAD=(function(){
 <body>
 <!-- 구글 로그인 · 허용된 계정만 들어올 수 있다 -->
 <div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="auth-wait" role="status"><span class="auth-wait-spin" aria-hidden="true"></span>로그인 상태를 확인하고 있어요</div>
   <div class="auth-card">
     <img class="auth-logo" id="authLogo" alt="바로얌">
     <p class="auth-eyebrow">BAROYAM DASHBOARD</p>
@@ -3409,8 +3421,12 @@ window.BAROYAM_LEAD=(function(){
 /* 회원 선택 화면 · 회원설정 목록을 그대로 쓰고, 사진·역할은 회원별 프로필에서 가져온다.
    시트에서 프로필이 도착하면 baroyam:profiles 이벤트로 다시 그린다(로그인이 느려지지 않도록) */
 (function(){
-  const root=document.documentElement;
-  if(!root.classList.contains('member-locked')) return;
+  /* 예전에는 여기서 member-locked 가 걸려 있는지 보고, 아니면 아무것도 하지 않고 나갔다.
+     그런데 로그인 판정은 <head>에서 비동기(await DB.session())로 돌기 때문에,
+     이 스크립트가 지나간 "뒤에" member-locked 가 붙는 경우가 많다.
+     그러면 화면은 떠도 목록이 비어 있고 버튼도 죽어 있어서 새로고침해야 보였다.
+     판정을 기다리지 말고 항상 그려 두고, 보이고 말고는 CSS(html.member-locked)에 맡긴다.
+     목록은 이 브라우저에 담긴 것이라 그리는 값이 거의 들지 않는다. */
   const P=window.BAROYAM_PROFILES, MEM=window.BAROYAM_MEMBERS;
   const list=document.getElementById('mpList');
   const PERSON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>';
