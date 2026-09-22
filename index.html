@@ -8,6 +8,338 @@
 <title>바로얌 매출·광고 성과 보고서 · 7월 vs 8월(8/1-8/8)</title>
 <!-- 저장된 테마로 시작한다 · 관리자 모드/관리자 계정이어도 테마는 바꾸지 않는다 -->
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('baroyam_theme')==='dark'?'dark':'light'}catch(e){}</script>
+<!-- Supabase · 마이홈 기록노트(notes)를 이 브라우저가 아니라 서버에 담아 기기 사이에서 같이 본다.
+     publishableKey는 브라우저에 드러나도 되는 공개 키다 · 실제 차단은 Supabase RLS 정책이 한다
+     (로그인한 사람만 읽고 쓸 수 있음 · 정책 SQL은 supabase/notes-rls.sql).
+     로그인은 바로 아래 구글 게이트가 받은 ID 토큰을 그대로 넘겨 쓰므로 또 묻지 않는다. -->
+<script>
+window.BAROYAM_SUPABASE={
+  url:'https://cbwoybtltebmiizzeojn.supabase.co',
+  publishableKey:'sb_publishable_M54y_26hXGieZFwGWUhHTA_wD1mxZAk',
+  sdk:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'
+};
+/* 설정 저장 · 화면 여러 곳에서 부르므로 짧은 전역 이름을 둔다.
+   Promise를 돌려주므로 기존 .then/.catch 사슬을 그대로 쓸 수 있다 */
+window.baroyamSaveSetting=function(key,value){
+  if(!window.BAROYAM_DB) return Promise.resolve(false);
+  return window.BAROYAM_DB.saveSetting(key,value);
+};
+window.BAROYAM_DB=(function(){
+  const CFG=window.BAROYAM_SUPABASE;
+  const SDK_TIMEOUT=5000;    /* SDK를 이만큼 기다린다 · 로그인 화면이 늦게 뜨지 않도록 */
+  let clientP=null, sdkFailed=false;
+  /* SDK는 실제로 쓸 때 한 번만 내려받는다 · 로그인 화면이 이걸 기다리느라 늦어지지 않도록 */
+  function loadSdk(){
+    return new Promise(function(resolve,reject){
+      if(window.supabase&&window.supabase.createClient) return resolve(window.supabase);
+      const s=document.createElement('script');
+      s.src=CFG.sdk; s.async=true;
+      /* 성공도 실패도 알려 주지 않고 멈추는 경우가 있다(CDN 차단·아주 느린 회선).
+         로그인 판정이 이걸 기다리므로, 시한이 없으면 화면이 빈 채로 영구히 멈춘다 */
+      const timer=setTimeout(function(){ reject(new Error('Supabase SDK 응답이 없습니다')); },SDK_TIMEOUT);
+      s.onload=function(){
+        clearTimeout(timer);
+        if(window.supabase&&window.supabase.createClient) resolve(window.supabase);
+        else reject(new Error('Supabase SDK를 불러오지 못했습니다'));
+      };
+      s.onerror=function(){ clearTimeout(timer); reject(new Error('Supabase SDK를 불러오지 못했습니다')); };
+      document.head.appendChild(s);
+    });
+  }
+  function client(){
+    if(!clientP) clientP=loadSdk().then(function(sb){
+      return sb.createClient(CFG.url,CFG.publishableKey,
+        {auth:{persistSession:true,autoRefreshToken:true,storageKey:'baroyam_sb_auth_v1'}});
+    }).catch(function(err){
+      clientP=null;          /* 다음에 다시 시도할 수 있게 비운다 */
+      sdkFailed=true;        /* 한 번 실패한 사실은 기억한다 · 판정이 두 번 기다리지 않도록 */
+      throw err;
+    });
+    return clientP;
+  }
+  /* 구글 게이트가 받은 ID 토큰을 그대로 Supabase 로그인에 쓴다 */
+  async function signInWithGoogle(idToken){
+    const c=await client();
+    const r=await c.auth.signInWithIdToken({provider:'google',token:idToken});
+    if(r.error) throw r.error;
+  }
+  async function session(){
+    try{
+      const c=await client();
+      const r=await c.auth.getSession();
+      return (r.data&&r.data.session)||null;
+    }catch(err){ return null; }
+  }
+  /* SDK를 불러오지 못한 적이 있는지 · 기다리지 않고 바로 답한다.
+     게이트가 session() 다음에 이걸 보는데, 여기서 다시 불러보면 시한이 두 번
+     걸려(총 10초 이상) 화면이 빈 채로 오래 멈춘다 */
+  function sdkOk(){ return !sdkFailed; }
+  async function signOut(){
+    try{ const c=await client(); await c.auth.signOut(); }catch(err){ console.error(err); }
+  }
+  /* 로그인은 Supabase 세션 하나로만 판단한다 · 세션이 없으면 게이트가 다시 뜨므로
+     여기서 몰래 다시 로그인할 필요가 없다(예전에는 자체 세션이 7일 살아 있어서
+     게이트가 뜨지 않아, 구글 원탭으로 억지로 다시 붙여야 했다) */
+  async function ensureSession(){ return !!(await session()); }
+  /* 서버에 담기는 모양: id · member_id · channel(마이홈은 비움) · body · created_at
+     화면이 쓰는 모양: {id, ts, text} */
+  function toNote(row){ return {id:row.id,ts:Date.parse(row.created_at)||Date.now(),text:row.body||''}; }
+  function toRow(n,memberId){
+    return {id:n.id,member_id:memberId,channel:null,body:n.text||'',
+      created_at:new Date(n.ts||Date.now()).toISOString(),updated_at:new Date().toISOString()};
+  }
+  /* 서버 것을 받아온다 · 로그인이 안 돼 있거나 연결이 안 되면 null을 돌려주고,
+     부르는 쪽은 이 브라우저에 저장해 둔 내용을 그대로 쓴다 */
+  async function listNotes(memberId){
+    if(!memberId) return null;
+    if(!(await ensureSession())){
+      console.warn('[바로얌] Supabase에 연결되지 않아 기록노트를 이 브라우저에만 담습니다.'
+        +' Supabase 대시보드에서 Authentication > Sign In / Providers > Google 을 켜고'
+        +' Authorized Client IDs 에 이 앱의 클라이언트 ID를 넣었는지 확인해 주세요.');
+      return null;
+    }
+    try{
+      const c=await client();
+      const r=await c.from('notes').select('id,body,created_at')
+        .eq('member_id',memberId).is('channel',null).order('created_at',{ascending:false});
+      if(r.error){ console.error(r.error); return null; }
+      return (r.data||[]).map(toNote);
+    }catch(err){ console.error(err); return null; }
+  }
+  /* 화면에 있는 목록에 서버를 맞춘다 · 지운 기록은 서버에서도 지운다.
+     한 번이라도 서버에서 받아온 뒤에만 부른다(빈 목록으로 서버를 지우지 않도록) */
+  async function syncNotes(memberId,notes){
+    if(!memberId) return;
+    if(!(await session())) return;
+    try{
+      const c=await client();
+      const list=Array.isArray(notes)?notes:[];
+      if(list.length){
+        const up=await c.from('notes').upsert(list.map(function(n){ return toRow(n,memberId); }));
+        if(up.error){ console.error(up.error); return; }
+      }
+      let q=c.from('notes').delete().eq('member_id',memberId).is('channel',null);
+      if(list.length) q=q.not('id','in',inList(list.map(function(n){ return n.id; })));
+      const del=await q;
+      if(del.error) console.error(del.error);
+    }catch(err){ console.error(err); }
+  }
+  /* ---------- 문서형 설정 (app_settings) ----------
+     앱은 구글시트 시절부터 설정을 "키 -> JSON 문자열" 한 벌로 다뤄 왔다.
+     그 모양은 그대로 두고 담는 곳만 Supabase로 바꾼다. */
+  function valueOut(v){
+    /* jsonb에 담긴 것을 앱이 기대하는 문자열로 되돌린다 ·
+       weekplan처럼 원래 문자열이던 값은 문자열로, 객체는 다시 JSON 문자열로 */
+    if(v==null) return '';
+    return typeof v==='string'?v:JSON.stringify(v);
+  }
+  function valueIn(value){
+    /* 앱이 넘기는 값은 객체를 stringify한 JSON 문자열이거나, 그냥 문자열(HTML)이다 */
+    try{ return JSON.parse(value); }catch(e){ return String(value==null?'':value); }
+  }
+  async function saveSetting(key,value){
+    if(!key) return false;
+    if(!(await ensureSession())) return false;
+    try{
+      const c=await client();
+      const r=await c.from('app_settings')
+        .upsert({key:key,value:valueIn(value),updated_at:new Date().toISOString()});
+      if(r.error){ console.error(r.error); return false; }
+      return true;
+    }catch(err){ console.error(err); return false; }
+  }
+  /* 구글시트에 쌓여 있던 설정을 딱 한 번 Supabase로 옮긴다 ·
+     담는 곳만 바꾸면, 이 브라우저에 저장된 것이 없는 기기(집 PC 등)에서는
+     예전 데이터가 사라진 것처럼 보인다. 옮긴 뒤에는 표식을 남겨 다시 옮기지 않는다. */
+  const MIGRATED_KEY='_migratedFromSheets';
+  async function migrateFromSheets(){
+    try{
+      const c=await client();
+      const chk=await c.from('app_settings').select('key').eq('key',MIGRATED_KEY).limit(1);
+      if(chk.error){ console.error(chk.error); return false; }
+      if(chk.data&&chk.data.length) return false;          /* 이미 옮겼다 */
+      let url='';
+      try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
+      if(!/^https:/.test(url)) return false;
+      const res=await fetch(url+'?action=settings&_='+Date.now(),{cache:'no-store'});
+      const settings=(await res.json()).settings;
+      if(!settings) return false;
+      const keys=Object.keys(settings);
+      if(!keys.length) return false;
+      const now=new Date().toISOString();
+      const rows=keys.map(function(k){ return {key:k,value:valueIn(settings[k]),updated_at:now}; });
+      rows.push({key:MIGRATED_KEY,value:{at:now,count:keys.length},updated_at:now});
+      const up=await c.from('app_settings').upsert(rows);
+      if(up.error){ console.error('설정을 옮기지 못했습니다',up.error); return false; }
+      console.info('[바로얌] 구글시트 설정 '+keys.length+'개를 Supabase로 옮겼습니다.');
+      return true;
+    }catch(err){ console.error('설정 이전 중 오류',err); return false; }
+  }
+  /* 설정 한 벌을 읽어온다 · 처음이면 시트에서 옮겨온 뒤 읽는다.
+     로그인/연결이 안 되면 null을 돌려주고, 부르는 쪽은 이 브라우저 것을 그대로 쓴다 */
+  async function loadSettings(){
+    if(!(await ensureSession())) return null;
+    await migrateFromSheets();
+    try{
+      const c=await client();
+      const r=await c.from('app_settings').select('key,value');
+      if(r.error){ console.error(r.error); return null; }
+      const out={};
+      (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
+      return out;
+    }catch(err){ console.error(err); return null; }
+  }
+  /* ---------- 관계형 테이블 거울 ----------
+     원본은 app_settings 에 담긴 덩어리다(화면 코드가 예전부터 그 모양으로 다룬다).
+     members / projects / quick_links / notes 테이블은 그것을 행으로 펼쳐 둔 거울이라,
+     Supabase Table Editor에서 눈으로 보고 쿼리로 다룰 수 있다.
+     읽기는 덩어리에서만 하므로 두 곳이 서로 덮는 충돌은 생기지 않는다. */
+  function dateOrNull(v){
+    /* 날짜 칸에 빈 문자열을 넣으면 오류가 난다 · 비어 있으면 비운 채로 둔다 */
+    v=String(v==null?'':v).trim();
+    return v?v:null;
+  }
+  async function upsertRows(table,rows){
+    if(!rows||!rows.length) return {ok:0,fail:0};
+    const c=await client();
+    const r=await c.from(table).upsert(rows);
+    if(!r.error) return {ok:rows.length,fail:0};
+    /* 한 행이 걸려 전체가 막히지 않도록, 실패하면 한 줄씩 다시 넣어 본다 ·
+       어느 행이 왜 안 들어갔는지 콘솔에 남긴다 */
+    let ok=0,fail=0;
+    for(let i=0;i<rows.length;i++){
+      const one=await c.from(table).upsert(rows[i]);
+      if(one.error){ fail++; console.warn('['+table+'] 담지 못한 행 '+rows[i].id+' · '+one.error.message); }
+      else ok++;
+    }
+    return {ok:ok,fail:fail};
+  }
+  /* 화면에 없는 행은 거울에서도 지운다 · 회원 몫(channel 비움)만 골라 지운다 */
+  function inList(ids){
+    /* id 에 쉼표나 괄호가 섞여도 목록이 깨지지 않도록 따옴표로 감싼다 */
+    return '("'+ids.map(function(v){ return String(v).replace(/"/g,'""'); }).join('","')+'")';
+  }
+  async function pruneMine(table,memberId,ids){
+    const c=await client();
+    let q=c.from(table).delete().eq('member_id',memberId).is('channel',null);
+    if(ids.length) q=q.not('id','in',inList(ids));
+    const r=await q;
+    if(r.error) console.warn('['+table+'] 지우기 실패 · '+r.error.message);
+  }
+  function linkRow(l,memberId,channel,i,now){
+    return {id:String(l.id),member_id:memberId,channel:channel,
+      name:l.name||'',url:l.url||'',sort_order:i,updated_at:now};
+  }
+  function noteRow(n,memberId,channel,now){
+    return {id:String(n.id),member_id:memberId,channel:channel,body:n.text||'',
+      created_at:new Date(n.ts||Date.now()).toISOString(),updated_at:now};
+  }
+  function projectRow(p,now){
+    return {id:String(p.id),name:p.name||'',status:p.status||'',
+      progress:+p.progress||0,memo:p.memo||'',urgent:!!p.urgent,
+      owner:p.owner||'',channel:p.channel||'',
+      due_date:dateOrNull(p.due),start_date:dateOrNull(p.start),updated_at:now};
+  }
+  /* 고른 회원의 퀵링크·기록노트를 거울에 맞춘다 (저장할 때마다 부른다) */
+  function isKnownMember(id){
+    /* notes.member_id 에 외래키가 걸려 있어, 회원 목록에 없는 칸(__admin__,
+       지워진 회원)을 담으려 하면 거부된다. 원본은 app_settings 에 그대로
+       남으니, 거울에는 실재하는 회원 몫만 올린다 */
+    try{
+      const MEM=window.BAROYAM_MEMBERS;
+      if(!MEM||!MEM.load) return false;
+      return MEM.load().some(function(m){ return m&&String(m.id)===String(id); });
+    }catch(e){ return false; }
+  }
+  async function mirrorMine(memberId,links,notes){
+    if(!memberId||!isKnownMember(memberId)) return;
+    if(!(await ensureSession())) return;
+    try{
+      const now=new Date().toISOString();
+      const L=(links||[]).filter(function(l){ return l&&l.id; });
+      const N=(notes||[]).filter(function(n){ return n&&n.id; });
+      await upsertRows('quick_links',L.map(function(l,i){ return linkRow(l,memberId,null,i,now); }));
+      await upsertRows('notes',N.map(function(n){ return noteRow(n,memberId,null,now); }));
+      await pruneMine('quick_links',memberId,L.map(function(l){ return String(l.id); }));
+      await pruneMine('notes',memberId,N.map(function(n){ return String(n.id); }));
+    }catch(err){ console.error(err); }
+  }
+  /* 프로젝트는 팀 공용이라 회원과 상관없이 한 벌이다 */
+  async function mirrorProjects(list){
+    if(!(await ensureSession())) return;
+    try{
+      const now=new Date().toISOString();
+      const P=(list||[]).filter(function(p){ return p&&p.id; });
+      await upsertRows('projects',P.map(function(p){ return projectRow(p,now); }));
+      const ids=P.map(function(p){ return String(p.id); });
+      if(ids.length){
+        const c=await client();
+        const r=await c.from('projects').delete().not('id','in',inList(ids));
+        if(r.error) console.warn('[projects] 지우기 실패 · '+r.error.message);
+      }
+    }catch(err){ console.error(err); }
+  }
+  /* 페이지를 열 때 한 번 · 덩어리 전체를 거울에 펼친다.
+     회원을 고르지 않아도 모든 회원 몫과 채널 몫이 테이블에 나타난다 */
+  async function mirrorAll(settings){
+    if(!settings) return;
+    if(!(await ensureSession())) return;
+    function j(k){ try{ return JSON.parse(settings[k]||'null'); }catch(e){ return null; } }
+    try{
+      const now=new Date().toISOString();
+      const memberRows=[], projectRows=[], linkRows=[], noteRows=[];
+      /* 회원 · 사진과 역할은 memberProfile:<id> 에 따로 담겨 있어 여기서 합친다 */
+      const m=j('members');
+      const list=Array.isArray(m)?m:((m&&m.list)||[]);
+      list.forEach(function(x,i){
+        if(!x||!x.id) return;
+        const prof=j('memberProfile:'+x.id)||{};
+        memberRows.push({id:String(x.id),name:x.name||'',color:x.color||'',
+          role:prof.role||'',avatar_url:prof.avatar||'',sort_order:i,updated_at:now});
+      });
+      /* 프로젝트 */
+      const sh=j('myhomeShared')||{};
+      (sh.projects||[]).forEach(function(p){ if(p&&p.id) projectRows.push(projectRow(p,now)); });
+      /* 퀵링크·기록노트 · 회원 몫과 채널 몫을 같은 함수로 펼친다 */
+      function part(memberId,channel,v){
+        if(!v||typeof v!=='object') return;
+        (v.links||[]).forEach(function(l,i){ if(l&&l.id) linkRows.push(linkRow(l,memberId,channel,i,now)); });
+        (v.notes||[]).forEach(function(n){ if(n&&n.id) noteRows.push(noteRow(n,memberId,channel,now)); });
+      }
+      const known={};
+      list.forEach(function(x){ if(x&&x.id) known[String(x.id)]=1; });
+      let skipped=0;
+      Object.keys(settings).forEach(function(k){
+        if(k.indexOf('myhome:')!==0) return;
+        const id=k.slice(7);
+        /* 회원 목록에 없는 칸은 외래키에 걸려 거부되므로 아예 담지 않는다 */
+        if(!known[id]){ skipped++; return; }
+        part(id,null,j(k));
+      });
+      /* 판매채널 몫 · 채널 소유라 member_id 를 비운다 */
+      const ch=j('channels')||{};
+      Object.keys(ch.data||{}).forEach(function(name){ part(null,name,(ch.data||{})[name]); });
+
+      /* 회원을 먼저 담는다 · notes/quick_links 가 회원을 참조할 수 있다 */
+      const r1=await upsertRows('members',memberRows);
+      const r2=await upsertRows('projects',projectRows);
+      const r3=await upsertRows('quick_links',linkRows);
+      const r4=await upsertRows('notes',noteRows);
+      const fail=r1.fail+r2.fail+r3.fail+r4.fail;
+      console.info('[바로얌] 테이블 거울 갱신 · 회원 '+r1.ok+' · 프로젝트 '+r2.ok
+        +' · 퀵링크 '+r3.ok+' · 기록노트 '+r4.ok
+        +(skipped?' · 회원 목록에 없어 건너뜀 '+skipped+'칸':'')
+        +(fail?' · 실패 '+fail+'건(위 경고 참고)':''));
+    }catch(err){ console.error('거울 갱신 중 오류',err); }
+  }
+  return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
+    listNotes:listNotes,syncNotes:syncNotes,
+    saveSetting:saveSetting,loadSettings:loadSettings,migrateFromSheets:migrateFromSheets,
+    mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects,
+    sdkOk:sdkOk,signOut:signOut};
+})();
+</script>
+
 <!-- 구글 로그인 게이트 · 허용된 이메일로 로그인해야 화면이 보인다.
      공개 저장소라 코드/시트 주소를 알면 우회할 수 있는 "화면 가림" 수준의 보호다.
      이메일은 원문 대신 SHA-256 해시로만 적어 둔다(소문자·앞뒤 공백 제거 후 해시). -->
@@ -15,7 +347,6 @@
 window.BAROYAM_AUTH={
   clientId:'118330296556-uq56i77gkis417ku2jiup6vlibkv963a.apps.googleusercontent.com',        /* Google Cloud Console > 사용자 인증 정보 > OAuth 클라이언트 ID(웹) */
   allowedHashes:['752601c57a347392cdfe495bec1949d0642a4fb865590ae6854d6de2e7ec3fc3'], /* sha256(email.toLowerCase().trim()) 16진수 */
-  sessionDays:7,
   lsKey:'baroyam_auth_v1',
   /* 팀장 비밀번호 · 역할이 '팀장'인 회원으로 들어갈 때와 관리자 설정을 열 때 같은 값을 쓴다 ·
      공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적어 둔다 */
@@ -193,14 +524,52 @@ window.BAROYAM_LEAD=(function(){
 
 (async function(){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
+  /* 로그인 상태는 Supabase 세션 하나로만 판단한다.
+     예전에는 이 브라우저에 7일짜리 자체 세션을 따로 두었는데, Supabase 세션과
+     수명이 달라서 "화면은 열리는데 저장은 되지 않는" 구간이 생겼다.
+     A.lsKey 는 이제 세션이 아니라, 프로필 메뉴에 띄울 이름·이메일·사진을
+     담아 두는 이 브라우저용 쪽지일 뿐이다.
+     실제 접근 차단은 서버가 한다(notes 등에 걸린 RLS의 is_baroyam_user()) ·
+     여기 검사는 권한 없는 계정에게 빈 화면 대신 안내를 보여 주기 위한 것이다. */
+  function cache(v){
+    try{ v?localStorage.setItem(A.lsKey,JSON.stringify(v)):localStorage.removeItem(A.lsKey); }catch(e){}
+  }
+  /* 무슨 일이 있어도 로그인 화면은 떠야 한다 · 판정이 늦어지면 잠긴 채로 진행한다 */
+  function withDeadline(p,ms){
+    return Promise.race([p,new Promise(function(r){ setTimeout(function(){ r(null); },ms); })]);
+  }
+  let unlocked=false;
   try{
-    const s=JSON.parse(localStorage.getItem(A.lsKey)||'null');
-    if(s && s.until>Date.now() && A.allowedHashes.includes(s.h)){
-      root.classList.remove('auth-locked');
-      /* 구글 계정으로 들어왔으면 "나"가 회원설정에 실제로 있는 회원이어야 한다 ·
-         고른 적이 없거나, 골라 둔 회원이 지워졌거나, 옛 버전에서 건너뛰기를
-         눌러 둔 경우 모두 선택 화면을 띄운다 ·
-         그대로 두면 없는 회원으로 잡혀서 빈 칸 마이홈이 보인다 */
+    const DB=window.BAROYAM_DB;
+    const sess=DB?await withDeadline(DB.session(),6000):null;
+    if(sess&&sess.user){
+      const u=sess.user, meta=u.user_metadata||{};
+      const h=await window.baroyamAuthHash(u.email||'');
+      if(A.allowedHashes.includes(h)){
+        cache({h:h,name:meta.full_name||meta.name||'',email:u.email||'',
+          picture:meta.avatar_url||meta.picture||''});
+        unlocked=true;
+      }else{
+        cache(null);          /* 허용되지 않은 계정이면 쪽지도 지운다 */
+      }
+    }else if(DB&&DB.sdkOk&&!DB.sdkOk()){
+      /* Supabase SDK를 아예 불러오지 못한 경우(차단·오프라인)에만, 예전에 들어온
+         적이 있으면 이 브라우저에 담긴 것이라도 볼 수 있게 열어 준다.
+         이때는 저장이 서버로 가지 않으므로, 연결이 돌아오면 다시 로그인해야 한다 */
+      const old=JSON.parse(localStorage.getItem(A.lsKey)||'null');
+      if(old&&A.allowedHashes.includes(old.h)){
+        unlocked=true;
+        console.warn('[바로얌] Supabase에 연결하지 못했습니다 · 이 브라우저에 담긴 것만 보입니다.');
+      }
+    }
+  }catch(e){ console.error(e); }
+  if(unlocked){
+    root.classList.remove('auth-locked');
+    /* 들어왔으면 "나"가 회원설정에 실제로 있는 회원이어야 한다 ·
+       고른 적이 없거나, 골라 둔 회원이 지워졌거나, 옛 버전에서 건너뛰기를
+       눌러 둔 경우 모두 선택 화면을 띄운다 ·
+       그대로 두면 없는 회원으로 잡혀서 빈 칸 마이홈이 보인다 */
+    try{
       const P0=window.BAROYAM_PROFILES, meRaw=P0.me();
       const picked=!!(meRaw && window.BAROYAM_MEMBERS.byId(meRaw));
       if(!picked){
@@ -208,8 +577,8 @@ window.BAROYAM_LEAD=(function(){
         window.BAROYAM_LEAD.clear();
         root.classList.add('member-locked');
       }
-    }
-  }catch(e){}
+    }catch(e){ console.error(e); }
+  }
   root.classList.remove('auth-checking');
 })();
 </script>
@@ -2734,349 +3103,6 @@ window.BAROYAM_LEAD=(function(){
     </div>
   </div>
 </div>
-<!-- Supabase · 마이홈 기록노트(notes)를 이 브라우저가 아니라 서버에 담아 기기 사이에서 같이 본다.
-     publishableKey는 브라우저에 드러나도 되는 공개 키다 · 실제 차단은 Supabase RLS 정책이 한다
-     (로그인한 사람만 읽고 쓸 수 있음 · 정책 SQL은 supabase/notes-rls.sql).
-     로그인은 바로 아래 구글 게이트가 받은 ID 토큰을 그대로 넘겨 쓰므로 또 묻지 않는다. -->
-<script>
-window.BAROYAM_SUPABASE={
-  url:'https://cbwoybtltebmiizzeojn.supabase.co',
-  publishableKey:'sb_publishable_M54y_26hXGieZFwGWUhHTA_wD1mxZAk',
-  sdk:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'
-};
-/* 설정 저장 · 화면 여러 곳에서 부르므로 짧은 전역 이름을 둔다.
-   Promise를 돌려주므로 기존 .then/.catch 사슬을 그대로 쓸 수 있다 */
-window.baroyamSaveSetting=function(key,value){
-  if(!window.BAROYAM_DB) return Promise.resolve(false);
-  return window.BAROYAM_DB.saveSetting(key,value);
-};
-window.BAROYAM_DB=(function(){
-  const CFG=window.BAROYAM_SUPABASE;
-  let clientP=null;
-  /* SDK는 실제로 쓸 때 한 번만 내려받는다 · 로그인 화면이 이걸 기다리느라 늦어지지 않도록 */
-  function loadSdk(){
-    return new Promise(function(resolve,reject){
-      if(window.supabase&&window.supabase.createClient) return resolve(window.supabase);
-      const s=document.createElement('script');
-      s.src=CFG.sdk; s.async=true;
-      s.onload=function(){
-        if(window.supabase&&window.supabase.createClient) resolve(window.supabase);
-        else reject(new Error('Supabase SDK를 불러오지 못했습니다'));
-      };
-      s.onerror=function(){ reject(new Error('Supabase SDK를 불러오지 못했습니다')); };
-      document.head.appendChild(s);
-    });
-  }
-  function client(){
-    if(!clientP) clientP=loadSdk().then(function(sb){
-      return sb.createClient(CFG.url,CFG.publishableKey,
-        {auth:{persistSession:true,autoRefreshToken:true,storageKey:'baroyam_sb_auth_v1'}});
-    });
-    return clientP;
-  }
-  /* 구글 게이트가 받은 ID 토큰을 그대로 Supabase 로그인에 쓴다 */
-  async function signInWithGoogle(idToken){
-    const c=await client();
-    const r=await c.auth.signInWithIdToken({provider:'google',token:idToken});
-    if(r.error) throw r.error;
-  }
-  async function session(){
-    try{
-      const c=await client();
-      const r=await c.auth.getSession();
-      return (r.data&&r.data.session)||null;
-    }catch(err){ return null; }
-  }
-  /* 대시보드 세션은 7일 유지돼서 구글 게이트가 다시 뜨지 않는다.
-     그 동안 Supabase 세션이 없으면 기록노트가 조용히 이 브라우저에만 쌓이고,
-     한 번 실패하면 스스로 회복하지 못한다. 그래서 세션이 없을 때는
-     구글 원탭으로 토큰을 한 번 더 받아 연결한다.
-     게이트가 떠 있을 때는 게이트가 알아서 하므로 건드리지 않는다. */
-  async function ensureSession(){
-    if(await session()) return true;
-    const A=window.BAROYAM_AUTH, root=document.documentElement;
-    if(!A||!A.clientId||root.classList.contains('auth-locked')) return false;
-    const token=await new Promise(function(resolve){
-      let done=false;
-      const finish=function(v){ if(!done){ done=true; resolve(v); } };
-      function start(){
-        try{
-          google.accounts.id.initialize({client_id:A.clientId,
-            callback:function(res){ finish(res&&res.credential||null); },auto_select:true});
-          google.accounts.id.prompt(function(n){
-            try{ if(n&&n.isNotDisplayed&&n.isNotDisplayed()) finish(null); }catch(e){}
-          });
-        }catch(err){ finish(null); }
-      }
-      setTimeout(function(){ finish(null); },8000);
-      if(window.google&&google.accounts&&google.accounts.id) return start();
-      const s=document.createElement('script');
-      s.src='https://accounts.google.com/gsi/client'; s.async=true;
-      s.onload=start; s.onerror=function(){ finish(null); };
-      document.head.appendChild(s);
-    });
-    if(!token) return false;
-    try{ await signInWithGoogle(token); return true; }
-    catch(err){ console.error('Supabase 재연결 실패',err); return false; }
-  }
-  /* 서버에 담기는 모양: id · member_id · channel(마이홈은 비움) · body · created_at
-     화면이 쓰는 모양: {id, ts, text} */
-  function toNote(row){ return {id:row.id,ts:Date.parse(row.created_at)||Date.now(),text:row.body||''}; }
-  function toRow(n,memberId){
-    return {id:n.id,member_id:memberId,channel:null,body:n.text||'',
-      created_at:new Date(n.ts||Date.now()).toISOString(),updated_at:new Date().toISOString()};
-  }
-  /* 서버 것을 받아온다 · 로그인이 안 돼 있거나 연결이 안 되면 null을 돌려주고,
-     부르는 쪽은 이 브라우저에 저장해 둔 내용을 그대로 쓴다 */
-  async function listNotes(memberId){
-    if(!memberId) return null;
-    if(!(await ensureSession())){
-      console.warn('[바로얌] Supabase에 연결되지 않아 기록노트를 이 브라우저에만 담습니다.'
-        +' Supabase 대시보드에서 Authentication > Sign In / Providers > Google 을 켜고'
-        +' Authorized Client IDs 에 이 앱의 클라이언트 ID를 넣었는지 확인해 주세요.');
-      return null;
-    }
-    try{
-      const c=await client();
-      const r=await c.from('notes').select('id,body,created_at')
-        .eq('member_id',memberId).is('channel',null).order('created_at',{ascending:false});
-      if(r.error){ console.error(r.error); return null; }
-      return (r.data||[]).map(toNote);
-    }catch(err){ console.error(err); return null; }
-  }
-  /* 화면에 있는 목록에 서버를 맞춘다 · 지운 기록은 서버에서도 지운다.
-     한 번이라도 서버에서 받아온 뒤에만 부른다(빈 목록으로 서버를 지우지 않도록) */
-  async function syncNotes(memberId,notes){
-    if(!memberId) return;
-    if(!(await session())) return;
-    try{
-      const c=await client();
-      const list=Array.isArray(notes)?notes:[];
-      if(list.length){
-        const up=await c.from('notes').upsert(list.map(function(n){ return toRow(n,memberId); }));
-        if(up.error){ console.error(up.error); return; }
-      }
-      let q=c.from('notes').delete().eq('member_id',memberId).is('channel',null);
-      if(list.length) q=q.not('id','in',inList(list.map(function(n){ return n.id; })));
-      const del=await q;
-      if(del.error) console.error(del.error);
-    }catch(err){ console.error(err); }
-  }
-  /* ---------- 문서형 설정 (app_settings) ----------
-     앱은 구글시트 시절부터 설정을 "키 -> JSON 문자열" 한 벌로 다뤄 왔다.
-     그 모양은 그대로 두고 담는 곳만 Supabase로 바꾼다. */
-  function valueOut(v){
-    /* jsonb에 담긴 것을 앱이 기대하는 문자열로 되돌린다 ·
-       weekplan처럼 원래 문자열이던 값은 문자열로, 객체는 다시 JSON 문자열로 */
-    if(v==null) return '';
-    return typeof v==='string'?v:JSON.stringify(v);
-  }
-  function valueIn(value){
-    /* 앱이 넘기는 값은 객체를 stringify한 JSON 문자열이거나, 그냥 문자열(HTML)이다 */
-    try{ return JSON.parse(value); }catch(e){ return String(value==null?'':value); }
-  }
-  async function saveSetting(key,value){
-    if(!key) return false;
-    if(!(await ensureSession())) return false;
-    try{
-      const c=await client();
-      const r=await c.from('app_settings')
-        .upsert({key:key,value:valueIn(value),updated_at:new Date().toISOString()});
-      if(r.error){ console.error(r.error); return false; }
-      return true;
-    }catch(err){ console.error(err); return false; }
-  }
-  /* 구글시트에 쌓여 있던 설정을 딱 한 번 Supabase로 옮긴다 ·
-     담는 곳만 바꾸면, 이 브라우저에 저장된 것이 없는 기기(집 PC 등)에서는
-     예전 데이터가 사라진 것처럼 보인다. 옮긴 뒤에는 표식을 남겨 다시 옮기지 않는다. */
-  const MIGRATED_KEY='_migratedFromSheets';
-  async function migrateFromSheets(){
-    try{
-      const c=await client();
-      const chk=await c.from('app_settings').select('key').eq('key',MIGRATED_KEY).limit(1);
-      if(chk.error){ console.error(chk.error); return false; }
-      if(chk.data&&chk.data.length) return false;          /* 이미 옮겼다 */
-      let url='';
-      try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
-      if(!/^https:/.test(url)) return false;
-      const res=await fetch(url+'?action=settings&_='+Date.now(),{cache:'no-store'});
-      const settings=(await res.json()).settings;
-      if(!settings) return false;
-      const keys=Object.keys(settings);
-      if(!keys.length) return false;
-      const now=new Date().toISOString();
-      const rows=keys.map(function(k){ return {key:k,value:valueIn(settings[k]),updated_at:now}; });
-      rows.push({key:MIGRATED_KEY,value:{at:now,count:keys.length},updated_at:now});
-      const up=await c.from('app_settings').upsert(rows);
-      if(up.error){ console.error('설정을 옮기지 못했습니다',up.error); return false; }
-      console.info('[바로얌] 구글시트 설정 '+keys.length+'개를 Supabase로 옮겼습니다.');
-      return true;
-    }catch(err){ console.error('설정 이전 중 오류',err); return false; }
-  }
-  /* 설정 한 벌을 읽어온다 · 처음이면 시트에서 옮겨온 뒤 읽는다.
-     로그인/연결이 안 되면 null을 돌려주고, 부르는 쪽은 이 브라우저 것을 그대로 쓴다 */
-  async function loadSettings(){
-    if(!(await ensureSession())) return null;
-    await migrateFromSheets();
-    try{
-      const c=await client();
-      const r=await c.from('app_settings').select('key,value');
-      if(r.error){ console.error(r.error); return null; }
-      const out={};
-      (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
-      return out;
-    }catch(err){ console.error(err); return null; }
-  }
-  /* ---------- 관계형 테이블 거울 ----------
-     원본은 app_settings 에 담긴 덩어리다(화면 코드가 예전부터 그 모양으로 다룬다).
-     members / projects / quick_links / notes 테이블은 그것을 행으로 펼쳐 둔 거울이라,
-     Supabase Table Editor에서 눈으로 보고 쿼리로 다룰 수 있다.
-     읽기는 덩어리에서만 하므로 두 곳이 서로 덮는 충돌은 생기지 않는다. */
-  function dateOrNull(v){
-    /* 날짜 칸에 빈 문자열을 넣으면 오류가 난다 · 비어 있으면 비운 채로 둔다 */
-    v=String(v==null?'':v).trim();
-    return v?v:null;
-  }
-  async function upsertRows(table,rows){
-    if(!rows||!rows.length) return {ok:0,fail:0};
-    const c=await client();
-    const r=await c.from(table).upsert(rows);
-    if(!r.error) return {ok:rows.length,fail:0};
-    /* 한 행이 걸려 전체가 막히지 않도록, 실패하면 한 줄씩 다시 넣어 본다 ·
-       어느 행이 왜 안 들어갔는지 콘솔에 남긴다 */
-    let ok=0,fail=0;
-    for(let i=0;i<rows.length;i++){
-      const one=await c.from(table).upsert(rows[i]);
-      if(one.error){ fail++; console.warn('['+table+'] 담지 못한 행 '+rows[i].id+' · '+one.error.message); }
-      else ok++;
-    }
-    return {ok:ok,fail:fail};
-  }
-  /* 화면에 없는 행은 거울에서도 지운다 · 회원 몫(channel 비움)만 골라 지운다 */
-  function inList(ids){
-    /* id 에 쉼표나 괄호가 섞여도 목록이 깨지지 않도록 따옴표로 감싼다 */
-    return '("'+ids.map(function(v){ return String(v).replace(/"/g,'""'); }).join('","')+'")';
-  }
-  async function pruneMine(table,memberId,ids){
-    const c=await client();
-    let q=c.from(table).delete().eq('member_id',memberId).is('channel',null);
-    if(ids.length) q=q.not('id','in',inList(ids));
-    const r=await q;
-    if(r.error) console.warn('['+table+'] 지우기 실패 · '+r.error.message);
-  }
-  function linkRow(l,memberId,channel,i,now){
-    return {id:String(l.id),member_id:memberId,channel:channel,
-      name:l.name||'',url:l.url||'',sort_order:i,updated_at:now};
-  }
-  function noteRow(n,memberId,channel,now){
-    return {id:String(n.id),member_id:memberId,channel:channel,body:n.text||'',
-      created_at:new Date(n.ts||Date.now()).toISOString(),updated_at:now};
-  }
-  function projectRow(p,now){
-    return {id:String(p.id),name:p.name||'',status:p.status||'',
-      progress:+p.progress||0,memo:p.memo||'',urgent:!!p.urgent,
-      owner:p.owner||'',channel:p.channel||'',
-      due_date:dateOrNull(p.due),start_date:dateOrNull(p.start),updated_at:now};
-  }
-  /* 고른 회원의 퀵링크·기록노트를 거울에 맞춘다 (저장할 때마다 부른다) */
-  function isKnownMember(id){
-    /* notes.member_id 에 외래키가 걸려 있어, 회원 목록에 없는 칸(__admin__,
-       지워진 회원)을 담으려 하면 거부된다. 원본은 app_settings 에 그대로
-       남으니, 거울에는 실재하는 회원 몫만 올린다 */
-    try{
-      const MEM=window.BAROYAM_MEMBERS;
-      if(!MEM||!MEM.load) return false;
-      return MEM.load().some(function(m){ return m&&String(m.id)===String(id); });
-    }catch(e){ return false; }
-  }
-  async function mirrorMine(memberId,links,notes){
-    if(!memberId||!isKnownMember(memberId)) return;
-    if(!(await ensureSession())) return;
-    try{
-      const now=new Date().toISOString();
-      const L=(links||[]).filter(function(l){ return l&&l.id; });
-      const N=(notes||[]).filter(function(n){ return n&&n.id; });
-      await upsertRows('quick_links',L.map(function(l,i){ return linkRow(l,memberId,null,i,now); }));
-      await upsertRows('notes',N.map(function(n){ return noteRow(n,memberId,null,now); }));
-      await pruneMine('quick_links',memberId,L.map(function(l){ return String(l.id); }));
-      await pruneMine('notes',memberId,N.map(function(n){ return String(n.id); }));
-    }catch(err){ console.error(err); }
-  }
-  /* 프로젝트는 팀 공용이라 회원과 상관없이 한 벌이다 */
-  async function mirrorProjects(list){
-    if(!(await ensureSession())) return;
-    try{
-      const now=new Date().toISOString();
-      const P=(list||[]).filter(function(p){ return p&&p.id; });
-      await upsertRows('projects',P.map(function(p){ return projectRow(p,now); }));
-      const ids=P.map(function(p){ return String(p.id); });
-      if(ids.length){
-        const c=await client();
-        const r=await c.from('projects').delete().not('id','in',inList(ids));
-        if(r.error) console.warn('[projects] 지우기 실패 · '+r.error.message);
-      }
-    }catch(err){ console.error(err); }
-  }
-  /* 페이지를 열 때 한 번 · 덩어리 전체를 거울에 펼친다.
-     회원을 고르지 않아도 모든 회원 몫과 채널 몫이 테이블에 나타난다 */
-  async function mirrorAll(settings){
-    if(!settings) return;
-    if(!(await ensureSession())) return;
-    function j(k){ try{ return JSON.parse(settings[k]||'null'); }catch(e){ return null; } }
-    try{
-      const now=new Date().toISOString();
-      const memberRows=[], projectRows=[], linkRows=[], noteRows=[];
-      /* 회원 · 사진과 역할은 memberProfile:<id> 에 따로 담겨 있어 여기서 합친다 */
-      const m=j('members');
-      const list=Array.isArray(m)?m:((m&&m.list)||[]);
-      list.forEach(function(x,i){
-        if(!x||!x.id) return;
-        const prof=j('memberProfile:'+x.id)||{};
-        memberRows.push({id:String(x.id),name:x.name||'',color:x.color||'',
-          role:prof.role||'',avatar_url:prof.avatar||'',sort_order:i,updated_at:now});
-      });
-      /* 프로젝트 */
-      const sh=j('myhomeShared')||{};
-      (sh.projects||[]).forEach(function(p){ if(p&&p.id) projectRows.push(projectRow(p,now)); });
-      /* 퀵링크·기록노트 · 회원 몫과 채널 몫을 같은 함수로 펼친다 */
-      function part(memberId,channel,v){
-        if(!v||typeof v!=='object') return;
-        (v.links||[]).forEach(function(l,i){ if(l&&l.id) linkRows.push(linkRow(l,memberId,channel,i,now)); });
-        (v.notes||[]).forEach(function(n){ if(n&&n.id) noteRows.push(noteRow(n,memberId,channel,now)); });
-      }
-      const known={};
-      list.forEach(function(x){ if(x&&x.id) known[String(x.id)]=1; });
-      let skipped=0;
-      Object.keys(settings).forEach(function(k){
-        if(k.indexOf('myhome:')!==0) return;
-        const id=k.slice(7);
-        /* 회원 목록에 없는 칸은 외래키에 걸려 거부되므로 아예 담지 않는다 */
-        if(!known[id]){ skipped++; return; }
-        part(id,null,j(k));
-      });
-      /* 판매채널 몫 · 채널 소유라 member_id 를 비운다 */
-      const ch=j('channels')||{};
-      Object.keys(ch.data||{}).forEach(function(name){ part(null,name,(ch.data||{})[name]); });
-
-      /* 회원을 먼저 담는다 · notes/quick_links 가 회원을 참조할 수 있다 */
-      const r1=await upsertRows('members',memberRows);
-      const r2=await upsertRows('projects',projectRows);
-      const r3=await upsertRows('quick_links',linkRows);
-      const r4=await upsertRows('notes',noteRows);
-      const fail=r1.fail+r2.fail+r3.fail+r4.fail;
-      console.info('[바로얌] 테이블 거울 갱신 · 회원 '+r1.ok+' · 프로젝트 '+r2.ok
-        +' · 퀵링크 '+r3.ok+' · 기록노트 '+r4.ok
-        +(skipped?' · 회원 목록에 없어 건너뜀 '+skipped+'칸':'')
-        +(fail?' · 실패 '+fail+'건(위 경고 참고)':''));
-    }catch(err){ console.error('거울 갱신 중 오류',err); }
-  }
-  return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
-    listNotes:listNotes,syncNotes:syncNotes,
-    saveSetting:saveSetting,loadSettings:loadSettings,migrateFromSheets:migrateFromSheets,
-    mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects};
-})();
-</script>
-
 <script>
 (function(){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
@@ -3086,11 +3112,13 @@ window.BAROYAM_DB=(function(){
     const src=document.querySelector('.sb-logo');
     if(src&&src.src) document.getElementById('authLogo').src=src.src;
   });
-  window.baroyamSignOut=function(){
+  window.baroyamSignOut=async function(){
     /* 로그아웃은 "이 PC를 다른 사람이 쓴다"는 뜻이라, 골라 둔 회원도 같이 비운다 ·
-       그냥 새로고침하거나 세션이 살아 있을 때는 선택이 그대로 남아 다시 묻지 않는다 */
+       그냥 새로고침할 때는 선택이 그대로 남아 다시 묻지 않는다.
+       로그인 판정이 Supabase 세션이므로 그 세션을 반드시 끊어야 한다 */
     try{ localStorage.removeItem(A.lsKey); localStorage.removeItem('baroyam_me_v1'); }catch(e){}
     window.BAROYAM_LEAD.clear();
+    try{ if(window.BAROYAM_DB) await window.BAROYAM_DB.signOut(); }catch(e){ console.error(e); }
     if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect();
     location.reload();
   };
@@ -3112,15 +3140,17 @@ window.BAROYAM_DB=(function(){
         msg.textContent=(p.email||'이 계정')+'은(는) 접근 권한이 없습니다.';
         return;
       }
-      /* 상단 프로필 메뉴에 띄울 이름·이메일·사진도 같이 적어 둔다 (이 브라우저에만 남는다) */
-      localStorage.setItem(A.lsKey,JSON.stringify({h,until:Date.now()+A.sessionDays*864e5,
-        name:p.name||'',email:p.email||'',picture:p.picture||''}));
-      /* 같은 구글 ID 토큰으로 Supabase에도 로그인해 둔다 · 기록노트를 서버에서 읽고 쓰는 데 쓴다.
-         Supabase 쪽 설정이 아직이어도 대시보드 로그인 자체는 막지 않는다 */
-      try{ if(window.BAROYAM_DB) await window.BAROYAM_DB.signInWithGoogle(res.credential); }
-      catch(err){ console.error('Supabase 로그인 실패',err); }
+      /* 받은 구글 ID 토큰을 그대로 Supabase 로그인에 쓴다 · 로그인 상태를
+         Supabase 세션 하나로 판단하므로, 여기서 세션을 만들지 못하면 들여보내지
+         않는다. 예전에는 자체 세션만 두고 통과시켜서 "화면은 열리는데 저장은
+         되지 않는" 상태가 됐다. 이름·이메일·사진은 새로 열릴 때 세션에서 받는다 */
+      msg.textContent='로그인 중...';
+      await window.BAROYAM_DB.signInWithGoogle(res.credential);
       location.reload();
-    }catch(err){ console.error(err); msg.textContent='로그인 처리 중 오류가 발생했습니다.'; }
+    }catch(err){
+      console.error(err);
+      msg.textContent='로그인하지 못했습니다 · '+((err&&err.message)||'잠시 후 다시 시도해 주세요');
+    }
   }
   const s=document.createElement('script');
   s.src='https://accounts.google.com/gsi/client'; s.async=true;
