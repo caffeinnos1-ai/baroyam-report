@@ -332,7 +332,147 @@ window.BAROYAM_DB=(function(){
         +(fail?' · 실패 '+fail+'건(위 경고 참고)':''));
     }catch(err){ console.error('거울 갱신 중 오류',err); }
   }
+  /* ---------- 회의안건 (agenda_items) ----------
+     예전에는 앱스크립트가 메인 탭과 휴지통 탭으로 행을 옮겨 휴지통을 만들었다 ·
+     여기서는 trashed 플래그 하나로 대신한다.
+     돌려주는 모양은 앱스크립트와 똑같이 맞춘다(화면 코드를 그대로 두기 위해) ·
+     records/trash 는 오래된 순이고, 화면이 newestFirst 로 뒤집어 쓴다 */
+  function agendaOut(row){
+    return {id:String(row.id),date:row.meeting_date||'',due:row.due_date||'',
+      topic:row.topic||'',category:row.category||'',
+      author:row.author||'',owner:row.owner||'',
+      noteHtml:row.note_html||'',notesHtml:row.notes_html||'',
+      updatedAt:row.updated_at||'',trashedAt:row.trashed_at||''};
+  }
+  function agendaIn(rec,now){
+    return {id:String(rec.id),meeting_date:dateOrNull(rec.date),due_date:dateOrNull(rec.due),
+      topic:rec.topic||'',category:rec.category||'',
+      author:rec.author||'',owner:rec.owner||'',
+      note_html:rec.noteHtml||'',notes_html:rec.notesHtml||'',
+      updated_at:now};
+  }
+  async function agendaFetch(){
+    const c=await client();
+    const r=await c.from('agenda_items').select('*').order('created_at',{ascending:true});
+    if(r.error) throw r.error;
+    const rows=r.data||[];
+    return {ok:true,
+      records:rows.filter(function(x){ return !x.trashed; }).map(agendaOut),
+      trash:rows.filter(function(x){ return x.trashed; }).map(agendaOut)};
+  }
+  async function agendaList(){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    return agendaFetch();
+  }
+  async function agendaUpsert(records){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const now=new Date().toISOString();
+    const rows=(records||[]).filter(function(r){ return r&&r.id; }).map(function(r){ return agendaIn(r,now); });
+    if(rows.length){
+      const c=await client();
+      const r=await c.from('agenda_items').upsert(rows);
+      if(r.error) throw r.error;
+    }
+    return (await agendaFetch()).records;
+  }
+  /* 휴지통으로 보내기 / 되돌리기 */
+  async function agendaSetTrashed(id,trashed){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('agenda_items')
+      .update({trashed:!!trashed,trashed_at:trashed?new Date().toISOString():null,
+        updated_at:new Date().toISOString()})
+      .eq('id',String(id));
+    if(r.error) throw r.error;
+    return agendaFetch();
+  }
+  async function agendaPurge(id){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('agenda_items').delete().eq('id',String(id));
+    if(r.error) throw r.error;
+    return agendaFetch();
+  }
+
+  /* ---------- 상담 가이드 (cs_guide) ---------- */
+  function guideOut(row){
+    return {id:String(row.id),title:row.title||'',keywords:row.keywords||'',
+      answer:row.answer||'',category:row.category||'',updatedAt:row.updated_at||''};
+  }
+  async function guideList(){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('cs_guide').select('*').order('updated_at',{ascending:true});
+    if(r.error) throw r.error;
+    return {ok:true,records:(r.data||[]).map(guideOut)};
+  }
+  async function guideSave(rec){
+    if(!rec||!rec.id) return false;
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('cs_guide').upsert({id:String(rec.id),title:rec.title||'',
+      keywords:rec.keywords||'',answer:rec.answer||'',category:rec.category||'',
+      updated_at:new Date().toISOString()});
+    if(r.error) throw r.error;
+    return true;
+  }
+  async function guideDelete(id){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('cs_guide').delete().eq('id',String(id));
+    if(r.error) throw r.error;
+    return true;
+  }
+
+  /* 앱스크립트에 쌓여 있던 회의안건·상담 가이드를 딱 한 번 옮겨 온다 ·
+     표식은 app_settings 에 남겨, 기기가 달라도 두 번 옮기지 않는다 */
+  async function migrateAgendaAndGuide(){
+    let url='';
+    try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
+    if(!/^https:/.test(url)) return;
+    const c=await client();
+    const MARK='_migratedAgendaGuide';
+    const chk=await c.from('app_settings').select('key').eq('key',MARK).limit(1);
+    if(chk.error||(chk.data&&chk.data.length)) return;
+    const now=new Date().toISOString();
+    let moved={agenda:0,trash:0,guide:0};
+    try{
+      const res=await fetch(url+'?action=list&_='+Date.now(),{cache:'no-store'});
+      const j=await res.json();
+      const live=(j&&j.records)||[], trash=(j&&j.trash)||[];
+      const rows=live.map(function(r){ return agendaIn(r,now); })
+        .concat(trash.map(function(r){
+          const row=agendaIn(r,now); row.trashed=true; row.trashed_at=r.trashedAt||now; return row;
+        }));
+      if(rows.length){
+        const up=await upsertRows('agenda_items',rows);
+        moved.agenda=up.ok;
+      }
+      moved.trash=trash.length;
+    }catch(err){ console.error('회의안건을 옮기지 못했습니다',err); return; }
+    try{
+      const res=await fetch(url+'?action=guideList&_='+Date.now(),{cache:'no-store'});
+      const j=await res.json();
+      const recs=(j&&j.records)||[];
+      const rows=recs.filter(function(r){ return r&&r.id; }).map(function(r){
+        return {id:String(r.id),title:r.title||'',keywords:r.keywords||'',
+          answer:r.answer||'',category:r.category||'',updated_at:now};
+      });
+      if(rows.length){
+        const up=await upsertRows('cs_guide',rows);
+        moved.guide=up.ok;
+      }
+    }catch(err){ console.error('상담 가이드를 옮기지 못했습니다',err); return; }
+    const mk=await c.from('app_settings')
+      .upsert({key:MARK,value:{at:now,moved:moved},updated_at:now});
+    if(mk.error){ console.error(mk.error); return; }
+    console.info('[바로얌] 앱스크립트에서 옮김 · 회의안건 '+moved.agenda
+      +'건(휴지통 '+moved.trash+') · 상담 가이드 '+moved.guide+'건');
+  }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
+    agendaList:agendaList,agendaUpsert:agendaUpsert,agendaSetTrashed:agendaSetTrashed,
+    agendaPurge:agendaPurge,guideList:guideList,guideSave:guideSave,guideDelete:guideDelete,
+    migrateAgendaAndGuide:migrateAgendaAndGuide,
     listNotes:listNotes,syncNotes:syncNotes,
     saveSetting:saveSetting,loadSettings:loadSettings,migrateFromSheets:migrateFromSheets,
     mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects,
@@ -6252,14 +6392,11 @@ window.CsGuide=(function(){
   /* 띄어쓰기·문장부호를 무시하고 비교해야 '안 와요'가 '아직안와요'에도 걸린다 */
   const norm=s=>String(s||'').toLowerCase().replace(/[\s\p{P}\p{S}]/gu,'');
 
-  function post(body){
-    return fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify(body)})
-      .then(res=>res.json()).then(j=>{ if(!j||!j.ok) throw new Error((j&&j.error)||'저장 실패'); return j; });
-  }
+  /* 상담 가이드는 Supabase cs_guide 에 담는다 */
   function push(it){
     if(!apiReady()){ it.pending=true; return Promise.resolve(false); }
     const rec={id:it.id,title:it.title,keywords:it.keywords,answer:it.answer,category:it.category||''};
-    return post({action:'guideSave',record:rec})
+    return window.BAROYAM_DB.guideSave(rec)
       .then(()=>{ delete it.pending; return true; })
       .catch(err=>{ console.error(err); it.pending=true; return false; });
   }
@@ -6268,8 +6405,8 @@ window.CsGuide=(function(){
     if(!apiReady()) return Promise.resolve(false);
     if(syncing) return syncing;
     touchedDuringSync=new Map();
-    syncing=fetch(AGENDA_API_URL+'?action=guideList&_='+Date.now(),{cache:'no-store'})
-      .then(res=>res.json()).then(j=>{
+    syncing=window.BAROYAM_DB.guideList()
+      .then(j=>{
         if(!j||!j.ok||!Array.isArray(j.records)) throw new Error((j&&j.error)||'불러오기 실패');
         const pending=items.filter(it=>it.pending||touchedDuringSync.get(it.id)==='save');
         const pendingIds=new Set(pending.map(it=>it.id));
@@ -6298,7 +6435,7 @@ window.CsGuide=(function(){
     if(syncing) touchedDuringSync.set(id,'delete');
     persist(); emit();
     if(!apiReady()) return Promise.resolve(false);
-    return post({action:'guideDelete',id}).then(()=>true).catch(err=>{ console.error(err); return false; });
+    return window.BAROYAM_DB.guideDelete(id).then(()=>true).catch(err=>{ console.error(err); return false; });
   }
 
   /* 고객 문의 글에 들어 있는 키워드 수로 순위를 매긴다 · 긴 키워드가 더 구체적이므로 점수를 더 준다 ·
@@ -9512,6 +9649,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       /* 덩어리를 관계형 테이블에 펼쳐 둔다 · Table Editor에서 행으로 보기 위한 거울이다.
          화면 동작과는 무관하므로 실패해도 대시보드는 그대로 쓴다 */
       if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorAll(settings);
+      /* 앱스크립트에 쌓여 있던 회의안건·상담 가이드도 한 번만 옮겨 온다 */
+      if(window.BAROYAM_DB) window.BAROYAM_DB.migrateAgendaAndGuide();
     }catch(err){ console.error(err); }
   })();
 })();
@@ -11834,47 +11973,18 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const apiReady=()=>AGENDA_API_URL && AGENDA_API_URL.indexOf('PUT_DEPLOYED')!==0;
   const agNoteEl=document.getElementById('agNote');
   if(agNoteEl) agNoteEl.textContent=apiReady()
-    ? '저장 · +신규 시 구글 시트로 동기화되어 다른 기기에서도 보여요'
+    ? '저장 · +신규 시 Supabase로 동기화되어 다른 기기에서도 보여요'
     : '이 브라우저에 자동 저장됩니다 (다른 사람과 실시간 공유되지 않아요)';
-  async function apiList(){
-    const res=await fetch(AGENDA_API_URL+'?action=list&_='+Date.now(),{cache:'no-store'});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'목록을 불러오지 못했습니다');
-    return json;
-  }
-  async function apiUpsert(record){
-    const res=await fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'upsert',record})});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'저장하지 못했습니다');
-    return json.records;
-  }
-  async function apiUpsertMany(records){
-    const res=await fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'upsert',records})});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'업로드하지 못했습니다');
-    return json.records;
-  }
-  /* 휴지통(trash)·복원(restore)·영구삭제(purgeTrash)는 회의안건_AppsScript.gs가
-     메인 탭이 아닌 별도 휴지통 탭으로 행을 옮겨서 처리한다 · 기기 간에도 같은 상태로 보인다 */
-  async function apiTrash(id){
-    const res=await fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'trash',id})});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'휴지통으로 옮기지 못했습니다');
-    return json;
-  }
-  async function apiRestore(id){
-    const res=await fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'restore',id})});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'복원하지 못했습니다');
-    return json;
-  }
-  async function apiPurgeTrash(id){
-    const res=await fetch(AGENDA_API_URL,{method:'POST',body:JSON.stringify({action:'purgeTrash',id})});
-    const json=await res.json();
-    if(!json.ok) throw new Error(json.error||'영구 삭제하지 못했습니다');
-    return json;
-  }
-  /* 시트는 새 회의를 맨 아래 행에 추가하므로(오래된 순), 화면에 최신순으로 보여주려면 뒤집어야 한다 */
+  /* 회의안건은 Supabase agenda_items 에 담는다 · 돌려주는 모양은 예전 앱스크립트와
+     같게 맞춰 두었으므로(records/trash, 오래된 순) 아래 화면 코드는 그대로 쓴다.
+     휴지통은 별도 탭이 아니라 trashed 플래그로 다룬다 */
+  async function apiList(){ return window.BAROYAM_DB.agendaList(); }
+  async function apiUpsert(record){ return window.BAROYAM_DB.agendaUpsert([record]); }
+  async function apiUpsertMany(records){ return window.BAROYAM_DB.agendaUpsert(records); }
+  async function apiTrash(id){ return window.BAROYAM_DB.agendaSetTrashed(id,true); }
+  async function apiRestore(id){ return window.BAROYAM_DB.agendaSetTrashed(id,false); }
+  async function apiPurgeTrash(id){ return window.BAROYAM_DB.agendaPurge(id); }
+  /* 목록은 오래된 순으로 오므로, 화면에 최신순으로 보여주려면 뒤집어야 한다 */
   function newestFirst(records){ return records.slice().reverse(); }
   /* 구버전 액션스크립트가 아직 category 컬럼을 모르면 서버 응답에서 비어서 돌아온다 ·
      그 사이엔 로컬에 남아있던 category 값을 덮어쓰지 않도록 보존한다 */
