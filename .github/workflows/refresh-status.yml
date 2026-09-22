@@ -27,7 +27,7 @@ jobs:
             shift 2
             local wanted_names=("$@")
             local runs
-            runs=$(gh run list --repo "$repo" --limit 20 --json workflowName,conclusion,url,createdAt,status \
+            runs=$(gh run list --repo "$repo" --limit 20 --json databaseId,workflowName,conclusion,url,createdAt,status \
               | jq -c '[.[] | select(.status=="completed")]')
             local workflows="[]"
             for name in "${wanted_names[@]}"; do
@@ -66,4 +66,60 @@ jobs:
           else
             git commit -m "자동화 현황 데이터 갱신 ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
             git push
+          fi
+
+      - name: 실행 기록을 Supabase에 쌓는다
+        env:
+          SUPABASE_URL: https://cbwoybtltebmiizzeojn.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          set -e
+
+          # 시크릿이 아직 없으면 조용히 넘어간다 · 현황 JSON 갱신은 이미 끝났다
+          if [ -z "$SUPABASE_KEY" ]; then
+            echo "SUPABASE_SERVICE_KEY 시크릿이 없습니다 · Supabase 적재를 건너뜁니다"
+            exit 0
+          fi
+
+          # automation-status.json 은 워크플로우별 "최신 1건"만 담는 스냅샷이다.
+          # 여기서는 끝난 실행을 전부 보내 이력이 쌓이게 한다 ·
+          # run_id(GitHub 실행 번호)가 기본키라 같은 실행을 다시 보내도 덮어쓰기만 된다.
+          collect_rows() {
+            local repo="$1" label="$2"
+            shift 2
+            local names
+            names=$(printf '%s\n' "$@" | jq -R . | jq -sc .)
+            gh run list --repo "$repo" --limit 50 \
+              --json databaseId,workflowName,conclusion,url,createdAt,status \
+              | jq -c --arg repo "$repo" --arg label "$label" --argjson names "$names" \
+                '[.[] | select(.status=="completed")
+                      | select(.workflowName as $n | $names | index($n))
+                      | {run_id: (.databaseId|tostring), repo: $repo, label: $label,
+                         workflow: .workflowName, conclusion: .conclusion,
+                         url: .url, run_at: .createdAt}]'
+          }
+
+          ROWS=$(jq -cs 'add' \
+            <(collect_rows "caffeinnos1-ai/baroyam-trend" "baroyam-trend" \
+                "구글트렌드 수집" "네이버데이터랩 수집") \
+            <(collect_rows "caffeinnos1-ai/caffeinnos-automation" "caffeinnos-automation" \
+                "당일판매분요약표 (Slack)"))
+
+          COUNT=$(echo "$ROWS" | jq 'length')
+          echo "보낼 실행 기록 ${COUNT}건"
+          [ "$COUNT" -eq 0 ] && exit 0
+
+          code=$(curl -s -o /tmp/sb.out -w '%{http_code}' \
+            -X POST "$SUPABASE_URL/rest/v1/automation_runs" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates,return=minimal" \
+            --data "$ROWS")
+          echo "Supabase 응답 HTTP $code"
+
+          # 현황 JSON은 이미 갱신·커밋됐으므로, 적재 실패로 이 워크플로우를 실패시키지 않는다
+          if [ "$code" -ge 300 ]; then
+            cat /tmp/sb.out
+            echo "::warning::Supabase 적재에 실패했습니다 (현황 JSON은 정상 갱신됨)"
           fi
