@@ -2781,6 +2781,38 @@ window.BAROYAM_DB=(function(){
       return (r.data&&r.data.session)||null;
     }catch(err){ return null; }
   }
+  /* 대시보드 세션은 7일 유지돼서 구글 게이트가 다시 뜨지 않는다.
+     그 동안 Supabase 세션이 없으면 기록노트가 조용히 이 브라우저에만 쌓이고,
+     한 번 실패하면 스스로 회복하지 못한다. 그래서 세션이 없을 때는
+     구글 원탭으로 토큰을 한 번 더 받아 연결한다.
+     게이트가 떠 있을 때는 게이트가 알아서 하므로 건드리지 않는다. */
+  async function ensureSession(){
+    if(await session()) return true;
+    const A=window.BAROYAM_AUTH, root=document.documentElement;
+    if(!A||!A.clientId||root.classList.contains('auth-locked')) return false;
+    const token=await new Promise(function(resolve){
+      let done=false;
+      const finish=function(v){ if(!done){ done=true; resolve(v); } };
+      function start(){
+        try{
+          google.accounts.id.initialize({client_id:A.clientId,
+            callback:function(res){ finish(res&&res.credential||null); },auto_select:true});
+          google.accounts.id.prompt(function(n){
+            try{ if(n&&n.isNotDisplayed&&n.isNotDisplayed()) finish(null); }catch(e){}
+          });
+        }catch(err){ finish(null); }
+      }
+      setTimeout(function(){ finish(null); },8000);
+      if(window.google&&google.accounts&&google.accounts.id) return start();
+      const s=document.createElement('script');
+      s.src='https://accounts.google.com/gsi/client'; s.async=true;
+      s.onload=start; s.onerror=function(){ finish(null); };
+      document.head.appendChild(s);
+    });
+    if(!token) return false;
+    try{ await signInWithGoogle(token); return true; }
+    catch(err){ console.error('Supabase 재연결 실패',err); return false; }
+  }
   /* 서버에 담기는 모양: id · member_id · channel(마이홈은 비움) · body · created_at
      화면이 쓰는 모양: {id, ts, text} */
   function toNote(row){ return {id:row.id,ts:Date.parse(row.created_at)||Date.now(),text:row.body||''}; }
@@ -2792,7 +2824,12 @@ window.BAROYAM_DB=(function(){
      부르는 쪽은 이 브라우저에 저장해 둔 내용을 그대로 쓴다 */
   async function listNotes(memberId){
     if(!memberId) return null;
-    if(!(await session())) return null;
+    if(!(await ensureSession())){
+      console.warn('[바로얌] Supabase에 연결되지 않아 기록노트를 이 브라우저에만 담습니다.'
+        +' Supabase 대시보드에서 Authentication > Sign In / Providers > Google 을 켜고'
+        +' Authorized Client IDs 에 이 앱의 클라이언트 ID를 넣었는지 확인해 주세요.');
+      return null;
+    }
     try{
       const c=await client();
       const r=await c.from('notes').select('id,body,created_at')
@@ -2819,7 +2856,8 @@ window.BAROYAM_DB=(function(){
       if(del.error) console.error(del.error);
     }catch(err){ console.error(err); }
   }
-  return {signInWithGoogle:signInWithGoogle,session:session,listNotes:listNotes,syncNotes:syncNotes};
+  return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
+    listNotes:listNotes,syncNotes:syncNotes};
 })();
 </script>
 
@@ -11133,10 +11171,19 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     window.BAROYAM_DB.listNotes(slot()).then(function(rows){
       if(!rows) return;
       notesPulled=true;
-      state.notes=rows; myPart.notes=rows;
-      lastMine=stampMine();
-      writeJson(LS_MINE+slot(),myPart);
-      renderNotes();
+      /* 서버 것과 이 브라우저 것을 합친다 · 같은 id는 이 브라우저 것을 남긴다.
+         통째로 교체하면, 연결이 안 된 동안 적어 둔 기록이 서버의 옛 목록에
+         덮여 사라진다. 합친 결과는 save()가 이 브라우저와 서버에 함께 올린다.
+         (아직 기기 사이 "삭제"는 오가지 않는다 · 지운 기록이 다른 기기의
+          사본에서 다시 올라올 수 있다) */
+      const seen={}, merged=[];
+      state.notes.concat(rows).forEach(function(n){
+        if(!n||!n.id||seen[n.id]) return;
+        seen[n.id]=1; merged.push(n);
+      });
+      merged.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+      state.notes=merged;
+      save();
     }).catch(function(err){ console.error(err); });
   })();
   tick();
