@@ -1399,7 +1399,8 @@ window.BAROYAM_LEAD=(function(){
     border-radius:3px;background:var(--mh-accent);pointer-events:none;z-index:1}
   .mh-link.drop-before::before{top:-5px}
   .mh-link.drop-after::after{bottom:-5px}
-  .mh-link-grip{cursor:grab;color:var(--mute);display:grid;place-items:center;flex:none}
+  .ui-btn.mh-link-grip{cursor:grab;color:var(--mute);display:grid;place-items:center;flex:none;touch-action:none;user-select:none}
+  .mh-link.is-dragging,.mh-link.is-dragging *{cursor:grabbing!important;user-select:none}
   .mh-link-grip svg{width:12px;height:12px}
   .mh-link-dot{width:5px;height:5px;border-radius:50%;background:var(--mh-accent);flex:none}
   .mh-link-name{flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--ink);text-decoration:none;
@@ -10598,12 +10599,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     empty:'팀이 함께 쓰는 링크를 등록해 두세요.<br>위 “+ 추가”'};
   function bindLinks(scope){
     const host=$(scope.host);
+    let gesture=null, scrollFrame=0, blockClickUntil=0;
     function render(){
+      endDrag();
       const list=scope.get();
       if(!list.length){ host.innerHTML=`<div class="mh-empty">${scope.empty}</div>`; return; }
       host.innerHTML=list.map(l=>
-        `<div class="mh-link" draggable="true" data-id="${esc(l.id)}">
-          <span class="mh-link-grip" aria-hidden="true" title="드래그하여 순서 변경">${ICON_GRIP}</span>
+        `<div class="mh-link" draggable="false" data-id="${esc(l.id)}">
+          <button type="button" class="ui-btn ghost icon sm mh-link-grip" aria-label="${esc(l.name)} 순서 이동" title="끌어서 순서 변경 · Alt+↑/↓">${ICON_GRIP}</button>
           <span class="mh-link-dot"></span>
           <a class="mh-link-name" draggable="false" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.name)}</a>
           <button type="button" class="mh-icon-btn" data-act="edit" aria-label="${esc(l.name)} 수정">${ICON_EDIT}</button>
@@ -10625,56 +10628,109 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         });
       }
     });
-    /* 끌어서 순서 바꾸기 */
-    let dragId=null;
+    /* HTML 기본 드래그 대신 포인터로 이동한다 · 마우스/펜/터치 손잡이를 모두 지원한다. */
     function clearDropMark(){
       host.querySelectorAll('.drop-before,.drop-after').forEach(r=>r.classList.remove('drop-before','drop-after'));
     }
     function endDrag(){
-      dragId=null;
+      const previous=gesture;
+      gesture=null;
+      cancelAnimationFrame(scrollFrame);
+      document.removeEventListener('pointermove',moveDrag);
+      document.removeEventListener('pointerup',finishDrag);
+      document.removeEventListener('pointercancel',endDrag);
+      document.removeEventListener('keydown',cancelDrag);
+      window.removeEventListener('blur',endDrag);
+      if(previous&&host.hasPointerCapture(previous.pointerId)) host.releasePointerCapture(previous.pointerId);
       clearDropMark();
       host.querySelectorAll('.is-dragging').forEach(r=>r.classList.remove('is-dragging'));
     }
     /* 끌고 있는 행을 뺀 나머지 행의 중간점을 기준으로, 빈 틈과 맨 끝도 삽입 위치로 쓴다. */
     function dropPosition(y){
-      const rows=Array.from(host.querySelectorAll('.mh-link')).filter(r=>r.dataset.id!==dragId);
+      const rows=Array.from(host.querySelectorAll('.mh-link')).filter(r=>r!==gesture.row);
       const before=rows.find(r=>{ const b=r.getBoundingClientRect(); return y<b.top+b.height/2; });
       return {before, last:rows[rows.length-1]};
     }
-    host.addEventListener('dragstart',e=>{
-      const row=e.target.closest('.mh-link'); if(!row) return;
-      endDrag();
-      dragId=row.dataset.id; row.classList.add('is-dragging');
-      e.dataTransfer.effectAllowed='move';
-      try{ e.dataTransfer.setData('text/plain',dragId); }catch(err){}
-    });
-    host.addEventListener('dragover',e=>{
-      if(!dragId) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect='move';
+    function insideHost(x,y){
+      const b=host.getBoundingClientRect();
+      return x>=b.left-8&&x<=b.right+8&&y>=b.top-8&&y<=b.bottom+8;
+    }
+    function markDrop(){
       clearDropMark();
-      const {before,last}=dropPosition(e.clientY);
+      if(!gesture||!insideHost(gesture.x,gesture.y)) return;
+      const {before,last}=dropPosition(gesture.y);
       if(before) before.classList.add('drop-before');
       else if(last) last.classList.add('drop-after');
-    });
-    host.addEventListener('dragleave',e=>{
-      if(!host.contains(e.relatedTarget)) clearDropMark();
-    });
-    host.addEventListener('drop',e=>{
-      if(!dragId) return;
+    }
+    function scrollDrag(){
+      if(!gesture||!gesture.active) return;
+      if(insideHost(gesture.x,gesture.y)){
+        const b=host.getBoundingClientRect();
+        if(gesture.y<b.top+24) host.scrollTop-=8;
+        else if(gesture.y>b.bottom-24) host.scrollTop+=8;
+        markDrop();
+      }
+      scrollFrame=requestAnimationFrame(scrollDrag);
+    }
+    function moveDrag(e){
+      if(!gesture||e.pointerId!==gesture.pointerId) return;
+      gesture.x=e.clientX; gesture.y=e.clientY;
+      if(!gesture.active){
+        if(Math.hypot(e.clientX-gesture.startX,e.clientY-gesture.startY)<5) return;
+        gesture.active=true;
+        gesture.row.classList.add('is-dragging');
+        host.setPointerCapture(e.pointerId);
+        scrollFrame=requestAnimationFrame(scrollDrag);
+      }
       e.preventDefault();
+      markDrop();
+    }
+    function finishDrag(e){
+      if(!gesture||e.pointerId!==gesture.pointerId) return;
+      if(!gesture.active){ endDrag(); return; }
+      e.preventDefault();
+      blockClickUntil=Date.now()+400;
+      if(!insideHost(e.clientX,e.clientY)){ endDrag(); return; }
       const list=scope.get();
-      const from=list.findIndex(l=>l.id===dragId);
+      const from=list.findIndex(l=>String(l.id)===gesture.row.dataset.id);
       const {before}=dropPosition(e.clientY);
-      const next=list.filter(l=>l.id!==dragId);
-      const to=before?next.findIndex(l=>l.id===before.dataset.id):next.length;
+      const next=list.filter((l,i)=>i!==from);
+      const to=before?next.findIndex(l=>String(l.id)===before.dataset.id):next.length;
       endDrag();
       if(from>-1&&to>-1&&from!==to){
         next.splice(to,0,list[from]);
         scope.set(next); save();
       }
+    }
+    function cancelDrag(e){ if(e.key==='Escape'){ blockClickUntil=Date.now()+400; endDrag(); } }
+    host.addEventListener('pointerdown',e=>{
+      if(e.button!==0||!e.isPrimary||e.target.closest('[data-act]')) return;
+      const row=e.target.closest('.mh-link'); if(!row) return;
+      if(e.pointerType!=='mouse'&&!e.target.closest('.mh-link-grip')) return;
+      endDrag();
+      gesture={row,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,active:false};
+      document.addEventListener('pointermove',moveDrag,{passive:false});
+      document.addEventListener('pointerup',finishDrag);
+      document.addEventListener('pointercancel',endDrag);
+      document.addEventListener('keydown',cancelDrag);
+      window.addEventListener('blur',endDrag);
     });
-    host.addEventListener('dragend',endDrag);
+    host.addEventListener('lostpointercapture',e=>{ if(e.target===host) endDrag(); });
+    host.addEventListener('dragstart',e=>e.preventDefault());
+    host.addEventListener('click',e=>{
+      if(Date.now()<blockClickUntil){ e.preventDefault(); e.stopImmediatePropagation(); }
+    },true);
+    host.addEventListener('keydown',e=>{
+      if(!e.altKey||!['ArrowUp','ArrowDown'].includes(e.key)||!e.target.closest('.mh-link-grip')) return;
+      e.preventDefault();
+      const id=e.target.closest('.mh-link').dataset.id, list=scope.get().slice();
+      const from=list.findIndex(l=>String(l.id)===id), to=from+(e.key==='ArrowUp'?-1:1);
+      if(from<0||to<0||to>=list.length) return;
+      const [link]=list.splice(from,1); list.splice(to,0,link);
+      scope.set(list); save();
+      const row=Array.from(host.children).find(r=>r.dataset.id===id);
+      if(row) row.querySelector('.mh-link-grip').focus();
+    });
     return render;
   }
   const renderLinks=bindLinks(LINKS_MINE);
