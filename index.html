@@ -182,11 +182,23 @@ window.BAROYAM_DB=(function(){
     await migrateFromSheets();
     try{
       const c=await client();
-      const r=await c.from('app_settings').select('key,value');
+      /* 드라이브 색인은 덩어리가 커서 여기서 빼고, 그 화면을 열 때만 따로 읽는다 */
+      const r=await c.from('app_settings').select('key,value').neq('key','drive_assets_v1');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
       return out;
+    }catch(err){ console.error(err); return null; }
+  }
+  /* 설정 한 칸만 읽는다 · 드라이브 색인처럼 큰 덩어리를 그 화면을 열 때만 불러올 때 쓴다 */
+  async function loadSetting(key){
+    if(!key) return null;
+    if(!(await ensureSession())) return null;
+    try{
+      const c=await client();
+      const r=await c.from('app_settings').select('value').eq('key',key).limit(1);
+      if(r.error){ console.error(r.error); return null; }
+      return (r.data&&r.data[0])?r.data[0].value:null;
     }catch(err){ console.error(err); return null; }
   }
   /* ---------- 관계형 테이블 거울 ----------
@@ -521,7 +533,7 @@ window.BAROYAM_DB=(function(){
     agendaPurge:agendaPurge,guideList:guideList,guideSave:guideSave,guideDelete:guideDelete,
     migrateAgendaAndGuide:migrateAgendaAndGuide,
     listNotes:listNotes,syncNotes:syncNotes,
-    saveSetting:saveSetting,loadSettings:loadSettings,migrateFromSheets:migrateFromSheets,
+    saveSetting:saveSetting,loadSettings:loadSettings,loadSetting:loadSetting,migrateFromSheets:migrateFromSheets,
     mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects,
     sdkOk:sdkOk,signOut:signOut};
 })();
@@ -3054,6 +3066,53 @@ window.BAROYAM_LEAD=(function(){
   .drive-empty svg{width:40px;height:40px;color:var(--mute);opacity:.5}
   .drive-empty b{font-size:14.5px;font-weight:800;letter-spacing:-.2px;color:var(--body)}
   .drive-empty span{font-size:12.5px;font-weight:600;color:var(--mute)}
+  .drive-empty[hidden]{display:none}   /* 칸 배치 규칙(display:flex)이 [hidden] 을 이기므로 짝을 지어 둔다 */
+  /* 드라이브 자산 화면 · 왼쪽 브랜드 레일 + 위 종류 칩 + 브랜드마다 가로로 흐르는 카드 줄 ·
+     폴더 구조를 그대로 따라가지 않고 브랜드·종류 두 축으로 걸러 본다(AGENTS.md 기획) */
+  .drv-bar{display:flex;align-items:center;gap:10px;margin:18px 0 10px}
+  .drv-bar .ui-field{flex:1;min-width:0}
+  .drv-meta{flex:none;font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}
+  .drv-types{margin-bottom:14px}
+  .drv-body{display:grid;grid-template-columns:186px minmax(0,1fr);gap:20px;align-items:start}
+  .drv-body[hidden]{display:none}          /* 칸 배치 규칙이 [hidden] 을 이기므로 짝을 지어 둔다 */
+  .drv-rail{display:flex;flex-direction:column;gap:6px;position:sticky;top:12px}
+  .drv-rail[hidden]{display:none}
+  .drv-rail .ui-chip{display:flex;width:100%;justify-content:space-between;height:34px}
+  .drv-rail-cap{padding:0 4px 4px;font-size:11.5px;font-weight:800;letter-spacing:.3px;color:var(--mute)}
+  .drv-lanes{display:flex;flex-direction:column;gap:22px;min-width:0}
+  .drv-lanes[hidden]{display:none}
+  .drv-lane{min-width:0}
+  .drv-lane-head{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .drv-lane-name{font-size:14.5px;font-weight:800;letter-spacing:-.2px;color:var(--ink)}
+  .drv-lane-n{font-size:12px;font-weight:700;color:var(--mute)}
+  .drv-lane-head .ui-btn{margin-left:auto}
+  /* 카드 줄 · 평소엔 가로로 흐르고, '전체 보기'를 누르면 격자로 펼쳐진다 */
+  .drv-strip{display:flex;gap:11px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+  .drv-strip::-webkit-scrollbar{height:8px}
+  .drv-strip::-webkit-scrollbar-thumb{border-radius:99px;background:var(--line)}
+  .drv-strip.open{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));overflow:visible}
+  .drv-card{all:unset;box-sizing:border-box;flex:none;width:148px;display:flex;flex-direction:column;gap:7px;
+    padding:8px;border-radius:13px;border:1px solid var(--line);background:var(--paper);cursor:pointer;
+    scroll-snap-align:start;transition:var(--ui-ease),transform .15s}
+  .drv-strip.open .drv-card{width:auto}
+  .drv-card:hover{border-color:var(--btn);transform:translateY(-2px)}
+  .drv-card:focus-visible{box-shadow:var(--ui-ring)}
+  .drv-thumb{width:100%;aspect-ratio:1/1;border-radius:9px;overflow:hidden;background:var(--chip-flat);
+    position:relative;display:grid;place-items:center;color:var(--mute)}
+  .drv-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .drv-thumb svg{width:26px;height:26px}
+  .drv-ext{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--mute)}
+  .drv-name{font-size:12px;font-weight:700;color:var(--ink);line-height:1.35;overflow:hidden;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all}
+  .drv-sub{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--mute)}
+  .drv-sub .drv-kind{padding:1px 6px;border-radius:99px;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  /* 좁은 화면 · 브랜드 레일을 위로 눕힌다 */
+  @media (max-width:820px){
+    .drv-body{grid-template-columns:minmax(0,1fr)}
+    .drv-rail{position:static;flex-direction:row;flex-wrap:wrap}
+    .drv-rail .ui-chip{width:auto}
+    .drv-rail-cap{display:none}
+  }
   /* 리뷰수집 사이드탭 · 중분류 없이 판매처만 한 줄씩 놓는 평평한 목록(앞에 판매처 색 점) */
   .sb-subnav-flat{display:flex;flex-direction:column;gap:2px}
   .sb-subnav-flat .sb-subnav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;font-weight:700}
@@ -3338,65 +3397,6 @@ window.BAROYAM_LEAD=(function(){
   .hero-view-tab:hover,.gv-cats button:hover,.trend-subcat-btn:hover,.rev-date-quick:hover{border-color:var(--btn);color:var(--btn)}
   html[data-theme="dark"] .hero-view-tab:hover,html[data-theme="dark"] .gv-cats button:hover,
   html[data-theme="dark"] .trend-subcat-btn:hover,html[data-theme="dark"] .rev-date-quick:hover{color:var(--btn-soft-ink)}
-  @media print{
-    *,*::before,*::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
-    @page{size:A4 portrait;margin:9mm}
-    body{background:#fff;background-image:none} .wrap{padding:0;max-width:none} .paper{box-shadow:none;border-radius:0}
-    .section,.ach,.panel,.reco,.chcard,.ins,table,.hero,.donut-wrap,.roasbars{break-inside:avoid}
-    .sidebar{display:none} .hero-view-tabs{display:none} .topbar{display:none}
-    .settings-overlay{display:none}
-  }
-</style>
-</head>
-<body>
-<!-- 구글 로그인 · 허용된 계정만 들어올 수 있다 -->
-<div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-  <div class="auth-wait" role="status"><span class="auth-wait-spin" aria-hidden="true"></span>로그인 상태를 확인하고 있어요</div>
-  <div class="auth-card">
-    <img class="auth-logo" id="authLogo" alt="바로얌">
-    <p class="auth-eyebrow">BAROYAM DASHBOARD</p>
-    <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
-    <p class="auth-sub">매출·광고 성과 보고서를 보려면<br>구글 계정으로 로그인해 주세요</p>
-    <div class="auth-btn" id="authBtn"></div>
-    <p class="auth-msg" id="authMsg"></p>
-    <div class="auth-foot">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      <span>허용된 계정만 접근할 수 있어요</span>
-    </div>
-  </div>
-</div>
-<script>
-(function(){
-  const A=window.BAROYAM_AUTH, root=document.documentElement;
-  const msg=document.getElementById('authMsg');
-  /* 로고 이미지는 사이드바(.sb-logo)에 이미 들어 있는 것을 그대로 빌려 쓴다 · 큰 base64를 두 번 넣지 않기 위해 */
-  document.addEventListener('DOMContentLoaded',function(){
-    const src=document.querySelector('.sb-logo');
-    if(src&&src.src) document.getElementById('authLogo').src=src.src;
-  });
-  window.baroyamSignOut=async function(){
-    /* 로그아웃은 "이 PC를 다른 사람이 쓴다"는 뜻이라, 골라 둔 회원도 같이 비운다 ·
-       그냥 새로고침할 때는 선택이 그대로 남아 다시 묻지 않는다.
-       로그인 판정이 Supabase 세션이므로 그 세션을 반드시 끊어야 한다 */
-    try{ localStorage.removeItem(A.lsKey); localStorage.removeItem('baroyam_me_v1'); }catch(e){}
-    window.BAROYAM_LEAD.clear();
-    try{ if(window.BAROYAM_DB) await window.BAROYAM_DB.signOut(); }catch(e){ console.error(e); }
-    if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect();
-    location.reload();
-  };
-  if(!root.classList.contains('auth-locked')) return;
-
-  if(!A.clientId){ msg.textContent='로그인 설정(클라이언트 ID)이 아직 없습니다.'; return; }
-  function decodeJwt(t){
-    const b=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-    const bin=atob(b+'='.repeat((4-b.length%4)%4));
-    return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
-  }
-  async function onCredential(res){
-    msg.textContent='';
-    /* 혹시 떠 있을지 모르는 원탭 팝업을 먼저 닫는다 · 로그인이 끝나도 저 혼자 남아 있었다 */
-    try{ google.accounts.id.cancel(); }catch(e){}
-    try{
   /* ===== 표준 UI 부품 (ui-*) · 새로 만드는 버튼·탭·칩·입력칸·날짜선택은 전부 이것만 쓴다 =====
      화면마다 xx-btn·xx-tab·xx-cal 을 새로 만들다 모양이 제각각이 된 것을 막는다 ·
      규칙은 AGENTS.md "UI 부품 규칙", 모양 견본은 ui-sample.html · 색은 위 --btn 계열만 쓴다 */
@@ -3510,15 +3510,15 @@ window.BAROYAM_LEAD=(function(){
   .ui-cal-day.sel{background:var(--btn);color:#fff;font-weight:800}
   .ui-cal-day:disabled{opacity:.25;cursor:not-allowed;background:none}
   .ui-cal-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
-      const p=decodeJwt(res.credential);
-      const h=await window.baroyamAuthHash(p.email||'');
-      if(p.aud!==A.clientId || !p.email_verified || p.exp*1000<Date.now() || !A.allowedHashes.includes(h)){
-        google.accounts.id.disableAutoSelect();
-        msg.textContent=(p.email||'이 계정')+'은(는) 접근 권한이 없습니다.';
-        return;
-      }
-      /* 받은 구글 ID 토큰을 그대로 Supabase 로그인에 쓴다 · 로그인 상태를
-         Supabase 세션 하나로 판단하므로, 여기서 세션을 만들지 못하면 들여보내지
+  @media print{
+    *,*::before,*::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
+    @page{size:A4 portrait;margin:9mm}
+    body{background:#fff;background-image:none} .wrap{padding:0;max-width:none} .paper{box-shadow:none;border-radius:0}
+    .section,.ach,.panel,.reco,.chcard,.ins,table,.hero,.donut-wrap,.roasbars{break-inside:avoid}
+    .sidebar{display:none} .hero-view-tabs{display:none} .topbar{display:none}
+    .settings-overlay{display:none}
+  }
+</style>
 <script>
 /* ===== 표준 UI 동작 (window.UI) · 위 ui-* 부품과 짝 · 새 화면은 여기 것만 쓴다 =====
    UI.datePicker(button, {mode:'single'|'range', value, placeholder, min, max, presets, resetValue, onChange})
@@ -3732,6 +3732,65 @@ window.BAROYAM_LEAD=(function(){
   window.UI={datePicker,tabs};
 })();
 </script>
+</head>
+<body>
+<!-- 구글 로그인 · 허용된 계정만 들어올 수 있다 -->
+<div id="authGate" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="auth-wait" role="status"><span class="auth-wait-spin" aria-hidden="true"></span>로그인 상태를 확인하고 있어요</div>
+  <div class="auth-card">
+    <img class="auth-logo" id="authLogo" alt="바로얌">
+    <p class="auth-eyebrow">BAROYAM DASHBOARD</p>
+    <h1 class="auth-title" id="authTitle">바로얌 대시보드</h1>
+    <p class="auth-sub">매출·광고 성과 보고서를 보려면<br>구글 계정으로 로그인해 주세요</p>
+    <div class="auth-btn" id="authBtn"></div>
+    <p class="auth-msg" id="authMsg"></p>
+    <div class="auth-foot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span>허용된 계정만 접근할 수 있어요</span>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const A=window.BAROYAM_AUTH, root=document.documentElement;
+  const msg=document.getElementById('authMsg');
+  /* 로고 이미지는 사이드바(.sb-logo)에 이미 들어 있는 것을 그대로 빌려 쓴다 · 큰 base64를 두 번 넣지 않기 위해 */
+  document.addEventListener('DOMContentLoaded',function(){
+    const src=document.querySelector('.sb-logo');
+    if(src&&src.src) document.getElementById('authLogo').src=src.src;
+  });
+  window.baroyamSignOut=async function(){
+    /* 로그아웃은 "이 PC를 다른 사람이 쓴다"는 뜻이라, 골라 둔 회원도 같이 비운다 ·
+       그냥 새로고침할 때는 선택이 그대로 남아 다시 묻지 않는다.
+       로그인 판정이 Supabase 세션이므로 그 세션을 반드시 끊어야 한다 */
+    try{ localStorage.removeItem(A.lsKey); localStorage.removeItem('baroyam_me_v1'); }catch(e){}
+    window.BAROYAM_LEAD.clear();
+    try{ if(window.BAROYAM_DB) await window.BAROYAM_DB.signOut(); }catch(e){ console.error(e); }
+    if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect();
+    location.reload();
+  };
+  if(!root.classList.contains('auth-locked')) return;
+
+  if(!A.clientId){ msg.textContent='로그인 설정(클라이언트 ID)이 아직 없습니다.'; return; }
+  function decodeJwt(t){
+    const b=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    const bin=atob(b+'='.repeat((4-b.length%4)%4));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
+  }
+  async function onCredential(res){
+    msg.textContent='';
+    /* 혹시 떠 있을지 모르는 원탭 팝업을 먼저 닫는다 · 로그인이 끝나도 저 혼자 남아 있었다 */
+    try{ google.accounts.id.cancel(); }catch(e){}
+    try{
+      const p=decodeJwt(res.credential);
+      const h=await window.baroyamAuthHash(p.email||'');
+      if(p.aud!==A.clientId || !p.email_verified || p.exp*1000<Date.now() || !A.allowedHashes.includes(h)){
+        google.accounts.id.disableAutoSelect();
+        msg.textContent=(p.email||'이 계정')+'은(는) 접근 권한이 없습니다.';
+        return;
+      }
+      /* 받은 구글 ID 토큰을 그대로 Supabase 로그인에 쓴다 · 로그인 상태를
+         Supabase 세션 하나로 판단하므로, 여기서 세션을 만들지 못하면 들여보내지
          않는다. 예전에는 자체 세션만 두고 통과시켜서 "화면은 열리는데 저장은
          되지 않는" 상태가 됐다. 이름·이메일·사진은 새로 열릴 때 세션에서 받는다 */
       msg.textContent='로그인 중...';
@@ -5797,18 +5856,32 @@ window.BAROYAM_LEAD=(function(){
         </section>
       </div><!-- /view-manual -->
 
-      <!-- 드라이브 · 화면 자리만 먼저 잡아 둔다(내용은 나중에 채운다) -->
+      <!-- 드라이브 · 회사 자산을 브랜드(왼쪽 줄)와 종류(위 칩) 두 축으로 걸러 본다 ·
+           목록은 Supabase 의 app_settings/drive_assets_v1 에서 이 화면을 열 때만 읽어 온다 -->
       <div id="view-drive" style="display:none">
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero">
             <div class="ptag">DRIVE</div>
             <div class="ptitle">드라이브</div>
-            <p class="psub">회사 자료를 한곳에 모아 보는 자리입니다</p>
+            <p class="psub">브랜드와 종류로 걸러 보는 회사 자산입니다</p>
           </div>
-          <div class="drive-empty">
+          <div class="drv-bar">
+            <label class="ui-field block" style="cursor:text">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+              <input id="drvSearch" type="search" placeholder="파일명·브랜드·종류로 찾기" autocomplete="off"
+                     style="all:unset;flex:1;min-width:0;font:inherit;color:inherit">
+            </label>
+            <span class="drv-meta" id="drvMeta"></span>
+          </div>
+          <div class="ui-chips drv-types" id="drvTypes"></div>
+          <div class="drv-body" id="drvBody" hidden>
+            <div class="drv-rail" id="drvRail"><div class="drv-rail-cap">브랜드</div></div>
+            <div class="drv-lanes" id="drvLanes"></div>
+          </div>
+          <div class="drive-empty" id="drvEmpty">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.8 21 19.4H3Z"/><path d="M12 3.8v9.1M12 12.9 3.9 19.1M12 12.9l8.1 6.2"/></svg>
-            <b>아직 준비 중이에요</b>
-            <span>여기에 드라이브 화면이 들어옵니다</span>
+            <b>불러오는 중이에요</b>
+            <span>구글드라이브 자산 목록을 읽고 있습니다</span>
           </div>
         </section>
       </div><!-- /view-drive -->
@@ -7773,6 +7846,8 @@ window.CsGuide=(function(){
     document.getElementById('view-admin').style.display=v==='admin'?'':'none';
     document.getElementById('view-manual').style.display=v==='manual'?'':'none';
     document.getElementById('view-drive').style.display=v==='drive'?'':'none';
+    /* 드라이브 목록은 덩어리가 커서 이 화면을 열 때 한 번만 읽는다 */
+    if(v==='drive'&&window.baroyamDriveOpen) window.baroyamDriveOpen();
     document.body.classList.toggle('view-is-manual',v==='manual');
     document.getElementById('view-project').style.display=v==='project'?'':'none';
     document.getElementById('view-channel').style.display=v==='channel'?'':'none';
@@ -13133,6 +13208,179 @@ window.baroyamAsk=function(title,body,okText){
     document.addEventListener('keydown',onKey,true);
   });
 };
+</script>
+<script>
+/* ===== 드라이브 자산 화면 =====
+   구글드라이브를 폴더 순서대로 따라가지 않는다. 회사 드라이브는 같은 자산이
+   여러 갈래로 나뉘어 있어서, 트리를 하나 고르면 나머지가 화면에서 사라진다.
+   대신 이름에서 뽑아 둔 브랜드·종류로 걸러 본다(목록은 trend/drive 색인이 만든다).
+   목록은 app_settings 의 drive_assets_v1 한 칸에 있고, 이 화면을 열 때만 읽는다. */
+(function(){
+  const 열쇠='drive_assets_v1';
+  const 레인최대=18;                 /* 한 줄에 먼저 보여 줄 카드 수 · 나머지는 '전체 보기' */
+  let 줄들=null, 읽는중=false, 갱신시각='';
+  const 상태={브랜드:'', 종류:new Set(), 검색:'', 펼침:new Set()};
+  const $=function(id){ return document.getElementById(id); };
+  function 안전(v){ return String(v==null?'':v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  const 미리보기가능={jpg:1,jpeg:1,png:1,gif:1,webp:1,heic:1,bmp:1,tif:1,tiff:1,
+                   mp4:1,mov:1,avi:1,pdf:1,psd:1,ai:1};
+  function 확장자(이름){
+    const 점=String(이름||'').lastIndexOf('.');
+    return 점>0?String(이름).slice(점+1).toLowerCase():'';
+  }
+  function 날짜표시(d){ d=String(d||''); return d.length>=10?d.slice(2).replace(/-/g,'.'):''; }
+
+  function 거른줄(건너뛸){
+    const 검색=상태.검색.trim().toLowerCase();
+    return (줄들||[]).filter(function(r){
+      if(건너뛸!=='브랜드'&&상태.브랜드&&(r.브랜드||'회사 공통')!==상태.브랜드) return false;
+      if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(r.자산종류||'그 밖')) return false;
+      if(검색){
+        const 밭=(r.이름+' '+r.브랜드+' '+r.제품+' '+r.자산종류+' '+r.경로).toLowerCase();
+        if(밭.indexOf(검색)<0) return false;
+      }
+      return true;
+    });
+  }
+
+  function 카드(r){
+    const 끝=확장자(r.이름);
+    const 그림=미리보기가능[끝]
+      ? '<img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+안전(r.아이디)+'&amp;sz=w220">'
+      : '';
+    return '<button type="button" class="drv-card" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'">'
+      + '<span class="drv-thumb"><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
+      + '<span class="drv-name">'+안전(r.이름)+'</span>'
+      + '<span class="drv-sub">'+(r.자산종류?'<span class="drv-kind">'+안전(r.자산종류)+'</span>':'')
+      + '<span>'+안전(날짜표시(r.날짜))+'</span></span></button>';
+  }
+
+  function 칩줄(){
+    const 바탕=거른줄('종류');
+    const 셈={}; 바탕.forEach(function(r){ const k=r.자산종류||'그 밖'; 셈[k]=(셈[k]||0)+1; });
+    const 이름들=Object.keys(셈).sort(function(a,b){ return 셈[b]-셈[a]; });
+    let h='<button type="button" class="ui-chip" data-kind="" aria-pressed="'+(상태.종류.size?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
+    이름들.forEach(function(k){
+      h+='<button type="button" class="ui-chip" data-kind="'+안전(k)+'" aria-pressed="'+(상태.종류.has(k)?'true':'false')+'">'
+        + 안전(k)+'<b>'+셈[k]+'</b></button>';
+    });
+    $('drvTypes').innerHTML=h;
+  }
+
+  function 레일(){
+    const 바탕=거른줄('브랜드');
+    const 셈={}; 바탕.forEach(function(r){ const k=r.브랜드||'회사 공통'; 셈[k]=(셈[k]||0)+1; });
+    const 이름들=Object.keys(셈).sort(function(a,b){ return 셈[b]-셈[a]; });
+    let h='<div class="drv-rail-cap">브랜드</div>'
+      + '<button type="button" class="ui-chip" data-brand="" aria-pressed="'+(상태.브랜드?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
+    이름들.forEach(function(k){
+      h+='<button type="button" class="ui-chip" data-brand="'+안전(k)+'" aria-pressed="'+(상태.브랜드===k?'true':'false')+'">'
+        + 안전(k)+'<b>'+셈[k]+'</b></button>';
+    });
+    $('drvRail').innerHTML=h;
+  }
+
+  function 레인들(){
+    const 보임=거른줄('');
+    const 묶음={};
+    보임.forEach(function(r){ const k=r.브랜드||'회사 공통'; (묶음[k]=묶음[k]||[]).push(r); });
+    const 이름들=Object.keys(묶음).sort(function(a,b){ return 묶음[b].length-묶음[a].length; });
+    if(!이름들.length){
+      $('drvLanes').innerHTML='<div class="drive-empty"><b>해당하는 자산이 없어요</b>'
+        + '<span>검색어나 걸러 둔 조건을 바꿔 보세요</span></div>';
+      return;
+    }
+    let h='';
+    이름들.forEach(function(브){
+      const 것들=묶음[브].slice().sort(function(a,b){ return String(b.날짜||'').localeCompare(String(a.날짜||'')); });
+      const 펼침=상태.펼침.has(브);
+      const 보일것=(펼침||것들.length<=레인최대)?것들:것들.slice(0,레인최대);
+      h+='<div class="drv-lane"><div class="drv-lane-head">'
+        + '<span class="drv-lane-name">'+안전(브)+'</span><span class="drv-lane-n">'+것들.length+'개</span>'
+        + (것들.length>레인최대
+            ? '<button type="button" class="ui-btn sm ghost" data-open="'+안전(브)+'">'+(펼침?'접기':'전체 보기 →')+'</button>'
+            : '')
+        + '</div><div class="drv-strip'+(펼침?' open':'')+'">'
+        + 보일것.map(카드).join('') + '</div></div>';
+    });
+    $('drvLanes').innerHTML=h;
+  }
+
+  function 그리기(){
+    const 전체=(줄들||[]).length;
+    $('drvMeta').textContent=전체?(전체+'개 · '+(갱신시각?갱신시각.slice(0,10)+' 기준':'')):'';
+    칩줄(); 레일(); 레인들();
+  }
+
+  function 눌림(e){
+    const 칩=e.target.closest('#drvTypes .ui-chip');
+    if(칩){
+      const k=칩.dataset.kind;
+      if(!k) 상태.종류.clear();
+      else if(상태.종류.has(k)) 상태.종류.delete(k);
+      else 상태.종류.add(k);
+      상태.펼침.clear(); 그리기(); return;
+    }
+    const 브=e.target.closest('#drvRail .ui-chip');
+    if(브){
+      상태.브랜드=(상태.브랜드===브.dataset.brand)?'':브.dataset.brand;
+      상태.펼침.clear(); 그리기(); return;
+    }
+    const 더=e.target.closest('[data-open]');
+    if(더){
+      const k=더.dataset.open;
+      if(상태.펼침.has(k)) 상태.펼침.delete(k); else 상태.펼침.add(k);
+      레인들(); return;
+    }
+    const 카=e.target.closest('.drv-card');
+    if(카) window.open('https://drive.google.com/file/d/'+카.dataset.id+'/view','_blank','noopener');
+  }
+
+  function 안내(굵게, 잔글){
+    const 빈=$('drvEmpty'); if(!빈) return;
+    빈.hidden=false;
+    const 몸=$('drvBody'); if(몸) 몸.hidden=true;
+    빈.querySelector('b').textContent=굵게;
+    빈.querySelector('span').textContent=잔글;
+  }
+
+  async function 열기(){
+    if(줄들||읽는중) return;
+    읽는중=true;
+    try{
+      const 덩어리=window.BAROYAM_DB?(await window.BAROYAM_DB.loadSetting(열쇠)):null;
+      const 칸=(덩어리&&덩어리['칸'])||[];
+      const 원줄=(덩어리&&덩어리['줄'])||[];
+      if(!원줄.length){
+        안내('아직 목록이 없어요','드라이브 색인을 한 번 올리면 여기에 나옵니다');
+        return;
+      }
+      갱신시각=(덩어리&&덩어리['갱신'])||'';
+      줄들=원줄.map(function(값들){
+        const o={}; 칸.forEach(function(이름,i){ o[이름]=값들[i]; }); return o;
+      });
+      $('drvEmpty').hidden=true; $('drvBody').hidden=false;
+      그리기();
+    }catch(err){
+      console.error(err);
+      안내('목록을 읽지 못했어요','로그인 상태를 확인한 뒤 다시 열어 주세요');
+    }finally{ 읽는중=false; }
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    const 뿌리=$('view-drive'); if(!뿌리) return;
+    뿌리.addEventListener('click',눌림);
+    const 찾기=$('drvSearch');
+    let 타이머=null;
+    if(찾기) 찾기.addEventListener('input',function(){
+      clearTimeout(타이머);
+      타이머=setTimeout(function(){ 상태.검색=찾기.value; 상태.펼침.clear(); if(줄들) 그리기(); },180);
+    });
+  });
+  window.baroyamDriveOpen=열기;
+})();
 </script>
 </body>
 </html>
