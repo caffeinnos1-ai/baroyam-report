@@ -1392,14 +1392,24 @@ window.BAROYAM_LEAD=(function(){
   .mh-empty{margin-top:18px;padding:22px 12px;text-align:center;font-size:13px;line-height:1.6;color:var(--mute);
     border:1px dashed var(--line);border-radius:12px}
   /* 퀵링크 */
-  .mh-links-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
-  .mh-link{position:relative;display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;background:var(--bg)}
+  .mh-links-list{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+  .mh-link{position:relative;display:flex;align-items:center;gap:6px;padding:4px 8px 4px 4px;border-radius:9px;background:var(--bg)}
+  /* 링크마다 고른 연한 바탕색 · 값은 LINK_TONES 의 k 로 저장한다 (없으면 기본 회색 바탕) */
+  [data-tone]{--tone-bg:var(--bg)}
+  [data-tone="rose"]{--tone-bg:#fde7ea} [data-tone="peach"]{--tone-bg:#fdeedd} [data-tone="mint"]{--tone-bg:#e1f5e8}
+  [data-tone="sky"]{--tone-bg:#e2eefd} [data-tone="lilac"]{--tone-bg:#ede7fb}
+  html[data-theme="dark"] [data-tone="rose"]{--tone-bg:rgba(244,114,138,.16)}
+  html[data-theme="dark"] [data-tone="peach"]{--tone-bg:rgba(245,158,78,.16)}
+  html[data-theme="dark"] [data-tone="mint"]{--tone-bg:rgba(74,190,120,.15)}
+  html[data-theme="dark"] [data-tone="sky"]{--tone-bg:rgba(88,150,240,.17)}
+  html[data-theme="dark"] [data-tone="lilac"]{--tone-bg:rgba(150,120,235,.18)}
+  .mh-links-list .mh-link[data-tone],.console-side-list .mh-link[data-tone]{background:var(--tone-bg);border-color:transparent}
   .mh-link.is-dragging{opacity:.35}
   .mh-link.drop-before::before,.mh-link.drop-after::after{content:'';position:absolute;left:0;right:0;height:3px;
     border-radius:3px;background:var(--mh-accent);pointer-events:none;z-index:1}
-  .mh-link.drop-before::before{top:-5px}
-  .mh-link.drop-after::after{bottom:-5px}
-  .ui-btn.mh-link-grip{cursor:grab;color:var(--mute);display:grid;place-items:center;flex:none;touch-action:none;user-select:none}
+  .mh-link.drop-before::before{top:-4px}
+  .mh-link.drop-after::after{bottom:-4px}
+  .ui-btn.mh-link-grip{width:24px;height:24px;cursor:grab;color:var(--mute);display:grid;place-items:center;flex:none;touch-action:none;user-select:none}
   .mh-link.is-dragging,.mh-link.is-dragging *{cursor:grabbing!important;user-select:none}
   .mh-link-grip svg{width:12px;height:12px}
   .mh-link-dot{width:5px;height:5px;border-radius:50%;background:var(--mh-accent);flex:none}
@@ -2584,8 +2594,7 @@ window.BAROYAM_LEAD=(function(){
   @media(max-width:620px){.tb-search{width:190px}}
 
   /* 메모 플로팅 버튼 (우하단 고정) */
-  /* 오른쪽 아래 떠 있는 동그란 버튼 두 개 · 아래가 로고(64px), 그 위가 노트(56px) ·
-     회의안건 패널이 열리면 둘 다 패널 폭만큼 왼쪽으로 비켜선다 */
+  /* 오른쪽 아래 떠 있는 동그란 버튼 두 개 · 아래가 로고(상담 콘솔), 그 위가 연필(프로젝트 추가) */
   .memo-fab{all:unset;box-sizing:border-box;position:fixed;right:24px;bottom:114px;width:56px;height:56px;
     border-radius:50%;background:var(--indigo);color:#fff;display:grid;place-items:center;cursor:pointer;z-index:70;
     box-shadow:0 12px 26px -8px rgba(var(--indigo-rgb),.6);transition:transform .18s,box-shadow .18s,background .18s}
@@ -2593,7 +2602,11 @@ window.BAROYAM_LEAD=(function(){
   .memo-fab:active{transform:translateY(0)}
   .memo-fab:focus-visible{outline:2px solid var(--indigo);outline-offset:3px}
   .memo-fab svg{width:24px;height:24px}
-  .memo-fab.is-open{right:calc(min(560px,40vw) + 40px)}
+  /* 라이트 모드 · 아래 상담 콘솔 버튼은 주황 로고 그림이 덮고 있어서, 그 로고 주황(#e94f0e)에 맞춘다 ·
+     다크 모드는 상담 콘솔 버튼도 --indigo 바탕이라 위 기본값 그대로 둔다 */
+  html:not([data-theme="dark"]) .memo-fab{background:#e94f0e;box-shadow:0 12px 26px -8px rgba(233,79,14,.55)}
+  html:not([data-theme="dark"]) .memo-fab:hover{background:#f0642a;box-shadow:0 18px 32px -10px rgba(233,79,14,.65)}
+  html:not([data-theme="dark"]) .memo-fab:focus-visible{outline-color:#e94f0e}
 
   /* 바로얌 로고 버튼 · 노트보다 한 치수 크고 색은 같은 계열 */
   .logo-fab{all:unset;box-sizing:border-box;position:fixed;right:24px;bottom:24px;width:76px;height:76px;
@@ -2640,7 +2653,6 @@ window.BAROYAM_LEAD=(function(){
   .console-head-lines{display:flex;flex-direction:column;gap:2px;min-width:0}
   .console-sub{font-size:12px;font-weight:600;color:var(--mute);letter-spacing:-.2px;line-height:1.2}
   .console-body{flex:1;min-height:0;overflow-y:auto;padding:24px 26px;background:var(--paper)}
-  .logo-fab.is-open{right:calc(min(560px,40vw) + 40px)}
 
   /* 상담 콘솔 왼쪽 퀵링크 · 창 높이만큼 길게 세워 둔다 · 상담 중에 콘솔을 닫지 않고
      자주 여는 페이지를 바로 연다 · 목록은 마이홈 퀵링크와 같은 한 벌을 읽어만 온다
@@ -2655,7 +2667,7 @@ window.BAROYAM_LEAD=(function(){
   .console-side-list{flex:1;min-height:0;overflow-y:auto;margin-top:12px;display:flex;flex-direction:column;gap:6px}
   .console-side-foot{flex:none;margin-top:12px;font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.55}
   /* 줄 모양은 마이홈 퀵링크(.mh-link)를 그대로 쓰고, 좁은 레일에 맞게만 줄인다 */
-  .console-side-list .mh-link{padding:8px 8px;gap:6px;background:var(--paper);border:1px solid var(--line)}
+  .console-side-list .mh-link{padding:3px 6px 3px 3px;gap:5px;background:var(--paper);border:1px solid var(--line)}
   .console-side-list .mh-link-name{font-size:12.5px}
   .console-side-list .mh-empty{padding:18px 10px;border-radius:12px;border:1.5px dashed var(--line);text-align:center;
     font-size:12px;font-weight:600;color:var(--mute);line-height:1.6}
@@ -2767,57 +2779,7 @@ window.BAROYAM_LEAD=(function(){
     .gm-actions{grid-column:1}
   }
 
-  @media (max-width:1100px){
-    .memo-fab.is-open{right:calc(min(420px,86vw) + 40px)}
-    .logo-fab.is-open{right:calc(min(420px,86vw) + 40px)}
-  }
-
-  /* 회의안건 우측 분할 패널 — 메모 버튼으로 여닫는다.
-     화면 끝에 각지게 붙지 않도록 사방에 여백을 두고 모서리를 둥글린 카드로 띄운다 ·
-     overflow:hidden 이라 안쪽 배너와 헤더도 둥근 모서리를 따라 잘린다 */
-  .agenda-pane{--agenda-w:min(560px,40vw);flex:none;width:var(--agenda-w);align-self:flex-start;
-    position:sticky;top:16px;height:calc(100vh - 32px);margin:16px 16px 16px 0;
-    background:var(--paper);border:1px solid var(--line);border-radius:22px;overflow:hidden;
-    box-shadow:0 22px 48px -28px rgba(38,38,46,.35);
-    display:flex;flex-direction:column;min-width:0;z-index:35}
-  .agenda-pane[hidden]{display:none}
-  /* 패널이 열려도 최상단 바는 제자리 · 본문만 좁아지고 최상단 바는 패널 밑으로 화면 끝까지 뻗는다
-     (오른쪽 끝 메일·프로필은 패널에 가려진다) */
-  @media (min-width:1101px){
-    body.agenda-open .topbar{margin-right:calc(-1 * (min(560px,40vw) + 16px))}
-  }
-  .agenda-pane-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;
-    padding:16px 20px;border-bottom:1px solid var(--line);background:var(--paper)}
-  .agenda-pane-title{font-size:14px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
-  .agenda-pane-close{all:unset;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;
-    color:var(--mute);cursor:pointer;font-size:13px;font-weight:700}
-  .agenda-pane-close:hover{background:var(--bg);color:var(--ink)}
-  /* 스크롤바는 얄게 — 기본 스크롤바가 패널 안에 툭하게 드러나는 게 어색해서.
-     scrollbar-gutter:stable 로 열릴 때 내용이 밀리는 것도 막는다 */
-  .agenda-pane-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
-    scrollbar-width:thin;scrollbar-color:var(--line) transparent;scrollbar-gutter:stable}
-  .agenda-pane-body::-webkit-scrollbar{width:8px}
-  .agenda-pane-body::-webkit-scrollbar-track{background:transparent}
-  .agenda-pane-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;
-    border:2px solid var(--paper)}
-  .agenda-pane-body::-webkit-scrollbar-thumb:hover{background:var(--mute)}
-  /* 좁은 폭에 맞춰 패널 안에서만 줄인다 */
-  .agenda-pane .section{padding:20px 22px}
-  .agenda-pane .section > .plan-hero{margin:0 -22px;border-radius:0;border-width:0 0 1px}
-  .agenda-pane .plan-hero{padding:24px 22px 26px;border-radius:0}
-  .agenda-pane .plan-hero .ptitle{font-size:34px;letter-spacing:-1.2px}
-  .agenda-pane .plan-hero .psub{margin-top:10px;font-size:15px}
-  .agenda-pane .plan-hero .ptag{font-size:12.5px}
   .ag-meta-full{grid-template-columns:1fr}
-  .agenda-pane .ag-meta{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-  .agenda-pane .ag-meta-full{grid-template-columns:1fr}
-  .agenda-pane .ag-stitle{font-size:22px}
-  .agenda-pane .ag-metaitem{padding:12px 14px}
-  /* 화면이 좁으면 본문이 못 쓰게 눌려서, 분할 대신 덮는 방식으로 */
-  @media (max-width:1100px){
-    .agenda-pane{--agenda-w:min(420px,86vw);position:fixed;right:16px;top:16px;z-index:75;
-      height:calc(100vh - 32px);margin:0;box-shadow:-14px 0 44px -20px rgba(0,0,0,.4)}
-  }
 
   /* 설정 패널 */
   .settings-overlay{position:fixed;inset:0;background:rgba(20,14,10,.5);display:flex;align-items:center;justify-content:center;
@@ -3032,14 +2994,6 @@ window.BAROYAM_LEAD=(function(){
   .sb-subnav-caption{padding:2px 10px 7px;font-size:10.5px;font-weight:800;color:var(--mute);letter-spacing:.02em}
   /* 수집기가 높이를 알려주면(dashboard-embed.js) 그 높이로 딱 맞춘다 · 파일이 옛날 버전인 PC는 높이를 안 알려주므로
      기본 높이를 넉넉히 잡고, 안쪽 스크롤(scrolling 속성 없음)로 나머지를 볼 수 있게 해 잘리지 않게 한다 */
-  /* 프로젝트 화면(.pj)과 같은 폭을 쓴다 · .section 의 좌우 48px 가 없어 바깥 칸을 꽉 채운다 */
-  .drv-view{padding:0 0 16px}
-  /* 회사 전환 줄 · 배너 위에 자리를 두고 왼쪽부터 바로얌 · 카페이노스 */
-  .drv-owner{margin:2px 0 14px}
-  /* 검색칸부터 카드 줄까지를 한 상자에 담는다 · 넓게 보기에서는 뒤 배경이 없어 상자가 경계를 만든다 */
-  .drv-box{margin-top:16px;padding:18px 18px 20px;border:1px solid var(--line);
-    border-radius:18px;background:var(--paper);min-height:420px}
-  .drv-box .drv-bar{margin-top:0}
   .collector-frame{display:block;width:100%;height:calc(100vh - 120px);min-height:900px;margin-top:22px;border:0;background:transparent}
   .collector-hint{margin-top:10px;font-size:12px;color:var(--mute);line-height:1.6;word-break:keep-all}
   .collector-status{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--mute);white-space:nowrap}
@@ -3078,6 +3032,14 @@ window.BAROYAM_LEAD=(function(){
   .drive-empty[hidden]{display:none}   /* 칸 배치 규칙(display:flex)이 [hidden] 을 이기므로 짝을 지어 둔다 */
   /* 드라이브 자산 화면 · 왼쪽 브랜드 레일 + 위 종류 칩 + 브랜드마다 가로로 흐르는 카드 줄 ·
      폴더 구조를 그대로 따라가지 않고 브랜드·종류 두 축으로 걸러 본다(AGENTS.md 기획) */
+  /* 프로젝트 화면(.pj)과 같은 폭을 쓴다 · .section 의 좌우 48px 가 없어 바깥 칸을 꽉 채운다 */
+  .drv-view{padding:0 0 16px}
+  /* 회사 전환 줄 · 배너 위에 자리를 두고 왼쪽부터 바로얌 · 카페이노스 */
+  .drv-owner{margin:2px 0 14px}
+  /* 검색칸부터 카드 줄까지를 한 상자에 담는다 · 넓게 보기에서는 뒤 배경이 없어 상자가 경계를 만든다 */
+  .drv-box{margin-top:16px;padding:18px 18px 20px;border:1px solid var(--line);
+    border-radius:18px;background:var(--paper);min-height:420px}
+  .drv-box .drv-bar{margin-top:0}
   .drv-bar{display:flex;align-items:center;gap:10px;margin:18px 0 10px}
   .drv-bar .ui-field{flex:1;min-width:0}
   .drv-meta{flex:none;font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}
@@ -3463,6 +3425,17 @@ window.BAROYAM_LEAD=(function(){
   .ui-chip[aria-pressed="true"],.ui-chip.on{background:var(--btn-soft);border-color:var(--btn);color:var(--btn-soft-ink)}
   .ui-chip b{font-weight:800;color:var(--mute)}
   .ui-chip[aria-pressed="true"] b,.ui-chip.on b{color:inherit}
+  /* 색 고르기 · 동그란 견본 한 줄 · 라디오라 폼에서 그대로 읽힌다 · 견본 색은 --sw 로 넘긴다 */
+  .ui-swatches{display:flex;flex-wrap:wrap;gap:8px}
+  .ui-swatch{position:relative;display:inline-flex;cursor:pointer}
+  .ui-swatch input{position:absolute;width:0;height:0;opacity:0}
+  .ui-swatch span{box-sizing:border-box;width:30px;height:30px;border-radius:50%;background:var(--sw);
+    border:1px solid var(--line);display:grid;place-items:center;color:var(--btn-soft-ink);transition:var(--ui-ease)}
+  .ui-swatch span svg{width:14px;height:14px;opacity:0}
+  .ui-swatch:hover span{border-color:var(--btn)}
+  .ui-swatch input:checked+span{border:2px solid var(--btn)}
+  .ui-swatch input:checked+span svg{opacity:1}
+  .ui-swatch input:focus-visible+span{box-shadow:var(--ui-ring)}
   /* 입력칸·선택칸 · input 에도, 누르면 목록/달력이 열리는 button 에도 같은 모양 */
   .ui-field{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;min-width:0;
     height:var(--ui-h);padding:0 12px;border-radius:var(--ui-r);border:1px solid var(--line);background:var(--paper);
@@ -5842,17 +5815,11 @@ window.BAROYAM_LEAD=(function(){
 
           <div class="admin-local-note" role="note" hidden>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
-          <!-- 회사 전환 · 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) -->
-          <div class="ui-tabs drv-owner" id="drvOwner">
-            <button type="button" class="ui-tab" data-value="바로얌" aria-selected="true">바로얌</button>
-            <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">카페이노스</button>
-          </div>
             <span><b>이용 안내</b> · 실시간 키워드는 이 PC에서 리뷰 수집기가 실행 중일 때 사용할 수 있습니다.</span>
           </div>
         </section>
       </div><!-- /view-admin -->
 
-          <div class="drv-box">
       <div id="view-manual" style="display:none">
         <section class="section man">
           <div class="man-head">
@@ -5871,16 +5838,21 @@ window.BAROYAM_LEAD=(function(){
         </section>
       </div><!-- /view-manual -->
 
-          </div><!-- /drv-box -->
       <!-- 드라이브 · 회사 자산을 브랜드(왼쪽 줄)와 종류(위 칩) 두 축으로 걸러 본다 ·
            목록은 Supabase 의 app_settings/drive_assets_v1 에서 이 화면을 열 때만 읽어 온다 -->
       <div id="view-drive" style="display:none">
         <div class="drv-view">
+          <!-- 회사 전환 · 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) -->
+          <div class="ui-tabs drv-owner" id="drvOwner">
+            <button type="button" class="ui-tab" data-value="바로얌" aria-selected="true">바로얌</button>
+            <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">카페이노스</button>
+          </div>
           <div class="plan-hero">
             <div class="ptag">DRIVE</div>
             <div class="ptitle">드라이브</div>
             <p class="psub">브랜드와 종류로 걸러 보는 회사 자산입니다</p>
           </div>
+          <div class="drv-box">
           <div class="drv-bar">
             <label class="ui-field block" style="cursor:text">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
@@ -5899,6 +5871,7 @@ window.BAROYAM_LEAD=(function(){
             <b>불러오는 중이에요</b>
             <span>구글드라이브 자산 목록을 읽고 있습니다</span>
           </div>
+          </div><!-- /drv-box -->
         </div>
       </div><!-- /view-drive -->
 
@@ -5947,19 +5920,8 @@ window.BAROYAM_LEAD=(function(){
         </button>
       </div>
 
-      <!-- 사이드탭 '회의안건' 크게보기 자리 · 우측 패널(보조용)과 회의안건 DOM 하나를 나눠 쓴다 -->
-      <div id="view-agenda-host" style="display:none"></div>
-
-    </div><!-- /paper -->
-    </div><!-- /wrap -->
-    </div><!-- /main -->
-
-    <aside class="agenda-pane" id="agendaPane" aria-label="회의안건" hidden>
-      <div class="agenda-pane-head">
-        <span class="agenda-pane-title">회의안건</span>
-        <button type="button" class="agenda-pane-close" id="agendaCloseBtn" aria-label="닫기" title="닫기">✕</button>
-      </div>
-      <div class="agenda-pane-body">
+      <!-- 사이드탭 '회의안건' 화면 · 예전 우측 미니창은 없앴다(2026-09-23) -->
+      <div id="view-agenda-host" style="display:none">
       <div id="view-agenda">
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
@@ -6129,10 +6091,14 @@ window.BAROYAM_LEAD=(function(){
         </section>
       </div><!-- /view-agenda -->
       </div>
-    </aside>
+
+    </div><!-- /paper -->
+    </div><!-- /wrap -->
+    </div><!-- /main -->
+
   </div><!-- /app -->
 
-  <button type="button" class="memo-fab" id="memoFab" aria-label="메모" title="메모">
+  <button type="button" class="memo-fab" id="memoFab" aria-label="프로젝트 추가" title="프로젝트 추가">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 20h9"/>
       <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
@@ -7875,8 +7841,6 @@ window.CsGuide=(function(){
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
-    /* 회의안건은 DOM이 하나뿐이라, 크게보기로 들어올 때 우측 패널에서 본문으로 옮겨온다 */
-    if(v==='agenda'&&window.mountAgendaMain) window.mountAgendaMain();
     /* 회의 기록은 여기 들어올 때 처음 받아 온다(1MB가 넘어 첫 화면에서는 받지 않는다) */
     if(v==='agenda') document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
     const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='agenda');
@@ -9391,52 +9355,12 @@ window.CsGuide=(function(){
   });
 })();
 
-/* 메모 버튼 → 우측 회의안건 패널 여닫기 (예전엔 사이드바 항목이었다) */
+/* 오른쪽 아래 연필 버튼 → 프로젝트 추가 창 · 예전엔 회의안건 미니창을 열었다 (미니창은 없앴다) */
 (function(){
   const fab=document.getElementById('memoFab');
-  const pane=document.getElementById('agendaPane');
-  const closeBtn=document.getElementById('agendaCloseBtn');
-  if(!fab||!pane) return;
-
-  /* 회의안건 본문은 통째로 하나뿐이다 · 보조용(우측 패널)과 크게보기(사이드탭)가
-     같은 DOM을 서로 옮겨가며 쓴다 · 옮기면 리스너와 입력값이 그대로 따라온다 */
-  const paneBody=pane.querySelector('.agenda-pane-body');
-  const mainHost=document.getElementById('view-agenda-host');
-  const agenda=document.getElementById('view-agenda');
-  function mountTo(host){
-    if(agenda&&host&&agenda.parentElement!==host) host.appendChild(agenda);
-  }
-
-  function setOpen(on){
-    if(on){
-      /* 크게보기로 보던 중이면 먼저 그 화면에서 빠져나오고 DOM을 패널로 되가져온다 */
-      if(mainHost&&mainHost.style.display!=='none'&&window.activateLastSales) window.activateLastSales();
-      mountTo(paneBody);
-    }
-    pane.hidden=!on;
-    document.body.classList.toggle('agenda-open',on);
-    fab.classList.toggle('is-open',on);
-    const logoFab=document.getElementById('logoFab');
-    if(logoFab) logoFab.classList.toggle('is-open',on);
-    fab.setAttribute('aria-expanded',on?'true':'false');
-    /* 펼칠 때만 · 회의 기록을 아직 안 받았으면 이때 받아 온다 */
-    if(on) document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
-  }
-
-  window.mountAgendaMain=()=>{ setOpen(false); mountTo(mainHost); };
-
-  fab.setAttribute('aria-controls','agendaPane');
-  fab.setAttribute('aria-expanded','false');
-  fab.addEventListener('click',()=>setOpen(pane.hidden));
-  if(closeBtn) closeBtn.addEventListener('click',()=>setOpen(false));
-  document.addEventListener('keydown',(e)=>{
-    /* 휴지통·설정 같은 띄우는 창이 위에 열려있으면 그쪽이 먼저 닫힌다 */
-    if(e.key!=='Escape'||pane.hidden) return;
-    const trash=document.getElementById('trashOverlay');
-    if(trash&&!trash.hidden) return;
-    setOpen(false);
-  });
-  window.openAgenda=()=>setOpen(true);
+  if(!fab) return;
+  fab.setAttribute('aria-haspopup','dialog');
+  fab.addEventListener('click',()=>{ if(window.openProjectAdd) window.openProjectAdd(); });
 })();
 
 /* 리뷰수집 채널 고르기 · 사이드바 아이콘을 누르면 메뉴얼가이드처럼 사이드탭이 열리고,
@@ -10597,6 +10521,15 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     return /^[a-z][a-z0-9+.-]*:/i.test(u)?u:'https://'+u;
   }
   function safeHref(u){ return /^(https?:|mailto:)/i.test(u)?u:'#'; }
+  /* 링크 바탕색 다섯 가지 · 실제 색은 CSS [data-tone] 에 있다 (다크 모드 색도 거기서 바뀐다) */
+  const LINK_TONES=[{k:'rose',n:'분홍'},{k:'peach',n:'살구'},{k:'mint',n:'민트'},{k:'sky',n:'하늘'},{k:'lilac',n:'라벤더'}];
+  function toneAttr(k){ return LINK_TONES.some(x=>x.k===k)?` data-tone="${k}"`:''; }
+  const ICON_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function toneSwatches(cur){
+    const all=[{k:'',n:'기본'}].concat(LINK_TONES);
+    return '<div class="ui-swatches">'+all.map(t=>
+      `<label class="ui-swatch" title="${esc(t.n)}"><input type="radio" name="tone" value="${t.k}"${(cur||'')===t.k?' checked':''} aria-label="${esc(t.n)}"><span data-tone="${t.k}" style="--sw:var(--tone-bg)">${ICON_CHECK}</span></label>`).join('')+'</div>';
+  }
   /* 퀵링크 한 벌 · 마이홈(회원 개인 목록)과 판매채널(채널 공용 목록)이 같은 코드를 쓴다 ·
      scope.get()이 지금 고칠 목록을 돌려주고, scope.set()으로 바뀐 목록을 돌려준다 */
   const LINKS_MINE={
@@ -10621,7 +10554,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const list=scope.get();
       if(!list.length){ host.innerHTML=`<div class="mh-empty">${scope.empty}</div>`; return; }
       host.innerHTML=list.map(l=>
-        `<div class="mh-link" draggable="false" data-id="${esc(l.id)}">
+        `<div class="mh-link" draggable="false" data-id="${esc(l.id)}"${toneAttr(l.tone)}>
           <button type="button" class="ui-btn ghost icon sm mh-link-grip" aria-label="${esc(l.name)} 순서 이동" title="끌어서 순서 변경 · Alt+↑/↓">${ICON_GRIP}</button>
           <span class="mh-link-dot"></span>
           <a class="mh-link-name" draggable="false" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.name)}</a>
@@ -10854,6 +10787,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* 마이홈에서 만드는 프로젝트는 담당자를 나로 미리 잡아 준다 ·
      담당자가 비면 내 담당 목록에 안 잡혀서 방금 만든 것이 사라진 것처럼 보인다 */
   $('mhProjAddBtn').addEventListener('click',()=>openProjectDialog(null,{owner:myName()}));
+  /* 오른쪽 아래 연필 버튼도 같은 창을 연다 */
+  window.openProjectAdd=()=>openProjectDialog(null,{owner:myName()});
   $('mhProjects').addEventListener('click',e=>{
     const row=e.target.closest('.mh-proj'); if(!row) return;
     const p=state.projects.find(x=>x.id===row.dataset.id);
@@ -10966,12 +10901,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     openDialog(link?'링크 수정':'링크 추가',
       `<label class="mh-field">이름<input type="text" name="name" required maxlength="60" value="${esc(link?link.name:'')}" placeholder="예) 자사몰 기획전"></label>
        <label class="mh-field">주소<input type="text" name="url" required value="${esc(link?link.url:'')}" placeholder="https://"></label>
+       <div class="mh-field">바탕색${toneSwatches(link&&link.tone)}</div>
        ${actions(!!link)}`,
       fd=>{
         const name=String(fd.get('name')).trim(), url=normUrl(fd.get('url'));
+        const tone=LINK_TONES.some(t=>t.k===fd.get('tone'))?String(fd.get('tone')):'';
         if(!name||!url) return false;
-        if(link){ link.name=name; link.url=url; }
-        else scope.get().push({id:uid(),name,url});
+        if(link){ link.name=name; link.url=url; if(tone) link.tone=tone; else delete link.tone; }
+        else scope.get().push(Object.assign({id:uid(),name,url},tone?{tone}:{}));
         save();
       });
   }
@@ -13241,15 +13178,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     </div>
   </div>
 </div>
-  /* 어느 회사 자산인지 · 지금은 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) */
-  function 회사(r){
-    return String(r.경로||'').split(' / ')[0]==='★바로얌' ? '바로얌' : '카페이노스';
-  }
-
 <script>
 /* 삭제 확인창 · 답을 늦게 주므로 Promise<boolean>을 돌려준다 ·
    실수로 지우는 일을 줄이려고 열릴 때 '취소'에 포커스를 둔다 */
-      if(회사(r)!==상태.회사) return false;
 window.baroyamAsk=function(title,body,okText){
   const dlg=document.getElementById('askDlg');
   if(!dlg) return Promise.resolve(window.confirm(title));   /* 창이 없으면 옛 방식으로 */
@@ -13310,9 +13241,15 @@ window.baroyamAsk=function(title,body,okText){
   }
   function 날짜표시(d){ d=String(d||''); return d.length>=10?d.slice(2).replace(/-/g,'.'):''; }
 
+  /* 어느 회사 자산인지 · 지금은 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) */
+  function 회사(r){
+    return String(r.경로||'').split(' / ')[0]==='★바로얌' ? '바로얌' : '카페이노스';
+  }
+
   function 거른줄(건너뛸){
     const 검색=상태.검색.trim().toLowerCase();
     return (줄들||[]).filter(function(r){
+      if(회사(r)!==상태.회사) return false;
       if(건너뛸!=='브랜드'&&상태.브랜드&&(r.브랜드||'회사 공통')!==상태.브랜드) return false;
       if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(r.자산종류||'그 밖')) return false;
       if(검색){
@@ -13327,15 +13264,6 @@ window.baroyamAsk=function(title,body,okText){
     const 끝=확장자(r.이름);
     const 그림=미리보기가능[끝]
       ? '<img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+안전(r.아이디)+'&amp;sz=w220">'
-    /* 자료가 아예 없는 회사를 고르면 '전체 0' 칩만 남아 모양이 달라진다 ·
-       거르개를 통째로 감추고 안내문 하나만 같은 자리에 둔다(상자 높이는 min-height 로 잡아 둔다) */
-    const 없음=!전체;
-    $('drvTypes').hidden=없음;
-    if(없음){
-      안내(상태.회사+' 자산은 아직 목록에 없어요', '해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다');
-      return;
-    }
-    $('drvEmpty').hidden=true; $('drvBody').hidden=false;
       : '';
     return '<button type="button" class="drv-card" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'">'
       + '<span class="drv-thumb"><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
@@ -13397,13 +13325,17 @@ window.baroyamAsk=function(title,body,okText){
 
   function 그리기(){
     /* 개수도 고른 회사 것만 센다 · 탭을 바꿨는데 숫자가 그대로면 안 된다 */
-    const 회사탭=$('drvOwner');
-    if(회사탭&&window.UI&&window.UI.tabs) window.UI.tabs(회사탭,function(값){
-      상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear();
-      if(줄들) 그리기();
-    });
     const 전체=(줄들||[]).filter(function(r){ return 회사(r)===상태.회사; }).length;
     $('drvMeta').textContent=전체?(전체+'개 · '+(갱신시각?갱신시각.slice(0,10)+' 기준':'')):'';
+    /* 자료가 아예 없는 회사를 고르면 '전체 0' 칩만 남아 모양이 달라진다 ·
+       거르개를 통째로 감추고 안내문 하나만 같은 자리에 둔다(상자 높이는 min-height 로 잡아 둔다) */
+    const 없음=!전체;
+    $('drvTypes').hidden=없음;
+    if(없음){
+      안내(상태.회사+' 자산은 아직 목록에 없어요', '해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다');
+      return;
+    }
+    $('drvEmpty').hidden=true; $('drvBody').hidden=false;
     칩줄(); 레일(); 레인들();
   }
 
@@ -13465,6 +13397,11 @@ window.baroyamAsk=function(title,body,okText){
   document.addEventListener('DOMContentLoaded',function(){
     const 뿌리=$('view-drive'); if(!뿌리) return;
     뿌리.addEventListener('click',눌림);
+    const 회사탭=$('drvOwner');
+    if(회사탭&&window.UI&&window.UI.tabs) window.UI.tabs(회사탭,function(값){
+      상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear();
+      if(줄들) 그리기();
+    });
     const 찾기=$('drvSearch');
     let 타이머=null;
     if(찾기) 찾기.addEventListener('input',function(){
