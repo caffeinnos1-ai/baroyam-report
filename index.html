@@ -2631,8 +2631,36 @@ window.BAROYAM_LEAD=(function(){
   .console-body{flex:1;min-height:0;overflow-y:auto;padding:24px 26px;background:var(--paper)}
   .logo-fab.is-open{right:calc(min(560px,40vw) + 40px)}
 
+  /* 상담 콘솔 왼쪽 퀵링크 · 창 높이만큼 길게 세워 둔다 · 상담 중에 콘솔을 닫지 않고
+     자주 여는 페이지를 바로 연다 · 목록은 마이홈 퀵링크와 같은 한 벌을 읽어만 온다
+     (추가·수정은 마이홈에서) · 창이 스크롤을 넘기지 않게 양쪽 칸이 따로 구른다 */
+  .console-body.console-split{display:flex;flex-direction:row;gap:0;padding:0;overflow:hidden}
+  .console-side{flex:none;box-sizing:border-box;width:252px;display:flex;flex-direction:column;min-height:0;
+    padding:18px 14px;border-right:1px solid var(--line);background:var(--bg)}
+  .console-side-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .console-side-title{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;
+    color:var(--ink);letter-spacing:-.2px}
+  .console-side-title svg{width:15px;height:15px;flex:none}
+  .console-side-list{flex:1;min-height:0;overflow-y:auto;margin-top:12px;display:flex;flex-direction:column;gap:6px}
+  .console-side-foot{flex:none;margin-top:12px;font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.55}
+  /* 줄 모양은 마이홈 퀵링크(.mh-link)를 그대로 쓰고, 좁은 레일에 맞게만 줄인다 */
+  .console-side-list .mh-link{padding:8px 8px;gap:6px;background:var(--paper);border:1px solid var(--line)}
+  .console-side-list .mh-link-name{font-size:12.5px}
+  .console-side-list .mh-empty{padding:18px 10px;border-radius:12px;border:1.5px dashed var(--line);text-align:center;
+    font-size:12px;font-weight:600;color:var(--mute);line-height:1.6}
+  .console-main{flex:1;min-width:0;overflow-y:auto;padding:24px 26px}
+  /* 링크 추가·수정 창은 상담 콘솔과 같은 층(z-index 80)이라 그냥 열면 콘솔에 가린다 */
+  .settings-overlay#mhDialog.is-over-console{z-index:86}
+  /* 좁은 화면에서는 왼쪽에 세울 자리가 없어 위로 눕힌다 */
+  @media (max-width:760px){
+    .console-body.console-split{flex-direction:column}
+    .console-side{width:auto;max-height:38%;padding:14px 16px;border-right:0;border-bottom:1px solid var(--line)}
+    .console-side-foot{display:none}
+    .console-main{padding:18px 16px}
+  }
+
   /* 상담 콘솔 · 고객 문의를 넣으면 상담가이드에서 키워드가 맞는 답변을 바로 띄운다 */
-  .console-body.cg-wrap{display:flex;flex-direction:column;gap:16px}
+  .console-panel .cg-wrap{display:flex;flex-direction:column;gap:16px}
   .cg-ask{display:flex;flex-direction:column;gap:8px}
   .cg-ask-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .cg-label{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.2px}
@@ -5721,7 +5749,17 @@ window.BAROYAM_LEAD=(function(){
         </div>
         <button class="settings-close" type="button" id="consoleCloseBtn" aria-label="상담 콘솔 닫기" title="닫기">✕</button>
       </div>
-      <div class="console-body cg-wrap" id="consoleBody">
+      <div class="console-body console-split" id="consoleBody">
+        <!-- 왼쪽 퀵링크 · 마이홈에 등록해 둔 링크를 상담 중에 바로 연다 (여기서는 열기만) -->
+        <aside class="console-side">
+          <div class="console-side-head">
+            <div class="console-side-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3.1-3.1a4 4 0 0 0-5.7-5.7L11.6 6.7"/><path d="M14 10a4 4 0 0 0-5.7 0l-3.1 3.1a4 4 0 0 0 5.7 5.7l1.5-1.5"/></svg>퀵링크</div>
+            <button type="button" class="mh-text-btn" id="cqAddBtn">+ 추가</button>
+          </div>
+          <div class="console-side-list" id="cqLinks"></div>
+          <p class="console-side-foot">팀 전체가 같이 보는 목록입니다 · 여기서 고치면 모두에게 반영됩니다</p>
+        </aside>
+        <div class="console-main cg-wrap" id="consoleMain">
         <!-- 고객 문의를 넣으면 상담가이드(메뉴얼가이드 > 고객 응대 & CS)에서 키워드가 맞는 답변이 바로 뜬다 -->
         <div class="cg-ask">
           <div class="cg-ask-head">
@@ -5732,6 +5770,7 @@ window.BAROYAM_LEAD=(function(){
           <div class="cg-hint" id="cgHint" aria-live="polite"></div>
         </div>
         <div class="cg-results" id="cgResults"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -6454,7 +6493,14 @@ syncFromSheets().catch(err=>console.error('자동 동기화 실패',err));
     /* 창이 떠 있는 동안 뒤쪽 대시보드가 같이 스크롤되지 않게 막는다 */
     document.body.style.overflow=on?'hidden':'';
     if(on){ if(closeBtn) closeBtn.focus(); } else { btn.focus(); }
+    if(on) renderQuickLinks();
     if(on&&window.__csConsole) window.__csConsole.onOpen();
+  }
+
+  /* 왼쪽 퀵링크 · 목록을 그리고 고치는 일은 마이홈 쪽 링크 코드가 한 벌로 맡는다
+     (끌어서 순서 바꾸기·수정창·저장이 모두 거기 있다) · 여기서는 열릴 때 다시 그려 달라고만 한다 */
+  function renderQuickLinks(){
+    try{ if(window.BAROYAM_LINKS) window.BAROYAM_LINKS.render(); }catch(e){ console.error(e); }
   }
 
   btn.setAttribute('aria-controls','consoleOverlay');
@@ -9787,7 +9833,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(!p.created) p.created=kstToday();
       return p;
     });
-    return {company:typeof s.company==='string'?s.company:'',projects,updatedAt:s.updatedAt||0};
+    return {company:typeof s.company==='string'?s.company:'',projects,
+      csLinks:Array.isArray(s.csLinks)?s.csLinks:[],updatedAt:s.updatedAt||0};
   }
   function normMine(s){
     s=s||{};
@@ -9823,11 +9870,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   let sharedPart=loadShared(), myPart=loadMine(), chPart=normCh(readJson(LS_CH));
   /* 화면 코드는 그대로 state.links / state.projects를 고친다 · 저장할 때 두 몫으로 갈라 담는다 */
-  function merge(){ return {company:sharedPart.company,links:myPart.links,notes:myPart.notes,projects:sharedPart.projects}; }
+  function merge(){ return {company:sharedPart.company,links:myPart.links,notes:myPart.notes,
+    projects:sharedPart.projects,csLinks:sharedPart.csLinks}; }
   let state=merge();
   /* state는 두 몫의 배열을 "같은 것"으로 들고 있어서, 링크를 고치면 myPart.links도 같이 바뀐다 ·
      그래서 무엇이 바뀌었는지는 마지막으로 저장한 내용을 문자열로 따로 떠 두고 비교한다 */
-  function stampShared(){ return JSON.stringify([state.company,state.projects]); }
+  function stampShared(){ return JSON.stringify([state.company,state.projects,state.csLinks]); }
   function stampMine(){ return JSON.stringify([state.links,state.notes]); }
   function stampCh(){ return JSON.stringify(chPart.data); }
   let lastShared=stampShared(), lastMine=stampMine(), lastCh=stampCh();
@@ -9876,7 +9924,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const now=Date.now();
     const nowShared=stampShared();
     if(nowShared!==lastShared){
-      sharedPart={company:state.company,projects:state.projects,updatedAt:now};
+      sharedPart={company:state.company,projects:state.projects,csLinks:state.csLinks,updatedAt:now};
       lastShared=nowShared;
       writeJson(LS_SHARED,sharedPart); queuePush(SHEET_SHARED,sharedPart);
       if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorProjects(state.projects);
@@ -10146,6 +10194,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     host:'chLinks', add:'chLinkAddBtn',
     get:()=>chBucket().links, set:v=>{ chBucket().links=v; },
     empty:'이 채널에서 자주 여는 페이지를 등록해 두세요.<br>오른쪽 위 “+ 링크 추가”'};
+  /* 상담 콘솔 왼쪽 레일 · 회원 개인 몫이 아니라 팀 전체가 같이 보는 한 벌이다 ·
+     그래서 공용 몫(회사명·프로젝트와 같은 칸)에 담아 기기·회원을 가리지 않고 같은 목록이 뜬다 */
+  const LINKS_CS={
+    host:'cqLinks', add:'cqAddBtn',
+    get:()=>state.csLinks, set:v=>{ state.csLinks=v; },
+    empty:'팀이 함께 쓰는 링크를 등록해 두세요.<br>위 “+ 추가”'};
   function bindLinks(scope){
     const host=$(scope.host);
     function render(){
@@ -10209,6 +10263,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   const renderLinks=bindLinks(LINKS_MINE);
   const renderChLinks=bindLinks(LINKS_CH);
+  const renderCsLinks=bindLinks(LINKS_CS);
+  /* 상담 콘솔은 따로 떠 있는 창이라, 열릴 때 한 번 더 그려 준다 ·
+     다른 기기에서 고친 목록이 늦게 내려와도 연 순간 최신으로 맞춰진다 */
+  window.BAROYAM_LINKS={ render:()=>renderCsLinks() };
 
   /* ---------- 간편 기록노트 ---------- */
   function fmtStamp(ts){
@@ -10328,6 +10386,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     onSubmit=submit;
     backdropArmed=false;
     dlgPanel.classList.remove('is-nudge');
+    /* 상담 콘솔도 같은 z-index(80)의 띄운 창이라, 그 위에서 열 때는 한 겹 올려야 보인다 */
+    const csOv=document.getElementById('consoleOverlay');
+    dlg.classList.toggle('is-over-console',!!(csOv&&!csOv.hidden));
     dlg.hidden=false;
     const first=form.querySelector('input');
     if(first) first.focus();
@@ -11722,7 +11783,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     renderChannel(true);
   };
 
-  function render(){ renderAvatar(); renderStats(); renderLinks(); renderNotes(); renderProjects(); renderBoard(); renderChannel(false); }
+  function render(){ renderAvatar(); renderStats(); renderLinks(); renderCsLinks(); renderNotes(); renderProjects(); renderBoard(); renderChannel(false); }
   render();
   /* 기록노트를 서버에서 따로 받아와 합치던 코드는 걷어냈다 ·
      원본은 app_settings 한 곳이고 notes 테이블은 거울이라, 양쪽에서 읽으면
