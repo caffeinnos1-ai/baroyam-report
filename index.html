@@ -1533,13 +1533,8 @@ window.BAROYAM_LEAD=(function(){
     --ch-blue:#58a6ff;--ch-blue-soft:rgba(88,166,255,.16)}
   .ch-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
   .ch-head-sub{margin:7px 0 0;font-size:13px;color:var(--mute)}
-  /* 기간 단추 · 당일과 이번달 누적을 번갈아 본다 */
-  .ch-period{all:unset;box-sizing:border-box;cursor:pointer;flex:none;display:inline-flex;align-items:center;gap:7px;
-    padding:9px 15px;border-radius:11px;background:var(--paper);box-shadow:var(--mh-card-shadow);
-    font-size:13px;font-weight:700;color:var(--body)}
-  .ch-period svg{width:15px;height:15px;color:var(--mute)}
-  .ch-period:hover,.ch-period:hover svg{color:var(--mh-accent)}
-  .ch-period:focus-visible{outline:2px solid var(--mh-accent);outline-offset:2px}
+  /* 기간 단추 · 표준 날짜선택(UI.datePicker, 프로젝트 마감일 고르기와 같은 모양)을 쓴다 */
+  .ch-head #chPeriodBtn{flex:none}
   .ch-kpis{margin-top:20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
   .ch-kpi{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:18px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);min-width:0}
@@ -3402,6 +3397,119 @@ window.BAROYAM_LEAD=(function(){
     /* 혹시 떠 있을지 모르는 원탭 팝업을 먼저 닫는다 · 로그인이 끝나도 저 혼자 남아 있었다 */
     try{ google.accounts.id.cancel(); }catch(e){}
     try{
+  /* ===== 표준 UI 부품 (ui-*) · 새로 만드는 버튼·탭·칩·입력칸·날짜선택은 전부 이것만 쓴다 =====
+     화면마다 xx-btn·xx-tab·xx-cal 을 새로 만들다 모양이 제각각이 된 것을 막는다 ·
+     규칙은 AGENTS.md "UI 부품 규칙", 모양 견본은 ui-sample.html · 색은 위 --btn 계열만 쓴다 */
+  :root{--ui-h:36px;--ui-h-sm:30px;--ui-r:10px;--ui-r-sm:8px;--ui-r-pop:14px;--ui-fs:13.5px;--ui-fs-sm:12.5px;
+    --ui-ring:0 0 0 3px rgba(var(--indigo-rgb),.2);--ui-pop-shadow:0 20px 44px -18px rgba(0,0,0,.35);
+    --ui-ease:background .15s,border-color .15s,color .15s,box-shadow .15s}
+  /* 버튼 · 기본(흰 바탕+테두리) / primary(주 행동 1개) / soft / ghost / danger · 크기 sm · 아이콘 전용 icon */
+  .ui-btn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    height:var(--ui-h);padding:0 14px;border-radius:var(--ui-r);border:1px solid var(--line);background:var(--paper);
+    color:var(--ink);font-family:inherit;font-size:var(--ui-fs);font-weight:700;line-height:1;white-space:nowrap;
+    cursor:pointer;transition:var(--ui-ease)}
+  .ui-btn:hover{border-color:var(--btn);color:var(--btn-soft-ink)}
+  .ui-btn:focus-visible{box-shadow:var(--ui-ring)}
+  .ui-btn svg{width:15px;height:15px;flex:none}
+  .ui-btn.primary{background:var(--btn);border-color:var(--btn);color:#fff}
+  .ui-btn.primary:hover{background:var(--btn-hover);border-color:var(--btn-hover);color:#fff}
+  .ui-btn.soft{background:var(--btn-soft);border-color:transparent;color:var(--btn-soft-ink)}
+  .ui-btn.soft:hover{border-color:var(--btn)}
+  .ui-btn.ghost{background:transparent;border-color:transparent;color:var(--body)}
+  .ui-btn.ghost:hover{background:var(--chip-flat);color:var(--ink)}
+  .ui-btn.danger{background:var(--neg-soft);border-color:transparent;color:var(--neg)}
+  .ui-btn.danger:hover{border-color:var(--neg)}
+  .ui-btn.sm{height:var(--ui-h-sm);padding:0 11px;border-radius:var(--ui-r-sm);font-size:var(--ui-fs-sm)}
+  .ui-btn.icon{width:var(--ui-h);padding:0}
+  .ui-btn.icon.sm{width:var(--ui-h-sm)}
+  .ui-btn.block{display:flex;width:100%}
+  .ui-btn:disabled,.ui-btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
+  .ui-btn[hidden]{display:none}
+  .ui-btn-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .ui-btn-row[hidden]{display:none}
+  /* 탭 · 회색 바탕 안에서 선택된 칸만 떠오르는 세그먼트형 · 화면 전환·보기 전환에 쓴다 */
+  .ui-tabs{display:inline-flex;gap:2px;padding:3px;max-width:100%;border-radius:12px;background:var(--chip-flat);
+    overflow-x:auto;scrollbar-width:none}
+  .ui-tabs::-webkit-scrollbar{display:none}
+  .ui-tabs.block{display:flex}
+  .ui-tabs.block .ui-tab{flex:1;justify-content:center}
+  .ui-tabs[hidden]{display:none}
+  .ui-tab{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 14px;
+    border-radius:9px;font-family:inherit;font-size:13px;font-weight:700;color:var(--mute);white-space:nowrap;
+    cursor:pointer;transition:var(--ui-ease)}
+  .ui-tab:hover{color:var(--ink)}
+  .ui-tab:focus-visible{box-shadow:var(--ui-ring)}
+  .ui-tab[aria-selected="true"],.ui-tab.active{background:var(--paper);color:var(--ink);font-weight:800;
+    box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+  .ui-tab .n{font-size:11.5px;font-weight:700;color:var(--mute)}
+  .ui-tab[aria-selected="true"] .n,.ui-tab.active .n{color:var(--btn-soft-ink)}
+  /* 칩 · 필터처럼 여러 개를 켰다 껐다 하는 알약 버튼 · 켜짐은 aria-pressed="true" 또는 .on */
+  .ui-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .ui-chips[hidden]{display:none}
+  .ui-chip{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;
+    border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--body);font-family:inherit;
+    font-size:var(--ui-fs-sm);font-weight:700;white-space:nowrap;cursor:pointer;transition:var(--ui-ease)}
+  .ui-chip:hover{border-color:var(--btn);color:var(--btn-soft-ink)}
+  .ui-chip:focus-visible{box-shadow:var(--ui-ring)}
+  .ui-chip[aria-pressed="true"],.ui-chip.on{background:var(--btn-soft);border-color:var(--btn);color:var(--btn-soft-ink)}
+  .ui-chip b{font-weight:800;color:var(--mute)}
+  .ui-chip[aria-pressed="true"] b,.ui-chip.on b{color:inherit}
+  /* 입력칸·선택칸 · input 에도, 누르면 목록/달력이 열리는 button 에도 같은 모양 */
+  .ui-field{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;min-width:0;
+    height:var(--ui-h);padding:0 12px;border-radius:var(--ui-r);border:1px solid var(--line);background:var(--paper);
+    color:var(--ink);font-family:inherit;font-size:var(--ui-fs);font-weight:600;cursor:pointer;transition:var(--ui-ease)}
+  input.ui-field,textarea.ui-field{cursor:text}
+  textarea.ui-field{height:auto;min-height:80px;padding:10px 12px;line-height:1.5}
+  .ui-field::placeholder{color:var(--mute);font-weight:500}
+  .ui-field:hover{border-color:color-mix(in srgb,var(--btn) 45%,var(--line))}
+  .ui-field:focus-visible,.ui-field:focus,.ui-field[aria-expanded="true"]{border-color:var(--btn);box-shadow:var(--ui-ring)}
+  .ui-field.block{display:flex;width:100%}
+  .ui-field.sm{height:var(--ui-h-sm);border-radius:var(--ui-r-sm);font-size:var(--ui-fs-sm)}
+  .ui-field svg{width:15px;height:15px;flex:none;color:var(--mute)}
+  .ui-field[aria-expanded="true"] svg{color:var(--btn)}
+  .ui-field .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+  .ui-field .ph{color:var(--mute);font-weight:500}
+  .ui-field[hidden]{display:none}
+  /* raised · 회색 바탕 위에 카드처럼 떠 있는 선택 버튼(대시보드 머리의 기간·필터 버튼) */
+  .ui-field.raised{border-color:transparent;box-shadow:var(--mh-card-shadow);font-weight:700}
+  .ui-field.raised:hover{border-color:transparent;color:var(--btn-soft-ink)}
+  .ui-field.raised:hover svg{color:var(--btn)}
+  .ui-field.raised:focus-visible,.ui-field.raised[aria-expanded="true"]{border-color:var(--btn);box-shadow:var(--ui-ring)}
+  /* 떠 있는 창(달력·메뉴) · body 에 붙여 fixed 로 띄우므로 부모의 overflow 에 잘리지 않는다 */
+  .ui-pop{position:fixed;z-index:1000;padding:12px;background:var(--paper);border:1px solid var(--line);
+    border-radius:var(--ui-r-pop);box-shadow:var(--ui-pop-shadow)}
+  .ui-pop[hidden]{display:none}
+  /* 날짜선택 달력 · UI.datePicker() 가 만든다 · 모양은 프로젝트 대시보드 마감일 고르기(.pj-dpick)를 표준으로 삼았다 ·
+     기간(range)은 빠른 선택 칩 → 시작일~종료일 칸 → 달력 → 초기화/적용, 한 날짜(single)는 누르면 바로 정해진다 */
+  .ui-cal{width:280px;display:flex;flex-direction:column;gap:10px}
+  .ui-cal.range{width:350px;max-width:calc(100vw - 16px)}
+  .ui-cal-head{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+  .ui-cal-title{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .ui-cal-quick{display:flex;flex-wrap:wrap;gap:5px}
+  .ui-cal-quick .ui-chip{height:30px;padding:0 11px;font-size:12px;font-weight:800}
+  .ui-dfields{display:flex;align-items:center;gap:7px}
+  .ui-dfield{all:unset;box-sizing:border-box;flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;
+    padding:9px 12px;border-radius:11px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer;
+    font-family:inherit;transition:var(--ui-ease)}
+  .ui-dfield span{font-size:10.5px;font-weight:700;color:var(--mute)}
+  .ui-dfield b{font-size:13px;font-weight:800;color:var(--ink)}
+  .ui-dfield.empty b{color:var(--mute)}
+  .ui-dfield.active{background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--btn)}
+  .ui-dfield:focus-visible{box-shadow:inset 0 0 0 1.5px var(--btn),var(--ui-ring)}
+  .ui-dfield-sep{flex:none;font-size:12px;font-weight:700;color:var(--mute)}
+  .ui-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px}
+  .ui-cal-dow{padding:2px 0 4px;text-align:center;font-size:11px;font-weight:700;color:var(--mute)}
+  .ui-cal-dow.sun{color:var(--neg)}
+  .ui-cal-day{all:unset;box-sizing:border-box;height:34px;display:grid;place-items:center;border-radius:10px;
+    font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;cursor:pointer}
+  .ui-cal-day:hover{background:var(--bg)}
+  .ui-cal-day:focus-visible{box-shadow:var(--ui-ring)}
+  .ui-cal-day.out{color:var(--mute);opacity:.5}
+  .ui-cal-day.today{color:var(--btn-soft-ink);font-weight:900}
+  .ui-cal-day.in{border-radius:0;background:var(--btn-soft)}
+  .ui-cal-day.sel{background:var(--btn);color:#fff;font-weight:800}
+  .ui-cal-day:disabled{opacity:.25;cursor:not-allowed;background:none}
+  .ui-cal-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
       const p=decodeJwt(res.credential);
       const h=await window.baroyamAuthHash(p.email||'');
       if(p.aud!==A.clientId || !p.email_verified || p.exp*1000<Date.now() || !A.allowedHashes.includes(h)){
@@ -3411,6 +3519,219 @@ window.BAROYAM_LEAD=(function(){
       }
       /* 받은 구글 ID 토큰을 그대로 Supabase 로그인에 쓴다 · 로그인 상태를
          Supabase 세션 하나로 판단하므로, 여기서 세션을 만들지 못하면 들여보내지
+<script>
+/* ===== 표준 UI 동작 (window.UI) · 위 ui-* 부품과 짝 · 새 화면은 여기 것만 쓴다 =====
+   UI.datePicker(button, {mode:'single'|'range', value, placeholder, min, max, presets, resetValue, onChange})
+     single 값 'YYYY-MM-DD' · range 값 {start:'YYYY-MM-DD', end:'YYYY-MM-DD'} · 비우면 null
+     presets(range) · today yesterday week last7 last30 month prevMonth nextMonth custom 중 골라 순서대로
+   UI.tabs(container, onChange) · 안의 .ui-tab[data-value] 중 하나를 고르는 탭 */
+(function(){
+  const pad=n=>String(n).padStart(2,'0');
+  const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const parse=s=>{ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+  const addDays=(s,n)=>{ const d=parse(s); d.setDate(d.getDate()+n); return iso(d); };
+  const dot=s=>s.replace(/-/g,'.');
+  const DOW=['일','월','화','수','목','금','토'];
+  const CAL_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>';
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let openPicker=null;
+
+  function place(pop,anchor){
+    const r=anchor.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight, gap=8;
+    let left=Math.min(Math.max(8,r.left),innerWidth-w-8);
+    let top=r.bottom+gap;
+    if(top+h>innerHeight-8&&r.top-gap-h>=8) top=r.top-gap-h;
+    pop.style.left=left+'px'; pop.style.top=Math.max(8,top)+'px';
+  }
+
+  /* 빠른 선택 · presets 에 이름만 적으면 된다 · custom 은 비워 두고 달력에서 직접 고른다 */
+  function presetRange(k){
+    const now=new Date(), y=now.getFullYear(), m=now.getMonth(), today=iso(now);
+    if(k==='today') return {start:today,end:today};
+    if(k==='yesterday'){ const s=addDays(today,-1); return {start:s,end:s}; }
+    if(k==='week'){ const mon=addDays(today,-((now.getDay()+6)%7)); return {start:mon,end:addDays(mon,6)}; }
+    if(k==='last7') return {start:addDays(today,-6),end:today};
+    if(k==='last30') return {start:addDays(today,-29),end:today};
+    if(k==='month') return {start:iso(new Date(y,m,1)),end:iso(new Date(y,m+1,0))};
+    if(k==='prevMonth') return {start:iso(new Date(y,m-1,1)),end:iso(new Date(y,m,0))};
+    if(k==='nextMonth') return {start:iso(new Date(y,m+1,1)),end:iso(new Date(y,m+2,0))};
+    return null;
+  }
+  const PRESET_LABEL={today:'오늘',yesterday:'어제',week:'이번 주',last7:'최근 7일',last30:'최근 30일',
+    month:'이번 달',prevMonth:'지난 달',nextMonth:'다음 달',custom:'범위 선택'};
+
+  function datePicker(btn,opts){
+    opts=opts||{};
+    const range=opts.mode==='range';
+    const placeholder=opts.placeholder||(range?'기간 선택':'날짜 선택');
+    const presets=range?(opts.presets||['week','month','prevMonth','custom']):[];
+    let value=opts.value||null, viewY, viewM;
+    /* 기간은 고르는 동안 draft 에만 담고 '적용'을 눌러야 value 가 된다 · pick = 지금 채우는 칸(start/end) */
+    let draft=null, pick='start';
+    btn.classList.add('ui-field');
+    btn.type='button';
+    btn.setAttribute('aria-haspopup','dialog');
+    btn.setAttribute('aria-expanded','false');
+
+    const pop=document.createElement('div');
+    pop.className='ui-pop ui-cal'+(range?' range':''); pop.hidden=true;
+    pop.setAttribute('role','dialog'); pop.setAttribute('aria-label',placeholder);
+    pop.addEventListener('click',e=>e.stopPropagation());
+    document.body.appendChild(pop);
+
+    /* max·min 을 넘는 빠른 선택은 끝을 잘라 담는다(예: 매출은 오늘까지만) */
+    function clamp(r){
+      if(!r) return r;
+      let start=r.start, end=r.end;
+      if(opts.max&&end>opts.max) end=opts.max;
+      if(opts.min&&start<opts.min) start=opts.min;
+      return start>end?null:{start:start,end:end};
+    }
+    function presetOf(r){
+      if(!r) return '';
+      return presets.find(k=>{ const p=clamp(presetRange(k)); return p&&p.start===r.start&&p.end===r.end; })||'';
+    }
+    function short(s,withYear){ return withYear?dot(s):(+s.slice(5,7))+'.'+(+s.slice(8)); }
+    function label(){
+      if(!value) return '<span class="t ph">'+esc(placeholder)+'</span>';
+      if(!range) return '<span class="t">'+dot(value)+'</span>';
+      const p=presetOf(value), s=value.start, e=value.end, thisYear=s.slice(0,4)===String(new Date().getFullYear());
+      const dates=s===e?short(s,!thisYear):short(s,!thisYear)+' ~ '+short(e,s.slice(0,4)!==e.slice(0,4));
+      return '<span class="t">'+(p&&p!=='custom'?esc(PRESET_LABEL[p]):dates)+'</span>';
+    }
+    function paintBtn(){
+      btn.innerHTML=CAL_SVG+label();
+      btn.title=range&&value?dot(value.start)+' ~ '+dot(value.end):'';
+    }
+    function allowed(s){ return !(opts.min&&s<opts.min)&&!(opts.max&&s>opts.max); }
+    function commit(v){
+      value=v; paintBtn(); close();
+      if(typeof opts.onChange==='function') opts.onChange(value);
+    }
+    function show(s){ viewY=+s.slice(0,4); viewM=+s.slice(5,7)-1; }
+
+    function render(){
+      const today=iso(new Date());
+      const first=new Date(viewY,viewM,1), start=new Date(viewY,viewM,1-first.getDay());
+      const weeks=Math.ceil((first.getDay()+new Date(viewY,viewM+1,0).getDate())/7);
+      const lo=range?draft.start:value, hi=range?(draft.end||draft.start):value;
+      let html='';
+      if(range){
+        const on=presetOf(draft.start&&draft.end?draft:null)||(draft.start?'custom':'');
+        html+='<div class="ui-cal-quick">'+presets.map(k=>'<button type="button" class="ui-chip" data-quick="'+k+'" aria-pressed="'+(on===k)+'">'+
+          esc(PRESET_LABEL[k]||k)+'</button>').join('')+'</div>';
+        const field=(k,t)=>'<button type="button" class="ui-dfield'+(pick===k?' active':'')+(draft[k]?'':' empty')+'" data-pick="'+k+'">'+
+          '<span>'+t+'</span><b>'+(draft[k]?dot(draft[k]):'선택')+'</b></button>';
+        html+='<div class="ui-dfields">'+field('start','시작일')+'<span class="ui-dfield-sep">~</span>'+field('end','종료일')+'</div>';
+      }
+      html+='<div class="ui-cal-head"><button type="button" class="ui-btn ghost icon sm" data-nav="-1" aria-label="이전 달">‹</button>'+
+        '<span class="ui-cal-title">'+viewY+'년 '+(viewM+1)+'월</span>'+
+        '<button type="button" class="ui-btn ghost icon sm" data-nav="1" aria-label="다음 달">›</button></div>';
+      html+='<div class="ui-cal-grid">'+DOW.map((d,i)=>'<div class="ui-cal-dow'+(i===0?' sun':'')+'">'+d+'</div>').join('');
+      for(let i=0;i<weeks*7;i++){
+        const d=new Date(start); d.setDate(start.getDate()+i);
+        const s=iso(d), cls=['ui-cal-day'], edge=!!lo&&(s===lo||s===hi);
+        if(d.getMonth()!==viewM) cls.push('out');
+        if(s===today) cls.push('today');
+        if(lo&&hi&&s>lo&&s<hi) cls.push('in');
+        if(edge) cls.push('sel');
+        html+='<button type="button" class="'+cls.join(' ')+'" data-day="'+s+'"'+(allowed(s)?'':' disabled')+
+          (edge?' aria-pressed="true"':'')+'>'+d.getDate()+'</button>';
+      }
+      html+='</div>';
+      html+=range
+        ?'<div class="ui-cal-foot"><button type="button" class="ui-btn ghost sm" data-act="reset">초기화</button>'+
+          '<button type="button" class="ui-btn primary sm" data-act="apply">적용</button></div>'
+        :'<div class="ui-cal-foot"><button type="button" class="ui-btn ghost sm" data-act="clear">지우기</button>'+
+          '<button type="button" class="ui-btn sm" data-act="today">오늘</button></div>';
+      pop.innerHTML=html;
+      place(pop,btn);
+    }
+
+    pop.addEventListener('click',e=>{
+      const t=e.target.closest('button'); if(!t||t.disabled) return;
+      if(t.dataset.nav){ viewM+=+t.dataset.nav; if(viewM<0){viewM=11;viewY--;} if(viewM>11){viewM=0;viewY++;} render(); return; }
+      const act=t.dataset.act;
+      if(act==='today'){ commit(iso(new Date())); return; }
+      if(act==='clear'){ commit(null); return; }
+      if(act==='reset'){ const r=opts.resetValue||null; draft={start:r?r.start:'',end:r?r.end:''}; pick='start'; render(); return; }
+      if(act==='apply'){
+        if(!draft.start){ commit(opts.resetValue||null); return; }
+        commit({start:draft.start,end:draft.end||draft.start}); return;
+      }
+      if(t.dataset.quick){
+        const r=clamp(presetRange(t.dataset.quick));
+        draft=r?{start:r.start,end:r.end}:{start:'',end:''}; pick='start';
+        if(r) show(r.start);
+        render(); return;
+      }
+      if(t.dataset.pick){ pick=t.dataset.pick; render(); return; }
+      const s=t.dataset.day; if(!s) return;
+      if(!range){ commit(s); return; }
+      /* 시작일부터 고르고, 다음 누름이 종료일 · 앞뒤가 뒤집히면 알아서 바꿔 담는다 · 옆 달 날짜를 누르면 그 달로 넘어간다 */
+      if(pick==='end'&&draft.start){
+        if(s<draft.start){ draft.end=draft.start; draft.start=s; } else draft.end=s;
+        pick='start';
+      }else{ draft.start=s; draft.end=''; pick='end'; }
+      show(s); render();
+    });
+
+    function open(){
+      if(openPicker&&openPicker!==api) openPicker.close();
+      draft=range?{start:value?value.start:'',end:value?value.end:''}:null; pick='start';
+      const today=iso(new Date());
+      show((range?value&&value.start:value)||(opts.max&&opts.max<today?opts.max:today));
+      pop.hidden=false; render();
+      btn.setAttribute('aria-expanded','true'); openPicker=api;
+    }
+    function close(){
+      if(pop.hidden) return;
+      pop.hidden=true; draft=null; btn.setAttribute('aria-expanded','false');
+      if(openPicker===api) openPicker=null;
+    }
+    btn.addEventListener('click',e=>{ e.stopPropagation(); pop.hidden?open():close(); });
+
+    const api={
+      get value(){ return value; },
+      set(v){ value=v||null; paintBtn(); },
+      open, close,
+      reposition(){ if(!pop.hidden) place(pop,btn); },
+      destroy(){ close(); pop.remove(); },
+    };
+    paintBtn();
+    return api;
+  }
+
+  document.addEventListener('click',()=>{ if(openPicker) openPicker.close(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&openPicker) openPicker.close(); });
+  addEventListener('resize',()=>{ if(openPicker) openPicker.close(); });
+  addEventListener('scroll',()=>{ if(openPicker) openPicker.reposition(); },true);
+
+  function tabs(box,onChange){
+    box.classList.add('ui-tabs'); box.setAttribute('role','tablist');
+    const list=()=>[...box.querySelectorAll('.ui-tab')];
+    function select(tab,fire){
+      list().forEach(t=>{ const on=t===tab; t.setAttribute('aria-selected',on?'true':'false'); t.tabIndex=on?0:-1; });
+      if(fire&&typeof onChange==='function') onChange(tab.dataset.value,tab);
+    }
+    list().forEach(t=>{ t.type='button'; t.setAttribute('role','tab'); });
+    select(list().find(t=>t.getAttribute('aria-selected')==='true'||t.classList.contains('active'))||list()[0],false);
+    box.addEventListener('click',e=>{ const t=e.target.closest('.ui-tab'); if(t&&box.contains(t)) select(t,true); });
+    box.addEventListener('keydown',e=>{
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft') return;
+      const all=list(), i=all.indexOf(document.activeElement); if(i<0) return;
+      const next=all[(i+(e.key==='ArrowRight'?1:all.length-1))%all.length];
+      next.focus(); select(next,true);
+    });
+    return {
+      get value(){ const t=list().find(t=>t.getAttribute('aria-selected')==='true'); return t?t.dataset.value:null; },
+      set(v){ const t=list().find(t=>t.dataset.value===v); if(t) select(t,false); },
+    };
+  }
+
+  window.UI={datePicker,tabs};
+})();
+</script>
          않는다. 예전에는 자체 세션만 두고 통과시켜서 "화면은 열리는데 저장은
          되지 않는" 상태가 됐다. 이름·이메일·사진은 새로 열릴 때 세션에서 받는다 */
       msg.textContent='로그인 중...';
@@ -3919,11 +4240,8 @@ window.BAROYAM_LEAD=(function(){
               <h2 class="ch-view-title" id="channelViewTitle">쿠팡</h2>
               <p class="ch-head-sub" id="channelViewSub"></p>
             </div>
-            <!-- 당일 ↔ 이번달 누적 · 누를 때마다 위 숫자가 0에서 다시 올라간다 -->
-            <button type="button" class="ch-period" id="chPeriodBtn" title="당일과 이번달 누적을 번갈아 봅니다">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3.5V6M15 3.5V6"/></svg>
-              <span id="chPeriodLabel">당일</span>
-            </button>
+            <!-- 기간 선택 · 프로젝트 마감일 고르기와 같은 달력(빠른 선택 → 시작일~종료일 → 적용) · 적용하면 위 숫자가 0에서 다시 올라간다 -->
+            <button type="button" class="raised" id="chPeriodBtn"></button>
           </div>
 
           <!-- 상단 숫자 네 칸 · 화면에 들어오거나 채널·기간을 바꾸면 0에서부터 올라간다 -->
@@ -11595,13 +11913,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const CH_VIEWS=['쿠팡','자사몰','스마트스토어','톡딜'];
   const CH_OPEN=['예정','진행중','보류'];
   const CH_NOTES_PER_PAGE=5;
-  let chActive=CH_VIEWS[0], chPeriod='day', chNotePage=1, chEditingNote=null;
+  let chActive=CH_VIEWS[0], chRange={start:kstToday(),end:kstToday()}, chNotePage=1, chEditingNote=null;
   function chBucket(){
     if(!chPart.data[chActive]) chPart.data[chActive]={links:[],notes:[]};
     return chPart.data[chActive];
   }
 
-  /* 상단 네 칸은 아직 가상 숫자다 · 한 달치로 적어 두고 '당일'은 30으로 나눠 보여 준다 ·
+  /* 상단 네 칸은 아직 가상 숫자다 · 한 달(30일)치로 적어 두고 고른 기간의 날수만큼 나눠 보여 준다 ·
      나중에 매출데이터(lastReportData)를 붙일 때 이 표와 chKpi()만 갈아 끼우면 된다 */
   const CH_KPI_DEMO={
     '쿠팡':{cost:1240000,rev:5860000,sales:18320000},
@@ -11610,9 +11928,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     '톡딜':{cost:180000,rev:620000,sales:3450000}};
   function chKpi(){
     const m=CH_KPI_DEMO[chActive]||{cost:0,rev:0,sales:0};
-    const div=chPeriod==='day'?30:1;
-    const cost=Math.round(m.cost/div), rev=Math.round(m.rev/div);
-    return {cost:cost,rev:rev,sales:Math.round(m.sales/div),roas:cost?Math.round(rev/cost*100):0};
+    const days=Math.round((Date.parse(chRange.end)-Date.parse(chRange.start))/864e5)+1, f=days/30;
+    const cost=Math.round(m.cost*f), rev=Math.round(m.rev*f);
+    return {cost:cost,rev:rev,sales:Math.round(m.sales*f),roas:cost?Math.round(rev/cost*100):0};
   }
   /* 0에서 올라가는 숫자 · 채널을 고르거나 기간을 바꿀 때 다시 센다 ·
      동작 줄이기(OS 설정)를 켠 사람에게도 숫자는 세되 더 짧게 끝낸다 ·
@@ -11776,15 +12094,18 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const p=state.projects.find(x=>x.id===row.dataset.id);
     if(p) openProjectDialog(p);
   });
-  $('chPeriodBtn').addEventListener('click',()=>{
-    chPeriod=chPeriod==='day'?'month':'day';
-    renderChannel(true);
+  /* 매출은 오늘까지만 있으니 미래 날짜는 막고, 빠른 선택(이번 주·이번 달)도 오늘에서 끊는다 ·
+     초기화하면 처음처럼 오늘로 돌아간다 */
+  UI.datePicker($('chPeriodBtn'),{
+    mode:'range', value:chRange, max:kstToday(), placeholder:'기간 선택',
+    presets:['today','week','month','prevMonth','custom'],
+    resetValue:{start:kstToday(),end:kstToday()},
+    onChange:v=>{ chRange=v||{start:kstToday(),end:kstToday()}; renderChannel(true); },
   });
 
   function renderChannel(animate){
     $('channelViewTitle').textContent=chActive;
     $('channelViewSub').textContent=chActive+' 채널의 프로젝트 달성률(예정·진행중·보류)을 확인하세요 (프로젝트 페이지와 연동됩니다)';
-    $('chPeriodLabel').textContent=chPeriod==='day'?'당일':'이번달';
     $('chNoteTitleText').textContent=chActive+' 판매처 기록노트';
     $('chNoteSub').textContent=chActive+' 채널 관련 짧은 기록을 남기는 공간입니다';
     $('chProjTitleText').textContent=chActive+' 프로젝트 달성률';

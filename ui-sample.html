@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UI 부품 견본</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<!-- 이 페이지는 모양을 따로 갖지 않는다 · index.html 의 스타일과 window.UI 를 그대로 읽어 와서 보여 준다 ·
+     그래서 index.html 의 ui-* 를 고치면 이 견본도 자동으로 같이 바뀐다 -->
+<style>
+  .smp{max-width:880px;margin:0 auto;padding:32px 16px 80px;font-family:Pretendard,system-ui,sans-serif;color:var(--ink)}
+  .smp h1{font-size:22px;margin:0 0 6px}
+  .smp .lead{color:var(--mute);font-size:13.5px;margin:0 0 28px}
+  .smp section{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+  .smp h2{font-size:15px;margin:0 0 4px}
+  .smp .use{font-size:12.5px;color:var(--mute);margin:0 0 14px}
+  .smp .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+  .smp code{font-size:12px;background:var(--chip-flat);padding:2px 6px;border-radius:6px}
+  .smp .out{font-size:12.5px;color:var(--mute)}
+  .smp .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+</style>
+</head>
+<body>
+<div class="smp" id="smp" hidden>
+  <div class="top">
+    <div>
+      <h1>UI 부품 견본</h1>
+      <p class="lead">새로 만드는 버튼·탭·칩·입력칸·날짜선택은 이 모양만 씁니다. 규칙은 AGENTS.md "UI 부품 규칙"에 있습니다.</p>
+    </div>
+    <button class="ui-btn sm" id="themeBtn">다크 모드</button>
+  </div>
+
+  <section>
+    <h2>버튼 <code>.ui-btn</code></h2>
+    <p class="use">한 영역에 primary 는 1개만 둡니다. 나머지는 기본·soft·ghost 로 둡니다.</p>
+    <div class="row">
+      <button class="ui-btn primary">저장</button>
+      <button class="ui-btn">기본</button>
+      <button class="ui-btn soft">soft</button>
+      <button class="ui-btn ghost">ghost</button>
+      <button class="ui-btn danger">삭제</button>
+      <button class="ui-btn" disabled>비활성</button>
+    </div>
+    <div class="row">
+      <button class="ui-btn primary sm">작게 (sm)</button>
+      <button class="ui-btn sm">작게</button>
+      <button class="ui-btn icon" aria-label="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg></button>
+      <button class="ui-btn icon sm ghost" aria-label="닫기">✕</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>탭 <code>.ui-tabs</code> + <code>.ui-tab</code></h2>
+    <p class="use">보기 전환(주간/월간, 판매처 등)에 씁니다. <code>UI.tabs(상자, 바뀔때함수)</code></p>
+    <div class="row"><div id="tabs1">
+      <button class="ui-tab" data-value="week" aria-selected="true">주간데이터</button>
+      <button class="ui-tab" data-value="month">월간데이터</button>
+      <button class="ui-tab" data-value="year">연간 <span class="n">12</span></button>
+    </div><span class="out" id="tabsOut">선택: week</span></div>
+  </section>
+
+  <section>
+    <h2>칩 <code>.ui-chip</code></h2>
+    <p class="use">여러 개를 켰다 껐다 하는 필터에 씁니다. 켜짐은 <code>aria-pressed="true"</code></p>
+    <div class="ui-chips" id="chips">
+      <button class="ui-chip" aria-pressed="true">전체 <b>128</b></button>
+      <button class="ui-chip" aria-pressed="false">쿠팡 <b>64</b></button>
+      <button class="ui-chip" aria-pressed="false">네이버 <b>41</b></button>
+      <button class="ui-chip" aria-pressed="false">자사몰 <b>23</b></button>
+    </div>
+  </section>
+
+  <section>
+    <h2>입력칸 <code>.ui-field</code></h2>
+    <p class="use">input·select 역할 버튼 모두 같은 모양입니다.</p>
+    <div class="row">
+      <input class="ui-field" placeholder="검색어를 입력하세요" style="width:240px">
+      <input class="ui-field sm" placeholder="작은 입력칸">
+    </div>
+  </section>
+
+  <section>
+    <h2>날짜선택 <code>UI.datePicker()</code></h2>
+    <p class="use"><code>&lt;input type="date"&gt;</code> 나 새 달력을 만들지 말고 이것을 씁니다.</p>
+    <div class="row"><button id="dp1"></button><span class="out" id="dp1Out"></span></div>
+    <div class="row"><button id="dp2"></button><span class="out" id="dp2Out"></span></div>
+  </section>
+</div>
+<script>
+(async function(){
+  const html=await (await fetch('index.html',{cache:'no-store'})).text();
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  doc.head.querySelectorAll('style').forEach(s=>document.head.appendChild(s.cloneNode(true)));
+  const src=[...doc.head.querySelectorAll('script:not([src])')].find(s=>s.textContent.includes('window.UI='));
+  (0,eval)(src.textContent);
+  document.getElementById('smp').hidden=false;
+  document.body.style.background='var(--bg)';
+
+  const root=document.documentElement, themeBtn=document.getElementById('themeBtn');
+  themeBtn.onclick=()=>{ const dark=root.dataset.theme!=='dark'; root.dataset.theme=dark?'dark':'light'; themeBtn.textContent=dark?'라이트 모드':'다크 모드'; };
+
+  UI.tabs(document.getElementById('tabs1'),v=>{ document.getElementById('tabsOut').textContent='선택: '+v; });
+  document.getElementById('chips').addEventListener('click',e=>{
+    const c=e.target.closest('.ui-chip'); if(c) c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');
+  });
+  const o1=document.getElementById('dp1Out'), o2=document.getElementById('dp2Out');
+  UI.datePicker(document.getElementById('dp1'),{placeholder:'회의 날짜',onChange:v=>{ o1.textContent='값: '+JSON.stringify(v); }});
+  UI.datePicker(document.getElementById('dp2'),{mode:'range',presets:['today','week','month','prevMonth','custom'],onChange:v=>{ o2.textContent='값: '+JSON.stringify(v); }});
+  o1.textContent='한 날짜'; o2.textContent='기간 · 빠른 선택 → 시작일~종료일 → 적용 (프로젝트 마감일·판매채널 기간과 같은 모양)';
+})();
+</script>
+</body>
+</html>

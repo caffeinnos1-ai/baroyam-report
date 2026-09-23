@@ -23,6 +23,31 @@
 - 이미 다른 창의 작업을 커밋해 푸시했다면 **되돌리지 않습니다.** 그 커밋 위에서 다른 창이
   계속 일하고 있을 수 있습니다. 사용자에게 알리고 그대로 둡니다.
 
+## UI 부품 규칙 (버튼·탭·칩·입력칸·날짜선택)
+
+화면마다 `mh-btn`·`ag-btn`·`hero-view-tab`·`ag-calendar`·`pjf-cal` 처럼 부품을 새로 만들다 보니
+모양이 제각각이 되었습니다. **새로 만드는 화면·기능은 아래 표준 부품만 씁니다.**
+정의는 `index.html` 의 `/* ===== 표준 UI 부품 (ui-*)` CSS 와 `window.UI` 스크립트이고,
+모양 견본은 `ui-sample.html` 입니다 (GitHub Pages 에서 `/baroyam-report/ui-sample.html`).
+
+| 용도 | 쓸 것 |
+|---|---|
+| 버튼 | `<button class="ui-btn">` + `primary` / `soft` / `ghost` / `danger`, 크기 `sm`, 아이콘만 `icon`, 꽉 채움 `block` |
+| 보기 전환 탭 | `<div class="ui-tabs">` 안에 `<button class="ui-tab" data-value="…">`, 동작은 `UI.tabs(상자, 함수)` |
+| 필터 칩 | `<div class="ui-chips">` 안에 `<button class="ui-chip" aria-pressed="true/false">`, 숫자는 `<b>` |
+| 입력칸·선택칸 | `<input class="ui-field">`, 목록을 여는 버튼도 `class="ui-field"` |
+| 날짜·기간 선택 | 빈 `<button>` 에 `UI.datePicker(버튼, {mode:'single'｜'range', value, presets, max, onChange})` · 기간은 프로젝트 마감일 고르기와 같은 모양(빠른 선택 → 시작일~종료일 → 달력 → 초기화/적용), 대시보드 머리 위 버튼은 `class="raised"` |
+| 떠 있는 메뉴 | `class="ui-pop"` |
+
+- 새 `xx-btn`·`xx-tab`·`xx-chip`·`xx-cal` 클래스를 만들지 않습니다. 필요한 변형은 `ui-*` 에 수식 클래스로 추가하고
+  `ui-sample.html` 에도 한 줄 넣습니다.
+- `<input type="date">` 와 새 달력 코드를 만들지 않습니다. 브라우저마다 모양이 다르고 다크 모드와 어긋납니다.
+- 색은 `--btn` / `--btn-hover` / `--btn-soft` / `--btn-soft-ink` 와 `--ink`·`--body`·`--mute`·`--line`·`--paper` 만 씁니다.
+  `#e2672a` 같은 색 코드를 직접 쓰지 않습니다. 그래야 다크 모드에서 자동으로 파란 계열로 바뀝니다.
+- 크기·둥글기는 `--ui-h`(36px) / `--ui-h-sm`(30px) / `--ui-r` 를 따릅니다.
+- 한 영역에 `primary` 버튼은 하나만 둡니다.
+- 기존 부품(`mh-btn` 등)은 **일부러 한꺼번에 바꾸지 않습니다.** 그 화면을 고칠 일이 생겼을 때 그 화면만 `ui-*` 로 옮깁니다.
+
 ## 과거에 일어난 일
 
 - 2026-09-22 집에서 한 필터 작업이 `baroyam-week` 의 옛 브랜치로 들어가 이 저장소에서 보이지
