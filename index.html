@@ -3032,6 +3032,14 @@ window.BAROYAM_LEAD=(function(){
   .sb-subnav-caption{padding:2px 10px 7px;font-size:10.5px;font-weight:800;color:var(--mute);letter-spacing:.02em}
   /* 수집기가 높이를 알려주면(dashboard-embed.js) 그 높이로 딱 맞춘다 · 파일이 옛날 버전인 PC는 높이를 안 알려주므로
      기본 높이를 넉넉히 잡고, 안쪽 스크롤(scrolling 속성 없음)로 나머지를 볼 수 있게 해 잘리지 않게 한다 */
+  /* 프로젝트 화면(.pj)과 같은 폭을 쓴다 · .section 의 좌우 48px 가 없어 바깥 칸을 꽉 채운다 */
+  .drv-view{padding:0 0 16px}
+  /* 회사 전환 줄 · 배너 위에 자리를 두고 왼쪽부터 바로얌 · 카페이노스 */
+  .drv-owner{margin:2px 0 14px}
+  /* 검색칸부터 카드 줄까지를 한 상자에 담는다 · 넓게 보기에서는 뒤 배경이 없어 상자가 경계를 만든다 */
+  .drv-box{margin-top:16px;padding:18px 18px 20px;border:1px solid var(--line);
+    border-radius:18px;background:var(--paper)}
+  .drv-box .drv-bar{margin-top:0}
   .collector-frame{display:block;width:100%;height:calc(100vh - 120px);min-height:900px;margin-top:22px;border:0;background:transparent}
   .collector-hint{margin-top:10px;font-size:12px;color:var(--mute);line-height:1.6;word-break:keep-all}
   .collector-status{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--mute);white-space:nowrap}
@@ -3080,8 +3088,6 @@ window.BAROYAM_LEAD=(function(){
   .drv-rail[hidden]{display:none}
   .drv-rail .ui-chip{display:flex;width:100%;justify-content:space-between;height:34px}
   .drv-rail-cap{padding:0 4px 4px;font-size:11.5px;font-weight:800;letter-spacing:.3px;color:var(--mute)}
-  /* 프로젝트 화면(.pj)과 같은 폭을 쓴다 · .section 의 좌우 48px 가 없어 바깥 칸을 꽉 채운다 */
-  .drv-view{padding:0 0 16px}
   .drv-lanes{display:flex;flex-direction:column;gap:22px;min-width:0}
   .drv-lanes[hidden]{display:none}
   .drv-lane{min-width:0}
@@ -5836,11 +5842,17 @@ window.BAROYAM_LEAD=(function(){
 
           <div class="admin-local-note" role="note" hidden>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
+          <!-- 회사 전환 · 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) -->
+          <div class="ui-tabs drv-owner" id="drvOwner">
+            <button type="button" class="ui-tab" data-value="바로얌" aria-selected="true">바로얌</button>
+            <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">카페이노스</button>
+          </div>
             <span><b>이용 안내</b> · 실시간 키워드는 이 PC에서 리뷰 수집기가 실행 중일 때 사용할 수 있습니다.</span>
           </div>
         </section>
       </div><!-- /view-admin -->
 
+          <div class="drv-box">
       <div id="view-manual" style="display:none">
         <section class="section man">
           <div class="man-head">
@@ -5859,6 +5871,7 @@ window.BAROYAM_LEAD=(function(){
         </section>
       </div><!-- /view-manual -->
 
+          </div><!-- /drv-box -->
       <!-- 드라이브 · 회사 자산을 브랜드(왼쪽 줄)와 종류(위 칩) 두 축으로 걸러 본다 ·
            목록은 Supabase 의 app_settings/drive_assets_v1 에서 이 화면을 열 때만 읽어 온다 -->
       <div id="view-drive" style="display:none">
@@ -13228,9 +13241,15 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     </div>
   </div>
 </div>
+  /* 어느 회사 자산인지 · 지금은 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) */
+  function 회사(r){
+    return String(r.경로||'').split(' / ')[0]==='★바로얌' ? '바로얌' : '카페이노스';
+  }
+
 <script>
 /* 삭제 확인창 · 답을 늦게 주므로 Promise<boolean>을 돌려준다 ·
    실수로 지우는 일을 줄이려고 열릴 때 '취소'에 포커스를 둔다 */
+      if(회사(r)!==상태.회사) return false;
 window.baroyamAsk=function(title,body,okText){
   const dlg=document.getElementById('askDlg');
   if(!dlg) return Promise.resolve(window.confirm(title));   /* 창이 없으면 옛 방식으로 */
@@ -13278,7 +13297,7 @@ window.baroyamAsk=function(title,body,okText){
   const 열쇠='drive_assets_v1';
   const 레인최대=18;                 /* 한 줄에 먼저 보여 줄 카드 수 · 나머지는 '전체 보기' */
   let 줄들=null, 읽는중=false, 갱신시각='';
-  const 상태={브랜드:'', 종류:new Set(), 검색:'', 펼침:new Set()};
+  const 상태={회사:'바로얌', 브랜드:'', 종류:new Set(), 검색:'', 펼침:new Set()};
   const $=function(id){ return document.getElementById(id); };
   function 안전(v){ return String(v==null?'':v)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -13347,8 +13366,12 @@ window.baroyamAsk=function(title,body,okText){
     보임.forEach(function(r){ const k=r.브랜드||'회사 공통'; (묶음[k]=묶음[k]||[]).push(r); });
     const 이름들=Object.keys(묶음).sort(function(a,b){ return 묶음[b].length-묶음[a].length; });
     if(!이름들.length){
-      $('drvLanes').innerHTML='<div class="drive-empty"><b>해당하는 자산이 없어요</b>'
-        + '<span>검색어나 걸러 둔 조건을 바꿔 보세요</span></div>';
+      const 회사것=(줄들||[]).some(function(r){ return 회사(r)===상태.회사; });
+      $('drvLanes').innerHTML= 회사것
+        ? '<div class="drive-empty"><b>해당하는 자산이 없어요</b>'
+          + '<span>검색어나 걸러 둔 조건을 바꿔 보세요</span></div>'
+        : '<div class="drive-empty"><b>'+안전(상태.회사)+' 자산은 아직 목록에 없어요</b>'
+          + '<span>해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다</span></div>';
       return;
     }
     let h='';
@@ -13368,6 +13391,11 @@ window.baroyamAsk=function(title,body,okText){
   }
 
   function 그리기(){
+    const 회사탭=$('drvOwner');
+    if(회사탭&&window.UI&&window.UI.tabs) window.UI.tabs(회사탭,function(값){
+      상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear();
+      if(줄들) 그리기();
+    });
     const 전체=(줄들||[]).length;
     $('drvMeta').textContent=전체?(전체+'개 · '+(갱신시각?갱신시각.slice(0,10)+' 기준':'')):'';
     칩줄(); 레일(); 레인들();
