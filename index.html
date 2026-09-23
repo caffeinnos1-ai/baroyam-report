@@ -3038,7 +3038,7 @@ window.BAROYAM_LEAD=(function(){
   .drv-owner{margin:2px 0 14px}
   /* 검색칸부터 카드 줄까지를 한 상자에 담는다 · 넓게 보기에서는 뒤 배경이 없어 상자가 경계를 만든다 */
   .drv-box{margin-top:16px;padding:18px 18px 20px;border:1px solid var(--line);
-    border-radius:18px;background:var(--paper)}
+    border-radius:18px;background:var(--paper);min-height:420px}
   .drv-box .drv-bar{margin-top:0}
   .collector-frame{display:block;width:100%;height:calc(100vh - 120px);min-height:900px;margin-top:22px;border:0;background:transparent}
   .collector-hint{margin-top:10px;font-size:12px;color:var(--mute);line-height:1.6;word-break:keep-all}
@@ -13327,6 +13327,15 @@ window.baroyamAsk=function(title,body,okText){
     const 끝=확장자(r.이름);
     const 그림=미리보기가능[끝]
       ? '<img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+안전(r.아이디)+'&amp;sz=w220">'
+    /* 자료가 아예 없는 회사를 고르면 '전체 0' 칩만 남아 모양이 달라진다 ·
+       거르개를 통째로 감추고 안내문 하나만 같은 자리에 둔다(상자 높이는 min-height 로 잡아 둔다) */
+    const 없음=!전체;
+    $('drvTypes').hidden=없음;
+    if(없음){
+      안내(상태.회사+' 자산은 아직 목록에 없어요', '해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다');
+      return;
+    }
+    $('drvEmpty').hidden=true; $('drvBody').hidden=false;
       : '';
     return '<button type="button" class="drv-card" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'">'
       + '<span class="drv-thumb"><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
@@ -13366,12 +13375,8 @@ window.baroyamAsk=function(title,body,okText){
     보임.forEach(function(r){ const k=r.브랜드||'회사 공통'; (묶음[k]=묶음[k]||[]).push(r); });
     const 이름들=Object.keys(묶음).sort(function(a,b){ return 묶음[b].length-묶음[a].length; });
     if(!이름들.length){
-      const 회사것=(줄들||[]).some(function(r){ return 회사(r)===상태.회사; });
-      $('drvLanes').innerHTML= 회사것
-        ? '<div class="drive-empty"><b>해당하는 자산이 없어요</b>'
-          + '<span>검색어나 걸러 둔 조건을 바꿔 보세요</span></div>'
-        : '<div class="drive-empty"><b>'+안전(상태.회사)+' 자산은 아직 목록에 없어요</b>'
-          + '<span>해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다</span></div>';
+      $('drvLanes').innerHTML='<div class="drive-empty"><b>해당하는 자산이 없어요</b>'
+        + '<span>검색어나 걸러 둔 조건을 바꿔 보세요</span></div>';
       return;
     }
     let h='';
@@ -13391,12 +13396,13 @@ window.baroyamAsk=function(title,body,okText){
   }
 
   function 그리기(){
+    /* 개수도 고른 회사 것만 센다 · 탭을 바꿨는데 숫자가 그대로면 안 된다 */
     const 회사탭=$('drvOwner');
     if(회사탭&&window.UI&&window.UI.tabs) window.UI.tabs(회사탭,function(값){
       상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear();
       if(줄들) 그리기();
     });
-    const 전체=(줄들||[]).length;
+    const 전체=(줄들||[]).filter(function(r){ return 회사(r)===상태.회사; }).length;
     $('drvMeta').textContent=전체?(전체+'개 · '+(갱신시각?갱신시각.slice(0,10)+' 기준':'')):'';
     칩줄(); 레일(); 레인들();
   }
