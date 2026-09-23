@@ -1381,9 +1381,12 @@ window.BAROYAM_LEAD=(function(){
     border:1px dashed var(--line);border-radius:12px}
   /* 퀵링크 */
   .mh-links-list{margin-top:16px;display:flex;flex-direction:column;gap:8px}
-  .mh-link{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;background:var(--bg)}
-  .mh-link.is-dragging{opacity:.4}
-  .mh-link.is-over{box-shadow:inset 0 2px 0 var(--mh-accent)}
+  .mh-link{position:relative;display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;background:var(--bg)}
+  .mh-link.is-dragging{opacity:.35}
+  .mh-link.drop-before::before,.mh-link.drop-after::after{content:'';position:absolute;left:0;right:0;height:3px;
+    border-radius:3px;background:var(--mh-accent);pointer-events:none;z-index:1}
+  .mh-link.drop-before::before{top:-5px}
+  .mh-link.drop-after::after{bottom:-5px}
   .mh-link-grip{cursor:grab;color:var(--mute);display:grid;place-items:center;flex:none}
   .mh-link-grip svg{width:12px;height:12px}
   .mh-link-dot{width:5px;height:5px;border-radius:50%;background:var(--mh-accent);flex:none}
@@ -10207,9 +10210,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(!list.length){ host.innerHTML=`<div class="mh-empty">${scope.empty}</div>`; return; }
       host.innerHTML=list.map(l=>
         `<div class="mh-link" draggable="true" data-id="${esc(l.id)}">
-          <span class="mh-link-grip" aria-hidden="true">${ICON_GRIP}</span>
+          <span class="mh-link-grip" aria-hidden="true" title="드래그하여 순서 변경">${ICON_GRIP}</span>
           <span class="mh-link-dot"></span>
-          <a class="mh-link-name" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.name)}</a>
+          <a class="mh-link-name" draggable="false" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" title="${esc(l.url)}">${esc(l.name)}</a>
           <button type="button" class="mh-icon-btn" data-act="edit" aria-label="${esc(l.name)} 수정">${ICON_EDIT}</button>
           <button type="button" class="mh-icon-btn" data-act="del" aria-label="${esc(l.name)} 삭제">${ICON_DEL}</button>
         </div>`).join('');
@@ -10231,34 +10234,54 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     });
     /* 끌어서 순서 바꾸기 */
     let dragId=null;
+    function clearDropMark(){
+      host.querySelectorAll('.drop-before,.drop-after').forEach(r=>r.classList.remove('drop-before','drop-after'));
+    }
+    function endDrag(){
+      dragId=null;
+      clearDropMark();
+      host.querySelectorAll('.is-dragging').forEach(r=>r.classList.remove('is-dragging'));
+    }
+    /* 끌고 있는 행을 뺀 나머지 행의 중간점을 기준으로, 빈 틈과 맨 끝도 삽입 위치로 쓴다. */
+    function dropPosition(y){
+      const rows=Array.from(host.querySelectorAll('.mh-link')).filter(r=>r.dataset.id!==dragId);
+      const before=rows.find(r=>{ const b=r.getBoundingClientRect(); return y<b.top+b.height/2; });
+      return {before, last:rows[rows.length-1]};
+    }
     host.addEventListener('dragstart',e=>{
       const row=e.target.closest('.mh-link'); if(!row) return;
+      endDrag();
       dragId=row.dataset.id; row.classList.add('is-dragging');
       e.dataTransfer.effectAllowed='move';
       try{ e.dataTransfer.setData('text/plain',dragId); }catch(err){}
     });
     host.addEventListener('dragover',e=>{
-      const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
+      if(!dragId) return;
       e.preventDefault();
-      host.querySelectorAll('.mh-link.is-over').forEach(r=>r.classList.remove('is-over'));
-      if(row.dataset.id!==dragId) row.classList.add('is-over');
+      e.dataTransfer.dropEffect='move';
+      clearDropMark();
+      const {before,last}=dropPosition(e.clientY);
+      if(before) before.classList.add('drop-before');
+      else if(last) last.classList.add('drop-after');
+    });
+    host.addEventListener('dragleave',e=>{
+      if(!host.contains(e.relatedTarget)) clearDropMark();
     });
     host.addEventListener('drop',e=>{
-      const row=e.target.closest('.mh-link'); if(!row||!dragId) return;
+      if(!dragId) return;
       e.preventDefault();
       const list=scope.get();
       const from=list.findIndex(l=>l.id===dragId);
-      const to=list.findIndex(l=>l.id===row.dataset.id);
+      const {before}=dropPosition(e.clientY);
+      const next=list.filter(l=>l.id!==dragId);
+      const to=before?next.findIndex(l=>l.id===before.dataset.id):next.length;
+      endDrag();
       if(from>-1&&to>-1&&from!==to){
-        const [m]=list.splice(from,1);
-        list.splice(to,0,m);
-        save();
+        next.splice(to,0,list[from]);
+        scope.set(next); save();
       }
     });
-    host.addEventListener('dragend',()=>{
-      dragId=null;
-      host.querySelectorAll('.mh-link.is-dragging,.mh-link.is-over').forEach(r=>r.classList.remove('is-dragging','is-over'));
-    });
+    host.addEventListener('dragend',endDrag);
     return render;
   }
   const renderLinks=bindLinks(LINKS_MINE);
@@ -12799,4 +12822,3 @@ window.baroyamAsk=function(title,body,okText){
 #adCards >div:nth-child(3) { border-color: rgb(231, 231, 240) !important }
 html[data-theme="dark"] #adCards >div:nth-child(3) { border-color: var(--line) !important }
 </style>
-
