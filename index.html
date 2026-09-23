@@ -7856,7 +7856,8 @@ window.CsGuide=(function(){
     document.getElementById('view-channel').style.display=v==='channel'?'':'none';
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel');
+    /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브)은 1720px 를 쓴다 */
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive');
     document.body.classList.toggle('view-is-project',v==='project');
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
