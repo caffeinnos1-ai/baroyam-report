@@ -3080,6 +3080,8 @@ window.BAROYAM_LEAD=(function(){
   .drv-rail[hidden]{display:none}
   .drv-rail .ui-chip{display:flex;width:100%;justify-content:space-between;height:34px}
   .drv-rail-cap{padding:0 4px 4px;font-size:11.5px;font-weight:800;letter-spacing:.3px;color:var(--mute)}
+  /* 프로젝트 화면(.pj)과 같은 폭을 쓴다 · .section 의 좌우 48px 가 없어 바깥 칸을 꽉 채운다 */
+  .drv-view{padding:0 0 16px}
   .drv-lanes{display:flex;flex-direction:column;gap:22px;min-width:0}
   .drv-lanes[hidden]{display:none}
   .drv-lane{min-width:0}
@@ -5860,7 +5862,7 @@ window.BAROYAM_LEAD=(function(){
       <!-- 드라이브 · 회사 자산을 브랜드(왼쪽 줄)와 종류(위 칩) 두 축으로 걸러 본다 ·
            목록은 Supabase 의 app_settings/drive_assets_v1 에서 이 화면을 열 때만 읽어 온다 -->
       <div id="view-drive" style="display:none">
-        <section class="section" style="padding-top:0;padding-bottom:16px">
+        <div class="drv-view">
           <div class="plan-hero">
             <div class="ptag">DRIVE</div>
             <div class="ptitle">드라이브</div>
@@ -5884,7 +5886,7 @@ window.BAROYAM_LEAD=(function(){
             <b>불러오는 중이에요</b>
             <span>구글드라이브 자산 목록을 읽고 있습니다</span>
           </div>
-        </section>
+        </div>
       </div><!-- /view-drive -->
 
       <!-- 메뉴얼 문서에서 글을 드래그하면 뜨는 글씨설정 창 -->
