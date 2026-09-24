@@ -3127,6 +3127,15 @@ window.BAROYAM_LEAD=(function(){
   .acc-box{border:1px solid var(--line);border-radius:16px;background:var(--paper);padding:16px;min-width:0}
   .acc-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
   .acc-head h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  /* 구역 관리 칸 · 한 줄에 순번 · 이름 · 계정 수 · 위/아래 · 지우기 */
+  .acc-glist{display:flex;flex-direction:column;gap:6px}
+  .acc-grow{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 10px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+  .acc-grow.is-new{border-style:dashed;border-color:var(--btn)}
+  .acc-grow-no{flex:none;width:20px;font-size:12px;font-weight:800;color:var(--mute);text-align:center}
+  .acc-grow .ui-field{flex:1;min-width:0}
+  .acc-grow-n{flex:none;min-width:52px;font-size:12px;font-weight:700;color:var(--mute);text-align:right}
+  .acc-gnew{display:flex;gap:8px}
+  .acc-gnew .ui-field{flex:1;min-width:0}
   .acc-head .n{font-size:12px;font-weight:700;color:var(--mute)}
   .acc-head .acc-head-tools{margin-left:auto;display:flex;gap:4px}
   .acc-list{display:flex;flex-direction:column;gap:8px}
@@ -6196,11 +6205,31 @@ window.BAROYAM_LEAD=(function(){
           </div>
           <div class="acc-bar">
             <span class="acc-meta" id="accMeta"></span>
-            <button type="button" class="ui-btn sm ghost" id="accAddGroup">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-              구역 추가
+            <button type="button" class="ui-btn sm" id="accAddGroup" aria-expanded="false" aria-controls="accGroups">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 14v6M14 17h6"/></svg>
+              구역 관리
             </button>
           </div>
+          <!-- 구역 관리 · 이름 고치기·순서 바꾸기·추가·지우기를 한 번에 하고 저장한다 -->
+          <form class="acc-set" id="accGroups" hidden autocomplete="off">
+            <div class="acc-set-head">
+              <b>구역 관리</b>
+              <span>이름을 고치고, 화살표로 순서를 바꾸고, 새 구역을 더한 뒤 저장하세요 · 계정이 남은 구역은 지울 수 없어요</span>
+            </div>
+            <div class="acc-glist" id="accGroupList"></div>
+            <div class="acc-gnew">
+              <input class="ui-field sm" id="accGroupNew" placeholder="새 구역 이름 (예: 광고 계정)">
+              <button type="button" class="ui-btn sm soft" id="accGroupNewBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                구역 추가
+              </button>
+            </div>
+            <div class="ui-btn-row acc-set-tools">
+              <span class="acc-logo-msg" id="accGroupMsg"></span>
+              <button type="button" class="ui-btn sm ghost" id="accGroupCancel" style="margin-left:auto">취소</button>
+              <button type="submit" class="ui-btn sm primary">저장</button>
+            </div>
+          </form>
           <div class="acc-grid" id="accGrid"></div>
         </section>
       </div><!-- /view-account -->
@@ -14667,13 +14696,11 @@ window.baroyamAsk=function(title,body,okText){
       '</div></form>';
   }
   function 상자(g){
-    const 기본=기본구역.some(function(b){ return b.id===g.id; });
     const 편집중=고치는줄&&g.items.find(function(x){ return x.id===고치는줄; });
     return '<div class="acc-box" data-g="'+안전(g.id)+'">'+
       '<div class="acc-head"><h3>'+안전(g.name)+'</h3><span class="n">'+g.items.length+'</span>'+
         '<div class="acc-head-tools">'+
-          '<button type="button" class="ui-btn sm ghost icon" data-act="rename" data-g="'+안전(g.id)+'" title="구역 이름 바꾸기" aria-label="구역 이름 바꾸기">'+아이콘.edit+'</button>'+
-          (기본?'':'<button type="button" class="ui-btn sm ghost icon" data-act="delgroup" data-g="'+안전(g.id)+'" title="구역 지우기" aria-label="구역 지우기">'+아이콘.del+'</button>')+
+          '<button type="button" class="ui-btn sm ghost icon" data-act="rename" data-g="'+안전(g.id)+'" title="구역 관리" aria-label="구역 관리">'+아이콘.edit+'</button>'+
         '</div></div>'+
       '<div class="acc-list">'+
         (g.items.length?g.items.map(function(it){ return it.id===고치는줄?입력칸(g,it):줄(g,it); }).join('')
@@ -14747,21 +14774,7 @@ window.baroyamAsk=function(title,body,okText){
         });
       });
     }
-    else if(act==='rename'){
-      const g=자료.groups.find(function(x){ return x.id===gid; });
-      const 이름=prompt('구역 이름',g?g.name:''); if(!이름||!이름.trim()) return;
-      바꾸기(function(d){ d.groups.forEach(function(x){ if(x.id===gid) x.name=이름.trim(); }); });
-    }
-    else if(act==='delgroup'){
-      const g=자료.groups.find(function(x){ return x.id===gid; });
-      if(!g) return;
-      if(g.items.length){ alert('안에 계정이 남아 있어 지울 수 없어요 · 계정을 먼저 옮기거나 지워 주세요'); return; }
-      window.baroyamAsk('"'+g.name+'" 구역을 지울까요?','비어 있는 구역 상자를 없앱니다').then(function(ok){
-        if(!ok) return;
-        /* 그사이 다른 사람이 계정을 넣었으면 지우지 않는다 */
-        바꾸기(function(d){ d.groups=d.groups.filter(function(x){ return x.id!==gid||x.items.length; }); });
-      });
-    }
+    else if(act==='rename') 구역관리열기(true,gid);
   });
   판.addEventListener('submit',function(e){
     e.preventDefault();
@@ -14897,9 +14910,96 @@ window.baroyamAsk=function(title,body,okText){
     바꾸기(function(d){ d.logos=켠; });
   });
 
-  $('accAddGroup').addEventListener('click',function(){
-    const 이름=prompt('새 구역 이름'); if(!이름||!이름.trim()) return;
-    바꾸기(function(d){ d.groups.push({id:'g'+새id(),name:이름.trim(),items:[]}); });
+  /* ----- 구역 관리 · 초안에서 고치고 저장할 때 한 번에 담는다 -----
+     저장은 최신본 위에 얹는다 · 그사이 다른 사람이 만든 구역은 뒤에 남기고,
+     지우려던 구역에 그사이 계정이 들어왔으면 지우지 않는다 */
+  const 구역창=$('accGroups'), 구역단추=$('accAddGroup');
+  let 초안=[];
+  const 화살={
+    up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 14.5 12 9l5.5 5.5"/></svg>',
+    down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>'
+  };
+  function 초안읽기(){
+    /* 입력칸에 쳐 둔 이름을 초안에 옮긴다 · 다시 그리기 전에 부른다 */
+    구역창.querySelectorAll('.acc-grow input').forEach(function(i){
+      const g=초안.find(function(x){ return x.id===i.dataset.g; }); if(g) g.name=i.value;
+    });
+  }
+  function 구역그리기(){
+    $('accGroupList').innerHTML=초안.map(function(g,i){
+      const 막힘=g.n>0?' disabled title="계정이 남아 있어 지울 수 없어요"':' title="구역 지우기"';
+      return '<div class="acc-grow'+(g.새?' is-new':'')+'">'+
+        '<span class="acc-grow-no">'+(i+1)+'</span>'+
+        '<input class="ui-field sm" data-g="'+안전(g.id)+'" value="'+안전(g.name)+'" placeholder="구역 이름" aria-label="구역 이름">'+
+        '<span class="acc-grow-n">'+(g.새?'새 구역':'계정 '+g.n)+'</span>'+
+        '<button type="button" class="ui-btn sm ghost icon" data-gact="up" data-g="'+안전(g.id)+'" aria-label="위로"'+(i===0?' disabled':'')+'>'+화살.up+'</button>'+
+        '<button type="button" class="ui-btn sm ghost icon" data-gact="down" data-g="'+안전(g.id)+'" aria-label="아래로"'+(i===초안.length-1?' disabled':'')+'>'+화살.down+'</button>'+
+        '<button type="button" class="ui-btn sm ghost icon" data-gact="del" data-g="'+안전(g.id)+'" aria-label="구역 지우기"'+막힘+'>'+아이콘.del+'</button>'+
+      '</div>';
+    }).join('');
+  }
+  function 구역관리열기(열,먼저){
+    구역창.hidden=!열;
+    구역단추.setAttribute('aria-expanded',String(열));
+    $('accGroupMsg').textContent='';
+    $('accGroupNew').value='';
+    if(!열) return;
+    초안=(자료?자료.groups:[]).map(function(g){ return {id:g.id,name:g.name,n:g.items.length}; });
+    구역그리기();
+    const 칸=먼저?구역창.querySelector('.acc-grow input[data-g="'+먼저+'"]'):null;
+    구역창.scrollIntoView({block:'nearest',behavior:'smooth'});
+    if(칸){ 칸.focus(); 칸.select(); }
+  }
+  구역단추.addEventListener('click',function(){ 구역관리열기(구역창.hidden); });
+  $('accGroupCancel').addEventListener('click',function(){ 구역관리열기(false); });
+  function 새구역(){
+    const 칸=$('accGroupNew'), 이름=칸.value.trim();
+    if(!이름){ 칸.focus(); return; }
+    초안읽기();
+    초안.push({id:'g'+새id(),name:이름,n:0,새:true});
+    칸.value=''; 구역그리기(); 칸.focus();
+  }
+  $('accGroupNewBtn').addEventListener('click',새구역);
+  $('accGroupNew').addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); 새구역(); }
+  });
+  $('accGroupList').addEventListener('click',function(e){
+    const b=e.target.closest('[data-gact]'); if(!b) return;
+    초안읽기();
+    const i=초안.findIndex(function(x){ return x.id===b.dataset.g; }); if(i<0) return;
+    const a=b.dataset.gact;
+    if(a==='up'&&i>0) 초안.splice(i-1,0,초안.splice(i,1)[0]);
+    else if(a==='down'&&i<초안.length-1) 초안.splice(i+1,0,초안.splice(i,1)[0]);
+    else if(a==='del'&&!초안[i].n) 초안.splice(i,1);
+    구역그리기();
+  });
+  구역창.addEventListener('submit',function(e){
+    e.preventDefault();
+    초안읽기();
+    const 빈칸=초안.find(function(g){ return !g.name.trim(); });
+    if(빈칸){
+      $('accGroupMsg').textContent='이름이 빈 구역이 있어요';
+      const i=구역창.querySelector('.acc-grow input[data-g="'+빈칸.id+'"]'); if(i) i.focus();
+      return;
+    }
+    if(!초안.length){ $('accGroupMsg').textContent='구역이 하나는 있어야 해요'; return; }
+    const 남길=초안.map(function(g){ return {id:g.id,name:g.name.trim()}; });
+    const 처음=(자료?자료.groups:[]).map(function(g){ return g.id; });
+    구역관리열기(false);
+    바꾸기(function(d){
+      const 옛=d.groups;
+      const 새줄=남길.map(function(g){
+        const 있던=옛.find(function(x){ return x.id===g.id; });
+        if(있던){ 있던.name=g.name; return 있던; }
+        return {id:g.id,name:g.name,items:[]};
+      });
+      옛.forEach(function(x){
+        if(새줄.indexOf(x)>=0) return;
+        /* 초안에 없는 구역 · 내가 연 뒤 다른 사람이 만든 것이거나, 지우려는데 그사이 계정이 들어온 것은 남긴다 */
+        if(처음.indexOf(x.id)<0||x.items.length) 새줄.push(x);
+      });
+      d.groups=새줄;
+    });
   });
 
   window.baroyamAccountOpen=열기;
