@@ -14523,7 +14523,27 @@ window.baroyamAsk=function(title,body,okText){
     catch(e){ return null; }
   }
   /* 바꾸기 · 최신본 위에 고침(fn)을 얹어 저장한다 */
+  /* 편집은 팀장만 · 팀장 비밀번호를 통과한 세션(BAROYAM_LEAD.isOn)일 때만 추가·수정·삭제·설정 단추를 보이고,
+     저장(바꾸기)에서도 한 번 더 막는다 · 보기·링크 열기·아이디/비밀번호 복사는 누구나 한다 */
+  function 편집가능(){
+    try{ return !!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; }
+  }
+  /* 팀장이 아니면 편집 단추를 숨기고 열려 있던 편집 칸을 닫는다 */
+  function 권한맞추기(){
+    const 된다=편집가능();
+    $('accSetBtn').hidden=!된다;
+    $('accAddGroup').hidden=!된다;
+    if(!된다){
+      여는칸=''; 고치는줄='';
+      if(!$('accSet').hidden){ $('accSet').hidden=true; $('accSetBtn').setAttribute('aria-expanded','false'); }
+      if(!$('accGroups').hidden){ $('accGroups').hidden=true; $('accAddGroup').setAttribute('aria-expanded','false'); }
+    }
+  }
+  ['baroyam:members','baroyam:profiles','baroyam:adminmode'].forEach(function(ev){
+    document.addEventListener(ev,function(){ if(자료) 그리기(); else 권한맞추기(); });
+  });
   async function 바꾸기(fn){
+    if(!편집가능()){ $('accMeta').textContent='계정관리 수정은 팀장만 할 수 있어요'; return false; }
     $('accMeta').textContent='저장하는 중…';
     const 최신=await 읽기();
     if(!최신){ $('accMeta').textContent='서버에 연결하지 못해 저장하지 못했어요'; return false; }
@@ -14556,7 +14576,9 @@ window.baroyamAsk=function(title,body,okText){
       (링크?'':'<span class="acc-go-host">주소 없음</span>');
     const 왼쪽=링크
       ?'<a class="ui-btn acc-go" href="'+안전(링크)+'" target="_blank" rel="noopener noreferrer" title="'+안전(it.service)+' 열기 (새 탭)">'+머리+아이콘.go+'</a>'
-      :'<button type="button" class="ui-btn acc-go" data-act="edit"'+속+' title="로그인 주소를 넣으면 바로 들어갈 수 있어요">'+머리+'</button>';
+      :편집가능()
+        ?'<button type="button" class="ui-btn acc-go" data-act="edit"'+속+' title="로그인 주소를 넣으면 바로 들어갈 수 있어요">'+머리+'</button>'
+        :'<span class="ui-btn acc-go" style="cursor:default">'+머리+'</span>';
     const 칸=[];
     if(it.loginId) 칸.push('<div class="acc-info-line"><i>아이디</i><b>'+안전(it.loginId)+'</b>'+
       '<button type="button" class="ui-btn sm soft" data-act="copy" data-f="loginId"'+속+'>복사</button></div>');
@@ -14573,10 +14595,10 @@ window.baroyamAsk=function(title,body,okText){
         '<button type="button" class="ui-btn soft acc-info-btn" data-act="info"'+속+' aria-expanded="'+펼침+'">계정정보'+아이콘.chev+'</button>'+
       '</div>'+
       (펼침?'<div class="acc-info">'+칸.join('')+
-        '<div class="ui-btn-row acc-info-tools">'+
+        (편집가능()?'<div class="ui-btn-row acc-info-tools">'+
           '<button type="button" class="ui-btn sm ghost" data-act="edit"'+속+'>'+아이콘.edit+'고치기</button>'+
           '<button type="button" class="ui-btn sm danger" data-act="del"'+속+'>'+아이콘.del+'지우기</button>'+
-        '</div></div>':'')+
+        '</div>':'')+'</div>':'')+
     '</div>';
   }
   function 입력칸(g,it){
@@ -14613,22 +14635,23 @@ window.baroyamAsk=function(title,body,okText){
     return '<div class="acc-box" data-g="'+안전(g.id)+'">'+
       '<div class="acc-head"><h3>'+안전(g.name)+'</h3><span class="n">'+g.items.length+'</span>'+
         '<div class="acc-head-tools">'+
-          '<button type="button" class="ui-btn sm ghost icon" data-act="rename" data-g="'+안전(g.id)+'" title="구역 관리" aria-label="구역 관리">'+아이콘.edit+'</button>'+
+          (편집가능()?'<button type="button" class="ui-btn sm ghost icon" data-act="rename" data-g="'+안전(g.id)+'" title="구역 관리" aria-label="구역 관리">'+아이콘.edit+'</button>':'')+
         '</div></div>'+
       '<div class="acc-list">'+
         (g.items.length?g.items.map(function(it){ return it.id===고치는줄?입력칸(g,it):줄(g,it); }).join('')
           :'<div class="acc-empty">아직 계정이 없어요</div>')+
       '</div>'+
       (여는칸===g.id&&!편집중?입력칸(g):'')+
-      '<button type="button" class="ui-btn ghost block acc-add" data-act="open" data-g="'+안전(g.id)+'"'+(여는칸===g.id||편집중?' hidden':'')+'>'+아이콘.plus+'계정 추가</button>'+
+      '<button type="button" class="ui-btn ghost block acc-add" data-act="open" data-g="'+안전(g.id)+'"'+(여는칸===g.id||편집중||!편집가능()?' hidden':'')+'>'+아이콘.plus+'계정 추가</button>'+
     '</div>';
   }
   function 그리기(){
     const 판=$('accGrid'); if(!판) return;
+    권한맞추기();
     if(!자료){ 판.innerHTML='<div class="acc-empty">'+(읽는중?'목록을 읽는 중이에요':'목록을 읽지 못했어요 · 로그인 상태를 확인해 주세요')+'</div>'; return; }
     판.innerHTML=자료.groups.map(상자).join('');
     const 합=자료.groups.reduce(function(s,g){ return s+g.items.length; },0);
-    $('accMeta').textContent='구역 '+자료.groups.length+'개 · 계정 '+합+'개';
+    $('accMeta').textContent='구역 '+자료.groups.length+'개 · 계정 '+합+'개'+(편집가능()?'':' · 보기 전용 (수정은 팀장만 할 수 있어요)');
     const 첫칸=판.querySelector('.acc-form input[name="service"]');
     if(첫칸&&!첫칸.value) 첫칸.focus();
   }
@@ -14647,6 +14670,8 @@ window.baroyamAsk=function(title,body,okText){
   판.addEventListener('click',function(e){
     const b=e.target.closest('[data-act]'); if(!b) return;
     const act=b.dataset.act, gid=b.dataset.g, iid=b.dataset.i;
+    /* 편집 단추는 팀장에게만 그리지만, 그사이 권한이 꺼졌을 때를 위해 여기서도 막는다 */
+    if(['open','edit','del','rename','logo'].indexOf(act)>=0&&!편집가능()){ 권한맞추기(); 그리기(); return; }
     if(act==='open'){ 여는칸=gid; 고치는줄=''; 그리기(); }
     else if(act==='cancel'){ 여는칸=''; 고치는줄=''; 그리기(); }
     else if(act==='edit'){ 고치는줄=iid; 여는칸=''; 그리기(); }
@@ -14724,6 +14749,7 @@ window.baroyamAsk=function(title,body,okText){
     return [].map.call(설정.칩.querySelectorAll('.ui-chip[aria-pressed="true"]'),function(c){ return c.dataset.logo; });
   }
   function 설정열기(열){
+    if(열&&!편집가능()){ 권한맞추기(); return; }
     설정.창.hidden=!열;
     설정.단추.setAttribute('aria-expanded',String(열));
     로고칸열기(null,false);
@@ -14852,6 +14878,7 @@ window.baroyamAsk=function(title,body,okText){
     }).join('');
   }
   function 구역관리열기(열,먼저){
+    if(열&&!편집가능()){ 권한맞추기(); return; }
     구역창.hidden=!열;
     구역단추.setAttribute('aria-expanded',String(열));
     $('accGroupMsg').textContent='';
