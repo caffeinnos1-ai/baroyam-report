@@ -3113,17 +3113,26 @@ window.BAROYAM_LEAD=(function(){
   .acc-item{min-width:0}
   .acc-item-bar{display:flex;min-width:0}
   .acc-item-bar .ui-btn{height:48px}
-  .acc-go{flex:1;min-width:0;justify-content:flex-start;gap:10px;padding:0 14px 0 8px;
+  /* .ui-btn 이 뒤에 정의돼 한 칸짜리 선택자로는 가운데 정렬·둥글기를 못 이긴다 · 두 칸으로 올려 둔다 */
+  .acc-item-bar .acc-go{flex:1;min-width:0;justify-content:flex-start;gap:10px;padding:0 14px 0 8px;
     border-top-right-radius:0;border-bottom-right-radius:0;text-decoration:none}
-  .acc-go:hover{background:var(--btn-soft)}
-  .acc-go-ini{flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  .acc-item-bar .acc-go:hover{background:var(--btn-soft)}
+  .acc-go-ini{position:relative;overflow:hidden;flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
     background:var(--btn-soft);color:var(--btn-soft-ink);font-size:14px;font-weight:800}
   .acc-go:hover .acc-go-ini{background:var(--btn);color:#fff}
+  /* 로고가 있으면 글자 위를 덮는다 · 못 불러오면 그림을 지워 글자가 드러난다 */
+  .acc-go-ini img{position:absolute;inset:0;width:100%;height:100%;padding:5px;box-sizing:border-box;
+    object-fit:contain;background:var(--paper)}
+  .acc-item-bar .acc-go:hover .acc-go-ini img{background:var(--paper)}
+  .acc-logo-chip img{width:16px;height:16px;border-radius:3px;object-fit:contain}
+  .acc-form .acc-logos{max-height:132px;overflow:auto}
+  .acc-pw{display:flex;gap:6px;min-width:0}
+  .acc-pw .ui-field{flex:1}
   .acc-go-name{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:800;color:var(--ink)}
   .acc-go-host{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:600;color:var(--mute)}
   .acc-go .acc-go-arrow{margin-left:auto;color:var(--mute)}
   .acc-go:hover .acc-go-arrow{color:var(--btn)}
-  .acc-info-btn{flex:none;border-top-left-radius:0;border-bottom-left-radius:0;padding:0 14px;margin-left:-1px}
+  .acc-item-bar .acc-info-btn{flex:none;border-top-left-radius:0;border-bottom-left-radius:0;padding:0 14px;margin-left:-1px}
   .acc-info-btn svg{transition:transform .15s}
   .acc-info-btn[aria-expanded="true"]{background:var(--btn);color:#fff}
   .acc-info-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
@@ -14436,7 +14445,8 @@ window.baroyamAsk=function(title,body,okText){
    구역(쇼핑몰 라인·운영관리·카페이노스매장, 더 만들 수 있다)마다 상자를 두고 계정을 모은다.
    목록은 app_settings 의 accounts_v1 한 칸 · 여럿이 같이 고치므로 저장할 때마다 최신본을 다시 읽어
    그 위에 바꾼 것만 얹는다(다른 사람이 방금 넣은 계정을 덮지 않도록).
-   비밀번호는 담지 않는다 · 로그인한 사람 누구나 읽는 칸이라, 보관 위치(예: 1Password)만 적는다 */
+   아이디·비밀번호·메모를 담는다(사용자 요청) · 로그인한 사람 누구나 읽는 칸이라 비밀번호는 평소 가려 두고
+   '보기'를 눌렀을 때만 보인다. 로고는 고른 브랜드(또는 로그인 주소)의 파비콘을 구글 파비콘 주소로 불러온다 */
 (function(){
   const 열쇠='accounts_v1';
   const 기본구역=[
@@ -14473,8 +14483,28 @@ window.baroyamAsk=function(title,body,okText){
       ['네이버 스마트플레이스','https://new.smartplace.naver.com']
     ]
   };
+  /* 고를 수 있는 로고 · [열쇠, 이름, 도메인] · '자동'은 로그인 주소의 도메인, '글자'는 첫 글자 */
+  const 로고=[
+    ['naver','네이버','naver.com'],['google','구글','google.com'],['11st','11번가','11st.co.kr'],
+    ['toss','토스','toss.im'],['coupang','쿠팡','coupang.com'],['coupangeats','쿠팡이츠','coupangeats.com'],
+    ['kakao','카카오','kakao.com'],['baemin','배민','baemin.com'],['yogiyo','요기요','yogiyo.co.kr'],
+    ['gmarket','G마켓','gmarket.co.kr'],['auction','옥션','auction.co.kr'],['ssg','SSG','ssg.com'],
+    ['lotteon','롯데ON','lotteon.com'],['ohou','오늘의집','ohou.se'],['musinsa','무신사','musinsa.com'],
+    ['cafe24','카페24','cafe24.com'],['meta','메타','facebook.com'],['instagram','인스타그램','instagram.com'],
+    ['youtube','유튜브','youtube.com'],['hometax','홈택스','hometax.go.kr'],['github','GitHub','github.com'],
+    ['notion','노션','notion.so']
+  ];
+  function 파비콘(도메인){ return 'https://www.google.com/s2/favicons?domain='+encodeURIComponent(도메인)+'&sz=64'; }
+  function 로고주소(it){
+    if(it.logo==='none') return '';
+    const 고른=로고.find(function(l){ return l[0]===it.logo; });
+    if(고른) return 파비콘(고른[2]);
+    const h=호스트(주소(it.url));
+    return h?파비콘(h):'';
+  }
   let 자료=null, 읽는중=false, 여는칸='', 고치는줄='';
   const 펼친줄=new Set();     /* '계정정보'를 펼쳐 둔 줄 · 이 브라우저에서만 기억한다 */
+  const 보인비번=new Set();   /* 비밀번호 '보기'를 누른 줄 · 다시 그리면 접히도록 펼침과 같이 지운다 */
   const $=function(id){ return document.getElementById(id); };
   function 안전(v){ return String(v==null?'':v)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -14522,7 +14552,9 @@ window.baroyamAsk=function(title,body,okText){
     const 링크=주소(it.url);
     const 속=' data-g="'+안전(g.id)+'" data-i="'+안전(it.id)+'"';
     const 펼침=펼친줄.has(it.id);
-    const 머리='<span class="acc-go-ini" aria-hidden="true">'+안전(String(it.service||'?').trim().charAt(0))+'</span>'+
+    const 그림=로고주소(it);
+    const 머리='<span class="acc-go-ini" aria-hidden="true">'+안전(String(it.service||'?').trim().charAt(0))+
+        (그림?'<img src="'+안전(그림)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>'+
       '<span class="acc-go-name">'+안전(it.service)+'</span>'+
       '<span class="acc-go-host">'+(링크?안전(호스트(링크)):'주소 없음')+'</span>';
     const 왼쪽=링크
@@ -14530,9 +14562,16 @@ window.baroyamAsk=function(title,body,okText){
       :'<button type="button" class="ui-btn acc-go" data-act="edit"'+속+' title="로그인 주소를 넣으면 바로 들어갈 수 있어요">'+머리+'</button>';
     const 칸=[];
     if(it.loginId) 칸.push('<div class="acc-info-line"><i>아이디</i><b>'+안전(it.loginId)+'</b>'+
-      '<button type="button" class="ui-btn sm ghost" data-act="copy" data-v="'+안전(it.loginId)+'">복사</button></div>');
+      '<button type="button" class="ui-btn sm soft" data-act="copy" data-f="loginId"'+속+'>복사</button></div>');
+    if(it.password){
+      const 보임=보인비번.has(it.id);
+      칸.push('<div class="acc-info-line"><i>비밀번호</i><b>'+(보임?안전(it.password):'••••••••')+'</b>'+
+        '<button type="button" class="ui-btn sm ghost" data-act="pwview"'+속+'>'+(보임?'가리기':'보기')+'</button>'+
+        '<button type="button" class="ui-btn sm soft" data-act="copy" data-f="password"'+속+'>복사</button></div>');
+    }
+    /* 예전 칸(담당·보관 위치)에 적어 둔 것이 있으면 그대로 보여 준다 */
     if(it.owner) 칸.push('<div class="acc-info-line"><i>담당</i><b>'+안전(it.owner)+'</b></div>');
-    if(it.pwWhere) 칸.push('<div class="acc-info-line"><i>비밀번호</i><b>'+안전(it.pwWhere)+'</b></div>');
+    if(it.pwWhere) 칸.push('<div class="acc-info-line"><i>보관 위치</i><b>'+안전(it.pwWhere)+'</b></div>');
     if(it.memo) 칸.push('<div class="acc-info-line"><i>메모</i><b class="memo">'+안전(it.memo)+'</b></div>');
     if(!칸.length) 칸.push('<div class="acc-info-line"><b class="none">적어 둔 정보가 없어요</b></div>');
     return '<div class="acc-item">'+
@@ -14556,12 +14595,22 @@ window.baroyamAsk=function(title,body,okText){
       '</div>':'')+
       '<input class="ui-field block" name="service" placeholder="서비스명 (필수)" value="'+안전(it.service)+'" required>'+
       '<input class="ui-field block" name="url" placeholder="로그인 주소" value="'+안전(it.url)+'">'+
-      '<div class="acc-form-two">'+
-        '<input class="ui-field block" name="loginId" placeholder="아이디" value="'+안전(it.loginId)+'">'+
-        '<input class="ui-field block" name="owner" placeholder="담당자" value="'+안전(it.owner)+'">'+
+      '<div class="acc-form-cap">로고</div>'+
+      '<input type="hidden" name="logo" value="'+안전(it.logo||'')+'">'+
+      '<div class="ui-chips acc-logos">'+
+        [['','자동',''],['none','글자','']].concat(로고).map(function(l){
+          return '<button type="button" class="ui-chip acc-logo-chip" data-act="logo" data-logo="'+l[0]+'" aria-pressed="'+((it.logo||'')===l[0])+'">'+
+            (l[2]?'<img src="'+안전(파비콘(l[2]))+'" alt="" loading="lazy" onerror="this.remove()">':'')+안전(l[1])+'</button>';
+        }).join('')+
       '</div>'+
-      '<input class="ui-field block" name="pwWhere" placeholder="비밀번호 보관 위치 (비밀번호 자체는 적지 마세요)" value="'+안전(it.pwWhere)+'">'+
-      '<textarea class="ui-field block" name="memo" placeholder="메모 (2단계 인증 휴대폰, 결제 카드 등)">'+안전(it.memo)+'</textarea>'+
+      '<div class="acc-form-two">'+
+        '<input class="ui-field block" name="loginId" placeholder="아이디" autocomplete="off" value="'+안전(it.loginId)+'">'+
+        '<div class="acc-pw">'+
+          '<input class="ui-field" type="password" name="password" placeholder="비밀번호" autocomplete="new-password" value="'+안전(it.password)+'">'+
+          '<button type="button" class="ui-btn ghost" data-act="pwform">보기</button>'+
+        '</div>'+
+      '</div>'+
+      '<textarea class="ui-field block" name="memo" placeholder="메모">'+안전(it.memo)+'</textarea>'+
       '<div class="ui-btn-row" style="justify-content:flex-end">'+
         '<button type="button" class="ui-btn sm ghost" data-act="cancel">취소</button>'+
         '<button type="submit" class="ui-btn sm primary">'+(고치는줄?'고치기':'추가')+'</button>'+
@@ -14611,12 +14660,31 @@ window.baroyamAsk=function(title,body,okText){
     if(act==='open'){ 여는칸=gid; 고치는줄=''; 그리기(); }
     else if(act==='cancel'){ 여는칸=''; 고치는줄=''; 그리기(); }
     else if(act==='edit'){ 고치는줄=iid; 여는칸=''; 그리기(); }
-    else if(act==='info'){ if(펼친줄.has(iid)) 펼친줄.delete(iid); else 펼친줄.add(iid); 그리기(); }
+    else if(act==='info'){
+      if(펼친줄.has(iid)){ 펼친줄.delete(iid); 보인비번.delete(iid); } else 펼친줄.add(iid);
+      그리기();
+    }
+    else if(act==='pwview'){ if(보인비번.has(iid)) 보인비번.delete(iid); else 보인비번.add(iid); 그리기(); }
+    else if(act==='pwform'){
+      const 칸=b.parentNode.querySelector('input');
+      const 보임=칸.type==='password';
+      칸.type=보임?'text':'password'; b.textContent=보임?'가리기':'보기';
+    }
+    else if(act==='logo'){
+      const f=b.closest('form');
+      f.logo.value=b.dataset.logo;
+      f.querySelectorAll('.acc-logo-chip').forEach(function(c){ c.setAttribute('aria-pressed',String(c===b)); });
+    }
     else if(act==='copy'){
-      const v=b.dataset.v, 원래=b.textContent;
+      /* 값은 버튼에 싣지 않고 목록에서 꺼낸다 · 비밀번호가 화면 코드에 드러나지 않도록 */
+      const g=자료.groups.find(function(x){ return x.id===gid; });
+      const it=g&&g.items.find(function(x){ return x.id===iid; });
+      const v=it?String(it[b.dataset.f]||''):'';
+      if(!v) return;
+      const 원래=b.textContent;
       (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){
         b.textContent='복사됨'; setTimeout(function(){ b.textContent=원래; },1200);
-      }).catch(function(){ prompt('아이디를 복사해 주세요',v); });
+      }).catch(function(){ prompt('복사해 주세요',v); });
     }
     else if(act==='pick'){
       const f=b.closest('form');
@@ -14655,7 +14723,8 @@ window.baroyamAsk=function(title,body,okText){
     e.preventDefault();
     const f=e.target, gid=f.dataset.g;
     const 값={};
-    ['service','url','loginId','owner','pwWhere','memo'].forEach(function(k){ 값[k]=String(f[k].value||'').trim(); });
+    ['service','url','logo','loginId','memo'].forEach(function(k){ 값[k]=String(f[k].value||'').trim(); });
+    값.password=String(f.password.value||'');   /* 비밀번호는 앞뒤 빈칸도 그대로 둔다 */
     if(!값.service){ f.service.focus(); return; }
     const 고칠=고치는줄;
     여는칸=''; 고치는줄='';
