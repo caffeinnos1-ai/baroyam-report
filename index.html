@@ -8141,6 +8141,11 @@ window.CsGuide=(function(){
   const CS_GUIDE_DOC_ID='1-1';
   /* 회사 개요 & 문화 > 바로얌 조직도 · 일반 문서가 아니라 자리(대표님~부서)마다 회원·담당 업무를 두는 트리 화면이다 */
   const ORG_DOC_ID='0-1';
+  /* 메뉴얼가이드는 누구나 보고, 고치는 것(문서 수정·상담가이드 설정·조직도 설정)은 팀장만 한다 ·
+     팀장 비밀번호를 통과한 세션(BAROYAM_LEAD.isOn)이 기준이다 · 목차 편집은 이미 팀장 전용인 관리자 설정 안에 있다 */
+  function manCanEdit(){
+    try{ return !!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; }
+  }
   let activeDoc=null;          /* null이면 전체 목차 화면 */
   let openGroups=new Set();    /* 펼쳐둔 중분류(group.id) · 기본은 모두 접힘 */
 
@@ -8200,7 +8205,7 @@ window.CsGuide=(function(){
     const ed=document.getElementById('manEditor');
     ed.innerHTML=docs[id]||'';
     bindEditor(ed,id);
-    editBtn.hidden=false;
+    editBtn.hidden=!manCanEdit();
     setEditMode(false);      /* 문서를 열면 항상 읽기 모드부터 */
   }
   /* ---------- 상담가이드 화면 ----------
@@ -8212,11 +8217,12 @@ window.CsGuide=(function(){
     const G=window.CsGuide;
     setEditMode(false);
     if(editBtn){
-      editBtn.hidden=false;
+      editBtn.hidden=!manCanEdit();
       editBtn.title='매뉴얼 관리 (추가·수정·삭제)';
       if(editBtnLabel) editBtnLabel.textContent='설정';
     }
-    descEl.textContent='고객 문의에 맞춰 상담 콘솔(오른쪽 아래 로고 버튼)에 바로 뜨는 답변 모음입니다. 추가·수정은 오른쪽 위 설정 버튼에서 합니다.';
+    descEl.textContent='고객 문의에 맞춰 상담 콘솔(오른쪽 아래 로고 버튼)에 바로 뜨는 답변 모음입니다. '+
+      (manCanEdit()?'추가·수정은 오른쪽 위 설정 버튼에서 합니다.':'추가·수정은 팀장만 할 수 있습니다.');
     bodyEl.innerHTML='<div class="gv">'+
       '<div class="gv-tools">'+
         '<input type="search" class="gv-search" id="gvSearch" placeholder="제목·키워드·답변 검색" aria-label="상담가이드 검색" value="'+esc(gmQuery)+'">'+
@@ -8267,7 +8273,8 @@ window.CsGuide=(function(){
         (c===gmCategory?' class="on"':'')+'>'+esc(c||'전체')+' <b>'+n+'</b></button>';
     }).join('');
     if(!all.length){
-      list.innerHTML='<div class="gm-empty">아직 등록된 매뉴얼이 없어요.<br>오른쪽 위 <b>설정</b> 버튼을 눌러 추가해 보세요.</div>';
+      list.innerHTML='<div class="gm-empty">아직 등록된 매뉴얼이 없어요.'+
+        (manCanEdit()?'<br>오른쪽 위 <b>설정</b> 버튼을 눌러 추가해 보세요.':'')+'</div>';
       return;
     }
     const q=gmQuery.trim().toLowerCase().replace(/\s+/g,'');
@@ -8325,6 +8332,7 @@ window.CsGuide=(function(){
   }
   function gmOpen(on){
     if(!gmOv) return;
+    if(on&&!manCanEdit()) return;
     gmOv.hidden=!on;
     document.body.style.overflow=on?'hidden':'';
     if(on){
@@ -8462,13 +8470,10 @@ window.CsGuide=(function(){
         '<span class="oc-people">'+orgPeopleHtml(n.members)+'</span>'+
       '</button>'+orgTreeHtml(n.id)+'</li>').join('')+'</ul>';
   }
-  /* 조직도 수정은 팀장만 한다 · 팀장 비밀번호를 통과한 세션(BAROYAM_LEAD.isOn)만 설정 버튼이 보인다 */
-  function orgCanEdit(){
-    try{ return !!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; }
-  }
+  /* 조직도 수정도 팀장만 한다 · 설정 버튼은 manCanEdit()일 때만 보인다 */
   function renderOrgChart(){
     setEditMode(false);
-    const can=orgCanEdit();
+    const can=manCanEdit();
     if(editBtn){
       editBtn.hidden=!can;
       editBtn.title='조직도 설정 (담당자·담당 업무)';
@@ -8570,7 +8575,7 @@ window.CsGuide=(function(){
     if(!ocOv) return;
     ocOv.hidden=!on;
     document.body.style.overflow=on?'hidden':'';
-    if(on&&!orgCanEdit()){ ocOv.hidden=true; document.body.style.overflow=''; return; }
+    if(on&&!manCanEdit()){ ocOv.hidden=true; document.body.style.overflow=''; return; }
     if(on){ ocDraft=JSON.parse(JSON.stringify(org.nodes)); ocDrawForm(); ocSetMsg(''); }
     else if(editBtn) editBtn.focus();
   }
@@ -8612,7 +8617,7 @@ window.CsGuide=(function(){
       }
     });
     ocEl('ocSave').addEventListener('click',()=>{
-      if(!orgCanEdit()){ ocSetMsg('조직도 수정은 팀장만 할 수 있어요',true); return; }
+      if(!manCanEdit()){ ocSetMsg('조직도 수정은 팀장만 할 수 있어요',true); return; }
       ocCollect();
       const blank=ocDraft.find(n=>!n.title);
       if(blank){
@@ -8869,7 +8874,7 @@ window.CsGuide=(function(){
   const editBtnLabel=document.getElementById('manEditBtnLabel');
   let editMode=false;
   function setEditMode(on){
-    editMode=!!on;
+    editMode=!!on&&manCanEdit();
     const ed=editorEl();
     if(ed){
       ed.contentEditable=editMode?'true':'false';
