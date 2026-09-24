@@ -13670,14 +13670,28 @@ window.baroyamAsk=function(title,body,okText){
     return String(r.경로||'').split(' / ')[0]==='★바로얌' ? '바로얌' : '카페이노스';
   }
 
+  /* 칩으로 거르는 갈래 · 바로얌은 이름에서 뽑은 자산종류, 카페이노스는 판매처별 폴더로 나눈다
+     (메뉴이미지 / 배민·쿠팡이츠·우노스(매장,토스), 그 밖의 폴더는 매장운영) */
+  const 카페칩=['배민','쿠팡이츠','키오스크&토스','매장운영'];
+  function 종류(r){
+    if(회사(r)!=='카페이노스') return r.자산종류||'그 밖';
+    const 칸=String(r.경로||'').split(' / ');
+    if(칸[1]==='메뉴이미지'){
+      if(칸[2]==='배민') return '배민';
+      if(칸[2]==='쿠팡이츠') return '쿠팡이츠';
+      if(/우노스|토스|키오스크/.test(칸[2]||'')) return '키오스크&토스';
+    }
+    return '매장운영';
+  }
+
   function 거른줄(건너뛸){
     const 검색=상태.검색.trim().toLowerCase();
     return (줄들||[]).filter(function(r){
       if(회사(r)!==상태.회사) return false;
       if(건너뛸!=='브랜드'&&상태.브랜드&&(r.브랜드||'회사 공통')!==상태.브랜드) return false;
-      if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(r.자산종류||'그 밖')) return false;
+      if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(종류(r))) return false;
       if(검색){
-        const 밭=(r.이름+' '+r.브랜드+' '+r.제품+' '+r.자산종류+' '+r.경로).toLowerCase();
+        const 밭=(r.이름+' '+r.브랜드+' '+r.제품+' '+종류(r)+' '+r.경로).toLowerCase();
         if(밭.indexOf(검색)<0) return false;
       }
       return true;
@@ -13692,18 +13706,22 @@ window.baroyamAsk=function(title,body,okText){
     return '<button type="button" class="drv-card" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'">'
       + '<span class="drv-thumb"><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
       + '<span class="drv-name">'+안전(r.이름)+'</span>'
-      + '<span class="drv-sub">'+(r.자산종류?'<span class="drv-kind">'+안전(r.자산종류)+'</span>':'')
+      + '<span class="drv-sub">'+(회사(r)==='카페이노스'
+          ? '<span class="drv-kind">'+안전(종류(r))+'</span>'
+          : (r.자산종류?'<span class="drv-kind">'+안전(r.자산종류)+'</span>':''))
       + '<span>'+안전(날짜표시(r.날짜))+'</span></span></button>';
   }
 
   function 칩줄(){
     const 바탕=거른줄('종류');
-    const 셈={}; 바탕.forEach(function(r){ const k=r.자산종류||'그 밖'; 셈[k]=(셈[k]||0)+1; });
-    const 이름들=Object.keys(셈).sort(function(a,b){ return 셈[b]-셈[a]; });
-    let h='<button type="button" class="ui-chip" data-kind="" aria-pressed="'+(상태.종류.size?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
+    const 셈={}; 바탕.forEach(function(r){ const k=종류(r); 셈[k]=(셈[k]||0)+1; });
+    /* 카페이노스는 판매처 네 칸만 정해진 순서로 둔다 · 모두 끄면 전체가 보인다 */
+    const 카페=상태.회사==='카페이노스';
+    const 이름들=카페?카페칩:Object.keys(셈).sort(function(a,b){ return 셈[b]-셈[a]; });
+    let h=카페?'':'<button type="button" class="ui-chip" data-kind="" aria-pressed="'+(상태.종류.size?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
     이름들.forEach(function(k){
       h+='<button type="button" class="ui-chip" data-kind="'+안전(k)+'" aria-pressed="'+(상태.종류.has(k)?'true':'false')+'">'
-        + 안전(k)+'<b>'+셈[k]+'</b></button>';
+        + 안전(k)+'<b>'+(셈[k]||0)+'</b></button>';
     });
     $('drvTypes').innerHTML=h;
   }
@@ -13716,7 +13734,7 @@ window.baroyamAsk=function(title,body,okText){
       + '<button type="button" class="ui-chip" data-brand="" aria-pressed="'+(상태.브랜드?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
     이름들.forEach(function(k){
       h+='<button type="button" class="ui-chip" data-brand="'+안전(k)+'" aria-pressed="'+(상태.브랜드===k?'true':'false')+'">'
-        + 안전(k)+'<b>'+셈[k]+'</b></button>';
+        + 안전(k)+'<b>'+(셈[k]||0)+'</b></button>';
     });
     $('drvRail').innerHTML=h;
   }
