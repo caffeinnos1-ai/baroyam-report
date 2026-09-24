@@ -3254,19 +3254,6 @@ window.BAROYAM_LEAD=(function(){
   .drv-lanes.l .drv-strip.open{grid-template-columns:repeat(auto-fill,minmax(212px,1fr))}
   .drv-lane-acts{margin-left:auto;display:flex;align-items:center;gap:6px}
   .drv-lane-acts .ui-btn{margin-left:0}
-  /* 크게 보기 · 두 번 클릭하면 화면 위에 크게 띄우고 ← → 로 넘긴다 */
-  .drv-lb{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;background:rgba(8,10,14,.88)}
-  .drv-lb[hidden]{display:none}
-  .drv-lb-top{display:flex;align-items:center;gap:8px;padding:12px 16px;color:#fff}
-  .drv-lb-name{flex:1;min-width:0;font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .drv-lb-n{flex:none;font-size:12px;font-weight:700;opacity:.7}
-  .drv-lb-body{flex:1;min-height:0;display:grid;grid-template-columns:60px minmax(0,1fr) 60px;grid-template-rows:minmax(0,1fr);
-    align-items:center;padding:0 6px 18px}
-  .drv-lb-body .ui-btn.icon{justify-self:center}
-  .drv-lb-stage{height:100%;min-height:0;display:grid;place-items:center}
-  .drv-lb-stage img{width:100%;height:100%;object-fit:contain;display:block}
-  .drv-lb-stage iframe{width:100%;height:100%;border:0;border-radius:8px;background:#000}
-  @media (max-width:820px){ .drv-lb-body{grid-template-columns:40px minmax(0,1fr) 40px} }
   .drv-thumb{width:100%;aspect-ratio:1/1;border-radius:9px;overflow:hidden;background:var(--chip-flat);
     position:relative;display:grid;place-items:center;color:var(--mute)}
   .drv-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -13966,7 +13953,7 @@ window.baroyamAsk=function(title,body,okText){
       ? '<img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+안전(r.아이디)+'&amp;sz='+(상태.크기==='l'?'w440':'w220')+'">'
       : '';
     const 골랐나=상태.선택.has(r.아이디);
-    return '<button type="button" class="drv-card'+(골랐나?' on':'')+'" aria-pressed="'+골랐나+'" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'&#10;한 번: 선택 · 두 번: 크게 보기 · Shift/Ctrl: 여러 개">'
+    return '<button type="button" class="drv-card'+(골랐나?' on':'')+'" aria-pressed="'+골랐나+'" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'&#10;한 번: 선택 · 두 번: 새 탭에서 보기 · Shift/Ctrl: 여러 개">'
       + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 9.5 17 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
       + '<span class="drv-name">'+안전(r.이름)+'</span>'
       + '<span class="drv-sub">'+(회사(r)==='카페이노스'
@@ -14089,7 +14076,16 @@ window.baroyamAsk=function(title,body,okText){
   /* ---------- 고르기 · 한 번 클릭은 선택, 두 번 클릭은 열기 ----------
      그냥 클릭: 그것 하나만(이미 고른 것을 다시 누르면 취소) · Ctrl(⌘): 하나씩 더하고 빼기 ·
      Shift: 마지막으로 고른 것부터 여기까지 · 두 번 클릭의 두 번째 클릭은 선택을 건드리지 않는다 */
-  function 열어보기(id){ window.open('https://drive.google.com/file/d/'+id+'/view','_blank','noopener'); }
+  /* 두 번 클릭(또는 Enter) · 새 탭에서 연다 · 사진은 큰 썸네일 주소로 열어 브라우저가 창에 맞춰 보여 주고
+     (누르면 원래 크기로 확대), 영상·PDF·작업파일은 드라이브 보기 화면으로 연다 */
+  const 그림확장자={jpg:1,jpeg:1,png:1,gif:1,webp:1,heic:1,bmp:1,tif:1,tiff:1};
+  function 열어보기(id){
+    const r=줄표[id]||{};
+    const 주소=그림확장자[확장자(r.이름)]
+      ? 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w2000-h2000'
+      : 'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view';
+    window.open(주소,'_blank','noopener');
+  }
   function 고르기(id, e){
     if(e.detail>1) return;
     if(e.shiftKey&&상태.기준){
@@ -14116,7 +14112,6 @@ window.baroyamAsk=function(title,body,okText){
       c.classList.toggle('on',켬); c.setAttribute('aria-pressed',켬?'true':'false');
     });
     document.querySelectorAll('#drvLanes [data-pickall]').forEach(function(b){ b.textContent=줄선택글(b.dataset.pickall); });
-    if(크게.열림) 크게단추();
     const n=상태.선택.size;
     $('drvPick').hidden=!n;
     $('drvPickN').textContent=n+'개 선택';
@@ -14174,78 +14169,6 @@ window.baroyamAsk=function(title,body,okText){
   function 진행(글){ $('drvSaveLabel').textContent=글; }
   function 고른줄(){
     return Array.from(상태.선택).map(function(id){ return 줄표[id]; }).filter(Boolean);
-  }
-
-  /* ---------- 크게 보기 · 두 번 클릭(또는 Enter) ----------
-     지금 화면에 보이는 카드 차례대로 ← → 로 넘긴다 · 사진은 큰 썸네일, 영상·PDF 등은 드라이브 미리보기 */
-  const 그림확장자={jpg:1,jpeg:1,png:1,gif:1,webp:1,heic:1,bmp:1,tif:1,tiff:1};
-  const 크게={열림:false, 목록:[], i:0};
-  function 크게틀(){
-    let 틀=$('drvLb'); if(틀) return 틀;
-    틀=document.createElement('div'); 틀.id='drvLb'; 틀.className='drv-lb'; 틀.hidden=true;
-    틀.setAttribute('role','dialog'); 틀.setAttribute('aria-modal','true'); 틀.setAttribute('aria-label','크게 보기');
-    틀.innerHTML='<div class="drv-lb-top"><span class="drv-lb-name" id="drvLbName"></span><span class="drv-lb-n" id="drvLbN"></span>'
-      + '<button type="button" class="ui-btn sm" data-lb="pick" id="drvLbPick">선택</button>'
-      + '<button type="button" class="ui-btn sm" data-lb="drive">드라이브에서 열기</button>'
-      + '<button type="button" class="ui-btn sm icon" data-lb="close" title="닫기 (Esc)" aria-label="닫기">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>'
-      + '<div class="drv-lb-body" data-lb="backdrop">'
-      + '<button type="button" class="ui-btn icon" data-lb="prev" title="이전 (←)" aria-label="이전">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>'
-      + '<div class="drv-lb-stage" id="drvLbStage" data-lb="backdrop"></div>'
-      + '<button type="button" class="ui-btn icon" data-lb="next" title="다음 (→)" aria-label="다음">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button></div>';
-    틀.addEventListener('click',function(e){
-      const b=e.target.closest('[data-lb]'); if(!b) return;
-      const 일=b.dataset.lb;
-      if(일==='backdrop'){ if(e.target===b) 크게닫기(); return; }
-      if(일==='close') 크게닫기();
-      else if(일==='prev') 크게넘기기(-1);
-      else if(일==='next') 크게넘기기(1);
-      else if(일==='drive') 열어보기(크게.목록[크게.i]);
-      else if(일==='pick') 크게고르기();
-    });
-    document.body.appendChild(틀);
-    return 틀;
-  }
-  function 크게보기(id){
-    크게.목록=Array.prototype.map.call(document.querySelectorAll('#drvLanes .drv-card'),function(c){ return c.dataset.id; });
-    크게.i=Math.max(0,크게.목록.indexOf(id));
-    if(크게.목록.indexOf(id)<0) 크게.목록=[id];
-    크게틀().hidden=false; 크게.열림=true;
-    크게그리기();
-  }
-  function 크게그리기(){
-    const id=크게.목록[크게.i], r=줄표[id]||{이름:'',아이디:id};
-    $('drvLbName').textContent=r.이름||'';
-    $('drvLbN').textContent=(크게.i+1)+' / '+크게.목록.length;
-    const 무대=$('drvLbStage');
-    if(그림확장자[확장자(r.이름)]){
-      무대.innerHTML='<img alt="" referrerpolicy="no-referrer" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&amp;sz=w1800">';
-      무대.querySelector('img').onerror=function(){ 무대.innerHTML=미리보기틀(id); };
-    }else 무대.innerHTML=미리보기틀(id);
-    크게단추();
-  }
-  function 미리보기틀(id){ return '<iframe src="https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview" allow="autoplay" title="미리보기"></iframe>'; }
-  function 크게단추(){
-    const b=$('drvLbPick'); if(!b) return;
-    const 켬=상태.선택.has(크게.목록[크게.i]);
-    b.textContent=켬?'✓ 선택됨':'선택';
-    b.className='ui-btn sm'+(켬?' primary':'');
-  }
-  function 크게넘기기(d){
-    if(!크게.목록.length) return;
-    크게.i=(크게.i+d+크게.목록.length)%크게.목록.length;
-    크게그리기();
-  }
-  function 크게고르기(){
-    const id=크게.목록[크게.i];
-    if(상태.선택.has(id)) 상태.선택.delete(id); else { 상태.선택.add(id); 상태.기준=id; }
-    선택표시();
-  }
-  function 크게닫기(){
-    const 틀=$('drvLb'); if(!틀) return;
-    틀.hidden=true; 크게.열림=false; $('drvLbStage').innerHTML='';   /* 영상 소리가 남지 않게 비운다 */
   }
 
   /* ---------- 목록 새로고침 ----------
@@ -14487,22 +14410,12 @@ window.baroyamAsk=function(title,body,okText){
     const 뿌리=$('view-drive'); if(!뿌리) return;
     뿌리.addEventListener('click',눌림);
     뿌리.addEventListener('dblclick',function(e){
-      const 카=e.target.closest('.drv-card'); if(카) 크게보기(카.dataset.id);
+      const 카=e.target.closest('.drv-card'); if(카) 열어보기(카.dataset.id);
     });
     뿌리.addEventListener('keydown',function(e){
       const 카=e.target.closest('.drv-card');
-      if(카&&e.key==='Enter'){ e.preventDefault(); 크게보기(카.dataset.id); }
+      if(카&&e.key==='Enter'){ e.preventDefault(); 열어보기(카.dataset.id); }
     });
-    /* 크게 보기가 떠 있으면 키보드는 그 창이 먼저 받는다 */
-    document.addEventListener('keydown',function(e){
-      if(!크게.열림) return;
-      if(e.key==='Escape') 크게닫기();
-      else if(e.key==='ArrowLeft') 크게넘기기(-1);
-      else if(e.key==='ArrowRight') 크게넘기기(1);
-      else if(e.key===' '&&!e.target.closest('button')) 크게고르기();
-      else return;
-      e.preventDefault(); e.stopImmediatePropagation();
-    },true);
     $('drvRefresh').addEventListener('click',function(e){ e.stopPropagation(); 새로고침(); });
     const 정렬탭=$('drvSort'), 크기탭=$('drvSize');
     if(window.UI&&window.UI.tabs){
