@@ -4039,6 +4039,11 @@ window.BAROYAM_LEAD=(function(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8 21 19.4H3Z"/><path d="M12 3.8v9.1M12 12.9 3.9 19.1M12 12.9l8.1 6.2"/></svg>
           <span>드라이브</span>
         </button>
+        <!-- 계정관리 · 자리만 만들어 두었다(내용은 아직 비어 있다) -->
+        <button class="sb-item" type="button" data-view="account" id="sbAccountBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.6c1.2-3.4 4-5.2 7.2-5.2s6 1.8 7.2 5.2"/></svg>
+          <span>계정관리</span>
+        </button>
         <button class="sb-item" type="button" data-view="manual" id="sbManualBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
           <span>메뉴얼가이드</span>
@@ -5987,6 +5992,22 @@ window.BAROYAM_LEAD=(function(){
           </div><!-- /drv-box -->
         </div>
       </div><!-- /view-drive -->
+
+      <!-- 계정관리 · 내용이 정해지기 전까지 빈 자리 안내만 둔다 -->
+      <div id="view-account" style="display:none">
+        <section class="section">
+          <div class="plan-hero">
+            <div class="ptag">ACCOUNT</div>
+            <div class="ptitle">계정관리</div>
+            <p class="psub">회사에서 쓰는 계정을 한곳에서 관리합니다</p>
+          </div>
+          <div class="drive-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.6c1.2-3.4 4-5.2 7.2-5.2s6 1.8 7.2 5.2"/></svg>
+            <b>아직 준비 중이에요</b>
+            <span>계정 목록이 이곳에 들어올 예정입니다</span>
+          </div>
+        </section>
+      </div><!-- /view-account -->
 
       <!-- 메뉴얼 문서에서 글을 드래그하면 뜨는 글씨설정 창 -->
       <!-- 수정 모드에서 줄에 마우스를 올리면 왼쪽에 뜨는 손잡이와 그 메뉴 -->
@@ -7957,6 +7978,7 @@ window.CsGuide=(function(){
     document.getElementById('view-admin').style.display=v==='admin'?'':'none';
     document.getElementById('view-manual').style.display=v==='manual'?'':'none';
     document.getElementById('view-drive').style.display=v==='drive'?'':'none';
+    document.getElementById('view-account').style.display=v==='account'?'':'none';
     /* 드라이브 목록은 덩어리가 커서 이 화면을 열 때 한 번만 읽는다 */
     if(v==='drive'&&window.baroyamDriveOpen) window.baroyamDriveOpen();
     document.body.classList.toggle('view-is-manual',v==='manual');
@@ -7972,7 +7994,7 @@ window.CsGuide=(function(){
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의 기록은 여기 들어올 때 처음 받아 온다(1MB가 넘어 첫 화면에서는 받지 않는다) */
     if(v==='agenda') document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
-    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='agenda');
+    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
@@ -9691,6 +9713,7 @@ window.CsGuide=(function(){
     {name:'리뷰수집',          kind:'메뉴',       go:()=>window.activateView('review')},
     {name:'메뉴얼가이드',      kind:'메뉴',       go:()=>window.activateView('manual')},
     {name:'드라이브',          kind:'메뉴',       go:()=>window.activateView('drive')},
+    {name:'계정관리',          kind:'메뉴',       go:()=>window.activateView('account')},
     {name:'자동화',            kind:'메뉴 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()},
     {name:'통합리뷰수집',      kind:'리뷰수집',   go:()=>{ document.getElementById('sbReviewBtn').click(); document.getElementById('sbReviewCollector').click(); }},
     {name:'자동화 관리',       kind:'자동화 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()}
