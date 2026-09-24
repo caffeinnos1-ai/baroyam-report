@@ -3107,6 +3107,20 @@ window.BAROYAM_LEAD=(function(){
   .acc-set-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
   .acc-set-head b{font-size:14px;font-weight:800;color:var(--ink)}
   .acc-set-head span{font-size:12.5px;font-weight:600;color:var(--mute)}
+  .acc-set-mine{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+  .acc-mylogos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+  .acc-mylogo{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 8px;border:1px solid var(--line);border-radius:10px;
+    font-size:13px;font-weight:700;color:var(--ink);min-width:0}
+  .acc-mylogo img{flex:none;width:28px;height:28px;border-radius:7px;object-fit:contain;background:var(--paper)}
+  .acc-mylogo span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .acc-mylogo-none{font-size:12.5px;font-weight:600;color:var(--mute)}
+  .acc-logo-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px;border-radius:12px;background:var(--chip-flat)}
+  .acc-logo-form[hidden]{display:none}
+  .acc-logo-form .ui-field{flex:1;min-width:160px}
+  .acc-logo-prev{flex:none;width:44px;height:44px;border-radius:10px;border:1px dashed var(--line);background:var(--paper);
+    display:grid;place-items:center;overflow:hidden}
+  .acc-logo-prev img{width:100%;height:100%;object-fit:contain}
+  .acc-logo-msg{font-size:12px;font-weight:600;color:var(--mute)}
   .acc-meta{font-size:12.5px;font-weight:600;color:var(--mute)}
   .acc-bar .ui-btn{margin-left:auto}
   .acc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:16px;margin-top:12px;align-items:start}
@@ -6152,6 +6166,27 @@ window.BAROYAM_LEAD=(function(){
               <span>계정을 추가·수정할 때 고를 수 있게 띄울 로고를 켜 주세요</span>
             </div>
             <div class="ui-chips" id="accSetLogos"></div>
+            <!-- 직접 올린 로고 · 받은 이미지는 128×128 PNG 로 맞춰 accounts_v1.customLogos 에 담는다 -->
+            <div class="acc-set-mine">
+              <div class="acc-set-head">
+                <b>직접 올린 로고</b>
+                <span>정사각형 이미지 · 128×128px 이상 권장 · PNG·JPG·SVG·WEBP · 2MB 이하 (저장할 때 128×128 PNG로 맞춰요)</span>
+                <button type="button" class="ui-btn sm soft" id="accLogoAdd" style="margin-left:auto">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                  로고 추가
+                </button>
+              </div>
+              <form class="acc-logo-form" id="accLogoForm" hidden autocomplete="off">
+                <span class="acc-logo-prev" id="accLogoPrev"></span>
+                <input class="ui-field" name="name" placeholder="로고 이름 (예: 스마트스토어)">
+                <input type="file" name="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+                <button type="button" class="ui-btn sm" id="accLogoPick">이미지 고르기</button>
+                <span class="acc-logo-msg" id="accLogoMsg"></span>
+                <button type="button" class="ui-btn sm ghost" id="accLogoCancel">취소</button>
+                <button type="submit" class="ui-btn sm soft">로고 저장</button>
+              </form>
+              <div class="acc-mylogos" id="accMyLogos"></div>
+            </div>
             <div class="ui-btn-row acc-set-tools">
               <button type="button" class="ui-btn sm ghost" id="accSetAll">모두 켜기</button>
               <button type="button" class="ui-btn sm ghost" id="accSetNone">모두 끄기</button>
@@ -14491,35 +14526,6 @@ window.baroyamAsk=function(title,body,okText){
     {id:'ops',   name:'운영관리'},
     {id:'store', name:'카페이노스매장'}
   ];
-  /* 추가 칸에 띄우는 추천 · 누르면 서비스명과 주소가 채워진다 */
-  const 추천={
-    shop:[
-      ['쿠팡 윙','https://wing.coupang.com'],
-      ['쿠팡 광고센터','https://advertising.coupang.com'],
-      ['스마트스토어센터','https://sell.smartstore.naver.com'],
-      ['자사몰 관리자',''],
-      ['카카오 톡딜 파트너센터','https://partners.kakao.com'],
-      ['네이버 검색광고','https://searchad.naver.com']
-    ],
-    ops:[
-      ['구글 워크스페이스','https://admin.google.com'],
-      ['메타 광고관리자','https://adsmanager.facebook.com'],
-      ['카카오톡 채널 관리자','https://center-pf.kakao.com'],
-      ['홈택스','https://www.hometax.go.kr'],
-      ['택배 계약 계정',''],
-      ['n8n 자동화','https://n8n.reflowguide.com'],
-      ['Supabase','https://supabase.com/dashboard'],
-      ['GitHub','https://github.com/caffeinnos1-ai']
-    ],
-    store:[
-      ['배민 사장님광장','https://ceo.baemin.com'],
-      ['쿠팡이츠 스토어','https://store.coupangeats.com'],
-      ['요기요 사장님','https://ceo.yogiyo.co.kr'],
-      ['토스플레이스',''],
-      ['우노스 키오스크',''],
-      ['네이버 스마트플레이스','https://new.smartplace.naver.com']
-    ]
-  };
   /* 고를 수 있는 로고 · [열쇠, 이름, 도메인] · '자동'은 로그인 주소의 도메인, '글자'는 첫 글자 */
   const 로고=[
     ['naver','네이버','naver.com'],['google','구글','google.com'],['11st','11번가','11st.co.kr'],
@@ -14535,10 +14541,16 @@ window.baroyamAsk=function(title,body,okText){
   /* 설정을 한 번도 안 했을 때 띄우는 로고 */
   const 기본로고=['naver','google','11st','toss','coupang','kakao','baemin','coupangeats'];
   function 켠로고(){ return (자료&&Array.isArray(자료.logos))?자료.logos:기본로고; }
+  /* 고를 수 있는 로고 전부 · 기본 브랜드 + 직접 올린 로고(customLogos) · {key,name,src,mine} */
+  function 로고목록(){
+    const 기본=로고.map(function(l){ return {key:l[0],name:l[1],src:파비콘(l[2])}; });
+    const 내것=((자료&&자료.customLogos)||[]).map(function(c){ return {key:c.id,name:c.name,src:c.src,mine:true}; });
+    return 기본.concat(내것);
+  }
   function 로고주소(it){
     if(it.logo==='none') return '';
-    const 고른=로고.find(function(l){ return l[0]===it.logo; });
-    if(고른) return 파비콘(고른[2]);
+    const 고른=로고목록().find(function(l){ return l.key===it.logo; });
+    if(고른) return 고른.src;
     const h=호스트(주소(it.url));
     return h?파비콘(h):'';
   }
@@ -14556,9 +14568,10 @@ window.baroyamAsk=function(title,body,okText){
     const 구역=(v&&Array.isArray(v.groups))?v.groups:[];
     /* logos · 설정에서 켠 로고 열쇠 목록 · 아직 고른 적이 없으면 없는 채로 두고 기본 로고를 쓴다 */
     const 켠로고=(v&&Array.isArray(v.logos))?v.logos:undefined;
-    if(!구역.length) return {groups:기본구역.map(function(g){ return {id:g.id,name:g.name,items:[]}; }),logos:켠로고};
+    const 내로고=(v&&Array.isArray(v.customLogos))?v.customLogos:[];
+    if(!구역.length) return {groups:기본구역.map(function(g){ return {id:g.id,name:g.name,items:[]}; }),logos:켠로고,customLogos:내로고};
     구역.forEach(function(g){ if(!Array.isArray(g.items)) g.items=[]; });
-    return {groups:구역,logos:켠로고};
+    return {groups:구역,logos:켠로고,customLogos:내로고};
   }
   /* 못 읽으면 null · 칸이 아직 없을 때만 기본 구역으로 시작한다 */
   async function 읽기(){
@@ -14611,9 +14624,6 @@ window.baroyamAsk=function(title,body,okText){
         '<button type="button" class="ui-btn sm ghost" data-act="pwview"'+속+'>'+(보임?'가리기':'보기')+'</button>'+
         '<button type="button" class="ui-btn sm soft" data-act="copy" data-f="password"'+속+'>복사</button></div>');
     }
-    /* 예전 칸(담당·보관 위치)에 적어 둔 것이 있으면 그대로 보여 준다 */
-    if(it.owner) 칸.push('<div class="acc-info-line"><i>담당</i><b>'+안전(it.owner)+'</b></div>');
-    if(it.pwWhere) 칸.push('<div class="acc-info-line"><i>보관 위치</i><b>'+안전(it.pwWhere)+'</b></div>');
     if(it.memo) 칸.push('<div class="acc-info-line"><i>메모</i><b class="memo">'+안전(it.memo)+'</b></div>');
     if(!칸.length) 칸.push('<div class="acc-info-line"><b class="none">적어 둔 정보가 없어요</b></div>');
     return '<div class="acc-item">'+
@@ -14629,23 +14639,18 @@ window.baroyamAsk=function(title,body,okText){
   }
   function 입력칸(g,it){
     it=it||{};
-    const 있는것=new Set(g.items.map(function(x){ return x.service; }));
-    const 칩=(추천[g.id]||[]).filter(function(r){ return !있는것.has(r[0]); });
     return '<form class="acc-form" data-g="'+안전(g.id)+'" autocomplete="off">'+
-      (!고치는줄&&칩.length?'<div class="acc-form-cap">추천 · 누르면 채워져요</div><div class="ui-chips">'+
-        칩.map(function(r){ return '<button type="button" class="ui-chip" data-act="pick" data-name="'+안전(r[0])+'" data-url="'+안전(r[1])+'">'+안전(r[0])+'</button>'; }).join('')+
-      '</div>':'')+
       '<input class="ui-field block" name="service" placeholder="서비스명 (필수)" value="'+안전(it.service)+'" required>'+
       '<input class="ui-field block" name="url" placeholder="로그인 주소" value="'+안전(it.url)+'">'+
       '<div class="acc-form-cap">로고</div>'+
       '<input type="hidden" name="logo" value="'+안전(it.logo||'')+'">'+
       '<div class="ui-chips acc-logos">'+
-        [['','자동',''],['none','글자','']].concat(로고.filter(function(l){
+        [{key:'',name:'자동',src:''},{key:'none',name:'글자',src:''}].concat(로고목록().filter(function(l){
           /* 설정에서 켠 로고만 · 고치는 계정이 이미 쓰는 로고는 꺼져 있어도 남긴다 */
-          return 켠로고().indexOf(l[0])>=0||l[0]===it.logo;
+          return 켠로고().indexOf(l.key)>=0||l.key===it.logo;
         })).map(function(l){
-          return '<button type="button" class="ui-chip acc-logo-chip" data-act="logo" data-logo="'+l[0]+'" aria-pressed="'+((it.logo||'')===l[0])+'">'+
-            (l[2]?'<img src="'+안전(파비콘(l[2]))+'" alt="" loading="lazy" onerror="this.remove()">':'')+안전(l[1])+'</button>';
+          return '<button type="button" class="ui-chip acc-logo-chip" data-act="logo" data-logo="'+안전(l.key)+'" aria-pressed="'+((it.logo||'')===l.key)+'">'+
+            (l.src?'<img src="'+안전(l.src)+'" alt="" loading="lazy" onerror="this.remove()">':'')+안전(l.name)+'</button>';
         }).join('')+
       '</div>'+
       '<div class="acc-form-two">'+
@@ -14731,12 +14736,6 @@ window.baroyamAsk=function(title,body,okText){
         b.textContent='복사됨'; setTimeout(function(){ b.textContent=원래; },1200);
       }).catch(function(){ prompt('복사해 주세요',v); });
     }
-    else if(act==='pick'){
-      const f=b.closest('form');
-      f.service.value=b.dataset.name;
-      if(b.dataset.url) f.url.value=b.dataset.url;
-      f.loginId.focus();
-    }
     else if(act==='del'){
       const g=자료.groups.find(function(x){ return x.id===gid; });
       const it=g&&g.items.find(function(x){ return x.id===iid; });
@@ -14783,14 +14782,25 @@ window.baroyamAsk=function(title,body,okText){
   /* 로고 설정 · 배너의 설정 버튼으로 연다 · 저장을 눌러야 서버에 담는다 */
   const 설정={창:$('accSet'),단추:$('accSetBtn'),칩:$('accSetLogos')};
   function 설정그리기(켠){
-    설정.칩.innerHTML=로고.map(function(l){
-      return '<button type="button" class="ui-chip acc-logo-chip" data-logo="'+l[0]+'" aria-pressed="'+(켠.indexOf(l[0])>=0)+'">'+
-        '<img src="'+안전(파비콘(l[2]))+'" alt="" loading="lazy" onerror="this.remove()">'+안전(l[1])+'</button>';
+    설정.칩.innerHTML=로고목록().map(function(l){
+      return '<button type="button" class="ui-chip acc-logo-chip" data-logo="'+안전(l.key)+'" aria-pressed="'+(켠.indexOf(l.key)>=0)+'">'+
+        '<img src="'+안전(l.src)+'" alt="" loading="lazy" onerror="this.remove()">'+안전(l.name)+'</button>';
     }).join('');
+    const 내것=로고목록().filter(function(l){ return l.mine; });
+    $('accMyLogos').innerHTML=내것.length?내것.map(function(l){
+      return '<div class="acc-mylogo"><img src="'+안전(l.src)+'" alt=""><span>'+안전(l.name)+'</span>'+
+        '<button type="button" class="ui-btn sm ghost icon" data-act="logoedit" data-logo="'+안전(l.key)+'" title="고치기" aria-label="'+안전(l.name)+' 고치기">'+아이콘.edit+'</button>'+
+        '<button type="button" class="ui-btn sm ghost icon" data-act="logodel" data-logo="'+안전(l.key)+'" title="지우기" aria-label="'+안전(l.name)+' 지우기">'+아이콘.del+'</button></div>';
+    }).join(''):'<div class="acc-mylogo-none">아직 올린 로고가 없어요</div>';
+  }
+  /* 켜고 끈 칩은 저장 전까지 화면에만 있다 · 다시 그릴 때 그 상태를 잃지 않도록 읽어 둔다 */
+  function 지금켠(){
+    return [].map.call(설정.칩.querySelectorAll('.ui-chip[aria-pressed="true"]'),function(c){ return c.dataset.logo; });
   }
   function 설정열기(열){
     설정.창.hidden=!열;
     설정.단추.setAttribute('aria-expanded',String(열));
+    로고칸열기(null,false);
     if(열) 설정그리기(켠로고());
   }
   설정.단추.addEventListener('click',function(){ 설정열기(설정.창.hidden); });
@@ -14798,9 +14808,89 @@ window.baroyamAsk=function(title,body,okText){
     const c=e.target.closest('.ui-chip'); if(!c) return;
     c.setAttribute('aria-pressed',String(c.getAttribute('aria-pressed')!=='true'));
   });
-  $('accSetAll').addEventListener('click',function(){ 설정그리기(로고.map(function(l){ return l[0]; })); });
+  $('accSetAll').addEventListener('click',function(){ 설정그리기(로고목록().map(function(l){ return l.key; })); });
   $('accSetNone').addEventListener('click',function(){ 설정그리기([]); });
   $('accSetCancel').addEventListener('click',function(){ 설정열기(false); });
+
+  /* ----- 직접 올린 로고 · 추가 / 고치기 / 지우기 -----
+     규격 · 받는 파일은 PNG·JPG·SVG·WEBP, 2MB 이하 · 정사각형 128×128px 이상을 권한다.
+     어떤 크기로 받든 128×128 투명 PNG 칸 가운데에 비율을 지켜 맞춰 담는다(한 개 수십 KB 안쪽) */
+  const 로고규격=128, 최대파일=2*1024*1024;
+  const 로고폼=$('accLogoForm');
+  let 고치는로고='', 새그림='';
+  function 로고칸열기(l,열){
+    로고폼.hidden=!열;
+    고치는로고=l?l.key:''; 새그림='';
+    로고폼.name.value=l?l.name:'';
+    로고폼.file.value='';
+    $('accLogoPrev').innerHTML=l?'<img src="'+안전(l.src)+'" alt="">':'';
+    $('accLogoMsg').textContent=l?'이미지를 바꾸려면 다시 고르세요':'';
+    if(열) 로고폼.name.focus();
+  }
+  function 로고맞추기(파일){
+    return new Promise(function(resolve,reject){
+      if(!/^image\/(png|jpeg|svg\+xml|webp)$/.test(파일.type)) return reject(new Error('PNG·JPG·SVG·WEBP 파일만 올릴 수 있어요'));
+      if(파일.size>최대파일) return reject(new Error('2MB 이하 파일만 올릴 수 있어요'));
+      const url=URL.createObjectURL(파일), img=new Image();
+      img.onload=function(){
+        const w=img.naturalWidth||로고규격, h=img.naturalHeight||로고규격;
+        const 배율=Math.min(로고규격/w,로고규격/h);
+        const cw=Math.round(w*배율), ch=Math.round(h*배율);
+        const cv=document.createElement('canvas'); cv.width=로고규격; cv.height=로고규격;
+        const cx=cv.getContext('2d');
+        cx.imageSmoothingQuality='high';
+        cx.drawImage(img,(로고규격-cw)/2,(로고규격-ch)/2,cw,ch);
+        URL.revokeObjectURL(url);
+        resolve({src:cv.toDataURL('image/png'),작음:Math.min(w,h)<로고규격&&파일.type!=='image/svg+xml'});
+      };
+      img.onerror=function(){ URL.revokeObjectURL(url); reject(new Error('이미지를 읽지 못했어요')); };
+      img.src=url;
+    });
+  }
+  $('accLogoAdd').addEventListener('click',function(){ 로고칸열기(null,true); });
+  $('accLogoCancel').addEventListener('click',function(){ 로고칸열기(null,false); });
+  $('accLogoPick').addEventListener('click',function(){ 로고폼.file.click(); });
+  로고폼.file.addEventListener('change',function(){
+    const 파일=로고폼.file.files[0]; if(!파일) return;
+    로고맞추기(파일).then(function(r){
+      새그림=r.src;
+      $('accLogoPrev').innerHTML='<img src="'+r.src+'" alt="">';
+      $('accLogoMsg').textContent=r.작음?'128×128px 보다 작아 흐리게 보일 수 있어요':'128×128 PNG로 맞췄어요';
+      if(!로고폼.name.value.trim()) 로고폼.name.value=파일.name.replace(/\.[^.]+$/,'');
+    }).catch(function(err){ 새그림=''; $('accLogoMsg').textContent=err.message; });
+  });
+  로고폼.addEventListener('submit',function(e){
+    e.preventDefault();
+    const 이름=로고폼.name.value.trim();
+    if(!이름){ 로고폼.name.focus(); return; }
+    if(!고치는로고&&!새그림){ $('accLogoMsg').textContent='이미지를 골라 주세요'; return; }
+    const 켠=지금켠(), 키=고치는로고||'c'+새id(), 그림=새그림;
+    if(!고치는로고) 켠.push(키);          /* 새 로고는 바로 켜 둔다 */
+    로고칸열기(null,false);
+    바꾸기(function(d){
+      const 있던=d.customLogos.find(function(c){ return c.id===키; });
+      if(있던){ 있던.name=이름; if(그림) 있던.src=그림; }
+      else{
+        d.customLogos.push({id:키,name:이름,src:그림});
+        d.logos=(Array.isArray(d.logos)?d.logos:기본로고.slice()).concat(키);
+      }
+    }).then(function(){ 설정그리기(켠); });
+  });
+  $('accMyLogos').addEventListener('click',function(e){
+    const b=e.target.closest('[data-act]'); if(!b) return;
+    const l=로고목록().find(function(x){ return x.key===b.dataset.logo; }); if(!l) return;
+    if(b.dataset.act==='logoedit') 로고칸열기(l,true);
+    else if(b.dataset.act==='logodel'){
+      window.baroyamAsk('"'+l.name+'" 로고를 지울까요?','이 로고를 쓰던 계정은 로그인 주소의 로고(자동)로 돌아갑니다').then(function(ok){
+        if(!ok) return;
+        const 켠=지금켠().filter(function(k){ return k!==l.key; });
+        바꾸기(function(d){
+          d.customLogos=d.customLogos.filter(function(c){ return c.id!==l.key; });
+          if(Array.isArray(d.logos)) d.logos=d.logos.filter(function(k){ return k!==l.key; });
+        }).then(function(){ 설정그리기(켠); });
+      });
+    }
+  });
   $('accSetSave').addEventListener('click',function(){
     const 켠=[].map.call(설정.칩.querySelectorAll('.ui-chip[aria-pressed="true"]'),function(c){ return c.dataset.logo; });
     설정열기(false);
