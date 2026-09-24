@@ -3234,7 +3234,7 @@ window.BAROYAM_LEAD=(function(){
   .drv-check{position:absolute;top:7px;left:7px;z-index:1;width:26px;height:26px;border-radius:99px;box-sizing:border-box;
     display:grid;place-items:center;background:rgba(255,255,255,.55);border:2px solid #fff;color:transparent;
     box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:scale(.8);transition:var(--ui-ease),opacity .15s,transform .15s}
-  .drv-check svg{width:9px;height:9px;display:block;overflow:visible}
+  .drv-check svg{width:7px;height:7px;display:block;overflow:visible}
   .drv-card:hover .drv-check{opacity:1;transform:none}
   .drv-card.on .drv-check{opacity:1;transform:none;background:var(--drv-pick);color:var(--drv-pick-ink)}
   .drv-pick{flex:none;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--btn-soft-ink)}
@@ -13967,7 +13967,7 @@ window.baroyamAsk=function(title,body,okText){
       : '';
     const 골랐나=상태.선택.has(r.아이디);
     return '<button type="button" class="drv-card'+(골랐나?' on':'')+'" aria-pressed="'+골랐나+'" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'&#10;한 번: 선택 · 두 번: 크게 보기 · Shift/Ctrl: 여러 개">'
-      + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 9.5 17 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
+      + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 9.5 17 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
       + '<span class="drv-name">'+안전(r.이름)+'</span>'
       + '<span class="drv-sub">'+(회사(r)==='카페이노스'
           ? '<span class="drv-kind">'+안전(종류(r))+'</span>'
