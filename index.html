@@ -3156,16 +3156,29 @@ window.BAROYAM_LEAD=(function(){
   .drv-lane-n{font-size:12px;font-weight:700;color:var(--mute)}
   .drv-lane-head .ui-btn{margin-left:auto}
   /* 카드 줄 · 평소엔 가로로 흐르고, '전체 보기'를 누르면 격자로 펼쳐진다 */
-  .drv-strip{display:flex;gap:11px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+  /* 위·옆 여백 · 카드가 떠오를 때(translateY) 가로 스크롤 상자에 테두리가 잘리지 않게 둔다 */
+  .drv-strip{display:flex;gap:11px;overflow-x:auto;padding:6px 4px 10px;margin:-6px -4px 0;scroll-snap-type:x proximity}
   .drv-strip::-webkit-scrollbar{height:8px}
   .drv-strip::-webkit-scrollbar-thumb{border-radius:99px;background:var(--line)}
   .drv-strip.open{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));overflow:visible}
   .drv-card{all:unset;box-sizing:border-box;flex:none;width:148px;display:flex;flex-direction:column;gap:7px;
     padding:8px;border-radius:13px;border:1px solid var(--line);background:var(--paper);cursor:pointer;
-    scroll-snap-align:start;transition:var(--ui-ease),transform .15s}
+    scroll-snap-align:start;transition:var(--ui-ease),transform .15s;user-select:none;-webkit-user-select:none}
   .drv-strip.open .drv-card{width:auto}
   .drv-card:hover{border-color:var(--btn);transform:translateY(-2px)}
   .drv-card:focus-visible{box-shadow:var(--ui-ring)}
+  /* 고른 카드 · 한 번 누르면 색이 들고, 두 번 눌러야 열린다 */
+  .drv-card.on{border-color:var(--btn);background:var(--btn-soft);box-shadow:inset 0 0 0 1px var(--btn)}
+  .drv-card.on .drv-name{color:var(--btn-soft-ink)}
+  .drv-check{position:absolute;top:6px;left:6px;z-index:1;width:20px;height:20px;border-radius:99px;
+    display:grid;place-items:center;background:var(--btn);color:#fff;opacity:0;transform:scale(.7);transition:var(--ui-ease)}
+  .drv-check svg{width:12px;height:12px}
+  .drv-card.on .drv-check{opacity:1;transform:none}
+  .drv-pick{flex:none;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--btn-soft-ink)}
+  .drv-pick[hidden]{display:none}
+  .drv-save-pop{width:260px;display:flex;flex-direction:column;gap:8px}
+  .drv-save-pop p{margin:0 0 2px;font-size:13px;font-weight:800;color:var(--ink)}
+  .drv-save-pop small{font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.45}
   .drv-thumb{width:100%;aspect-ratio:1/1;border-radius:9px;overflow:hidden;background:var(--chip-flat);
     position:relative;display:grid;place-items:center;color:var(--mute)}
   .drv-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -6011,6 +6024,15 @@ window.BAROYAM_LEAD=(function(){
                      style="all:unset;flex:1;min-width:0;font:inherit;color:inherit">
             </label>
             <span class="drv-meta" id="drvMeta"></span>
+            <!-- 고른 파일 · 한 번 클릭으로 고르고 Shift(구간)·Ctrl(하나씩)로 여러 개 고른다 -->
+            <span class="drv-pick" id="drvPick" hidden>
+              <span id="drvPickN">0개 선택</span>
+              <button type="button" class="ui-btn sm ghost" id="drvPickClear">선택 해제</button>
+            </span>
+            <button type="button" class="ui-btn primary" id="drvSave" disabled title="고른 파일을 내 컴퓨터에 저장">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></svg>
+              <span id="drvSaveLabel">저장</span>
+            </button>
           </div>
           <div class="ui-chips drv-types" id="drvTypes"></div>
           <div class="drv-body" id="drvBody" hidden>
@@ -13690,7 +13712,7 @@ window.baroyamAsk=function(title,body,okText){
   const 열쇠='drive_assets_v1';
   const 레인최대=18;                 /* 한 줄에 먼저 보여 줄 카드 수 · 나머지는 '전체 보기' */
   let 줄들=null, 읽는중=false, 갱신시각='';
-  const 상태={회사:'바로얌', 브랜드:'', 종류:new Set(), 검색:'', 펼침:new Set()};
+  const 상태={회사:'바로얌', 브랜드:'', 종류:new Set(), 검색:'', 펼침:new Set(), 선택:new Set(), 기준:''};
   const $=function(id){ return document.getElementById(id); };
   function 안전(v){ return String(v==null?'':v)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -13756,8 +13778,9 @@ window.baroyamAsk=function(title,body,okText){
     const 그림=미리보기가능[끝]
       ? '<img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+안전(r.아이디)+'&amp;sz=w220">'
       : '';
-    return '<button type="button" class="drv-card" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'">'
-      + '<span class="drv-thumb"><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
+    const 골랐나=상태.선택.has(r.아이디);
+    return '<button type="button" class="drv-card'+(골랐나?' on':'')+'" aria-pressed="'+골랐나+'" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'&#10;한 번: 선택 · 두 번: 열기 · Shift/Ctrl: 여러 개">'
+      + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
       + '<span class="drv-name">'+안전(r.이름)+'</span>'
       + '<span class="drv-sub">'+(회사(r)==='카페이노스'
           ? '<span class="drv-kind">'+안전(종류(r))+'</span>'
@@ -13812,7 +13835,7 @@ window.baroyamAsk=function(title,body,okText){
       h+='<div class="drv-lane"><div class="drv-lane-head">'
         + '<span class="drv-lane-name">'+안전(브)+'</span><span class="drv-lane-n">'+것들.length+'개</span>'
         + (것들.length>레인최대
-            ? '<button type="button" class="ui-btn sm ghost" data-open="'+안전(브)+'">'+(펼침?'접기':'전체 보기 →')+'</button>'
+            ? '<button type="button" class="ui-btn sm soft" data-open="'+안전(브)+'">'+(펼침?'접기':'전체 보기 →')+'</button>'
             : '')
         + '</div><div class="drv-strip'+(펼침?' open':'')+'">'
         + 보일것.map(카드).join('') + '</div></div>';
@@ -13857,7 +13880,161 @@ window.baroyamAsk=function(title,body,okText){
       레인들(); return;
     }
     const 카=e.target.closest('.drv-card');
-    if(카) window.open('https://drive.google.com/file/d/'+카.dataset.id+'/view','_blank','noopener');
+    if(카) 고르기(카.dataset.id, e);
+  }
+
+  /* ---------- 고르기 · 한 번 클릭은 선택, 두 번 클릭은 열기 ----------
+     그냥 클릭: 그것 하나만 · Ctrl(⌘): 하나씩 더하고 빼기 · Shift: 마지막으로 고른 것부터 여기까지 */
+  function 열어보기(id){ window.open('https://drive.google.com/file/d/'+id+'/view','_blank','noopener'); }
+  function 고르기(id, e){
+    if(e.shiftKey&&상태.기준){
+      const 차례=Array.prototype.map.call(document.querySelectorAll('#drvLanes .drv-card'),function(c){ return c.dataset.id; });
+      const a=차례.indexOf(상태.기준), b=차례.indexOf(id);
+      if(a>=0&&b>=0){
+        if(!(e.ctrlKey||e.metaKey)) 상태.선택.clear();
+        차례.slice(Math.min(a,b),Math.max(a,b)+1).forEach(function(k){ 상태.선택.add(k); });
+      }else 상태.선택.add(id);
+    }else if(e.ctrlKey||e.metaKey){
+      if(상태.선택.has(id)) 상태.선택.delete(id); else 상태.선택.add(id);
+      상태.기준=id;
+    }else{
+      상태.선택.clear(); 상태.선택.add(id); 상태.기준=id;
+    }
+    선택표시();
+  }
+  function 선택해제(){ 상태.선택.clear(); 상태.기준=''; 선택표시(); }
+  function 선택표시(){
+    document.querySelectorAll('#drvLanes .drv-card').forEach(function(c){
+      const 켬=상태.선택.has(c.dataset.id);
+      c.classList.toggle('on',켬); c.setAttribute('aria-pressed',켬?'true':'false');
+    });
+    const n=상태.선택.size;
+    $('drvPick').hidden=!n;
+    $('drvPickN').textContent=n+'개 선택';
+    if(!저장중){
+      $('drvSave').disabled=!n;
+      $('drvSaveLabel').textContent=n>1?('저장 ('+n+')'):'저장';
+    }
+  }
+
+  /* ---------- 저장 ----------
+     드라이브 파일은 로그인한 사람의 구글 권한으로 직접 받는다(drive.readonly · 처음 한 번 허락 창이 뜬다).
+     여러 개면 개별 파일로 받을지, ZIP 한 파일로 묶을지 묻는다 */
+  let 저장중=false, 토큰값='', 토큰끝=0, 지퍼=null;
+  function 드라이브토큰(){
+    return new Promise(function(풀, 막){
+      if(토큰값&&Date.now()<토큰끝) return 풀(토큰값);
+      const g=window.google&&google.accounts&&google.accounts.oauth2;
+      if(!g) return 막(new Error('구글 로그인 도구를 아직 불러오지 못했어요'));
+      const 손=g.initTokenClient({
+        client_id:window.BAROYAM_AUTH.clientId,
+        scope:'https://www.googleapis.com/auth/drive.readonly',
+        callback:function(답){
+          if(!답||답.error||!답.access_token) return 막(new Error((답&&답.error)||'권한을 받지 못했어요'));
+          토큰값=답.access_token; 토큰끝=Date.now()+(Number(답.expires_in||3600)-60)*1000; 풀(토큰값);
+        },
+        error_callback:function(err){ 막(new Error((err&&err.type)==='popup_closed'?'허락 창이 닫혔어요':'권한을 받지 못했어요')); }
+      });
+      손.requestAccessToken({prompt:''});
+    });
+  }
+  async function 파일받기(r, 토큰){
+    const 답=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.아이디)+'?alt=media&supportsAllDrives=true',
+      {headers:{Authorization:'Bearer '+토큰}});
+    if(!답.ok) throw new Error(r.이름+' ('+답.status+')');
+    return 답.blob();
+  }
+  function 내려주기(blob, 이름){
+    const 주소=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=주소; a.download=이름||'file';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(주소); },60000);
+  }
+  function 지퍼불러오기(){
+    if(window.JSZip) return Promise.resolve(window.JSZip);
+    if(지퍼) return 지퍼;
+    지퍼=new Promise(function(풀, 막){
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=function(){ 풀(window.JSZip); };
+      s.onerror=function(){ 지퍼=null; 막(new Error('압축 도구를 불러오지 못했어요')); };
+      document.head.appendChild(s);
+    });
+    return 지퍼;
+  }
+  function 진행(글){ $('drvSaveLabel').textContent=글; }
+  function 고른줄(){
+    const 표={}; (줄들||[]).forEach(function(r){ 표[r.아이디]=r; });
+    return Array.from(상태.선택).map(function(id){ return 표[id]; }).filter(Boolean);
+  }
+  function 겹침없는이름(쓴이름, 이름){
+    if(!쓴이름[이름]){ 쓴이름[이름]=1; return 이름; }
+    const 점=이름.lastIndexOf('.'), n=++쓴이름[이름];
+    return (점>0?이름.slice(0,점):이름)+' ('+n+')'+(점>0?이름.slice(점):'');
+  }
+  async function 저장하기(방식){
+    const 것들=고른줄(); if(!것들.length||저장중) return;
+    const 토큰P=드라이브토큰();          /* 클릭 순간에 불러야 허락 창이 막히지 않는다 */
+    const 지퍼P=방식==='zip'?지퍼불러오기():null;
+    저장중=true; $('drvSave').disabled=true; 진행('준비 중…');
+    const 실패=[];
+    try{
+      const 토큰=await 토큰P;
+      if(방식==='zip'){
+        const JSZip=await 지퍼P, zip=new JSZip(), 쓴이름={};
+        let 끝=0, 다음=0;
+        const 일꾼=async function(){
+          while(다음<것들.length){
+            const r=것들[다음++];
+            try{ zip.file(겹침없는이름(쓴이름, r.이름||r.아이디), await 파일받기(r,토큰), {binary:true}); }
+            catch(err){ 실패.push(err.message); }
+            진행('받는 중 '+(++끝)+'/'+것들.length);
+          }
+        };
+        await Promise.all([일꾼(),일꾼(),일꾼(),일꾼()]);
+        if(실패.length<것들.length){
+          진행('묶는 중…');
+          const 묶음=await zip.generateAsync({type:'blob',compression:'STORE'});
+          const d=new Date(), 날=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+          내려주기(묶음,'드라이브_'+상태.회사+'_'+날+'_'+(것들.length-실패.length)+'개.zip');
+        }
+      }else{
+        for(let i=0;i<것들.length;i++){
+          진행(것들.length>1?('받는 중 '+(i+1)+'/'+것들.length):'받는 중…');
+          try{ 내려주기(await 파일받기(것들[i],토큰), 것들[i].이름); }
+          catch(err){ 실패.push(err.message); }
+          if(i<것들.length-1) await new Promise(function(r){ setTimeout(r,300); });
+        }
+      }
+      if(실패.length) alert('받지 못한 파일 '+실패.length+'개\n\n'+실패.slice(0,10).join('\n')
+        +(실패.length>10?'\n…':'')+'\n\n구글 문서·시트처럼 드라이브 전용 파일은 열어서 따로 내려받아 주세요.');
+    }catch(err){
+      console.error(err);
+      alert('저장하지 못했어요 · '+err.message);
+    }finally{
+      저장중=false; 선택표시();
+    }
+  }
+  function 저장창(열기){
+    let 창=$('drvSavePop');
+    if(!열기){ if(창) 창.hidden=true; return; }
+    if(!창){
+      창=document.createElement('div'); 창.id='drvSavePop'; 창.className='ui-pop drv-save-pop'; 창.hidden=true;
+      창.innerHTML='<p id="drvSavePopTitle"></p>'
+        + '<button type="button" class="ui-btn soft block" data-save="each">개별 파일로 받기</button>'
+        + '<button type="button" class="ui-btn primary block" data-save="zip">ZIP 한 파일로 받기</button>'
+        + '<small>개별로 받으면 브라우저가 "여러 파일 다운로드"를 허용할지 한 번 묻습니다.</small>';
+      창.addEventListener('click',function(e){
+        const b=e.target.closest('[data-save]'); if(!b) return;
+        저장창(false); 저장하기(b.dataset.save);
+      });
+      document.body.appendChild(창);
+    }
+    $('drvSavePopTitle').textContent=상태.선택.size+'개 파일을 어떻게 받을까요?';
+    창.hidden=false;
+    const 칸=$('drvSave').getBoundingClientRect();
+    창.style.top=(칸.bottom+8)+'px';
+    창.style.left=Math.max(12,Math.min(칸.right-창.offsetWidth,window.innerWidth-창.offsetWidth-12))+'px';
   }
 
   function 안내(굵게, 잔글){
@@ -13894,10 +14071,34 @@ window.baroyamAsk=function(title,body,okText){
   document.addEventListener('DOMContentLoaded',function(){
     const 뿌리=$('view-drive'); if(!뿌리) return;
     뿌리.addEventListener('click',눌림);
+    뿌리.addEventListener('dblclick',function(e){
+      const 카=e.target.closest('.drv-card'); if(카) 열어보기(카.dataset.id);
+    });
+    뿌리.addEventListener('keydown',function(e){
+      const 카=e.target.closest('.drv-card');
+      if(카&&e.key==='Enter'){ e.preventDefault(); 열어보기(카.dataset.id); }
+    });
+    $('drvPickClear').addEventListener('click',function(e){ e.stopPropagation(); 선택해제(); });
+    $('drvSave').addEventListener('click',function(e){
+      e.stopPropagation();
+      if(상태.선택.size>1){ const 창=$('drvSavePop'); 저장창(!(창&&!창.hidden)); }
+      else 저장하기('each');
+    });
+    document.addEventListener('click',function(e){
+      const 창=$('drvSavePop');
+      if(창&&!창.hidden&&!창.contains(e.target)) 저장창(false);
+    });
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Escape'||뿌리.style.display==='none') return;
+      const 창=$('drvSavePop');
+      if(창&&!창.hidden) 저장창(false); else if(상태.선택.size) 선택해제();
+    });
     const 회사탭=$('drvOwner');
     if(회사탭&&window.UI&&window.UI.tabs) window.UI.tabs(회사탭,function(값){
       상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear();
+      상태.선택.clear(); 상태.기준=''; 저장창(false);
       if(줄들) 그리기();
+      선택표시();
     });
     const 찾기=$('drvSearch');
     let 타이머=null;
