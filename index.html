@@ -13967,7 +13967,7 @@ window.baroyamAsk=function(title,body,okText){
       : '';
     const 골랐나=상태.선택.has(r.아이디);
     return '<button type="button" class="drv-card'+(골랐나?' on':'')+'" aria-pressed="'+골랐나+'" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'&#10;한 번: 선택 · 두 번: 크게 보기 · Shift/Ctrl: 여러 개">'
-      + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 9.5 17 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
+      + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 9.5 17 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
       + '<span class="drv-name">'+안전(r.이름)+'</span>'
       + '<span class="drv-sub">'+(회사(r)==='카페이노스'
           ? '<span class="drv-kind">'+안전(종류(r))+'</span>'
