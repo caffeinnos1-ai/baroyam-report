@@ -3207,11 +3207,11 @@ window.BAROYAM_LEAD=(function(){
   .drv-card.on .drv-name{color:var(--btn-soft-ink)}
   /* 선택 표시 · 사진 위에서도 잘 보이게 연두 바탕에 진한 체크, 흰 테두리를 두른다 ·
      고르기 전에도 마우스를 올리면 빈 동그라미가 떠서 고를 수 있다는 것을 알려 준다 */
-  .drv-view{--drv-pick:#9be15d;--drv-pick-ink:#1d3d0a}
+  .drv-view{--drv-pick:#4cb82b;--drv-pick-ink:#fff}
   .drv-check{position:absolute;top:7px;left:7px;z-index:1;width:26px;height:26px;border-radius:99px;box-sizing:border-box;
     display:grid;place-items:center;background:rgba(255,255,255,.55);border:2px solid #fff;color:transparent;
     box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:scale(.8);transition:var(--ui-ease),opacity .15s,transform .15s}
-  .drv-check svg{width:15px;height:15px}
+  .drv-check svg{width:12px;height:12px;display:block;overflow:visible}
   .drv-card:hover .drv-check{opacity:1;transform:none}
   .drv-card.on .drv-check{opacity:1;transform:none;background:var(--drv-pick);color:var(--drv-pick-ink)}
   .drv-pick{flex:none;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:var(--btn-soft-ink)}
@@ -3237,10 +3237,11 @@ window.BAROYAM_LEAD=(function(){
   .drv-lb-top{display:flex;align-items:center;gap:8px;padding:12px 16px;color:#fff}
   .drv-lb-name{flex:1;min-width:0;font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .drv-lb-n{flex:none;font-size:12px;font-weight:700;opacity:.7}
-  .drv-lb-body{flex:1;min-height:0;display:grid;grid-template-columns:60px minmax(0,1fr) 60px;align-items:center;padding:0 6px 18px}
+  .drv-lb-body{flex:1;min-height:0;display:grid;grid-template-columns:60px minmax(0,1fr) 60px;grid-template-rows:minmax(0,1fr);
+    align-items:center;padding:0 6px 18px}
   .drv-lb-body .ui-btn.icon{justify-self:center}
   .drv-lb-stage{height:100%;min-height:0;display:grid;place-items:center}
-  .drv-lb-stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+  .drv-lb-stage img{width:100%;height:100%;object-fit:contain;display:block}
   .drv-lb-stage iframe{width:100%;height:100%;border:0;border-radius:8px;background:#000}
   @media (max-width:820px){ .drv-lb-body{grid-template-columns:40px minmax(0,1fr) 40px} }
   .drv-thumb{width:100%;aspect-ratio:1/1;border-radius:9px;overflow:hidden;background:var(--chip-flat);
@@ -13902,7 +13903,7 @@ window.baroyamAsk=function(title,body,okText){
       : '';
     const 골랐나=상태.선택.has(r.아이디);
     return '<button type="button" class="drv-card'+(골랐나?' on':'')+'" aria-pressed="'+골랐나+'" data-id="'+안전(r.아이디)+'" title="'+안전(r.경로+' / '+r.이름)+'&#10;한 번: 선택 · 두 번: 크게 보기 · Shift/Ctrl: 여러 개">'
-      + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
+      + '<span class="drv-thumb"><span class="drv-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg></span><span class="drv-ext">'+안전(끝.toUpperCase()||'파일')+'</span>'+그림+'</span>'
       + '<span class="drv-name">'+안전(r.이름)+'</span>'
       + '<span class="drv-sub">'+(회사(r)==='카페이노스'
           ? '<span class="drv-kind">'+안전(종류(r))+'</span>'
@@ -14022,9 +14023,11 @@ window.baroyamAsk=function(title,body,okText){
   function 줄선택글(브){ return 줄다골랐나(레인목록[브]||[])?'줄 선택 해제':'이 줄 전체 선택'; }
 
   /* ---------- 고르기 · 한 번 클릭은 선택, 두 번 클릭은 열기 ----------
-     그냥 클릭: 그것 하나만 · Ctrl(⌘): 하나씩 더하고 빼기 · Shift: 마지막으로 고른 것부터 여기까지 */
+     그냥 클릭: 그것 하나만(이미 고른 것을 다시 누르면 취소) · Ctrl(⌘): 하나씩 더하고 빼기 ·
+     Shift: 마지막으로 고른 것부터 여기까지 · 두 번 클릭의 두 번째 클릭은 선택을 건드리지 않는다 */
   function 열어보기(id){ window.open('https://drive.google.com/file/d/'+id+'/view','_blank','noopener'); }
   function 고르기(id, e){
+    if(e.detail>1) return;
     if(e.shiftKey&&상태.기준){
       const 차례=Array.prototype.map.call(document.querySelectorAll('#drvLanes .drv-card'),function(c){ return c.dataset.id; });
       const a=차례.indexOf(상태.기준), b=차례.indexOf(id);
@@ -14035,6 +14038,8 @@ window.baroyamAsk=function(title,body,okText){
     }else if(e.ctrlKey||e.metaKey){
       if(상태.선택.has(id)) 상태.선택.delete(id); else 상태.선택.add(id);
       상태.기준=id;
+    }else if(상태.선택.has(id)){
+      상태.선택.delete(id); if(상태.기준===id) 상태.기준='';
     }else{
       상태.선택.clear(); 상태.선택.add(id); 상태.기준=id;
     }
