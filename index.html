@@ -2345,17 +2345,19 @@ window.BAROYAM_LEAD=(function(){
      판매처 고르기는 왼쪽 사이드탭이 맡는다(예전엔 여기 가로 탭줄, 그 전엔 상단 채널 아이콘 3개였다) */
   .rev-daterow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:18px}
   .rev-daterow-label{font-size:11.5px;font-weight:800;color:var(--mute);letter-spacing:.04em;margin-right:2px}
-  .rev-date-input{box-sizing:border-box;font-family:inherit;font-size:12.5px;font-weight:700;
-    color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;
-    padding:6px 10px;outline:none;transition:border-color .15s}
-  .rev-date-input:focus{border-color:var(--indigo)}
-  .rev-date-sep{font-size:12.5px;font-weight:800;color:var(--mute)}
-  .rev-date-quick{all:unset;box-sizing:border-box;cursor:pointer;font-size:12.5px;font-weight:700;
-    padding:6px 14px;border-radius:999px;color:var(--body);background:var(--paper);
-    border:1.5px solid var(--line);letter-spacing:-.2px;transition:background .15s,color .15s,border-color .15s}
-  .rev-date-quick:hover{border-color:var(--indigo);color:var(--indigo)}
-  .rev-date-quick.active{background:var(--indigo);color:#fff;border-color:var(--indigo)}
-  html[data-theme="dark"] .rev-date-input::-webkit-calendar-picker-indicator{filter:invert(1) opacity(.6)}
+  /* 기간은 이번 주 · 이번 달 칩과 범위 선택(UI.datePicker) 셋만 쓴다 · 범위를 골랐을 때만 범위 단추가 눌린 모양 */
+  #revRangeBtn{height:var(--ui-h-sm)}
+  #revRangeBtn.on{border-color:var(--btn);color:var(--btn-soft-ink);background:var(--btn-soft)}
+  /* 개선 필요 상품 TOP 줄을 누르면 그 상품의 부정 리뷰가 표 아래 펼쳐진다 */
+  #revTopTable tbody tr[data-brand]{cursor:pointer}
+  #revTopTable tbody tr[data-brand]:hover td{background:var(--btn-soft)}
+  #revTopTable tbody tr.on td{background:var(--btn-soft)}
+  .rev-topneg{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .rev-topneg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .rev-topneg-head b{font-size:14px;font-weight:800;color:var(--ink)}
+  .rev-topneg-head span{font-size:12.5px;font-weight:600;color:var(--mute);margin-left:6px}
+  #revTopNegTable td:nth-child(2){text-align:left;min-width:220px}
+  #revTopNegTable th,#revTopNegTable td:not(:nth-child(2)){white-space:nowrap}
   /* 최근 수집 리뷰 안의 브랜드 선택줄 · 고른 판매처에 리뷰가 있는 브랜드만 목록에 나온다 ·
      CSV를 올렸는데 브랜드 열이 없으면 줄 자체가 숨는다 */
   .rev-search{min-width:200px;flex:1;max-width:280px;margin-left:4px}
@@ -5007,13 +5009,11 @@ window.BAROYAM_LEAD=(function(){
           <!-- 판매처 고르기는 왼쪽 사이드탭(#sbReviewSubnav)이 맡는다 · 예전 가로 탭줄은 없앴다 -->
           <div class="rev-daterow" id="revDateRow">
             <span class="rev-daterow-label">기간</span>
-            <input type="date" class="rev-date-input" id="revDateFrom" aria-label="시작일">
-            <span class="rev-date-sep">~</span>
-            <input type="date" class="rev-date-input" id="revDateTo" aria-label="종료일">
-            <button type="button" class="rev-date-quick" data-days="7">최근 7일</button>
-            <button type="button" class="rev-date-quick" data-days="14">최근 14일</button>
-            <button type="button" class="rev-date-quick" data-days="30">최근 30일</button>
-            <button type="button" class="rev-date-quick" data-days="0">전체 기간</button>
+            <div class="ui-chips" id="revDateChips">
+              <button type="button" class="ui-chip" data-preset="week" aria-pressed="true">이번 주</button>
+              <button type="button" class="ui-chip" data-preset="month" aria-pressed="false">이번 달</button>
+            </div>
+            <button type="button" id="revRangeBtn"></button>
           </div>
 
           <div class="panel" id="revDailyPanel" style="margin-top:22px">
@@ -5050,13 +5050,26 @@ window.BAROYAM_LEAD=(function(){
                 <thead><tr><th>순위</th><th>상품브랜드</th><th>부정 리뷰 비율</th><th>부정 리뷰</th><th>평균 별점</th><th>리뷰수</th></tr></thead>
                 <tbody></tbody>
               </table>
+              <!-- 순위표에서 상품을 누르면 그 상품의 부정 리뷰가 여기 펼쳐진다 -->
+              <div class="rev-topneg" id="revTopNeg" hidden>
+                <div class="rev-topneg-head">
+                  <div><b id="revTopNegTitle"></b><span id="revTopNegUnit"></span></div>
+                  <button type="button" class="ui-btn ghost sm" id="revTopNegClose">닫기</button>
+                </div>
+                <table id="revTopNegTable">
+                  <thead><tr><th>채널</th><th>내용</th><th>별점</th><th>수집일</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
             </div>
           </div>
           <script>
           /* 리뷰 CSV 업로드 · 채널,브랜드,내용,별점,수집일 열(또는 같은 뜻의 헤더)을 읽어
              일별 현황 차트와 최근 리뷰 표를 실제 값으로 다시 그린다 ·
              브랜드 열은 없어도 되고, 있으면 그 값으로 상품브랜드 버튼이 만들어진다 */
-          var revState={rows:null, demoRows:null, activePlatform:null, activeBrand:null, dateFrom:null, dateTo:null};
+          /* datePreset · 'week'(처음 값) | 'month' | 'custom' · topBrand · 개선 필요 상품 TOP에서 펼친 상품 */
+          var revState={rows:null, demoRows:null, activePlatform:null, activeBrand:null, dateFrom:null, dateTo:null,
+            datePreset:'week', topBrand:null};
 
           /* 판매처(채널)별 화면 문구 · 탭을 바꾸면 배너 제목/설명과 각 패널 제목이 함께 바뀐다 */
           var REV_CHANNEL_INFO={
@@ -5266,7 +5279,7 @@ window.BAROYAM_LEAD=(function(){
             if(!channelHas&&revState.source==='collector')
               return {head:'아직 수집된 리뷰가 없어요',
                       sub:'통합리뷰수집에서 '+name+' 리뷰를 수집하면 여기에 들어와요'};
-            if(channelHas) return {head:'선택한 기간에 리뷰가 없어요', sub:'기간을 넓히거나 전체 기간을 눌러보세요'};
+            if(channelHas) return {head:'선택한 기간에 리뷰가 없어요', sub:'이번 달이나 범위 선택으로 기간을 넓혀보세요'};
             return {head:'업로드된 데이터 없음', sub:'CSV를 불러와 주세요'};
           }
           function revDayOnly(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
@@ -5604,6 +5617,9 @@ window.BAROYAM_LEAD=(function(){
             var list=pool.slice().sort(function(a,b){
               return (b.negRatio-a.negRatio)||(b.neg-a.neg)||a.name.localeCompare(b.name);
             }).slice(0,REV_TOP_N);
+            /* 기간을 바꿔 펼쳐 둔 상품이 순위에서 빠지면 부정 리뷰 목록도 접는다 */
+            if(revState.topBrand&&!list.some(function(s){return s.name===revState.topBrand})) revState.topBrand=null;
+            renderRevTopNeg(rows);
             if(!list.length){
               unitEl.textContent='표시할 리뷰가 없습니다';
               tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--mute)">선택한 조건에 맞는 리뷰가 없습니다</td></tr>';
@@ -5614,7 +5630,8 @@ window.BAROYAM_LEAD=(function(){
               ' (전체 '+rows.length.toLocaleString()+'건)';
             var max=list[0].negRatio||100;   /* 1위를 꽉 찬 막대로 두고 나머지를 견준다 */
             tbody.innerHTML=list.map(function(s,i){
-              return '<tr><td><span class="rev-rank'+(i<3?' top':'')+'">'+(i+1)+'</span></td>'+
+              return '<tr data-brand="'+revEscapeHtml(s.name)+'"'+(s.name===revState.topBrand?' class="on"':'')+
+                ' title="눌러서 부정 리뷰 보기"><td><span class="rev-rank'+(i<3?' top':'')+'">'+(i+1)+'</span></td>'+
                 '<td>'+revEscapeHtml(s.name)+'</td>'+
                 '<td><div class="rev-negbar"><span class="rev-negbar-track">'+
                   '<span class="rev-negbar-fill" style="display:block;width:'+(s.negRatio/max*100).toFixed(1)+'%"></span>'+
@@ -5623,6 +5640,25 @@ window.BAROYAM_LEAD=(function(){
                 '<td class="rev-stars">'+revStarsHtml(s.avg)+'<span class="rev-avg">'+s.avg.toFixed(1)+'</span></td>'+
                 '<td>'+s.total.toLocaleString()+'개</td></tr>';
             }).join('');
+          }
+          /* 순위표에서 고른 상품의 부정 리뷰 · 지금 기간 안의 것을 최신순으로 모두 보여준다 */
+          function renderRevTopNeg(rows){
+            var box=document.getElementById('revTopNeg');
+            var brand=revState.topBrand;
+            if(!brand){ box.hidden=true; return; }
+            var neg=rows.filter(function(r){return String(r.brand||'').trim()===brand&&r.sentiment==='neg'})
+              .sort(function(a,b){return b.date-a.date});
+            document.getElementById('revTopNegTitle').textContent=brand+' 부정 리뷰';
+            document.getElementById('revTopNegUnit').textContent='최신순 '+neg.length.toLocaleString()+'건';
+            document.querySelector('#revTopNegTable tbody').innerHTML=neg.length
+              ?neg.map(function(r){
+                return '<tr><td>'+revEscapeHtml(r.channel)+'</td>'+
+                  '<td>'+revEscapeHtml(r.content)+'</td>'+
+                  '<td class="rev-stars">'+revStarsHtml(r.rating)+'</td>'+
+                  '<td>'+revFmtMD(r.date)+'</td></tr>';
+              }).join('')
+              :'<tr><td colspan="4" style="text-align:center;color:var(--mute);padding:20px 12px">선택한 기간에 부정 리뷰가 없어요</td></tr>';
+            box.hidden=false;
           }
           /* 배너 색·제목과 각 패널 제목을 선택한 판매처(+브랜드)에 맞춘다 · 카페24는 기본 주황 배너를 그대로 쓴다 */
           function renderRevChrome(showTop){
@@ -5676,20 +5712,40 @@ window.BAROYAM_LEAD=(function(){
             var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');
             return m?new Date(+m[1],+m[2]-1,+m[3]):null;
           }
-          /* 기간 선택줄 · 입력칸을 현재 상태에 맞추고, 데이터가 있는 날짜 밖은 고를 수 없게 한다 */
-          function renderRevDateRow(){
-            var fromEl=document.getElementById('revDateFrom'), toEl=document.getElementById('revDateTo');
-            var range=revDataRange();
-            if(range){
-              fromEl.min=toEl.min=revInputYMD(range.min);
-              fromEl.max=toEl.max=revInputYMD(range.max);
+          /* ---- 기간 · 이번 주 / 이번 달 / 범위 선택 셋만 쓴다 ----
+             이번 주·이번 달은 오늘이 든 달력 주(월~일)·달이다 · 처음 열면 이번 주 ·
+             종료일은 그날 끝(23:59:59)까지 넣어 시각이 붙은 리뷰도 빠지지 않게 한다 */
+          function revEndOfDay(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59,59,999); }
+          function revPresetSpan(k){
+            var t=revDayOnly(new Date());
+            if(k==='month') return {from:new Date(t.getFullYear(),t.getMonth(),1), to:new Date(t.getFullYear(),t.getMonth()+1,0)};
+            var mon=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7));
+            return {from:mon, to:new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+6)};
+          }
+          function revSetDatePreset(k){
+            var sp=revPresetSpan(k);
+            revState.datePreset=k; revState.dateFrom=sp.from; revState.dateTo=revEndOfDay(sp.to);
+          }
+          revSetDatePreset('week');
+          /* 범위 선택 · 초기화 후 적용하면(값 없음) 다시 이번 주로 돌아간다 */
+          var revRangePicker=UI.datePicker(document.getElementById('revRangeBtn'),{
+            mode:'range', placeholder:'범위 선택', presets:['custom'],
+            onChange:function(v){
+              if(!v){ revSetDatePreset('week'); renderRevAll(); return; }
+              revState.datePreset='custom';
+              revState.dateFrom=revParseInputDate(v.start);
+              revState.dateTo=revEndOfDay(revParseInputDate(v.end));
+              renderRevAll();
             }
-            fromEl.value=revState.dateFrom?revInputYMD(revState.dateFrom):'';
-            toEl.value=revState.dateTo?revInputYMD(revState.dateTo):'';
-            var whole=!revState.dateFrom&&!revState.dateTo;
-            document.querySelectorAll('#revDateRow .rev-date-quick').forEach(function(b){
-              b.classList.toggle('active',whole&&b.dataset.days==='0');
+          });
+          /* 칩 두 개와 범위 단추 중 지금 고른 것 하나만 눌린 모양으로 둔다 */
+          function renderRevDateRow(){
+            var custom=revState.datePreset==='custom';
+            document.querySelectorAll('#revDateChips .ui-chip').forEach(function(b){
+              b.setAttribute('aria-pressed',String(b.dataset.preset===revState.datePreset));
             });
+            revRangePicker.set(custom?{start:revInputYMD(revState.dateFrom),end:revInputYMD(revState.dateTo)}:null);
+            document.getElementById('revRangeBtn').classList.toggle('on',custom);
           }
           function revSyncBrand(){
             if(!revState.activeBrand) return;
@@ -5712,29 +5768,23 @@ window.BAROYAM_LEAD=(function(){
             if(showTop) renderRevTopTable(chRows);
             else renderRevRecentTable(revFilteredRows());
           }
-          /* 최근 N일은 오늘이 아니라 데이터의 마지막 날을 기준으로 잡는다(샘플·과거 CSV도 맞게 걸리도록) */
-          document.getElementById('revDateRow').addEventListener('click',function(e){
-            var btn=e.target.closest('.rev-date-quick');
+          document.getElementById('revDateChips').addEventListener('click',function(e){
+            var btn=e.target.closest('.ui-chip');
             if(!btn) return;
-            var days=+btn.dataset.days;
-            if(!days){ revState.dateFrom=null; revState.dateTo=null; renderRevAll(); return; }
-            var range=revDataRange();
-            if(!range) return;
-            var to=range.max;
-            var from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-(days-1));
-            revState.dateFrom=from<range.min?range.min:from;
-            revState.dateTo=to;
+            revSetDatePreset(btn.dataset.preset);
             renderRevAll();
           });
-          ['revDateFrom','revDateTo'].forEach(function(id){
-            document.getElementById(id).addEventListener('change',function(){
-              var from=revParseInputDate(document.getElementById('revDateFrom').value);
-              var to=revParseInputDate(document.getElementById('revDateTo').value);
-              /* 시작일이 종료일보다 뒤면 서로 바꿔서 빈 화면이 나오지 않게 한다 */
-              if(from&&to&&from>to){ var t=from; from=to; to=t; }
-              revState.dateFrom=from; revState.dateTo=to;
-              renderRevAll();
-            });
+          /* 순위표 줄을 누르면 그 상품의 부정 리뷰를 펼치고, 같은 줄을 다시 누르면 접는다 */
+          document.getElementById('revTopTable').addEventListener('click',function(e){
+            var tr=e.target.closest('tr[data-brand]');
+            if(!tr) return;
+            revState.topBrand=revState.topBrand===tr.dataset.brand?null:tr.dataset.brand;
+            renderRevTopTable(revChannelRows());
+            if(revState.topBrand) document.getElementById('revTopNeg').scrollIntoView({behavior:'smooth',block:'nearest'});
+          });
+          document.getElementById('revTopNegClose').addEventListener('click',function(){
+            revState.topBrand=null;
+            renderRevTopTable(revChannelRows());
           });
           document.getElementById('revBrandList').addEventListener('click',function(e){
             var btn=e.target.closest('.rev-brand');
@@ -5764,7 +5814,7 @@ window.BAROYAM_LEAD=(function(){
               revState.rows=result.rows;
               revState.source='csv';
               revState.activeBrand=null;
-              revState.dateFrom=null; revState.dateTo=null;
+              revSetDatePreset('week'); revState.topBrand=null;
               revSetActivePlatform(null);
               var msg=result.rows.length+'개 리뷰를 불러왔습니다.';
               if(result.skipped>0) msg+='\n('+result.skipped+'개 행은 형식 오류로 건너뛰었습니다)';
@@ -5809,8 +5859,8 @@ window.BAROYAM_LEAD=(function(){
           function revUseCollector(store){
             var rows=revCollectorRows(store);
             if(!rows.length) return false;
-            /* 샘플·CSV에서 넘어올 때는 이전 기간 선택이 새 데이터를 가리지 않게 풀어준다 */
-            if(revState.source!=='collector'){ revState.dateFrom=null; revState.dateTo=null; revState.activeBrand=null; }
+            /* 샘플·CSV에서 넘어올 때는 이전 기간 선택을 버리고 이번 주로 되돌린다 */
+            if(revState.source!=='collector'){ revSetDatePreset('week'); revState.activeBrand=null; revState.topBrand=null; }
             revState.rows=rows;
             revState.source='collector';
             return true;
