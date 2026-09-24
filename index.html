@@ -13685,11 +13685,25 @@ window.baroyamAsk=function(title,body,okText){
     return '매장운영';
   }
 
+  /* 왼쪽 줄 갈래 · 바로얌은 브랜드, 카페이노스는 메뉴 분류 폴더(배민-커피,음료 처럼 '판매처-분류')로 나눈다 ·
+     분류 폴더 밖에 있는 파일(매장운영·로고·스피드오븐 등)은 기타 */
+  const 카페분류=['커피&음료','식사&간식','젤라또&빙수&과일','세트','반조리','기타'];
+  function 갈래(r){
+    if(회사(r)!=='카페이노스') return r.브랜드||'회사 공통';
+    const 폴더=String(r.경로||'').split(' / ')[3]||'';
+    const 뒤=폴더.slice(폴더.indexOf('-')+1).split(',').join('&');
+    return 카페분류.indexOf(뒤)>=0?뒤:'기타';
+  }
+  function 갈래순서(이름들, 셈){
+    if(상태.회사==='카페이노스') return 카페분류.filter(function(k){ return 이름들.indexOf(k)>=0; });
+    return 이름들.sort(function(a,b){ return 셈[b]-셈[a]; });
+  }
+
   function 거른줄(건너뛸){
     const 검색=상태.검색.trim().toLowerCase();
     return (줄들||[]).filter(function(r){
       if(회사(r)!==상태.회사) return false;
-      if(건너뛸!=='브랜드'&&상태.브랜드&&(r.브랜드||'회사 공통')!==상태.브랜드) return false;
+      if(건너뛸!=='브랜드'&&상태.브랜드&&갈래(r)!==상태.브랜드) return false;
       if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(종류(r))) return false;
       if(검색){
         const 밭=(r.이름+' '+r.브랜드+' '+r.제품+' '+종류(r)+' '+r.경로).toLowerCase();
@@ -13729,9 +13743,10 @@ window.baroyamAsk=function(title,body,okText){
 
   function 레일(){
     const 바탕=거른줄('브랜드');
-    const 셈={}; 바탕.forEach(function(r){ const k=r.브랜드||'회사 공통'; 셈[k]=(셈[k]||0)+1; });
-    const 이름들=Object.keys(셈).sort(function(a,b){ return 셈[b]-셈[a]; });
-    let h='<div class="drv-rail-cap">브랜드</div>'
+    const 셈={}; 바탕.forEach(function(r){ const k=갈래(r); 셈[k]=(셈[k]||0)+1; });
+    /* 카페이노스는 여섯 분류를 정해진 순서로 늘 둔다 · 0개여도 자리를 지킨다 */
+    const 이름들=상태.회사==='카페이노스'?카페분류:갈래순서(Object.keys(셈),셈);
+    let h='<div class="drv-rail-cap">'+(상태.회사==='카페이노스'?'분류':'브랜드')+'</div>'
       + '<button type="button" class="ui-chip" data-brand="" aria-pressed="'+(상태.브랜드?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
     이름들.forEach(function(k){
       h+='<button type="button" class="ui-chip" data-brand="'+안전(k)+'" aria-pressed="'+(상태.브랜드===k?'true':'false')+'">'
@@ -13743,8 +13758,9 @@ window.baroyamAsk=function(title,body,okText){
   function 레인들(){
     const 보임=거른줄('');
     const 묶음={};
-    보임.forEach(function(r){ const k=r.브랜드||'회사 공통'; (묶음[k]=묶음[k]||[]).push(r); });
-    const 이름들=Object.keys(묶음).sort(function(a,b){ return 묶음[b].length-묶음[a].length; });
+    보임.forEach(function(r){ const k=갈래(r); (묶음[k]=묶음[k]||[]).push(r); });
+    const 셈={}; Object.keys(묶음).forEach(function(k){ 셈[k]=묶음[k].length; });
+    const 이름들=갈래순서(Object.keys(묶음),셈);
     if(!이름들.length){
       $('drvLanes').innerHTML='<div class="drive-empty"><b>해당하는 자산이 없어요</b>'
         + '<span>검색어나 걸러 둔 조건을 바꿔 보세요</span></div>';
