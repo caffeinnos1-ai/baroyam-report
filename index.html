@@ -3108,16 +3108,33 @@ window.BAROYAM_LEAD=(function(){
   .acc-head h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
   .acc-head .n{font-size:12px;font-weight:700;color:var(--mute)}
   .acc-head .acc-head-tools{margin-left:auto;display:flex;gap:4px}
-  .acc-list{display:flex;flex-direction:column;gap:6px}
-  .acc-row{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
-  .acc-row-main{flex:1;min-width:0}
-  .acc-row-name{font-size:13.5px;font-weight:800;color:var(--ink);text-decoration:none;word-break:break-all}
-  a.acc-row-name:hover{color:var(--btn-soft-ink);text-decoration:underline}
-  .acc-row-sub{margin-top:3px;font-size:12px;font-weight:600;color:var(--body);display:flex;flex-wrap:wrap;gap:4px 10px}
-  .acc-row-sub span{min-width:0;word-break:break-all}
-  .acc-row-sub i{font-style:normal;color:var(--mute)}
-  .acc-row-memo{margin-top:4px;font-size:12px;color:var(--mute);white-space:pre-wrap;word-break:break-all}
-  .acc-row-tools{display:flex;gap:2px;flex:none}
+  .acc-list{display:flex;flex-direction:column;gap:8px}
+  /* 계정 한 줄 · 왼쪽 긴 링크 버튼 + 오른쪽 계정정보 버튼이 한 덩어리로 붙는다 */
+  .acc-item{min-width:0}
+  .acc-item-bar{display:flex;min-width:0}
+  .acc-item-bar .ui-btn{height:48px}
+  .acc-go{flex:1;min-width:0;justify-content:flex-start;gap:10px;padding:0 14px 0 8px;
+    border-top-right-radius:0;border-bottom-right-radius:0;text-decoration:none}
+  .acc-go:hover{background:var(--btn-soft)}
+  .acc-go-ini{flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:var(--btn-soft);color:var(--btn-soft-ink);font-size:14px;font-weight:800}
+  .acc-go:hover .acc-go-ini{background:var(--btn);color:#fff}
+  .acc-go-name{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:800;color:var(--ink)}
+  .acc-go-host{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:600;color:var(--mute)}
+  .acc-go .acc-go-arrow{margin-left:auto;color:var(--mute)}
+  .acc-go:hover .acc-go-arrow{color:var(--btn)}
+  .acc-info-btn{flex:none;border-top-left-radius:0;border-bottom-left-radius:0;padding:0 14px;margin-left:-1px}
+  .acc-info-btn svg{transition:transform .15s}
+  .acc-info-btn[aria-expanded="true"]{background:var(--btn);color:#fff}
+  .acc-info-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+  .acc-info{margin-top:4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--chip-flat);
+    display:flex;flex-direction:column;gap:6px}
+  .acc-info-line{display:flex;align-items:center;gap:10px;min-height:26px;font-size:12.5px}
+  .acc-info-line i{flex:none;width:52px;font-style:normal;font-weight:700;color:var(--mute)}
+  .acc-info-line b{flex:1;min-width:0;font-weight:700;color:var(--ink);word-break:break-all}
+  .acc-info-line b.memo{font-weight:600;color:var(--body);white-space:pre-wrap}
+  .acc-info-line b.none{font-weight:600;color:var(--mute)}
+  .acc-info-tools{justify-content:flex-end;padding-top:4px;border-top:1px solid var(--line)}
   .acc-empty{padding:18px 8px;text-align:center;font-size:12.5px;font-weight:600;color:var(--mute);
     border:1.5px dashed var(--line);border-radius:12px}
   .acc-form{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px;border-radius:12px;background:var(--chip-flat)}
@@ -14153,6 +14170,7 @@ window.baroyamAsk=function(title,body,okText){
     ]
   };
   let 자료=null, 읽는중=false, 여는칸='', 고치는줄='';
+  const 펼친줄=new Set();     /* '계정정보'를 펼쳐 둔 줄 · 이 브라우저에서만 기억한다 */
   const $=function(id){ return document.getElementById(id); };
   function 안전(v){ return String(v==null?'':v)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -14189,27 +14207,40 @@ window.baroyamAsk=function(title,body,okText){
   const 아이콘={
     edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16Z"/></svg>',
     del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>',
-    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    go:'<svg class="acc-go-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M10 14 19 5M19 14v5H5V5h5"/></svg>',
+    chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>'
   };
 
+  function 호스트(u){ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return ''; } }
+  /* 계정 한 줄 · 왼쪽 긴 버튼은 그 서비스로 바로 들어가는 링크, 오른쪽 '계정정보'는 아래로 정보를 펼친다 */
   function 줄(g,it){
     const 링크=주소(it.url);
-    const 이름=링크
-      ?'<a class="acc-row-name" href="'+안전(링크)+'" target="_blank" rel="noopener noreferrer">'+안전(it.service)+'</a>'
-      :'<span class="acc-row-name">'+안전(it.service)+'</span>';
-    const 부=[];
-    if(it.loginId) 부.push('<span><i>아이디</i> '+안전(it.loginId)+'</span>');
-    if(it.owner) 부.push('<span><i>담당</i> '+안전(it.owner)+'</span>');
-    if(it.pwWhere) 부.push('<span><i>비밀번호</i> '+안전(it.pwWhere)+'</span>');
-    return '<div class="acc-row">'+
-      '<div class="acc-row-main">'+이름+
-        (부.length?'<div class="acc-row-sub">'+부.join('')+'</div>':'')+
-        (it.memo?'<div class="acc-row-memo">'+안전(it.memo)+'</div>':'')+
+    const 속=' data-g="'+안전(g.id)+'" data-i="'+안전(it.id)+'"';
+    const 펼침=펼친줄.has(it.id);
+    const 머리='<span class="acc-go-ini" aria-hidden="true">'+안전(String(it.service||'?').trim().charAt(0))+'</span>'+
+      '<span class="acc-go-name">'+안전(it.service)+'</span>'+
+      '<span class="acc-go-host">'+(링크?안전(호스트(링크)):'주소 없음')+'</span>';
+    const 왼쪽=링크
+      ?'<a class="ui-btn acc-go" href="'+안전(링크)+'" target="_blank" rel="noopener noreferrer" title="'+안전(it.service)+' 열기 (새 탭)">'+머리+아이콘.go+'</a>'
+      :'<button type="button" class="ui-btn acc-go" data-act="edit"'+속+' title="로그인 주소를 넣으면 바로 들어갈 수 있어요">'+머리+'</button>';
+    const 칸=[];
+    if(it.loginId) 칸.push('<div class="acc-info-line"><i>아이디</i><b>'+안전(it.loginId)+'</b>'+
+      '<button type="button" class="ui-btn sm ghost" data-act="copy" data-v="'+안전(it.loginId)+'">복사</button></div>');
+    if(it.owner) 칸.push('<div class="acc-info-line"><i>담당</i><b>'+안전(it.owner)+'</b></div>');
+    if(it.pwWhere) 칸.push('<div class="acc-info-line"><i>비밀번호</i><b>'+안전(it.pwWhere)+'</b></div>');
+    if(it.memo) 칸.push('<div class="acc-info-line"><i>메모</i><b class="memo">'+안전(it.memo)+'</b></div>');
+    if(!칸.length) 칸.push('<div class="acc-info-line"><b class="none">적어 둔 정보가 없어요</b></div>');
+    return '<div class="acc-item">'+
+      '<div class="acc-item-bar">'+왼쪽+
+        '<button type="button" class="ui-btn soft acc-info-btn" data-act="info"'+속+' aria-expanded="'+펼침+'">계정정보'+아이콘.chev+'</button>'+
       '</div>'+
-      '<div class="acc-row-tools">'+
-        '<button type="button" class="ui-btn sm ghost icon" data-act="edit" data-g="'+안전(g.id)+'" data-i="'+안전(it.id)+'" title="고치기" aria-label="고치기">'+아이콘.edit+'</button>'+
-        '<button type="button" class="ui-btn sm ghost icon" data-act="del" data-g="'+안전(g.id)+'" data-i="'+안전(it.id)+'" title="지우기" aria-label="지우기">'+아이콘.del+'</button>'+
-      '</div></div>';
+      (펼침?'<div class="acc-info">'+칸.join('')+
+        '<div class="ui-btn-row acc-info-tools">'+
+          '<button type="button" class="ui-btn sm ghost" data-act="edit"'+속+'>'+아이콘.edit+'고치기</button>'+
+          '<button type="button" class="ui-btn sm danger" data-act="del"'+속+'>'+아이콘.del+'지우기</button>'+
+        '</div></div>':'')+
+    '</div>';
   }
   function 입력칸(g,it){
     it=it||{};
@@ -14246,7 +14277,7 @@ window.baroyamAsk=function(title,body,okText){
           :'<div class="acc-empty">아직 계정이 없어요</div>')+
       '</div>'+
       (여는칸===g.id&&!편집중?입력칸(g):'')+
-      '<button type="button" class="ui-btn sm soft block acc-add" data-act="open" data-g="'+안전(g.id)+'"'+(여는칸===g.id||편집중?' hidden':'')+'>'+아이콘.plus+'계정 추가</button>'+
+      '<button type="button" class="ui-btn ghost block acc-add" data-act="open" data-g="'+안전(g.id)+'"'+(여는칸===g.id||편집중?' hidden':'')+'>'+아이콘.plus+'계정 추가</button>'+
     '</div>';
   }
   function 그리기(){
@@ -14276,6 +14307,13 @@ window.baroyamAsk=function(title,body,okText){
     if(act==='open'){ 여는칸=gid; 고치는줄=''; 그리기(); }
     else if(act==='cancel'){ 여는칸=''; 고치는줄=''; 그리기(); }
     else if(act==='edit'){ 고치는줄=iid; 여는칸=''; 그리기(); }
+    else if(act==='info'){ if(펼친줄.has(iid)) 펼친줄.delete(iid); else 펼친줄.add(iid); 그리기(); }
+    else if(act==='copy'){
+      const v=b.dataset.v, 원래=b.textContent;
+      (navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){
+        b.textContent='복사됨'; setTimeout(function(){ b.textContent=원래; },1200);
+      }).catch(function(){ prompt('아이디를 복사해 주세요',v); });
+    }
     else if(act==='pick'){
       const f=b.closest('form');
       f.service.value=b.dataset.name;
