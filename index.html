@@ -3100,6 +3100,13 @@ window.BAROYAM_LEAD=(function(){
   /* 계정관리 · 구역마다 네모 상자 하나, 상자 안에 계정 줄 · 추가 칸은 상자 안에서 펼친다 */
   .acc-view{padding:0 0 16px}   /* 넓게 보기(view-is-wide) · 드라이브처럼 .section 좌우 여백 없이 꽉 채운다 */
   .acc-bar{display:flex;align-items:center;gap:10px;margin-top:18px}
+  .plan-hero .acc-hero-set{position:absolute;top:24px;right:24px}
+  .acc-set{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--paper);
+    display:flex;flex-direction:column;gap:12px}
+  .acc-set[hidden]{display:none}
+  .acc-set-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+  .acc-set-head b{font-size:14px;font-weight:800;color:var(--ink)}
+  .acc-set-head span{font-size:12.5px;font-weight:600;color:var(--mute)}
   .acc-meta{font-size:12.5px;font-weight:600;color:var(--mute)}
   .acc-bar .ui-btn{margin-left:auto}
   .acc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:16px;margin-top:12px;align-items:start}
@@ -6124,7 +6131,25 @@ window.BAROYAM_LEAD=(function(){
           <div class="plan-hero">
             <div class="ptag">ACCOUNT</div>
             <div class="ptitle">계정관리</div>
-            <p class="psub">회사에서 쓰는 계정을 구역별로 모아 둡니다 · 비밀번호는 적지 말고 보관 위치만 남겨 주세요</p>
+            <p class="psub">회사에서 쓰는 계정을 구역별로 모아 둡니다 · 왼쪽을 누르면 바로 들어가고, 계정정보에서 아이디·비밀번호를 복사합니다</p>
+            <!-- 설정 · 계정 추가/수정 칸에 띄울 로고만 고른다 -->
+            <button type="button" class="ui-btn sm acc-hero-set" id="accSetBtn" aria-expanded="false" aria-controls="accSet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+              설정
+            </button>
+          </div>
+          <div class="acc-set" id="accSet" hidden>
+            <div class="acc-set-head">
+              <b>로고 설정</b>
+              <span>계정을 추가·수정할 때 고를 수 있게 띄울 로고를 켜 주세요</span>
+            </div>
+            <div class="ui-chips" id="accSetLogos"></div>
+            <div class="ui-btn-row acc-set-tools">
+              <button type="button" class="ui-btn sm ghost" id="accSetAll">모두 켜기</button>
+              <button type="button" class="ui-btn sm ghost" id="accSetNone">모두 끄기</button>
+              <button type="button" class="ui-btn sm ghost" id="accSetCancel" style="margin-left:auto">취소</button>
+              <button type="button" class="ui-btn sm primary" id="accSetSave">저장</button>
+            </div>
           </div>
           <div class="acc-bar">
             <span class="acc-meta" id="accMeta"></span>
@@ -14495,6 +14520,9 @@ window.baroyamAsk=function(title,body,okText){
     ['notion','노션','notion.so']
   ];
   function 파비콘(도메인){ return 'https://www.google.com/s2/favicons?domain='+encodeURIComponent(도메인)+'&sz=64'; }
+  /* 설정을 한 번도 안 했을 때 띄우는 로고 */
+  const 기본로고=['naver','google','11st','toss','coupang','kakao','baemin','coupangeats'];
+  function 켠로고(){ return (자료&&Array.isArray(자료.logos))?자료.logos:기본로고; }
   function 로고주소(it){
     if(it.logo==='none') return '';
     const 고른=로고.find(function(l){ return l[0]===it.logo; });
@@ -14514,9 +14542,11 @@ window.baroyamAsk=function(title,body,okText){
   function 다듬기(v){
     if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
     const 구역=(v&&Array.isArray(v.groups))?v.groups:[];
-    if(!구역.length) return {groups:기본구역.map(function(g){ return {id:g.id,name:g.name,items:[]}; })};
+    /* logos · 설정에서 켠 로고 열쇠 목록 · 아직 고른 적이 없으면 없는 채로 두고 기본 로고를 쓴다 */
+    const 켠로고=(v&&Array.isArray(v.logos))?v.logos:undefined;
+    if(!구역.length) return {groups:기본구역.map(function(g){ return {id:g.id,name:g.name,items:[]}; }),logos:켠로고};
     구역.forEach(function(g){ if(!Array.isArray(g.items)) g.items=[]; });
-    return {groups:구역};
+    return {groups:구역,logos:켠로고};
   }
   /* 못 읽으면 null · 칸이 아직 없을 때만 기본 구역으로 시작한다 */
   async function 읽기(){
@@ -14556,7 +14586,7 @@ window.baroyamAsk=function(title,body,okText){
     const 머리='<span class="acc-go-ini" aria-hidden="true">'+안전(String(it.service||'?').trim().charAt(0))+
         (그림?'<img src="'+안전(그림)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</span>'+
       '<span class="acc-go-name">'+안전(it.service)+'</span>'+
-      '<span class="acc-go-host">'+(링크?안전(호스트(링크)):'주소 없음')+'</span>';
+      (링크?'':'<span class="acc-go-host">주소 없음</span>');
     const 왼쪽=링크
       ?'<a class="ui-btn acc-go" href="'+안전(링크)+'" target="_blank" rel="noopener noreferrer" title="'+안전(it.service)+' 열기 (새 탭)">'+머리+아이콘.go+'</a>'
       :'<button type="button" class="ui-btn acc-go" data-act="edit"'+속+' title="로그인 주소를 넣으면 바로 들어갈 수 있어요">'+머리+'</button>';
@@ -14598,7 +14628,10 @@ window.baroyamAsk=function(title,body,okText){
       '<div class="acc-form-cap">로고</div>'+
       '<input type="hidden" name="logo" value="'+안전(it.logo||'')+'">'+
       '<div class="ui-chips acc-logos">'+
-        [['','자동',''],['none','글자','']].concat(로고).map(function(l){
+        [['','자동',''],['none','글자','']].concat(로고.filter(function(l){
+          /* 설정에서 켠 로고만 · 고치는 계정이 이미 쓰는 로고는 꺼져 있어도 남긴다 */
+          return 켠로고().indexOf(l[0])>=0||l[0]===it.logo;
+        })).map(function(l){
           return '<button type="button" class="ui-chip acc-logo-chip" data-act="logo" data-logo="'+l[0]+'" aria-pressed="'+((it.logo||'')===l[0])+'">'+
             (l[2]?'<img src="'+안전(파비콘(l[2]))+'" alt="" loading="lazy" onerror="this.remove()">':'')+안전(l[1])+'</button>';
         }).join('')+
@@ -14735,6 +14768,33 @@ window.baroyamAsk=function(title,body,okText){
       else g.items.push(Object.assign({id:새id()},값));
     });
   });
+  /* 로고 설정 · 배너의 설정 버튼으로 연다 · 저장을 눌러야 서버에 담는다 */
+  const 설정={창:$('accSet'),단추:$('accSetBtn'),칩:$('accSetLogos')};
+  function 설정그리기(켠){
+    설정.칩.innerHTML=로고.map(function(l){
+      return '<button type="button" class="ui-chip acc-logo-chip" data-logo="'+l[0]+'" aria-pressed="'+(켠.indexOf(l[0])>=0)+'">'+
+        '<img src="'+안전(파비콘(l[2]))+'" alt="" loading="lazy" onerror="this.remove()">'+안전(l[1])+'</button>';
+    }).join('');
+  }
+  function 설정열기(열){
+    설정.창.hidden=!열;
+    설정.단추.setAttribute('aria-expanded',String(열));
+    if(열) 설정그리기(켠로고());
+  }
+  설정.단추.addEventListener('click',function(){ 설정열기(설정.창.hidden); });
+  설정.칩.addEventListener('click',function(e){
+    const c=e.target.closest('.ui-chip'); if(!c) return;
+    c.setAttribute('aria-pressed',String(c.getAttribute('aria-pressed')!=='true'));
+  });
+  $('accSetAll').addEventListener('click',function(){ 설정그리기(로고.map(function(l){ return l[0]; })); });
+  $('accSetNone').addEventListener('click',function(){ 설정그리기([]); });
+  $('accSetCancel').addEventListener('click',function(){ 설정열기(false); });
+  $('accSetSave').addEventListener('click',function(){
+    const 켠=[].map.call(설정.칩.querySelectorAll('.ui-chip[aria-pressed="true"]'),function(c){ return c.dataset.logo; });
+    설정열기(false);
+    바꾸기(function(d){ d.logos=켠; });
+  });
+
   $('accAddGroup').addEventListener('click',function(){
     const 이름=prompt('새 구역 이름'); if(!이름||!이름.trim()) return;
     바꾸기(function(d){ d.groups.push({id:'g'+새id(),name:이름.trim(),items:[]}); });
