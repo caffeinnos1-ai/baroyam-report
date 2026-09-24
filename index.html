@@ -723,6 +723,92 @@ window.BAROYAM_LEAD=(function(){
   return {ROLE,isLeadRole,isOn,grant,clear};
 })();
 
+/* 사이드바 메뉴 권한 · 관리자 설정>권한설정에서 팀장이 회원마다 사이드바에 보일 메뉴를 정한다 ·
+   저장은 {map:{회원id:[숨길 메뉴 key…]},updatedAt} 한 덩어리로 이 브라우저와 시트('sidebarAccess')에 둔다 ·
+   아직 정하지 않은 회원은 예전 규칙을 그대로 따른다 — 판매채널만 관리자에게 보이고 나머지는 모두 보인다 ·
+   마이홈은 첫 화면이라 끌 수 없다 · 화면을 가리는 수준의 잠금이다 */
+window.BAROYAM_ACCESS=(function(){
+  const LS_KEY='baroyam_sidebar_access_v1', SHEET_KEY='sidebarAccess';
+  /* 사이드바 순서 그대로 · sel은 사이드바에서 그 메뉴를 가리키는 자리, views는 그 메뉴가 여는 화면 */
+  const MENUS=[
+    {k:'project',   name:'프로젝트',     sel:'.sidebar .sb-item[data-view="project"]', views:['project']},
+    {k:'channel',   name:'판매채널',     sel:'#sbChannelGroup',                        views:['channel']},
+    {k:'sales',     name:'매출데이터',   sel:'#sbSalesToggle',                         views:['week','month']},
+    {k:'goal',      name:'목표설정',     sel:'.sidebar .sb-item[data-view="goal"]',    views:['goal']},
+    {k:'agenda',    name:'회의안건',     sel:'.sidebar .sb-item[data-view="agenda"]',  views:['agenda']},
+    {k:'trend',     name:'트렌드분석',   sel:'.sidebar .sb-item[data-view="trend"]',   views:['trend']},
+    {k:'review',    name:'리뷰수집',     sel:'.sidebar .sb-item[data-view="review"]',  views:['review','collector']},
+    {k:'drive',     name:'드라이브',     sel:'.sidebar .sb-item[data-view="drive"]',   views:['drive']},
+    {k:'account',   name:'계정관리',     sel:'.sidebar .sb-item[data-view="account"]', views:['account']},
+    {k:'manual',    name:'메뉴얼가이드', sel:'.sidebar .sb-item[data-view="manual"]',  views:['manual']},
+    {k:'automation',name:'자동화',       sel:'#sbAutomationLink',                      views:[]},
+  ];
+  function readBox(){
+    try{
+      const o=JSON.parse(localStorage.getItem(LS_KEY)||'null');
+      if(o&&typeof o==='object'&&o.map&&typeof o.map==='object') return {map:o.map,updatedAt:+o.updatedAt||0};
+    }catch(e){}
+    return {map:{},updatedAt:0};
+  }
+  function writeBox(box){ try{ localStorage.setItem(LS_KEY,JSON.stringify(box)); }catch(e){} }
+  function changed(){ document.dispatchEvent(new CustomEvent('baroyam:access')); }
+  function apiUrl(){ try{ return typeof AGENDA_API_URL==='string'?AGENDA_API_URL:''; }catch(e){ return ''; } }
+  let pushTimer=null;
+  function push(box){
+    if(!/^https:/.test(apiUrl())) return;
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(()=>{
+      window.baroyamSaveSetting(SHEET_KEY,JSON.stringify(box)).catch(err=>console.error(err));
+    },700);
+  }
+  function isSet(id){ return !!(id&&Array.isArray(readBox().map[id])); }
+  /* 정하지 않은 회원의 기본값 · 판매채널은 팀장 역할에게만 켠다 */
+  function defaults(id){
+    return window.BAROYAM_LEAD.isLeadRole(id)?[]:['channel'];
+  }
+  function hiddenFor(id){
+    const list=readBox().map[id];
+    return Array.isArray(list)?list.slice():defaults(id);
+  }
+  function setHidden(id,list){
+    if(!id) return;
+    const box=readBox();
+    box.map[id]=[...new Set(list)].filter(k=>MENUS.some(m=>m.k===k));
+    box.updatedAt=Date.now();
+    writeBox(box); push(box); changed();
+  }
+  /* 되돌리기 · 그 회원을 "정하지 않음"으로 돌려 예전 규칙을 따르게 한다 */
+  function reset(id){
+    const box=readBox();
+    if(!(id in box.map)) return;
+    delete box.map[id];
+    box.updatedAt=Date.now();
+    writeBox(box); push(box); changed();
+  }
+  /* 지금 이 브라우저의 회원이 그 메뉴를 볼 수 있는지 ·
+     정하지 않은 회원(또는 회원을 아직 안 고른 상태)은 판매채널만 관리자 모드에서 보인다 */
+  function allows(k){
+    if(!k) return true;
+    const id=window.BAROYAM_PROFILES.meId();
+    if(isSet(id)) return readBox().map[id].indexOf(k)<0;
+    if(k==='channel'){ const AM=window.baroyamAdminMode; return !!(AM&&AM.isOn()); }
+    return true;
+  }
+  function keyOfView(v){ const m=MENUS.find(x=>x.views.indexOf(v)>=0); return m?m.k:''; }
+  function allowsView(v){ return allows(keyOfView(v)); }
+  function applyRemote(settings){
+    if(!settings||!settings[SHEET_KEY]) return;
+    try{
+      const r=JSON.parse(settings[SHEET_KEY]);
+      if(r&&r.map&&typeof r.map==='object'&&(+r.updatedAt||0)>readBox().updatedAt){
+        writeBox({map:r.map,updatedAt:+r.updatedAt||0});
+        changed();
+      }
+    }catch(err){ console.error(err); }
+  }
+  return {MENUS,isSet,hiddenFor,setHidden,reset,allows,allowsView,keyOfView,applyRemote};
+})();
+
 (async function(){
   const A=window.BAROYAM_AUTH, root=document.documentElement;
   /* 로그인 상태는 Supabase 세션 하나로만 판단한다.
@@ -2993,6 +3079,19 @@ window.BAROYAM_LEAD=(function(){
   .wf-meta a:hover{text-decoration:underline}
   .wf-checked{font-size:11.5px;font-weight:600;color:var(--mute)}
 
+  /* 관리자 설정 · 권한설정(회원별 사이드바 메뉴 보이기) · 부품은 ui-chip·ui-btn 을 쓴다 */
+  .settings-view[data-settings-panel="access"]{height:auto}
+  .ax-manager{display:flex;flex-direction:column;gap:14px}
+  .ax-box{border:1px solid var(--line);border-radius:14px;padding:14px 15px;display:flex;flex-direction:column;gap:12px}
+  .ax-box[hidden]{display:none}
+  .ax-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+  .ax-title{font-size:14px;font-weight:800;color:var(--ink)}
+  .ax-title small{margin-left:6px;font-size:11.5px;font-weight:700;color:var(--mute)}
+  .ax-actions{display:flex;flex-wrap:wrap;gap:6px}
+  .ax-note{font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.5}
+  /* 권한에서 끈 사이드바 메뉴 · sb-item 은 all:unset 이라 hidden 만으로는 숨지 않는다 */
+  .sidebar .is-access-off{display:none!important}
+
   /* 설정 · 메뉴얼가이드 목차(중분류/항목) 추가·이름수정·삭제 */
   .settings-view[data-settings-panel="manual"]{height:auto}
   .mg-manager{display:flex;flex-direction:column;gap:12px}
@@ -4255,6 +4354,10 @@ window.BAROYAM_LEAD=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7.2l8.3 8.3a1.6 1.6 0 0 1 0 2.3l-4.9 4.9a1.6 1.6 0 0 1-2.3 0L4 11.2V4Z"/><circle cx="8.5" cy="8.5" r="1.3"/></svg>
               <span>카테고리설정</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="access" id="accSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 14.6v2.2"/></svg>
+              <span>권한설정</span>
+            </button>
             <button class="mini-sb-item" type="button" data-settings-view="manual" id="mgSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
               <span>메뉴얼가이드설정</span>
@@ -4283,6 +4386,24 @@ window.BAROYAM_LEAD=(function(){
                   <button type="submit">추가</button>
                 </form>
                 <div class="member-list" id="categoryList"></div>
+              </div>
+            </section>
+            <section class="settings-view" data-settings-panel="access" hidden>
+              <div class="ax-manager">
+                <p class="mg-hint">회원을 고른 뒤, 그 회원의 사이드바에 보일 메뉴만 켜 두세요. 바꾼 권한은 구글시트에 저장돼 다른 PC에도 반영됩니다. 마이홈은 항상 보여요.</p>
+                <div class="ui-chips" id="axMembers" role="group" aria-label="회원 고르기"></div>
+                <div class="ax-box" id="axBox">
+                  <div class="ax-head">
+                    <div class="ax-title" id="axTitle"></div>
+                    <div class="ax-actions">
+                      <button type="button" class="ui-btn sm ghost" id="axAllOn">모두 보이기</button>
+                      <button type="button" class="ui-btn sm ghost" id="axAllOff">모두 숨기기</button>
+                      <button type="button" class="ui-btn sm ghost" id="axReset">기본값으로</button>
+                    </div>
+                  </div>
+                  <div class="ui-chips" id="axMenus" role="group" aria-label="보일 메뉴"></div>
+                  <p class="ax-note" id="axNote"></p>
+                </div>
               </div>
             </section>
             <section class="settings-view" data-settings-panel="manual" hidden>
@@ -8092,6 +8213,84 @@ window.CsGuide=(function(){
   render();
 })();
 
+/* 권한설정 · 회원마다 사이드바에 보일 메뉴를 켜고 끈다 · 값은 BAROYAM_ACCESS 가 담고 시트에 올린다 ·
+   아래 syncSidebar 가 지금 회원 기준으로 사이드바 메뉴를 실제로 숨긴다 */
+(function(){
+  const ACC=window.BAROYAM_ACCESS, MEM=window.BAROYAM_MEMBERS, P=window.BAROYAM_PROFILES;
+  const membersEl=document.getElementById('axMembers');
+  const box=document.getElementById('axBox');
+  const titleEl=document.getElementById('axTitle');
+  const menusEl=document.getElementById('axMenus');
+  const noteEl=document.getElementById('axNote');
+  if(!ACC||!membersEl||!box) return;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let sel='';
+
+  function render(){
+    const members=MEM.load();
+    if(!members.some(m=>m.id===sel)) sel=(members[0]&&members[0].id)||'';
+    membersEl.innerHTML=members.length
+      ? members.map(m=>{
+          const off=ACC.hiddenFor(m.id).length;
+          return `<button type="button" class="ui-chip" data-id="${esc(m.id)}" aria-pressed="${m.id===sel}">`+
+            `${esc(m.name)}${off?` <b>${off}개 숨김</b>`:''}</button>`;
+        }).join('')
+      : '<div class="member-list-empty">등록된 회원이 없어요. 회원설정에서 먼저 회원을 추가해 주세요.</div>';
+    box.hidden=!sel;
+    if(!sel) return;
+    const m=MEM.byId(sel), hidden=ACC.hiddenFor(sel), custom=ACC.isSet(sel);
+    const role=P.get(sel).role;
+    titleEl.innerHTML=esc(m?m.name:'')+(role?`<small>${esc(role)}</small>`:'')+`<small>${custom?'직접 정함':'기본값'}</small>`;
+    menusEl.innerHTML=ACC.MENUS.map(x=>
+      `<button type="button" class="ui-chip" data-k="${x.k}" aria-pressed="${hidden.indexOf(x.k)<0}">${esc(x.name)}</button>`
+    ).join('');
+    noteEl.textContent=custom
+      ? '켜진 메뉴만 이 회원의 사이드바에 보여요. 꺼진 메뉴의 화면은 검색으로도 열리지 않아요.'
+      : '아직 정하지 않은 회원이에요. 기본값은 판매채널만 관리자에게 보이고 나머지는 모두 보여요. 메뉴를 누르면 이 회원 권한으로 저장돼요.';
+    document.getElementById('axReset').disabled=!custom;
+  }
+
+  membersEl.addEventListener('click',e=>{
+    const b=e.target.closest('.ui-chip[data-id]');
+    if(!b) return;
+    sel=b.dataset.id; render();
+  });
+  menusEl.addEventListener('click',e=>{
+    const b=e.target.closest('.ui-chip[data-k]');
+    if(!b||!sel) return;
+    const k=b.dataset.k, hidden=ACC.hiddenFor(sel), i=hidden.indexOf(k);
+    if(i>=0) hidden.splice(i,1); else hidden.push(k);
+    ACC.setHidden(sel,hidden);   /* baroyam:access 로 다시 그려진다 */
+  });
+  document.getElementById('axAllOn').addEventListener('click',()=>{ if(sel) ACC.setHidden(sel,[]); });
+  document.getElementById('axAllOff').addEventListener('click',()=>{ if(sel) ACC.setHidden(sel,ACC.MENUS.map(x=>x.k)); });
+  document.getElementById('axReset').addEventListener('click',()=>{ if(sel) ACC.reset(sel); });
+  document.addEventListener('baroyam:access',render);
+  document.addEventListener('baroyam:members',render);
+  document.addEventListener('baroyam:profiles',render);
+  document.getElementById('accSettingsTab').addEventListener('click',render);
+
+  /* 사이드바에 적용 · 판매채널은 판매채널 묶음 쪽 코드가 따로 숨기고 화면도 돌려보낸다 */
+  function syncSidebar(){
+    ACC.MENUS.forEach(x=>{
+      if(x.k==='channel') return;
+      const el=document.querySelector(x.sel);
+      if(el) el.classList.toggle('is-access-off',!ACC.allows(x.k));
+    });
+    /* 보고 있던 화면의 메뉴가 꺼졌으면 마이홈으로 보낸다 · 하위 메뉴(리뷰수집·메뉴얼가이드)도 같이 닫히게 버튼을 누른다 */
+    const v=window.baroyamCurrentView;
+    if(v&&!ACC.allowsView(v)){
+      const home=document.querySelector('.sb-item[data-view="home"]');
+      if(home) home.click();
+    }
+  }
+  syncSidebar();
+  document.addEventListener('baroyam:access',syncSidebar);
+  document.addEventListener('baroyam:adminmode',syncSidebar);
+  document.addEventListener('baroyam:profiles',syncSidebar);
+  render();
+})();
+
 
 
 /* 홈 배너 · 명언과 추천 문구 ·
@@ -8177,6 +8376,10 @@ window.CsGuide=(function(){
   let lastSalesView='week';
 
   function activateView(v){
+    /* 권한설정에서 이 회원에게 끈 메뉴의 화면은 열지 않고 마이홈으로 보낸다 (검색·단축키로 들어오는 길까지 막는다) */
+    const ACC=window.BAROYAM_ACCESS;
+    if(ACC&&!ACC.allowsView(v)) v='home';
+    window.baroyamCurrentView=v;
     document.querySelectorAll('.sb-item[data-view],.hero-view-tab[data-view]').forEach(b=>b.classList.remove('active'));
     /* 통합리뷰수집은 리뷰수집 아래 화면이라 사이드바에서는 리뷰수집 아이콘을 켠다 */
     document.querySelectorAll('[data-view="'+(v==='collector'?'review':v)+'"]').forEach(b=>b.classList.add('active'));
@@ -8245,9 +8448,10 @@ window.CsGuide=(function(){
   /* 판매채널은 관리자만 본다 · 일반 회원에게는 사이드탭에 나오지 않는다 ·
      관리자 기준은 프로필의 관리자 칩과 같다 — 팀장으로 들어왔거나,
      설정에서 비밀번호를 통과한 동안 */
+  /* 지금은 관리자 설정>권한설정이 정한다 · 아직 정하지 않은 회원은 예전처럼 관리자에게만 보인다 */
   function isAdmin(){
-    const AM=window.baroyamAdminMode;
-    return !!(AM&&AM.isOn());
+    const ACC=window.BAROYAM_ACCESS;
+    return !!(ACC&&ACC.allows('channel'));
   }
   function syncVisible(){
     const on=isAdmin();
@@ -8263,6 +8467,8 @@ window.CsGuide=(function(){
   syncVisible();
   /* 설정에서 비밀번호를 통과하거나 풀리면 바로 따라 그린다 */
   document.addEventListener('baroyam:adminmode',syncVisible);
+  document.addEventListener('baroyam:access',syncVisible);
+  document.addEventListener('baroyam:profiles',syncVisible);
 
   function setOpen(open){
     group.classList.toggle('is-closed',!open);
@@ -9919,25 +10125,27 @@ window.CsGuide=(function(){
   const clearBtn=document.getElementById('tbSearchClear');
 
   const VIEWS=[
-    {name:'주간 데이터 보고서', kind:'매출데이터', go:()=>window.activateView('week')},
-    {name:'월간 성과보고서',   kind:'매출데이터', go:()=>window.activateView('month')},
-    {name:'목표설정',          kind:'메뉴',       go:()=>window.activateView('goal')},
-    {name:'트렌드분석',        kind:'메뉴',       go:()=>window.activateView('trend')},
-    {name:'리뷰수집',          kind:'메뉴',       go:()=>window.activateView('review')},
-    {name:'메뉴얼가이드',      kind:'메뉴',       go:()=>window.activateView('manual')},
-    {name:'드라이브',          kind:'메뉴',       go:()=>window.activateView('drive')},
-    {name:'계정관리',          kind:'메뉴',       go:()=>window.activateView('account')},
-    {name:'자동화',            kind:'메뉴 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()},
-    {name:'통합리뷰수집',      kind:'리뷰수집',   go:()=>{ document.getElementById('sbReviewBtn').click(); document.getElementById('sbReviewCollector').click(); }},
-    {name:'자동화 관리',       kind:'자동화 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()}
+    {key:'sales',name:'주간 데이터 보고서', kind:'매출데이터', go:()=>window.activateView('week')},
+    {key:'sales',name:'월간 성과보고서',   kind:'매출데이터', go:()=>window.activateView('month')},
+    {key:'goal',name:'목표설정',          kind:'메뉴',       go:()=>window.activateView('goal')},
+    {key:'trend',name:'트렌드분석',        kind:'메뉴',       go:()=>window.activateView('trend')},
+    {key:'review',name:'리뷰수집',          kind:'메뉴',       go:()=>window.activateView('review')},
+    {key:'manual',name:'메뉴얼가이드',      kind:'메뉴',       go:()=>window.activateView('manual')},
+    {key:'drive',name:'드라이브',          kind:'메뉴',       go:()=>window.activateView('drive')},
+    {key:'account',name:'계정관리',          kind:'메뉴',       go:()=>window.activateView('account')},
+    {key:'automation',name:'자동화',            kind:'메뉴 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()},
+    {key:'review',name:'통합리뷰수집',      kind:'리뷰수집',   go:()=>{ document.getElementById('sbReviewBtn').click(); document.getElementById('sbReviewCollector').click(); }},
+    {key:'automation',name:'자동화 관리',       kind:'자동화 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()}
   ];
   const ESC={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'};
   const esc=t=>String(t).split('').map(c=>ESC[c]||c).join('');
 
   function entries(){
     const docs=(typeof window.manualDocs==='function'?window.manualDocs():[])
-      .map(d=>({name:d.name, kind:d.group, go:()=>window.openManualDoc(d.id)}));
-    return VIEWS.concat(docs);
+      .map(d=>({key:'manual',name:d.name, kind:d.group, go:()=>window.openManualDoc(d.id)}));
+    /* 권한설정에서 이 회원에게 끈 메뉴는 검색에도 나오지 않는다 */
+    const ACC=window.BAROYAM_ACCESS;
+    return VIEWS.concat(docs).filter(e=>!ACC||ACC.allows(e.key));
   }
   function match(q){
     const k=q.trim().toLowerCase();
@@ -10732,6 +10940,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(window.BAROYAM_MEMBERS) window.BAROYAM_MEMBERS.applyRemote(settings);
       if(window.__myhomeSync) window.__myhomeSync.apply(settings);
       if(window.BAROYAM_PROFILES) window.BAROYAM_PROFILES.applyRemote(settings);
+      if(window.BAROYAM_ACCESS) window.BAROYAM_ACCESS.applyRemote(settings);
       /* 덩어리를 관계형 테이블에 펼쳐 둔다 · Table Editor에서 행으로 보기 위한 거울이다.
          화면 동작과는 무관하므로 실패해도 대시보드는 그대로 쓴다 */
       if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorAll(settings);
