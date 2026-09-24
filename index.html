@@ -4234,6 +4234,15 @@ window.BAROYAM_ACCESS=(function(){
             <button class="sb-subitem" type="button" data-channel="톡딜">톡딜</button>
           </div>
         </div>
+        <!-- 퍼포먼스마케팅 · 콘텐츠마케팅 · 자리만 만들어 두었다(대시보드는 아직 비어 있다) -->
+        <button class="sb-item" type="button" data-view="perf" id="sbPerfBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11v2.5c0 .8.7 1.5 1.5 1.5H7l4.5 4V5L7 9H5.5C4.7 9 4 9.7 4 10.5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <span>퍼포먼스마케팅</span>
+        </button>
+        <button class="sb-item" type="button" data-view="content" id="sbContentBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M10 9.2v5.6l4.8-2.8Z"/></svg>
+          <span>콘텐츠마케팅</span>
+        </button>
         <button class="sb-item" type="button" id="sbSalesToggle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-8M4 20h16"/></svg>
           <span>매출데이터</span>
@@ -6262,6 +6271,24 @@ window.BAROYAM_ACCESS=(function(){
           </div><!-- /drv-box -->
         </div>
       </div><!-- /view-drive -->
+
+      <!-- 퍼포먼스마케팅 · 콘텐츠마케팅 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
+      <div id="view-perf" style="display:none">
+        <section>
+          <div class="plan-hero">
+            <div class="ptag">PERFORMANCE</div>
+            <div class="ptitle">퍼포먼스마케팅</div>
+          </div>
+        </section>
+      </div><!-- /view-perf -->
+      <div id="view-content" style="display:none">
+        <section>
+          <div class="plan-hero">
+            <div class="ptag">CONTENT</div>
+            <div class="ptitle">콘텐츠마케팅</div>
+          </div>
+        </section>
+      </div><!-- /view-content -->
 
       <!-- 계정관리 · 쇼핑몰 라인 / 운영관리 / 카페이노스매장 구역 상자마다 계정을 모아 둔다 ·
            목록은 Supabase 의 app_settings/accounts_v1 에 있고, 비밀번호는 담지 않는다(보관 위치만 적는다) -->
@@ -8394,6 +8421,8 @@ window.CsGuide=(function(){
     document.getElementById('view-manual').style.display=v==='manual'?'':'none';
     document.getElementById('view-drive').style.display=v==='drive'?'':'none';
     document.getElementById('view-account').style.display=v==='account'?'':'none';
+    document.getElementById('view-perf').style.display=v==='perf'?'':'none';
+    document.getElementById('view-content').style.display=v==='content'?'':'none';
     if(v==='account'&&window.baroyamAccountOpen) window.baroyamAccountOpen();
     /* 드라이브 목록은 덩어리가 커서 이 화면을 열 때 한 번만 읽는다 */
     if(v==='drive'&&window.baroyamDriveOpen) window.baroyamDriveOpen();
@@ -8410,7 +8439,7 @@ window.CsGuide=(function(){
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의 기록은 여기 들어올 때 처음 받아 온다(1MB가 넘어 첫 화면에서는 받지 않는다) */
     if(v==='agenda') document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
-    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda');
+    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda'||v==='perf'||v==='content');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
