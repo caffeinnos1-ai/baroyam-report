@@ -2802,6 +2802,7 @@ window.BAROYAM_LEAD=(function(){
   .oc-node.is-group:hover{border-color:var(--oc-link)}
   .oc-node.is-group .oc-title{font-size:13.5px;color:var(--body)}
   .oc-edit.is-group{background:var(--chip-flat)}
+  .oc-edit-tools{grid-column:1/-1;justify-content:flex-end;padding-top:4px}
   .oc-title{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
   .oc-node[aria-expanded="true"] .oc-title{color:var(--btn-soft-ink)}
   .oc-people{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px}
@@ -8454,20 +8455,50 @@ window.CsGuide=(function(){
   const ocOv=document.getElementById('ocOverlay');
   const ocEl=id=>document.getElementById(id);
   function ocSetMsg(t,warn){ const m=ocEl('ocMsg'); if(!m) return; m.textContent=t||''; m.classList.toggle('is-warn',!!warn); }
+  /* 창을 여는 동안은 사본(ocDraft)을 고치고, 저장을 누를 때만 org 에 넣는다 ·
+     자리를 더하거나 지우면 목록을 새로 그리므로, 그 전에 칸에 쓴 값을 사본에 먼저 옮겨 둔다 */
+  let ocDraft=[];
+  function ocTreeOrder(){
+    /* 설정 창 목록도 트리 순서(부모 바로 아래 자식)로 늘어놓고 깊이만큼 들여 쓴다 */
+    const out=[];
+    (function walk(pid,depth){
+      ocDraft.filter(n=>(n.parent||'')===pid).forEach(n=>{ out.push([n,depth]); walk(n.id,depth+1); });
+    })('',0);
+    return out;
+  }
+  function ocCollect(){
+    const list=ocEl('ocEditList');
+    ocDraft=ocDraft.map(n=>{
+      const box=list.querySelector('[data-oc-edit="'+CSS.escape(n.id)+'"]');
+      if(!box) return n;
+      const title=box.querySelector('[data-oc-f="title"]').value.trim();
+      if(n.group) return Object.assign({},n,{title});
+      const members=[...box.querySelectorAll('[data-oc-m][aria-pressed="true"]')].map(b=>b.dataset.ocM);
+      const duties=box.querySelector('[data-oc-f="duties"]').value.split('\n').map(s=>s.trim()).filter(Boolean);
+      return Object.assign({},n,{title,members,duties});
+    });
+  }
   function ocDrawForm(){
     const list=ocEl('ocEditList');
     if(!list) return;
     const ms=orgMembers();
-    list.innerHTML=org.nodes.map(n=>{
+    list.innerHTML=ocTreeOrder().map(([n,depth])=>{
       const fid='ocT_'+n.id.replace(/[^\w-]/g,'_');
-      /* 본부는 사람을 두지 않으므로 이름만 고친다 */
-      if(n.group) return '<div class="oc-edit is-group" data-oc-edit="'+esc(n.id)+'">'+
-        '<label for="'+fid+'">본부 이름</label>'+
-        '<input class="ui-field block" id="'+fid+'" data-oc-f="title" maxlength="20" value="'+esc(n.title)+'">'+
+      const tools='<div class="oc-edit-tools ui-btn-row">'+
+        '<button type="button" class="ui-btn sm soft" data-oc-add="seat" data-oc-under="'+esc(n.id)+'">+ 아래 자리</button>'+
+        '<button type="button" class="ui-btn sm ghost" data-oc-add="group" data-oc-under="'+esc(n.id)+'">+ 아래 본부</button>'+
+        (n.parent?'<button type="button" class="ui-btn sm danger" data-oc-del="'+esc(n.id)+'">삭제</button>':'')+
       '</div>';
-      return '<div class="oc-edit" data-oc-edit="'+esc(n.id)+'">'+
+      const indent=' style="margin-left:'+Math.min(depth,6)*18+'px"';
+      /* 본부는 사람을 두지 않으므로 이름만 고친다 */
+      if(n.group) return '<div class="oc-edit is-group" data-oc-edit="'+esc(n.id)+'"'+indent+'>'+
+        '<label for="'+fid+'">본부 이름</label>'+
+        '<input class="ui-field block" id="'+fid+'" data-oc-f="title" maxlength="20" value="'+esc(n.title)+'" placeholder="예: 영업본부">'+
+        tools+
+      '</div>';
+      return '<div class="oc-edit" data-oc-edit="'+esc(n.id)+'"'+indent+'>'+
         '<label for="'+fid+'">자리 이름</label>'+
-        '<input class="ui-field block" id="'+fid+'" data-oc-f="title" maxlength="20" value="'+esc(n.title)+'">'+
+        '<input class="ui-field block" id="'+fid+'" data-oc-f="title" maxlength="20" value="'+esc(n.title)+'" placeholder="예: 영업 담당">'+
         '<span class="oc-edit-k">담당자</span>'+
         '<div class="ui-chips">'+(ms.length?ms.map(m=>
           '<button type="button" class="ui-chip" data-oc-m="'+esc(m.id)+'" aria-pressed="'+(n.members||[]).includes(m.id)+'">'+esc(m.name)+'</button>'
@@ -8475,6 +8506,7 @@ window.CsGuide=(function(){
         '<label for="'+fid+'_d">담당 업무</label>'+
         '<textarea class="ui-field block" id="'+fid+'_d" data-oc-f="duties" placeholder="한 줄에 하나씩 입력 (예: 광고 운영)">'+
           esc((n.duties||[]).join('\n'))+'</textarea>'+
+        tools+
       '</div>';
     }).join('');
   }
@@ -8482,7 +8514,7 @@ window.CsGuide=(function(){
     if(!ocOv) return;
     ocOv.hidden=!on;
     document.body.style.overflow=on?'hidden':'';
-    if(on){ ocDrawForm(); ocSetMsg(''); }
+    if(on){ ocDraft=JSON.parse(JSON.stringify(org.nodes)); ocDrawForm(); ocSetMsg(''); }
     else if(editBtn) editBtn.focus();
   }
   if(ocOv){
@@ -8492,19 +8524,46 @@ window.CsGuide=(function(){
     document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!ocOv.hidden) ocOpen(false); });
     ocEl('ocEditList').addEventListener('click',e=>{
       const c=e.target.closest('[data-oc-m]');
-      if(c) c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');
+      if(c){ c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true'); return; }
+      const add=e.target.closest('[data-oc-add]');
+      if(add){
+        ocCollect();
+        const group=add.dataset.ocAdd==='group';
+        const n=group?{id:newId(),parent:add.dataset.ocUnder,title:'',group:true}
+          :{id:newId(),parent:add.dataset.ocUnder,title:'',members:[],duties:[]};
+        ocDraft.push(n);
+        ocDrawForm();
+        const inp=ocEl('ocEditList').querySelector('[data-oc-edit="'+CSS.escape(n.id)+'"] [data-oc-f="title"]');
+        if(inp){ inp.scrollIntoView({block:'nearest'}); inp.focus(); }
+        ocSetMsg(group?'본부를 추가했어요 · 이름을 적고 저장하세요':'자리를 추가했어요 · 이름을 적고 저장하세요');
+        return;
+      }
+      const del=e.target.closest('[data-oc-del]');
+      if(del){
+        ocCollect();
+        const id=del.dataset.ocDel, n=ocDraft.find(x=>x.id===id);
+        if(!n) return;
+        /* 아래에 딸린 자리까지 함께 지운다 */
+        const gone=new Set([id]);
+        let grew=true;
+        while(grew){ grew=false; ocDraft.forEach(x=>{ if(!gone.has(x.id)&&gone.has(x.parent)){ gone.add(x.id); grew=true; } }); }
+        const label='"'+(n.title||'이름 없는 칸')+'"'+(gone.size>1?'과(와) 아래 '+(gone.size-1)+'칸':'');
+        if(!window.confirm(label+'을(를) 삭제할까요? 저장을 눌러야 확정됩니다.')) return;
+        ocDraft=ocDraft.filter(x=>!gone.has(x.id));
+        ocDrawForm();
+        ocSetMsg('삭제했어요 · 저장을 누르면 반영됩니다');
+      }
     });
     ocEl('ocSave').addEventListener('click',()=>{
-      const nodes=org.nodes.map(n=>{
-        const box=ocEl('ocEditList').querySelector('[data-oc-edit="'+CSS.escape(n.id)+'"]');
-        if(!box) return n;
-        const title=box.querySelector('[data-oc-f="title"]').value.trim()||n.title;
-        if(n.group) return Object.assign({},n,{title});
-        const members=[...box.querySelectorAll('[data-oc-m][aria-pressed="true"]')].map(b=>b.dataset.ocM);
-        const duties=box.querySelector('[data-oc-f="duties"]').value.split('\n').map(s=>s.trim()).filter(Boolean);
-        return Object.assign({},n,{title,members,duties});
-      });
-      org={v:ORG_VER,nodes,updatedAt:Date.now()};
+      ocCollect();
+      const blank=ocDraft.find(n=>!n.title);
+      if(blank){
+        ocSetMsg('이름이 비어 있는 칸이 있어요',true);
+        const inp=ocEl('ocEditList').querySelector('[data-oc-edit="'+CSS.escape(blank.id)+'"] [data-oc-f="title"]');
+        if(inp) inp.focus();
+        return;
+      }
+      org={v:ORG_VER,nodes:ocDraft,updatedAt:Date.now()};
       orgWriteLocal();
       if(activeDoc===ORG_DOC_ID) drawOrgChart();
       ocOpen(false);
