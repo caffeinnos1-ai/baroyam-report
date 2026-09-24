@@ -8412,14 +8412,20 @@ window.CsGuide=(function(){
         '<span class="oc-people">'+orgPeopleHtml(n.members)+'</span>'+
       '</button>'+orgTreeHtml(n.id)+'</li>').join('')+'</ul>';
   }
+  /* 조직도 수정은 팀장만 한다 · 팀장 비밀번호를 통과한 세션(BAROYAM_LEAD.isOn)만 설정 버튼이 보인다 */
+  function orgCanEdit(){
+    try{ return !!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; }
+  }
   function renderOrgChart(){
     setEditMode(false);
+    const can=orgCanEdit();
     if(editBtn){
-      editBtn.hidden=false;
+      editBtn.hidden=!can;
       editBtn.title='조직도 설정 (담당자·담당 업무)';
       if(editBtnLabel) editBtnLabel.textContent='설정';
     }
-    descEl.textContent='자리를 누르면 그 자리의 담당 업무가 아래에 펼쳐집니다. 담당자·업무는 오른쪽 위 설정 버튼에서 바꿉니다.';
+    descEl.textContent='자리를 누르면 그 자리의 담당 업무가 아래에 펼쳐집니다. '+
+      (can?'담당자·업무는 오른쪽 위 설정 버튼에서 바꿉니다.':'조직도 수정은 팀장만 할 수 있습니다.');
     bodyEl.innerHTML='<div class="oc"><div class="oc-scroll"><div class="oc-tree" id="ocTree"></div></div>'+
       '<div id="ocDetail"></div></div>';
     document.getElementById('ocTree').addEventListener('click',e=>{
@@ -8446,9 +8452,9 @@ window.CsGuide=(function(){
         :'<div class="oc-hint">아직 담당 업무가 없어요. 오른쪽 위 <b>설정</b>에서 추가해 보세요.</div>')+
       '</section>';
   }
-  /* 회원 이름·색·사진이 바뀌면 조직도도 다시 그린다 */
+  /* 회원 이름·색·사진·역할이 바뀌면 조직도와 설정 버튼(팀장 여부)을 다시 그린다 */
   ['baroyam:members','baroyam:profiles'].forEach(ev=>document.addEventListener(ev,()=>{
-    if(activeDoc===ORG_DOC_ID) drawOrgChart();
+    if(activeDoc===ORG_DOC_ID) renderOrgChart();
   }));
 
   /* 조직도 설정 창 · 고친 내용은 저장을 눌러야 반영된다(취소하면 버린다) */
@@ -8514,6 +8520,7 @@ window.CsGuide=(function(){
     if(!ocOv) return;
     ocOv.hidden=!on;
     document.body.style.overflow=on?'hidden':'';
+    if(on&&!orgCanEdit()){ ocOv.hidden=true; document.body.style.overflow=''; return; }
     if(on){ ocDraft=JSON.parse(JSON.stringify(org.nodes)); ocDrawForm(); ocSetMsg(''); }
     else if(editBtn) editBtn.focus();
   }
@@ -8555,6 +8562,7 @@ window.CsGuide=(function(){
       }
     });
     ocEl('ocSave').addEventListener('click',()=>{
+      if(!orgCanEdit()){ ocSetMsg('조직도 수정은 팀장만 할 수 있어요',true); return; }
       ocCollect();
       const blank=ocDraft.find(n=>!n.title);
       if(blank){
@@ -8839,7 +8847,7 @@ window.CsGuide=(function(){
   }
   if(editBtn) editBtn.addEventListener('click',()=>{
     if(activeDoc===CS_GUIDE_DOC_ID){ gmOpen(true); return; }   /* 상담가이드는 문서 편집 대신 매뉴얼 관리 창 */
-    if(activeDoc===ORG_DOC_ID){ ocOpen(true); return; }        /* 조직도는 조직도 설정 창 */
+    if(activeDoc===ORG_DOC_ID){ ocOpen(true); return; }        /* 조직도는 조직도 설정 창 (팀장만) */
     setEditMode(!editMode);
   });
 
