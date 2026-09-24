@@ -191,15 +191,17 @@ window.BAROYAM_DB=(function(){
     }catch(err){ console.error(err); return null; }
   }
   /* 설정 한 칸만 읽는다 · 드라이브 색인처럼 큰 덩어리를 그 화면을 열 때만 불러올 때 쓴다 */
-  async function loadSetting(key){
+  /* strict 이면 "칸이 없다"(null)와 "읽지 못했다"(오류를 던진다)를 가른다 ·
+     읽은 값 위에 고쳐서 다시 저장하는 곳은, 못 읽은 것을 빈 목록으로 알고 덮어쓰면 안 된다 */
+  async function loadSetting(key,strict){
     if(!key) return null;
-    if(!(await ensureSession())) return null;
+    if(!(await ensureSession())){ if(strict) throw new Error('로그인되지 않았습니다'); return null; }
     try{
       const c=await client();
       const r=await c.from('app_settings').select('value').eq('key',key).limit(1);
-      if(r.error){ console.error(r.error); return null; }
+      if(r.error){ console.error(r.error); if(strict) throw r.error; return null; }
       return (r.data&&r.data[0])?r.data[0].value:null;
-    }catch(err){ console.error(err); return null; }
+    }catch(err){ console.error(err); if(strict) throw err; return null; }
   }
   /* ---------- 관계형 테이블 거울 ----------
      원본은 app_settings 에 담긴 덩어리다(화면 코드가 예전부터 그 모양으로 다룬다).
@@ -3095,6 +3097,36 @@ window.BAROYAM_LEAD=(function(){
   .drive-empty b{font-size:14.5px;font-weight:800;letter-spacing:-.2px;color:var(--body)}
   .drive-empty span{font-size:12.5px;font-weight:600;color:var(--mute)}
   .drive-empty[hidden]{display:none}   /* 칸 배치 규칙(display:flex)이 [hidden] 을 이기므로 짝을 지어 둔다 */
+  /* 계정관리 · 구역마다 네모 상자 하나, 상자 안에 계정 줄 · 추가 칸은 상자 안에서 펼친다 */
+  .acc-bar{display:flex;align-items:center;gap:10px;margin-top:18px}
+  .acc-meta{font-size:12.5px;font-weight:600;color:var(--mute)}
+  .acc-bar .ui-btn{margin-left:auto}
+  .acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:16px;margin-top:12px;align-items:start}
+  .acc-box{border:1px solid var(--line);border-radius:16px;background:var(--paper);padding:16px;min-width:0}
+  .acc-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .acc-head h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  .acc-head .n{font-size:12px;font-weight:700;color:var(--mute)}
+  .acc-head .acc-head-tools{margin-left:auto;display:flex;gap:4px}
+  .acc-list{display:flex;flex-direction:column;gap:6px}
+  .acc-row{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
+  .acc-row-main{flex:1;min-width:0}
+  .acc-row-name{font-size:13.5px;font-weight:800;color:var(--ink);text-decoration:none;word-break:break-all}
+  a.acc-row-name:hover{color:var(--btn-soft-ink);text-decoration:underline}
+  .acc-row-sub{margin-top:3px;font-size:12px;font-weight:600;color:var(--body);display:flex;flex-wrap:wrap;gap:4px 10px}
+  .acc-row-sub span{min-width:0;word-break:break-all}
+  .acc-row-sub i{font-style:normal;color:var(--mute)}
+  .acc-row-memo{margin-top:4px;font-size:12px;color:var(--mute);white-space:pre-wrap;word-break:break-all}
+  .acc-row-tools{display:flex;gap:2px;flex:none}
+  .acc-empty{padding:18px 8px;text-align:center;font-size:12.5px;font-weight:600;color:var(--mute);
+    border:1.5px dashed var(--line);border-radius:12px}
+  .acc-form{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px;border-radius:12px;background:var(--chip-flat)}
+  .acc-form[hidden]{display:none}
+  .acc-form-cap{font-size:11.5px;font-weight:700;color:var(--mute)}
+  .acc-form .ui-chips{gap:5px}
+  .acc-form .ui-chip{height:26px;padding:0 10px;font-size:12px}
+  .acc-form-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .acc-add{margin-top:10px}
+  .acc-add[hidden]{display:none}
   /* 드라이브 자산 화면 · 왼쪽 브랜드 레일 + 위 종류 칩 + 브랜드마다 가로로 흐르는 카드 줄 ·
      폴더 구조를 그대로 따라가지 않고 브랜드·종류 두 축으로 걸러 본다(AGENTS.md 기획) */
   /* 프로젝트 화면(.pj)과 같은 폭을 쓴다 · .section 의 좌우 48px 가 없어 바깥 칸을 꽉 채운다 */
@@ -5993,19 +6025,23 @@ window.BAROYAM_LEAD=(function(){
         </div>
       </div><!-- /view-drive -->
 
-      <!-- 계정관리 · 내용이 정해지기 전까지 빈 자리 안내만 둔다 -->
+      <!-- 계정관리 · 쇼핑몰 라인 / 운영관리 / 카페이노스매장 구역 상자마다 계정을 모아 둔다 ·
+           목록은 Supabase 의 app_settings/accounts_v1 에 있고, 비밀번호는 담지 않는다(보관 위치만 적는다) -->
       <div id="view-account" style="display:none">
         <section class="section">
           <div class="plan-hero">
             <div class="ptag">ACCOUNT</div>
             <div class="ptitle">계정관리</div>
-            <p class="psub">회사에서 쓰는 계정을 한곳에서 관리합니다</p>
+            <p class="psub">회사에서 쓰는 계정을 구역별로 모아 둡니다 · 비밀번호는 적지 말고 보관 위치만 남겨 주세요</p>
           </div>
-          <div class="drive-empty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.6c1.2-3.4 4-5.2 7.2-5.2s6 1.8 7.2 5.2"/></svg>
-            <b>아직 준비 중이에요</b>
-            <span>계정 목록이 이곳에 들어올 예정입니다</span>
+          <div class="acc-bar">
+            <span class="acc-meta" id="accMeta"></span>
+            <button type="button" class="ui-btn sm ghost" id="accAddGroup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              구역 추가
+            </button>
           </div>
+          <div class="acc-grid" id="accGrid"></div>
         </section>
       </div><!-- /view-account -->
 
@@ -7979,6 +8015,7 @@ window.CsGuide=(function(){
     document.getElementById('view-manual').style.display=v==='manual'?'':'none';
     document.getElementById('view-drive').style.display=v==='drive'?'':'none';
     document.getElementById('view-account').style.display=v==='account'?'':'none';
+    if(v==='account'&&window.baroyamAccountOpen) window.baroyamAccountOpen();
     /* 드라이브 목록은 덩어리가 커서 이 화면을 열 때 한 번만 읽는다 */
     if(v==='drive'&&window.baroyamDriveOpen) window.baroyamDriveOpen();
     document.body.classList.toggle('view-is-manual',v==='manual');
@@ -13869,6 +13906,228 @@ window.baroyamAsk=function(title,body,okText){
     });
   });
   window.baroyamDriveOpen=열기;
+})();
+</script>
+<script>
+/* ===== 계정관리 화면 =====
+   구역(쇼핑몰 라인·운영관리·카페이노스매장, 더 만들 수 있다)마다 상자를 두고 계정을 모은다.
+   목록은 app_settings 의 accounts_v1 한 칸 · 여럿이 같이 고치므로 저장할 때마다 최신본을 다시 읽어
+   그 위에 바꾼 것만 얹는다(다른 사람이 방금 넣은 계정을 덮지 않도록).
+   비밀번호는 담지 않는다 · 로그인한 사람 누구나 읽는 칸이라, 보관 위치(예: 1Password)만 적는다 */
+(function(){
+  const 열쇠='accounts_v1';
+  const 기본구역=[
+    {id:'shop',  name:'쇼핑몰 라인'},
+    {id:'ops',   name:'운영관리'},
+    {id:'store', name:'카페이노스매장'}
+  ];
+  /* 추가 칸에 띄우는 추천 · 누르면 서비스명과 주소가 채워진다 */
+  const 추천={
+    shop:[
+      ['쿠팡 윙','https://wing.coupang.com'],
+      ['쿠팡 광고센터','https://advertising.coupang.com'],
+      ['스마트스토어센터','https://sell.smartstore.naver.com'],
+      ['자사몰 관리자',''],
+      ['카카오 톡딜 파트너센터','https://partners.kakao.com'],
+      ['네이버 검색광고','https://searchad.naver.com']
+    ],
+    ops:[
+      ['구글 워크스페이스','https://admin.google.com'],
+      ['메타 광고관리자','https://adsmanager.facebook.com'],
+      ['카카오톡 채널 관리자','https://center-pf.kakao.com'],
+      ['홈택스','https://www.hometax.go.kr'],
+      ['택배 계약 계정',''],
+      ['n8n 자동화','https://n8n.reflowguide.com'],
+      ['Supabase','https://supabase.com/dashboard'],
+      ['GitHub','https://github.com/caffeinnos1-ai']
+    ],
+    store:[
+      ['배민 사장님광장','https://ceo.baemin.com'],
+      ['쿠팡이츠 스토어','https://store.coupangeats.com'],
+      ['요기요 사장님','https://ceo.yogiyo.co.kr'],
+      ['토스플레이스',''],
+      ['우노스 키오스크',''],
+      ['네이버 스마트플레이스','https://new.smartplace.naver.com']
+    ]
+  };
+  let 자료=null, 읽는중=false, 여는칸='', 고치는줄='';
+  const $=function(id){ return document.getElementById(id); };
+  function 안전(v){ return String(v==null?'':v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function 새id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function 주소(u){ u=String(u||'').trim(); if(!u) return ''; return /^https?:\/\//i.test(u)?u:'https://'+u; }
+
+  function 다듬기(v){
+    if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+    const 구역=(v&&Array.isArray(v.groups))?v.groups:[];
+    if(!구역.length) return {groups:기본구역.map(function(g){ return {id:g.id,name:g.name,items:[]}; })};
+    구역.forEach(function(g){ if(!Array.isArray(g.items)) g.items=[]; });
+    return {groups:구역};
+  }
+  /* 못 읽으면 null · 칸이 아직 없을 때만 기본 구역으로 시작한다 */
+  async function 읽기(){
+    const db=window.BAROYAM_DB;
+    if(!db||!db.loadSetting) return null;
+    try{ return 다듬기(await db.loadSetting(열쇠,true)); }
+    catch(e){ return null; }
+  }
+  /* 바꾸기 · 최신본 위에 고침(fn)을 얹어 저장한다 */
+  async function 바꾸기(fn){
+    $('accMeta').textContent='저장하는 중…';
+    const 최신=await 읽기();
+    if(!최신){ $('accMeta').textContent='서버에 연결하지 못해 저장하지 못했어요'; return false; }
+    fn(최신);
+    const ok=await window.baroyamSaveSetting(열쇠,JSON.stringify(최신));
+    if(ok) 자료=최신;
+    그리기();
+    $('accMeta').textContent=ok?'저장했어요':'저장하지 못했어요 · 잠시 뒤 다시 해 주세요';
+    return ok;
+  }
+
+  const 아이콘={
+    edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16Z"/></svg>',
+    del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>',
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+  };
+
+  function 줄(g,it){
+    const 링크=주소(it.url);
+    const 이름=링크
+      ?'<a class="acc-row-name" href="'+안전(링크)+'" target="_blank" rel="noopener noreferrer">'+안전(it.service)+'</a>'
+      :'<span class="acc-row-name">'+안전(it.service)+'</span>';
+    const 부=[];
+    if(it.loginId) 부.push('<span><i>아이디</i> '+안전(it.loginId)+'</span>');
+    if(it.owner) 부.push('<span><i>담당</i> '+안전(it.owner)+'</span>');
+    if(it.pwWhere) 부.push('<span><i>비밀번호</i> '+안전(it.pwWhere)+'</span>');
+    return '<div class="acc-row">'+
+      '<div class="acc-row-main">'+이름+
+        (부.length?'<div class="acc-row-sub">'+부.join('')+'</div>':'')+
+        (it.memo?'<div class="acc-row-memo">'+안전(it.memo)+'</div>':'')+
+      '</div>'+
+      '<div class="acc-row-tools">'+
+        '<button type="button" class="ui-btn sm ghost icon" data-act="edit" data-g="'+안전(g.id)+'" data-i="'+안전(it.id)+'" title="고치기" aria-label="고치기">'+아이콘.edit+'</button>'+
+        '<button type="button" class="ui-btn sm ghost icon" data-act="del" data-g="'+안전(g.id)+'" data-i="'+안전(it.id)+'" title="지우기" aria-label="지우기">'+아이콘.del+'</button>'+
+      '</div></div>';
+  }
+  function 입력칸(g,it){
+    it=it||{};
+    const 있는것=new Set(g.items.map(function(x){ return x.service; }));
+    const 칩=(추천[g.id]||[]).filter(function(r){ return !있는것.has(r[0]); });
+    return '<form class="acc-form" data-g="'+안전(g.id)+'" autocomplete="off">'+
+      (!고치는줄&&칩.length?'<div class="acc-form-cap">추천 · 누르면 채워져요</div><div class="ui-chips">'+
+        칩.map(function(r){ return '<button type="button" class="ui-chip" data-act="pick" data-name="'+안전(r[0])+'" data-url="'+안전(r[1])+'">'+안전(r[0])+'</button>'; }).join('')+
+      '</div>':'')+
+      '<input class="ui-field block" name="service" placeholder="서비스명 (필수)" value="'+안전(it.service)+'" required>'+
+      '<input class="ui-field block" name="url" placeholder="로그인 주소" value="'+안전(it.url)+'">'+
+      '<div class="acc-form-two">'+
+        '<input class="ui-field block" name="loginId" placeholder="아이디" value="'+안전(it.loginId)+'">'+
+        '<input class="ui-field block" name="owner" placeholder="담당자" value="'+안전(it.owner)+'">'+
+      '</div>'+
+      '<input class="ui-field block" name="pwWhere" placeholder="비밀번호 보관 위치 (비밀번호 자체는 적지 마세요)" value="'+안전(it.pwWhere)+'">'+
+      '<textarea class="ui-field block" name="memo" placeholder="메모 (2단계 인증 휴대폰, 결제 카드 등)">'+안전(it.memo)+'</textarea>'+
+      '<div class="ui-btn-row" style="justify-content:flex-end">'+
+        '<button type="button" class="ui-btn sm ghost" data-act="cancel">취소</button>'+
+        '<button type="submit" class="ui-btn sm primary">'+(고치는줄?'고치기':'추가')+'</button>'+
+      '</div></form>';
+  }
+  function 상자(g){
+    const 기본=기본구역.some(function(b){ return b.id===g.id; });
+    const 편집중=고치는줄&&g.items.find(function(x){ return x.id===고치는줄; });
+    return '<div class="acc-box" data-g="'+안전(g.id)+'">'+
+      '<div class="acc-head"><h3>'+안전(g.name)+'</h3><span class="n">'+g.items.length+'</span>'+
+        '<div class="acc-head-tools">'+
+          '<button type="button" class="ui-btn sm ghost icon" data-act="rename" data-g="'+안전(g.id)+'" title="구역 이름 바꾸기" aria-label="구역 이름 바꾸기">'+아이콘.edit+'</button>'+
+          (기본?'':'<button type="button" class="ui-btn sm ghost icon" data-act="delgroup" data-g="'+안전(g.id)+'" title="구역 지우기" aria-label="구역 지우기">'+아이콘.del+'</button>')+
+        '</div></div>'+
+      '<div class="acc-list">'+
+        (g.items.length?g.items.map(function(it){ return it.id===고치는줄?입력칸(g,it):줄(g,it); }).join('')
+          :'<div class="acc-empty">아직 계정이 없어요</div>')+
+      '</div>'+
+      (여는칸===g.id&&!편집중?입력칸(g):'')+
+      '<button type="button" class="ui-btn sm soft block acc-add" data-act="open" data-g="'+안전(g.id)+'"'+(여는칸===g.id||편집중?' hidden':'')+'>'+아이콘.plus+'계정 추가</button>'+
+    '</div>';
+  }
+  function 그리기(){
+    const 판=$('accGrid'); if(!판) return;
+    if(!자료){ 판.innerHTML='<div class="acc-empty">'+(읽는중?'목록을 읽는 중이에요':'목록을 읽지 못했어요 · 로그인 상태를 확인해 주세요')+'</div>'; return; }
+    판.innerHTML=자료.groups.map(상자).join('');
+    const 합=자료.groups.reduce(function(s,g){ return s+g.items.length; },0);
+    $('accMeta').textContent='구역 '+자료.groups.length+'개 · 계정 '+합+'개';
+    const 첫칸=판.querySelector('.acc-form input[name="service"]');
+    if(첫칸&&!첫칸.value) 첫칸.focus();
+  }
+
+  async function 열기(){
+    if(읽는중) return;
+    읽는중=true; 그리기();
+    const v=await 읽기();
+    읽는중=false;
+    if(v) 자료=v;
+    그리기();
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){ 그리기(); });
+  const 판=$('accGrid');
+  판.addEventListener('click',function(e){
+    const b=e.target.closest('[data-act]'); if(!b) return;
+    const act=b.dataset.act, gid=b.dataset.g, iid=b.dataset.i;
+    if(act==='open'){ 여는칸=gid; 고치는줄=''; 그리기(); }
+    else if(act==='cancel'){ 여는칸=''; 고치는줄=''; 그리기(); }
+    else if(act==='edit'){ 고치는줄=iid; 여는칸=''; 그리기(); }
+    else if(act==='pick'){
+      const f=b.closest('form');
+      f.service.value=b.dataset.name;
+      if(b.dataset.url) f.url.value=b.dataset.url;
+      f.loginId.focus();
+    }
+    else if(act==='del'){
+      const g=자료.groups.find(function(x){ return x.id===gid; });
+      const it=g&&g.items.find(function(x){ return x.id===iid; });
+      if(!it) return;
+      window.baroyamAsk('"'+it.service+'" 계정을 지울까요?','계정관리 목록에서만 지워집니다').then(function(ok){
+        if(!ok) return;
+        바꾸기(function(d){
+          d.groups.forEach(function(x){ if(x.id===gid) x.items=x.items.filter(function(y){ return y.id!==iid; }); });
+        });
+      });
+    }
+    else if(act==='rename'){
+      const g=자료.groups.find(function(x){ return x.id===gid; });
+      const 이름=prompt('구역 이름',g?g.name:''); if(!이름||!이름.trim()) return;
+      바꾸기(function(d){ d.groups.forEach(function(x){ if(x.id===gid) x.name=이름.trim(); }); });
+    }
+    else if(act==='delgroup'){
+      const g=자료.groups.find(function(x){ return x.id===gid; });
+      if(!g) return;
+      if(g.items.length){ alert('안에 계정이 남아 있어 지울 수 없어요 · 계정을 먼저 옮기거나 지워 주세요'); return; }
+      window.baroyamAsk('"'+g.name+'" 구역을 지울까요?','비어 있는 구역 상자를 없앱니다').then(function(ok){
+        if(!ok) return;
+        /* 그사이 다른 사람이 계정을 넣었으면 지우지 않는다 */
+        바꾸기(function(d){ d.groups=d.groups.filter(function(x){ return x.id!==gid||x.items.length; }); });
+      });
+    }
+  });
+  판.addEventListener('submit',function(e){
+    e.preventDefault();
+    const f=e.target, gid=f.dataset.g;
+    const 값={};
+    ['service','url','loginId','owner','pwWhere','memo'].forEach(function(k){ 값[k]=String(f[k].value||'').trim(); });
+    if(!값.service){ f.service.focus(); return; }
+    const 고칠=고치는줄;
+    여는칸=''; 고치는줄='';
+    바꾸기(function(d){
+      const g=d.groups.find(function(x){ return x.id===gid; }); if(!g) return;
+      const 있던=고칠&&g.items.find(function(x){ return x.id===고칠; });
+      if(있던) Object.assign(있던,값);
+      else g.items.push(Object.assign({id:새id()},값));
+    });
+  });
+  $('accAddGroup').addEventListener('click',function(){
+    const 이름=prompt('새 구역 이름'); if(!이름||!이름.trim()) return;
+    바꾸기(function(d){ d.groups.push({id:'g'+새id(),name:이름.trim(),items:[]}); });
+  });
+
+  window.baroyamAccountOpen=열기;
 })();
 </script>
 </body>
