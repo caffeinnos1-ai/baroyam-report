@@ -182,8 +182,10 @@ window.BAROYAM_DB=(function(){
     await migrateFromSheets();
     try{
       const c=await client();
-      /* 드라이브 색인·사전은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 */
-      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1)');
+      /* 드라이브 색인·사전과 계정관리 목록은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 ·
+         계정관리(accounts_v1)는 아이디·비밀번호와 올린 로고 그림이 들어 있어, 첫 화면에서 받으면
+         느려지고 계정관리 비밀번호를 통과하기 전에 브라우저에 와 버린다 */
+      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1)');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
@@ -14814,7 +14816,8 @@ window.baroyamAsk=function(title,body,okText){
     {id:'ops',   name:'운영관리'},
     {id:'store', name:'카페이노스매장'}
   ];
-  /* 고를 수 있는 로고 · [열쇠, 이름, 도메인] · '자동'은 로그인 주소의 도메인, '글자'는 첫 글자 */
+  /* 고를 수 있는 로고 · [열쇠, 이름, 도메인] · 그림은 logos/<열쇠>.png (도메인은 받아 올 때 쓴 출처) ·
+     '자동'은 로그인 주소의 도메인 파비콘(구글), '글자'는 첫 글자 */
   const 로고=[
     ['naver','네이버','naver.com'],['google','구글','google.com'],['11st','11번가','11st.co.kr'],
     ['toss','토스','toss.im'],['coupang','쿠팡','coupang.com'],['coupangeats','쿠팡이츠','coupangeats.com'],
@@ -14831,7 +14834,8 @@ window.baroyamAsk=function(title,body,okText){
   function 켠로고(){ return (자료&&Array.isArray(자료.logos))?자료.logos:기본로고; }
   /* 고를 수 있는 로고 전부 · 기본 브랜드 + 직접 올린 로고(customLogos) · {key,name,src,mine} */
   function 로고목록(){
-    const 기본=로고.map(function(l){ return {key:l[0],name:l[1],src:파비콘(l[2])}; });
+    /* 기본 로고는 저장소의 logos/ 에 받아 둔 그림을 쓴다 · 구글 파비콘을 매번 거치면 로고마다 두 번 오가 느리다 */
+    const 기본=로고.map(function(l){ return {key:l[0],name:l[1],src:'logos/'+l[0]+'.png'}; });
     const 내것=((자료&&자료.customLogos)||[]).map(function(c){ return {key:c.id,name:c.name,src:c.src,mine:true}; });
     return 기본.concat(내것);
   }
@@ -14840,7 +14844,12 @@ window.baroyamAsk=function(title,body,okText){
     const 고른=로고목록().find(function(l){ return l.key===it.logo; });
     if(고른) return 고른.src;
     const h=호스트(주소(it.url));
-    return h?파비콘(h):'';
+    if(!h) return '';
+    /* 자동 · 로그인 주소가 받아 둔 브랜드 도메인이면(wing.coupang.com → coupang.com) 저장소 그림을 쓰고,
+       그 밖의 주소만 구글 파비콘에서 받아 온다 */
+    const 아는=로고.filter(function(l){ return h===l[2]||h.slice(-(l[2].length+1))==='.'+l[2]; })
+      .sort(function(a,b){ return b[2].length-a[2].length; })[0];
+    return 아는?'logos/'+아는[0]+'.png':파비콘(h);
   }
   let 자료=null, 읽는중=false, 여는칸='', 고치는줄='';
   const 펼친줄=new Set();     /* '계정정보'를 펼쳐 둔 줄 · 이 브라우저에서만 기억한다 */
@@ -15035,6 +15044,8 @@ window.baroyamAsk=function(title,body,okText){
   });
   async function 열기(){
     if(!잠금보이기()) return;
+    /* 한 번 읽었으면 이 탭에서는 다시 읽지 않는다 · 저장할 때는 늘 최신본을 다시 읽어 그 위에 얹는다(바꾸기) */
+    if(자료){ 그리기(); return; }
     if(읽는중) return;
     읽는중=true; 그리기();
     const v=await 읽기();
