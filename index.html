@@ -3199,6 +3199,16 @@ window.BAROYAM_ACCESS=(function(){
   /* 계정관리 · 구역마다 네모 상자 하나, 상자 안에 계정 줄 · 추가 칸은 상자 안에서 펼친다 */
   .acc-view{padding:0 0 16px}   /* 넓게 보기(view-is-wide) · 드라이브처럼 .section 좌우 여백 없이 꽉 채운다 */
   .acc-bar{display:flex;align-items:center;gap:10px;margin-top:18px}
+  /* 들어가기 비밀번호 칸 */
+  .acc-lock{margin:22px auto 0;max-width:420px;padding:36px 24px;display:flex;flex-direction:column;align-items:center;gap:8px;
+    border:1px solid var(--line);border-radius:18px;background:var(--paper);text-align:center}
+  .acc-lock[hidden]{display:none}
+  .acc-lock svg{width:40px;height:40px;color:var(--mute)}
+  .acc-lock b{font-size:15px;font-weight:800;color:var(--ink)}
+  .acc-lock > span{font-size:12.5px;font-weight:600;color:var(--mute)}
+  .acc-lock-row{display:flex;gap:8px;width:100%;margin-top:10px}
+  .acc-lock-row .ui-field{flex:1;min-width:0}
+  .acc-lock .acc-lock-msg{min-height:17px;color:var(--neg)}
   .plan-hero .acc-hero-set{position:absolute;top:24px;right:24px}
   .acc-set{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--paper);
     display:flex;flex-direction:column;gap:12px}
@@ -6317,6 +6327,18 @@ window.BAROYAM_ACCESS=(function(){
               설정
             </button>
           </div>
+          <!-- 들어가기 비밀번호 · 맞히기 전에는 목록을 서버에서 읽지도 않는다 -->
+          <form class="acc-lock" id="accLock" autocomplete="off" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7M12 14.6v2.2"/></svg>
+            <b>비밀번호를 입력해 주세요</b>
+            <span>계정관리는 비밀번호를 아는 사람만 들어갈 수 있어요</span>
+            <div class="acc-lock-row">
+              <input class="ui-field" type="password" id="accLockPw" inputmode="numeric" autocomplete="off" placeholder="비밀번호" aria-label="계정관리 비밀번호">
+              <button type="submit" class="ui-btn primary">들어가기</button>
+            </div>
+            <span class="acc-lock-msg" id="accLockMsg" role="alert"></span>
+          </form>
+          <div id="accBody" hidden>
           <div class="acc-set" id="accSet" hidden>
             <div class="acc-set-head">
               <b>로고 설정</b>
@@ -6379,6 +6401,7 @@ window.BAROYAM_ACCESS=(function(){
             </div>
           </form>
           <div class="acc-grid" id="accGrid"></div>
+          </div><!-- /accBody -->
         </section>
       </div><!-- /view-account -->
 
@@ -14852,7 +14875,7 @@ window.baroyamAsk=function(title,body,okText){
   /* 팀장이 아니면 편집 단추를 숨기고 열려 있던 편집 칸을 닫는다 */
   function 권한맞추기(){
     const 된다=편집가능();
-    $('accSetBtn').hidden=!된다;
+    $('accSetBtn').hidden=!된다||!풀림();
     $('accAddGroup').hidden=!된다;
     if(!된다){
       여는칸=''; 고치는줄='';
@@ -14977,7 +15000,39 @@ window.baroyamAsk=function(title,body,okText){
     if(첫칸&&!첫칸.value) 첫칸.focus();
   }
 
+  /* 들어가기 비밀번호 · 공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적어 둔다
+     (팀장 비밀번호와 같은 방식, 소금만 다르다) · 맞히면 이 탭을 닫을 때까지 다시 묻지 않는다 ·
+     화면을 가리는 수준의 잠금이다 — 서버의 accounts_v1 자체를 막아 주지는 않는다 */
+  const 잠금={salt:'baroyam-account-v1',iterations:200000,hash:'b073c25ac3e892e8d8ec54c319c4c6bbf83847cd82d5ae053ec3d7ea40606e86'};
+  const 풀림열쇠='baroyam_account_unlock_v1';
+  function 풀림(){ try{ return sessionStorage.getItem(풀림열쇠)===잠금.hash; }catch(e){ return false; } }
+  async function 잠금해시(pw){
+    const enc=new TextEncoder();
+    const key=await crypto.subtle.importKey('raw',enc.encode(String(pw)),'PBKDF2',false,['deriveBits']);
+    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(잠금.salt),iterations:잠금.iterations,hash:'SHA-256'},key,256);
+    return [...new Uint8Array(bits)].map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+  function 잠금보이기(){
+    const 열림=풀림();
+    $('accLock').hidden=열림;
+    $('accBody').hidden=!열림;
+    권한맞추기();
+    if(!열림){ $('accLockMsg').textContent=''; $('accLockPw').value=''; setTimeout(function(){ $('accLockPw').focus(); },0); }
+    return 열림;
+  }
+  $('accLock').addEventListener('submit',async function(e){
+    e.preventDefault();
+    const 칸=$('accLockPw'), 글=$('accLockMsg');
+    if(!칸.value){ 칸.focus(); return; }
+    if(!(window.crypto&&crypto.subtle)){ 글.textContent='이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'; return; }
+    글.textContent='확인하는 중…';
+    const 맞음=(await 잠금해시(칸.value))===잠금.hash;
+    if(!맞음){ 글.textContent='비밀번호가 맞지 않아요'; 칸.value=''; 칸.focus(); return; }
+    try{ sessionStorage.setItem(풀림열쇠,잠금.hash); }catch(err){}
+    열기();
+  });
   async function 열기(){
+    if(!잠금보이기()) return;
     if(읽는중) return;
     읽는중=true; 그리기();
     const v=await 읽기();
