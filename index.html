@@ -2796,6 +2796,12 @@ window.BAROYAM_LEAD=(function(){
   .oc-node:focus-visible{box-shadow:var(--ui-ring)}
   .oc-node[aria-expanded="true"]{border-color:var(--btn);background:var(--btn-soft);box-shadow:0 0 0 1px var(--btn)}
   .oc-node.is-top{background:var(--btn-soft)}
+  /* 본부 · 사람 없이 아래 자리를 묶는 이름표 · 누를 수 없다 */
+  .oc-node.is-group{min-width:0;padding:8px 18px;border-radius:999px;border:1.5px dashed var(--oc-link);
+    background:var(--chip-flat);cursor:default}
+  .oc-node.is-group:hover{border-color:var(--oc-link)}
+  .oc-node.is-group .oc-title{font-size:13.5px;color:var(--body)}
+  .oc-edit.is-group{background:var(--chip-flat)}
   .oc-title{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
   .oc-node[aria-expanded="true"] .oc-title{color:var(--btn-soft-ink)}
   .oc-people{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px}
@@ -8328,19 +8334,41 @@ window.CsGuide=(function(){
      회원 이름·사진이 바뀌면 조직도에도 그대로 따라온다 ·
      통째로 app_settings 의 key='orgChart' 에 {nodes,updatedAt} 로 담고, 더 새 쪽이 이긴다 */
   const ORG_KEY='orgChart', ORG_LS_KEY='baroyam_org_chart_v1';
+  /* group:true 는 본부처럼 사람을 두지 않고 아래 자리를 묶기만 하는 칸이다 */
+  const ORG_VER=2;
   const ORG_DEFAULT=[
-    {id:'ceo',       parent:'',         title:'대표님',     members:[], duties:[]},
-    {id:'director',  parent:'ceo',      title:'이사님',     members:[], duties:[]},
-    {id:'lead',      parent:'director', title:'팀장',       members:[], duties:[]},
-    {id:'marketing', parent:'lead',     title:'마케팅',     members:[], duties:[]},
-    {id:'design-ops',parent:'lead',     title:'디자인&운영', members:[], duties:[]}
+    {id:'ceo',          parent:'',             title:'대표님',       members:[], duties:[]},
+    {id:'director',     parent:'ceo',          title:'이사님',       members:[], duties:[]},
+    {id:'lead',         parent:'director',     title:'팀장',         members:[], duties:[]},
+    {id:'marketing-hq', parent:'lead',         title:'마케팅본부',   group:true},
+    {id:'marketing',    parent:'marketing-hq', title:'마케팅 담당',  members:[], duties:[]},
+    {id:'admin-hq',     parent:'lead',         title:'관리본부',     group:true},
+    {id:'design',       parent:'admin-hq',     title:'디자인',       members:[], duties:[]},
+    {id:'customer',     parent:'admin-hq',     title:'고객관리',     members:[], duties:[]}
   ];
+  /* v1(팀장 아래 마케팅·디자인&운영 두 칸)을 본부 구조로 옮긴다 ·
+     고른 담당자·업무는 마케팅 → 마케팅 담당, 디자인&운영 → 디자인으로 넘긴다 */
+  function orgUpgrade(b){
+    if((+b.v||1)>=ORG_VER) return b;
+    const old=id=>b.nodes.find(n=>n.id===id)||{};
+    const nodes=JSON.parse(JSON.stringify(ORG_DEFAULT)).map(n=>{
+      const src=n.id==='design'?old('design-ops'):(n.group?null:old(n.id));
+      if(src&&!n.group){
+        if(Array.isArray(src.members)) n.members=src.members;
+        if(Array.isArray(src.duties)) n.duties=src.duties;
+        if(['ceo','director','lead'].includes(n.id)&&src.title) n.title=src.title;
+      }
+      return n;
+    });
+    /* 저장 시각은 그대로 둔다 · 다른 PC가 이미 새 구조로 저장했다면 그쪽이 이겨야 한다 */
+    return {v:ORG_VER,nodes,updatedAt:+b.updatedAt||0};
+  }
   function orgRead(){
     try{
       const b=JSON.parse(localStorage.getItem(ORG_LS_KEY)||'null');
-      if(b&&Array.isArray(b.nodes)) return b;
+      if(b&&Array.isArray(b.nodes)) return orgUpgrade(b);
     }catch(e){}
-    return {nodes:JSON.parse(JSON.stringify(ORG_DEFAULT)),updatedAt:0};
+    return {v:ORG_VER,nodes:JSON.parse(JSON.stringify(ORG_DEFAULT)),updatedAt:0};
   }
   let org=orgRead();
   let orgOpenId='';                /* 담당 업무를 펼친 자리 · 비어 있으면 안내만 */
@@ -8348,9 +8376,14 @@ window.CsGuide=(function(){
   function orgApplyRemote(settings){
     if(typeof settings[ORG_KEY]!=='string'||!settings[ORG_KEY]) return;
     try{
-      const b=JSON.parse(settings[ORG_KEY]);
-      if(b&&Array.isArray(b.nodes)&&(+b.updatedAt||0)>org.updatedAt){
-        org={nodes:b.nodes,updatedAt:+b.updatedAt||0};
+      const raw=JSON.parse(settings[ORG_KEY]);
+      if(raw&&Array.isArray(raw.nodes)&&(+raw.updatedAt||0)>org.updatedAt){
+        const old=(+raw.v||1)<ORG_VER;
+        org=orgUpgrade(raw);
+        if(old){   /* 서버에 옛 구조가 남아 있으면 새 구조로 한 번 올려 둔다 */
+          org.updatedAt=Date.now();
+          window.baroyamSaveSetting(ORG_KEY,JSON.stringify(org)).catch(err=>console.error(err));
+        }
         orgWriteLocal();
         if(activeDoc===ORG_DOC_ID) drawOrgChart();
       }
@@ -8371,7 +8404,8 @@ window.CsGuide=(function(){
   function orgTreeHtml(parentId){
     const kids=org.nodes.filter(n=>(n.parent||'')===parentId);
     if(!kids.length) return '';
-    return '<ul>'+kids.map(n=>
+    return '<ul>'+kids.map(n=>n.group?
+      '<li><div class="oc-node is-group"><span class="oc-title">'+esc(n.title)+'</span></div>'+orgTreeHtml(n.id)+'</li>':
       '<li><button type="button" class="oc-node'+(parentId?'':' is-top')+'" data-oc="'+esc(n.id)+'" aria-expanded="'+(n.id===orgOpenId)+'">'+
         '<span class="oc-title">'+esc(n.title)+'</span>'+
         '<span class="oc-people">'+orgPeopleHtml(n.members)+'</span>'+
@@ -8399,7 +8433,7 @@ window.CsGuide=(function(){
     const tree=document.getElementById('ocTree'), detail=document.getElementById('ocDetail');
     if(!tree||!detail) return;
     tree.innerHTML=orgTreeHtml('');
-    const n=org.nodes.find(x=>x.id===orgOpenId);
+    const n=org.nodes.find(x=>x.id===orgOpenId&&!x.group);
     if(!n){
       orgOpenId='';
       detail.innerHTML='<div class="oc-hint">자리를 누르면 담당 업무가 여기에 보입니다.</div>';
@@ -8426,6 +8460,11 @@ window.CsGuide=(function(){
     const ms=orgMembers();
     list.innerHTML=org.nodes.map(n=>{
       const fid='ocT_'+n.id.replace(/[^\w-]/g,'_');
+      /* 본부는 사람을 두지 않으므로 이름만 고친다 */
+      if(n.group) return '<div class="oc-edit is-group" data-oc-edit="'+esc(n.id)+'">'+
+        '<label for="'+fid+'">본부 이름</label>'+
+        '<input class="ui-field block" id="'+fid+'" data-oc-f="title" maxlength="20" value="'+esc(n.title)+'">'+
+      '</div>';
       return '<div class="oc-edit" data-oc-edit="'+esc(n.id)+'">'+
         '<label for="'+fid+'">자리 이름</label>'+
         '<input class="ui-field block" id="'+fid+'" data-oc-f="title" maxlength="20" value="'+esc(n.title)+'">'+
@@ -8460,11 +8499,12 @@ window.CsGuide=(function(){
         const box=ocEl('ocEditList').querySelector('[data-oc-edit="'+CSS.escape(n.id)+'"]');
         if(!box) return n;
         const title=box.querySelector('[data-oc-f="title"]').value.trim()||n.title;
+        if(n.group) return Object.assign({},n,{title});
         const members=[...box.querySelectorAll('[data-oc-m][aria-pressed="true"]')].map(b=>b.dataset.ocM);
         const duties=box.querySelector('[data-oc-f="duties"]').value.split('\n').map(s=>s.trim()).filter(Boolean);
         return Object.assign({},n,{title,members,duties});
       });
-      org={nodes,updatedAt:Date.now()};
+      org={v:ORG_VER,nodes,updatedAt:Date.now()};
       orgWriteLocal();
       if(activeDoc===ORG_DOC_ID) drawOrgChart();
       ocOpen(false);
