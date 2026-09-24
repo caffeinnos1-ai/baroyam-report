@@ -3204,15 +3204,23 @@ window.BAROYAM_ACCESS=(function(){
   .acc-view{padding:0 0 16px}   /* 넓게 보기(view-is-wide) · 드라이브처럼 .section 좌우 여백 없이 꽉 채운다 */
   .acc-bar{display:flex;align-items:center;gap:10px;margin-top:18px}
   /* 들어가기 비밀번호 칸 */
-  .acc-lock{margin:22px auto 0;max-width:420px;padding:36px 24px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  /* 화면 전체를 흐리게 덮고 가운데에 창을 띄운다 · 모양은 삭제 확인창(.ask)과 같은 결 */
+  .acc-lock-ov{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:rgba(20,14,10,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .acc-lock-ov[hidden]{display:none}
+  .acc-lock{width:100%;max-width:360px;padding:26px 22px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.06);animation:askIn .16s ease-out both;
     border:1px solid var(--line);border-radius:18px;background:var(--paper);text-align:center}
-  .acc-lock[hidden]{display:none}
-  .acc-lock svg{width:40px;height:40px;color:var(--mute)}
-  .acc-lock b{font-size:15px;font-weight:800;color:var(--ink)}
+  @media (prefers-reduced-motion:reduce){ .acc-lock{animation:none} }
+  .acc-lock-ic{width:44px;height:44px;margin-bottom:8px;border-radius:13px;display:grid;place-items:center;
+    background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .acc-lock-ic svg{width:22px;height:22px}
+  .acc-lock b{font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
   .acc-lock > span{font-size:12.5px;font-weight:600;color:var(--mute)}
   .acc-lock-row{display:flex;gap:8px;width:100%;margin-top:10px}
   .acc-lock-row .ui-field{flex:1;min-width:0}
-  .acc-lock .acc-lock-msg{min-height:17px;color:var(--neg)}
+  .acc-lock .acc-lock-msg{min-height:17px;font-size:12.5px;font-weight:600;color:var(--neg)}
+  .acc-lock-btns{display:flex;gap:8px;width:100%;margin-top:6px}
   .plan-hero .acc-hero-set{position:absolute;top:24px;right:24px}
   .acc-set{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--paper);
     display:flex;flex-direction:column;gap:12px}
@@ -6332,16 +6340,22 @@ window.BAROYAM_ACCESS=(function(){
             </button>
           </div>
           <!-- 들어가기 비밀번호 · 맞히기 전에는 목록을 서버에서 읽지도 않는다 -->
-          <form class="acc-lock" id="accLock" autocomplete="off" hidden>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7M12 14.6v2.2"/></svg>
-            <b>비밀번호를 입력해 주세요</b>
+          <!-- 흐린 배경 위에 비밀번호 창이 떠 있는 모양 · 계정관리 화면 안에 두어 다른 메뉴로 가면 같이 사라진다 -->
+          <div class="acc-lock-ov" id="accLock" role="dialog" aria-modal="true" aria-labelledby="accLockTitle" hidden>
+          <form class="acc-lock" autocomplete="off">
+            <span class="acc-lock-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7M12 14.6v2.2"/></svg></span>
+            <b id="accLockTitle">계정관리 비밀번호</b>
             <span>계정관리는 비밀번호를 아는 사람만 들어갈 수 있어요</span>
             <div class="acc-lock-row">
               <input class="ui-field" type="password" id="accLockPw" inputmode="numeric" autocomplete="off" placeholder="비밀번호" aria-label="계정관리 비밀번호">
-              <button type="submit" class="ui-btn primary">들어가기</button>
             </div>
             <span class="acc-lock-msg" id="accLockMsg" role="alert"></span>
+            <div class="acc-lock-btns">
+              <button type="button" class="ui-btn block" id="accLockCancel">취소</button>
+              <button type="submit" class="ui-btn primary block">들어가기</button>
+            </div>
           </form>
+          </div>
           <div id="accBody" hidden>
           <div class="acc-set" id="accSet" hidden>
             <div class="acc-set-head">
@@ -15031,6 +15045,10 @@ window.baroyamAsk=function(title,body,okText){
     if(!열림){ $('accLockMsg').textContent=''; $('accLockPw').value=''; setTimeout(function(){ $('accLockPw').focus(); },0); }
     return 열림;
   }
+  /* 취소·Esc · 들어가지 않고 마이홈으로 돌아간다 */
+  function 잠금취소(){ if(window.activateView) window.activateView('home'); }
+  $('accLockCancel').addEventListener('click',잠금취소);
+  $('accLock').addEventListener('keydown',function(e){ if(e.key==='Escape'){ e.preventDefault(); 잠금취소(); } });
   $('accLock').addEventListener('submit',async function(e){
     e.preventDefault();
     const 칸=$('accLockPw'), 글=$('accLockMsg');
