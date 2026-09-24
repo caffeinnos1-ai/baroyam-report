@@ -3098,10 +3098,11 @@ window.BAROYAM_LEAD=(function(){
   .drive-empty span{font-size:12.5px;font-weight:600;color:var(--mute)}
   .drive-empty[hidden]{display:none}   /* 칸 배치 규칙(display:flex)이 [hidden] 을 이기므로 짝을 지어 둔다 */
   /* 계정관리 · 구역마다 네모 상자 하나, 상자 안에 계정 줄 · 추가 칸은 상자 안에서 펼친다 */
+  .acc-view{padding:0 0 16px}   /* 넓게 보기(view-is-wide) · 드라이브처럼 .section 좌우 여백 없이 꽉 채운다 */
   .acc-bar{display:flex;align-items:center;gap:10px;margin-top:18px}
   .acc-meta{font-size:12.5px;font-weight:600;color:var(--mute)}
   .acc-bar .ui-btn{margin-left:auto}
-  .acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:16px;margin-top:12px;align-items:start}
+  .acc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:16px;margin-top:12px;align-items:start}
   .acc-box{border:1px solid var(--line);border-radius:16px;background:var(--paper);padding:16px;min-width:0}
   .acc-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
   .acc-head h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
@@ -6028,7 +6029,7 @@ window.BAROYAM_LEAD=(function(){
       <!-- 계정관리 · 쇼핑몰 라인 / 운영관리 / 카페이노스매장 구역 상자마다 계정을 모아 둔다 ·
            목록은 Supabase 의 app_settings/accounts_v1 에 있고, 비밀번호는 담지 않는다(보관 위치만 적는다) -->
       <div id="view-account" style="display:none">
-        <section class="section">
+        <section class="acc-view">
           <div class="plan-hero">
             <div class="ptag">ACCOUNT</div>
             <div class="ptitle">계정관리</div>
@@ -8023,8 +8024,8 @@ window.CsGuide=(function(){
     document.getElementById('view-channel').style.display=v==='channel'?'':'none';
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
-    /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브)은 1720px 를 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive');
+    /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브·계정관리)은 1720px 를 쓴다 */
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account');
     document.body.classList.toggle('view-is-project',v==='project');
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
