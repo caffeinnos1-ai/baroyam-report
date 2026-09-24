@@ -2773,6 +2773,62 @@ window.BAROYAM_LEAD=(function(){
   .gm-pending{font-size:11px;font-weight:700;color:var(--neg)}
   .gm-empty{padding:28px 16px;text-align:center;border-radius:12px;border:1.5px dashed var(--line);
     font-size:13px;font-weight:600;color:var(--mute);line-height:1.6}
+  /* 바로얌 조직도 · 위→아래 트리 · 박스를 누르면 아래에 그 자리의 담당 업무가 펼쳐진다 */
+  .oc{margin-top:26px;display:flex;flex-direction:column;gap:22px}
+  .oc-scroll{overflow-x:auto;padding:6px 4px 10px}
+  .oc-tree{--oc-link:color-mix(in srgb,var(--mute) 45%,var(--line));min-width:max-content;display:flex;justify-content:center}
+  .oc-tree ul{position:relative;display:flex;justify-content:center;list-style:none;margin:0;padding:24px 0 0}
+  .oc-tree>ul{padding-top:0}
+  .oc-tree li{position:relative;display:flex;flex-direction:column;align-items:center;padding:24px 10px 0}
+  .oc-tree li::before,.oc-tree li::after{content:'';position:absolute;top:0;right:50%;width:50%;height:24px;
+    border-top:1.5px solid var(--oc-link)}
+  .oc-tree li::after{right:auto;left:50%;border-left:1.5px solid var(--oc-link)}
+  .oc-tree li:only-child{padding-top:0}
+  .oc-tree li:only-child::before,.oc-tree li:only-child::after{display:none}
+  .oc-tree li:first-child::before,.oc-tree li:last-child::after{border:0 none}
+  .oc-tree li:last-child::before{border-right:1.5px solid var(--oc-link);border-radius:0 8px 0 0}
+  .oc-tree li:first-child::after{border-radius:8px 0 0 0}
+  .oc-tree ul ul::before{content:'';position:absolute;top:0;left:50%;height:24px;border-left:1.5px solid var(--oc-link)}
+  .oc-node{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:9px;
+    min-width:150px;max-width:230px;padding:14px 16px;border-radius:14px;border:1px solid var(--line);background:var(--paper);
+    cursor:pointer;text-align:center;transition:var(--ui-ease)}
+  .oc-node:hover{border-color:var(--btn)}
+  .oc-node:focus-visible{box-shadow:var(--ui-ring)}
+  .oc-node[aria-expanded="true"]{border-color:var(--btn);background:var(--btn-soft);box-shadow:0 0 0 1px var(--btn)}
+  .oc-node.is-top{background:var(--btn-soft)}
+  .oc-title{font-size:14.5px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+  .oc-node[aria-expanded="true"] .oc-title{color:var(--btn-soft-ink)}
+  .oc-people{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px}
+  .oc-person{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--body)}
+  .oc-face{flex:none;width:24px;height:24px;border-radius:50%;overflow:hidden;display:grid;place-items:center;
+    color:#fff;font-size:11px;font-weight:800}
+  .oc-face img{width:100%;height:100%;object-fit:cover;display:block}
+  .oc-empty-person{font-size:12px;font-weight:600;color:var(--mute)}
+  .oc-detail{border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+  .oc-detail h3{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;font-size:16px;font-weight:800;
+    color:var(--ink);letter-spacing:-.35px;margin:0 0 12px}
+  .oc-detail .oc-people{justify-content:flex-start}
+  .oc-duties{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .oc-duties li{position:relative;padding-left:16px;font-size:13.5px;font-weight:500;color:var(--body);line-height:1.65}
+  .oc-duties li::before{content:'';position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--btn)}
+  .oc-hint{font-size:13px;font-weight:600;color:var(--mute);text-align:center;padding:14px;border-radius:12px;
+    border:1.5px dashed var(--line);line-height:1.6}
+  /* 조직도 설정 창 · 자리마다 이름칸 + 회원 칩 + 담당 업무(한 줄에 하나) */
+  .settings-panel.oc-dialog{max-width:680px;height:min(780px,90vh)}
+  .oc-dialog-body{flex:1;min-height:0;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+  .oc-edit{display:grid;grid-template-columns:84px 1fr;gap:10px 14px;align-items:start;padding:16px;
+    border:1px solid var(--line);border-radius:14px}
+  .oc-edit label,.oc-edit .oc-edit-k{padding-top:9px;text-align:right;font-size:13px;font-weight:700;color:var(--body)}
+  .oc-edit .oc-edit-k{padding-top:6px}
+  .oc-edit textarea.ui-field{resize:vertical}
+  .oc-dialog-foot{flex:none;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 22px;
+    border-top:1px solid var(--line)}
+  .oc-msg{flex:1;font-size:12px;font-weight:600;color:var(--mute)}
+  .oc-msg.is-warn{color:var(--neg)}
+  @media(max-width:640px){
+    .oc-edit{grid-template-columns:1fr}
+    .oc-edit label,.oc-edit .oc-edit-k{padding-top:0;text-align:left}
+  }
   @media(max-width:640px){
     .gm-form{grid-template-columns:1fr}
     .gm-form label{padding-top:0;text-align:left}
@@ -6176,6 +6232,22 @@ window.BAROYAM_LEAD=(function(){
     </div>
   </div>
 
+  <!-- 조직도 설정 · 메뉴얼가이드 > 바로얌 조직도 화면의 설정 버튼으로 연다 (자리마다 회원·담당 업무) -->
+  <div class="settings-overlay" id="ocOverlay" hidden>
+    <div class="settings-panel oc-dialog" role="dialog" aria-modal="true" aria-labelledby="ocDialogTitle">
+      <div class="settings-head">
+        <h2 id="ocDialogTitle">조직도 설정</h2>
+        <button class="settings-close" type="button" id="ocClose" aria-label="조직도 설정 닫기" title="닫기">✕</button>
+      </div>
+      <div class="oc-dialog-body" id="ocEditList"></div>
+      <div class="oc-dialog-foot">
+        <span class="oc-msg" id="ocMsg" aria-live="polite"></span>
+        <button type="button" class="ui-btn ghost" id="ocCancel">취소</button>
+        <button type="button" class="ui-btn primary" id="ocSave">저장</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* ===== 상수/헬퍼 ===== */
 const CH=['쿠팡','네이버','자사몰'];
@@ -7957,7 +8029,7 @@ window.CsGuide=(function(){
   let MANUAL_GUIDE=[
     {id:'g0', name:'회사 개요 & 문화', items:[
       {id:'0-0', name:'브랜드 비전 및 핵심 가치'},
-      {id:'0-1', name:'조직도 및 부서별 담당 업무'},
+      {id:'0-1', name:'바로얌 조직도'},
       {id:'0-2', name:'사내 보안 및 계정 관리 규정'}
     ]},
     {id:'g1', name:'고객 응대 & CS', items:[
@@ -7984,6 +8056,17 @@ window.CsGuide=(function(){
     const cachedGuide=JSON.parse(localStorage.getItem(GUIDE_LS_KEY)||'null');
     if(Array.isArray(cachedGuide)) MANUAL_GUIDE=cachedGuide;
   }catch(e){}
+  /* 옛 항목 이름을 새 이름으로 바꾼다 · 서버(Supabase)에 옛 이름이 남아 있어도 한 번 바꿔 저장하면 끝난다 */
+  const RENAMED_ITEMS={'0-1':['조직도 및 부서별 담당 업무','바로얌 조직도']};
+  function renameLegacyItems(){
+    let hit=false;
+    MANUAL_GUIDE.forEach(g=>g.items.forEach(it=>{
+      const r=RENAMED_ITEMS[it.id];
+      if(r && it.name===r[0]){ it.name=r[1]; hit=true; }
+    }));
+    return hit;
+  }
+  renameLegacyItems();
 
   const btn=document.getElementById('sbManualBtn');
   const subnav=document.getElementById('sbManualSubnav');
@@ -7999,6 +8082,8 @@ window.CsGuide=(function(){
   const newId=()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
   /* 고객 응대 & CS > 상담가이드 · 일반 문서가 아니라 상담 콘솔이 쓰는 답변 데이터(제목/키워드/답변) 등록 화면이다 */
   const CS_GUIDE_DOC_ID='1-1';
+  /* 회사 개요 & 문화 > 바로얌 조직도 · 일반 문서가 아니라 자리(대표님~부서)마다 회원·담당 업무를 두는 트리 화면이다 */
+  const ORG_DOC_ID='0-1';
   let activeDoc=null;          /* null이면 전체 목차 화면 */
   let openGroups=new Set();    /* 펼쳐둔 중분류(group.id) · 기본은 모두 접힘 */
 
@@ -8051,6 +8136,7 @@ window.CsGuide=(function(){
     titleEl.textContent=doc.name;
     descEl.textContent='';
     if(id===CS_GUIDE_DOC_ID){ renderGuideManager(); return; }
+    if(id===ORG_DOC_ID){ renderOrgChart(); return; }
     bodyEl.innerHTML='<div class="man-editor" id="manEditor" spellcheck="false" '+
       'data-placeholder="여기에 내용을 입력하세요. 글을 드래그하면 글씨설정 창이 나옵니다."></div>'+
       '<div class="man-savestate" id="manSaveState" hidden></div>';
@@ -8236,6 +8322,157 @@ window.CsGuide=(function(){
     if(activeDoc===CS_GUIDE_DOC_ID) drawGuideView();
     if(gmOv&&!gmOv.hidden) gmDrawList();
   });
+
+  /* ---------- 바로얌 조직도 ----------
+     자리(노드)는 parent 로 이어진 트리다 · 사람은 회원 목록(BAROYAM_MEMBERS)의 id 로 담아
+     회원 이름·사진이 바뀌면 조직도에도 그대로 따라온다 ·
+     통째로 app_settings 의 key='orgChart' 에 {nodes,updatedAt} 로 담고, 더 새 쪽이 이긴다 */
+  const ORG_KEY='orgChart', ORG_LS_KEY='baroyam_org_chart_v1';
+  const ORG_DEFAULT=[
+    {id:'ceo',       parent:'',         title:'대표님',     members:[], duties:[]},
+    {id:'director',  parent:'ceo',      title:'이사님',     members:[], duties:[]},
+    {id:'lead',      parent:'director', title:'팀장',       members:[], duties:[]},
+    {id:'marketing', parent:'lead',     title:'마케팅',     members:[], duties:[]},
+    {id:'design-ops',parent:'lead',     title:'디자인&운영', members:[], duties:[]}
+  ];
+  function orgRead(){
+    try{
+      const b=JSON.parse(localStorage.getItem(ORG_LS_KEY)||'null');
+      if(b&&Array.isArray(b.nodes)) return b;
+    }catch(e){}
+    return {nodes:JSON.parse(JSON.stringify(ORG_DEFAULT)),updatedAt:0};
+  }
+  let org=orgRead();
+  let orgOpenId='';                /* 담당 업무를 펼친 자리 · 비어 있으면 안내만 */
+  function orgWriteLocal(){ try{ localStorage.setItem(ORG_LS_KEY,JSON.stringify(org)); }catch(e){} }
+  function orgApplyRemote(settings){
+    if(typeof settings[ORG_KEY]!=='string'||!settings[ORG_KEY]) return;
+    try{
+      const b=JSON.parse(settings[ORG_KEY]);
+      if(b&&Array.isArray(b.nodes)&&(+b.updatedAt||0)>org.updatedAt){
+        org={nodes:b.nodes,updatedAt:+b.updatedAt||0};
+        orgWriteLocal();
+        if(activeDoc===ORG_DOC_ID) drawOrgChart();
+      }
+    }catch(err){ console.error(err); }
+  }
+  function orgMembers(){ return window.BAROYAM_MEMBERS?window.BAROYAM_MEMBERS.load():[]; }
+  function orgPeopleHtml(ids){
+    const all=orgMembers(), P=window.BAROYAM_PROFILES;
+    const ms=(ids||[]).map(id=>all.find(m=>m.id===id)).filter(Boolean);   /* 회원설정에서 지운 사람은 빠진다 */
+    if(!ms.length) return '<span class="oc-empty-person">담당자 미정</span>';
+    return ms.map(m=>{
+      const av=P?P.get(m.id).avatar:'';
+      const face=av?'<img src="'+esc(av)+'" alt="" referrerpolicy="no-referrer">':esc(String(m.name||'').trim().charAt(0));
+      return '<span class="oc-person"><span class="oc-face" style="background:'+esc(m.color||'var(--mute)')+'" aria-hidden="true">'+
+        face+'</span>'+esc(m.name)+'</span>';
+    }).join('');
+  }
+  function orgTreeHtml(parentId){
+    const kids=org.nodes.filter(n=>(n.parent||'')===parentId);
+    if(!kids.length) return '';
+    return '<ul>'+kids.map(n=>
+      '<li><button type="button" class="oc-node'+(parentId?'':' is-top')+'" data-oc="'+esc(n.id)+'" aria-expanded="'+(n.id===orgOpenId)+'">'+
+        '<span class="oc-title">'+esc(n.title)+'</span>'+
+        '<span class="oc-people">'+orgPeopleHtml(n.members)+'</span>'+
+      '</button>'+orgTreeHtml(n.id)+'</li>').join('')+'</ul>';
+  }
+  function renderOrgChart(){
+    setEditMode(false);
+    if(editBtn){
+      editBtn.hidden=false;
+      editBtn.title='조직도 설정 (담당자·담당 업무)';
+      if(editBtnLabel) editBtnLabel.textContent='설정';
+    }
+    descEl.textContent='자리를 누르면 그 자리의 담당 업무가 아래에 펼쳐집니다. 담당자·업무는 오른쪽 위 설정 버튼에서 바꿉니다.';
+    bodyEl.innerHTML='<div class="oc"><div class="oc-scroll"><div class="oc-tree" id="ocTree"></div></div>'+
+      '<div id="ocDetail"></div></div>';
+    document.getElementById('ocTree').addEventListener('click',e=>{
+      const b=e.target.closest('[data-oc]');
+      if(!b) return;
+      orgOpenId=orgOpenId===b.dataset.oc?'':b.dataset.oc;
+      drawOrgChart();
+    });
+    drawOrgChart();
+  }
+  function drawOrgChart(){
+    const tree=document.getElementById('ocTree'), detail=document.getElementById('ocDetail');
+    if(!tree||!detail) return;
+    tree.innerHTML=orgTreeHtml('');
+    const n=org.nodes.find(x=>x.id===orgOpenId);
+    if(!n){
+      orgOpenId='';
+      detail.innerHTML='<div class="oc-hint">자리를 누르면 담당 업무가 여기에 보입니다.</div>';
+      return;
+    }
+    const duties=(n.duties||[]).filter(d=>String(d).trim());
+    detail.innerHTML='<section class="oc-detail"><h3>'+esc(n.title)+' <span class="oc-people">'+orgPeopleHtml(n.members)+'</span></h3>'+
+      (duties.length?'<ul class="oc-duties">'+duties.map(d=>'<li>'+esc(d)+'</li>').join('')+'</ul>'
+        :'<div class="oc-hint">아직 담당 업무가 없어요. 오른쪽 위 <b>설정</b>에서 추가해 보세요.</div>')+
+      '</section>';
+  }
+  /* 회원 이름·색·사진이 바뀌면 조직도도 다시 그린다 */
+  ['baroyam:members','baroyam:profiles'].forEach(ev=>document.addEventListener(ev,()=>{
+    if(activeDoc===ORG_DOC_ID) drawOrgChart();
+  }));
+
+  /* 조직도 설정 창 · 고친 내용은 저장을 눌러야 반영된다(취소하면 버린다) */
+  const ocOv=document.getElementById('ocOverlay');
+  const ocEl=id=>document.getElementById(id);
+  function ocSetMsg(t,warn){ const m=ocEl('ocMsg'); if(!m) return; m.textContent=t||''; m.classList.toggle('is-warn',!!warn); }
+  function ocDrawForm(){
+    const list=ocEl('ocEditList');
+    if(!list) return;
+    const ms=orgMembers();
+    list.innerHTML=org.nodes.map(n=>{
+      const fid='ocT_'+n.id.replace(/[^\w-]/g,'_');
+      return '<div class="oc-edit" data-oc-edit="'+esc(n.id)+'">'+
+        '<label for="'+fid+'">자리 이름</label>'+
+        '<input class="ui-field block" id="'+fid+'" data-oc-f="title" maxlength="20" value="'+esc(n.title)+'">'+
+        '<span class="oc-edit-k">담당자</span>'+
+        '<div class="ui-chips">'+(ms.length?ms.map(m=>
+          '<button type="button" class="ui-chip" data-oc-m="'+esc(m.id)+'" aria-pressed="'+(n.members||[]).includes(m.id)+'">'+esc(m.name)+'</button>'
+        ).join(''):'<span class="oc-empty-person">회원설정에 회원이 없어요</span>')+'</div>'+
+        '<label for="'+fid+'_d">담당 업무</label>'+
+        '<textarea class="ui-field block" id="'+fid+'_d" data-oc-f="duties" placeholder="한 줄에 하나씩 입력 (예: 광고 운영)">'+
+          esc((n.duties||[]).join('\n'))+'</textarea>'+
+      '</div>';
+    }).join('');
+  }
+  function ocOpen(on){
+    if(!ocOv) return;
+    ocOv.hidden=!on;
+    document.body.style.overflow=on?'hidden':'';
+    if(on){ ocDrawForm(); ocSetMsg(''); }
+    else if(editBtn) editBtn.focus();
+  }
+  if(ocOv){
+    ocEl('ocClose').addEventListener('click',()=>ocOpen(false));
+    ocEl('ocCancel').addEventListener('click',()=>ocOpen(false));
+    ocOv.addEventListener('click',e=>{ if(e.target===ocOv) ocOpen(false); });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!ocOv.hidden) ocOpen(false); });
+    ocEl('ocEditList').addEventListener('click',e=>{
+      const c=e.target.closest('[data-oc-m]');
+      if(c) c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');
+    });
+    ocEl('ocSave').addEventListener('click',()=>{
+      const nodes=org.nodes.map(n=>{
+        const box=ocEl('ocEditList').querySelector('[data-oc-edit="'+CSS.escape(n.id)+'"]');
+        if(!box) return n;
+        const title=box.querySelector('[data-oc-f="title"]').value.trim()||n.title;
+        const members=[...box.querySelectorAll('[data-oc-m][aria-pressed="true"]')].map(b=>b.dataset.ocM);
+        const duties=box.querySelector('[data-oc-f="duties"]').value.split('\n').map(s=>s.trim()).filter(Boolean);
+        return Object.assign({},n,{title,members,duties});
+      });
+      org={nodes,updatedAt:Date.now()};
+      orgWriteLocal();
+      if(activeDoc===ORG_DOC_ID) drawOrgChart();
+      ocOpen(false);
+      window.baroyamSaveSetting(ORG_KEY,JSON.stringify(org)).then(ok=>{
+        if(!ok) console.warn('[바로얌] 조직도를 서버에 저장하지 못했습니다 · 이 기기에는 저장됨');
+      }).catch(err=>console.error(err));
+    });
+  }
 
   function showDoc(id){
     const doc=findDoc(id);
@@ -8503,6 +8740,7 @@ window.CsGuide=(function(){
   }
   if(editBtn) editBtn.addEventListener('click',()=>{
     if(activeDoc===CS_GUIDE_DOC_ID){ gmOpen(true); return; }   /* 상담가이드는 문서 편집 대신 매뉴얼 관리 창 */
+    if(activeDoc===ORG_DOC_ID){ ocOpen(true); return; }        /* 조직도는 조직도 설정 창 */
     setEditMode(!editMode);
   });
 
@@ -8592,13 +8830,14 @@ window.CsGuide=(function(){
     apply(settings){
       if(!settings) return;
       /* 목차 구조(중분류/항목 목록)를 내용보다 먼저 반영해야, 아래 내용 동기화가 최신 항목 id 기준으로 돈다 */
+      orgApplyRemote(settings);
       let structChanged=false;
       if(typeof settings.manualGuide==='string' && settings.manualGuide){
         try{
           const parsed=JSON.parse(settings.manualGuide);
           if(Array.isArray(parsed) && JSON.stringify(parsed)!==JSON.stringify(MANUAL_GUIDE)){
             MANUAL_GUIDE=parsed;
-            persistGuideLocal();
+            if(renameLegacyItems()) saveGuideChange(); else persistGuideLocal();
             structChanged=true;
           }
         }catch(err){ console.error(err); }
