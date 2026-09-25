@@ -8513,7 +8513,35 @@ window.CsGuide=(function(){
     const isSales=(v==='month'||v==='week');
     salesToggle.classList.toggle('active',isSales);
     if(isSales) lastSalesView=v;
+    syncHash(v);
   }
+
+  /* 탭마다 주소 · 보고 있는 화면을 주소 끝(#drive 등)에 적어 두어 새로고침·북마크·공유해도 그 탭이 열린다 ·
+     replaceState 라 뒤로가기 기록은 쌓지 않는다 · 마이홈은 주소를 비우고, 판매채널처럼 다시 열 길이 없는 화면도 비운다 */
+  function openFromHash(v){
+    if(v==='week'||v==='month'){ activateView(v); return true; }
+    if(v==='collector'){
+      const r=document.getElementById('sbReviewBtn'), c=document.getElementById('sbReviewCollector');
+      if(!r||!c) return false;
+      r.click(); c.click(); return true;
+    }
+    const b=document.querySelector('.sidebar .sb-item[data-view="'+v+'"]');
+    if(!b||v==='home') return false;
+    b.click(); return true;
+  }
+  function routable(v){
+    return v==='week'||v==='month'||v==='collector'||(v!=='home'&&!!document.querySelector('.sidebar .sb-item[data-view="'+v+'"]'));
+  }
+  function syncHash(v){
+    const want=routable(v)?'#'+v:'';
+    if(location.hash===want) return;
+    try{ history.replaceState(history.state,'',location.pathname+location.search+want); }catch(e){}
+  }
+  /* 주소창에 직접 #탭 을 쳐서 바꾼 경우 */
+  window.addEventListener('hashchange',()=>{
+    const v=location.hash.slice(1);
+    if(v!==window.baroyamCurrentView&&!openFromHash(v)) activateView('home');
+  });
 
   document.querySelectorAll('.sb-item[data-view],.hero-view-tab[data-view]').forEach(btn=>{
     btn.addEventListener('click',()=>activateView(btn.dataset.view));
@@ -8522,8 +8550,15 @@ window.CsGuide=(function(){
   salesToggle.addEventListener('click',()=>activateView(lastSalesView));
   window.activateView=activateView;
 
-  /* 처음 들어오면 홈 · 마크업의 초기 표시와 한 번 맞춰 둔다 */
+  /* 처음 들어오면 홈 · 마크업의 초기 표시와 한 번 맞춰 둔다 ·
+     주소에 탭이 적혀 있으면 모든 화면 코드가 준비된 뒤 그 탭 버튼을 눌러 연다(리뷰수집·메뉴얼가이드 하위 메뉴까지 펼치도록) */
+  const startView=location.hash.slice(1);
   activateView('home');
+  if(startView){
+    document.addEventListener('DOMContentLoaded',()=>{
+      if(window.baroyamCurrentView==='home') openFromHash(startView);
+    });
+  }
   window.activateLastSales=()=>activateView(lastSalesView);
 })();
 
@@ -10390,8 +10425,7 @@ window.CsGuide=(function(){
   });
   const salesToggleBtn=document.getElementById('sbSalesToggle');
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
-  /* 로컬 도구에서 돌아오면 리뷰 메뉴를 다시 펼친다. */
-  if(window.location.hash==='#review') btn.click();
+  /* 로컬 도구에서 #review 로 돌아오면 탭마다 주소 코드가 리뷰수집 버튼을 눌러 메뉴를 펼친다 */
 })();
 
 /* 사이드탭 활성 표시만 맡고, 배너 색·제목과 패널 내용은 renderRevAll()이 판매처에 맞춰 다시 그린다 */
