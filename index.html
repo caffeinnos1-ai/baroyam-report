@@ -15034,11 +15034,26 @@ window.baroyamAsk=function(title,body,okText){
   }
 
   /* 들어가기 비밀번호 · 공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적어 둔다
-     (팀장 비밀번호와 같은 방식, 소금만 다르다) · 맞히면 이 탭을 닫을 때까지 다시 묻지 않는다 ·
+     (팀장 비밀번호와 같은 방식, 소금만 다르다) · 들어올 때마다 묻는다 — 맞히면 이 화면에 있는 동안만 열리고,
+     다른 메뉴로 나가면 다시 잠근다(풀린 표시는 저장하지 않고 이 페이지 기억에만 둔다) ·
      화면을 가리는 수준의 잠금이다 — 서버의 accounts_v1 자체를 막아 주지는 않는다 */
   const 잠금={salt:'baroyam-account-v1',iterations:200000,hash:'b073c25ac3e892e8d8ec54c319c4c6bbf83847cd82d5ae053ec3d7ea40606e86'};
-  const 풀림열쇠='baroyam_account_unlock_v1';
-  function 풀림(){ try{ return sessionStorage.getItem(풀림열쇠)===잠금.hash; }catch(e){ return false; } }
+  let 풀린=false;
+  function 풀림(){ try{ return 풀린; }catch(e){ return false; } }
+  /* 나갈 때 잠근다 · 계정관리 화면이 숨겨지는 순간(다른 메뉴로 이동)을 지켜본다 ·
+     펼친 계정정보·보인 비밀번호·열린 편집 칸도 닫고 목록 그림을 지운다(읽어 둔 목록은 다음 입장 때 다시 쓴다) */
+  (function(){
+    const 화면=$('view-account'); if(!화면) return;
+    new MutationObserver(function(){
+      if(화면.style.display!=='none'||!풀린) return;
+      풀린=false;
+      펼친줄.clear(); 보인비번.clear(); 여는칸=''; 고치는줄='';
+      $('accSet').hidden=true; $('accSetBtn').setAttribute('aria-expanded','false');
+      $('accGroups').hidden=true; $('accAddGroup').setAttribute('aria-expanded','false');
+      $('accGrid').innerHTML='';
+      $('accBody').hidden=true;
+    }).observe(화면,{attributes:true,attributeFilter:['style']});
+  })();
   async function 잠금해시(pw){
     const enc=new TextEncoder();
     const key=await crypto.subtle.importKey('raw',enc.encode(String(pw)),'PBKDF2',false,['deriveBits']);
@@ -15065,7 +15080,7 @@ window.baroyamAsk=function(title,body,okText){
     글.textContent='확인하는 중…';
     const 맞음=(await 잠금해시(칸.value))===잠금.hash;
     if(!맞음){ 글.textContent='비밀번호가 맞지 않아요'; 칸.value=''; 칸.focus(); return; }
-    try{ sessionStorage.setItem(풀림열쇠,잠금.hash); }catch(err){}
+    풀린=true;
     열기();
   });
   async function 열기(){
