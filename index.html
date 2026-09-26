@@ -744,9 +744,9 @@ window.BAROYAM_ACCESS=(function(){
     {k:'trend',     name:'트렌드분석',   sel:'.sidebar .sb-item[data-view="trend"]',   views:['trend']},
     {k:'review',    name:'리뷰수집',     sel:'.sidebar .sb-item[data-view="review"]',  views:['review','collector']},
     {k:'drive',     name:'드라이브',     sel:'.sidebar .sb-item[data-view="drive"]',   views:['drive']},
-    {k:'account',   name:'계정관리',     sel:'.sidebar .sb-item[data-view="account"]', views:['account']},
     {k:'manual',    name:'메뉴얼가이드', sel:'.sidebar .sb-item[data-view="manual"]',  views:['manual']},
     {k:'automation',name:'자동화',       sel:'#sbAutomationLink',                      views:[]},
+    {k:'account',   name:'계정관리',     sel:'.sidebar .sb-item[data-view="account"]', views:['account']},
   ];
   function readBox(){
     try{
@@ -4311,11 +4311,6 @@ window.BAROYAM_ACCESS=(function(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8 21 19.4H3Z"/><path d="M12 3.8v9.1M12 12.9 3.9 19.1M12 12.9l8.1 6.2"/></svg>
           <span>드라이브</span>
         </button>
-        <!-- 계정관리 · 자리만 만들어 두었다(내용은 아직 비어 있다) -->
-        <button class="sb-item" type="button" data-view="account" id="sbAccountBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.6c1.2-3.4 4-5.2 7.2-5.2s6 1.8 7.2 5.2"/></svg>
-          <span>계정관리</span>
-        </button>
         <button class="sb-item" type="button" data-view="manual" id="sbManualBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
           <span>메뉴얼가이드</span>
@@ -4324,6 +4319,11 @@ window.BAROYAM_ACCESS=(function(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="13" rx="2.5"/><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M3.5 12h17M10 12v2h4v-2"/></svg>
           <span>자동화</span>
         </a>
+        <!-- 계정관리 · 자리만 만들어 두었다(내용은 아직 비어 있다) -->
+        <button class="sb-item" type="button" data-view="account" id="sbAccountBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.6c1.2-3.4 4-5.2 7.2-5.2s6 1.8 7.2 5.2"/></svg>
+          <span>계정관리</span>
+        </button>
       </div>
       <div class="sb-bottom">
         <div class="sb-bottom-row">
