@@ -4278,7 +4278,7 @@ window.BAROYAM_ACCESS=(function(){
           </div>
         </div>
         <!-- 퍼포먼스마케팅 · 콘텐츠마케팅 · 자리만 만들어 두었다(대시보드는 아직 비어 있다) -->
-        <button class="sb-item" type="button" data-view="perf" id="sbPerfBtn">
+        <button class="sb-item" type="button" data-view="perf" id="sbPerfBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11v2.5c0 .8.7 1.5 1.5 1.5H7l4.5 4V5L7 9H5.5C4.7 9 4 9.7 4 10.5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
           <span>퍼포먼스마케팅</span>
         </button>
@@ -4359,6 +4359,26 @@ window.BAROYAM_ACCESS=(function(){
         <button type="button" class="sb-subnav-item" data-platform="coupang"><i class="sb-subnav-dot is-coupang"></i>쿠팡리뷰</button>
         <button type="button" class="sb-subnav-item" data-platform="toss"><i class="sb-subnav-dot is-toss"></i>토스리뷰</button>
         <button type="button" class="sb-subnav-item" data-platform="alwayz"><i class="sb-subnav-dot is-alwayz"></i>올웨이즈리뷰</button>
+      </div>
+    </nav>
+
+    <!-- 퍼포먼스마케팅 사이드탭 · 퍼포먼스 매출과 광고 등록(메타·구글애즈·유튜브)을 고른다 -->
+    <nav class="sb-subnav" id="sbPerfSubnav" hidden aria-label="퍼포먼스마케팅 하위 메뉴">
+      <div class="sb-subnav-head">
+        <div class="sb-subnav-title">퍼포먼스마케팅</div>
+      </div>
+      <div class="sb-subnav-flat" id="sbPerfSubnavList">
+        <button type="button" class="sb-subnav-home active" data-perf="sales">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
+          <span>퍼포먼스 매출</span>
+        </button>
+      </div>
+      <div class="sb-subnav-sep"></div>
+      <div class="sb-subnav-caption">광고 등록</div>
+      <div class="sb-subnav-flat">
+        <button type="button" class="sb-subnav-item" data-perf="meta">메타광고 등록</button>
+        <button type="button" class="sb-subnav-item" data-perf="google">구글애즈 등록</button>
+        <button type="button" class="sb-subnav-item" data-perf="youtube">유튜브 등록</button>
       </div>
     </nav>
 
@@ -6320,7 +6340,7 @@ window.BAROYAM_ACCESS=(function(){
         <section>
           <div class="plan-hero">
             <div class="ptag">PERFORMANCE</div>
-            <div class="ptitle">퍼포먼스마케팅</div>
+            <div class="ptitle" id="perfViewTitle">퍼포먼스 매출</div>
           </div>
         </section>
       </div><!-- /view-perf -->
@@ -10426,6 +10446,28 @@ window.CsGuide=(function(){
   const salesToggleBtn=document.getElementById('sbSalesToggle');
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
   /* 로컬 도구에서 #review 로 돌아오면 탭마다 주소 코드가 리뷰수집 버튼을 눌러 메뉴를 펼친다 */
+})();
+
+/* 퍼포먼스마케팅 사이드탭 · 아이콘을 누르면 리뷰수집처럼 사이드탭이 열리고,
+   퍼포먼스 매출 / 메타광고·구글애즈·유튜브 등록 중 하나를 고른다(화면 내용은 아직 제목만 있다) */
+(function(){
+  const btn=document.getElementById('sbPerfBtn');
+  const subnav=document.getElementById('sbPerfSubnav');
+  const title=document.getElementById('perfViewTitle');
+  if(!btn||!subnav) return;
+  const items=[...subnav.querySelectorAll('[data-perf]')];
+  function pick(el){
+    items.forEach(b=>b.classList.toggle('active',b===el));
+    if(title) title.textContent=el.textContent.trim();
+  }
+  btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
+  items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('perf'); pick(el); }));
+  function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
+  document.querySelectorAll('.sb-item[data-view],.sb-subitem').forEach(other=>{
+    if(other!==btn) other.addEventListener('click',close);
+  });
+  const salesToggleBtn=document.getElementById('sbSalesToggle');
+  if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
 })();
 
 /* 사이드탭 활성 표시만 맡고, 배너 색·제목과 패널 내용은 renderRevAll()이 판매처에 맞춰 다시 그린다 */
