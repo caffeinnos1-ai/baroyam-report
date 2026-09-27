@@ -2596,6 +2596,15 @@ window.BAROYAM_ACCESS=(function(){
   @keyframes sbspin{to{transform:rotate(360deg)}}
   .sb-synctime{flex:1;min-width:0;font-size:10.5px;color:var(--sb-mute);font-weight:600;text-align:left;
     padding:0 0 0 8px;line-height:1.45;white-space:pre-line;min-height:1px}
+  /* 매출데이터 새로고침 · 업데이트 시각 옆 작은 아이콘 · 누르면 시트에서 매출·회원 데이터를 다시 불러온다 */
+  .sb-refresh{all:unset;box-sizing:border-box;flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    color:var(--sb-mute);cursor:pointer;transition:background .16s,color .16s}
+  .sb-refresh svg{width:15px;height:15px;display:block}
+  .sb-refresh:hover{background:var(--sb-hover);color:var(--sb-ink-hi)}
+  .sb-refresh:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:2px}
+  .sb-refresh.is-loading{pointer-events:none;opacity:.7}
+  .sb-refresh.is-loading svg{animation:sbspin .8s linear infinite}
+  .sidebar:is(.is-collapsed,.is-compact) .sb-refresh{display:none}
   .main{flex:1;min-width:0}
 
   /* 최상단 바 · 왼쪽 검색 하나만 두고 나머지는 비워 둔다 */
@@ -4333,6 +4342,9 @@ window.BAROYAM_ACCESS=(function(){
       <div class="sb-bottom">
         <div class="sb-bottom-row">
           <div class="sb-synctime" id="sbSyncTime"></div>
+          <button class="sb-refresh" type="button" id="sbSalesRefresh" aria-label="매출데이터 새로고침" title="매출데이터 새로고침">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+          </button>
           <button class="sb-theme" type="button" id="themeSwitch" role="switch" aria-checked="false" aria-label="다크모드 전환" title="다크 모드">
             <svg class="ts-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.3 6.3 0 0 0 10.5 10.5Z"/></svg>
             <span class="ts-track"><span class="ts-knob"></span></span>
@@ -7447,6 +7459,18 @@ async function syncFromSheets(){
   showSyncTime(at);
 }
 syncFromSheets().catch(err=>console.error('자동 동기화 실패',err));
+/* 사이드바 하단 새로고침 · 페이지를 다시 열지 않고 매출데이터를 시트에서 다시 불러온다 */
+(function(){
+  const btn=document.getElementById('sbSalesRefresh');
+  if(!btn) return;
+  btn.addEventListener('click',()=>{
+    if(btn.classList.contains('is-loading')) return;
+    btn.classList.add('is-loading');
+    syncFromSheets()
+      .catch(err=>{ console.error('매출데이터 새로고침 실패',err); alert('매출데이터를 불러오지 못했어요 · '+err.message); })
+      .finally(()=>btn.classList.remove('is-loading'));
+  });
+})();
 
 })();
 
@@ -9352,9 +9376,9 @@ window.CsGuide=(function(){
     }
     return it.name;
   }
-  /* 고정 항목 · 상담가이드(1-1)는 상담 AI가 쓰는 답변 데이터를 입력하는 곳이라 설정창에서도 지울 수 없다 ·
-     id로 묶어서 이름을 바꿔도 고정은 유지되고, 이 항목이 든 중분류도 통째로 지울 수 없다 */
-  const FIXED_ITEM_IDS=new Set([CS_GUIDE_DOC_ID]);
+  /* 고정 항목 · 상담가이드(1-1)는 상담 AI가 쓰는 답변 데이터를 입력하는 곳, 바로얌 조직도(0-1)는 자리·담당 업무
+     트리 화면이라 설정창에서도 지울 수 없다 · id로 묶어서 이름을 바꿔도 고정은 유지되고, 이 항목이 든 중분류도 통째로 지울 수 없다 */
+  const FIXED_ITEM_IDS=new Set([CS_GUIDE_DOC_ID,ORG_DOC_ID]);
   const isFixedItem=id=>FIXED_ITEM_IDS.has(id);
   const groupHasFixed=g=>g.items.some(it=>isFixedItem(it.id));
   const LOCK_HTML='<span class="mg-lock" title="고정 항목 · 삭제할 수 없습니다" aria-label="고정 항목">'+
