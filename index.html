@@ -4105,6 +4105,11 @@ window.BAROYAM_ACCESS=(function(){
          되지 않는" 상태가 됐다. 이름·이메일·사진은 새로 열릴 때 세션에서 받는다 */
       msg.textContent='로그인 중...';
       await window.BAROYAM_DB.signInWithGoogle(res.credential);
+      /* 구글로 새로 들어올 때마다 회원을 다시 고르게 한다 · 세션이 만료돼 로그아웃 없이
+         이 화면이 뜨면 지난번 회원과 팀장 통과 기록이 남아 있어서, 누가 로그인하든
+         그 회원(팀장이면 관리자 권한까지)으로 바로 들어갔다 */
+      try{ localStorage.removeItem('baroyam_me_v1'); }catch(e){}
+      window.BAROYAM_LEAD.clear();
       /* 프로필 메뉴에 띄울 이름·이메일·사진을 지금 적어 둔다 · 화면 여러 곳이 이
          쪽지를 "즉시" 읽는데, 새로 열린 뒤 세션에서 채우면 읽는 시점에 아직
          비어 있어 프로필이 빈 채로 나온다 */
