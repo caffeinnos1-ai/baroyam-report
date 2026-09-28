@@ -7469,16 +7469,19 @@ async function sheetsGet(token,path){
   if(!res.ok) throw new Error('시트를 불러오지 못했어요 ('+res.status+')');
   return res.json();
 }
-/* Sheets API 값을 예전 gviz 모양({table:{cols:[{label}],rows:[{c:[{v}]}]}})으로 바꾼다 ·
-   gviz 도 시트 1행을 머리글(label)로 썼으므로 아래 해석 코드를 그대로 쓸 수 있다 */
-function toGvizTable(valueRange){
-  const rows=(valueRange&&valueRange.values)||[];
-  const width=rows.reduce((w,r)=>Math.max(w,r.length),0);
-  const head=rows[0]||[];
-  const cell=v=>(v===''||v==null)?null:{v};
+/* Sheets API 값을 예전 gviz 모양({table:{cols:[{label}],rows:[{c:[{v,f}]}]}})으로 바꾼다 ·
+   gviz 도 시트 1행을 머리글(label)로 썼으므로 아래 해석 코드를 그대로 쓸 수 있다.
+   v 는 칸의 원래 값(숫자는 숫자), f 는 화면에 보이는 글자다 · A열의 "9월 26일" 은
+   구글시트가 날짜로 저장해서 원래 값이 날짜 숫자로 오므로, 이름표는 f 로 읽어야 한다
+   (v 만 읽었더니 진행 중인 달을 못 알아보고 9월 숫자가 8월 자리에 들어가 9월끼리 비교됐다) */
+function toGvizTable(raw,shown){
+  const rows=(raw&&raw.values)||[], text=(shown&&shown.values)||[];
+  const width=rows.concat(text).reduce((w,r)=>Math.max(w,r.length),0);
+  const head=text[0]||rows[0]||[];
+  const cell=(v,f)=>(v===''||v==null)?null:{v,f:f==null?'':String(f)};
   return {table:{
-    cols:Array.from({length:width},(_,i)=>({label:head[i]==null?'':String(head[i])})),
-    rows:rows.slice(1).map(r=>({c:Array.from({length:width},(_,i)=>cell(r[i]))}))
+    cols:Array.from({length:width},(_,i)=>({label:head[i]==null?'':String(head[i]).trim()})),
+    rows:rows.slice(1).map((r,ri)=>{const t=text[ri+1]||[];return {c:Array.from({length:width},(_,i)=>cell(r[i],t[i]))};})
   }};
 }
 async function fetchSheetTables(interactive){
@@ -7490,8 +7493,10 @@ async function fetchSheetTables(interactive){
     return "'"+s.properties.title.replace(/'/g,"''")+"'";
   };
   const q=[GID_SALES,GID_MEMBERS].map(g=>'ranges='+encodeURIComponent(title(g))).join('&');
-  const v=await sheetsGet(token,'/values:batchGet?'+q+'&valueRenderOption=UNFORMATTED_VALUE');
-  return (v.valueRanges||[]).map(toGvizTable);
+  const [raw,shown]=await Promise.all([
+    sheetsGet(token,'/values:batchGet?'+q+'&valueRenderOption=UNFORMATTED_VALUE'),
+    sheetsGet(token,'/values:batchGet?'+q+'&valueRenderOption=FORMATTED_VALUE')]);
+  return (raw.valueRanges||[]).map((vr,i)=>toGvizTable(vr,(shown.valueRanges||[])[i]));
 }
 function cellNum(cell){
   if(!cell||cell.v===null||cell.v===undefined) return 0;
@@ -7499,7 +7504,12 @@ function cellNum(cell){
   if(typeof cell.v==='string'){const n=parseFloat(cell.v.replace(/[,명]/g,''));return isNaN(n)?0:n;}
   return 0;
 }
-function cellStr(cell){return cell&&typeof cell.v==='string'?cell.v.trim():'';}
+/* 이름표 칸 · 날짜로 저장된 "9월 26일" 같은 칸은 원래 값이 숫자라 화면 글자(f)로 읽는다 */
+function cellStr(cell){
+  if(!cell) return '';
+  if(typeof cell.v==='string') return cell.v.trim();
+  return typeof cell.f==='string'?cell.f.trim():'';
+}
 
 function parseSalesSheet(json){
   const cols=json.table.cols, rows=json.table.rows;
@@ -11689,8 +11699,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      rule:"상태가 '진행중'이고 마감일이 오늘보다 지난 프로젝트",
      pick:(list,today)=>list.filter(p=>p.status==='진행중'&&p.due&&p.due<today)},
     {k:'soon',id:'mhStatSoon',name:'마감 3일 이내 프로젝트',
-     rule:"상태가 '진행중'이고 마감일이 오늘부터 3일 안에 오는 프로젝트",
-     pick:(list,today)=>list.filter(p=>p.status==='진행중'&&p.due&&p.due>=today&&dayDiff(today,p.due)<=3)},
+     rule:"상태가 '예정'·'진행중'이고 마감일이 오늘부터 3일 안에 오는 프로젝트",
+     pick:(list,today)=>list.filter(p=>(p.status==='예정'||p.status==='진행중')&&p.due&&p.due>=today&&dayDiff(today,p.due)<=3)},
     {k:'planned',id:'mhStatPlanned',name:'예정 프로젝트',
      rule:"상태가 '예정'인 프로젝트",
      pick:(list)=>list.filter(p=>p.status==='예정')},
