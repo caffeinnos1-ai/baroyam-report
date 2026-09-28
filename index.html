@@ -3151,6 +3151,13 @@ window.BAROYAM_ACCESS=(function(){
   .mg-del:hover{background:var(--neg-soft);color:var(--neg)}
   .mg-del:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:1px}
   /* 고정 항목(상담가이드 등) · 삭제 버튼 자리에 자물쇠만 보여준다 */
+  /* 순서 바꾸기 ▲▼ · 이름칸과 ✕ 사이에 작게 */
+  .mg-move{flex:none;display:flex;gap:2px}
+  .mg-move button{all:unset;box-sizing:border-box;display:grid;place-items:center;width:22px;height:26px;border-radius:7px;
+    font-size:9px;line-height:1;color:var(--mute);cursor:pointer;transition:background .14s,color .14s}
+  .mg-move button:hover{background:var(--paper);color:var(--indigo)}
+  .mg-move button:focus-visible{outline:2px solid var(--indigo-lite);outline-offset:1px}
+  .mg-move button:disabled{opacity:.3;cursor:default;background:none;color:var(--mute)}
   .mg-lock{flex:none;display:grid;place-items:center;width:26px;height:26px;color:var(--mute);cursor:default}
   .mg-lock svg{width:13px;height:13px}
   .mg-add-item{display:flex;gap:6px;margin-top:4px}
@@ -7575,12 +7582,18 @@ function buildDataFromSheets(salesJson,memberData){
   const blocks=parseSalesSheet(salesJson);
   const complete=blocks.filter(b=>!b.isPartial);
   const partial=blocks.find(b=>b.isPartial);
-  if(complete.length<1) throw new Error('완결월 데이터를 찾지 못했습니다');
-  /* 기준월(prev)은 진행 중인 달보다 앞선 완결월 중 가장 최근 달 · 시트에 미래 월 행이
-     값과 함께 잘못 들어가도 기준이 뒤로 밀리지 않게 월번호로 거른다 */
-  const prevBlock=(partial&&complete.filter(b=>b.monthNum&&b.monthNum<partial.monthNum).pop())
-    ||complete[complete.length-1];
-  const currBlock=partial||prevBlock;
+  if(!blocks.length) throw new Error('월 데이터를 찾지 못했습니다');
+  /* 이번달(curr)은 "9월 26일"처럼 날짜가 붙은 진행 중인 달, 없으면 오늘이 속한 달 ·
+     예전에는 날짜가 붙은 이름표만 이번달로 봤는데, 시트에 그냥 "9월"로 적히면 이번달을
+     못 찾아 마지막 달(9월)끼리 비교했다.
+     기준월(prev)은 이번달보다 앞선 달 중 가장 최근 달 · 시트에 미래 월 행이 값과 함께
+     잘못 들어가도 기준이 뒤로 밀리지 않게 월번호로 거른다 */
+  const nowMonth=new Date().getMonth()+1;
+  const currBlock=partial||blocks.find(b=>b.monthNum===nowMonth)||complete[complete.length-1]||blocks[blocks.length-1];
+  const prevBlock=blocks.filter(b=>b!==currBlock&&b.monthNum&&b.monthNum<currBlock.monthNum).pop()
+    ||blocks[blocks.indexOf(currBlock)-1]||currBlock;
+  /* 날짜 없는 이름표인 이번달은 오늘 날짜까지 누적으로 본다 */
+  const currDay=currBlock.day||(currBlock.monthNum===nowMonth?new Date().getDate():0);
   const platSales=b=>{const o={};CH.forEach(c=>o[c]=(b.platforms[c]&&b.platforms[c].sales)||0);return o;};
   const platAd=b=>{const o={};CH.forEach(c=>o[c]={cost:(b.platforms[c]&&b.platforms[c].cost)||0,rev:(b.platforms[c]&&b.platforms[c].rev)||0});return o;};
   const daysInMonth=monthNum=>new Date(new Date().getFullYear(),monthNum,0).getDate();
@@ -7591,9 +7604,9 @@ function buildDataFromSheets(salesJson,memberData){
   const labelFor=b=>b.isPartial?`${b.monthNum}월`:b.label;
   return {
     prevLabel:prevBlock.label,
-    currLabel:partial?`${currBlock.monthNum}월`:currBlock.label,
+    currLabel:currBlock.monthNum?`${currBlock.monthNum}월`:currBlock.label,
     currMonthNum:currBlock.monthNum,
-    currDay:currBlock.day||daysInMonth(currBlock.monthNum),
+    currDay:currDay||daysInMonth(currBlock.monthNum),
     daysInCurrMonth:daysInMonth(currBlock.monthNum),
     salesPrev:platSales(prevBlock), salesCurr:platSales(currBlock),
     adPrev:platAd(prevBlock), adCurr:platAd(currBlock),
@@ -9634,6 +9647,41 @@ window.CsGuide=(function(){
     refreshAfterGuideChange();
   }
 
+  /* 순서 바꾸기 · ▲▼로 한 칸씩 옮긴다 · id는 그대로라 써둔 문서는 따라 움직인다 ·
+     항목이 중분류 맨 위/맨 아래에서 더 가면 이웃 중분류의 끝/처음으로 넘어간다 · 고정 항목도 옮길 수는 있다 */
+  function moveGroup_(groupId,dir){
+    const i=MANUAL_GUIDE.findIndex(x=>x.id===groupId), j=i+dir;
+    if(i===-1||j<0||j>=MANUAL_GUIDE.length) return;
+    [MANUAL_GUIDE[i],MANUAL_GUIDE[j]]=[MANUAL_GUIDE[j],MANUAL_GUIDE[i]];
+    saveGuideChange();
+    refreshAfterGuideChange();
+  }
+  function moveItem_(groupId,itemId,dir){
+    const gi=MANUAL_GUIDE.findIndex(x=>x.id===groupId);
+    if(gi===-1) return;
+    const items=MANUAL_GUIDE[gi].items, i=items.findIndex(x=>x.id===itemId);
+    if(i===-1) return;
+    const j=i+dir;
+    if(j>=0&&j<items.length){
+      [items[i],items[j]]=[items[j],items[i]];
+    }else{
+      const next=MANUAL_GUIDE[gi+dir];
+      if(!next) return;
+      const it=items.splice(i,1)[0];
+      if(dir<0) next.items.push(it); else next.items.unshift(it);
+      openGroups.add(next.id);
+    }
+    saveGuideChange();
+    refreshAfterGuideChange();
+  }
+  const MOVE_HTML=(attr,id,group,label,first,last)=>
+    '<span class="mg-move">'+
+      '<button type="button" '+attr+'="'+id+'" data-dir="-1"'+(group?' data-group="'+group+'"':'')+(first?' disabled':'')+
+        ' title="위로" aria-label="'+label+' 위로 옮기기">▲</button>'+
+      '<button type="button" '+attr+'="'+id+'" data-dir="1"'+(group?' data-group="'+group+'"':'')+(last?' disabled':'')+
+        ' title="아래로" aria-label="'+label+' 아래로 옮기기">▼</button>'+
+    '</span>';
+
   /* ---------- 설정창 · 메뉴얼가이드설정 탭 ---------- */
   const mgList=document.getElementById('mgList');
   const mgGroupForm=document.getElementById('mgGroupAddForm');
@@ -9649,13 +9697,16 @@ window.CsGuide=(function(){
         '<div class="mg-row">'+
           '<span class="mg-no">'+(gi+1)+'</span>'+
           '<input class="mg-name" type="text" maxlength="40" value="'+esc(g.name)+'" data-rename-group="'+g.id+'" aria-label="중분류 이름">'+
+          MOVE_HTML('data-mg-move-group',g.id,'',esc(g.name),gi===0,gi===MANUAL_GUIDE.length-1)+
           (groupHasFixed(g)?LOCK_HTML:
           '<button type="button" class="mg-del" data-mg-del-group="'+g.id+'" title="이 중분류 삭제" aria-label="'+esc(g.name)+' 중분류 삭제">✕</button>')+
         '</div>'+
         '<div class="mg-items">'+
-          g.items.map(it=>
+          g.items.map((it,ii)=>
             '<div class="mg-row">'+
               '<input class="mg-name" type="text" maxlength="40" value="'+esc(it.name)+'" data-rename-item="'+it.id+'" data-group="'+g.id+'" aria-label="항목 이름">'+
+              MOVE_HTML('data-mg-move-item',it.id,g.id,esc(it.name),
+                gi===0&&ii===0, gi===MANUAL_GUIDE.length-1&&ii===g.items.length-1)+
               (isFixedItem(it.id)?LOCK_HTML:
               '<button type="button" class="mg-del" data-mg-del-item="'+it.id+'" data-group="'+g.id+'" title="이 항목 삭제" aria-label="'+esc(it.name)+' 항목 삭제">✕</button>')+
             '</div>'
@@ -9686,6 +9737,10 @@ window.CsGuide=(function(){
       if(again) again.focus();
     });
     mgList.addEventListener('click',e=>{
+      const mvGroup=e.target.closest('[data-mg-move-group]');
+      if(mvGroup){ moveGroup_(mvGroup.dataset.mgMoveGroup,+mvGroup.dataset.dir); return; }
+      const mvItem=e.target.closest('[data-mg-move-item]');
+      if(mvItem){ moveItem_(mvItem.dataset.group,mvItem.dataset.mgMoveItem,+mvItem.dataset.dir); return; }
       const delGroup=e.target.closest('[data-mg-del-group]');
       if(delGroup){ deleteGroup_(delGroup.dataset.mgDelGroup); return; }
       const delItem=e.target.closest('[data-mg-del-item]');
