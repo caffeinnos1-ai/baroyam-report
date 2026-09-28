@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "checkedAt": "2026-09-28T06:16:48Z",
+  "checkedAt": "2026-09-28T16:24:03Z",
   "repos": [
     {
       "repo": "caffeinnos1-ai/baroyam-trend",
@@ -26,9 +26,9 @@
       "workflows": [
         {
           "name": "당일판매분요약표 (Slack)",
-          "conclusion": "failure",
-          "url": "https://github.com/caffeinnos1-ai/caffeinnos-automation/actions/runs/36357765064",
-          "createdAt": "2026-09-27T23:10:01Z"
+          "conclusion": "success",
+          "url": "https://github.com/caffeinnos1-ai/caffeinnos-automation/actions/runs/36390751191",
+          "createdAt": "2026-09-28T07:16:13Z"
         }
       ]
     }
