@@ -6844,14 +6844,25 @@ try{
   const cached=JSON.parse(localStorage.getItem(GOAL_LS_KEY)||'null');
   const b=goalBookFrom(cached); if(Object.keys(b).length) goalBook=b;
 }catch(e){}
-let section01State={
+/* 01 매출목표(채널·소재별 집중 투자 방향)도 달마다 따로 둔다(section01Book: {'9':{subtitle,cards}}) ·
+   section01State는 목표설정 화면에서 고른 달의 것이다 */
+const SECTION01_TEMPLATE=()=>({
   subtitle:'채널·소재별 집중 투자 방향',
   cards:[
     {title:'브랜드 검색 노출', items:[]},
     {title:'디스플레이 광고', items:[]},
     {title:'브랜드 협찬', items:[]}
   ]
-};
+});
+let section01Book={};
+let section01State=SECTION01_TEMPLATE();
+function section01For(m){
+  const k=String(m);
+  if(!section01Book[k]) section01Book[k]=SECTION01_TEMPLATE();
+  return section01Book[k];
+}
+/* 1~12월 버튼으로 달이 바뀌면 01 매출목표·02 실행계획이 그 달 내용으로 갈아 끼운다 */
+const goalMonthListeners=[];
 
 const won=n=>Math.round(n).toLocaleString('ko-KR')+'원';
 const wonRaw=n=>Math.round(n).toLocaleString('ko-KR');
@@ -7248,6 +7259,7 @@ function renderGoalPlan(){
   const dataMonth=goalDataMonth();
   goalState=goalFor(goalViewMonth||dataMonth);
   renderGoalMonthTabs();
+  goalMonthListeners.forEach(f=>f(goalState.month));
   document.getElementById('goalPlanTitle').textContent=`${goalState.month}월 목표달성 계획표`;
   CH.forEach(c=>{
     const el=document.getElementById('goalAmt-'+c);
@@ -7257,8 +7269,7 @@ function renderGoalPlan(){
   const h1=document.getElementById('section01Heading');
   if(h1) h1.textContent=`${goalState.month}월 ${eok(total)} 매출목표`;
   const h2=document.getElementById('section02Heading');
-  /* 실행계획은 모든 달이 한 벌을 같이 쓰므로 제목은 이번 달을 따른다 */
-  if(h2) h2.textContent=`${dataMonth}월 실행계획`;
+  if(h2) h2.textContent=`${goalState.month}월 실행계획`;
 
   const data=lastReportData;
   if(!data) return;
@@ -7315,12 +7326,47 @@ renderSection01();
 (function(){
   const focusRow=document.getElementById('focusRow');
   const apiReady=()=>AGENDA_API_URL && AGENDA_API_URL.indexOf('PUT_DEPLOYED')!==0;
-  let pushTimer=null;
+  let pushTimer=null, shownMonth=null;
+  /* 달마다 'section01:9' 같은 키로 따로 저장 · 저장 대기 중에 달을 바꿔도 고친 달은 모두 올린다 */
+  const pending=new Set();
   function pushSection01(){
-    if(!apiReady()) return;
-    window.baroyamSaveSetting('section01',JSON.stringify(section01State)).catch(err=>console.error(err));
+    clearTimeout(pushTimer);
+    if(apiReady()) pending.forEach(m=>{
+      window.baroyamSaveSetting('section01:'+m,JSON.stringify(section01Book[m])).catch(err=>console.error(err));
+    });
+    pending.clear();
   }
-  function schedulePush(){ clearTimeout(pushTimer); pushTimer=setTimeout(pushSection01,800); }
+  function schedulePush(){ pending.add(String(shownMonth)); clearTimeout(pushTimer); pushTimer=setTimeout(pushSection01,800); }
+
+  function showMonth(m){
+    if(shownMonth===m) return;
+    shownMonth=m;
+    section01State=section01For(m);
+    renderSection01();
+  }
+  goalMonthListeners.push(showMonth);
+  showMonth(goalState.month);
+
+  const valid=v=>v&&typeof v==='object'&&Array.isArray(v.cards);
+  /* 설정을 받아오면 달별 키를 읽는다 · 예전 한 벌짜리 'section01'은 이번 달 몫으로 옮겨 저장한다 */
+  window.__section01Sync={
+    apply(settings){
+      const book={};
+      Object.keys(settings||{}).forEach(k=>{
+        const mm=k.match(/^section01:(\d{1,2})$/);
+        if(!mm) return;
+        try{ const v=JSON.parse(settings[k]); if(valid(v)) book[String(+mm[1])]=v; }catch(err){ console.error(err); }
+      });
+      const dm=String(goalDataMonth());
+      if(!book[dm]&&settings&&settings.section01){
+        try{ const v=JSON.parse(settings.section01); if(valid(v)){ book[dm]=v; pending.add(dm); } }catch(err){ console.error(err); }
+      }
+      section01Book=book;
+      shownMonth=null;
+      showMonth(goalState.month);
+      if(pending.size) pushSection01();
+    }
+  };
 
   focusRow.addEventListener('input',e=>{
     if(!e.target.classList.contains('fc-item-text')) return;
@@ -11109,14 +11155,23 @@ function revSetActivePlatform(platform){
 /* 실행계획 · 직접 수정 + 이 브라우저에 자동 저장 + 구글시트로 동기화(다른 사람과 공유) */
 (function(){
   const wp=document.getElementById('weekPlan');
-  const LS_KEY='baroyam_weekplan_2026_08_v3';
-  const OLD_LS_KEYS=[];
+  /* 달마다 따로 둔다 · 이 브라우저에는 baroyam_weekplan_m9, 서버에는 'weekplan:9' 같은 키로 저장 ·
+     예전 한 벌짜리(LEGACY_LS_KEY, 'weekplan')는 이번 달 몫으로 옮긴다 */
+  const LEGACY_LS_KEY='baroyam_weekplan_2026_08_v3';
+  const lsKey=m=>'baroyam_weekplan_m'+m;
+  const lsGet=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  const lsSet=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
   const original=wp.innerHTML;
   const apiReady=()=>AGENDA_API_URL && AGENDA_API_URL.indexOf('PUT_DEPLOYED')!==0;
-  let pushTimer=null;
+  const book={};
+  const pending=new Set();
+  let pushTimer=null, shownMonth=null;
   function pushToSheet(){
-    if(!apiReady()) return;
-    window.baroyamSaveSetting('weekplan',wp.innerHTML).catch(err=>console.error(err));
+    clearTimeout(pushTimer);
+    if(apiReady()) pending.forEach(m=>{
+      window.baroyamSaveSetting('weekplan:'+m,book[m]||original).catch(err=>console.error(err));
+    });
+    pending.clear();
   }
 
   function buildItem(html){
@@ -11147,29 +11202,53 @@ function revSetActivePlatform(platform){
     });
   }
 
-  let raw=localStorage.getItem(LS_KEY), migratedFrom=null;
-  if(!raw){
-    for(const k of OLD_LS_KEYS){ const old=localStorage.getItem(k); if(old){ raw=old; migratedFrom=k; break; } }
+  function showMonth(m){
+    const k=String(m);
+    if(shownMonth===k) return;
+    shownMonth=k;
+    wp.innerHTML=original;
+    const raw=book[k]||lsGet(lsKey(k));
+    if(raw) migrateFrom(raw);
   }
-  const hadLocalDraft=!!raw;
-  if(raw) migrateFrom(raw);
+
+  /* 예전 한 벌짜리 초안은 이번 달 몫으로 옮긴다(서버에는 설정을 받아온 뒤 올린다) */
+  (function(){
+    const legacy=lsGet(LEGACY_LS_KEY), dm=String(goalDataMonth());
+    if(!legacy) return;
+    if(!lsGet(lsKey(dm))){ lsSet(lsKey(dm),legacy); pending.add(dm); }
+    try{ localStorage.removeItem(LEGACY_LS_KEY); }catch(e){}
+  })();
+  goalMonthListeners.push(showMonth);
+  showMonth(goalState.month);
 
   const save=()=>{
-    localStorage.setItem(LS_KEY,wp.innerHTML);
+    book[shownMonth]=wp.innerHTML;
+    lsSet(lsKey(shownMonth),wp.innerHTML);
+    pending.add(shownMonth);
     clearTimeout(pushTimer);
     pushTimer=setTimeout(pushToSheet,800);
   };
-  if(migratedFrom){ localStorage.removeItem(migratedFrom); save(); }
 
-  /* 목표설정 초기화 IIFE가 시트에서 받아온 weekplan 값을 여기로 넘겨준다(전체 설정을 한 번만 fetch) */
+  /* 목표설정 초기화 IIFE가 받아온 설정 전체를 넘겨준다 · 서버 값이 우선이고,
+     서버에 없는 달의 이 브라우저 초안은 서버로 올린다 */
   window.__weekplanSync={
-    apply(remoteHtml){
-      if(remoteHtml){
-        migrateFrom(remoteHtml);
-        localStorage.setItem(LS_KEY,wp.innerHTML);
-      }else if(hadLocalDraft){
-        pushToSheet();
+    apply(settings){
+      settings=settings||{};
+      Object.keys(settings).forEach(k=>{
+        const mm=k.match(/^weekplan:(\d{1,2})$/);
+        if(mm&&settings[k]) book[String(+mm[1])]=settings[k];
+      });
+      const dm=String(goalDataMonth());
+      if(!book[dm]&&settings.weekplan){ book[dm]=settings.weekplan; pending.add(dm); }
+      for(let m=1;m<=12;m++){
+        const k=String(m);
+        if(book[k]){ lsSet(lsKey(k),book[k]); continue; }
+        const local=lsGet(lsKey(k));
+        if(local){ book[k]=local; pending.add(k); }
       }
+      shownMonth=null;
+      showMonth(goalState.month);
+      if(pending.size) pushToSheet();
     }
   };
 
@@ -11190,8 +11269,8 @@ function revSetActivePlatform(platform){
   });
   document.getElementById('wpReset').addEventListener('click',()=>{
     if(!confirm('입력된 항목이 모두 삭제됩니다. 계속할까요?')) return;
-    wp.innerHTML=original; localStorage.removeItem(LS_KEY);
-    pushToSheet();
+    wp.innerHTML=original;
+    save();
   });
 })();
 
@@ -11295,12 +11374,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
           }
         }catch(err){ console.error(err); }
       }
-      if(settings.section01){
-        try{ section01State=JSON.parse(settings.section01); }catch(err){ console.error(err); }
-      }
       renderGoalPlan();
-      renderSection01();
-      if(window.__weekplanSync) window.__weekplanSync.apply(settings.weekplan);
+      /* 01 매출목표·02 실행계획은 달별 키(section01:9, weekplan:9)로 받는다 */
+      if(window.__section01Sync) window.__section01Sync.apply(settings);
+      if(window.__weekplanSync) window.__weekplanSync.apply(settings);
       if(window.__manualSync) window.__manualSync.apply(settings);
       /* 회원 목록을 먼저 맞춘다 · 마이홈이 "내 담당" 판정에 이 목록을 쓴다 */
       if(window.BAROYAM_MEMBERS) window.BAROYAM_MEMBERS.applyRemote(settings);
