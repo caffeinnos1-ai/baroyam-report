@@ -205,6 +205,202 @@ window.BAROYAM_DB=(function(){
       return (r.data&&r.data[0])?r.data[0].value:null;
     }catch(err){ console.error(err); if(strict) throw err; return null; }
   }
+  /* ---------- 덮어쓰지 않는 저장 (app_settings 한 칸) ----------
+     여러 PC가 같은 칸(예: 공용 프로젝트 목록)을 고치면, 각자 들고 있던 옛 사본으로 통째로 덮어써서
+     남이 방금 넣은 프로젝트·사진이 사라졌다 · 그래서 저장 직전에 서버 최신본을 읽고
+     fn(최신본)으로 그 위에 내 변경만 얹어 쓴다 · 읽고 쓰는 사이에 누가 먼저 썼으면
+     (updated_at 이 달라져 0행이 바뀌면) 다시 읽어 얹는다 · 실패하면 null */
+  async function saveMerged(key,fn){
+    if(!key) return null;
+    if(!(await ensureSession())) return null;
+    try{
+      const c=await client();
+      for(let i=0;i<6;i++){
+        const r=await c.from('app_settings').select('value,updated_at').eq('key',key).limit(1);
+        if(r.error){ console.error(r.error); return null; }
+        const row=r.data&&r.data[0];
+        const next=fn(row?row.value:null);
+        const now=new Date().toISOString();
+        let w;
+        if(row){
+          w=await c.from('app_settings').update({value:next,updated_at:now})
+            .eq('key',key).eq('updated_at',row.updated_at).select('key');
+        }else{
+          w=await c.from('app_settings').insert({key:key,value:next,updated_at:now}).select('key');
+          if(w.error&&w.error.code==='23505') continue;      /* 그사이 누가 먼저 만들었다 */
+        }
+        if(w.error){ console.error(w.error); return null; }
+        if(w.data&&w.data.length) return next;
+      }
+      console.warn('[바로얌] '+key+' · 다른 PC와 저장이 계속 겹쳐 이번에는 못 담았습니다');
+      return null;
+    }catch(err){ console.error(err); return null; }
+  }
+  /* ---------- 세 갈래 합치기 ----------
+     base = 마지막으로 서버와 맞춘 사본 · local = 이 PC 지금 것 · server = 서버 최신본 ·
+     이 PC가 base 에서 바꾼 것만 서버본에 얹는다 · id 가 있는 목록은 항목 단위로, 객체는 칸 단위로 합친다 ·
+     같은 칸을 둘 다 고쳤으면 이 PC 것이 이긴다(방금 저장을 누른 사람의 뜻) ·
+     한쪽이 지운 항목을 다른 쪽이 고쳤으면 지우지 않고 남긴다(잃는 것보다 남는 게 낫다) */
+  function same(a,b){ return JSON.stringify(a)===JSON.stringify(b); }
+  function isObj(v){ return !!v&&typeof v==='object'&&!Array.isArray(v); }
+  function isIdList(v){ return Array.isArray(v)&&v.every(function(x){ return isObj(x)&&x.id!=null; }); }
+  function byId(list){ const m=new Map(); list.forEach(function(x){ m.set(String(x.id),x); }); return m; }
+  /* 서버에만 있는 항목은 서버에서 바로 앞에 있던 항목 뒤에 끼운다 · 순서가 크게 흐트러지지 않게 */
+  function insertNear(out,src,i,x){
+    let at=0;
+    for(let j=i-1;j>=0;j--){
+      const id=String(src[j].id), k=out.findIndex(function(o){ return String(o.id)===id; });
+      if(k>=0){ at=k+1; break; }
+    }
+    out.splice(at,0,x);
+  }
+  function mergeList(b,l,s){
+    const bm=byId(b), sm=byId(s), lm=byId(l), out=[], used=new Set();
+    l.forEach(function(x){
+      const id=String(x.id);
+      if(bm.has(id)&&!sm.has(id)&&same(x,bm.get(id))) return;      /* 남이 지웠고 나는 안 고쳤다 */
+      out.push(sm.has(id)?merge3(bm.get(id),x,sm.get(id)):x);
+      used.add(id);
+    });
+    s.forEach(function(x,i){
+      const id=String(x.id);
+      if(used.has(id)) return;
+      if(bm.has(id)&&!lm.has(id)&&same(x,bm.get(id))) return;      /* 내가 지웠고 남은 안 고쳤다 */
+      insertNear(out,s,i,x); used.add(id);
+    });
+    return out;
+  }
+  function mergeObj(b,l,s){
+    const out={}, keys=[];
+    [l,s,b].forEach(function(o){ Object.keys(o).forEach(function(k){ if(keys.indexOf(k)<0) keys.push(k); }); });
+    keys.forEach(function(k){
+      const inB=k in b, inL=k in l, inS=k in s;
+      if(inB&&!inL){ if(inS&&!same(s[k],b[k])) out[k]=s[k]; return; }   /* 내가 지웠다 */
+      if(inB&&!inS){ if(inL&&!same(l[k],b[k])) out[k]=l[k]; return; }   /* 남이 지웠다 */
+      if(!inL){ out[k]=s[k]; return; }
+      if(!inS){ out[k]=l[k]; return; }
+      out[k]=merge3(inB?b[k]:undefined,l[k],s[k]);
+    });
+    return out;
+  }
+  function merge3(base,local,server){
+    if(same(local,base)) return server;
+    if(same(server,base)||same(local,server)) return local;
+    if(isIdList(local)&&isIdList(server)) return mergeList(isIdList(base)?base:[],local,server);
+    if(isObj(local)&&isObj(server)) return mergeObj(isObj(base)?base:{},local,server);
+    return local;
+  }
+  /* base 를 모를 때(이 방식으로 처음 맞출 때) · 양쪽을 모두 살린다 · 같은 항목은 서버 것이 이긴다 ·
+     예전 방식에서 서버에 못 올라가고 이 PC에만 남아 있던 프로젝트도 이렇게 서버로 되살아난다 */
+  function union(l,s){
+    if(l===undefined) return s;
+    if(s===undefined) return l;
+    if(isIdList(l)&&isIdList(s)){
+      const sm=byId(s), out=s.map(function(x){ const y=byId(l).get(String(x.id)); return y?union(y,x):x; });
+      l.forEach(function(x,i){ if(!sm.has(String(x.id))) insertNear(out,l,i,x); });
+      return out;
+    }
+    if(isObj(l)&&isObj(s)){
+      const out={};
+      Object.keys(l).concat(Object.keys(s)).forEach(function(k){ if(!(k in out)) out[k]=union(l[k],s[k]); });
+      return out;
+    }
+    return s;
+  }
+  /* ---------- 저장 알림 ----------
+     예전에는 로그인이 풀리거나 인터넷이 끊겨 서버 저장이 실패해도 아무 표시가 없어서,
+     이 PC에서는 보이는데 다른 PC와 새로고침 뒤에는 사라진 것처럼 보였다 */
+  const failing=new Set(), pending=new Set();
+  let bar=null;
+  function paintBar(){
+    if(!bar){
+      bar=document.createElement('div');
+      bar.setAttribute('role','status');
+      bar.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9999;'
+        +'max-width:calc(100vw - 32px);padding:11px 16px;border-radius:12px;background:#b42318;color:#fff;'
+        +'font-size:13.5px;line-height:1.45;box-shadow:0 12px 32px -12px rgba(0,0,0,.5);display:none';
+      document.body.appendChild(bar);
+    }
+    bar.textContent='서버에 저장하지 못했어요 · 이 PC에는 남아 있고 잠시 뒤 다시 보냅니다. 계속되면 새로고침 후 다시 로그인해 주세요.';
+    bar.style.display=failing.size?'block':'none';
+  }
+  /* 저장이 남았는데 창을 닫으려 하면 한 번 붙잡는다 · 저장은 0.7초 모았다 보내서 바로 닫으면 잃었다 */
+  window.addEventListener('beforeunload',function(e){
+    if(!pending.size&&!failing.size) return;
+    e.preventDefault(); e.returnValue='';
+  });
+  /* ---------- 한 칸을 이 브라우저 사본과 맞춰 두는 도우미 ----------
+     o.key() 서버 칸 이름 · o.baseKey() base 를 둘 localStorage 칸 · o.norm(v) 모양 맞추기 ·
+     o.get() 이 PC 지금 것 · o.set(v) 합친 결과를 화면에 받아들인다 · o.saved(v) 서버에 담은 뒤 할 일 */
+  const syncs=[];
+  function clone(v){ return v==null?v:JSON.parse(JSON.stringify(v)); }
+  function blobSync(o){
+    let timer=null, busy=false, again=false;
+    const tag=function(){ return o.key(); };
+    function readBase(){ try{ const r=localStorage.getItem(o.baseKey()); return r?JSON.parse(r):null; }catch(e){ return null; } }
+    function writeBase(v){ try{ localStorage.setItem(o.baseKey(),JSON.stringify(v)); }catch(e){} }
+    function parse(v){ if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ return null; } } return v; }
+    function stamp(v){ return Object.assign({},v,{updatedAt:Date.now()}); }
+    function push(delay){
+      pending.add(tag());
+      clearTimeout(timer);
+      timer=setTimeout(function(){ timer=null; run(); },delay==null?700:delay);
+    }
+    async function run(){
+      if(busy){ again=true; return; }
+      busy=true;
+      const key=tag();
+      try{
+        const sent=clone(o.get()), base=readBase();
+        const result=await saveMerged(key,function(server){
+          server=server==null?null:o.norm(parse(server));
+          if(!server) return stamp(sent);
+          return stamp(base==null?union(sent,server):merge3(base,sent,server));
+        });
+        if(result==null){ failing.add(key); paintBar(); push(15000); return; }
+        failing.delete(key); pending.delete(key); paintBar();
+        writeBase(result);
+        /* 보내는 사이에 또 고쳤으면 그 변경을 결과 위에 다시 얹는다 */
+        const now=clone(o.get());
+        const next=same(now,sent)?result:merge3(sent,now,result);
+        if(!same(next,now)) o.set(clone(next));
+        if(o.saved) o.saved(result);
+        if(!same(next,result)) again=true;
+      }catch(err){ console.error(err); failing.add(key); paintBar(); push(15000); }
+      finally{ busy=false; if(again){ again=false; push(); } }
+    }
+    /* 서버에서 받은 값 · absent 면 서버에 그 칸이 정말 없다(읽기 실패와 구분) */
+    function receive(remote,absent){
+      if(busy||timer) return;          /* 곧 보낼 것이 있으면 보낼 때 합친다 */
+      remote=remote==null||remote===''?null:o.norm(parse(remote));
+      const local=clone(o.get()), base=readBase();
+      if(!remote){
+        if(absent&&base==null) push();          /* 이 칸을 처음 만든다 */
+        return;
+      }
+      /* base 가 없으면(이 방식으로 처음) · 서버본이 더 새로우면 그대로 받고(오래 안 쓴 PC가 지운 것을 되살리지 않게),
+         이 PC 것이 더 새로우면 못 올린 고침이 있을 수 있어 양쪽을 합친다 */
+      const next=base==null
+        ?(((remote.updatedAt||0)>=((local&&local.updatedAt)||0))?remote:union(local,remote))
+        :(same(local,base)?remote:merge3(base,local,remote));
+      writeBase(remote);
+      if(!same(next,local)) o.set(clone(next));
+      if(!same(next,remote)) push();
+    }
+    async function refresh(){
+      if(busy||timer) return;
+      let v;
+      try{ v=await loadSetting(tag(),true); }catch(e){ return; }
+      receive(v,v==null);
+    }
+    const api={push:push,receive:receive,refresh:refresh};
+    syncs.push(api);
+    return api;
+  }
+  /* 창을 오래 열어 둔 PC도 남이 넣은 것을 보도록 · 다시 볼 때와 1분마다 서버본을 받아 합친다 */
+  function refreshAll(){ if(document.visibilityState==='visible') syncs.forEach(function(s){ s.refresh(); }); }
+  document.addEventListener('visibilitychange',refreshAll);
+  setInterval(refreshAll,60000);
   /* ---------- 관계형 테이블 거울 ----------
      원본은 app_settings 에 담긴 덩어리다(화면 코드가 예전부터 그 모양으로 다룬다).
      members / projects / quick_links / notes 테이블은 그것을 행으로 펼쳐 둔 거울이라,
@@ -538,6 +734,7 @@ window.BAROYAM_DB=(function(){
     migrateAgendaAndGuide:migrateAgendaAndGuide,
     listNotes:listNotes,syncNotes:syncNotes,
     saveSetting:saveSetting,loadSettings:loadSettings,loadSetting:loadSetting,migrateFromSheets:migrateFromSheets,
+    saveMerged:saveMerged,blobSync:blobSync,merge3:merge3,union:union,
     mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects,
     sdkOk:sdkOk,signOut:signOut};
 })();
@@ -679,35 +876,63 @@ window.BAROYAM_PROFILES=(function(){
   function changed(){ document.dispatchEvent(new CustomEvent('baroyam:profiles')); }
   /* AGENDA_API_URL은 문서 아래쪽에서 선언되므로(최상위 const) 쓰는 시점에 꺼내 온다 */
   function apiUrl(){ try{ return typeof AGENDA_API_URL==='string'?AGENDA_API_URL:''; }catch(e){ return ''; } }
+  /* 아직 서버에 못 올린 고침 · {회원id:{avatar?,role?}} · 올릴 때까지 이 브라우저에 남겨 두고 다시 보낸다 */
+  const PENDING_KEY='baroyam_profile_pending_v1';
+  function pendingAll(){
+    try{ const o=JSON.parse(localStorage.getItem(PENDING_KEY)||'{}'); return (o&&typeof o==='object')?o:{}; }catch(e){ return {}; }
+  }
+  function writePending(o){ try{ localStorage.setItem(PENDING_KEY,JSON.stringify(o)); }catch(e){} }
   function set(id,patch){
     if(!id) return;
     const map=all();
     map[id]=Object.assign({avatar:'',role:''},map[id],patch,{updatedAt:Date.now()});
-    writeAll(map); changed(); push(id,map[id]);
+    writeAll(map); changed();
+    const pend=pendingAll();
+    pend[id]=Object.assign({},pend[id],patch);
+    writePending(pend);
+    push(id);
   }
-  function push(id,p){
-    const url=apiUrl();
-    if(!/^https:/.test(url)) return;
-    window.baroyamSaveSetting(SHEET_PREFIX+id,JSON.stringify(p))
-      .catch(err=>console.error(err));
+  /* 예전에는 이 브라우저가 들고 있던 프로필 전체를 통째로 올렸다 · 다른 PC에서 역할만 바꿔도
+     그 PC에 사진이 없으면 서버의 사진이 빈 값으로 덮여 사라졌다 ·
+     이제는 서버 최신본을 읽고 이번에 바꾼 칸(사진 또는 역할)만 얹어 올린다 */
+  const retry={};
+  async function push(id){
+    if(!/^https:/.test(apiUrl())||!window.BAROYAM_DB) return;
+    const patch=pendingAll()[id];
+    if(!patch) return;
+    clearTimeout(retry[id]);
+    const res=await window.BAROYAM_DB.saveMerged(SHEET_PREFIX+id,function(server){
+      if(typeof server==='string'){ try{ server=JSON.parse(server); }catch(e){ server=null; } }
+      const base=(server&&typeof server==='object')?server:{};
+      return Object.assign({avatar:'',role:''},base,patch,{updatedAt:Date.now()});
+    });
+    if(!res){ retry[id]=setTimeout(function(){ push(id); },15000); return; }
+    /* 보내는 사이에 또 고쳤으면 남겨 두고 다시 보낸다 */
+    const pend=pendingAll();
+    if(JSON.stringify(pend[id])===JSON.stringify(patch)) delete pend[id];
+    writePending(pend);
+    const map=all();
+    map[id]=Object.assign({avatar:res.avatar||'',role:res.role||'',updatedAt:res.updatedAt||0},pend[id]||{});
+    writeAll(map); changed();
+    if(pend[id]) push(id);
   }
-  /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 (마이홈 동기화와 같은 방식) */
+  /* 서버가 원본이다 · PC마다 시계가 달라 "더 새 시각" 비교로는 옛 사본이 이길 수 있었다 ·
+     아직 못 올린 고침이 있는 회원만 그 고침을 얹어 두고 다시 보낸다 */
   function applyRemote(settings){
     if(!settings) return;
-    const map=all(); let hit=false;
+    const map=all(), pend=pendingAll(); let hit=false;
     Object.keys(settings).forEach(k=>{
       if(k.indexOf(SHEET_PREFIX)!==0) return;
       const id=k.slice(SHEET_PREFIX.length);
       try{
         const r=JSON.parse(settings[k]);
         if(!r||typeof r!=='object') return;
-        if((r.updatedAt||0)>((map[id]&&map[id].updatedAt)||0)){
-          map[id]={avatar:r.avatar||'',role:r.role||'',updatedAt:r.updatedAt||0};
-          hit=true;
-        }
+        const next=Object.assign({avatar:r.avatar||'',role:r.role||'',updatedAt:r.updatedAt||0},pend[id]||{});
+        if(JSON.stringify(next)!==JSON.stringify(map[id])){ map[id]=next; hit=true; }
       }catch(e){}
     });
     if(hit){ writeAll(map); changed(); }
+    Object.keys(pend).forEach(id=>push(id));
   }
   return {SKIP,all,get,set,me,meId,meMember,setMe,role,applyRemote,changed};
 })();
@@ -11609,41 +11834,90 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     });
     state.projects=guarded;
   }
-
-  const pushTimers={};
-  function queuePush(key,value){
-    if(typeof AGENDA_API_URL==='undefined'||!/^https:/.test(AGENDA_API_URL)) return;
-    clearTimeout(pushTimers[key]);
-    pushTimers[key]=setTimeout(()=>{
-      window.baroyamSaveSetting(key,JSON.stringify(value))
-        .catch(err=>console.error(err));
-    },700);
+  /* 완료·종료로 넘어간 날을 doneAt(한국시간 'YYYY-MM-DD')에 적는다 · 마이홈 '이번달 종료' 카드가 이 날짜를 본다 ·
+     직전 저장본과 비교해 "이번에 넘어간 것"에만 오늘을 적는다(옛 완료 건에 오늘이 찍히지 않게) ·
+     수정창이 새 객체로 갈아 끼워 doneAt이 빠져도 직전 값을 이어 붙이고, 다시 열린 상태로 돌리면 지운다 */
+  const DONE_ST=['완료','종료'];
+  function stampDoneAt(){
+    let previous=[];
+    try{
+      const parsed=JSON.parse(lastShared);
+      previous=Array.isArray(parsed&&parsed[1])?parsed[1]:[];
+    }catch(e){}
+    const before=new Map(previous.map(p=>[p.id,p]));
+    const today=kstToday();
+    state.projects.forEach(p=>{
+      if(!DONE_ST.includes(p.status)){ delete p.doneAt; return; }
+      const old=before.get(p.id);
+      if(!old||!DONE_ST.includes(old.status)) p.doneAt=today;
+      else if(!p.doneAt&&old.doneAt) p.doneAt=old.doneAt;
+    });
   }
+
+  /* 서버와 맞추기 · 예전에는 이 PC가 들고 있던 몫을 통째로 올려서, 다른 PC가 그사이 넣은
+     프로젝트·링크·노트를 지워 버렸다(나중에 저장한 쪽이 전부 이기는 덮어쓰기) ·
+     이제는 저장할 때 서버 최신본을 읽고 이 PC가 바꾼 항목만 얹는다(BAROYAM_DB.blobSync) */
+  function apiOn(){ return typeof AGENDA_API_URL!=='undefined'&&/^https:/.test(AGENDA_API_URL)&&!!window.BAROYAM_DB; }
+  function adopt(){
+    state=merge(); lastShared=stampShared(); lastMine=stampMine(); lastCh=stampCh();
+    /* 서버본을 받으면 프로젝트가 새 객체로 바뀐다 · 수정창이 옛 객체를 붙들고 있으면
+       그 뒤에 친 글이 목록에 들어가지 않으므로 같은 id 의 새 객체로 다시 잇는다 */
+    if(editingProject){
+      const id=String(editingProject.id);
+      const now=state.projects.find(p=>String(p.id)===id);
+      if(now) editingProject=now;
+    }
+    /* 기록노트를 고치던 중이면 다시 그려도 치던 글이 날아가지 않게 옮겨 둔다 */
+    const ta=document.querySelector('#mhNotes [data-edit]');
+    const typing=ta?{v:ta.value,focus:document.activeElement===ta,s:ta.selectionStart,e:ta.selectionEnd}:null;
+    render();
+    if(typing){
+      const t=document.querySelector('#mhNotes [data-edit]');
+      if(t){ t.value=typing.v; if(typing.focus){ t.focus(); try{ t.setSelectionRange(typing.s,typing.e); }catch(e){} } }
+    }
+  }
+  const noSync={push(){},receive(){},refresh(){}};
+  const syncShared=apiOn()?window.BAROYAM_DB.blobSync({
+    key:()=>SHEET_SHARED, baseKey:()=>LS_SHARED+'#base', norm:normShared,
+    get:()=>sharedPart,
+    set:v=>{ sharedPart=normShared(v); writeJson(LS_SHARED,sharedPart); adopt(); },
+    saved:v=>window.BAROYAM_DB.mirrorProjects(v.projects)
+  }):noSync;
+  const syncMine=apiOn()?window.BAROYAM_DB.blobSync({
+    key:()=>SHEET_MINE+slot(), baseKey:()=>LS_MINE+slot()+'#base', norm:normMine,
+    get:()=>myPart,
+    set:v=>{ myPart=normMine(v); writeJson(LS_MINE+slot(),myPart); adopt(); },
+    /* 관계형 거울도 같이 맞춘다 · Table Editor에서 바로 보이도록 */
+    saved:v=>window.BAROYAM_DB.mirrorMine(slot(),v.links,v.notes)
+  }):noSync;
+  const syncCh=apiOn()?window.BAROYAM_DB.blobSync({
+    key:()=>SHEET_CH, baseKey:()=>LS_CH+'#base', norm:normCh,
+    get:()=>chPart,
+    set:v=>{ chPart=normCh(v); writeJson(LS_CH,chPart); adopt(); }
+  }):noSync;
   /* 실제로 바뀐 몫에만 새 시각을 달고 올린다 ·
      링크를 고쳤다고 프로젝트를 다시 올리면 남의 최신 프로젝트를 되돌릴 수 있다 */
   function save(){
     guardProjectWrites();
+    stampDoneAt();
     const now=Date.now();
     const nowShared=stampShared();
     if(nowShared!==lastShared){
       sharedPart={company:state.company,projects:state.projects,csLinks:state.csLinks,updatedAt:now};
       lastShared=nowShared;
-      writeJson(LS_SHARED,sharedPart); queuePush(SHEET_SHARED,sharedPart);
-      if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorProjects(state.projects);
+      writeJson(LS_SHARED,sharedPart); syncShared.push();
     }
     const nowMine=stampMine();
     if(nowMine!==lastMine){
       myPart={links:state.links,notes:state.notes,updatedAt:now};
       lastMine=nowMine;
-      writeJson(LS_MINE+slot(),myPart); queuePush(SHEET_MINE+slot(),myPart);
-      /* 관계형 거울도 같이 맞춘다 · Table Editor에서 바로 보이도록 */
-      if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorMine(slot(),state.links,state.notes);
+      writeJson(LS_MINE+slot(),myPart); syncMine.push();
     }
     const nowCh=stampCh();
     if(nowCh!==lastCh){
       chPart.updatedAt=now;
       lastCh=nowCh;
-      writeJson(LS_CH,chPart); queuePush(SHEET_CH,chPart);
+      writeJson(LS_CH,chPart); syncCh.push();
     }
     render();
   }
@@ -11658,33 +11932,15 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     renamingOwner=true;
     try{ save(); }finally{ renamingOwner=false; }
   });
-  /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 · 두 몫을 따로 본다.
+  /* 페이지를 열 때 서버에서 받은 값과 맞춘다 · 서버가 원본이다 ·
+     예전에는 "더 새 시각"이면 이 PC 사본이 서버를 이겼는데, PC마다 시계가 달라 옛 사본이 이기기도 했다 ·
+     이 PC에 아직 못 올린 고침이 있으면 서버본 위에 얹어 다시 올린다 ·
      새 키가 아직 없으면 옛 키(myhome)를 씨앗으로 읽는다 */
   window.__myhomeSync={apply(settings){
     if(!settings) return;
-    let hit=false;
-    try{
-      const raw=settings[SHEET_SHARED]||settings[SHEET_LEGACY];
-      if(raw){
-        const r=normShared(JSON.parse(raw));
-        if(r.updatedAt>sharedPart.updatedAt){ sharedPart=r; writeJson(LS_SHARED,sharedPart); hit=true; }
-      }
-    }catch(err){ console.error(err); }
-    try{
-      const raw=settings[SHEET_MINE+slot()]||(isNewMember()?'':settings[SHEET_LEGACY]);
-      if(raw){
-        const r=normMine(JSON.parse(raw));
-        if(r.updatedAt>myPart.updatedAt){ myPart=r; writeJson(LS_MINE+slot(),myPart); hit=true; }
-      }
-    }catch(err){ console.error(err); }
-    try{
-      const raw=settings[SHEET_CH];
-      if(raw){
-        const r=normCh(JSON.parse(raw));
-        if(r.updatedAt>chPart.updatedAt){ chPart=r; writeJson(LS_CH,chPart); hit=true; }
-      }
-    }catch(err){ console.error(err); }
-    if(hit){ state=merge(); lastShared=stampShared(); lastMine=stampMine(); lastCh=stampCh(); render(); }
+    try{ syncShared.receive(settings[SHEET_SHARED]||settings[SHEET_LEGACY]); }catch(err){ console.error(err); }
+    try{ syncMine.receive(settings[SHEET_MINE+slot()]||(isNewMember()?'':settings[SHEET_LEGACY])); }catch(err){ console.error(err); }
+    try{ syncCh.receive(settings[SHEET_CH]); }catch(err){ console.error(err); }
   }};
 
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -11776,8 +12032,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      rule:"상태가 '예정'·'진행중'·'보류'인 프로젝트 (완료·종료 제외)",
      pick:(list)=>list.filter(p=>OPEN_ST.includes(p.status))},
     {k:'monthEnd',id:'mhStatMonthEnd',name:'이번달 종료 프로젝트',
-     rule:'마감일이 이번 달에 있는 프로젝트 (상태와 무관)',
-     pick:(list,today)=>list.filter(p=>p.due&&p.due.slice(0,7)===today.slice(0,7))},
+     rule:"이번 달에 '완료'·'종료'로 바뀐 프로젝트 (완료일을 모르는 예전 건은 마감일로 판단)",
+     pick:(list,today)=>list.filter(p=>DONE_ST.includes(p.status)&&(p.doneAt||p.due||'').slice(0,7)===today.slice(0,7))},
   ];
   function statDef(k){ return STAT_DEFS.find(d=>d.k===k)||null; }
   function statRows(k){
