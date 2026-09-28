@@ -544,7 +544,9 @@ window.BAROYAM_DB=(function(){
 </script>
 
 <!-- 구글 로그인 게이트 · 허용된 이메일로 로그인해야 화면이 보인다.
-     공개 저장소라 코드/시트 주소를 알면 우회할 수 있는 "화면 가림" 수준의 보호다.
+     이 게이트는 "화면 가림"일 뿐이라, 실제 데이터는 서버 쪽 권한으로 막는다 ·
+     Supabase 는 RLS, 매출 시트는 공유 "제한됨" + 로그인한 사람의 구글 권한으로만 읽는다.
+     그래서 이 파일에 매출 숫자를 직접 적어 두면 안 된다(공개 저장소).
      이메일은 원문 대신 SHA-256 해시로만 적어 둔다(소문자·앞뒤 공백 제거 후 해시). -->
 <script>
 window.BAROYAM_AUTH={
@@ -2071,6 +2073,14 @@ window.BAROYAM_ACCESS=(function(){
     font-size:13.5px;font-weight:700;padding:8px;color:var(--mute)}
   .goal-edit-cancel:hover{color:var(--ink)}
   .goalgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+  /* 1~12월 버튼(ui-tabs) · 목표를 넣은 달은 점, 이번 달은 글자색으로 표시 */
+  .goal-months{margin-top:22px}
+  .goal-months .ui-tab{padding:0 10px;gap:4px}
+  .goal-months .ui-tab .gm-dot{width:5px;height:5px;border-radius:50%;background:var(--btn);visibility:hidden}
+  .goal-months .ui-tab.is-set .gm-dot{visibility:visible}
+  .goal-months .ui-tab.is-now{color:var(--btn-soft-ink)}
+  .goalach-empty{grid-column:1/-1;padding:22px 20px;border-radius:14px;background:var(--bg);
+    color:var(--mute);font-size:14px;font-weight:600;text-align:center}
   .goalcard{background:var(--paper);border:1px solid var(--hero-line);border-radius:14px;padding:24px 22px}
   .goalcard .gc-plat{font-size:15px;font-weight:700;color:var(--mute)}
   .goalcard .gc-amt{font-size:38px;font-weight:800;letter-spacing:-1.2px;margin-top:10px;color:var(--ink)}
@@ -5016,6 +5026,7 @@ window.BAROYAM_ACCESS=(function(){
               <button type="button" class="plan-edit-btn" id="goalEditBtn">수정</button>
             </div>
             <p class="psub">쿠팡·네이버·자사몰 채널별 이번 달 목표 금액을 한눈에 확인하세요</p>
+            <div class="goal-months block" id="goalMonthTabs" aria-label="목표 월 선택"></div>
             <div class="goalgrid">
               <div class="goalcard">
                 <div class="gc-plat">쿠팡</div>
@@ -6818,9 +6829,14 @@ function goalFor(month){
     ?? Object.keys(goalBook).map(Number).sort((a,b)=>b-a)[0];
   return Object.assign({month:+m,isSet:false},prev!=null?goalBook[String(prev)]:{'쿠팡':0,'네이버':0,'자사몰':0});
 }
+/* 매출 데이터가 가리키는 이번 달 · 목표설정 화면의 1~12월 버튼은 이 달을 기본으로 고른다 */
+let goalViewMonth=null;
+function goalDataMonth(){
+  return lastReportData&&lastReportData.currMonthNum?lastReportData.currMonthNum:goalState.month;
+}
 function goalPayload(){
   /* 예전 방식으로 읽는 곳이 있어도 깨지지 않게 현재 달 값을 겉에도 같이 적는다 */
-  const cur=goalFor(goalState.month);
+  const cur=goalFor(goalDataMonth());
   const top={month:cur.month}; CH.forEach(c=>top[c]=cur[c]);
   return Object.assign(top,{months:goalBook});
 }
@@ -6860,6 +6876,8 @@ const sumv=o=>Object.values(o).reduce((a,b)=>a+b,0);
 const sumArr=a=>a.reduce((x,y)=>x+y,0);
 const roasPct=(rev,cost)=>cost?Math.round(rev/cost*100):0;
 const pct=(a,b)=>b?Math.round((a-b)/b*100):0;
+/* 나누는 값이 0이면 0 · 시트를 불러오기 전 빈 화면(모두 0)에서 NaN%가 찍히지 않게 */
+const share=(a,b)=>b?a/b:0;
 function achChip(p,ok){
   return `<span class="achip" style="background:${ok?'var(--pos-soft)':'var(--warn-soft)'};color:${ok?'var(--pos)':'var(--warn)'}">${p}%</span>`;}
 function achipDelta(p){
@@ -6879,32 +6897,28 @@ function lineChart(vals,labels,fmt){
   return s+'</svg>';
 }
 
-/* ===== 기본 데이터 (구글시트 최초 반영 스냅샷) ===== */
-const DEFAULT_DATA={
-  prevLabel:'8월', currLabel:'9월', currMonthNum:9, currDay:4, daysInCurrMonth:30,
-  salesPrev:{'쿠팡':424050080,'네이버':44115500,'자사몰':62811500},
-  salesCurr:{'쿠팡':33333333,'네이버':33333333,'자사몰':333333},
-  adPrev:{'쿠팡':{cost:36779779,rev:246634531},'네이버':{cost:3132697,rev:21388320},'자사몰':{cost:15078441,rev:60552131}},
-  adCurr:{'쿠팡':{cost:3333,rev:33333},'네이버':{cost:415117,rev:1196000},'자사몰':{cost:3878827,rev:15512679}},
-  siteAdParts:['네이버광고','메타광고','구글광고'],
-  siteAdCurr:[200000,2326094,1352733],
-  months:['1월','2월','3월','4월','5월','6월','7월','8월','9월'],
-  monthlySales:{
-    '쿠팡':[302761809,240077394,377644833,317557503,276563052,325586133,375594606,424050080,33333333],
-    '네이버':[95993480,49200250,68627780,61141830,42036070,42368150,45561000,44115500,33333333],
-    '자사몰':[21387280,19870450,58739850,155104100,38733230,68949060,76827743,62811500,333333],
-  },
-  monthlyAd:{
-    '쿠팡':[{cost:24641544,rev:167401404},{cost:21714856,rev:128095650},{cost:29406523,rev:192821230},{cost:21482459,rev:153393350},{cost:18822466,rev:126061330},{cost:26391082,rev:146913100},{cost:33469744,rev:193977432},{cost:36779779,rev:246634531},{cost:3333,rev:33333}],
-    '네이버':[{cost:3504446,rev:33199210},{cost:2238797,rev:22382310},{cost:2170954,rev:27190960},{cost:2088577,rev:22316160},{cost:1550492,rev:13581170},{cost:1976206,rev:16655750},{cost:2906444,rev:20450260},{cost:3132697,rev:21388320},{cost:415117,rev:1196000}],
-    '자사몰':[{cost:5993910,rev:18336980},{cost:5276596,rev:15839618},{cost:12670945,rev:53381319},{cost:42346120,rev:142595812},{cost:8514500,rev:28454820},{cost:17908139,rev:51422600},{cost:21089671,rev:77167169},{cost:15078441,rev:60552131},{cost:3878827,rev:15512679}],
-  },
-  visMonths:['1월','2월','3월','4월','5월','6월','7월','8월'],
-  visTotal:[11313,8475,22436,56875,18225,37182,42568,39966],
-  visNew:[9023,6416,18953,46214,13230,29425,32907,30063],
-  visRe:[2290,2059,3483,10661,4995,7757,9661,9903],
-  members:[3331,4014,5821,9592,10490,11766,13075,15026],
-};
+/* ===== 기본 데이터 · 시트를 불러오기 전 빈 화면용 (모두 0) =====
+   예전에는 여기에 실제 매출 스냅샷을 적어 두었는데, 공개 저장소라 페이지 소스만 열면
+   누구나 볼 수 있었다 · 이제 숫자는 로그인한 사람이 시트에서 받아 온 것만 보인다 */
+const DEFAULT_DATA=(()=>{
+  const now=new Date(), m=now.getMonth()+1;
+  const months=Array.from({length:m},(_,i)=>(i+1)+'월');
+  const visMonths=months.slice(0,Math.max(1,m-1));
+  const per=f=>{const o={};CH.forEach(c=>o[c]=f());return o;};
+  const zeros=a=>a.map(()=>0);
+  return {
+    prevLabel:(m>1?m-1:12)+'월', currLabel:m+'월', currMonthNum:m, currDay:now.getDate(),
+    daysInCurrMonth:new Date(now.getFullYear(),m,0).getDate(),
+    salesPrev:per(()=>0), salesCurr:per(()=>0),
+    adPrev:per(()=>({cost:0,rev:0})), adCurr:per(()=>({cost:0,rev:0})),
+    siteAdParts:['네이버광고','메타광고','구글광고'],
+    siteAdCurr:[0,0,0],
+    months,
+    monthlySales:per(()=>zeros(months)),
+    monthlyAd:per(()=>months.map(()=>({cost:0,rev:0}))),
+    visMonths, visTotal:zeros(visMonths), visNew:zeros(visMonths), visRe:zeros(visMonths), members:zeros(visMonths),
+  };
+})();
 
 /* ===== 숫자 카운트업 =====
    보고서의 값(.num이 붙은 달성률·광고비·광고매출·ROAS 등)을 0에서 올린다 ·
@@ -6969,7 +6983,7 @@ let lastReportData=null;
 function renderReport(data){
   lastReportData=data;
   const totPrev=sumv(data.salesPrev), totCurr=sumv(data.salesCurr);
-  const achTotal=Math.round(totCurr/totPrev*1000)/10;
+  const achTotal=Math.round(share(totCurr,totPrev)*1000)/10;
   const paceFrac=data.currDay/data.daysInCurrMonth*100;
   const pacePct=Math.round(paceFrac*10)/10;
   const proj=totCurr/data.currDay*data.daysInCurrMonth;
@@ -7007,7 +7021,7 @@ function renderReport(data){
   /* 2. 채널 매출 표 */
   document.getElementById('salesSsub').textContent=`쿠팡 · 네이버 · 자사몰 · ${data.prevLabel} vs ${data.currMonthNum}/1-${data.currMonthNum}/${data.currDay}`;
   let st=`<thead><tr><th>채널</th><th>${data.prevLabel} 전체매출</th><th>${data.currMonthNum}/${data.currDay} 누적매출</th><th>달성률</th></tr></thead><tbody>`;
-  CH.forEach(c=>{const a=Math.round(data.salesCurr[c]/data.salesPrev[c]*100);
+  CH.forEach(c=>{const a=Math.round(share(data.salesCurr[c],data.salesPrev[c])*100);
     st+=`<tr><td><span class="ch-dot" style="background:${CH_COLOR[c]}"></span>${c}</td>
       <td>${wonRaw(data.salesPrev[c])}</td><td class="colhi">${wonRaw(data.salesCurr[c])}</td><td>${achChip(a,paceOk(a))}</td></tr>`;});
   st+=`<tr class="sum"><td>합계</td><td>${wonRaw(totPrev)}</td><td>${wonRaw(totCurr)}</td><td>${achChip(Math.round(achTotal),paceOk(achTotal))}</td></tr></tbody>`;
@@ -7037,7 +7051,7 @@ function renderReport(data){
   document.getElementById('donutList').innerHTML=data.siteAdParts.map((p,i)=>`
     <div class="drow"><span class="sw" style="background:${dColors[i]}"></span>
       <span class="dn">${p}</span>
-      <span class="dpct num">${Math.round(data.siteAdCurr[i]/dTot*100)}%</span>
+      <span class="dpct num">${Math.round(share(data.siteAdCurr[i],dTot)*100)}%</span>
       <span class="damt num">${wonRaw(data.siteAdCurr[i])}원</span>
     </div>`).join('');
 
@@ -7064,11 +7078,11 @@ function renderReport(data){
     {h:`${data.currMonthNum}/${data.currDay} 이미 ${data.prevLabel}의 ${achTotal}% 달성`,
      p:`시간은 ${pacePct}%(${data.currLabel} ${data.daysInCurrMonth}일 기준)밖에 지나지 않았는데 매출은 <b>${achTotal}%</b>에 도달했습니다. 페이스를 유지하면 월말 약 <b>${wonRaw(proj)}원</b>으로 ${data.prevLabel}(+${pct(proj,totPrev)}%)을 넘어설 전망입니다.`},
     {h:'쿠팡, 가장 빠른 페이스',
-     p:`쿠팡은 ${data.currDay}일 만에 ${data.prevLabel} 매출의 <b>${Math.round(data.salesCurr['쿠팡']/data.salesPrev['쿠팡']*100)}%</b>를 달성해 세 채널 중 가장 앞섭니다. 자사몰은 ${data.prevLabel} 대형 프로모션 매출 기저가 높아 상대적으로 낮은 페이스(${Math.round(data.salesCurr['자사몰']/data.salesPrev['자사몰']*100)}%)를 보이고 있습니다.`},
+     p:`쿠팡은 ${data.currDay}일 만에 ${data.prevLabel} 매출의 <b>${Math.round(share(data.salesCurr['쿠팡'],data.salesPrev['쿠팡'])*100)}%</b>를 달성해 세 채널 중 가장 앞섭니다. 자사몰은 ${data.prevLabel} 대형 프로모션 매출 기저가 높아 상대적으로 낮은 페이스(${Math.round(share(data.salesCurr['자사몰'],data.salesPrev['자사몰'])*100)}%)를 보이고 있습니다.`},
     {h:'네이버 ROAS '+naverRoasCurr+'%로 압도적',
      p:`네이버는 광고비 ${wonRaw(data.adCurr['네이버'].cost)}원으로 광고매출 ${wonRaw(data.adCurr['네이버'].rev)}원을 만들어 ROAS <b>${naverRoasCurr}%</b>를 기록했습니다. 투입 대비 회수가 가장 효율적인 채널입니다.`},
     {h:'자사몰 광고비, 메타에 집중',
-     p:`자사몰 ${data.currLabel} 광고비 ${wonRaw(dTot)}원 중 <b>메타광고가 ${Math.round((data.siteAdCurr[1]||0)/dTot*100)}%</b>를 차지합니다. ROAS ${roasPct(data.adCurr['자사몰'].rev,data.adCurr['자사몰'].cost)}%는 네이버·쿠팡 대비 낮아 메타 소재 효율 점검이 필요합니다.`},
+     p:`자사몰 ${data.currLabel} 광고비 ${wonRaw(dTot)}원 중 <b>메타광고가 ${Math.round(share(data.siteAdCurr[1]||0,dTot)*100)}%</b>를 차지합니다. ROAS ${roasPct(data.adCurr['자사몰'].rev,data.adCurr['자사몰'].cost)}%는 네이버·쿠팡 대비 낮아 메타 소재 효율 점검이 필요합니다.`},
   ].map((it,i)=>`<div class="ins"><div class="ic">${i+1}</div><div><h4>${it.h}</h4><p>${it.p}</p></div></div>`).join('');
 
   /* reco */
@@ -7171,7 +7185,7 @@ function renderReport(data){
   document.getElementById('mAdDonutTot').textContent=wonRaw(adDTot);
   document.getElementById('mAdDonutList').innerHTML=CH.map((c,i)=>`
     <div class="drow"><span class="sw" style="background:${adDColors[i]}"></span><span class="dn">${c}</span>
-      <span class="dpct num">${Math.round(AD[c].curr.cost/adDTot*100)}%</span>
+      <span class="dpct num">${Math.round(share(AD[c].curr.cost,adDTot)*100)}%</span>
       <span class="damt num">${wonRaw(AD[c].curr.cost)}원</span></div>`).join('');
 
   /* M04 total */
@@ -7188,7 +7202,7 @@ function renderReport(data){
   document.getElementById('mTotDonutTot').textContent=eok(grand);
   document.getElementById('mTotDonutList').innerHTML=CH.map((c,i)=>`
     <div class="drow"><span class="sw" style="background:${totDColors[i]}"></span><span class="dn">${c}</span>
-      <span class="dpct num">${Math.round(chTotal(c)/grand*100)}%</span>
+      <span class="dpct num">${Math.round(share(chTotal(c),grand)*100)}%</span>
       <span class="damt num">${wonRaw(chTotal(c))}원</span></div>`).join('');
 
   /* M footnote */
@@ -7209,8 +7223,31 @@ const GOAL_ICON=(()=>{
   };
 })();
 
+/* 1~12월 버튼 · 누르면 그 달 목표 금액을 보여주고, 수정 창도 그 달로 열린다 ·
+   목표를 넣은 달에는 점을 찍어 미설정 달과 구분한다 */
+let goalMonthTabs=null;
+function renderGoalMonthTabs(){
+  const box=document.getElementById('goalMonthTabs');
+  if(!box) return;
+  if(!goalMonthTabs){
+    box.innerHTML=Array.from({length:12},(_,i)=>
+      `<button class="ui-tab" data-value="${i+1}">${i+1}월<span class="gm-dot" aria-hidden="true"></span></button>`).join('');
+    goalMonthTabs=window.UI.tabs(box,v=>{ goalViewMonth=+v; renderGoalPlan(); });
+  }
+  const dataMonth=goalDataMonth();
+  box.querySelectorAll('.ui-tab').forEach(t=>{
+    const m=+t.dataset.value, set=!!goalBook[String(m)];
+    t.classList.toggle('is-set',set);
+    t.classList.toggle('is-now',m===dataMonth);
+    t.title=(m===dataMonth?'이번 달 · ':'')+(set?'목표 설정됨':'목표 미설정');
+  });
+  goalMonthTabs.set(String(goalState.month));
+}
+
 function renderGoalPlan(){
-  goalState=goalFor(lastReportData&&lastReportData.currMonthNum?lastReportData.currMonthNum:goalState.month);
+  const dataMonth=goalDataMonth();
+  goalState=goalFor(goalViewMonth||dataMonth);
+  renderGoalMonthTabs();
   document.getElementById('goalPlanTitle').textContent=`${goalState.month}월 목표달성 계획표`;
   CH.forEach(c=>{
     const el=document.getElementById('goalAmt-'+c);
@@ -7220,10 +7257,22 @@ function renderGoalPlan(){
   const h1=document.getElementById('section01Heading');
   if(h1) h1.textContent=`${goalState.month}월 ${eok(total)} 매출목표`;
   const h2=document.getElementById('section02Heading');
-  if(h2) h2.textContent=`${goalState.month}월 실행계획`;
+  /* 실행계획은 모든 달이 한 벌을 같이 쓰므로 제목은 이번 달을 따른다 */
+  if(h2) h2.textContent=`${dataMonth}월 실행계획`;
 
   const data=lastReportData;
   if(!data) return;
+  /* 달성률은 누적매출이 있는 이번 달만 계산된다 · 다른 달은 상태만 알려 준다 */
+  if(goalState.month!==dataMonth){
+    const future=goalState.month>dataMonth;
+    document.getElementById('goalAchTitle').textContent=`${goalState.month}월 달성률`;
+    document.getElementById('goalAchUnit').textContent=future?'아직 시작 전인 달입니다':'지난 달입니다';
+    document.getElementById('goalAchCards').innerHTML=
+      `<div class="goalach-empty">${future
+        ?`${goalState.month}월이 시작되면 누적매출과 달성률이 여기에 표시됩니다.`
+        :`달성률은 진행 중인 달(${dataMonth}월)만 표시됩니다.`}${goalState.isSet?'':' 이 달 목표는 아직 설정하지 않았습니다 — 위 금액은 이전 달 목표를 임시로 보여 줍니다.'}</div>`;
+    return;
+  }
   document.getElementById('goalAchTitle').textContent=`${goalState.month}월 현재 달성률`;
   document.getElementById('goalAchUnit').textContent=`${goalState.month}/1–${goalState.month}/${data.currDay} 누적매출 · 목표 대비`;
   document.getElementById('goalAchCards').innerHTML=CH.map(c=>{
@@ -7299,26 +7348,100 @@ renderSection01();
 })();
 
 /* ===== 구글시트에서 데이터 가져오기 =====
-   버튼 클릭 시 아래 구글시트를 gviz JSONP로 읽어와 위 renderReport()를 다시 실행합니다.
-   https://docs.google.com/spreadsheets/d/1xa2syVxlWfCksZgUx8riP6Wp_COQv_v1jskXxFjJ9S8/edit
-   시트가 "링크가 있는 모든 사용자에게 보기 허용"으로 공유되어 있어야 동작합니다. */
+   로그인한 사람의 구글 권한(drive.readonly · 드라이브 화면과 같은 권한)으로 Sheets API를 읽어
+   위 renderReport()를 다시 실행한다. 시트는 공유를 "제한됨"으로 두고, 볼 사람에게만 공유한다.
+   예전에는 gviz(JSONP)로 읽느라 시트를 "링크가 있는 모든 사용자"로 열어 둬야 했고,
+   이 저장소가 공개라 시트 주소만 알면 누구나 매출을 받아 갈 수 있었다.
+   권한 창은 클릭 없이 띄울 수 없어서, 처음에는 사이드바 새로고침 버튼으로 받아 온다 ·
+   받은 권한은 이 탭이 닫힐 때까지(최대 1시간) 기억해 두고 새로고침 때 자동으로 쓴다 */
 (function(){
 const SHEET_ID='1xa2syVxlWfCksZgUx8riP6Wp_COQv_v1jskXxFjJ9S8';
 const GID_SALES=0, GID_MEMBERS=179809001;
 const SHEET_CACHE_KEY='baroyam_sheet_data_v1';
+const SHEET_TOKEN_KEY='baroyam_sheet_token_v1';
 
-function gvizFetch(gid,range){
+function savedSheetToken(){
+  try{
+    const t=JSON.parse(sessionStorage.getItem(SHEET_TOKEN_KEY)||'null');
+    if(t&&t.v&&Date.now()<t.exp) return t.v;
+  }catch(e){}
+  return '';
+}
+function loadGsi(){
+  if(window.google&&google.accounts&&google.accounts.oauth2) return Promise.resolve();
   return new Promise((resolve,reject)=>{
-    const cbName='__gvizCb_'+gid+'_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
-    const timer=setTimeout(()=>{cleanup();reject(new Error('시간이 초과되었습니다'));},15000);
-    function cleanup(){clearTimeout(timer);delete window[cbName];script.remove();}
-    window[cbName]=json=>{cleanup();resolve(json);};
-    const script=document.createElement('script');
-    const rangeParam=range?`&range=${encodeURIComponent(range)}`:'';
-    script.src=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${gid}${rangeParam}&tqx=responseHandler:${cbName}`;
-    script.onerror=()=>{cleanup();reject(new Error('시트를 불러오지 못했습니다'));};
-    document.body.appendChild(script);
+    const s=document.createElement('script');
+    s.src='https://accounts.google.com/gsi/client'; s.async=true;
+    s.onload=()=>resolve();
+    s.onerror=()=>reject(new Error('구글 로그인 도구를 불러오지 못했어요'));
+    document.head.appendChild(s);
   });
+}
+/* interactive=false 이면 기억해 둔 권한만 쓴다 · 없으면 needClick 오류로 알린다 */
+async function sheetToken(interactive){
+  const saved=savedSheetToken();
+  if(saved) return saved;
+  if(!interactive){ const e=new Error('새로고침 버튼을 눌러 매출을 불러와 주세요'); e.needClick=true; throw e; }
+  await loadGsi();
+  let hint='';
+  try{ hint=(JSON.parse(localStorage.getItem(window.BAROYAM_AUTH.lsKey)||'null')||{}).email||''; }catch(e){}
+  return new Promise((resolve,reject)=>{
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:window.BAROYAM_AUTH.clientId,
+      scope:'https://www.googleapis.com/auth/drive.readonly',
+      hint:hint,
+      callback:res=>{
+        if(!res||res.error||!res.access_token) return reject(new Error((res&&res.error)||'구글 권한을 받지 못했어요'));
+        try{ sessionStorage.setItem(SHEET_TOKEN_KEY,JSON.stringify({v:res.access_token,
+          exp:Date.now()+(Number(res.expires_in||3600)-60)*1000})); }catch(e){}
+        resolve(res.access_token);
+      },
+      error_callback:err=>reject(new Error((err&&err.type)==='popup_closed'?'허락 창이 닫혔어요':'구글 권한을 받지 못했어요'))
+    });
+    client.requestAccessToken({prompt:''});
+  });
+}
+async function sheetsGet(token,path){
+  const res=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+SHEET_ID+path,
+    {headers:{Authorization:'Bearer '+token}});
+  if(res.status===401){
+    try{ sessionStorage.removeItem(SHEET_TOKEN_KEY); }catch(e){}
+    const e=new Error('구글 권한이 만료됐어요 · 새로고침 버튼을 다시 눌러 주세요'); e.needClick=true; throw e;
+  }
+  if(res.status===403||res.status===404){
+    let why='';
+    try{ why=((await res.json()).error||{}).message||''; }catch(e){}
+    /* 구글 클라우드 프로젝트에서 Sheets API 를 켜지 않았을 때도 403 이 온다 */
+    if(/has not been used|is disabled|SERVICE_DISABLED/i.test(why))
+      throw new Error('구글 클라우드 콘솔에서 Google Sheets API 를 사용 설정해야 해요');
+    throw new Error('이 구글 계정은 매출 시트를 볼 권한이 없어요 · 시트 주인에게 공유를 요청해 주세요');
+  }
+  if(!res.ok) throw new Error('시트를 불러오지 못했어요 ('+res.status+')');
+  return res.json();
+}
+/* Sheets API 값을 예전 gviz 모양({table:{cols:[{label}],rows:[{c:[{v}]}]}})으로 바꾼다 ·
+   gviz 도 시트 1행을 머리글(label)로 썼으므로 아래 해석 코드를 그대로 쓸 수 있다 */
+function toGvizTable(valueRange){
+  const rows=(valueRange&&valueRange.values)||[];
+  const width=rows.reduce((w,r)=>Math.max(w,r.length),0);
+  const head=rows[0]||[];
+  const cell=v=>(v===''||v==null)?null:{v};
+  return {table:{
+    cols:Array.from({length:width},(_,i)=>({label:head[i]==null?'':String(head[i])})),
+    rows:rows.slice(1).map(r=>({c:Array.from({length:width},(_,i)=>cell(r[i]))}))
+  }};
+}
+async function fetchSheetTables(interactive){
+  const token=await sheetToken(interactive);
+  const meta=await sheetsGet(token,'?fields=sheets.properties(sheetId,title)');
+  const title=gid=>{
+    const s=(meta.sheets||[]).find(x=>x.properties&&x.properties.sheetId===gid);
+    if(!s) throw new Error('시트 탭(gid '+gid+')을 찾지 못했어요');
+    return "'"+s.properties.title.replace(/'/g,"''")+"'";
+  };
+  const q=[GID_SALES,GID_MEMBERS].map(g=>'ranges='+encodeURIComponent(title(g))).join('&');
+  const v=await sheetsGet(token,'/values:batchGet?'+q+'&valueRenderOption=UNFORMATTED_VALUE');
+  return (v.valueRanges||[]).map(toGvizTable);
 }
 function cellNum(cell){
   if(!cell||cell.v===null||cell.v===undefined) return 0;
@@ -7361,34 +7484,21 @@ function parseSalesSheet(json){
   return blocks.filter(b=>CH.reduce((s,c)=>s+((b.platforms[c]&&b.platforms[c].sales)||0),0)>0);
 }
 
-/* 구글시트는 같은 열에 "11,313명" 같은 텍스트와 37182 같은 순수 숫자가 섞여 있으면
-   타입 추론에 실패한 셀을 null로 반환한다(실측: 회원수 행의 6~8월). 그런 행만
-   해당 행 단독 range로 다시 조회해 보정한다. */
-async function fetchMembersData(){
-  const base=await gvizFetch(GID_MEMBERS);
+/* 예전 gviz 는 같은 열에 "11,313명" 같은 텍스트와 37182 같은 숫자가 섞이면 셀을 null로
+   돌려줘서 그 행만 다시 조회했다 · Sheets API 는 칸 값을 그대로 주므로 그럴 일이 없다 */
+function parseMembersSheet(base){
   const cols=base.table.cols, rows=base.table.rows;
   const allCols=cols.slice(1);
   let monthCount=allCols.findIndex(c=>!c.label);
   if(monthCount===-1) monthCount=allCols.length;
   const monthLabels=allCols.slice(0,monthCount).map(c=>c.label);
-  const lastCol=String.fromCharCode(65+monthLabels.length);
-  const metrics={}, rowNum={}, needsFix=[];
-  rows.forEach((r,i)=>{
+  const metrics={};
+  rows.forEach(r=>{
     if(!r||!r.c) return;
     const label=cellStr(r.c[0]);
     if(!label) return;
-    const vals=r.c.slice(1,1+monthLabels.length);
-    metrics[label]=vals.map(cellNum);
-    rowNum[label]=i+2;
-    if(vals.some(c=>c===null||c===undefined)) needsFix.push(label);
+    metrics[label]=r.c.slice(1,1+monthLabels.length).map(cellNum);
   });
-  if(needsFix.length){
-    const fixed=await Promise.all(needsFix.map(label=>gvizFetch(GID_MEMBERS,`A${rowNum[label]}:${lastCol}${rowNum[label]}`)));
-    needsFix.forEach((label,i)=>{
-      const r=fixed[i]&&fixed[i].table.rows[0];
-      if(r&&r.c) metrics[label]=r.c.slice(1,1+monthLabels.length).map(cellNum);
-    });
-  }
   const idx=[];
   monthLabels.forEach((m,i)=>{ if((metrics['총 방문자수']||[])[i]>0) idx.push(i); });
   const pick=arr=>idx.map(i=>(arr&&arr[i])||0);
@@ -7453,18 +7563,23 @@ try{
   }
 }catch(e){ /* 캐시가 손상된 경우 기본값 유지 */ }
 
-/* 캐시된 데이터를 먼저 즉시 그려서 화면이 비지 않게 한 뒤, 페이지가 열릴 때마다
-   백그라운드에서 시트 최신값으로 자동 갱신한다 — 수동으로 "가져오기"를 눌러야만
-   최신 데이터가 반영되던 것을 방지 */
-async function syncFromSheets(){
-  const [salesJson,memberData]=await Promise.all([gvizFetch(GID_SALES),fetchMembersData()]);
-  const data=buildDataFromSheets(salesJson,memberData);
+/* 캐시된 데이터를 먼저 즉시 그려서 화면이 비지 않게 한 뒤, 페이지가 열릴 때
+   기억해 둔 구글 권한이 있으면 백그라운드에서 시트 최신값으로 자동 갱신한다 ·
+   권한이 없으면(탭을 새로 열었을 때) 새로고침 버튼을 누르라고 알린다 */
+async function syncFromSheets(interactive){
+  const [salesJson,membersJson]=await fetchSheetTables(interactive);
+  const data=buildDataFromSheets(salesJson,parseMembersSheet(membersJson));
   renderReport(data);
   const at=Date.now();
   localStorage.setItem(SHEET_CACHE_KEY,JSON.stringify({data,at}));
   showSyncTime(at);
 }
-syncFromSheets().catch(err=>console.error('자동 동기화 실패',err));
+syncFromSheets(false).catch(err=>{
+  if(!err.needClick){ console.error('자동 동기화 실패',err); return; }
+  let cached=false;
+  try{ cached=!!localStorage.getItem(SHEET_CACHE_KEY); }catch(e){}
+  if(!cached){ const el=document.getElementById('sbSyncTime'); if(el) el.textContent='매출 불러오기\n새로고침을 눌러 주세요'; }
+});
 /* 사이드바 하단 새로고침 · 페이지를 다시 열지 않고 매출데이터를 시트에서 다시 불러온다 */
 (function(){
   const btn=document.getElementById('sbSalesRefresh');
@@ -7472,7 +7587,7 @@ syncFromSheets().catch(err=>console.error('자동 동기화 실패',err));
   btn.addEventListener('click',()=>{
     if(btn.classList.contains('is-loading')) return;
     btn.classList.add('is-loading');
-    syncFromSheets()
+    syncFromSheets(true)
       .catch(err=>{ console.error('매출데이터 새로고침 실패',err); alert('매출데이터를 불러오지 못했어요 · '+err.message); })
       .finally(()=>btn.classList.remove('is-loading'));
   });
@@ -11146,10 +11261,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
     goalBook[String(month)]=amounts;
     try{ localStorage.setItem(GOAL_LS_KEY,JSON.stringify({months:goalBook})); }catch(err){}
+    /* 수정 창에서 월을 바꿔 저장했으면 화면도 그 달로 옮긴다 */
+    goalViewMonth=month;
     renderGoalPlan();
     closeModal();
-    /* 매출 데이터 달과 다른 달을 저장했으면 화면은 그대로 두고 저장만 알린다 */
-    const savedMsg=month===goalState.month?'저장됨':`${month}월 목표 저장됨`;
+    const savedMsg=`${month}월 목표 저장됨`;
 
     if(apiReady()){
       window.baroyamSaveSetting('goal',JSON.stringify(goalPayload()))
