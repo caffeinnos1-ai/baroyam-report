@@ -3303,6 +3303,16 @@ window.BAROYAM_ACCESS=(function(){
   /* 계정 한 줄 · 왼쪽 긴 링크 버튼 + 오른쪽 계정정보 버튼이 한 덩어리로 붙는다 */
   .acc-item{min-width:0}
   .acc-item-bar{display:flex;min-width:0}
+  /* 순서 바꾸기 손잡이 · 팀장에게만 보인다 · 줄 전체가 링크라 손잡이로만 끈다 */
+  .acc-grip{flex:none;width:22px;margin-right:4px;display:grid;place-items:center;border-radius:8px;
+    color:var(--mute);cursor:grab;touch-action:none;user-select:none;transition:background .14s,color .14s}
+  .acc-grip:hover{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .acc-grip svg{width:14px;height:14px}
+  .acc-item.is-dragging{opacity:.32}
+  .acc-item-ghost{position:fixed;z-index:200;pointer-events:none;margin:0;opacity:.96;
+    transform:rotate(1.2deg);box-shadow:0 22px 44px -16px rgba(0,0,0,.45);border-radius:var(--ui-r)}
+  .acc-item-ghost .acc-info{display:none}
+  body.acc-dragging,body.acc-dragging *{cursor:grabbing!important;user-select:none}
   .acc-item-bar .ui-btn{height:48px}
   /* .ui-btn 이 뒤에 정의돼 한 칸짜리 선택자로는 가운데 정렬·둥글기를 못 이긴다 · 두 칸으로 올려 둔다 */
   .acc-item-bar .acc-go{flex:1;min-width:0;justify-content:flex-start;gap:10px;padding:0 14px 0 8px;
@@ -15366,7 +15376,8 @@ window.baroyamAsk=function(title,body,okText){
     del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>',
     plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     go:'<svg class="acc-go-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5M10 14 19 5M19 14v5H5V5h5"/></svg>',
-    chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>'
+    chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5 12 15l5.5-5.5"/></svg>',
+    grip:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>'
   };
 
   function 호스트(u){ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return ''; } }
@@ -15396,8 +15407,10 @@ window.baroyamAsk=function(title,body,okText){
     }
     if(it.memo) 칸.push('<div class="acc-info-line"><i>메모</i><b class="memo">'+안전(it.memo)+'</b></div>');
     if(!칸.length) 칸.push('<div class="acc-info-line"><b class="none">적어 둔 정보가 없어요</b></div>');
-    return '<div class="acc-item">'+
-      '<div class="acc-item-bar">'+왼쪽+
+    return '<div class="acc-item" data-i="'+안전(it.id)+'">'+
+      '<div class="acc-item-bar">'+
+        (편집가능()?'<span class="acc-grip" title="끌어서 순서 바꾸기" aria-hidden="true">'+아이콘.grip+'</span>':'')+
+        왼쪽+
         '<button type="button" class="ui-btn soft acc-info-btn" data-act="info"'+속+' aria-expanded="'+펼침+'">계정정보'+아이콘.chev+'</button>'+
       '</div>'+
       (펼침?'<div class="acc-info">'+칸.join('')+
@@ -15589,6 +15602,81 @@ window.baroyamAsk=function(title,body,okText){
       else g.items.push(Object.assign({id:새id()},값));
     });
   });
+  /* ----- 계정 순서 바꾸기 · 왼쪽 손잡이를 끌어 위아래(다른 구역 상자로도) 옮긴다 -----
+     프로젝트 보드와 같이 브라우저 기본 끌어놓기 대신 포인터를 직접 따라간다(마우스·터치 같은 길) ·
+     끄는 동안은 줄 자체를 들어갈 자리로 옮겨 보여 주고, 놓으면 최신본 위에서 그 자리로 옮겨 저장한다 */
+  const 끌기={준비:null,유령:null,원래:null};
+  function 끌기끝(놓기){
+    const 준=끌기.준비; 끌기.준비=null;
+    if(!준) return;
+    const 움직임=!!끌기.유령;
+    if(끌기.유령){ 끌기.유령.remove(); 끌기.유령=null; }
+    document.body.classList.remove('acc-dragging');
+    준.el.classList.remove('is-dragging');
+    if(!움직임) return;
+    const 상자el=준.el.closest('.acc-box');
+    let 다음=준.el.nextElementSibling;
+    while(다음&&!다음.classList.contains('acc-item')) 다음=다음.nextElementSibling;
+    const 새구역=상자el?상자el.dataset.g:'', 앞=다음?다음.dataset.i:'';
+    if(!놓기||!새구역||(새구역===준.gid&&앞===준.앞)){ 그리기(); return; }
+    바꾸기(function(d){
+      /* 그사이 다른 사람이 받을 구역을 지웠거나 이 계정을 지웠으면 옮기지 않는다 */
+      const 받을=d.groups.find(function(g){ return g.id===새구역; });
+      if(!받을) return;
+      let 옮길=null;
+      d.groups.forEach(function(g){
+        const i=g.items.findIndex(function(x){ return x.id===준.iid; });
+        if(i>=0) 옮길=g.items.splice(i,1)[0];
+      });
+      if(!옮길) return;
+      const j=앞?받을.items.findIndex(function(x){ return x.id===앞; }):-1;
+      if(j>=0) 받을.items.splice(j,0,옮길); else 받을.items.push(옮길);
+    });
+  }
+  판.addEventListener('pointerdown',function(e){
+    const 손=e.target.closest('.acc-grip'); if(!손||!자료||!편집가능()) return;
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    const el=손.closest('.acc-item'), 상자el=el&&el.closest('.acc-box'); if(!상자el) return;
+    e.preventDefault();
+    let 다음=el.nextElementSibling;
+    while(다음&&!다음.classList.contains('acc-item')) 다음=다음.nextElementSibling;
+    const gid=상자el.dataset.g;
+    끌기.준비={el:el,gid:gid,iid:el.dataset.i,앞:다음?다음.dataset.i:'',x:e.clientX,y:e.clientY};
+  });
+  window.addEventListener('pointermove',function(e){
+    const 준=끌기.준비; if(!준) return;
+    if(!끌기.유령){
+      if(Math.abs(e.clientX-준.x)<5&&Math.abs(e.clientY-준.y)<5) return;
+      const r=준.el.getBoundingClientRect();
+      const g=준.el.cloneNode(true);
+      g.classList.add('acc-item-ghost');
+      g.style.width=r.width+'px';
+      g.__dx=준.x-r.left; g.__dy=준.y-r.top;
+      document.body.appendChild(g);
+      끌기.유령=g;
+      준.el.classList.add('is-dragging');
+      document.body.classList.add('acc-dragging');
+    }
+    e.preventDefault();
+    const g=끌기.유령;
+    g.style.left=(e.clientX-g.__dx)+'px';
+    g.style.top=(e.clientY-g.__dy)+'px';
+    /* 화면 위아래 끝에 닿으면 따라 굴린다 */
+    if(e.clientY<72) window.scrollBy(0,-16); else if(innerHeight-e.clientY<72) window.scrollBy(0,16);
+    /* 손끝 아래 상자의 목록에서, 손끝보다 가운데가 아래인 첫 줄 앞에 끼운다 */
+    const 아래=document.elementFromPoint(e.clientX,e.clientY);
+    const 상자el=아래&&아래.closest('#accGrid .acc-box'); if(!상자el) return;
+    const 목록=상자el.querySelector('.acc-list'); if(!목록) return;
+    const 줄들=[].filter.call(목록.children,function(c){ return c.classList.contains('acc-item')&&c!==준.el; });
+    const 앞줄=줄들.find(function(c){ const r=c.getBoundingClientRect(); return e.clientY<r.top+r.height/2; });
+    if(앞줄){ if(준.el.nextElementSibling!==앞줄) 목록.insertBefore(준.el,앞줄); }
+    else if(목록.lastElementChild!==준.el) 목록.appendChild(준.el);
+    const 빈=목록.querySelector('.acc-empty'); if(빈) 빈.remove();
+  },{passive:false});
+  window.addEventListener('pointerup',function(){ if(끌기.준비) 끌기끝(true); });
+  window.addEventListener('pointercancel',function(){ if(끌기.준비) 끌기끝(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&끌기.준비) 끌기끝(false); });
+
   /* 로고 설정 · 배너의 설정 버튼으로 연다 · 저장을 눌러야 서버에 담는다 */
   const 설정={창:$('accSet'),단추:$('accSetBtn'),칩:$('accSetLogos')};
   function 설정그리기(켠){
