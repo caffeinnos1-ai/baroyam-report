@@ -3076,6 +3076,12 @@ window.BAROYAM_ACCESS=(function(){
   #memberList .member-badge{min-width:0}
   #memberList .mb-txt{flex:1;min-width:0}
   #memberList .mb-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 이름 바꾸기 · 이름을 누르면 그 자리에 입력칸이 뜬다 (Enter·바깥 클릭 저장, Esc 취소) */
+  .member-badge .mb-name{all:unset;box-sizing:border-box;cursor:text;border-radius:5px}
+  .member-badge .mb-name:hover,.member-badge .mb-name:focus-visible{text-decoration:underline;text-underline-offset:3px}
+  .member-badge .mb-name-input{all:unset;box-sizing:border-box;width:100%;padding:1px 5px;border-radius:5px;
+    background:rgba(255,255,255,.26);color:#fff;font-size:13px;font-weight:800;letter-spacing:-.2px}
+  .member-badge .mb-name-input:focus{outline:2px solid rgba(255,255,255,.7);outline-offset:0}
   #memberList .m-del{flex:none;margin-left:auto}
 
   /* 관리자 설정 · 워크플로우(자동화 수집 일정과 최근 실행 결과) */
@@ -8159,7 +8165,7 @@ window.CsGuide=(function(){
       const label=r?(r.ic+escapeHtml(r.k)):'역할 없음';
       return `<span class="member-badge" style="background:${m.color}" data-id="${m.id}">`+
         `<span class="mb-ava" aria-hidden="true">${face}</span>`+
-        `<span class="mb-txt"><span class="mb-name" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>`+
+        `<span class="mb-txt"><button type="button" class="mb-name" data-rename="${m.id}" title="${escapeHtml(m.name)} · 눌러서 이름 바꾸기">${escapeHtml(m.name)}</button>`+
         `<button type="button" class="mb-role${r?'':' is-none'}" data-role-for="${m.id}" aria-haspopup="menu"`+
         ` aria-label="${escapeHtml(m.name)} 역할 고르기">${label}${CARET}</button></span>`+
         `<button type="button" class="m-del" data-id="${m.id}" aria-label="${escapeHtml(m.name)} 삭제">✕</button></span>`;
@@ -8224,6 +8230,48 @@ window.CsGuide=(function(){
     announce();
     return true;
   }
+  /* 이름 바꾸기 · 추가할 때와 같이 다른 회원과 겹치는 이름은 막는다 ·
+     마이홈·프로필은 id로 묶여 있어 그대로 따라오고, 이름으로 묶인 프로젝트 담당자는
+     baroyam:member-renamed를 받은 프로젝트 쪽에서 새 이름으로 옮긴다 · 바꿨으면 true */
+  function renameMember(id,name){
+    const trimmed=String(name||'').trim();
+    const members=load();
+    const m=members.find(x=>x.id===id);
+    if(!m||!trimmed) return false;
+    const from=String(m.name).trim();
+    if(trimmed===from) return false;
+    if(members.some(x=>x.id!==id&&String(x.name).trim()===trimmed)){
+      alert("'"+trimmed+"' 회원이 이미 있어요. 다른 이름으로 바꿔 주세요.");
+      return false;
+    }
+    m.name=trimmed;
+    save(members);
+    document.dispatchEvent(new CustomEvent('baroyam:member-renamed',{detail:{id,from,to:trimmed}}));
+    announce();
+    return true;
+  }
+  function startRename(btn){
+    const id=btn.dataset.rename, m=MEM.byId(id);
+    if(!m) return;
+    closeDrop();
+    const box=document.createElement('input');
+    box.type='text'; box.className='mb-name-input'; box.maxLength=20; box.value=m.name;
+    box.setAttribute('aria-label',m.name+' 새 이름');
+    btn.replaceWith(box);
+    box.focus(); box.select();
+    let done=false;
+    const finish=ok=>{
+      if(done) return;
+      done=true;
+      /* 겹치는 이름이면 알림 뒤 원래 이름으로 되돌려 그린다 */
+      if(!(ok&&renameMember(id,box.value))) render();
+    };
+    box.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); finish(true); }
+      else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); finish(false); }
+    });
+    box.addEventListener('blur',()=>finish(true));
+  }
   /* 회원설정의 이름이 곧 마이홈이라, 이름을 지우면 그 마이홈도 사라진다 ·
      퀵링크·간편 기록노트·프로필 사진을 이 브라우저와 시트에서 같이 지운다 ·
      담당이던 프로젝트는 팀 자산이라 그대로 남긴다 */
@@ -8261,6 +8309,8 @@ window.CsGuide=(function(){
     input.focus();
   });
   list.addEventListener('click',(e)=>{
+    const nameBtn=e.target.closest('.mb-name');
+    if(nameBtn){ startRename(nameBtn); return; }
     const roleBtn=e.target.closest('.mb-role');
     if(roleBtn){
       /* 열려 있는 같은 버튼을 다시 누르면 닫는다 */
@@ -11262,8 +11312,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* 화면의 각 단추에서 막는 것과 별개로 공용 프로젝트를 저장하기 직전에 한 번 더 검사한다 ·
      일반 회원은 기존에 본인 담당이던 프로젝트와 새 본인 프로젝트만 바꿀 수 있다.
      다른 담당자의 레코드는 이전 스냅샷으로 되돌리고, 담당자 값은 언제나 본인으로 고정한다 */
+  let renamingOwner=false;
   function guardProjectWrites(){
-    if(isProjectLead()) return;
+    if(isProjectLead()||renamingOwner) return;
     const mine=myName();
     let previous=[];
     try{
@@ -11324,6 +11375,17 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
     render();
   }
+  /* 회원설정에서 이름을 바꾸면 그 이름으로 잡혀 있던 프로젝트 담당자도 새 이름으로 옮긴다 ·
+     담당자 보호(guardProjectWrites)는 이 한 번만 건너뛴다 · 관리자 설정에서만 일어나는 일이다 */
+  document.addEventListener('baroyam:member-renamed',e=>{
+    const d=e.detail||{};
+    if(!d.from||!d.to) return;
+    let hit=false;
+    state.projects.forEach(p=>{ if(p.owner===d.from){ p.owner=d.to; hit=true; } });
+    if(!hit){ render(); return; }
+    renamingOwner=true;
+    try{ save(); }finally{ renamingOwner=false; }
+  });
   /* 시트에서 받은 값이 이 브라우저 것보다 새로울 때만 덮어쓴다 · 두 몫을 따로 본다.
      새 키가 아직 없으면 옛 키(myhome)를 씨앗으로 읽는다 */
   window.__myhomeSync={apply(settings){
