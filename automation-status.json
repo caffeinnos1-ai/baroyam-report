@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "checkedAt": "2026-09-27T13:30:08Z",
+  "checkedAt": "2026-09-28T06:16:48Z",
   "repos": [
     {
       "repo": "caffeinnos1-ai/baroyam-trend",
@@ -9,14 +9,14 @@
         {
           "name": "구글트렌드 수집",
           "conclusion": "success",
-          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/35824757390",
-          "createdAt": "2026-09-23T06:00:08Z"
+          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36384344696",
+          "createdAt": "2026-09-28T06:00:09Z"
         },
         {
           "name": "네이버데이터랩 수집",
           "conclusion": "success",
-          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/35800087507",
-          "createdAt": "2026-09-23T00:00:41Z"
+          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36360567374",
+          "createdAt": "2026-09-28T00:00:24Z"
         }
       ]
     },
@@ -26,9 +26,9 @@
       "workflows": [
         {
           "name": "당일판매분요약표 (Slack)",
-          "conclusion": "success",
-          "url": "https://github.com/caffeinnos1-ai/caffeinnos-automation/actions/runs/35830859740",
-          "createdAt": "2026-09-23T07:16:31Z"
+          "conclusion": "failure",
+          "url": "https://github.com/caffeinnos1-ai/caffeinnos-automation/actions/runs/36357765064",
+          "createdAt": "2026-09-27T23:10:01Z"
         }
       ]
     }
