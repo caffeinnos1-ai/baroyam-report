@@ -7262,21 +7262,25 @@ function renderGoalPlan(){
 
   const data=lastReportData;
   if(!data) return;
-  /* 달성률은 누적매출이 있는 이번 달만 계산된다 · 다른 달은 상태만 알려 준다 */
-  if(goalState.month!==dataMonth){
-    const future=goalState.month>dataMonth;
-    document.getElementById('goalAchTitle').textContent=`${goalState.month}월 달성률`;
-    document.getElementById('goalAchUnit').textContent=future?'아직 시작 전인 달입니다':'지난 달입니다';
-    document.getElementById('goalAchCards').innerHTML=
-      `<div class="goalach-empty">${future
-        ?`${goalState.month}월이 시작되면 누적매출과 달성률이 여기에 표시됩니다.`
-        :`달성률은 진행 중인 달(${dataMonth}월)만 표시됩니다.`}${goalState.isSet?'':' 이 달 목표는 아직 설정하지 않았습니다 — 위 금액은 이전 달 목표를 임시로 보여 줍니다.'}</div>`;
+  /* 달성률은 구글시트 매출 데이터(월간 탭과 같은 months/monthlySales)에서 그 달 매출을 찾아 계산한다 ·
+     이번 달은 1일~오늘 누적, 지난 달은 월 전체 매출이다 */
+  const m=goalState.month, isNow=m===dataMonth;
+  const unset=goalState.isSet?'':' · 이 달 목표 미설정(이전 달 목표로 계산)';
+  const mi=(data.months||[]).findIndex(l=>parseInt(l,10)===m);
+  const sales=isNow?data.salesCurr:(mi>=0&&data.monthlySales?Object.fromEntries(CH.map(c=>[c,(data.monthlySales[c]||[])[mi]||0])):null);
+  document.getElementById('goalAchTitle').textContent=isNow?`${m}월 현재 달성률`:`${m}월 달성률`;
+  if(!sales){
+    document.getElementById('goalAchUnit').textContent=m>dataMonth?'아직 시작 전인 달입니다':'구글시트에 매출 데이터가 없습니다';
+    document.getElementById('goalAchCards').innerHTML=`<div class="goalach-empty">${m>dataMonth
+      ?`${m}월이 시작되면 구글시트 누적매출로 달성률이 표시됩니다.`
+      :`구글시트 매출 보고서에 ${m}월 행이 없어 달성률을 계산할 수 없습니다.`}</div>`;
     return;
   }
-  document.getElementById('goalAchTitle').textContent=`${goalState.month}월 현재 달성률`;
-  document.getElementById('goalAchUnit').textContent=`${goalState.month}/1–${goalState.month}/${data.currDay} 누적매출 · 목표 대비`;
+  document.getElementById('goalAchUnit').textContent=(isNow
+    ?`${m}/1–${m}/${data.currDay} 누적매출 · 목표 대비`
+    :`${m}월 전체 매출 · 목표 대비`)+unset;
   document.getElementById('goalAchCards').innerHTML=CH.map(c=>{
-    const cur=data.salesCurr[c], goal=goalState[c], p=Math.round(cur/goal*1000)/10;
+    const cur=sales[c], goal=goalState[c], p=goal>0?Math.round(cur/goal*1000)/10:0;
     return `<div class="goalach-card" style="--cc:${CH_COLOR[c]}">
       <div class="ga-head">
         <span class="ga-ico">${GOAL_ICON[c]||''}</span>
@@ -7285,7 +7289,7 @@ function renderGoalPlan(){
       </div>
       <div class="ga-pct num">${p}<small>%</small></div>
       <div class="goalach-track"><div class="fill" style="width:${Math.min(p,100)}%"></div></div>
-      <div class="ga-amt"><b>${wonRaw(cur)}원</b> 누적 / 목표 ${wonRaw(goal)}원</div>
+      <div class="ga-amt"><b>${wonRaw(cur)}원</b> ${isNow?'누적':'매출'} / 목표 ${wonRaw(goal)}원</div>
     </div>`;
   }).join('');
 }
