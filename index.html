@@ -378,7 +378,7 @@ window.BAROYAM_DB=(function(){
   const syncs=[];
   function clone(v){ return v==null?v:JSON.parse(JSON.stringify(v)); }
   /* 이 창만의 이름표 · 못 올린 고침(draft)이 어느 창 것인지 가린다 */
-  const SAVE_REV=2;
+  const SAVE_REV=3;
   const TAB_ID=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   function blobSync(o){
     let timer=null, busy=false, again=false;
@@ -535,12 +535,6 @@ window.BAROYAM_DB=(function(){
     return {id:String(n.id),member_id:memberId,channel:channel,body:n.text||'',
       created_at:new Date(n.ts||Date.now()).toISOString(),updated_at:now};
   }
-  function projectRow(p,now){
-    return {id:String(p.id),name:p.name||'',status:p.status||'',
-      progress:+p.progress||0,memo:p.memo||'',urgent:!!p.urgent,
-      owner:p.owner||'',channel:p.channel||'',
-      due_date:dateOrNull(p.due),start_date:dateOrNull(p.start),updated_at:now};
-  }
   /* 고른 회원의 퀵링크·기록노트를 거울에 맞춘다 (저장할 때마다 부른다) */
   function isKnownMember(id){
     /* notes.member_id 에 외래키가 걸려 있어, 회원 목록에 없는 칸(__admin__,
@@ -566,23 +560,105 @@ window.BAROYAM_DB=(function(){
     }catch(err){ console.error(err); }
   }
   /* 프로젝트는 팀 공용이라 회원과 상관없이 한 벌이다 */
-  /* 거울에서 지우는 것은 삭제 단추로 지운 프로젝트(deleted 기록)뿐이다 ·
-     예전에는 "보낸 목록에 없는 행"을 지워서, 옛 사본을 든 창이 저장하면 원본은 서버가 지켜도 거울 행은 사라졌다 */
-  async function mirrorProjects(list,deleted){
-    if(!(await ensureSession())) return;
+  /* ---------- 프로젝트 · projects 표가 원본이다 (한 프로젝트 = 한 줄) ----------
+     예전에는 모든 프로젝트를 app_settings 한 칸(myhomeShared)에 한 덩어리로 담아, 여러 PC가 그 한 칸을
+     각자 들고 있던 사본으로 덮어쓰며 프로젝트가 사라졌다 · 이제 고친 프로젝트의 줄만 바꾼다 ·
+     행은 지우지 않는다 · 삭제 단추는 deleted_at 만 적는다(서버 08 트리거가 화면의 행 삭제를 막는다) ·
+     rev 가 없는 옛 버전 창의 쓰기는 서버가 건너뛴다 */
+  const PROJ_REV=3;
+  const PROJ_KEYS=['id','name','status','progress','memo','urgent','owner','channel','due','start','created','doneAt'];
+  function dayOrNull(v){
+    v=String(v==null?'':v).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;
+  }
+  function projToRow(p,order){
+    const extra={};
+    Object.keys(p||{}).forEach(function(k){ if(PROJ_KEYS.indexOf(k)<0) extra[k]=p[k]; });
+    const row={id:String(p.id),name:String(p.name||''),status:String(p.status||''),
+      progress:Math.round(+p.progress||0),memo:String(p.memo||''),urgent:!!p.urgent,
+      owner:String(p.owner||''),owner_name_raw:String(p.owner||''),channel:String(p.channel||''),
+      due_date:dayOrNull(p.due),start_date:dayOrNull(p.start),
+      created_on:dayOrNull(p.created),done_on:dayOrNull(p.doneAt),data:extra,rev:PROJ_REV};
+    if(order!=null) row.sort_order=order;
+    return row;
+  }
+  function projFromRow(r){
+    const p=Object.assign({},(r.data&&typeof r.data==='object'&&!Array.isArray(r.data))?r.data:{});
+    p.id=String(r.id); p.name=r.name||''; p.status=r.status||''; p.progress=+r.progress||0;
+    p.memo=r.memo||''; p.urgent=!!r.urgent; p.owner=r.owner||''; p.channel=r.channel||'';
+    p.due=r.due_date||''; p.start=r.start_date||'';
+    if(r.created_on) p.created=r.created_on;
+    if(r.done_on) p.doneAt=r.done_on;
+    return p;
+  }
+  /* 비교용 · 화면 값과 서버 값을 같은 모양으로 맞춘다('' 와 없음, 문자열 숫자 등) */
+  function projCanon(p){ return p?projFromRow(Object.assign(projToRow(p),{})):p; }
+  /* 전부 읽는다 · 지운 것(deleted_at)은 id 만 따로 돌려준다 · 읽지 못하면 오류를 던진다 */
+  async function loadProjects(){
+    if(!(await ensureSession())) throw new Error('로그인되지 않았습니다');
+    const c=await client();
+    const r=await c.from('projects').select('*')
+      .order('sort_order',{ascending:true,nullsFirst:false}).order('created_on',{ascending:true});
+    if(r.error) throw r.error;
+    const live=[], gone=[];
+    (r.data||[]).forEach(function(row){ if(row.deleted_at) gone.push(String(row.id)); else live.push(projFromRow(row)); });
+    return {live:live,gone:gone};
+  }
+  /* 한 프로젝트 저장 · 서버 줄을 읽어 이 창이 바꾼 칸만 얹는다(base = 이 창이 고치기 전 값) ·
+     읽고 쓰는 사이에 누가 먼저 썼으면(updated_at 이 달라짐) 다시 읽어 얹는다 ·
+     {ok, value} / 그사이 삭제됐으면 {deleted} / 실패하면 null */
+  async function saveProject(local,base,order){
+    if(!(await ensureSession())) return null;
     try{
-      const now=new Date().toISOString();
-      const P=(list||[]).filter(function(p){ return p&&p.id; });
-      await upsertRows('projects',P.map(function(p){ return projectRow(p,now); }));
-      const live=new Set(P.map(function(p){ return String(p.id); }));
-      const gone=(deleted||[]).map(function(d){ return d&&d.id!=null?String(d.id):''; })
-        .filter(function(id){ return id&&!live.has(id); });
-      if(gone.length){
-        const c=await client();
-        const r=await c.from('projects').delete().in('id',gone);
-        if(r.error) console.warn('[projects] 지우기 실패 · '+r.error.message);
+      const c=await client(), id=String(local.id);
+      for(let i=0;i<6;i++){
+        const r=await c.from('projects').select('*').eq('id',id).limit(1);
+        if(r.error){ console.error(r.error); return null; }
+        const row=r.data&&r.data[0];
+        if(row&&row.deleted_at) return {deleted:true};
+        const server=row?projFromRow(row):null;
+        const next=(server&&base)?merge3(projCanon(base),projCanon(local),server):local;
+        const rec=Object.assign(projToRow(next,order),{updated_at:new Date().toISOString()});
+        let w;
+        if(row){
+          let q=c.from('projects').update(rec).eq('id',id);
+          q=row.updated_at==null?q.is('updated_at',null):q.eq('updated_at',row.updated_at);
+          w=await q.select('id');
+        }else{
+          if(rec.sort_order==null) rec.sort_order=0;               /* 표에서 비울 수 없는 칸 */
+          w=await c.from('projects').insert(Object.assign({created_at:rec.updated_at},rec)).select('id');
+          if(w.error&&w.error.code==='23505') continue;      /* 그사이 누가 먼저 넣었다 */
+        }
+        if(w.error){ console.error(w.error); return null; }
+        if(w.data&&w.data.length) return {ok:true,value:projFromRow(rec)};
       }
-    }catch(err){ console.error(err); }
+      console.warn('[바로얌] 프로젝트 '+id+' · 다른 PC와 저장이 계속 겹쳐 이번에는 못 담았습니다');
+      return null;
+    }catch(err){ console.error(err); return null; }
+  }
+  /* 순서만 바뀐 프로젝트 · 내용은 건드리지 않고 sort_order 만 고친다 · 실패한 id 목록을 돌려준다 */
+  async function saveProjectOrder(pairs){
+    if(!(await ensureSession())) return pairs.map(function(x){ return x[0]; });
+    const c=await client(), bad=[];
+    for(let i=0;i<pairs.length;i+=10){
+      const chunk=pairs.slice(i,i+10);
+      const res=await Promise.all(chunk.map(function(x){
+        return c.from('projects').update({sort_order:x[1],rev:PROJ_REV}).eq('id',String(x[0]));
+      }));
+      res.forEach(function(r,j){ if(r.error){ console.error(r.error); bad.push(chunk[j][0]); } });
+    }
+    return bad;
+  }
+  /* 삭제 단추 · 행은 남기고 지운 시각·지운 사람만 적는다 */
+  async function deleteProject(id,by){
+    if(!(await ensureSession())) return false;
+    try{
+      const c=await client(), now=new Date().toISOString();
+      const w=await c.from('projects').update({deleted_at:now,deleted_by:String(by||''),rev:PROJ_REV,updated_at:now})
+        .eq('id',String(id)).is('deleted_at',null);
+      if(w.error){ console.error(w.error); return false; }
+      return true;
+    }catch(err){ console.error(err); return false; }
   }
   /* 페이지를 열 때 한 번 · 덩어리 전체를 거울에 펼친다.
      회원을 고르지 않아도 모든 회원 몫과 채널 몫이 테이블에 나타난다 */
@@ -592,7 +668,7 @@ window.BAROYAM_DB=(function(){
     function j(k){ try{ return JSON.parse(settings[k]||'null'); }catch(e){ return null; } }
     try{
       const now=new Date().toISOString();
-      const memberRows=[], projectRows=[], linkRows=[], noteRows=[];
+      const memberRows=[], linkRows=[], noteRows=[];
       /* 회원 · 사진과 역할은 memberProfile:<id> 에 따로 담겨 있어 여기서 합친다 */
       const m=j('members');
       const list=Array.isArray(m)?m:((m&&m.list)||[]);
@@ -602,9 +678,7 @@ window.BAROYAM_DB=(function(){
         memberRows.push({id:String(x.id),name:x.name||'',color:x.color||'',
           role:prof.role||'',avatar_url:prof.avatar||'',sort_order:i,updated_at:now});
       });
-      /* 프로젝트 */
-      const sh=j('myhomeShared')||{};
-      (sh.projects||[]).forEach(function(p){ if(p&&p.id) projectRows.push(projectRow(p,now)); });
+      /* 프로젝트는 projects 표가 원본이라 여기서 옮기지 않는다(옛 덩어리로 덮으면 안 된다) */
       /* 퀵링크·기록노트 · 회원 몫과 채널 몫을 같은 함수로 펼친다 */
       function part(memberId,channel,v){
         if(!v||typeof v!=='object') return;
@@ -627,11 +701,10 @@ window.BAROYAM_DB=(function(){
 
       /* 회원을 먼저 담는다 · notes/quick_links 가 회원을 참조할 수 있다 */
       const r1=await upsertRows('members',memberRows);
-      const r2=await upsertRows('projects',projectRows);
       const r3=await upsertRows('quick_links',linkRows);
       const r4=await upsertRows('notes',noteRows);
-      const fail=r1.fail+r2.fail+r3.fail+r4.fail;
-      console.info('[바로얌] 테이블 거울 갱신 · 회원 '+r1.ok+' · 프로젝트 '+r2.ok
+      const fail=r1.fail+r3.fail+r4.fail;
+      console.info('[바로얌] 테이블 거울 갱신 · 회원 '+r1.ok
         +' · 퀵링크 '+r3.ok+' · 기록노트 '+r4.ok
         +(skipped?' · 회원 목록에 없어 건너뜀 '+skipped+'칸':'')
         +(fail?' · 실패 '+fail+'건(위 경고 참고)':''));
@@ -829,7 +902,9 @@ window.BAROYAM_DB=(function(){
     saveSetting:saveSetting,loadSettings:loadSettings,loadSetting:loadSetting,migrateFromSheets:migrateFromSheets,
     saveMerged:saveMerged,blobSync:blobSync,merge3:merge3,union:union,
     saveIfVersion:saveIfVersion,loadSettingRows:loadSettingRows,saveNotice:saveNotice,
-    mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects,
+    mirrorAll:mirrorAll,mirrorMine:mirrorMine,
+    loadProjects:loadProjects,saveProject:saveProject,saveProjectOrder:saveProjectOrder,deleteProject:deleteProject,
+    projCanon:projCanon,
     sdkOk:sdkOk,signOut:signOut};
 })();
 </script>
@@ -12108,11 +12183,17 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
   }
   const noSync={push(){},receive(){},refresh(){}};
+  /* 공용 칸(myhomeShared)에는 이제 회사명·CS 링크만 담는다 · 프로젝트는 projects 표가 원본이다(projSync) ·
+     서버의 옛 프로젝트 덩어리는 06 트리거가 그대로 얼려 둔다(되돌릴 때를 위한 보관본) */
+  function normCo(s){
+    s=s||{};
+    return {company:typeof s.company==='string'?s.company:'',
+      csLinks:Array.isArray(s.csLinks)?s.csLinks:[],updatedAt:s.updatedAt||0};
+  }
   const syncShared=apiOn()?window.BAROYAM_DB.blobSync({
-    key:()=>SHEET_SHARED, baseKey:()=>LS_SHARED+'#base', norm:normShared,
-    get:()=>sharedPart,
-    set:v=>{ sharedPart=normShared(v); writeJson(LS_SHARED,sharedPart); adopt(); },
-    saved:v=>window.BAROYAM_DB.mirrorProjects(v.projects,v.deleted)
+    key:()=>SHEET_SHARED, baseKey:()=>LS_SHARED+'#base', norm:normCo,
+    get:()=>normCo(sharedPart),
+    set:v=>{ v=normCo(v); sharedPart=Object.assign({},sharedPart,v); writeJson(LS_SHARED,sharedPart); adopt(); }
   }):noSync;
   const syncMine=apiOn()?window.BAROYAM_DB.blobSync({
     key:()=>SHEET_MINE+slot(), baseKey:()=>LS_MINE+slot()+'#base', norm:normMine,
@@ -12134,9 +12215,17 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const now=Date.now();
     const nowShared=stampShared();
     if(nowShared!==lastShared){
-      sharedPart={company:state.company,projects:state.projects,csLinks:state.csLinks,deleted:state.deleted,updatedAt:now};
-      lastShared=nowShared;
-      writeJson(LS_SHARED,sharedPart); syncShared.push();
+      let prev=[];
+      try{ prev=JSON.parse(lastShared)||[]; }catch(e){}
+      /* 프로젝트는 바뀐 것만 projects 표로 · 회사명·CS 링크가 바뀌었을 때만 공용 칸을 올린다 */
+      projSync.queue(Array.isArray(prev[1])?prev[1]:[],state.projects,state.deleted||[]);
+      const coChanged=JSON.stringify([prev[0],prev[2]])!==JSON.stringify([state.company,state.csLinks]);
+      state.deleted=[];
+      sharedPart={company:state.company,projects:state.projects,csLinks:state.csLinks,deleted:[],
+        updatedAt:coChanged?now:sharedPart.updatedAt};
+      lastShared=stampShared();
+      writeJson(LS_SHARED,sharedPart);
+      if(coChanged) syncShared.push();
     }
     const nowMine=stampMine();
     if(nowMine!==lastMine){
@@ -12167,8 +12256,143 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      예전에는 "더 새 시각"이면 이 PC 사본이 서버를 이겼는데, PC마다 시계가 달라 옛 사본이 이기기도 했다 ·
      이 PC에 아직 못 올린 고침이 있으면 서버본 위에 얹어 다시 올린다 ·
      새 키가 아직 없으면 옛 키(myhome)를 씨앗으로 읽는다 */
+  /* ---------- 프로젝트 · projects 표와 맞추기 ----------
+     한 프로젝트 = 한 줄 · 바꾼 프로젝트만 그 줄에 저장한다(BAROYAM_DB.saveProject) ·
+     base 는 이 창이 고치기 전에 보던 값이다(창마다 따로 든다 · 09-29 교훈) ·
+     못 올린 고침은 창 이름표를 단 localStorage 칸에 남겨, 창을 닫았다 열어도 다시 보낸다 ·
+     서버에 없는 프로젝트는 화면에서도 뺀다(서버는 행을 지우지 않으므로, 없으면 삭제 단추로 지운 것이다) */
+  const PQ_PREFIX='baroyam_proj_queue:';
+  const PQ_TAB=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const projSync=(function(){
+    const DB=window.BAROYAM_DB;
+    const on=apiOn()&&!!(DB&&DB.saveProject);
+    const content=new Map(), order=new Map(), dels=new Map();
+    let timer=0, flushing=false, again=false, gen=0, started=false;
+    const copy=v=>v==null?v:JSON.parse(JSON.stringify(v));
+    const canon=p=>JSON.stringify(DB.projCanon(p));
+    function persist(){
+      try{
+        const k=PQ_PREFIX+PQ_TAB;
+        if(!content.size&&!order.size&&!dels.size){ localStorage.removeItem(k); return; }
+        localStorage.setItem(k,JSON.stringify({content:[...content],order:[...order],dels:[...dels]}));
+      }catch(e){}
+    }
+    /* 지난번에 닫힌 창들이 못 올린 고침을 넘겨받는다 */
+    function adoptLeftovers(){
+      try{
+        const keys=[];
+        for(let i=0;i<localStorage.length;i++){
+          const k=localStorage.key(i);
+          if(k&&k.indexOf(PQ_PREFIX)===0&&k!==PQ_PREFIX+PQ_TAB) keys.push(k);
+        }
+        keys.forEach(k=>{
+          let v=null;
+          try{ v=JSON.parse(localStorage.getItem(k)||'null'); }catch(e){}
+          localStorage.removeItem(k);
+          if(!v) return;
+          (v.dels||[]).forEach(([id,d])=>{ dels.set(id,d); content.delete(id); order.delete(id); });
+          (v.content||[]).forEach(([id,q])=>{
+            if(dels.has(id)) return;
+            const cur=content.get(id);
+            content.set(id,cur?{base:cur.base,local:q.local,order:q.order}:q);
+          });
+          (v.order||[]).forEach(([id,i])=>{ if(!content.has(id)&&!dels.has(id)) order.set(id,i); });
+        });
+      }catch(e){}
+    }
+    function kick(delay){
+      DB.saveNotice('projects','pending');
+      clearTimeout(timer);
+      timer=setTimeout(()=>{ timer=0; flush(); },delay==null?700:delay);
+    }
+    /* 직전에 보던 목록(prev)과 지금 목록(now)을 견줘 바뀐 프로젝트만 줄을 세운다 */
+    function queue(prev,now,deleted){
+      if(!on) return;
+      const pm=new Map(), pi=new Map();
+      prev.forEach((p,i)=>{ pm.set(String(p.id),p); pi.set(String(p.id),i); });
+      now.forEach((p,i)=>{
+        const id=String(p.id), old=pm.get(id);
+        if(!old||canon(old)!==canon(p)){
+          const q=content.get(id);
+          content.set(id,{base:q?q.base:(old?copy(old):null),local:copy(p),order:i});
+          order.delete(id);
+        }else if(pi.get(id)!==i){
+          const q=content.get(id);
+          if(q) q.order=i; else order.set(id,i);
+        }
+      });
+      deleted.forEach(d=>{ const id=String(d.id); dels.set(id,d); content.delete(id); order.delete(id); });
+      if(!content.size&&!order.size&&!dels.size) return;
+      persist(); kick();
+    }
+    async function flush(){
+      if(flushing){ again=true; return; }
+      flushing=true; gen++;
+      let failed=false;
+      try{
+        for(const [id,d] of [...dels]){
+          if(await DB.deleteProject(id,d.by)){ if(dels.get(id)===d) dels.delete(id); }
+          else failed=true;
+        }
+        for(const [id,q] of [...content]){
+          const res=await DB.saveProject(q.local,q.base,q.order);
+          if(!res){ failed=true; continue; }
+          const cur=content.get(id);
+          if(cur===q) content.delete(id);
+          else if(cur&&res.ok) cur.base=res.value;      /* 보내는 사이에 또 고쳤다 · 방금 담은 값이 새 기준 */
+        }
+        if(order.size){
+          const pairs=[...order];
+          const bad=await DB.saveProjectOrder(pairs);
+          pairs.forEach(([id,i])=>{ if(bad.indexOf(id)<0&&order.get(id)===i) order.delete(id); });
+          if(bad.length) failed=true;
+        }
+      }catch(err){ console.error(err); failed=true; }
+      finally{
+        flushing=false; gen++; persist();
+        if(failed){ DB.saveNotice('projects','failing'); kick(15000); }
+        else if(again||content.size||dels.size||order.size){ again=false; kick(); }
+        else{ DB.saveNotice('projects','ok'); refresh(); }
+      }
+    }
+    /* 서버 목록을 받아 화면에 들인다 · 아직 못 올린 고침은 그 위에 얹어 둔다 */
+    function receive(got){
+      const gone=new Set(got.gone), ids=new Set(got.live.map(p=>String(p.id)));
+      const next=got.live.filter(p=>!dels.has(String(p.id)))
+        .map(p=>{ const q=content.get(String(p.id)); return q?copy(q.local):p; });
+      [...content].forEach(([id,q])=>{
+        if(ids.has(id)) return;
+        if(gone.has(id)){ content.delete(id); return; }                 /* 그사이 누가 지웠다 */
+        next.splice(Math.min(q.order,next.length),0,copy(q.local));   /* 아직 서버에 없는 새 프로젝트 */
+      });
+      if(JSON.stringify(next.map(canon))===JSON.stringify(state.projects.map(canon))) return;
+      sharedPart=Object.assign({},sharedPart,{projects:next});
+      writeJson(LS_SHARED,sharedPart);
+      adopt();
+    }
+    async function refresh(){
+      if(!on||!started||flushing||timer) return;
+      const g=gen;
+      let got;
+      try{ got=await DB.loadProjects(); }catch(e){ return; }
+      if(g!==gen||flushing||timer) return;        /* 읽는 사이에 저장이 오갔다 · 다음 번에 다시 받는다 */
+      receive(got);
+    }
+    function start(){
+      if(!on||started) return;
+      started=true;
+      adoptLeftovers(); persist();
+      if(content.size||dels.size||order.size) kick(); else refresh();
+    }
+    /* 창을 오래 열어 둔 PC도 남이 넣은 것을 보도록 · 다시 볼 때와 1분마다 받는다 */
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') refresh(); });
+    setInterval(()=>{ if(document.visibilityState==='visible') refresh(); },60000);
+    return {queue:queue,start:start,refresh:refresh};
+  })();
+
   window.__myhomeSync={apply(settings){
     if(!settings) return;
+    try{ projSync.start(); }catch(err){ console.error(err); }
     try{ syncShared.receive(settings[SHEET_SHARED]||settings[SHEET_LEGACY]); }catch(err){ console.error(err); }
     try{ syncMine.receive(settings[SHEET_MINE+slot()]||(isNewMember()?'':settings[SHEET_LEGACY])); }catch(err){ console.error(err); }
     try{ syncCh.receive(settings[SHEET_CH]); }catch(err){ console.error(err); }
