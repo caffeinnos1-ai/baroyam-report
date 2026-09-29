@@ -8626,7 +8626,10 @@ window.CsGuide=(function(){
   if(!tab||!list) return;
   const WORKFLOWS=[
     {name:'구글트렌드 수집', times:['09:00','12:00','15:00','18:00']},
-    {name:'네이버데이터랩 수집', times:['09:00']}
+    {name:'네이버데이터랩 수집', times:['09:00']},
+    /* 점검 · 위 수집과 김비서 AI 탭 자동화의 GitHub 실행 결과를 모아 automation_runs 에 쌓는 refresh-status 자신 ·
+       GitHub 예약 실행은 늦게 도는 일이 잦아 시각은 예약 기준이다 */
+    {name:'자동화 현황 데이터 갱신', times:['10:00','15:00','17:00']}
   ];
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pad=n=>String(n).padStart(2,'0');
