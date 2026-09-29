@@ -3518,6 +3518,16 @@ window.BAROYAM_ACCESS=(function(){
   .wf-meta a{color:var(--indigo);font-weight:700;text-decoration:none}
   .wf-meta a:hover{text-decoration:underline}
   .wf-checked{font-size:11.5px;font-weight:600;color:var(--mute)}
+  /* 김비서 AI 탭 · 워크플로우 카드를 그대로 쓰고, 설명 한 줄과 대화 명령 칩·슬랙 연결 회원만 더한다 */
+  .settings-view[data-settings-panel="kimbiseo"]{height:auto}
+  .wf-desc{font-size:12.5px;font-weight:600;color:var(--body);line-height:1.5}
+  .wf-status.is-live{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .kb-cmds{display:flex;flex-wrap:wrap;gap:6px}
+  .kb-cmd{padding:4px 9px;border-radius:8px;background:var(--paper);border:1px solid var(--line);
+    font-size:12px;font-weight:700;color:var(--ink)}
+  .kb-people{border:1px dashed var(--line);border-radius:14px;padding:12px 15px;display:flex;flex-direction:column;gap:8px}
+  .kb-people-title{font-size:12.5px;font-weight:800;color:var(--ink)}
+  .kb-people-title small{font-weight:600;color:var(--mute);margin-left:6px}
 
   /* 관리자 설정 · 권한설정(회원별 사이드바 메뉴 보이기) · 부품은 ui-chip·ui-btn 을 쓴다 */
   .settings-view[data-settings-panel="access"]{height:auto}
@@ -4891,6 +4901,10 @@ window.BAROYAM_ACCESS=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="6" height="5" rx="1.4"/><rect x="14.5" y="15" width="6" height="5" rx="1.4"/><path d="M6.5 9v3.5a2 2 0 0 0 2 2h9V15"/></svg>
               <span>워크플로우</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="kimbiseo" id="kbSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="7.5" width="15" height="11" rx="3"/><path d="M12 7.5V4.5"/><circle cx="12" cy="3.8" r=".9"/><circle cx="9.3" cy="12.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.7" cy="12.6" r="1.1" fill="currentColor" stroke="none"/><path d="M2.5 12v2.5M21.5 12v2.5"/></svg>
+              <span>김비서 AI</span>
+            </button>
           </nav>
           <div class="settings-content">
             <section class="settings-view active" data-settings-panel="members">
@@ -4943,9 +4957,17 @@ window.BAROYAM_ACCESS=(function(){
             </section>
             <section class="settings-view" data-settings-panel="workflow" hidden>
               <div class="wf-manager">
-                <p class="mg-hint">회사 PC 작업 스케줄러가 아래 시각에 실행해요. 최근 실행 기록은 하루 세 번(10·15·17시) 갱신됩니다.</p>
+                <p class="mg-hint">데이터를 모아 오는 자동 수집(구글트렌드·네이버데이터랩, 앞으로 붙일 API 수집)을 모아 둡니다. 슬랙으로 알리는 자동화는 <b>김비서 AI</b> 탭에 있어요. 최근 실행 기록은 하루 세 번(10·15·17시) 갱신됩니다.</p>
                 <div class="wf-list" id="wfList"></div>
                 <p class="wf-checked" id="wfChecked"></p>
+              </div>
+            </section>
+            <section class="settings-view" data-settings-panel="kimbiseo" hidden>
+              <div class="wf-manager">
+                <p class="mg-hint"><b>김비서</b>는 슬랙의 바로얌AI 봇이에요. 슬랙으로 보내는 알림과 대화 봇을 여기에 모아 둡니다. 모두 회사 PC에서 돌아서 PC가 꺼져 있으면 멈춰요.</p>
+                <div class="wf-list" id="kbList"></div>
+                <div class="kb-people" id="kbPeople"></div>
+                <p class="wf-checked" id="kbChecked"></p>
               </div>
             </section>
           </div>
@@ -8583,7 +8605,8 @@ window.CsGuide=(function(){
 
 })();
 
-/* 관리자 설정 · 워크플로우 · 회사 PC 작업 스케줄러로 돌리는 자동화 3가지의 실행 시각과 최근 결과 ·
+/* 관리자 설정 · 워크플로우 · 데이터 자동 수집(구글트렌드·네이버데이터랩, 앞으로 붙일 API 수집)의 실행 시각과 최근 결과 ·
+   슬랙으로 알리는 자동화는 아래 김비서 AI 탭이 같은 카드 모양으로 따로 보여 준다 ·
    실행 시각은 스케줄러에만 있어 실제 실행 기록(9/16~)을 보고 적어 둔다. 시각이 바뀌면 WORKFLOWS만 고친다 ·
    실행 기록은 Supabase automation_runs 에서 읽는다 · baroyam-report의 refresh-status
    워크플로우가 하루 세 번 GitHub Actions 실행 결과를 그 표에 쌓는다 */
@@ -8594,8 +8617,7 @@ window.CsGuide=(function(){
   if(!tab||!list) return;
   const WORKFLOWS=[
     {name:'구글트렌드 수집', times:['09:00','12:00','15:00','18:00']},
-    {name:'네이버데이터랩 수집', times:['09:00']},
-    {name:'당일판매분요약표 (Slack)', times:['16:15']}
+    {name:'네이버데이터랩 수집', times:['09:00']}
   ];
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pad=n=>String(n).padStart(2,'0');
@@ -8640,7 +8662,7 @@ window.CsGuide=(function(){
     if(byName===false){ checked.textContent='최근 실행 기록을 불러오지 못했어요.'; return; }
     if(!byName){ checked.textContent=''; return; }
     let total=0, newest='';
-    Object.keys(by).forEach(k=>{ total+=by[k].length; if(by[k][0]&&(!newest||by[k][0].run_at>newest)) newest=by[k][0].run_at; });
+    WORKFLOWS.forEach(w=>{ const h=by[w.name]||[]; total+=h.length; if(h[0]&&(!newest||h[0].run_at>newest)) newest=h[0].run_at; });
     checked.textContent=total?`실행 기록 ${total}건 · 가장 최근 ${fmt(newest)}`:'쌓인 실행 기록이 아직 없어요.';
   }
   /* 실행 이력은 Supabase(automation_runs)에서 읽는다 ·
@@ -8655,6 +8677,104 @@ window.CsGuide=(function(){
     }).catch(err=>{ console.error(err); byName=false; render(); });
   }
   tab.addEventListener('click',load);
+})();
+
+/* 관리자 설정 · 김비서 AI · 슬랙 봇 "김비서"(바로얌AI 봇)가 하는 자동화 목록 ·
+   코드는 caffeinnos-automation 저장소(daily_report.js·notice_alert.js·slack_bot.js)이고
+   모두 회사 PC 작업 스케줄러가 켠다 · 시각·명령이 바뀌면 AUTOMATIONS 만 고친다 ·
+   당일판매분요약표만 GitHub 에 결과를 알려 automation_runs 에 기록이 쌓이고,
+   공지 알림·대화 봇은 PC 의 기록 파일(notice_alert_log.txt·slack_bot_log.txt)에만 남는다 */
+(function(){
+  const tab=document.getElementById('kbSettingsTab');
+  const list=document.getElementById('kbList');
+  const people=document.getElementById('kbPeople');
+  const checked=document.getElementById('kbChecked');
+  if(!tab||!list) return;
+  const WD=['일','월','화','수','목','금','토'];
+  /* days · 도는 요일(0=일) · times 가 없으면 늘 켜져 있는 것 · record 는 automation_runs 의 workflow 이름 */
+  const AUTOMATIONS=[
+    {name:'당일판매분요약표', where:'#재고알림', days:[1,2,3,4,5], times:['16:15'], record:'당일판매분요약표 (Slack)',
+     desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올려요.', task:'CaffeinnosDailyReport'},
+    {name:'밥시간 알림', where:'#공지사항', days:[1,2,3,4,5], times:['10:50'],
+     desc:'"🍱 밥시간 알림 · 메뉴를 주문해 주세요!"', task:'BaroyamNoticeLunch'},
+    {name:'사무실 청소 알림', where:'#공지사항', days:[1], times:['12:10'],
+     desc:'"🧹 사무실 청소 시간 · 지금부터 20분간 사무실 청소를 합니다."', task:'BaroyamNoticeClean'},
+    {name:'김비서 대화', where:'김비서 개인 메시지', always:true,
+     desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. PC에 로그인하면 창 없이 켜져요.', task:'BaroyamSlackBot',
+     cmds:['안녕 · 도움말 → 짧은 안내','예시 → 자세한 사용법','내 프로젝트','마감 (7일 안)','○○ 보내줘 → 드라이브 파일']}
+  ];
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pad=n=>String(n).padStart(2,'0');
+  function fmt(iso){
+    const d=new Date(iso); if(isNaN(d)) return '';
+    return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function dayLabel(days){
+    if(days.length===7) return '매일';
+    if(days.join()==='1,2,3,4,5') return '평일';
+    return days.map(d=>WD[d]).join('·')+'요일';
+  }
+  /* 다음 실행 · 오늘부터 7일 안에서 요일과 시각이 맞는 가장 이른 때 */
+  function nextRun(a){
+    const now=new Date(), cur=pad(now.getHours())+':'+pad(now.getMinutes());
+    for(let i=0;i<8;i++){
+      const d=(now.getDay()+i)%7;
+      if(a.days.indexOf(d)<0) continue;
+      const t=a.times.find(x=>i>0||x>cur);
+      if(t) return {time:t,label:(i===0?'오늘':i===1?'내일':WD[d]+'요일')+' '+t};
+    }
+    return null;
+  }
+  let byName=null;   /* null=아직 안 읽음 · false=읽지 못함 · 객체=이름별 실행 이력(최신순) */
+  function render(){
+    const by=(byName&&typeof byName==='object')?byName:{};
+    list.innerHTML=AUTOMATIONS.map(a=>{
+      let badge, times='', meta='';
+      if(a.always){
+        badge='<span class="wf-status is-live">늘 켜 둠</span>';
+      }else{
+        const nx=nextRun(a);
+        times=`<div class="wf-times"><span class="wf-times-label">${esc(dayLabel(a.days))}</span>`+
+          a.times.map(t=>`<span class="wf-time is-next" title="다음 실행 · ${esc(nx?nx.label:'')}">${t}</span>`).join('')+
+          (nx?`<span class="wf-times-label">다음 ${esc(nx.label)}</span>`:'')+'</div>';
+        const hist=a.record?(by[a.record]||[]):[], run=hist[0];
+        if(!a.record) badge='<span class="wf-status" title="실행 기록은 PC 기록 파일에만 남아요">PC 기록</span>';
+        else if(!run) badge='<span class="wf-status">기록 없음</span>';
+        else badge=`<span class="wf-status ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'정상':'실패'}</span>`;
+        if(a.record&&hist.length){
+          const recent=hist.slice(0,12), fails=recent.filter(r=>r.conclusion!=='success');
+          meta=`<span>${fails.length?`최근 ${recent.length}회 중 <b>${fails.length}회 실패</b>`:`최근 ${recent.length}회 모두 정상`}</span>`+
+            `<span>마지막 실행 <b>${esc(fmt(run.run_at))}</b>${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록 보기</a>`:''}</span>`;
+        }
+      }
+      return `<div class="wf-card">
+        <div class="wf-top"><div class="wf-name">${esc(a.name)} <span class="wf-times-label">· ${esc(a.where)}</span></div>${badge}</div>
+        <div class="wf-desc">${esc(a.desc)}</div>
+        ${times}
+        ${a.cmds?`<div class="kb-cmds">${a.cmds.map(c=>`<span class="kb-cmd">${esc(c)}</span>`).join('')}</div>`:''}
+        <div class="wf-meta">${meta}<span>작업 스케줄러 <b>${esc(a.task)}</b></span></div>
+      </div>`;
+    }).join('');
+    /* 김비서가 알아보는 회원 · 회원설정의 슬랙 칩에서 넣은 슬랙 ID 기준 */
+    const MEM=window.BAROYAM_MEMBERS, P=window.BAROYAM_PROFILES;
+    const members=(MEM&&MEM.load())||[];
+    const on=members.filter(m=>P.get(m.id).slack), off=members.filter(m=>!P.get(m.id).slack);
+    people.innerHTML=`<div class="kb-people-title">김비서가 알아보는 회원 ${on.length}명<small>회원설정의 슬랙 칩에서 연결해요</small></div>`+
+      `<div class="kb-cmds">${on.map(m=>`<span class="kb-cmd">${esc(m.name)}</span>`).join('')||'<span class="wf-times-label">아직 없어요</span>'}</div>`+
+      (off.length?`<div class="wf-times-label">연결 안 됨 · ${off.map(m=>esc(m.name)).join(', ')}</div>`:'');
+    checked.textContent=byName===false?'당일판매분요약표 실행 기록을 불러오지 못했어요.':'';
+  }
+  function load(){
+    render();
+    if(!window.BAROYAM_DB){ byName=false; render(); return; }
+    window.BAROYAM_DB.automationRuns().then(rows=>{
+      const by={};
+      (rows||[]).forEach(r=>{ (by[r.workflow]=by[r.workflow]||[]).push(r); });
+      byName=by; render();
+    }).catch(err=>{ console.error(err); byName=false; render(); });
+  }
+  tab.addEventListener('click',load);
+  document.addEventListener('baroyam:profiles',()=>{ if(!list.closest('[hidden]')) render(); });
 })();
 
 /* 최상단 바 프로필 · 로그인한 계정을 보여주고, 관리자 모드 켜기/끄기 · 설정 · 로그아웃을 모아 둔다 */
