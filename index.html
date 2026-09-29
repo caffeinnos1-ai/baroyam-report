@@ -1004,7 +1004,10 @@ window.BAROYAM_MEMBERS=(function(){
     }catch(err){ console.error(err); }
   }
   function byId(id){ return id?(load().find(m=>m.id===id)||null):null; }
-  return {COLORS,DEFAULTS,load,save,byId,applyRemote};
+  /* 비활성 회원 · 회원설정에서 끈 사람(inactive:true)은 목록·마이홈은 그대로 두고
+     "누구신가요?" 프로필 선택 화면에서만 빠진다 · 이미 그 회원으로 들어와 있던 브라우저도 선택 화면으로 돌아간다 */
+  function active(){ return load().filter(m=>!m.inactive); }
+  return {COLORS,DEFAULTS,load,save,byId,active,applyRemote};
 })();
 
 /* 역할 · 각자 마이홈 프로필 창에서 고르고, 회원 선택 화면·상단바·회원설정에 아이콘으로 같이 보인다 */
@@ -1265,9 +1268,10 @@ window.BAROYAM_ACCESS=(function(){
        그대로 두면 없는 회원으로 잡혀서 빈 칸 마이홈이 보인다 */
     try{
       const P0=window.BAROYAM_PROFILES, meRaw=P0.me();
-      const picked=!!(meRaw && window.BAROYAM_MEMBERS.byId(meRaw));
+      const meM=meRaw?window.BAROYAM_MEMBERS.byId(meRaw):null;
+      const picked=!!(meM && !meM.inactive);
       if(!picked){
-        if(meRaw) P0.setMe('');   /* 지워진 회원이나 옛 건너뛰기 값을 비운다 */
+        if(meRaw) P0.setMe('');   /* 지워지거나 비활성이 된 회원, 옛 건너뛰기 값을 비운다 */
         window.BAROYAM_LEAD.clear();
         root.classList.add('member-locked');
       }
@@ -3471,6 +3475,14 @@ window.BAROYAM_ACCESS=(function(){
   .member-badge .mb-slack:hover,.member-badge .mb-slack:focus-visible{background:rgba(255,255,255,.42)}
   .member-badge .mb-slack.is-none{opacity:.6;background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
   .member-badge .mb-slack svg{width:10px;height:10px;flex:none}
+  /* 활성·비활성 칩 · 비활성 회원은 프로필 선택 화면에서 빠지고, 여기서는 카드째 흐리게 보인다 */
+  .member-badge .mb-active{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;
+    padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.22);
+    font-size:10.5px;font-weight:700;color:#fff;cursor:pointer;transition:background-color .14s}
+  .member-badge .mb-active:hover,.member-badge .mb-active:focus-visible{background:rgba(255,255,255,.42)}
+  .member-badge .mb-active.is-off{background:rgba(0,0,0,.38)}
+  .member-badge.is-inactive{filter:grayscale(1);opacity:.6}
+  .member-badge.is-inactive:hover{opacity:.85}
   .member-badge .mb-slack-input{width:96px;font-size:11px;font-weight:700;letter-spacing:0}
   /* 출근 요일 · 월~금 다섯 칸 · 켜진 날(흰 바탕)만 김비서 개인 알림이 간다 */
   .member-badge .mb-days{display:flex;gap:2px}
@@ -4638,7 +4650,7 @@ window.BAROYAM_ACCESS=(function(){
   const GO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>';
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function render(){
-    const members=MEM.load();
+    const members=MEM.active();   /* 회원설정에서 비활성으로 끈 회원은 고를 수 없다 */
     if(!members.length){
       list.innerHTML='<p class="mp-empty">등록된 회원이 없어요.<br>관리자가 관리자 설정 &gt; 회원설정에서 이름을 추가하면<br>여기에서 고를 수 있어요.</p>';
       return;
@@ -8947,14 +8959,16 @@ window.CsGuide=(function(){
       const p=P.get(m.id), r=P.role(p.role), initial=String(m.name||'').trim().charAt(0);
       const face=p.avatar?`<img src="${escapeHtml(p.avatar)}" alt="" referrerpolicy="no-referrer">`:escapeHtml(initial);
       const label=r?(r.ic+escapeHtml(r.k)):'역할 없음';
-      return `<span class="member-badge" style="background:${m.color}" data-id="${m.id}">`+
+      return `<span class="member-badge${m.inactive?' is-inactive':''}" style="background:${m.color}" data-id="${m.id}">`+
         `<span class="mb-ava" aria-hidden="true">${face}</span>`+
         `<span class="mb-txt"><button type="button" class="mb-name" data-rename="${m.id}" title="${escapeHtml(m.name)} · 눌러서 이름 바꾸기">${escapeHtml(m.name)}</button>`+
         `<span class="mb-tags"><button type="button" class="mb-role${r?'':' is-none'}" data-role-for="${m.id}" aria-haspopup="menu"`+
         ` aria-label="${escapeHtml(m.name)} 역할 고르기">${label}${CARET}</button>`+
         `<button type="button" class="mb-slack${p.slack?'':' is-none'}" data-slack-for="${m.id}"`+
         ` title="${p.slack?'슬랙 회원 ID '+escapeHtml(p.slack)+' · 눌러서 바꾸기':'눌러서 슬랙 회원 ID 넣기'}"`+
-        ` aria-label="${escapeHtml(m.name)} 슬랙 회원 ID">${SLACK}${p.slack?'슬랙':'슬랙 ID'}</button></span>`+
+        ` aria-label="${escapeHtml(m.name)} 슬랙 회원 ID">${SLACK}${p.slack?'슬랙':'슬랙 ID'}</button>`+
+        `<button type="button" class="mb-active${m.inactive?' is-off':''}" data-active-for="${m.id}" aria-pressed="${!m.inactive}"`+
+        ` title="${m.inactive?'비활성 · 프로필 선택 화면에 안 보여요 · 눌러서 다시 활성화':'활성 · 눌러서 비활성화(프로필 선택 화면에서 숨김)'}">${m.inactive?'비활성':'활성'}</button></span>`+
         `<span class="mb-days" role="group" aria-label="${escapeHtml(m.name)} 출근 요일">`+
         WORKDAYS.map((d,i)=>{ const on=(p.workdays||ALL_WORKDAYS).indexOf(i+1)>=0;
           return `<button type="button" class="mb-day${on?' is-on':''}" data-day-for="${m.id}" data-day="${i+1}" aria-pressed="${on}" title="${d}요일 ${on?'출근':'쉬는 날'} · 눌러서 바꾸기">${d}</button>`; }).join('')+
@@ -9105,6 +9119,17 @@ window.CsGuide=(function(){
     render();
     announce();
   }
+  /* 비활성화 · 지우기와 달리 마이홈·프로필·프로젝트는 그대로 두고 프로필 선택 화면에서만 뺀다 ·
+     다시 누르면 되살아난다 */
+  function toggleActive(id){
+    const members=load(), m=members.find(x=>x.id===id);
+    if(!m) return;
+    if(!m.inactive && !confirm("'"+m.name+"' 회원을 비활성화할까요?\n\n프로필 선택 화면에 더 이상 보이지 않아요.\n마이홈·프로젝트 기록은 그대로 남고, 언제든 다시 활성화할 수 있어요.")) return;
+    if(m.inactive) delete m.inactive; else m.inactive=true;
+    save(members);
+    render();
+    announce();
+  }
   /* 시트에는 행 삭제가 없어서 빈 값으로 덮어쓴다 · 읽는 쪽이 빈 값을 건너뛴다 */
   function purgeMyHome(id){
     try{
@@ -9135,6 +9160,8 @@ window.CsGuide=(function(){
     if(slackBtn){ startSlack(slackBtn); return; }
     const dayBtn=e.target.closest('.mb-day');
     if(dayBtn){ closeDrop(); toggleDay(dayBtn.dataset.dayFor,+dayBtn.dataset.day); return; }
+    const actBtn=e.target.closest('.mb-active');
+    if(actBtn){ closeDrop(); toggleActive(actBtn.dataset.activeFor); return; }
     const roleBtn=e.target.closest('.mb-role');
     if(roleBtn){
       /* 열려 있는 같은 버튼을 다시 누르면 닫는다 */
