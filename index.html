@@ -566,16 +566,20 @@ window.BAROYAM_DB=(function(){
     }catch(err){ console.error(err); }
   }
   /* 프로젝트는 팀 공용이라 회원과 상관없이 한 벌이다 */
-  async function mirrorProjects(list){
+  /* 거울에서 지우는 것은 삭제 단추로 지운 프로젝트(deleted 기록)뿐이다 ·
+     예전에는 "보낸 목록에 없는 행"을 지워서, 옛 사본을 든 창이 저장하면 원본은 서버가 지켜도 거울 행은 사라졌다 */
+  async function mirrorProjects(list,deleted){
     if(!(await ensureSession())) return;
     try{
       const now=new Date().toISOString();
       const P=(list||[]).filter(function(p){ return p&&p.id; });
       await upsertRows('projects',P.map(function(p){ return projectRow(p,now); }));
-      const ids=P.map(function(p){ return String(p.id); });
-      if(ids.length){
+      const live=new Set(P.map(function(p){ return String(p.id); }));
+      const gone=(deleted||[]).map(function(d){ return d&&d.id!=null?String(d.id):''; })
+        .filter(function(id){ return id&&!live.has(id); });
+      if(gone.length){
         const c=await client();
-        const r=await c.from('projects').delete().not('id','in',inList(ids));
+        const r=await c.from('projects').delete().in('id',gone);
         if(r.error) console.warn('[projects] 지우기 실패 · '+r.error.message);
       }
     }catch(err){ console.error(err); }
@@ -12108,7 +12112,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     key:()=>SHEET_SHARED, baseKey:()=>LS_SHARED+'#base', norm:normShared,
     get:()=>sharedPart,
     set:v=>{ sharedPart=normShared(v); writeJson(LS_SHARED,sharedPart); adopt(); },
-    saved:v=>window.BAROYAM_DB.mirrorProjects(v.projects)
+    saved:v=>window.BAROYAM_DB.mirrorProjects(v.projects,v.deleted)
   }):noSync;
   const syncMine=apiOn()?window.BAROYAM_DB.blobSync({
     key:()=>SHEET_MINE+slot(), baseKey:()=>LS_MINE+slot()+'#base', norm:normMine,

@@ -147,6 +147,9 @@
 - **서버가 프로젝트를 지킨다:** 화면 코드만 믿지 않도록, 삭제 단추로 지우면 `myhomeShared.deleted` 에 기록을 남기고
   Supabase 트리거(`supabase/06-protect-projects.sql`)가 기록 없이 빠진 프로젝트를 되살립니다(이력에 `RESTORED`).
   칸 삭제는 막고, 저장 방식 판 번호(`_rev`)가 없는 옛 창의 저장은 거절합니다. PGlite(실제 Postgres)로 시험했습니다.
+  이때 이력 SQL(04)이 실제 DB에는 한 번도 실행되지 않았던 것을 발견해 함께 실행했습니다(만든 SQL 파일과 실행 여부는 다를 수 있음).
+- **Table Editor `projects` 표(거울)도 보호:** 저장 뒤 "보낸 목록에 없는 행"을 지우던 것을, 삭제 기록에 있는 행만 지우게 바꿨습니다.
+  서버 트리거(`supabase/07-protect-projects-mirror.sql`)는 원본에 살아 있는 프로젝트 행의 삭제를 건너뜁니다.
 
 ---
 
