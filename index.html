@@ -1021,7 +1021,8 @@ window.BAROYAM_ROLES=[
   {k:'CS',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 14.2v-2.1a7.6 7.6 0 0 1 15.2 0v2.1"/><path d="M4.4 13.6h1.9a1.1 1.1 0 0 1 1.1 1.1v3.5a1.1 1.1 0 0 1-1.1 1.1h-.5a1.4 1.4 0 0 1-1.4-1.4Z"/><path d="M19.6 13.6h-1.9a1.1 1.1 0 0 0-1.1 1.1v3.5a1.1 1.1 0 0 0 1.1 1.1h.5a1.4 1.4 0 0 0 1.4-1.4Z"/></svg>'},
 ];
 
-/* 회원별 프로필(사진·역할·슬랙 회원 ID) · 슬랙 ID는 김비서(슬랙 봇)가 개인 메시지를 보낼 때 쓴다 · 이 브라우저에 담아 두고 구글시트에도 올려 PC마다 같이 보이게 한다.
+/* 회원별 프로필(사진·역할·슬랙 회원 ID·출근 요일) · 슬랙 ID는 김비서(슬랙 봇)가 개인 메시지를 보낼 때 쓴다 ·
+   출근 요일(workdays, 1=월…5=금 · null=월~금 모두)이 아닌 날에는 김비서 개인 알림을 보내지 않는다 · 이 브라우저에 담아 두고 구글시트에도 올려 PC마다 같이 보이게 한다.
    시트는 한 칸에 5만 자까지만 들어가서, 회원 한 명당 한 칸('memberProfile:<회원id>')으로 나눠 담는다.
    '나'(me)는 이 브라우저에서만 쓰는 값이라 올리지 않는다 — 공용 PC에서 남의 계정으로 잡히지 않도록 */
 window.BAROYAM_PROFILES=(function(){
@@ -1035,7 +1036,7 @@ window.BAROYAM_PROFILES=(function(){
   function writeAll(map){ try{ localStorage.setItem(LS_KEY,JSON.stringify(map)); }catch(e){} }
   function get(id){
     const p=id?all()[id]:null;
-    return {avatar:(p&&p.avatar)||'',role:(p&&p.role)||'',slack:(p&&p.slack)||'',updatedAt:(p&&p.updatedAt)||0};
+    return {avatar:(p&&p.avatar)||'',role:(p&&p.role)||'',slack:(p&&p.slack)||'',workdays:(p&&Array.isArray(p.workdays))?p.workdays:null,updatedAt:(p&&p.updatedAt)||0};
   }
   function me(){ try{ return localStorage.getItem(ME_KEY)||''; }catch(e){ return ''; } }
   function meId(){ const v=me(); return v===SKIP?'':v; }
@@ -1081,7 +1082,7 @@ window.BAROYAM_PROFILES=(function(){
     if(JSON.stringify(pend[id])===JSON.stringify(patch)) delete pend[id];
     writePending(pend);
     const map=all();
-    map[id]=Object.assign({avatar:res.avatar||'',role:res.role||'',slack:res.slack||'',updatedAt:res.updatedAt||0},pend[id]||{});
+    map[id]=Object.assign({avatar:res.avatar||'',role:res.role||'',slack:res.slack||'',workdays:Array.isArray(res.workdays)?res.workdays:null,updatedAt:res.updatedAt||0},pend[id]||{});
     writeAll(map); changed();
     if(pend[id]) push(id);
   }
@@ -1096,7 +1097,7 @@ window.BAROYAM_PROFILES=(function(){
       try{
         const r=JSON.parse(settings[k]);
         if(!r||typeof r!=='object') return;
-        const next=Object.assign({avatar:r.avatar||'',role:r.role||'',slack:r.slack||'',updatedAt:r.updatedAt||0},pend[id]||{});
+        const next=Object.assign({avatar:r.avatar||'',role:r.role||'',slack:r.slack||'',workdays:Array.isArray(r.workdays)?r.workdays:null,updatedAt:r.updatedAt||0},pend[id]||{});
         if(JSON.stringify(next)!==JSON.stringify(map[id])){ map[id]=next; hit=true; }
       }catch(e){}
     });
@@ -3469,6 +3470,12 @@ window.BAROYAM_ACCESS=(function(){
   .member-badge .mb-slack.is-none{opacity:.6;background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
   .member-badge .mb-slack svg{width:10px;height:10px;flex:none}
   .member-badge .mb-slack-input{width:96px;font-size:11px;font-weight:700;letter-spacing:0}
+  /* 출근 요일 · 월~금 다섯 칸 · 켜진 날(흰 바탕)만 김비서 개인 알림이 간다 */
+  .member-badge .mb-days{display:flex;gap:2px}
+  .member-badge .mb-day{all:unset;box-sizing:border-box;width:17px;height:17px;border-radius:5px;display:grid;place-items:center;
+    font-size:10px;font-weight:800;cursor:pointer;color:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+  .member-badge .mb-day.is-on{background:rgba(255,255,255,.92);color:rgba(0,0,0,.72);box-shadow:none}
+  .member-badge .mb-day:hover,.member-badge .mb-day:focus-visible{outline:2px solid rgba(255,255,255,.7);outline-offset:0}
   /* 역할 고르기 목록 · 회원 목록이 스크롤 영역이라 화면 기준(fixed)으로 띄운다 */
   .member-roledrop{position:fixed;z-index:60;width:158px;max-height:270px;overflow-y:auto;
     display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:14px;
@@ -4913,7 +4920,7 @@ window.BAROYAM_ACCESS=(function(){
                   <input type="text" id="memberNameInput" placeholder="회원 이름 입력" maxlength="14" autocomplete="off">
                   <button type="submit">추가</button>
                 </form>
-                <p class="mg-hint">회원 칩의 역할을 눌러 대표·팀장·마케팅 같은 역할을 정할 수 있어요. 정한 역할은 구글시트에 저장돼 다른 PC의 로그인 화면에도 보입니다.</p>
+                <p class="mg-hint">회원 칩의 역할을 눌러 대표·팀장·마케팅 같은 역할을 정할 수 있어요. 정한 역할은 구글시트에 저장돼 다른 PC의 로그인 화면에도 보입니다.<br><b>슬랙</b> 칩에 슬랙 회원 ID를 넣으면 김비서가 알아봐요. <b>월~금</b> 칸은 출근 요일이에요 · 꺼진 날에는 김비서 개인 알림이 가지 않아요.</p>
                 <div class="member-list" id="memberList"></div>
                 <div class="member-roledrop" id="memberRoleDrop" role="menu" aria-label="역할 고르기" hidden></div>
               </div>
@@ -8699,6 +8706,10 @@ window.CsGuide=(function(){
      desc:'"🍱 밥시간 알림 · 메뉴를 주문해 주세요!"', task:'BaroyamNoticeLunch'},
     {name:'사무실 청소 알림', where:'#공지사항', days:[1], times:['12:10'],
      desc:'"🧹 사무실 청소 시간 · 지금부터 20분간 사무실 청소를 합니다."', task:'BaroyamNoticeClean'},
+    {name:'아침 프로젝트 인사', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['08:10'],
+     desc:'그날 출근하는 회원 모두에게 좋은 아침 인사와 맡은 프로젝트 현황(긴급·오늘/내일 마감)을 보내요.', task:'BaroyamProjectMorning'},
+    {name:'퇴근 전 프로젝트 체크', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['16:00'],
+     desc:'긴급이거나 내일 마감인 프로젝트가 있는 회원에게 완료·추가 업데이트를 부탁해요.', task:'BaroyamProjectEvening'},
     {name:'김비서 대화', where:'김비서 개인 메시지', always:true,
      desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. PC에 로그인하면 창 없이 켜져요.', task:'BaroyamSlackBot',
      cmds:['안녕 · 도움말 → 짧은 안내','예시 → 자세한 사용법','내 프로젝트','마감 (7일 안)','○○ 보내줘 → 드라이브 파일']}
@@ -8760,7 +8771,9 @@ window.CsGuide=(function(){
     const members=(MEM&&MEM.load())||[];
     const on=members.filter(m=>P.get(m.id).slack), off=members.filter(m=>!P.get(m.id).slack);
     people.innerHTML=`<div class="kb-people-title">김비서가 알아보는 회원 ${on.length}명<small>회원설정의 슬랙 칩에서 연결해요</small></div>`+
-      `<div class="kb-cmds">${on.map(m=>`<span class="kb-cmd">${esc(m.name)}</span>`).join('')||'<span class="wf-times-label">아직 없어요</span>'}</div>`+
+      `<div class="kb-cmds">${on.map(m=>{ const wd=P.get(m.id).workdays;
+        /* 출근 요일을 줄였으면 이름 옆에 적는다 · 기본(월~금)은 적지 않는다 */
+        return `<span class="kb-cmd">${esc(m.name)}${wd?` <span class="wf-times-label">${wd.length?wd.map(d=>WD[d]).join('·'):'출근 없음'}</span>`:''}</span>`; }).join('')||'<span class="wf-times-label">아직 없어요</span>'}</div>`+
       (off.length?`<div class="wf-times-label">연결 안 됨 · ${off.map(m=>esc(m.name)).join(', ')}</div>`:'');
     checked.textContent=byName===false?'당일판매분요약표 실행 기록을 불러오지 못했어요.':'';
   }
@@ -8893,6 +8906,16 @@ window.CsGuide=(function(){
   const SLACK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9.5 3.5v17M14.5 3.5v17M3.5 9.5h17M3.5 14.5h17"/></svg>';
   /* 슬랙 회원 ID · 프로필 ⋮ → 멤버 ID 복사로 얻는 U… 값 */
   const SLACK_ID=/^[UW][A-Z0-9]{6,}$/;
+  /* 출근 요일 · 1=월 … 5=금 · 정한 적 없으면(null) 월~금 모두 출근 · 쉬는 날에는 김비서 개인 알림이 가지 않는다 */
+  const WORKDAYS=['월','화','수','목','금'], ALL_WORKDAYS=[1,2,3,4,5];
+  function toggleDay(id,day){
+    const cur=(P.get(id).workdays||ALL_WORKDAYS).slice();
+    const i=cur.indexOf(day);
+    if(i>=0) cur.splice(i,1); else cur.push(day);
+    cur.sort();
+    /* 다섯 날 모두면 "정하지 않음"과 같으므로 null 로 담아 기본값을 따르게 한다 */
+    P.set(id,{workdays:cur.length===5?null:cur});   /* 저장하면 baroyam:profiles로 다시 그려진다 */
+  }
 
   function render(){
     const members=load();
@@ -8912,7 +8935,11 @@ window.CsGuide=(function(){
         ` aria-label="${escapeHtml(m.name)} 역할 고르기">${label}${CARET}</button>`+
         `<button type="button" class="mb-slack${p.slack?'':' is-none'}" data-slack-for="${m.id}"`+
         ` title="${p.slack?'슬랙 회원 ID '+escapeHtml(p.slack)+' · 눌러서 바꾸기':'눌러서 슬랙 회원 ID 넣기'}"`+
-        ` aria-label="${escapeHtml(m.name)} 슬랙 회원 ID">${SLACK}${p.slack?'슬랙':'슬랙 ID'}</button></span></span>`+
+        ` aria-label="${escapeHtml(m.name)} 슬랙 회원 ID">${SLACK}${p.slack?'슬랙':'슬랙 ID'}</button></span>`+
+        `<span class="mb-days" role="group" aria-label="${escapeHtml(m.name)} 출근 요일">`+
+        WORKDAYS.map((d,i)=>{ const on=(p.workdays||ALL_WORKDAYS).indexOf(i+1)>=0;
+          return `<button type="button" class="mb-day${on?' is-on':''}" data-day-for="${m.id}" data-day="${i+1}" aria-pressed="${on}" title="${d}요일 ${on?'출근':'쉬는 날'} · 눌러서 바꾸기">${d}</button>`; }).join('')+
+        `</span></span>`+
         `<button type="button" class="m-del" data-id="${m.id}" aria-label="${escapeHtml(m.name)} 삭제">✕</button></span>`;
     }).join('');
   }
@@ -9065,7 +9092,7 @@ window.CsGuide=(function(){
       localStorage.removeItem('baroyam_myhome_me_v1:'+id);
       localStorage.removeItem('baroyam_myhome_avatar_v1:'+id);
     }catch(e){}
-    P.set(id,{avatar:'',role:'',slack:''});   /* 시트의 프로필 사진·역할·슬랙 ID도 비운다 */
+    P.set(id,{avatar:'',role:'',slack:'',workdays:null});   /* 시트의 프로필 사진·역할·슬랙 ID·출근 요일도 비운다 */
     let url='';
     try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
     if(!/^https:/.test(url)) return;
@@ -9087,6 +9114,8 @@ window.CsGuide=(function(){
     if(nameBtn){ startRename(nameBtn); return; }
     const slackBtn=e.target.closest('.mb-slack');
     if(slackBtn){ startSlack(slackBtn); return; }
+    const dayBtn=e.target.closest('.mb-day');
+    if(dayBtn){ closeDrop(); toggleDay(dayBtn.dataset.dayFor,+dayBtn.dataset.day); return; }
     const roleBtn=e.target.closest('.mb-role');
     if(roleBtn){
       /* 열려 있는 같은 버튼을 다시 누르면 닫는다 */
