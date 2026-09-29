@@ -1021,7 +1021,7 @@ window.BAROYAM_ROLES=[
   {k:'CS',ic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 14.2v-2.1a7.6 7.6 0 0 1 15.2 0v2.1"/><path d="M4.4 13.6h1.9a1.1 1.1 0 0 1 1.1 1.1v3.5a1.1 1.1 0 0 1-1.1 1.1h-.5a1.4 1.4 0 0 1-1.4-1.4Z"/><path d="M19.6 13.6h-1.9a1.1 1.1 0 0 0-1.1 1.1v3.5a1.1 1.1 0 0 0 1.1 1.1h.5a1.4 1.4 0 0 0 1.4-1.4Z"/></svg>'},
 ];
 
-/* 회원별 프로필(사진·역할) · 이 브라우저에 담아 두고 구글시트에도 올려 PC마다 같이 보이게 한다.
+/* 회원별 프로필(사진·역할·슬랙 회원 ID) · 슬랙 ID는 김비서(슬랙 봇)가 개인 메시지를 보낼 때 쓴다 · 이 브라우저에 담아 두고 구글시트에도 올려 PC마다 같이 보이게 한다.
    시트는 한 칸에 5만 자까지만 들어가서, 회원 한 명당 한 칸('memberProfile:<회원id>')으로 나눠 담는다.
    '나'(me)는 이 브라우저에서만 쓰는 값이라 올리지 않는다 — 공용 PC에서 남의 계정으로 잡히지 않도록 */
 window.BAROYAM_PROFILES=(function(){
@@ -1035,7 +1035,7 @@ window.BAROYAM_PROFILES=(function(){
   function writeAll(map){ try{ localStorage.setItem(LS_KEY,JSON.stringify(map)); }catch(e){} }
   function get(id){
     const p=id?all()[id]:null;
-    return {avatar:(p&&p.avatar)||'',role:(p&&p.role)||'',updatedAt:(p&&p.updatedAt)||0};
+    return {avatar:(p&&p.avatar)||'',role:(p&&p.role)||'',slack:(p&&p.slack)||'',updatedAt:(p&&p.updatedAt)||0};
   }
   function me(){ try{ return localStorage.getItem(ME_KEY)||''; }catch(e){ return ''; } }
   function meId(){ const v=me(); return v===SKIP?'':v; }
@@ -1081,7 +1081,7 @@ window.BAROYAM_PROFILES=(function(){
     if(JSON.stringify(pend[id])===JSON.stringify(patch)) delete pend[id];
     writePending(pend);
     const map=all();
-    map[id]=Object.assign({avatar:res.avatar||'',role:res.role||'',updatedAt:res.updatedAt||0},pend[id]||{});
+    map[id]=Object.assign({avatar:res.avatar||'',role:res.role||'',slack:res.slack||'',updatedAt:res.updatedAt||0},pend[id]||{});
     writeAll(map); changed();
     if(pend[id]) push(id);
   }
@@ -1096,7 +1096,7 @@ window.BAROYAM_PROFILES=(function(){
       try{
         const r=JSON.parse(settings[k]);
         if(!r||typeof r!=='object') return;
-        const next=Object.assign({avatar:r.avatar||'',role:r.role||'',updatedAt:r.updatedAt||0},pend[id]||{});
+        const next=Object.assign({avatar:r.avatar||'',role:r.role||'',slack:r.slack||'',updatedAt:r.updatedAt||0},pend[id]||{});
         if(JSON.stringify(next)!==JSON.stringify(map[id])){ map[id]=next; hit=true; }
       }catch(e){}
     });
@@ -3460,6 +3460,15 @@ window.BAROYAM_ACCESS=(function(){
   .member-badge .mb-role.is-none{opacity:.8}
   .member-badge .mb-role svg{width:11px;height:11px;flex:none}
   .member-badge .mb-role .mb-caret{width:8px;height:8px;opacity:.75}
+  /* 역할 칩 옆 슬랙 칩 · 김비서가 개인 메시지를 보낼 슬랙 회원 ID · 없으면 흐리게 */
+  .member-badge .mb-tags{display:flex;flex-wrap:wrap;gap:4px}
+  .member-badge .mb-slack{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:3px;
+    padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.22);
+    font-size:10.5px;font-weight:700;color:#fff;cursor:pointer;transition:background-color .14s}
+  .member-badge .mb-slack:hover,.member-badge .mb-slack:focus-visible{background:rgba(255,255,255,.42)}
+  .member-badge .mb-slack.is-none{opacity:.6;background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+  .member-badge .mb-slack svg{width:10px;height:10px;flex:none}
+  .member-badge .mb-slack-input{width:96px;font-size:11px;font-weight:700;letter-spacing:0}
   /* 역할 고르기 목록 · 회원 목록이 스크롤 영역이라 화면 기준(fixed)으로 띄운다 */
   .member-roledrop{position:fixed;z-index:60;width:158px;max-height:270px;overflow-y:auto;
     display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:14px;
@@ -8761,6 +8770,9 @@ window.CsGuide=(function(){
   const drop=document.getElementById('memberRoleDrop');
   const load=MEM.load, save=MEM.save;
   const CARET='<svg class="mb-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  const SLACK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9.5 3.5v17M14.5 3.5v17M3.5 9.5h17M3.5 14.5h17"/></svg>';
+  /* 슬랙 회원 ID · 프로필 ⋮ → 멤버 ID 복사로 얻는 U… 값 */
+  const SLACK_ID=/^[UW][A-Z0-9]{6,}$/;
 
   function render(){
     const members=load();
@@ -8776,8 +8788,11 @@ window.CsGuide=(function(){
       return `<span class="member-badge" style="background:${m.color}" data-id="${m.id}">`+
         `<span class="mb-ava" aria-hidden="true">${face}</span>`+
         `<span class="mb-txt"><button type="button" class="mb-name" data-rename="${m.id}" title="${escapeHtml(m.name)} · 눌러서 이름 바꾸기">${escapeHtml(m.name)}</button>`+
-        `<button type="button" class="mb-role${r?'':' is-none'}" data-role-for="${m.id}" aria-haspopup="menu"`+
-        ` aria-label="${escapeHtml(m.name)} 역할 고르기">${label}${CARET}</button></span>`+
+        `<span class="mb-tags"><button type="button" class="mb-role${r?'':' is-none'}" data-role-for="${m.id}" aria-haspopup="menu"`+
+        ` aria-label="${escapeHtml(m.name)} 역할 고르기">${label}${CARET}</button>`+
+        `<button type="button" class="mb-slack${p.slack?'':' is-none'}" data-slack-for="${m.id}"`+
+        ` title="${p.slack?'슬랙 회원 ID '+escapeHtml(p.slack)+' · 눌러서 바꾸기':'눌러서 슬랙 회원 ID 넣기'}"`+
+        ` aria-label="${escapeHtml(m.name)} 슬랙 회원 ID">${SLACK}${p.slack?'슬랙':'슬랙 ID'}</button></span></span>`+
         `<button type="button" class="m-del" data-id="${m.id}" aria-label="${escapeHtml(m.name)} 삭제">✕</button></span>`;
     }).join('');
   }
@@ -8882,6 +8897,35 @@ window.CsGuide=(function(){
     });
     box.addEventListener('blur',()=>finish(true));
   }
+  /* 슬랙 회원 ID 넣기 · 이름 바꾸기와 같이 칩 자리에 입력칸이 뜬다 (Enter·바깥 클릭 저장, Esc 취소, 비우면 연결 해제) */
+  function startSlack(btn){
+    const id=btn.dataset.slackFor;
+    if(!MEM.byId(id)) return;
+    closeDrop();
+    const box=document.createElement('input');
+    box.type='text'; box.className='mb-name-input mb-slack-input'; box.maxLength=20;
+    box.value=P.get(id).slack; box.placeholder='U0…'; box.spellcheck=false;
+    box.setAttribute('aria-label','슬랙 회원 ID');
+    btn.replaceWith(box);
+    box.focus(); box.select();
+    let done=false;
+    const finish=ok=>{
+      if(done) return;
+      done=true;
+      const v=box.value.trim().toUpperCase();
+      if(ok&&v!==P.get(id).slack){
+        if(v&&!SLACK_ID.test(v)){
+          alert("슬랙 회원 ID는 U로 시작하는 영문·숫자예요.\n슬랙에서 그 사람 프로필 → ⋮ → '멤버 ID 복사'로 얻을 수 있어요.");
+        }else{ P.set(id,{slack:v}); return; }   /* 저장하면 baroyam:profiles로 다시 그려진다 */
+      }
+      render();
+    };
+    box.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); finish(true); }
+      else if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); finish(false); }
+    });
+    box.addEventListener('blur',()=>finish(true));
+  }
   /* 회원설정의 이름이 곧 마이홈이라, 이름을 지우면 그 마이홈도 사라진다 ·
      퀵링크·간편 기록노트·프로필 사진을 이 브라우저와 시트에서 같이 지운다 ·
      담당이던 프로젝트는 팀 자산이라 그대로 남긴다 */
@@ -8901,7 +8945,7 @@ window.CsGuide=(function(){
       localStorage.removeItem('baroyam_myhome_me_v1:'+id);
       localStorage.removeItem('baroyam_myhome_avatar_v1:'+id);
     }catch(e){}
-    P.set(id,{avatar:'',role:''});   /* 시트의 프로필 사진·역할도 비운다 */
+    P.set(id,{avatar:'',role:'',slack:''});   /* 시트의 프로필 사진·역할·슬랙 ID도 비운다 */
     let url='';
     try{ url=(typeof AGENDA_API_URL==='string')?AGENDA_API_URL:''; }catch(e){}
     if(!/^https:/.test(url)) return;
@@ -8921,6 +8965,8 @@ window.CsGuide=(function(){
   list.addEventListener('click',(e)=>{
     const nameBtn=e.target.closest('.mb-name');
     if(nameBtn){ startRename(nameBtn); return; }
+    const slackBtn=e.target.closest('.mb-slack');
+    if(slackBtn){ startSlack(slackBtn); return; }
     const roleBtn=e.target.closest('.mb-role');
     if(roleBtn){
       /* 열려 있는 같은 버튼을 다시 누르면 닫는다 */
