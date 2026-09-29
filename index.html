@@ -1395,6 +1395,8 @@ window.BAROYAM_ACCESS=(function(){
     #memberGate .mp-list{grid-template-columns:repeat(2,1fr);max-height:none;overflow:visible}
   }
   @media (max-width:420px){ #memberGate .mp-card{padding:32px 18px 16px} #memberGate .mp-foot{margin:18px -18px 0;padding:14px 18px 0} }
+  /* 비밀번호 칸은 type=text + 글자 가림 · type=password 면 크롬이 autocomplete=off 를 무시하고 저장·업데이트 창을 띄운다 */
+  .pw-mask{-webkit-text-security:disc;text-security:disc}
 </style>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
@@ -4607,7 +4609,7 @@ window.BAROYAM_ACCESS=(function(){
     <div class="mp-list" id="mpList"></div>
     <form class="mp-pw" id="mpPwForm" hidden autocomplete="off">
       <p class="mp-pw-who"><b id="mpPwName"></b>님은 팀장이에요.<br>팀장 비밀번호를 입력해 주세요.</p>
-      <input class="mp-pw-input" id="mpPwInput" type="password" inputmode="numeric" placeholder="비밀번호" aria-label="팀장 비밀번호" aria-describedby="mpPwError">
+      <input class="mp-pw-input pw-mask" id="mpPwInput" type="text" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="팀장 비밀번호" aria-describedby="mpPwError">
       <p class="mp-pw-error" id="mpPwError" role="alert"></p>
       <div class="mp-pw-actions">
         <button type="button" class="mp-pw-cancel" id="mpPwCancel">취소</button>
@@ -4873,7 +4875,7 @@ window.BAROYAM_ACCESS=(function(){
         <p class="pw-hint" id="settingsPwHint">아직 팀장이 없어요. 팀장 비밀번호를 입력하면 들어가서 팀장을 정할 수 있어요.</p>
         <p class="pw-hint" id="settingsPwDenied" hidden>관리자 설정은 <b>팀장</b>만 들어갈 수 있어요.<br>팀장에게 요청하거나, 로그인 화면에서 팀장으로 다시 들어와 주세요.</p>
         <form class="member-add-form" id="settingsPwForm" autocomplete="off">
-          <input type="password" id="settingsPwInput" inputmode="numeric" placeholder="비밀번호" aria-label="관리자 비밀번호" aria-describedby="settingsPwError">
+          <input type="text" class="pw-mask" id="settingsPwInput" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="관리자 비밀번호" aria-describedby="settingsPwError">
           <button type="submit">확인</button>
         </form>
         <div class="pw-error" id="settingsPwError" role="alert"></div>
@@ -6858,7 +6860,7 @@ window.BAROYAM_ACCESS=(function(){
             <b id="accLockTitle">계정관리 비밀번호</b>
             <span>계정관리는 비밀번호를 아는 사람만 들어갈 수 있어요</span>
             <div class="acc-lock-row">
-              <input class="ui-field" type="password" id="accLockPw" inputmode="numeric" autocomplete="off" placeholder="비밀번호" aria-label="계정관리 비밀번호">
+              <input class="ui-field pw-mask" type="text" id="accLockPw" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="계정관리 비밀번호">
             </div>
             <span class="acc-lock-msg" id="accLockMsg" role="alert"></span>
             <div class="acc-lock-btns">
@@ -16358,7 +16360,7 @@ window.baroyamAsk=function(title,body,okText){
       '<div class="acc-form-two">'+
         '<input class="ui-field block" name="loginId" placeholder="아이디" autocomplete="off" value="'+안전(it.loginId)+'">'+
         '<div class="acc-pw">'+
-          '<input class="ui-field" type="password" name="password" placeholder="비밀번호" autocomplete="new-password" value="'+안전(it.password)+'">'+
+          '<input class="ui-field pw-mask" type="text" name="password" placeholder="비밀번호" autocomplete="off" data-lpignore="true" data-1p-ignore value="'+안전(it.password)+'">'+
           '<button type="button" class="ui-btn ghost" data-act="pwform">보기</button>'+
         '</div>'+
       '</div>'+
@@ -16473,8 +16475,8 @@ window.baroyamAsk=function(title,body,okText){
     else if(act==='pwview'){ if(보인비번.has(iid)) 보인비번.delete(iid); else 보인비번.add(iid); 그리기(); }
     else if(act==='pwform'){
       const 칸=b.parentNode.querySelector('input');
-      const 보임=칸.type==='password';
-      칸.type=보임?'text':'password'; b.textContent=보임?'가리기':'보기';
+      const 보임=칸.classList.toggle('pw-mask')===false;
+      b.textContent=보임?'가리기':'보기';
     }
     else if(act==='logo'){
       const f=b.closest('form');
