@@ -4971,7 +4971,7 @@ window.BAROYAM_ACCESS=(function(){
             </section>
             <section class="settings-view" data-settings-panel="kimbiseo" hidden>
               <div class="wf-manager">
-                <p class="mg-hint"><b>김비서</b>는 슬랙의 바로얌AI 봇이에요. 슬랙으로 보내는 알림과 대화 봇을 여기에 모아 둡니다. 모두 회사 PC에서 돌아서 PC가 꺼져 있으면 멈춰요.</p>
+                <p class="mg-hint"><b>김비서</b>는 슬랙의 바로얌AI 봇이에요. 슬랙으로 보내는 알림과 대화 봇을 여기에 모아 둡니다. 모두 <b>VPS 서버</b>(카페24)에서 24시간 돌아서 회사 PC가 꺼져 있어도 나가요. 실행할 때마다 정상·실패가 여기에 기록돼요.</p>
                 <div class="wf-list" id="kbList"></div>
                 <div class="kb-people" id="kbPeople"></div>
                 <p class="wf-checked" id="kbChecked"></p>
@@ -8688,9 +8688,10 @@ window.CsGuide=(function(){
 
 /* 관리자 설정 · 김비서 AI · 슬랙 봇 "김비서"(바로얌AI 봇)가 하는 자동화 목록 ·
    코드는 caffeinnos-automation 저장소(daily_report.js·notice_alert.js·slack_bot.js)이고
-   모두 회사 PC 작업 스케줄러가 켠다 · 시각·명령이 바뀌면 AUTOMATIONS 만 고친다 ·
-   당일판매분요약표만 GitHub 에 결과를 알려 automation_runs 에 기록이 쌓이고,
-   공지 알림·대화 봇은 PC 의 기록 파일(notice_alert_log.txt·slack_bot_log.txt)에만 남는다 */
+   2026-09-29 부터 모두 VPS 서버(카페24 가상서버)의 cron 이 켜고, 대화 봇은 systemd(slack-bot)가 늘 켜 둔다 ·
+   시각·명령이 바뀌면 AUTOMATIONS 와 caffeinnos-automation/vps/crontab.txt 를 같이 고친다 ·
+   예약 작업은 vps/run.sh 가 끝날 때마다 automation_runs 에 한 줄(record 이름)을 쌓고,
+   대화 봇은 vps/bot_check.sh 가 10분마다 한 줄(run_id vps-slack-bot)을 덮어쓴다 */
 (function(){
   const tab=document.getElementById('kbSettingsTab');
   const list=document.getElementById('kbList');
@@ -8698,22 +8699,24 @@ window.CsGuide=(function(){
   const checked=document.getElementById('kbChecked');
   if(!tab||!list) return;
   const WD=['일','월','화','수','목','금','토'];
-  /* days · 도는 요일(0=일) · times 가 없으면 늘 켜져 있는 것 · record 는 automation_runs 의 workflow 이름 */
+  /* days · 도는 요일(0=일) · times 가 없으면 늘 켜져 있는 것 · record 는 automation_runs 의 workflow 이름(crontab.txt 와 같게) */
   const AUTOMATIONS=[
     {name:'당일판매분요약표', where:'#재고알림', days:[1,2,3,4,5], times:['16:15'], record:'당일판매분요약표 (Slack)',
-     desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올려요.', task:'CaffeinnosDailyReport'},
+     desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올려요.', task:'cron'},
     {name:'밥시간 알림', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['10:50'],
-     desc:'"🍱 밥시간 알림 · 메뉴를 주문해 주세요!"', task:'BaroyamNoticeLunch'},
+     record:'밥시간 알림',
+     desc:'"🍱 밥시간 알림 · 메뉴를 주문해 주세요!"', task:'cron'},
     {name:'점심시간 종료 안내', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['12:00'],
-     desc:'"⏰ 점심시간이 끝났어요. 오후 업무를 시작해 주세요." + 김비서 응원 한마디(날마다 바뀜)', task:'BaroyamNoticeLunchEnd'},
+     desc:'"⏰ 점심시간이 끝났어요. 오후 업무를 시작해 주세요." + 김비서 응원 한마디(날마다 바뀜)', record:'점심시간 종료 안내', task:'cron'},
     {name:'사무실 청소 알림', where:'#공지사항 · @channel', days:[1], times:['12:10'],
-     desc:'"🧹 사무실 청소 시간 · 지금부터 20분간 사무실 청소를 합니다."', task:'BaroyamNoticeClean'},
+     desc:'"🧹 사무실 청소 시간 · 지금부터 20분간 사무실 청소를 합니다."', record:'사무실 청소 알림', task:'cron'},
     {name:'아침 프로젝트 인사', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['08:10'],
-     desc:'그날 출근하는 회원 모두에게 좋은 아침 인사와 맡은 프로젝트 현황(긴급·오늘/내일 마감)을 보내요.', task:'BaroyamProjectMorning'},
+     desc:'그날 출근하는 회원 모두에게 좋은 아침 인사와 맡은 프로젝트 현황(긴급·오늘/내일 마감)을 보내요.', record:'아침 프로젝트 인사', task:'cron'},
     {name:'퇴근 전 프로젝트 체크', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['16:00'],
-     desc:'그날 출근하는 회원 모두에게 긴급·내일 마감 프로젝트를 알리고 완료·수정·진행도 업데이트를 부탁해요 + 응원 한마디.', task:'BaroyamProjectEvening'},
+     desc:'그날 출근하는 회원 모두에게 긴급·내일 마감 프로젝트를 알리고 완료·수정·진행도 업데이트를 부탁해요 + 응원 한마디.', record:'퇴근 전 프로젝트 체크', task:'cron'},
     {name:'김비서 대화', where:'김비서 개인 메시지', always:true,
-     desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. PC에 로그인하면 창 없이 켜져요.', task:'BaroyamSlackBot',
+     record:'김비서 대화',
+     desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. 서버에서 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd',
      cmds:['안녕 · 도움말 → 짧은 안내','예시 → 자세한 사용법','내 프로젝트','마감 (7일 안)','○○ 보내줘 → 미리보기 5개 → 번호로 원본','고객 문의 → 상담 가이드 추천 답변']}
   ];
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8744,15 +8747,20 @@ window.CsGuide=(function(){
     list.innerHTML=AUTOMATIONS.map(a=>{
       let badge, times='', meta='';
       if(a.always){
-        badge='<span class="wf-status is-live">늘 켜 둠</span>';
+        /* 서버가 10분마다 켜짐 여부를 덮어쓴다 · 30분 넘게 소식이 없으면 서버가 멈춘 것 */
+        const run=(by[a.record]||[])[0];
+        const stale=run&&(Date.now()-new Date(run.run_at))>30*60*1000;
+        if(!run) badge='<span class="wf-status is-live">늘 켜 둠</span>';
+        else if(stale) badge='<span class="wf-status is-fail" title="서버가 30분 넘게 소식이 없어요">연락 끊김</span>';
+        else badge=`<span class="wf-status ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'켜짐':'꺼짐'}</span>`;
+        if(run) meta=`<span>마지막 확인 <b>${esc(fmt(run.run_at))}</b> · 10분마다 확인</span>`;
       }else{
         const nx=nextRun(a);
         times=`<div class="wf-times"><span class="wf-times-label">${esc(dayLabel(a.days))}</span>`+
           a.times.map(t=>`<span class="wf-time is-next" title="다음 실행 · ${esc(nx?nx.label:'')}">${t}</span>`).join('')+
           (nx?`<span class="wf-times-label">다음 ${esc(nx.label)}</span>`:'')+'</div>';
         const hist=a.record?(by[a.record]||[]):[], run=hist[0];
-        if(!a.record) badge='<span class="wf-status" title="실행 기록은 PC 기록 파일에만 남아요">PC 기록</span>';
-        else if(!run) badge='<span class="wf-status">기록 없음</span>';
+        if(!run) badge='<span class="wf-status">기록 없음</span>';
         else badge=`<span class="wf-status ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'정상':'실패'}</span>`;
         if(a.record&&hist.length){
           const recent=hist.slice(0,12), fails=recent.filter(r=>r.conclusion!=='success');
@@ -8765,7 +8773,7 @@ window.CsGuide=(function(){
         <div class="wf-desc">${esc(a.desc)}</div>
         ${times}
         ${a.cmds?`<div class="kb-cmds">${a.cmds.map(c=>`<span class="kb-cmd">${esc(c)}</span>`).join('')}</div>`:''}
-        <div class="wf-meta">${meta}<span>작업 스케줄러 <b>${esc(a.task)}</b></span></div>
+        <div class="wf-meta">${meta}<span>VPS 서버 · <b>${esc(a.task)}</b></span></div>
       </div>`;
     }).join('');
     /* 김비서가 알아보는 회원 · 회원설정의 슬랙 칩에서 넣은 슬랙 ID 기준 */
@@ -8777,7 +8785,7 @@ window.CsGuide=(function(){
         /* 출근 요일을 줄였으면 이름 옆에 적는다 · 기본(월~금)은 적지 않는다 */
         return `<span class="kb-cmd">${esc(m.name)}${wd?` <span class="wf-times-label">${wd.length?wd.map(d=>WD[d]).join('·'):'출근 없음'}</span>`:''}</span>`; }).join('')||'<span class="wf-times-label">아직 없어요</span>'}</div>`+
       (off.length?`<div class="wf-times-label">연결 안 됨 · ${off.map(m=>esc(m.name)).join(', ')}</div>`:'');
-    checked.textContent=byName===false?'당일판매분요약표 실행 기록을 불러오지 못했어요.':'';
+    checked.textContent=byName===false?'실행 기록을 불러오지 못했어요.':'';
   }
   function load(){
     render();
