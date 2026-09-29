@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "checkedAt": "2026-09-29T08:08:06Z",
+  "checkedAt": "2026-09-29T14:34:20Z",
   "repos": [
     {
       "repo": "caffeinnos1-ai/baroyam-trend",
@@ -9,8 +9,8 @@
         {
           "name": "구글트렌드 수집",
           "conclusion": "success",
-          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36528852801",
-          "createdAt": "2026-09-29T06:00:12Z"
+          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36546302332",
+          "createdAt": "2026-09-29T09:00:09Z"
         },
         {
           "name": "네이버데이터랩 수집",
