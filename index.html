@@ -236,6 +236,41 @@ window.BAROYAM_DB=(function(){
       return null;
     }catch(err){ console.error(err); return null; }
   }
+  /* ---------- 합칠 수 없는 글 한 칸 저장 (메뉴얼 문서 등) ----------
+     서버 칸의 updated_at 을 버전으로 삼는다 · 내가 마지막으로 받은 버전일 때만 쓰고(낙관적 잠금),
+     그사이 다른 PC가 먼저 고쳤으면 쓰지 않고 {conflict, value, version} 으로 알린다 ·
+     version 이 비었으면 "서버에 아직 없는 칸"으로 보고 새로 만든다 · 로그인/연결 실패는 null */
+  async function saveIfVersion(key,value,version){
+    if(!key) return null;
+    if(!(await ensureSession())) return null;
+    try{
+      const c=await client();
+      const now=new Date().toISOString();
+      let w;
+      if(version){
+        w=await c.from('app_settings').update({value:valueIn(value),updated_at:now})
+          .eq('key',key).eq('updated_at',version).select('updated_at');
+      }else{
+        w=await c.from('app_settings').insert({key:key,value:valueIn(value),updated_at:now}).select('updated_at');
+        if(w.error&&w.error.code==='23505') w={data:[]};      /* 그사이 누가 먼저 만들었다 */
+      }
+      if(w.error){ console.error(w.error); return null; }
+      if(w.data&&w.data.length) return {ok:true,version:w.data[0].updated_at};
+      const r=await c.from('app_settings').select('value,updated_at').eq('key',key).limit(1);
+      if(r.error){ console.error(r.error); return null; }
+      const row=r.data&&r.data[0];
+      if(!row) return saveIfVersion(key,value,null);          /* 누가 칸을 지웠다 · 새로 만든다 */
+      return {conflict:true,value:valueOut(row.value),version:row.updated_at};
+    }catch(err){ console.error(err); return null; }
+  }
+  /* 이름이 prefix 로 시작하는 칸을 값·버전과 함께 읽는다 · 읽지 못하면 오류를 던진다 */
+  async function loadSettingRows(prefix){
+    if(!(await ensureSession())) throw new Error('로그인되지 않았습니다');
+    const c=await client();
+    const r=await c.from('app_settings').select('key,value,updated_at').like('key',prefix+'%');
+    if(r.error) throw r.error;
+    return (r.data||[]).map(function(row){ return {key:row.key,value:valueOut(row.value),version:row.updated_at}; });
+  }
   /* ---------- 세 갈래 합치기 ----------
      base = 마지막으로 서버와 맞춘 사본 · local = 이 PC 지금 것 · server = 서버 최신본 ·
      이 PC가 base 에서 바꾼 것만 서버본에 얹는다 · id 가 있는 목록은 항목 단위로, 객체는 칸 단위로 합친다 ·
@@ -324,6 +359,14 @@ window.BAROYAM_DB=(function(){
     bar.textContent='서버에 저장하지 못했어요 · 이 PC에는 남아 있고 잠시 뒤 다시 보냅니다. 계속되면 새로고침 후 다시 로그인해 주세요.';
     bar.style.display=failing.size?'block':'none';
   }
+  /* blobSync 을 쓰지 않는 저장(메뉴얼 문서 등)도 같은 빨간 알림·창 닫기 붙잡기를 쓰도록 ·
+     state: 'pending' 보내는 중 / 'failing' 실패 / 'ok' 서버에 담김 */
+  function saveNotice(key,state){
+    if(state==='ok'){ failing.delete(key); pending.delete(key); }
+    else if(state==='failing') failing.add(key);
+    else pending.add(key);
+    paintBar();
+  }
   /* 저장이 남았는데 창을 닫으려 하면 한 번 붙잡는다 · 저장은 0.7초 모았다 보내서 바로 닫으면 잃었다 */
   window.addEventListener('beforeunload',function(e){
     if(!pending.size&&!failing.size) return;
@@ -334,24 +377,60 @@ window.BAROYAM_DB=(function(){
      o.get() 이 PC 지금 것 · o.set(v) 합친 결과를 화면에 받아들인다 · o.saved(v) 서버에 담은 뒤 할 일 */
   const syncs=[];
   function clone(v){ return v==null?v:JSON.parse(JSON.stringify(v)); }
+  /* 이 창만의 이름표 · 못 올린 고침(draft)이 어느 창 것인지 가린다 */
+  const SAVE_REV=2;
+  const TAB_ID=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   function blobSync(o){
     let timer=null, busy=false, again=false;
     const tag=function(){ return o.key(); };
-    function readBase(){ try{ const r=localStorage.getItem(o.baseKey()); return r?JSON.parse(r):null; }catch(e){ return null; } }
-    function writeBase(v){ try{ localStorage.setItem(o.baseKey(),JSON.stringify(v)); }catch(e){} }
     function parse(v){ if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ return null; } } return v; }
-    function stamp(v){ return Object.assign({},v,{updatedAt:Date.now()}); }
+    /* _rev · 이 저장 방식의 판 번호 · 서버(06-protect-projects.sql)는 이 번호가 없는 옛 창의 프로젝트 저장을 거절한다 */
+    function stamp(v){ return Object.assign({},v,{updatedAt:Date.now(),_rev:SAVE_REV}); }
+    /* base(마지막으로 서버와 맞춘 사본)는 창마다 메모리에 따로 든다 ·
+       예전에는 localStorage 한 칸을 같은 브라우저의 모든 창이 같이 써서, 오래 열어 둔 창이
+       다른 창이 받아 둔 새 base 와 자기 옛 목록을 비교해 "남이 넣은 프로젝트를 내가 지웠다"로 읽고
+       서버에서 지웠다(09-29 수정 뒤에도 프로젝트가 사라진 원인) ·
+       localStorage 에는 다음에 열 때 쓸 "못 올린 고침 + 그때의 base" 짝만 남긴다(키 + '~draft') ·
+       baseKey 는 회원을 바꾸면 달라지므로 칸 이름마다 따로 둔다 */
+    const slots={};
+    function S(){
+      const k=o.baseKey();
+      if(!slots[k]) slots[k]=boot(k);
+      return slots[k];
+    }
+    function boot(k){
+      let raw=null, d=null;
+      try{ raw=localStorage.getItem(k+'~draft'); d=raw?JSON.parse(raw):null; }catch(e){}
+      if(d&&d.local!==undefined) return {base:d.base==null?null:d.base,start:{draft:d},dirty:false};
+      if(raw!=null) return {base:null,start:{clean:true},dirty:false};     /* 못 올린 고침 없음 · 서버본을 그대로 받는다 */
+      /* 예전 버전이 남긴 base 뿐 · 어느 창이 쓴 것인지 몰라 처음 한 번은 지우지 않고 양쪽을 살린다 */
+      let b=null;
+      try{ const r=localStorage.getItem(k); b=r?JSON.parse(r):null; }catch(e){}
+      return {base:b,start:{legacy:true},dirty:false};
+    }
+    function persist(s,k){
+      try{
+        localStorage.setItem(k,JSON.stringify(s.base==null?null:s.base));
+        let other=null;
+        try{ const d=JSON.parse(localStorage.getItem(k+'~draft')||'null'); if(d&&d.tab!==TAB_ID&&d.tab!==s.adopted) other=d; }catch(e){}
+        /* 아직 서버와 맞추기 전이면 base 를 비워 둔다 · 다음에 열 때 지우지 않고 양쪽을 살리게 */
+        const own=s.dirty?{tab:TAB_ID,base:s.start?null:s.base,local:clone(o.get())}:null;
+        localStorage.setItem(k+'~draft',JSON.stringify(own||other));
+      }catch(e){}
+    }
     function push(delay){
       pending.add(tag());
+      const s=S(); s.dirty=true; persist(s,o.baseKey());
       clearTimeout(timer);
       timer=setTimeout(function(){ timer=null; run(); },delay==null?700:delay);
     }
     async function run(){
       if(busy){ again=true; return; }
       busy=true;
-      const key=tag();
+      const key=tag(), k=o.baseKey(), s=S();
       try{
-        const sent=clone(o.get()), base=readBase();
+        /* 아직 서버와 한 번도 맞추지 않았으면 base 를 믿지 않고 양쪽을 살린다 */
+        const sent=clone(o.get()), base=s.start?null:s.base;
         const result=await saveMerged(key,function(server){
           server=server==null?null:o.norm(parse(server));
           if(!server) return stamp(sent);
@@ -359,33 +438,43 @@ window.BAROYAM_DB=(function(){
         });
         if(result==null){ failing.add(key); paintBar(); push(15000); return; }
         failing.delete(key); pending.delete(key); paintBar();
-        writeBase(result);
+        s.base=clone(result);
+        if(s.start&&!s.start.draft) s.start=null;
         /* 보내는 사이에 또 고쳤으면 그 변경을 결과 위에 다시 얹는다 */
         const now=clone(o.get());
         const next=same(now,sent)?result:merge3(sent,now,result);
         if(!same(next,now)) o.set(clone(next));
         if(o.saved) o.saved(result);
         if(!same(next,result)) again=true;
+        s.dirty=!!timer||again;
+        persist(s,k);
       }catch(err){ console.error(err); failing.add(key); paintBar(); push(15000); }
       finally{ busy=false; if(again){ again=false; push(); } }
     }
     /* 서버에서 받은 값 · absent 면 서버에 그 칸이 정말 없다(읽기 실패와 구분) */
     function receive(remote,absent){
       if(busy||timer) return;          /* 곧 보낼 것이 있으면 보낼 때 합친다 */
+      const s=S();
       remote=remote==null||remote===''?null:o.norm(parse(remote));
-      const local=clone(o.get()), base=readBase();
+      const local=clone(o.get());
       if(!remote){
-        if(absent&&base==null) push();          /* 이 칸을 처음 만든다 */
+        if(absent&&s.base==null) push();          /* 이 칸을 처음 만든다 */
         return;
       }
-      /* base 가 없으면(이 방식으로 처음) · 서버본이 더 새로우면 그대로 받고(오래 안 쓴 PC가 지운 것을 되살리지 않게),
-         이 PC 것이 더 새로우면 못 올린 고침이 있을 수 있어 양쪽을 합친다 */
-      const next=base==null
-        ?(((remote.updatedAt||0)>=((local&&local.updatedAt)||0))?remote:union(local,remote))
-        :(same(local,base)?remote:merge3(base,local,remote));
-      writeBase(remote);
+      /* 처음 받을 때 · 지난번에 못 올린 고침이 있으면 그 짝(base·고침)으로 서버본 위에 얹는다 ·
+         없으면 서버본을 그대로 받는다(다른 창이 남긴 옛 사본이 서버를 이기지 않게) */
+      const start=s.start; s.start=null;
+      let base=s.base, mine=local, next;
+      if(start&&start.draft){ base=start.draft.base; mine=start.draft.local; s.adopted=start.draft.tab; }
+      if(start&&start.clean) next=remote;
+      else if(base==null) next=((remote.updatedAt||0)>=((mine&&mine.updatedAt)||0))?remote:union(mine,remote);
+      else if(same(mine,base)) next=remote;
+      else if(start&&start.legacy) next=union(mine,remote);
+      else next=merge3(base,mine,remote);
+      s.base=clone(remote);
       if(!same(next,local)) o.set(clone(next));
       if(!same(next,remote)) push();
+      else{ s.dirty=false; persist(s,o.baseKey()); }
     }
     async function refresh(){
       if(busy||timer) return;
@@ -735,6 +824,7 @@ window.BAROYAM_DB=(function(){
     listNotes:listNotes,syncNotes:syncNotes,
     saveSetting:saveSetting,loadSettings:loadSettings,loadSetting:loadSetting,migrateFromSheets:migrateFromSheets,
     saveMerged:saveMerged,blobSync:blobSync,merge3:merge3,union:union,
+    saveIfVersion:saveIfVersion,loadSettingRows:loadSettingRows,saveNotice:saveNotice,
     mirrorAll:mirrorAll,mirrorMine:mirrorMine,mirrorProjects:mirrorProjects,
     sdkOk:sdkOk,signOut:signOut};
 })();
@@ -7962,13 +8052,25 @@ window.CsGuide=(function(){
   /* 띄어쓰기·문장부호를 무시하고 비교해야 '안 와요'가 '아직안와요'에도 걸린다 */
   const norm=s=>String(s||'').toLowerCase().replace(/[\s\p{P}\p{S}]/gu,'');
 
-  /* 상담 가이드는 Supabase cs_guide 에 담는다 */
+  /* 상담 가이드는 Supabase cs_guide 에 담는다 ·
+     못 올린 건은 빨간 알림을 띄우고 잠시 뒤 다시 동기화한다(sync 가 pending 건을 다시 올린다) */
+  const noticeKey=id=>'cs_guide:'+id;
+  let retryTimer=null;
+  function scheduleRetry(){
+    if(retryTimer) return;
+    retryTimer=setTimeout(()=>{ retryTimer=null; sync(); },15000);
+  }
   function push(it){
     if(!apiReady()){ it.pending=true; return Promise.resolve(false); }
     const rec={id:it.id,title:it.title,keywords:it.keywords,answer:it.answer,category:it.category||''};
+    window.BAROYAM_DB.saveNotice(noticeKey(it.id),'pending');
     return window.BAROYAM_DB.guideSave(rec)
-      .then(()=>{ delete it.pending; return true; })
-      .catch(err=>{ console.error(err); it.pending=true; return false; });
+      .then(()=>{ delete it.pending; window.BAROYAM_DB.saveNotice(noticeKey(it.id),'ok'); return true; })
+      .catch(err=>{
+        console.error(err); it.pending=true;
+        window.BAROYAM_DB.saveNotice(noticeKey(it.id),'failing'); scheduleRetry();
+        return false;
+      });
   }
 
   function sync(){
@@ -7985,10 +8087,16 @@ window.CsGuide=(function(){
         persist(); emit();
         return Promise.all(pending.filter(it=>it.pending).map(push)).then(()=>{ persist(); emit(); return true; });
       })
-      .catch(err=>{ console.error(err); return false; })
+      .catch(err=>{
+        console.error(err);
+        if(items.some(it=>it.pending)) scheduleRetry();      /* 못 올린 건이 남아 있으면 다시 시도한다 */
+        return false;
+      })
       .finally(()=>{ syncing=null; });
     return syncing;
   }
+  /* 지난번에 못 올리고 닫은 건이 있으면, 상담가이드 화면을 열지 않아도 곧 다시 올린다 */
+  if(items.some(it=>it.pending)) scheduleRetry();
 
   function save(data){
     let it=data.id&&items.find(x=>x.id===data.id);
@@ -9444,7 +9552,7 @@ window.CsGuide=(function(){
       const data={id:gmEditingId,title:t.value,category:c.value,keywords:k.value,answer:a.value};
       gmResetForm();
       gmSetMsg('저장 중...');
-      G.save(data).then(ok=>{ gmSetMsg(ok?'저장했어요.':'시트 저장 실패 · 이 기기에는 저장됨',!ok); gmFillCategories(); });
+      G.save(data).then(ok=>{ gmSetMsg(ok?'저장했어요.':'서버 저장 실패 · 이 기기에 보관 중이며 잠시 뒤 다시 보냅니다',!ok); gmFillCategories(); });
     });
     gmEl('gmCancel').addEventListener('click',()=>{ gmResetForm(); gmSetMsg(''); });
     gmEl('gmList').addEventListener('click',e=>{
@@ -9468,7 +9576,7 @@ window.CsGuide=(function(){
       if(!it||!window.confirm('"'+(it.title||'이 매뉴얼')+'"을(를) 삭제할까요?')) return;
       if(gmEditingId===it.id) gmResetForm();
       gmSetMsg('삭제 중...');
-      G.remove(it.id).then(ok=>gmSetMsg(ok?'삭제했어요.':'시트에서 삭제하지 못했어요 · 새로고침 후 다시 시도해 주세요',!ok));
+      G.remove(it.id).then(ok=>gmSetMsg(ok?'삭제했어요.':'서버에서 삭제하지 못했어요 · 새로고침 후 다시 시도해 주세요',!ok));
     });
   }
   /* 데이터가 바뀌면(관리 창 저장, 다른 기기 동기화) 보기 화면과 관리 창 목록을 같이 다시 그린다 */
@@ -9744,16 +9852,30 @@ window.CsGuide=(function(){
   }
 
   /* ---------- 문서 본문 저장 ----------
-     타이핑하면 곧바로 이 기기(localStorage)에 남기고, 잠시 뒤 구글시트로 올린다 ·
-     시트 저장이 실패해도 글이 사라지지 않도록 로컬을 먼저 쓴다 */
+     타이핑하면 곧바로 이 기기(localStorage)에 남기고, 잠시 뒤 Supabase(app_settings 'manual-<id>')로 올린다 ·
+     회사 자산이라 한 번 쓴 글은 사라지면 안 된다 → 세 가지를 지킨다.
+       1) 서버에 못 올린 글은 dirty 표시를 남겨, 서버본이 덮지 못하게 하고 올라갈 때까지 다시 보낸다(빨간 알림).
+       2) 서버 칸의 updated_at 을 버전으로 삼아, 내가 받아 본 버전일 때만 쓴다(낙관적 잠금) ·
+          그사이 다른 PC가 먼저 고쳤으면 덮지 않고 어느 쪽을 남길지 묻는다.
+       3) 덮이거나 버려지는 글은 이 PC 백업(최근 30개)에도 남긴다 · 서버에는 app_settings 변경 이력이 남는다 */
   /* 이 IIFE는 AGENDA_API_URL보다 앞에 있지만, 실제 호출은 사용자가 글을 쓴 뒤라 그때는 이미 초기화돼 있다 */
-  const apiReady=()=>typeof AGENDA_API_URL!=='undefined' && AGENDA_API_URL && AGENDA_API_URL.indexOf('PUT_DEPLOYED')!==0;
+  const apiReady=()=>typeof AGENDA_API_URL!=='undefined' && AGENDA_API_URL && AGENDA_API_URL.indexOf('PUT_DEPLOYED')!==0
+    && !!window.BAROYAM_DB;
+  const DB=()=>window.BAROYAM_DB;
   const DOCS_LS_KEY='baroyam_manual_docs_v1';
+  const META_LS_KEY='baroyam_manual_docs_meta_v1';     /* {ver:{id:서버 updated_at}, dirty:{id:true}} */
+  const BACKUP_LS_KEY='baroyam_manual_docs_backup_v1';
   const settingsKey=id=>'manual-'+id.replace('-','_');
   let docs={};
   try{ docs=JSON.parse(localStorage.getItem(DOCS_LS_KEY)||'{}')||{}; }catch(e){ docs={}; }
+  let meta={ver:{},dirty:{}};
+  try{
+    const m=JSON.parse(localStorage.getItem(META_LS_KEY)||'null');
+    if(m&&typeof m==='object') meta={ver:m.ver||{},dirty:m.dirty||{}};
+  }catch(e){}
 
-  let saveTimer=null,pendingId=null,stateEl=null;
+  let saveTimer=null,pendingId=null,stateEl=null,retryTimer=null;
+  const sending=new Set(), resend=new Set();
   function setSaveState(text,warn){
     if(!stateEl) return;
     stateEl.textContent=text;
@@ -9762,39 +9884,164 @@ window.CsGuide=(function(){
   function persistLocal(){
     try{ localStorage.setItem(DOCS_LS_KEY,JSON.stringify(docs)); }catch(e){}
   }
-  function pushToSheet(id){
+  function persistMeta(){
+    try{ localStorage.setItem(META_LS_KEY,JSON.stringify(meta)); }catch(e){}
+  }
+  /* 버려지거나 덮이는 글을 이 PC에 남긴다 · 콘솔에서 JSON.parse(localStorage['baroyam_manual_docs_backup_v1']) 로 본다 */
+  function backupDoc(id,html,why){
+    if(!html) return;
+    try{
+      const list=JSON.parse(localStorage.getItem(BACKUP_LS_KEY)||'[]')||[];
+      list.unshift({id,why,at:new Date().toISOString(),html});
+      localStorage.setItem(BACKUP_LS_KEY,JSON.stringify(list.slice(0,30)));
+    }catch(e){}
+  }
+  function markDirty(id){
+    meta.dirty[id]=true;
+    persistMeta();
+    if(apiReady()) DB().saveNotice(settingsKey(id),'pending');
+  }
+  function scheduleRetry(){
+    if(retryTimer) return;
+    retryTimer=setTimeout(()=>{ retryTimer=null; pushAllDirty(); },15000);
+  }
+  function pushAllDirty(){
+    Object.keys(meta.dirty).forEach(id=>{ if(!(saveTimer&&pendingId===id)) pushDoc(id); });
+  }
+  async function pushDoc(id){
     if(!apiReady()){ setSaveState('이 기기에만 저장됨',true); return; }
-    setSaveState('저장 중...');
-    window.baroyamSaveSetting(settingsKey(id),docs[id]||'').then(()=>setSaveState('저장됨'))
-      .catch(err=>{ console.error(err); setSaveState('시트 저장 실패 · 이 기기에는 저장됨',true); });
+    if(sending.has(id)){ resend.add(id); return; }
+    sending.add(id);
+    const key=settingsKey(id), sent=docs[id]||'';
+    if(id===activeDoc) setSaveState('저장 중...');
+    let r=null;
+    try{ r=await DB().saveIfVersion(key,sent,meta.ver[id]||null); }catch(err){ console.error(err); r=null; }
+    sending.delete(id);
+    if(r&&r.ok){
+      meta.ver[id]=r.version;
+      if((docs[id]||'')===sent) delete meta.dirty[id];
+      persistMeta();
+      if(!meta.dirty[id]){
+        DB().saveNotice(key,'ok');
+        if(id===activeDoc) setSaveState('저장됨');
+      }else resend.add(id);                              /* 보내는 사이에 또 고쳤다 */
+    }else if(r&&r.conflict){
+      resolveConflict(id,r);
+    }else{
+      DB().saveNotice(key,'failing');
+      if(id===activeDoc) setSaveState('서버 저장 실패 · 이 PC에 보관 중이며 잠시 뒤 다시 보냅니다',true);
+      scheduleRetry();
+    }
+    if(resend.delete(id) && meta.dirty[id] && !(saveTimer&&pendingId===id)) pushDoc(id);
+  }
+  /* 다른 PC가 이 문서를 먼저 고쳤다 · 조용히 덮지 않고 묻는다 · 어느 쪽을 골라도 다른 쪽은 백업에 남는다 */
+  function resolveConflict(id,r){
+    const key=settingsKey(id), mine=docs[id]||'';
+    meta.ver[id]=r.version;
+    if(r.value===mine){                                   /* 내용이 같으면 겹친 게 아니다 */
+      delete meta.dirty[id]; persistMeta();
+      DB().saveNotice(key,'ok');
+      if(id===activeDoc) setSaveState('저장됨');
+      return;
+    }
+    const d=findDoc(id), name=d?d.name:id;
+    const keepMine=window.confirm('"'+name+'" 문서를 다른 PC에서 먼저 고쳤습니다.\n\n'+
+      '[확인] 내가 쓴 내용으로 저장합니다. (다른 PC의 내용은 변경 이력·이 PC 백업에 남습니다)\n'+
+      '[취소] 다른 PC의 최신 내용을 불러옵니다. (내가 쓴 내용은 이 PC 백업에 남습니다)');
+    if(keepMine){
+      backupDoc(id,r.value,'다른 PC 내용 · 내 것으로 덮음');
+      persistMeta();
+      pushDoc(id);
+      return;
+    }
+    backupDoc(id,mine,'내 내용 · 다른 PC 것을 불러옴');
+    docs[id]=r.value;
+    delete meta.dirty[id];
+    persistLocal(); persistMeta();
+    DB().saveNotice(key,'ok');
+    if(id===activeDoc){
+      const ed=document.getElementById('manEditor');
+      if(ed) ed.innerHTML=r.value;
+      setSaveState('다른 PC의 최신 내용을 불러왔습니다');
+    }
   }
   function scheduleSave(id){
     pendingId=id;
+    markDirty(id);
     clearTimeout(saveTimer);
     setSaveState('입력 중...');
-    saveTimer=setTimeout(()=>{ saveTimer=null; pushToSheet(id); },900);
+    saveTimer=setTimeout(()=>{ saveTimer=null; pushDoc(id); },900);
   }
   /* 다른 문서로 옮기거나 창을 닫기 전에 대기 중인 저장을 즉시 처리한다 */
   function flushSave(){
     if(!saveTimer||!pendingId) return;
     clearTimeout(saveTimer); saveTimer=null;
-    pushToSheet(pendingId);
+    pushDoc(pendingId);
   }
   window.addEventListener('beforeunload',flushSave);
+  window.addEventListener('online',pushAllDirty);
+
+  /* 서버의 문서 본문을 버전과 함께 받아온다 · 못 올린 글(dirty)이 있는 문서는 덮지 않고 다시 보낸다
+     (보낼 때 버전을 비교하므로, 그사이 서버가 바뀌었으면 묻는 창이 뜬다) */
+  let docsRefreshing=null;
+  function refreshDocs(){
+    if(!apiReady()||!DB().loadSettingRows) return Promise.resolve();
+    if(docsRefreshing) return docsRefreshing;
+    docsRefreshing=DB().loadSettingRows('manual-').then(rows=>{
+      const byKey=new Map(rows.map(r=>[r.key,r]));
+      let changed=false;
+      MANUAL_GUIDE.forEach(g=>g.items.forEach(it=>{
+        const id=it.id, row=byKey.get(settingsKey(id));
+        if(!row||meta.dirty[id]) return;
+        /* 이 방식으로 처음 맞추는데 이 PC 사본이 서버와 다르면, 예전에 못 올린 글일 수 있어 백업해 둔다 */
+        if(meta.ver[id]===undefined && docs[id] && docs[id]!==row.value) backupDoc(id,docs[id],'첫 동기화 전 이 PC 사본');
+        meta.ver[id]=row.version;
+        if(row.value!==docs[id]){ docs[id]=row.value; changed=true; }
+      }));
+      persistMeta();
+      if(changed) persistLocal();
+      /* 지금 열려 있는 문서라면 화면도 새로 받은 내용으로 바꾼다 */
+      const ed=document.getElementById('manEditor');
+      if(ed && activeDoc && !saveTimer && !meta.dirty[activeDoc] && ed.innerHTML!==(docs[activeDoc]||'')){
+        ed.innerHTML=docs[activeDoc]||'';
+        setSaveState(docs[activeDoc]?'저장됨':'');
+      }
+      pushAllDirty();
+    }).catch(err=>console.error(err)).finally(()=>{ docsRefreshing=null; });
+    return docsRefreshing;
+  }
+  /* 창을 오래 열어 둔 PC도 남이 고친 글을 보도록 · 다시 볼 때와 1분마다 받아온다 */
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') refreshDocs(); });
+  setInterval(()=>{ if(document.visibilityState==='visible') refreshDocs(); },60000);
 
   /* ---------- 목차(중분류/항목) 구조 저장 ----------
-     내용(docs)과는 별개로, 중분류·항목 목록 자체(이름/순서/존재 여부)도 하나의 설정값(key='manualGuide')으로
-     통째로 저장한다 · 추가/삭제할 때마다 바로 시트에 반영해 다른 기기에도 곧 나타나게 한다 */
+     내용(docs)과는 별개로, 중분류·항목 목록 자체(이름/순서/존재 여부)를 설정값 key='manualGuide' 에 담는다 ·
+     통째로 덮으면 창을 오래 열어 둔 PC가 남이 넣은 항목을 지우므로, 다른 공용 데이터와 같이
+     서버 최신본 위에 이 PC가 바꾼 것만 얹어 저장한다(blobSync) · 서버 모양은 {groups:[...], updatedAt} ·
+     예전 버전이 쓴 배열 모양도 그대로 읽는다 */
+  const GUIDE_BASE_KEY=GUIDE_LS_KEY+'#base';
+  let guideStamp;
+  try{ const b=JSON.parse(localStorage.getItem(GUIDE_BASE_KEY)||'null'); if(b) guideStamp=b.updatedAt; }catch(e){}
+  const normGuide=v=>Array.isArray(v)?{groups:v}:(v&&Array.isArray(v.groups)?v:null);
   function persistGuideLocal(){
     try{ localStorage.setItem(GUIDE_LS_KEY,JSON.stringify(MANUAL_GUIDE)); }catch(e){}
   }
-  function pushGuideToSheet(){
-    if(!apiReady()) return;
-    window.baroyamSaveSetting('manualGuide',JSON.stringify(MANUAL_GUIDE)).catch(err=>console.error(err));
-  }
+  const guideSync=(window.BAROYAM_DB&&window.BAROYAM_DB.blobSync)?window.BAROYAM_DB.blobSync({
+    key:()=>'manualGuide', baseKey:()=>GUIDE_BASE_KEY, norm:normGuide,
+    get:()=>({groups:MANUAL_GUIDE,updatedAt:guideStamp}),
+    set:v=>{
+      MANUAL_GUIDE=v.groups; guideStamp=v.updatedAt;
+      if(renameLegacyItems()) saveGuideChange(); else persistGuideLocal();
+      if(activeDoc && !findDoc(activeDoc)) activeDoc=null;   /* 다른 기기에서 지운 문서를 보고 있었다면 */
+      /* 설정창에서 이름을 치고 있는 중이면 목록은 그대로 둔다 (탭을 다시 열 때 최신으로 그려진다) */
+      const typing=mgList && mgList.contains(document.activeElement);
+      refreshAfterGuideChange(typing);
+      refreshDocs();                                          /* 새로 생긴 항목의 본문도 받아온다 */
+    }
+  }):{push(){},receive(){},refresh(){}};
   function saveGuideChange(){
     persistGuideLocal();
-    pushGuideToSheet();
+    if(apiReady()) guideSync.push();
   }
   /* 목차 편집은 설정창의 '메뉴얼가이드설정' 탭에서만 한다 · 사이드탭은 보기 전용 */
   /* 목차가 바뀐 뒤 사이드탭·전체 목차·열린 문서 제목·설정창 목록을 한꺼번에 다시 그린다 ·
@@ -9862,7 +10109,7 @@ window.CsGuide=(function(){
     if(idx===-1) return;
     const g=MANUAL_GUIDE[idx];
     if(groupHasFixed(g)) return;
-    if(!window.confirm('"'+g.name+'" 중분류와 안의 항목 '+g.items.length+'개를 모두 삭제할까요?\n(작성해둔 문서 내용은 시트에 남지만 목차에서는 사라집니다)')) return;
+    if(!window.confirm('"'+g.name+'" 중분류와 안의 항목 '+g.items.length+'개를 모두 삭제할까요?\n(작성해둔 문서 내용은 서버에 남지만 목차에서는 사라집니다)')) return;
     const hadActive=g.items.some(it=>it.id===activeDoc);
     MANUAL_GUIDE.splice(idx,1);
     openGroups.delete(groupId);
@@ -10015,6 +10262,7 @@ window.CsGuide=(function(){
       if(editMode){
         ensureNotEmpty(ed);   /* 분할·구분선으로 끝나는 문서도 아래로 이어 쓸 수 있게 */
         ed.focus();
+        refreshDocs();        /* 고치기 전에 다른 PC가 고친 최신본으로 맞춘다 · 옛 내용 위에 쓰다 겹치지 않게 */
       }
     }
     if(editBtn){
@@ -10124,35 +10372,10 @@ window.CsGuide=(function(){
       if(!settings) return;
       /* 목차 구조(중분류/항목 목록)를 내용보다 먼저 반영해야, 아래 내용 동기화가 최신 항목 id 기준으로 돈다 */
       orgApplyRemote(settings);
-      let structChanged=false;
-      if(typeof settings.manualGuide==='string' && settings.manualGuide){
-        try{
-          const parsed=JSON.parse(settings.manualGuide);
-          if(Array.isArray(parsed) && JSON.stringify(parsed)!==JSON.stringify(MANUAL_GUIDE)){
-            MANUAL_GUIDE=parsed;
-            if(renameLegacyItems()) saveGuideChange(); else persistGuideLocal();
-            structChanged=true;
-          }
-        }catch(err){ console.error(err); }
-      }
-      let changed=false;
-      MANUAL_GUIDE.forEach(g=>g.items.forEach(it=>{
-        const id=it.id, v=settings[settingsKey(id)];
-        if(typeof v==='string' && v!==docs[id]){ docs[id]=v; changed=true; }
-      }));
-      if(changed) persistLocal();
-      if(structChanged){
-        if(activeDoc && !findDoc(activeDoc)) activeDoc=null;   /* 다른 기기에서 지운 문서를 보고 있었다면 */
-        /* 설정창에서 이름을 치고 있는 중이면 목록은 그대로 둔다 (탭을 다시 열 때 최신으로 그려진다) */
-        const typing=mgList && mgList.contains(document.activeElement);
-        refreshAfterGuideChange(typing);
-      }
-      /* 지금 열려 있는 문서라면 화면도 새로 받은 내용으로 바꾼다 */
-      const ed=document.getElementById('manEditor');
-      if(ed && activeDoc && !saveTimer && ed.innerHTML!==(docs[activeDoc]||'')){
-        ed.innerHTML=docs[activeDoc]||'';
-        setSaveState(docs[activeDoc]?'저장됨':'');
-      }
+      /* 받은 목차는 blobSync 가 이 PC의 못 올린 고침과 합쳐 들인다(바뀌었으면 set 에서 화면·본문까지 갱신) */
+      if(settings.manualGuide) guideSync.receive(settings.manualGuide,false);
+      /* 본문은 버전(updated_at)이 필요해 따로 받아온다 · 못 올린 글도 여기서 다시 보낸다 */
+      refreshDocs();
     }
   };
 
@@ -11759,8 +11982,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(!p.created) p.created=kstToday();
       return p;
     });
+    /* deleted · 삭제 단추로 지운 프로젝트의 기록 · 서버는 여기 없는 프로젝트가 목록에서 빠지면 되살린다 */
     return {company:typeof s.company==='string'?s.company:'',projects,
-      csLinks:Array.isArray(s.csLinks)?s.csLinks:[],updatedAt:s.updatedAt||0};
+      csLinks:Array.isArray(s.csLinks)?s.csLinks:[],deleted:Array.isArray(s.deleted)?s.deleted:[],updatedAt:s.updatedAt||0};
   }
   function normMine(s){
     s=s||{};
@@ -11797,11 +12021,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   let sharedPart=loadShared(), myPart=loadMine(), chPart=normCh(readJson(LS_CH));
   /* 화면 코드는 그대로 state.links / state.projects를 고친다 · 저장할 때 두 몫으로 갈라 담는다 */
   function merge(){ return {company:sharedPart.company,links:myPart.links,notes:myPart.notes,
-    projects:sharedPart.projects,csLinks:sharedPart.csLinks}; }
+    projects:sharedPart.projects,csLinks:sharedPart.csLinks,deleted:sharedPart.deleted}; }
   let state=merge();
   /* state는 두 몫의 배열을 "같은 것"으로 들고 있어서, 링크를 고치면 myPart.links도 같이 바뀐다 ·
      그래서 무엇이 바뀌었는지는 마지막으로 저장한 내용을 문자열로 따로 떠 두고 비교한다 */
-  function stampShared(){ return JSON.stringify([state.company,state.projects,state.csLinks]); }
+  function stampShared(){ return JSON.stringify([state.company,state.projects,state.csLinks,state.deleted]); }
   function stampMine(){ return JSON.stringify([state.links,state.notes]); }
   function stampCh(){ return JSON.stringify(chPart.data); }
   let lastShared=stampShared(), lastMine=stampMine(), lastCh=stampCh();
@@ -11824,6 +12048,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const old=before.get(p.id);
       if(old&&old.owner!==mine) guarded.push(old);
       else if(mine) guarded.push(Object.assign(p,{owner:mine}));
+      else if(old) guarded.push(old);          /* 회원을 안 골랐어도 있던 프로젝트는 빼지 않는다 */
     });
     /* 다른 사람 프로젝트를 배열에서 지우는 우회도 저장되지 않게 원래 자리에 되살린다 */
     const present=new Set(guarded.map(p=>p.id));
@@ -11832,6 +12057,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       guarded.splice(Math.min(i,guarded.length),0,p);
       present.add(p.id);
     });
+    /* 되살린 프로젝트에 붙은 삭제 기록도 떼어 낸다 · 서버가 그 기록을 보고 지우지 않게 */
+    state.deleted=(state.deleted||[]).filter(d=>!present.has(d.id));
     state.projects=guarded;
   }
   /* 완료·종료로 넘어간 날을 doneAt(한국시간 'YYYY-MM-DD')에 적는다 · 마이홈 '이번달 종료' 카드가 이 날짜를 본다 ·
@@ -11903,7 +12130,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const now=Date.now();
     const nowShared=stampShared();
     if(nowShared!==lastShared){
-      sharedPart={company:state.company,projects:state.projects,csLinks:state.csLinks,updatedAt:now};
+      sharedPart={company:state.company,projects:state.projects,csLinks:state.csLinks,deleted:state.deleted,updatedAt:now};
       lastShared=nowShared;
       writeJson(LS_SHARED,sharedPart); syncShared.push();
     }
@@ -13143,6 +13370,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
             if(!ok) return;
             pickCard(null);
             state.projects=state.projects.filter(x=>x.id!==id);
+            /* 삭제 단추로 지웠다는 기록 · 이것이 없으면 서버가 "사고로 빠진 것"으로 보고 되살린다 */
+            state.deleted=(state.deleted||[]).filter(x=>x.id!==id)
+              .concat({id:id,name:t.name||'',by:myName(),at:new Date().toISOString()});
             save();
           });
         }else{ pickCard(id); openProjectDialog(t); }
