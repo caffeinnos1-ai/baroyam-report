@@ -8718,7 +8718,7 @@ window.CsGuide=(function(){
   const WD=['일','월','화','수','목','금','토'];
   /* days · 도는 요일(0=일) · times 가 없으면 늘 켜져 있는 것 · record 는 automation_runs 의 workflow 이름(crontab.txt 와 같게) */
   const AUTOMATIONS=[
-    {name:'당일판매분요약표', where:'#재고알림', days:[1,2,3,4,5], times:['16:15'], record:'당일판매분요약표 (Slack)',
+    {name:'당일판매분요약표', where:'#재고알림', days:[0,1,2,3,4,5,6], times:['16:15'], record:'당일판매분요약표 (Slack)',
      desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올려요.', task:'cron'},
     {name:'밥시간 알림', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['10:50'],
      record:'밥시간 알림',
