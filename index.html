@@ -13752,7 +13752,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const el=board.querySelector('.pj-card[data-id="'+pickedCard+'"]');
     if(el) el.classList.add('is-picked'); else pickedCard=null;
   }
-  const pf={status:new Set(),owner:new Set(),channel:new Set(),from:'',to:'',q:''};
+  /* 처음 열 때는 마감일이 이번 달(1일~말일)인 프로젝트만 보인다 · 필터 초기화를 누르면 전체 */
+  const pf=(function(){
+    const ym=kstToday().slice(0,7), [y,m]=ym.split('-').map(Number);
+    const last=String(new Date(Date.UTC(y,m,0)).getUTCDate()).padStart(2,'0');
+    return {status:new Set(),owner:new Set(),channel:new Set(),from:ym+'-01',to:ym+'-'+last,q:''};
+  })();
   const STATUS_TAG={'예정':['rgba(124,111,224,.14)','#6b5fe0'],'진행중':['rgba(59,130,246,.12)','#2f6fd6'],
     '보류':['rgba(240,138,36,.14)','#d9731a'],'완료':['rgba(34,160,90,.13)','#1d8a4d'],'종료':['rgba(107,114,128,.14)','#4b5563']};
   const tag=(t,bg,fg)=>`<span class="pj-tag" style="--tag-bg:${bg};--tag-fg:${fg}">${esc(t)}</span>`;
