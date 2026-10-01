@@ -2228,6 +2228,15 @@ window.BAROYAM_ACCESS=(function(){
   .pj-mcal-day:hover{border-color:color-mix(in srgb,var(--btn) 35%,var(--line))}
   .pj-mcal-day.is-out{background:transparent;box-shadow:none}
   .pj-mcal-day.is-today{border-color:var(--btn)}
+  .pj-mcal-day{position:relative}
+  .pj-mcal-add{all:unset;box-sizing:border-box;position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:8px;
+    display:grid;place-items:center;font-size:16px;font-weight:700;line-height:1;color:var(--mute);cursor:pointer;
+    opacity:0;transition:opacity .12s,background .12s,color .12s}
+  .pj-mcal-day:hover .pj-mcal-add,.pj-mcal-add:focus-visible{opacity:1}
+  .pj-mcal-add:hover{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .pj-mcal-add:focus-visible{box-shadow:var(--ui-ring)}
+  @media(hover:none){ .pj-mcal-add{opacity:.6} }
+  body.pj-mcal-dragging .pj-mcal-add{display:none}
   .pj-mcal-day.is-out .pj-mcal-num{opacity:.45}
   .pj-mcal-num{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;margin:5px 6px 0;padding:0 5px;
     border-radius:99px;font-size:12.5px;font-weight:700;color:var(--body)}
@@ -2266,6 +2275,8 @@ window.BAROYAM_ACCESS=(function(){
   /* 프로젝트 수정창 · 상태와 우선순위를 펼침목록 대신 색 칩으로 고르고, 마감일 옆에 D-day를 띄운다 ·
      링크 추가 같은 다른 대화상자는 예전 모습 그대로 쓰고 이 화면만 넓게 연다 */
   .settings-panel.mh-dialog.is-project{max-width:720px}
+  /* 프로젝트 창 맨 아래 · 저장은 저절로 되니 단추는 삭제 하나뿐이다 */
+  .pjf-foot{display:flex;justify-content:flex-end;margin-top:12px}
   /* 겉틀 · 위쪽에 강조색이 아주 옅게 깔리고 아래로 사라진다 · 테두리도 한 줄 둘러 떠 보이게 */
   .mh-dialog.is-project{border:1px solid color-mix(in srgb,var(--mh-accent) 22%,var(--line));
     border-radius:22px;overflow:visible;
@@ -3164,21 +3175,8 @@ window.BAROYAM_ACCESS=(function(){
   .tb-res-empty{padding:16px 12px;text-align:center;font-size:12.5px;font-weight:600;color:var(--mute)}
   @media(max-width:620px){.tb-search{width:190px}}
 
-  /* 메모 플로팅 버튼 (우하단 고정) */
-  /* 오른쪽 아래 떠 있는 동그란 버튼 두 개 · 아래가 로고(상담 콘솔), 그 위가 연필(프로젝트 추가) */
-  .memo-fab{all:unset;box-sizing:border-box;position:fixed;right:24px;bottom:114px;width:56px;height:56px;
-    border-radius:50%;background:var(--indigo);color:#fff;display:grid;place-items:center;cursor:pointer;z-index:70;
-    box-shadow:0 12px 26px -8px rgba(var(--indigo-rgb),.6);transition:transform .18s,box-shadow .18s,background .18s}
-  .memo-fab:hover{background:var(--indigo-lite);transform:translateY(-2px);box-shadow:0 18px 32px -10px rgba(var(--indigo-rgb),.7)}
-  .memo-fab:active{transform:translateY(0)}
-  .memo-fab:focus-visible{outline:2px solid var(--indigo);outline-offset:3px}
-  .memo-fab svg{width:24px;height:24px}
-  /* 라이트 모드 · 아래 상담 콘솔 버튼은 주황 로고 그림이 덮고 있어서, 그 로고 주황(#e94f0e)에 맞춘다 ·
-     다크 모드는 상담 콘솔 버튼도 --indigo 바탕이라 위 기본값 그대로 둔다 */
-  html:not([data-theme="dark"]) .memo-fab{background:#e94f0e;box-shadow:0 12px 26px -8px rgba(233,79,14,.55)}
-  html:not([data-theme="dark"]) .memo-fab:hover{background:#f0642a;box-shadow:0 18px 32px -10px rgba(233,79,14,.65)}
-  html:not([data-theme="dark"]) .memo-fab:focus-visible{outline-color:#e94f0e}
-
+  /* 오른쪽 아래 떠 있는 로고 버튼(상담 콘솔) · 위에 있던 연필(프로젝트 추가) 버튼은 2026-10-01 뺐다
+     (프로젝트는 보드 칸의 + 나 캘린더 날짜 칸의 + 로 더한다) */
   /* 바로얌 로고 버튼 · 노트보다 한 치수 크고 색은 같은 계열 */
   .logo-fab{all:unset;box-sizing:border-box;position:fixed;right:24px;bottom:24px;width:76px;height:76px;
     border-radius:50%;background:var(--indigo);color:#fff;display:block;cursor:pointer;z-index:70;
@@ -3200,10 +3198,9 @@ window.BAROYAM_ACCESS=(function(){
   .logo-fab .logo-fab-white{display:none}
   html[data-theme="dark"] .logo-fab #logoFabImg{display:none}
   html[data-theme="dark"] .logo-fab .logo-fab-white{display:block}
-  /* 노트북처럼 작은 화면에서는 오른쪽 아래 떠 있는 버튼 두 개가 본문 버튼을 가리지 않게 작게 */
+  /* 노트북처럼 작은 화면에서는 오른쪽 아래 떠 있는 버튼이 본문 버튼을 가리지 않게 작게 */
   @media (max-width:1280px),(max-height:720px){
     .logo-fab{right:18px;bottom:18px;width:58px;height:58px}
-    .memo-fab{right:22px;bottom:88px;width:48px;height:48px}
   }
   @media (prefers-reduced-motion:reduce){
     .logo-fab::after{animation:none}
@@ -7232,13 +7229,6 @@ window.BAROYAM_ACCESS=(function(){
     </div><!-- /main -->
 
   </div><!-- /app -->
-
-  <button type="button" class="memo-fab" id="memoFab" aria-label="프로젝트 추가" title="프로젝트 추가">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 20h9"/>
-      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-    </svg>
-  </button>
 
   <button type="button" class="logo-fab" id="logoFab" aria-label="바로얌 홈" title="바로얌 홈">
     <img id="logoFabImg" alt="" aria-hidden="true">
@@ -11495,14 +11485,6 @@ window.CsGuide=(function(){
   });
 })();
 
-/* 오른쪽 아래 연필 버튼 → 프로젝트 추가 창 · 예전엔 회의안건 미니창을 열었다 (미니창은 없앴다) */
-(function(){
-  const fab=document.getElementById('memoFab');
-  if(!fab) return;
-  fab.setAttribute('aria-haspopup','dialog');
-  fab.addEventListener('click',()=>{ if(window.openProjectAdd) window.openProjectAdd(); });
-})();
-
 /* 리뷰수집 채널 고르기 · 사이드바 아이콘을 누르면 메뉴얼가이드처럼 사이드탭이 열리고,
    거기서 전체리뷰통계와 판매처를 고른다 · 대시보드 안에는 판매처 버튼을 두지 않는다 */
 (function(){
@@ -13583,16 +13565,31 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     setTimeout(()=>{ if(document.contains(t)&&document.activeElement!==t) pjMemoShowView(t); },0);
   });
 
+  /* 프로젝트 지우기 · 묻고 나서 지운다 · 지웠으면 true 로 풀린다 ·
+     삭제 단추로 지웠다는 기록(state.deleted)을 꼭 남긴다 · 이것이 없으면 서버가 "사고로 빠진 것"으로 보고 되살린다 */
+  function pjDeleteProject(t){
+    if(!t||!canManageProject(t)) return Promise.resolve(false);
+    return window.baroyamAsk(`'${t.name}' 프로젝트를 지울까요?`,
+      '프로젝트와 적어 둔 내용이 함께 사라지고 되돌릴 수 없어요.').then(ok=>{
+      if(!ok) return false;
+      if(typeof pickCard==='function') pickCard(null);
+      state.projects=state.projects.filter(x=>x.id!==t.id);
+      state.deleted=(state.deleted||[]).filter(x=>x.id!==t.id)
+        .concat({id:t.id,name:t.name||'',by:myName(),at:new Date().toISOString()});
+      save();
+      return true;
+    });
+  }
   function openProjectDialog(p,preset){
     /* 저장 단추가 없으니 새 프로젝트도 여는 순간 자리를 만들어 둔다 ·
-       그래야 창을 닫아도 고친 값이 그대로 남는다 (지우기는 카드의 작은 단추가 맡는다) */
+       그래야 창을 닫아도 고친 값이 그대로 남는다 (지우기는 창 아래 삭제 단추나 카드의 작은 단추가 맡는다) */
     const isNew=!p;
     /* 일반 회원은 본인 담당 프로젝트만 열 수 있다 · 보드는 이미 그렇게 걸러지지만,
        다른 화면이나 콘솔에서 이 함수를 직접 부르는 우회도 여기서 한 번 더 막는다 */
     if(!canManageProject(p||null)) return;
     if(isNew){
       p=Object.assign({id:uid(),created:kstToday(),name:'새 프로젝트',status:'진행중',progress:0},preset||{});
-      p.owner=projectOwner(p.owner);
+      p.owner=projectOwner(p.owner||myName());
       state.projects.push(p);
       save();
     }
@@ -13652,8 +13649,16 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
          <span class="pjf-prog-l">진행도</span>
          <input type="range" name="progress" min="0" max="100" step="5" value="${prog}" aria-label="진행률">
          <output>${prog}%</output>
+       </div>
+       <div class="pjf-foot">
+         <button type="button" class="ui-btn danger sm" data-act="delete">삭제</button>
        </div>`,
       ()=>{},{project:true,icon:ICON_PENCIL});
+    /* 삭제 · 지우는 프로젝트에 남은 입력을 다시 저장하지 않게 수정 중 표시를 먼저 푼다 */
+    form.__onDelete=()=>pjDeleteProject(cur).then(ok=>{
+      if(ok){ clearTimeout(projSaveTimer); projSaveTimer=0; editingProject=null; }
+      return ok;
+    });
     /* 새로 만든 것은 제목을 통째로 잡아 둬서 바로 덮어쓸 수 있게 한다 */
     const nameEl=form.querySelector('.pjf-name');
     if(nameEl&&isNew) nameEl.select();
@@ -13914,6 +13919,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       .sort((a,b)=>a.sp.s.localeCompare(b.sp.s)||b.sp.e.localeCompare(a.sp.e)||String(a.p.name||'').localeCompare(String(b.p.name||'')));
     const inMonth=items.filter(x=>x.sp.s<=monthEnd&&x.sp.e>=monthStart).length;
     const colorOf=st=>(STATUSES.find(x=>x.k===st)||STATUSES[1]).c;
+    const canAdd=canManageProject(null);                   /* 날짜 칸 + 는 프로젝트를 더할 수 있는 사람에게만 */
     let body='';
     for(let w=0;w<weeks;w++){
       const ws=dayAdd(gridStart,w*7), we=dayAdd(ws,6);
@@ -13937,7 +13943,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       for(let i=0;i<7;i++){
         const d=dayAdd(ws,i);
         cells+=`<div class="pj-mcal-day${d.slice(0,7)!==calMonth?' is-out':''}${d===today?' is-today':''}" data-date="${d}" style="grid-column:${i+1}">
-          <span class="pj-mcal-num num">${+d.slice(8)}</span></div>`;
+          <span class="pj-mcal-num num">${+d.slice(8)}</span>${canAdd?`<button type="button" class="pj-mcal-add" data-add-date="${d}" aria-label="${fmtKDate(d)} 프로젝트 추가" title="이 날 프로젝트 추가">+</button>`:''}</div>`;
       }
       body+=`<div class="pj-mcal-week" style="grid-template-rows:32px repeat(${lanes.length},22px) minmax(8px,1fr)">${cells}${bars}</div>`;
     }
@@ -13984,17 +13990,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
           return;
         }
         if(tool.dataset.act==='del'){
-          if(!canManageProject(t)) return;
-          window.baroyamAsk(`'${t.name}' 프로젝트를 지울까요?`,
-            '프로젝트와 적어 둔 내용이 함께 사라지고 되돌릴 수 없어요.').then(ok=>{
-            if(!ok) return;
-            pickCard(null);
-            state.projects=state.projects.filter(x=>x.id!==id);
-            /* 삭제 단추로 지웠다는 기록 · 이것이 없으면 서버가 "사고로 빠진 것"으로 보고 되살린다 */
-            state.deleted=(state.deleted||[]).filter(x=>x.id!==id)
-              .concat({id:id,name:t.name||'',by:myName(),at:new Date().toISOString()});
-            save();
-          });
+          pjDeleteProject(t);
         }else{ pickCard(id); openProjectDialog(t); }
         return;
       }
@@ -14120,6 +14116,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         if(k==='today') calMonth=kstToday().slice(0,7);
         else{ const [y,m]=calMonth.split('-').map(Number); calMonth=new Date(Date.UTC(y,m-1+(k==='next'?1:-1),1)).toISOString().slice(0,7); }
         renderCal();
+        return;
+      }
+      /* 날짜 칸 + · 그날 하루를 진행 날짜로 잡은 새 프로젝트 · 앞으로의 날이면 예정, 아니면 진행중 */
+      const addDay=e.target.closest('[data-add-date]');
+      if(addDay){
+        const d=addDay.dataset.addDate;
+        openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,workFrom:d,workTo:d});
         return;
       }
       const bar=e.target.closest('.pj-mcal-bar');
