@@ -753,6 +753,25 @@ window.BAROYAM_DB=(function(){
     }
     return (await agendaFetch()).records;
   }
+  /* 자동 저장 · 고친 기록만 올리고 목록은 다시 받지 않는다(그림이 섞여 목록이 1MB가 넘는다) */
+  async function agendaSave(records){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const now=new Date().toISOString();
+    const rows=(records||[]).filter(function(r){ return r&&r.id; }).map(function(r){ return agendaIn(r,now); });
+    if(!rows.length) return;
+    const c=await client();
+    const r=await c.from('agenda_items').upsert(rows);
+    if(r.error) throw r.error;
+  }
+  /* ✕ 삭제 · 행은 지우지 않고 trashed 로 숨긴다(프로젝트의 deleted_at 과 같은 방식) ·
+     화면에는 휴지통이 없어 다시 보이지 않지만, 서버에는 남아 실수로 지운 것도 되살릴 수 있다 */
+  async function agendaHide(id){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const now=new Date().toISOString();
+    const r=await c.from('agenda_items').update({trashed:true,trashed_at:now,updated_at:now}).eq('id',String(id));
+    if(r.error) throw r.error;
+  }
   /* 휴지통으로 보내기 / 되돌리기 */
   async function agendaSetTrashed(id,trashed){
     if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
@@ -896,6 +915,7 @@ window.BAROYAM_DB=(function(){
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
     trendGoogle:trendGoogle,trendNaver:trendNaver,automationRuns:automationRuns,
     agendaList:agendaList,agendaUpsert:agendaUpsert,agendaSetTrashed:agendaSetTrashed,
+    agendaSave:agendaSave,agendaHide:agendaHide,
     agendaPurge:agendaPurge,guideList:guideList,guideSave:guideSave,guideDelete:guideDelete,
     migrateAgendaAndGuide:migrateAgendaAndGuide,
     listNotes:listNotes,syncNotes:syncNotes,
@@ -1144,6 +1164,7 @@ window.BAROYAM_ACCESS=(function(){
     {k:'trend',     name:'트렌드분석',   sel:'.sidebar .sb-item[data-view="trend"]',   views:['trend']},
     {k:'review',    name:'리뷰수집',     sel:'.sidebar .sb-item[data-view="review"]',  views:['review','collector']},
     {k:'drive',     name:'드라이브',     sel:'.sidebar .sb-item[data-view="drive"]',   views:['drive']},
+    {k:'brand',     name:'브랜드전략실', sel:'.sidebar .sb-item[data-view="brand"]',   views:['brand']},
     {k:'manual',    name:'메뉴얼가이드', sel:'.sidebar .sb-item[data-view="manual"]',  views:['manual']},
     {k:'automation',name:'자동화',       sel:'#sbAutomationLink',                      views:[]},
     {k:'account',   name:'계정관리',     sel:'.sidebar .sb-item[data-view="account"]', views:['account']},
@@ -2750,6 +2771,8 @@ window.BAROYAM_ACCESS=(function(){
   .ag-trash-btn:hover{background:rgba(194,106,65,.08);color:var(--indigo)}
   .ag-trash-count{position:absolute;top:1px;right:1px;min-width:15px;height:15px;padding:0 3px;border-radius:999px;
     background:var(--indigo);color:#fff;font-size:9.5px;font-weight:800;display:grid;place-items:center;line-height:1}
+  .ag-autosave{font-size:12px;font-weight:700;color:var(--mute);margin-right:4px;white-space:nowrap}
+  .ag-autosave.is-warn{color:#c0392b}
   .ag-trash-list{display:flex;flex-direction:column}
   .ag-trash-item{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
   .ag-trash-item:last-child{border-bottom:none}
@@ -2764,12 +2787,14 @@ window.BAROYAM_ACCESS=(function(){
   .ag-trash-purge{color:var(--mute)}
   .ag-trash-purge:hover{color:#c0392b;background:rgba(192,57,43,.08)}
   .ag-trash-empty{text-align:center;color:var(--mute);font-size:13px;font-weight:600;padding:40px 10px;line-height:1.6;white-space:pre-line}
-  .ag-note-big{height:920px;overflow-y:auto;border:1px solid var(--line);border-top:none;border-radius:0 0 18px 18px;padding:36px 56px;
+  .ag-note-big{height:920px;overflow-y:auto;border:1px solid var(--line);border-radius:18px;padding:36px 56px;
     font-size:16px;line-height:2;color:var(--ink);outline:none;cursor:text}
   .ag-note-big:hover{background:rgba(194,106,65,.03)}
   .ag-note-big:focus{box-shadow:0 0 0 2px var(--indigo);background:#fff}
   .ag-note-big img{max-width:100%;height:auto;border-radius:8px;cursor:pointer;vertical-align:middle}
   .ag-note-big img:hover{outline:2px solid var(--indigo);outline-offset:2px}
+  /* 메뉴얼 편집기(.man-editor) 글꼴·제목·목록 모양을 그대로 쓰되, 상자 크기와 여백은 회의 메모 것을 지킨다 */
+  .ag-note-big.man-editor{margin-top:0;min-height:0;padding-bottom:36px}
 
   /* 회의 메모 서식 툴바 */
   .ag-note-toolbar{display:flex;align-items:center;gap:3px;flex-wrap:wrap;padding:7px;border:1px solid var(--line);
@@ -4848,6 +4873,11 @@ window.BAROYAM_ACCESS=(function(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8 21 19.4H3Z"/><path d="M12 3.8v9.1M12 12.9 3.9 19.1M12 12.9l8.1 6.2"/></svg>
           <span>드라이브</span>
         </button>
+        <!-- 브랜드전략실 · 자리만 만들어 두었다(내용은 아직 비어 있다) -->
+        <button class="sb-item" type="button" data-view="brand" id="sbBrandBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6l2.5 5.1 5.6.8-4.05 3.95.96 5.6L12 16.4l-5.01 2.65.96-5.6L3.9 9.5l5.6-.8Z"/></svg>
+          <span>브랜드전략실</span>
+        </button>
         <button class="sb-item" type="button" data-view="manual" id="sbManualBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
           <span>메뉴얼가이드</span>
@@ -6911,6 +6941,15 @@ window.BAROYAM_ACCESS=(function(){
           </div>
         </section>
       </div><!-- /view-content -->
+      <!-- 브랜드전략실 · 자리만 있다(내용은 아직 비어 있다) -->
+      <div id="view-brand" style="display:none">
+        <section>
+          <div class="plan-hero">
+            <div class="ptag">BRAND STRATEGY</div>
+            <div class="ptitle">브랜드전략실</div>
+          </div>
+        </section>
+      </div><!-- /view-brand -->
 
       <!-- 계정관리 · 쇼핑몰 라인 / 운영관리 / 카페이노스매장 구역 상자마다 계정을 모아 둔다 ·
            목록은 Supabase 의 app_settings/accounts_v1 에 있고, 비밀번호는 담지 않는다(보관 위치만 적는다) -->
@@ -7075,11 +7114,11 @@ window.BAROYAM_ACCESS=(function(){
             </div>
           </div>
           <div class="ag-toolbar">
-            <div class="wp-note" id="agNote" style="margin:0">이 브라우저에 자동 저장됩니다 (다른 사람과 실시간 공유되지 않아요)</div>
+            <div class="wp-note" id="agNote" style="margin:0">쓰는 대로 자동 저장됩니다 · 회의 기록에서 ✕를 눌러야만 지워져요</div>
             <div class="ag-actions">
+              <span class="ag-autosave" id="agAutoState" aria-live="polite"></span>
               <button type="button" class="ag-btn ag-btn-accent" id="agNewBtn">+ 신규</button>
               <button type="button" class="ag-btn" id="agShareBtn">다운로드</button>
-              <button type="button" class="ag-btn primary" id="agSaveBtn">저장</button>
             </div>
           </div>
           <div id="agendaWrap">
@@ -7107,42 +7146,7 @@ window.BAROYAM_ACCESS=(function(){
                 </div>
               </div>
             </div>
-            <div class="ag-note-toolbar" id="agNoteToolbar">
-              <button type="button" class="ag-nt-btn" data-cmd="bold" title="굵게"><b>B</b></button>
-              <button type="button" class="ag-nt-btn" data-cmd="italic" title="기울임"><i>I</i></button>
-              <button type="button" class="ag-nt-btn" data-cmd="underline" title="밑줄"><u>U</u></button>
-              <span class="ag-nt-sep"></span>
-              <button type="button" class="ag-nt-btn" id="agNtSizeDown" title="글자 작게">A−</button>
-              <div class="ag-nt-size-wrap">
-                <button type="button" class="ag-nt-size-btn" id="agNtSizeBtn" title="글자 크기 선택">
-                  <span id="agNtSizeLabel">16</span>
-                </button>
-                <div class="ag-nt-palette ag-nt-size-drop" id="agNtSizeDrop" hidden></div>
-              </div>
-              <button type="button" class="ag-nt-btn" id="agNtSizeUp" title="글자 크게">A+</button>
-              <span class="ag-nt-sep"></span>
-              <div class="ag-nt-color-wrap">
-                <button type="button" class="ag-nt-btn ag-nt-color-btn" id="agNtTextColorBtn" title="글자 색">
-                  A<span class="ag-nt-color-chip" id="agNtTextColorChip"></span>
-                </button>
-                <div class="ag-nt-palette" id="agNtTextColorPalette" hidden></div>
-              </div>
-              <div class="ag-nt-color-wrap">
-                <button type="button" class="ag-nt-btn ag-nt-color-btn" id="agNtBgColorBtn" title="형광펜">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l6-6 4 4-6 6-4-4Z"/><path d="M8.5 12.5 4 17v3h3l4.5-4.5"/></svg>
-                  <span class="ag-nt-color-chip" id="agNtBgColorChip"></span>
-                </button>
-                <div class="ag-nt-palette" id="agNtBgColorPalette" hidden></div>
-              </div>
-              <span class="ag-nt-sep"></span>
-              <button type="button" class="ag-nt-btn" id="agNtClearBtn" title="서식 지우기">✕</button>
-            </div>
             <div class="ag-note-big" id="agNoteBig" contenteditable="true" spellcheck="false">여기에 자유롭게 적으세요</div>
-            <div class="panel" style="margin-top:22px">
-              <h3>전달 및 건의사항</h3>
-              <div class="unit">공유할 내용이나 다음 회의 전까지 처리할 요청사항을 적어두세요</div>
-              <div class="ag-notes" id="agNotes" contenteditable="true" spellcheck="false" style="margin-top:10px">내용을 입력하세요</div>
-            </div>
           </div>
           </div><!-- /ag-layout-main -->
 
@@ -7150,10 +7154,6 @@ window.BAROYAM_ACCESS=(function(){
           <div class="panel ag-history-panel">
             <div class="ag-hist-head">
               <h3>회의 기록<span class="ag-hist-loading" id="agHistLoading" hidden><svg id="agHistLoadingSpinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-6.36 2.64"/></svg><svg id="agHistLoadingCheck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" hidden><path d="M5 13l4 4L19 7"/></svg><span id="agHistLoadingText">수집중입니다</span></span></h3>
-              <button type="button" class="ag-trash-btn" id="agTrashBtn" title="휴지통">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.8c0-.44.36-.8.8-.8h4.4c.44 0 .8.36.8.8V7"/><path d="M6 7l1 12.2c.05.98.86 1.8 1.85 1.8h6.3c.99 0 1.8-.82 1.85-1.8L18 7"/><path d="M10 11v6M14 11v6"/></svg>
-                <span class="ag-trash-count" id="agTrashCount" hidden>0</span>
-              </button>
             </div>
             <div class="ag-hist-toolbar">
               <div class="ag-hist-search">
@@ -7200,27 +7200,13 @@ window.BAROYAM_ACCESS=(function(){
                 </div>
               </div>
             </div>
-            <div class="unit" id="agHistoryUnit">저장한 회의가 최신순으로 쌓입니다 · 목록을 클릭하면 다시 불러와요</div>
+            <div class="unit" id="agHistoryUnit">쓰는 회의가 자동 저장돼 최신순으로 쌓입니다 · 목록을 클릭하면 다시 불러와요</div>
             <div class="ag-history" id="agHistory">
-              <div class="ag-history-empty" id="agHistoryEmpty">아직 저장된 회의가 없습니다. 아래에서 작성 후 저장을 눌러보세요.</div>
+              <div class="ag-history-empty" id="agHistoryEmpty">아직 저장된 회의가 없습니다. 메모를 쓰면 자동으로 저장돼요.</div>
             </div>
             <div class="ag-hist-pager" id="agHistPager" style="display:none"></div>
           </div>
 
-          <div class="settings-overlay" id="trashOverlay" hidden>
-            <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="trashTitle" style="max-width:480px;height:min(520px,80vh)">
-              <div class="settings-head">
-                <h2 id="trashTitle">휴지통</h2>
-                <div style="display:flex;align-items:center;gap:8px">
-                  <button type="button" class="ag-btn" id="trashClearAllBtn">전체비우기</button>
-                  <button class="settings-close" type="button" id="trashCloseBtn" aria-label="휴지통 닫기">✕</button>
-                </div>
-              </div>
-              <div class="settings-content" style="padding:14px 18px">
-                <div class="ag-trash-list" id="agTrashList"></div>
-              </div>
-            </div>
-          </div>
           </div><!-- /ag-layout-side -->
           </div><!-- /ag-layout -->
         </section>
@@ -9490,6 +9476,7 @@ window.CsGuide=(function(){
     document.getElementById('view-account').style.display=v==='account'?'':'none';
     document.getElementById('view-perf').style.display=v==='perf'?'':'none';
     document.getElementById('view-content').style.display=v==='content'?'':'none';
+    document.getElementById('view-brand').style.display=v==='brand'?'':'none';
     if(v==='account'&&window.baroyamAccountOpen) window.baroyamAccountOpen();
     /* 드라이브 목록은 덩어리가 커서 이 화면을 열 때 한 번만 읽는다 */
     if(v==='drive'&&window.baroyamDriveOpen) window.baroyamDriveOpen();
@@ -9506,7 +9493,7 @@ window.CsGuide=(function(){
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의 기록은 여기 들어올 때 처음 받아 온다(1MB가 넘어 첫 화면에서는 받지 않는다) */
     if(v==='agenda') document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
-    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda'||v==='perf'||v==='content');
+    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda'||v==='perf'||v==='content'||v==='brand');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
@@ -10628,7 +10615,7 @@ window.CsGuide=(function(){
   let editMode=false;
   function setEditMode(on){
     editMode=!!on&&manCanEdit();
-    const ed=editorEl();
+    const ed=document.getElementById('manEditor');
     if(ed){
       ed.contentEditable=editMode?'true':'false';
       ed.classList.toggle('is-editing',editMode);
@@ -10670,10 +10657,35 @@ window.CsGuide=(function(){
       persistLocal();
       scheduleSave(id);
     });
+    bindEditing(ed);
+    /* 붙여넣기는 서식을 걷어내고 글자만 넣는다 (외부 문서에서 가져온 스타일이 화면을 깨뜨리지 않도록) */
+    /* 붙여넣기 · 글자를 드래그해 둔 상태에서 주소를 붙여넣으면 그 글자에 링크가 걸린다 ·
+       그 외에는 서식을 걷어내고 글자만 넣는다 */
+    ed.addEventListener('paste',e=>{
+      e.preventDefault();
+      const raw=(e.clipboardData||window.clipboardData).getData('text/plain')||'';
+      if(pasteLink(raw)) return;
+      document.execCommand('insertText',false,raw);
+    });
+    ed.addEventListener('blur',flushSave);
+  }
+  /* 드래그한 글자 위에 주소를 붙여넣으면 링크를 건다 · 걸었으면 true */
+  function pasteLink(raw){
+    const url=String(raw||'').trim();
+    const sel=window.getSelection();
+    if(sel&&!sel.isCollapsed&&/^(https?:\/\/|www\.)\S+$/i.test(url)){
+      document.execCommand('createLink',false,/^www\./i.test(url)?'https://'+url:url);
+      afterEdit();
+      return true;
+    }
+    return false;
+  }
+  /* 메뉴얼 문서와 회의안건 메모가 같이 쓰는 편집 동작 (분할 칸 이동·빈 칸 클릭·링크 새 탭) */
+  function bindEditing(ed){
     /* 분할 칸 안에서 위/아래 방향키로 분할 바깥 줄로 빠져나간다 ·
        칸이 grid라 브라우저 기본 이동으로는 밖으로 못 나간다 */
     ed.addEventListener('keydown',e=>{
-      if(!editMode) return;
+      if(!editing()) return;
       if(e.key!=='ArrowDown'&&e.key!=='ArrowUp') return;
       const sel=window.getSelection();
       if(!sel||!sel.rangeCount||!sel.isCollapsed) return;
@@ -10700,7 +10712,7 @@ window.CsGuide=(function(){
     /* 분할 칸의 빈 곳을 눌렀을 때도 그 칸에 커서가 들어가게 한다 ·
        이게 없으면 칸이 비어 있을 때 옆 칸(첫 칸) 글에 커서가 잡혀 다른 칸을 못 쓴다 */
     ed.addEventListener('mousedown',e=>{
-      if(!editMode) return;
+      if(!editing()) return;
       const col=e.target&&e.target.closest?e.target.closest('.man-col'):null;
       if(!col||e.target!==col) return;
       const last=col.lastElementChild;
@@ -10714,29 +10726,13 @@ window.CsGuide=(function(){
       ed.focus();
       markActiveCol();
     });
-    /* 붙여넣기는 서식을 걷어내고 글자만 넣는다 (외부 문서에서 가져온 스타일이 화면을 깨뜨리지 않도록) */
-    /* 붙여넣기 · 글자를 드래그해 둔 상태에서 주소를 붙여넣으면 그 글자에 링크가 걸린다 ·
-       그 외에는 서식을 걷어내고 글자만 넣는다 */
-    ed.addEventListener('paste',e=>{
-      e.preventDefault();
-      const raw=(e.clipboardData||window.clipboardData).getData('text/plain')||'';
-      const url=raw.trim();
-      const sel=window.getSelection();
-      if(sel&&!sel.isCollapsed&&/^(https?:\/\/|www\.)\S+$/i.test(url)){
-        document.execCommand('createLink',false,/^www\./i.test(url)?'https://'+url:url);
-        afterEdit();
-        return;
-      }
-      document.execCommand('insertText',false,raw);
-    });
-    ed.addEventListener('blur',flushSave);
     /* 본문 링크는 대시보드를 떠나지 않도록 항상 새 탭으로 연다 · 저장된 본문(target 속성)은 건드리지 않고 클릭에서 처리한다 ·
        수정 모드에서는 그냥 클릭하면 커서만 놓이고, Ctrl(⌘)+클릭하면 새 탭으로 열린다 */
     ed.addEventListener('click',e=>{
       const a=e.target.closest&&e.target.closest('a[href]');
       if(!a||!ed.contains(a)) return;
       e.preventDefault();
-      if(editMode&&!(e.ctrlKey||e.metaKey)) return;
+      if(editing()&&!(e.ctrlKey||e.metaKey)) return;
       window.open(a.href,'_blank','noopener,noreferrer');
     });
   }
@@ -10764,10 +10760,33 @@ window.CsGuide=(function(){
     fmtbar.hidden=true;
     if(window.__manCloseFmtMenus) window.__manCloseFmtMenus();
   }
-  function editorEl(){ return document.getElementById('manEditor'); }
+  /* 회의안건 메모처럼 같은 편집기를 빌려 쓰는 칸 · 그 화면을 보고 있을 때는 서식바·줄 손잡이가 그 칸에 붙는다 */
+  let altEd=null, altView='', altChange=null;
+  function onAlt(){ return !!(altEd&&altEd.isConnected&&window.baroyamCurrentView===altView); }
+  function editorEl(){ return onAlt()?altEd:document.getElementById('manEditor'); }
+  function editing(){ return onAlt()||editMode; }
+  window.__manAttachEditor=function(ed,view,onChange){
+    altEd=ed; altView=view; altChange=onChange;
+    ed.classList.add('man-editor','is-editing');
+    bindEditing(ed);
+    ed.addEventListener('input',()=>{
+      if(!onAlt()) return;
+      if(autoFormatRule(ed)){ tidyEditor(ed); if(altChange) altChange(); }
+    });
+    /* 붙여넣기 · 그림은 그대로 붙고, 글은 서식을 걷어내고 글자만 넣는다 */
+    ed.addEventListener('paste',e=>{
+      const cd=e.clipboardData||window.clipboardData;
+      if(!cd) return;
+      if(cd.files&&cd.files.length) return;
+      e.preventDefault();
+      const raw=cd.getData('text/plain')||'';
+      if(pasteLink(raw)) return;
+      document.execCommand('insertText',false,raw);
+    });
+  };
   function selectionInEditor(){
     const ed=editorEl();
-    if(!ed||!editMode) return null;
+    if(!ed||!editing()) return null;
     const sel=window.getSelection();
     if(!sel||sel.isCollapsed||!sel.rangeCount) return null;
     const r=sel.getRangeAt(0);
@@ -11004,7 +11023,7 @@ window.CsGuide=(function(){
     const ed=editorEl();
     if(!ed) return;
     let col=null;
-    if(editMode){
+    if(editing()){
       const sel=window.getSelection();
       if(sel&&sel.rangeCount){
         let n=sel.getRangeAt(0).startContainer;
@@ -11054,6 +11073,7 @@ window.CsGuide=(function(){
     if(!ed) return;
     tidyEditor(ed);
     ensureNotEmpty(ed);
+    if(ed===altEd){ if(altChange) altChange(); syncFmtState(); return; }
     docs[activeDoc]=readEditorHtml(ed);
     persistLocal();
     scheduleSave(activeDoc);
@@ -11186,7 +11206,7 @@ window.CsGuide=(function(){
     /* ----- 줄 손잡이 · 마우스를 올린 줄에만 따라다닌다 (수정 모드에서만) ----- */
     if(bHandle&&bMenu){
       document.addEventListener('mousemove',e=>{
-        if(!editMode||!bMenu.hidden) return;
+        if(!editing()||!bMenu.hidden) return;
         const ed=editorEl();
         if(!ed) return;
         const edRect=ed.getBoundingClientRect();
@@ -11418,6 +11438,7 @@ window.CsGuide=(function(){
     {key:'goal',name:'목표설정',          kind:'메뉴',       go:()=>window.activateView('goal')},
     {key:'trend',name:'트렌드분석',        kind:'메뉴',       go:()=>window.activateView('trend')},
     {key:'review',name:'리뷰수집',          kind:'메뉴',       go:()=>window.activateView('review')},
+    {key:'brand',name:'브랜드전략실',      kind:'메뉴',       go:()=>window.activateView('brand')},
     {key:'manual',name:'메뉴얼가이드',      kind:'메뉴',       go:()=>window.activateView('manual')},
     {key:'drive',name:'드라이브',          kind:'메뉴',       go:()=>window.activateView('drive')},
     {key:'account',name:'계정관리',          kind:'메뉴',       go:()=>window.activateView('account')},
@@ -14839,22 +14860,24 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const CATEGORY_KEY='baroyam_agenda_category_v1';
   const CATEGORIES_KEY='baroyam_categories_v1';
   const HIST_KEY='baroyam_agenda_history_v1';
-  const TRASH_KEY='baroyam_agenda_trash_v1';
   const MIGRATED_KEY='baroyam_agenda_migrated_v1';
   const CATEGORY_BACKFILL_KEY='baroyam_agenda_category_backfill_v2';
 
   const agTopic=document.getElementById('agTopic');
   const agCategory=document.getElementById('agCategory');
   const agNoteBig=document.getElementById('agNoteBig');
-  const agNotes=document.getElementById('agNotes');
+  /* 전달 및 건의사항 칸은 화면에서 뺐다 · 예전 기록에 적힌 내용이 다시 저장할 때 지워지지 않도록 보이지 않는 칸에 담아 둔다 */
+  const agNotes=document.getElementById('agNotes')||document.createElement('div');
   const historyEl=document.getElementById('agHistory');
   const emptyEl=document.getElementById('agHistoryEmpty');
-  const trashBtn=document.getElementById('agTrashBtn');
-  const trashCountEl=document.getElementById('agTrashCount');
-  const trashOverlay=document.getElementById('trashOverlay');
-  const trashCloseBtn=document.getElementById('trashCloseBtn');
-  const trashListEl=document.getElementById('agTrashList');
-  const trashClearAllBtn=document.getElementById('trashClearAllBtn');
+  const autoStateEl=document.getElementById('agAutoState');
+  /* 자동 저장 장부 · 지금 쓰는 기록 id, 서버에 아직 못 올린 id, ✕로 지운 id(서버 반영 전까지 다시 올리지 않도록) */
+  const CUR_KEY='baroyam_agenda_current_v1';
+  const PEND_KEY='baroyam_agenda_pending_v1';
+  const DEL_KEY='baroyam_agenda_deleted_v1';
+  const DELQ_KEY='baroyam_agenda_delete_queue_v1';
+  function readIds(k){ try{ const a=JSON.parse(localStorage.getItem(k)||'[]'); return new Set(Array.isArray(a)?a.map(String):[]); }catch(e){ return new Set(); } }
+  function writeIds(k,set){ try{ localStorage.setItem(k,JSON.stringify([...set])); }catch(e){} }
   const histLoadingEl=document.getElementById('agHistLoading');
   const histLoadingSpinner=document.getElementById('agHistLoadingSpinner');
   const histLoadingCheck=document.getElementById('agHistLoadingCheck');
@@ -14922,10 +14945,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const pad2=n=>String(n).padStart(2,'0');
   const todayIso=()=>{ const d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); };
 
-  const save=()=>{
+  const saveDraft=()=>{
     localStorage.setItem(LS_KEY,aw.innerHTML);
     localStorage.setItem(DATE_KEY,agMeetingDate.value);
   };
+  /* 사람이 고칠 때마다 · 초안을 남기고 회의 기록에도 자동 저장한다 (불러오기·신규는 saveDraft 만 쓴다) */
+  const save=()=>{ saveDraft(); scheduleAuto(); };
 
   /* 클릭형 달력 위젯 (회의일자) */
   function createDatePicker({btnId,calId,titleId,gridId,prevId,nextId,initial,placeholder}){
@@ -15051,129 +15076,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     optionsProvider:loadCategoriesForPicker, emptyText:'설정 > 회의설정 > 카테고리설정에서 먼저 추가해주세요',
   });
 
-  /* 회의 메모 서식 툴바 (굵게/기울임/밑줄/글자색/형광펜/서식지우기) */
+  /* 회의 메모 편집 · 메뉴얼가이드와 같은 편집기를 쓴다 (드래그하면 글씨설정 창, 줄 왼쪽 손잡이로 전환·2·3분할·복제·삭제·끌어 옮기기) */
   (function(){
-    const TEXT_COLORS=['#241a14','#c2683c','#1c7550','#3a67a8','#8a6410','#6a4fb5','#b04a6e','#00757e'];
-    const BG_COLORS=['none','#fff1ea','#e4f6ec','#eef2fb','#fbeede','#f1eafc','#fde4ea','#e2f7f5'];
-    const textChip=document.getElementById('agNtTextColorChip');
-    const bgChip=document.getElementById('agNtBgColorChip');
-
-    function closeAllPalettes(except){
-      document.querySelectorAll('.ag-nt-palette').forEach(p=>{ if(p!==except) p.hidden=true; });
-    }
-    function buildPalette(container,colors,onPick){
-      container.innerHTML='';
-      colors.forEach(c=>{
-        const sw=document.createElement('button');
-        sw.type='button';
-        if(c==='none'){ sw.className='ag-nt-swatch none'; sw.textContent='✕'; sw.title='배경 없음'; }
-        else{ sw.className='ag-nt-swatch'; sw.style.background=c; sw.title=c; }
-        sw.addEventListener('click',()=>{ onPick(c); container.hidden=true; });
-        container.appendChild(sw);
-      });
-    }
-    function setupColorPicker(btnId,paletteId,colors,onPick){
-      const btn=document.getElementById(btnId);
-      const palette=document.getElementById(paletteId);
-      buildPalette(palette,colors,onPick);
-      btn.addEventListener('click',e=>{ e.stopPropagation(); const willOpen=palette.hidden; closeAllPalettes(); palette.hidden=!willOpen; });
-      palette.addEventListener('click',e=>e.stopPropagation());
-    }
-    document.addEventListener('click',()=>closeAllPalettes());
-
-    /* 버튼 클릭 시 메모의 텍스트 선택이 풀리지 않도록(포커스 이동 방지) */
-    document.getElementById('agNoteToolbar').addEventListener('mousedown',e=>{
-      if(e.target.closest('button')) e.preventDefault();
-    });
-
-    document.querySelectorAll('.ag-nt-btn[data-cmd]').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        agNoteBig.focus();
-        document.execCommand(btn.dataset.cmd,false,null);
-        updateToolbarState();
-      });
-    });
-    function updateToolbarState(){
-      document.querySelectorAll('.ag-nt-btn[data-cmd]').forEach(btn=>{
-        try{ btn.classList.toggle('active',document.queryCommandState(btn.dataset.cmd)); }catch(e){}
-      });
-      updateSizeLabel(getCurrentFontSizePx());
-    }
-    agNoteBig.addEventListener('keyup',updateToolbarState);
-    agNoteBig.addEventListener('mouseup',updateToolbarState);
-
-    /* 글자 크기: -/+ 버튼과 직접 선택하는 크기 목록 */
-    const SIZE_STEPS=[12,14,16,18,20,24,28,32,40,48];
-    const sizeLabel=document.getElementById('agNtSizeLabel');
-    const sizeDrop=document.getElementById('agNtSizeDrop');
-    const sizeBtn=document.getElementById('agNtSizeBtn');
-
-    function getCurrentFontSizePx(){
-      const sel=window.getSelection();
-      if(!sel||!sel.rangeCount) return 16;
-      let node=sel.getRangeAt(0).startContainer;
-      if(node.nodeType===3) node=node.parentElement;
-      if(!node||!agNoteBig.contains(node)) return 16;
-      const size=parseFloat(getComputedStyle(node).fontSize);
-      return isNaN(size)?16:Math.round(size);
-    }
-    function applyFontSize(px){
-      agNoteBig.focus();
-      document.execCommand('fontSize',false,'7');
-      agNoteBig.querySelectorAll('font[size="7"]').forEach(f=>{
-        f.removeAttribute('size');
-        f.style.fontSize=px+'px';
-      });
-      updateSizeLabel(px);
-      save();
-    }
-    function updateSizeLabel(px){
-      sizeLabel.textContent=px;
-      sizeDrop.querySelectorAll('.ag-nt-size-opt').forEach(o=>{
-        o.classList.toggle('active',+o.dataset.size===px);
-      });
-    }
-    function nearestStepIndex(px){
-      let idx=0,best=Infinity;
-      SIZE_STEPS.forEach((s,i)=>{ const d=Math.abs(s-px); if(d<best){best=d; idx=i;} });
-      return idx;
-    }
-    function stepFontSize(dir){
-      const idx=Math.min(SIZE_STEPS.length-1,Math.max(0,nearestStepIndex(getCurrentFontSizePx())+dir));
-      applyFontSize(SIZE_STEPS[idx]);
-    }
-    sizeDrop.innerHTML='';
-    SIZE_STEPS.forEach(s=>{
-      const opt=document.createElement('button');
-      opt.type='button'; opt.className='ag-nt-size-opt'; opt.dataset.size=s;
-      opt.style.fontSize=Math.min(s,20)+'px';
-      opt.textContent=s;
-      opt.addEventListener('click',()=>{ applyFontSize(s); sizeDrop.hidden=true; });
-      sizeDrop.appendChild(opt);
-    });
-    sizeBtn.addEventListener('click',e=>{ e.stopPropagation(); const willOpen=sizeDrop.hidden; closeAllPalettes(); sizeDrop.hidden=!willOpen; });
-    sizeDrop.addEventListener('click',e=>e.stopPropagation());
-    document.getElementById('agNtSizeDown').addEventListener('click',()=>stepFontSize(-1));
-    document.getElementById('agNtSizeUp').addEventListener('click',()=>stepFontSize(1));
-
-    setupColorPicker('agNtTextColorBtn','agNtTextColorPalette',TEXT_COLORS,c=>{
-      agNoteBig.focus();
-      document.execCommand('foreColor',false,c);
-      textChip.style.background=c;
-    });
-    setupColorPicker('agNtBgColorBtn','agNtBgColorPalette',BG_COLORS,c=>{
-      agNoteBig.focus();
-      document.execCommand('hiliteColor',false,c==='none'?'transparent':c);
-      bgChip.style.background=c==='none'?'transparent':c;
-    });
-    document.getElementById('agNtClearBtn').addEventListener('click',()=>{
-      agNoteBig.focus();
-      document.execCommand('removeFormat',false,null);
-      document.execCommand('hiliteColor',false,'transparent');
-      textChip.style.background='var(--indigo)';
-      bgChip.style.background='var(--indigo)';
-    });
-
+    if(window.__manAttachEditor) window.__manAttachEditor(agNoteBig,'agenda',save);
     /* 메모에 넣은 이미지를 클릭할 때마다 크기를 단계적으로 줄이고, 가장 작은 단계에서 다시 누르면 원본 크기로 돌아온다 */
     const IMG_STEPS=[1,0.75,0.5,0.33];
     agNoteBig.addEventListener('click',e=>{
@@ -15193,47 +15098,127 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
   aw.addEventListener('input',save);
 
+  /* ---------- 자동 저장 ----------
+     쓰기 시작하면 1초 남짓 뒤 이 브라우저 기록에 넣고 서버(agenda_items)로 올린다 ·
+     못 올린 것은 PEND_KEY 에 남아 다음에 열 때·인터넷이 돌아올 때 다시 올린다 ·
+     서버 목록을 받아도 이 브라우저에만 있는 기록은 버리지 않는다 — ✕를 눌러야만 사라진다 */
+  const PH_TOPIC='주제를 입력하세요', PH_NOTE='여기에 자유롭게 적으세요';
+  function isBlankForm(){
+    const t=agTopic.textContent.trim();
+    const n=agNoteBig.textContent.trim();
+    const hasImg=!!agNoteBig.querySelector('img');
+    return (!t||t===PH_TOPIC)&&(!n||n===PH_NOTE)&&!hasImg;
+  }
+  function setAutoState(text,warn){
+    if(!autoStateEl) return;
+    autoStateEl.textContent=text||'';
+    autoStateEl.classList.toggle('is-warn',!!warn);
+  }
+  let autoTimer=null;
+  function scheduleAuto(){
+    if(currentId==null&&isBlankForm()) return;     /* 빈 양식은 기록으로 만들지 않는다 */
+    setAutoState('저장 중…');
+    clearTimeout(autoTimer);
+    autoTimer=setTimeout(autoSaveNow,1200);
+  }
+  function autoSaveNow(){
+    clearTimeout(autoTimer); autoTimer=null;
+    if(currentId==null&&isBlankForm()) return;
+    const rec=buildRecord();
+    localUpsert(rec);
+    try{ localStorage.setItem(CUR_KEY,String(rec.id)); }catch(e){}
+    const p=readIds(PEND_KEY); p.add(String(rec.id)); writeIds(PEND_KEY,p);
+    flushPending();
+  }
+  let flushing=false, flushAgain=false;
+  async function flushPending(){
+    if(!apiReady()){ setAutoState('이 브라우저에 저장됨'); return; }
+    if(flushing){ flushAgain=true; return; }
+    flushing=true;
+    try{
+      do{
+        flushAgain=false;
+        /* ✕로 지운 것부터 서버에 반영 */
+        const dq=readIds(DELQ_KEY);
+        for(const id of dq){
+          await window.BAROYAM_DB.agendaHide(id);
+          const q=readIds(DELQ_KEY); q.delete(id); writeIds(DELQ_KEY,q);
+        }
+        const pend=readIds(PEND_KEY);
+        if(!pend.size) continue;
+        const list=loadHistory();
+        const recs=[...pend].map(id=>list.find(r=>String(r.id)===id)).filter(Boolean);
+        const sent={};
+        recs.forEach(r=>{ sent[String(r.id)]=JSON.stringify(r); });
+        if(recs.length) await window.BAROYAM_DB.agendaSave(recs);
+        /* 올리는 사이에 또 고친 기록은 남겨 두고 다음 바퀴에 다시 올린다 */
+        const now=loadHistory(), p=readIds(PEND_KEY);
+        [...p].forEach(id=>{
+          const cur=now.find(r=>String(r.id)===id);
+          if(!cur||sent[id]===JSON.stringify(cur)) p.delete(id);
+        });
+        writeIds(PEND_KEY,p);
+        if(p.size) flushAgain=true;
+      }while(flushAgain);
+      setAutoState('자동 저장됨');
+    }catch(err){
+      console.error(err);
+      setAutoState('서버 저장 대기 중 (이 브라우저에는 저장됨)',true);
+    }finally{ flushing=false; }
+  }
+  window.addEventListener('online',()=>flushPending());
+  /* 창을 닫거나 다른 탭으로 갈 때 기다리던 저장을 바로 한다 */
+  window.addEventListener('pagehide',()=>{ if(autoTimer) autoSaveNow(); });
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden&&autoTimer) autoSaveNow(); });
+
+  /* 서버 목록과 이 브라우저 기록을 합친다 ·
+     서버에 있는 것 + 아직 못 올린 이 브라우저 고침(우선) + 이 브라우저에만 있는 기록(다시 올릴 목록에 넣는다) ·
+     빠지는 것은 ✕로 지운 것(이 기기 또는 다른 기기)뿐이다 */
+  function mergeServer(json){
+    const del=readIds(DEL_KEY);
+    const hiddenOnServer=new Set((json.trash||[]).map(r=>String(r.id)));
+    const server=newestFirst((json.records||[]).filter(r=>r&&!r.trashedAt)).filter(r=>!del.has(String(r.id)));
+    const local=loadHistory();
+    const pend=readIds(PEND_KEY);
+    const byId={};
+    local.forEach(r=>{ byId[String(r.id)]=r; });
+    const ids=new Set(server.map(r=>String(r.id)));
+    const merged=server.map(r=>{
+      const l=byId[String(r.id)];
+      return (l&&pend.has(String(r.id)))?Object.assign({},r,l):r;
+    });
+    const onlyLocal=local.filter(r=>{
+      const id=String(r.id);
+      return !ids.has(id)&&!del.has(id)&&!hiddenOnServer.has(id);
+    });
+    onlyLocal.forEach(r=>pend.add(String(r.id)));
+    writeIds(PEND_KEY,pend);
+    const out=preserveLocalCategory(onlyLocal.concat(merged));
+    saveHistory(out);
+    /* 지금 쓰던 기록을 다른 기기가 지웠으면 새 양식으로 */
+    if(currentId!=null&&hiddenOnServer.has(String(currentId))&&!pend.has(String(currentId))){
+      currentId=null;
+      try{ localStorage.removeItem(CUR_KEY); }catch(e){}
+    }
+    return out;
+  }
+
   function loadHistory(){
     try{ return JSON.parse(localStorage.getItem(HIST_KEY))||[]; }catch(e){ return []; }
   }
   function saveHistory(list){ localStorage.setItem(HIST_KEY,JSON.stringify(list)); }
-  function loadTrash(){
-    try{ return JSON.parse(localStorage.getItem(TRASH_KEY))||[]; }catch(e){ return []; }
-  }
-  function saveTrash(list){ localStorage.setItem(TRASH_KEY,JSON.stringify(list)); }
-  /* 서버(구글 시트/Apps Script)가 구버전 배포이거나 일시적으로 필터링을 놓쳐서
-     trashedAt이 찍힌 항목을 records 목록에 섞어 돌려주는 경우를 대비한 방어 로직.
-     접속하자마자(=목록을 화면에 반영하기 전) 항상 trashedAt 유무로 다시 나눠서
-     회의 목록에는 휴지통 항목이 절대 노출되지 않게 하고, 휴지통 캐시에도 반영한다. */
-  function reconcileTrashLeak(records){
-    const list=Array.isArray(records)?records:[];
-    const leaked=list.filter(r=>r&&r.trashedAt);
-    const kept=list.filter(r=>!(r&&r.trashedAt));
-    if(leaked.length){
-      const trash=loadTrash();
-      leaked.forEach(rec=>{
-        const idx=trash.findIndex(t=>String(t.id)===String(rec.id));
-        if(idx!==-1) trash[idx]=rec; else trash.unshift(rec);
-      });
-      saveTrash(trash);
-    }
-    return kept;
-  }
 
   const apiReady=()=>AGENDA_API_URL && AGENDA_API_URL.indexOf('PUT_DEPLOYED')!==0;
   const agNoteEl=document.getElementById('agNote');
   if(agNoteEl) agNoteEl.textContent=apiReady()
-    ? '저장 · +신규 시 Supabase로 동기화되어 다른 기기에서도 보여요'
+    ? '쓰는 대로 자동 저장돼 다른 기기에서도 보여요 · ✕를 눌러야만 지워집니다'
     : '이 브라우저에 자동 저장됩니다 (다른 사람과 실시간 공유되지 않아요)';
   /* 회의안건은 Supabase agenda_items 에 담는다 · 돌려주는 모양은 예전 앱스크립트와
      같게 맞춰 두었으므로(records/trash, 오래된 순) 아래 화면 코드는 그대로 쓴다.
-     휴지통은 별도 탭이 아니라 trashed 플래그로 다룬다 */
+     ✕로 지운 기록은 trashed 플래그로 숨긴다(화면에 휴지통은 없다) */
   async function apiList(){ return window.BAROYAM_DB.agendaList(); }
   async function apiUpsert(record){ return window.BAROYAM_DB.agendaUpsert([record]); }
   async function apiUpsertMany(records){ return window.BAROYAM_DB.agendaUpsert(records); }
-  async function apiTrash(id){ return window.BAROYAM_DB.agendaSetTrashed(id,true); }
-  async function apiRestore(id){ return window.BAROYAM_DB.agendaSetTrashed(id,false); }
-  async function apiPurgeTrash(id){ return window.BAROYAM_DB.agendaPurge(id); }
   /* 목록은 오래된 순으로 오므로, 화면에 최신순으로 보여주려면 뒤집어야 한다 */
   function newestFirst(records){ return records.slice().reverse(); }
   /* 구버전 액션스크립트가 아직 category 컬럼을 모르면 서버 응답에서 비어서 돌아온다 ·
@@ -15273,54 +15258,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     renderHistory();
     return updated;
   }
-  /* 구글 시트 동기화는 배경에서 시도하고, 성공하면 서버가 반환한 최신 목록으로 캐시를 맞춘다 */
-  async function syncUpsertBackground(rec,statusEl){
-    if(!apiReady()) return;
-    try{
-      const records=reconcileTrashLeak(await apiUpsert(rec));
-      saveHistory(preserveLocalCategory(newestFirst(records))); renderHistory();
-      updateTrashCount(); renderTrash();
-      if(statusEl) showStatus(statusEl,'동기화 완료');
-    }catch(err){
-      console.error(err);
-      if(statusEl) showStatus(statusEl,'동기화 실패(오프라인?)');
-    }
-  }
-  async function syncTrashBackground(id){
-    if(!apiReady()) return;
-    try{
-      const json=await apiTrash(id);
-      saveTrash(newestFirst(json.trash||[]));
-      saveHistory(preserveLocalCategory(newestFirst(reconcileTrashLeak(json.records))));
-      renderHistory(); renderTrash(); updateTrashCount();
-    }catch(err){ console.error(err); }
-  }
-  async function syncRestoreBackground(id){
-    if(!apiReady()) return;
-    try{
-      const json=await apiRestore(id);
-      saveTrash(newestFirst(json.trash||[]));
-      saveHistory(preserveLocalCategory(newestFirst(reconcileTrashLeak(json.records))));
-      renderHistory(); renderTrash(); updateTrashCount();
-    }catch(err){ console.error(err); }
-  }
-  async function syncPurgeBackground(id){
-    if(!apiReady()) return;
-    try{
-      const json=await apiPurgeTrash(id);
-      saveTrash(newestFirst(json.trash||[]));
-      saveHistory(preserveLocalCategory(newestFirst(reconcileTrashLeak(json.records))));
-      renderHistory(); renderTrash(); updateTrashCount();
-    }catch(err){ console.error(err); }
-  }
-  function showStatus(btn,text){
-    const orig=btn.dataset.origLabel||btn.textContent;
-    btn.dataset.origLabel=orig;
-    btn.textContent=text;
-    setTimeout(()=>{ btn.textContent=orig; },1600);
-  }
-
-  let currentId=null;
+  /* 새로고침해도 쓰던 기록을 이어서 고치도록 id 를 기억한다 (없으면 새 기록이 하나 더 생긴다) */
+  let currentId=(function(){
+    const v=localStorage.getItem(CUR_KEY);
+    if(!v||readIds(DEL_KEY).has(v)) return null;
+    return /^\d+$/.test(v)?Number(v):v;
+  })();
 
   const pagerEl=document.getElementById('agHistPager');
   const HIST_PAGE_SIZE=5;
@@ -15359,8 +15302,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
        이 기기가 이미 "휴지통으로 옮겼다"고 알고 있는 id는, 어떤 이유로든 회의 기록 쪽에 다시
        나타나더라도(예: 다른 기기의 오래된 캐시가 잘못 업로드된 경우) 여기서 한 번 더 걸러낸다 —
        복원 버튼을 눌러야만(=휴지통 캐시에서 그 id가 빠져야만) 다시 보인다 */
-    const trashIds=new Set(loadTrash().map(r=>String(r.id)));
-    const all=loadHistory().filter(r=>!(r&&r.trashedAt)&&!trashIds.has(String(r.id)));
+    const delIds=readIds(DEL_KEY);
+    const all=loadHistory().filter(r=>!(r&&r.trashedAt)&&!delIds.has(String(r.id)));
     let list=all;
     if(historySearch) list=list.filter(r=>(r.topic||'').toLowerCase().includes(historySearch));
     if(historyCategoryFilter) list=list.filter(r=>r.category===historyCategoryFilter);
@@ -15376,7 +15319,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     emptyEl.style.display=list.length?'none':'';
     emptyEl.textContent=all.length && !list.length
       ? '검색·필터 조건에 맞는 회의 기록이 없습니다.'
-      : '아직 저장된 회의가 없습니다. 아래에서 작성 후 저장을 눌러보세요.';
+      : '아직 저장된 회의가 없습니다. 메모를 쓰면 자동으로 저장돼요.';
     const totalPages=Math.max(1,Math.ceil(list.length/HIST_PAGE_SIZE));
     if(historyPage>totalPages) historyPage=totalPages;
     if(historyPage<1) historyPage=1;
@@ -15527,98 +15470,6 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     closeHistDate();
   });
 
-  function fmtTrashDate(ts){
-    const d=new Date(ts||Date.now());
-    return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
-  }
-  function updateTrashCount(){
-    const n=loadTrash().length;
-    trashCountEl.hidden=n===0;
-    trashCountEl.textContent=n>99?'99+':String(n);
-  }
-  function renderTrash(){
-    const list=loadTrash();
-    trashListEl.innerHTML='';
-    if(!list.length){
-      const empty=document.createElement('div');
-      empty.className='ag-trash-empty';
-      empty.textContent='휴지통이 비어 있습니다.\n회의 기록에서 ✕를 누르면 여기로 옮겨져요.';
-      trashListEl.appendChild(empty);
-    }else{
-      list.forEach(rec=>{
-        const row=document.createElement('div'); row.className='ag-trash-item';
-        const main=document.createElement('div'); main.className='ag-trash-main';
-        const topic=document.createElement('div'); topic.className='ag-trash-topic'; topic.textContent=rec.topic||'제목 없음';
-        const meta=document.createElement('div'); meta.className='ag-trash-meta';
-        meta.textContent=(rec.date?rec.date.replace(/-/g,'.'):'날짜 미입력')+' · '+fmtTrashDate(rec.trashedAt)+' 삭제';
-        main.appendChild(topic); main.appendChild(meta);
-        const actions=document.createElement('div'); actions.className='ag-trash-actions';
-        const restoreBtn=document.createElement('button'); restoreBtn.type='button'; restoreBtn.className='ag-trash-restore'; restoreBtn.textContent='복원';
-        restoreBtn.addEventListener('click',()=>restoreFromTrash(rec.id));
-        const purgeBtn=document.createElement('button'); purgeBtn.type='button'; purgeBtn.className='ag-trash-purge'; purgeBtn.textContent='영구삭제';
-        purgeBtn.addEventListener('click',()=>purgeFromTrash(rec.id));
-        actions.appendChild(restoreBtn); actions.appendChild(purgeBtn);
-        row.appendChild(main); row.appendChild(actions);
-        trashListEl.appendChild(row);
-      });
-    }
-    trashClearAllBtn.hidden=!list.length;
-    updateTrashCount();
-  }
-  /* 복원: 휴지통 → 회의 기록으로 되돌리고, 시트에서 지워지지 않았는지 안전하게 다시 업서트 */
-  function restoreFromTrash(id){
-    const trash=loadTrash();
-    const idx=trash.findIndex(r=>String(r.id)===String(id));
-    if(idx===-1) return;
-    const rec=Object.assign({},trash[idx]);
-    delete rec.trashedAt;
-    trash.splice(idx,1);
-    saveTrash(trash);
-    const list=loadHistory();
-    list.unshift(rec);
-    saveHistory(list);
-    renderHistory();
-    renderTrash();
-    syncRestoreBackground(id);
-  }
-  /* 영구삭제: 이 시점에만 실제로 시트(휴지통 탭)에서 행을 지운다 */
-  function purgeFromTrash(id){
-    if(!confirm('이 회의 기록을 영구 삭제할까요? 복구할 수 없습니다.')) return;
-    saveTrash(loadTrash().filter(r=>String(r.id)!==String(id)));
-    renderTrash();
-    syncPurgeBackground(id);
-  }
-  /* 전체비우기: 휴지통에 있는 모든 항목을 한 번에 영구 삭제한다 · 서버엔 기존 단건 삭제 액션을
-     순서대로 호출한다(백엔드가 일괄삭제를 지원하지 않고, 동시에 여러 건을 보내면 시트 행번호가
-     서로 밀려 꼬일 수 있어서) */
-  async function purgeAllFromTrash(){
-    const ids=loadTrash().map(r=>r.id);
-    if(!ids.length) return;
-    if(!confirm('휴지통에 있는 '+ids.length+'건을 모두 영구 삭제할까요? 복구할 수 없습니다.')) return;
-    saveTrash([]);
-    renderTrash();
-    for(const id of ids){
-      await syncPurgeBackground(id);
-    }
-  }
-  function onTrashKeydown(e){ if(e.key==='Escape') closeTrash(); }
-  function openTrash(){
-    renderTrash(); trashOverlay.hidden=false;
-    trashCloseBtn.focus();
-    document.addEventListener('keydown',onTrashKeydown);
-  }
-  function closeTrash(){
-    trashOverlay.hidden=true;
-    trashBtn.focus();
-    document.removeEventListener('keydown',onTrashKeydown);
-  }
-  trashBtn.addEventListener('click',openTrash);
-  trashCloseBtn.addEventListener('click',closeTrash);
-  trashClearAllBtn.addEventListener('click',purgeAllFromTrash);
-  trashOverlay.addEventListener('click',e=>{ if(e.target===trashOverlay) closeTrash(); });
-  trashOverlay.querySelector('.settings-panel').addEventListener('click',e=>e.stopPropagation());
-  updateTrashCount();
-
   const historyUnitEl=document.getElementById('agHistoryUnit');
   function flashHistoryUnit(text){
     if(!historyUnitEl) return;
@@ -15650,11 +15501,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   async function agendaFetchOnce(){
     try{
       const json=await apiList();
-      saveTrash(newestFirst(json.trash||[]));
-      const records=preserveLocalCategory(newestFirst(reconcileTrashLeak(json.records)));
-      saveHistory(records);
-      renderHistory(); renderTrash(); updateTrashCount();
+      const records=mergeServer(json);
+      renderHistory();
       flashHistoryUnit('회의 기록을 불러왔습니다 ('+records.length+'건)');
+      flushPending();                     /* 못 올렸던 고침·이 브라우저에만 있던 기록을 올린다 */
       return true;
     }catch(err){
       console.error(err);
@@ -15703,52 +15553,49 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!row) return;
     const id=row.dataset.id;
     if(e.target.closest('.ag-hi-del')){
-      if(String(id)===String(currentId)) currentId=null;
       const list=loadHistory();
       const rec=list.find(r=>String(r.id)===id);
+      if(!confirm('"'+((rec&&rec.topic)||'제목 없음')+'" 회의 기록을 삭제할까요?\n삭제하면 목록에서 사라집니다.')) return;
+      const del=readIds(DEL_KEY); del.add(id); writeIds(DEL_KEY,del);
+      const dq=readIds(DELQ_KEY); dq.add(id); writeIds(DELQ_KEY,dq);
+      const p=readIds(PEND_KEY); p.delete(id); writeIds(PEND_KEY,p);
       saveHistory(list.filter(r=>String(r.id)!==id));
-      if(rec){
-        const trash=loadTrash().filter(r=>String(r.id)!==id);
-        trash.unshift(Object.assign({},rec,{trashedAt:Date.now()}));
-        saveTrash(trash);
-      }
+      if(String(id)===String(currentId)){ clearTimeout(autoTimer); autoTimer=null; resetForm(); }
       renderHistory();
-      updateTrashCount();
-      syncTrashBackground(id);
+      flushPending();
       return;
     }
     const rec=loadHistory().find(r=>String(r.id)===id);
     if(!rec) return;
+    if(autoTimer) autoSaveNow();          /* 쓰던 기록을 먼저 저장하고 다른 기록을 연다 */
     currentId=rec.id;
+    try{ localStorage.setItem(CUR_KEY,String(rec.id)); }catch(e){}
     agMeetingDate.set(rec.date||todayIso());
     agTopic.textContent=rec.topic||'주제를 입력하세요';
     agCategoryPicker.set(rec.category||'');
     agNoteBig.innerHTML=rec.noteHtml||'여기에 자유롭게 적으세요';
     agNotes.innerHTML=rec.notesHtml||'내용을 입력하세요';
-    save();
+    saveDraft();
+    setAutoState('');
     renderHistory();
   });
 
-  document.getElementById('agNewBtn').addEventListener('click',()=>{
-    const rec=buildRecord();
-    localUpsert(rec);
-    syncUpsertBackground(rec);
+  /* 빈 양식으로 · 지금 쓰던 기록은 이미 자동 저장돼 있다 */
+  function resetForm(){
     currentId=null;
+    try{ localStorage.removeItem(CUR_KEY); }catch(e){}
     agMeetingDate.set(todayIso());
-    agTopic.textContent='주제를 입력하세요';
+    agTopic.textContent=PH_TOPIC;
     agCategoryPicker.set('');
-    agNoteBig.innerHTML='여기에 자유롭게 적으세요';
+    agNoteBig.innerHTML=PH_NOTE;
     agNotes.innerHTML='내용을 입력하세요';
-    save();
+    saveDraft();
+    setAutoState('');
+  }
+  document.getElementById('agNewBtn').addEventListener('click',()=>{
+    if(autoTimer) autoSaveNow();
+    resetForm();
     renderHistory();
-  });
-
-  document.getElementById('agSaveBtn').addEventListener('click',()=>{
-    const rec=buildRecord();
-    const updated=localUpsert(rec);
-    const btn=document.getElementById('agSaveBtn'); const orig=btn.textContent;
-    btn.textContent=updated?'수정됨':'저장됨'; setTimeout(()=>{btn.textContent=orig;},1200);
-    syncUpsertBackground(rec,btn);
   });
 
   document.getElementById('agShareBtn').addEventListener('click',async()=>{
