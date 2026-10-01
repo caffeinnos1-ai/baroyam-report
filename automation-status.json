@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "checkedAt": "2026-09-30T14:32:56Z",
+  "checkedAt": "2026-10-01T06:47:09Z",
   "repos": [
     {
       "repo": "caffeinnos1-ai/baroyam-trend",
@@ -9,14 +9,14 @@
         {
           "name": "구글트렌드 수집",
           "conclusion": "success",
-          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36662932178",
-          "createdAt": "2026-09-30T03:06:46Z"
+          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36793935213",
+          "createdAt": "2026-10-01T00:00:11Z"
         },
         {
           "name": "네이버데이터랩 수집",
           "conclusion": "success",
-          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36648145718",
-          "createdAt": "2026-09-30T00:00:42Z"
+          "url": "https://github.com/caffeinnos1-ai/baroyam-trend/actions/runs/36793998490",
+          "createdAt": "2026-10-01T00:00:49Z"
         }
       ]
     },
