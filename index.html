@@ -13238,7 +13238,23 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
   });
   form.addEventListener('input',e=>{
-    if(e.target.name==='progress'){ const o=form.querySelector('output'); if(o) o.textContent=e.target.value+'%'; }
+    if(e.target.name==='progress'){
+      const o=form.querySelector('output'); if(o) o.textContent=e.target.value+'%';
+      /* 진행도를 100%로 올리면 상태도 완료로 · 보드에서는 저장되는 즉시 완료 칸으로 옮겨진다 ·
+         이미 완료·종료면 그대로 둔다(종료를 완료로 되돌리지 않게) */
+      const st=form.querySelector('input[name=status]');
+      if(+e.target.value>=100&&st&&st.value!=='완료'&&st.value!=='종료'){
+        pjSetPick('status','완료');
+        flushProjectSave();
+        return;
+      }
+      /* 완료였는데 진행도를 낮추면 다시 진행중으로 · 보드에서는 진행중 칸으로 돌아간다 */
+      if(+e.target.value<100&&st&&st.value==='완료'){
+        pjSetPick('status','진행중');
+        flushProjectSave();
+        return;
+      }
+    }
     queueProjectSave();
   });
   $('mhDialogClose').addEventListener('click',closeDialog);
@@ -13406,6 +13422,15 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         </button>`).join('')}
       </div>
     </span>`;
+  }
+  /* 고르기 목록의 값을 코드에서 바꾼다 · 보이는 글자·점 색·고른 표시까지 같이 맞춘다 */
+  function pjSetPick(name,v){
+    const wrap=form.querySelector('.pjf-pick[data-pick="'+name+'"]');
+    if(!wrap) return;
+    wrap.querySelector('input[type=hidden]').value=v;
+    wrap.querySelector('.pjf-sel-t').textContent=v||'없음';
+    wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
+    wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o.dataset.v===v));
   }
   /* 한 목록을 열면 나머지는 닫는다 */
   function closePickMenus(except){
@@ -13627,6 +13652,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
            <div class="pjf-row"><span class="pjf-rl">담당자</span>
              <div class="pjf-rc">
                ${ownerField}
+             </div>
+           </div>
+           <div class="pjf-row"><span class="pjf-rl">시작날짜</span>
+             <div class="pjf-rc">
+               ${pjDateField('start',cur.start)}
              </div>
            </div>
            <div class="pjf-row"><span class="pjf-rl">마감기한</span>
@@ -13881,12 +13911,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   /* ---------- 캘린더 보기 ----------
      보드판은 '지금 어디까지 왔나', 캘린더는 '언제 무엇을 했나'를 본다 ·
-     프로젝트 이름만 '진행한 날짜'(workFrom~workTo)에 막대로 얹는다 ·
-     막대를 끌어 다른 날로 옮기거나 양 끝을 끌어 늘이면 진행 날짜가 바뀐다(마감일·시작일은 그대로) ·
-     진행 날짜를 아직 안 정한 프로젝트는 짐작해서 보여 준다:
-       시작 = 시작일 → 없으면 작성일 → 없으면 마감일 ·
-       끝 = 완료·종료면 끝낸 날(doneAt) → 마감일 → 진행중이면 오늘 → 시작일 ·
-     진행 날짜는 표에 따로 칸이 없어 projects.data(나머지 값 칸)에 함께 저장된다 ·
+     프로젝트 이름만 막대로 얹는다 · 왼쪽 끝 = 시작날짜(start), 오른쪽 끝 = 마감기한(due) ·
+     막대를 끌어 옮기면 두 날짜가 함께 움직이고, 왼쪽 끝을 끌면 시작날짜, 오른쪽 끝을 끌면 마감기한이 바뀐다 ·
+     비어 있으면: 시작 = 예전 진행 날짜(workFrom, 10-01 하루 쓰던 칸) → 작성일 → 마감기한,
+                 끝 = 마감기한 → 예전 진행 날짜 끝(workTo) → 시작 (끝이 시작보다 앞이면 시작 하루) ·
      거르는 조건은 보드와 같다(회원·상태 칩, 마감일, 검색) */
   const PJ_VIEW_KEY='baroyam_pj_view_v1';
   let pjView='board';
@@ -13897,11 +13925,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function dayAdd(d,n){ const [y,m,dd]=d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); }
   function pjSpan(p){
     if(calDrag&&calDrag.moved&&calDrag.id===p.id) return {s:calDrag.s,e:calDrag.e};   /* 끄는 중인 막대는 미리보기 자리 */
-    if(isDay(p.workFrom)) return {s:p.workFrom,e:isDay(p.workTo)&&p.workTo>=p.workFrom?p.workTo:p.workFrom};
-    const s=[p.start,p.created,p.due].find(isDay);
+    const s=[p.start,p.workFrom,p.created,p.due].find(isDay);
     if(!s) return null;
-    const done=p.status==='완료'||p.status==='종료';
-    let e=(done&&isDay(p.doneAt))?p.doneAt:isDay(p.due)?p.due:(p.status==='진행중'&&kstToday()>s)?kstToday():s;
+    let e=[p.due,p.workTo].find(isDay)||s;
     if(e<s) e=s;
     return {s:s,e:e};
   }
@@ -13953,7 +13979,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
     host.innerHTML=`<div class="pj-mcal-head">
         <span class="pj-mcal-count">이 달 ${inMonth}개</span>
-        <span class="pj-mcal-hint">막대 = 진행한 날짜 · 끌어서 옮기고 끝을 끌어 늘입니다 · 누르면 열립니다</span>
+        <span class="pj-mcal-hint">막대 = 시작날짜 ~ 마감기한 · 끌어서 옮기고 끝을 끌어 늘입니다 · 누르면 열립니다</span>
         <div class="pj-mcal-move">
           <button type="button" class="ui-btn ghost sm icon" data-cal="prev" aria-label="이전 달">‹</button>
           <b class="pj-mcal-month">${y}년 ${m}월</b>
@@ -13969,8 +13995,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
 
   if(board){
-    /* 카드는 두 번 눌러야 열린다 · 첫 번째는 고르기(테두리에 은은한 빛), 두 번째에 수정창 ·
-       옮기려다 창이 뜨는 일이 없고, 지금 어느 카드를 보고 있는지도 드러난다 */
+    /* 카드는 한 번 누르면 고른 표시(테두리 빛)와 함께 수정창이 열린다 ·
+       끌어 옮기는 동작은 따로 걸러서(justDragged) 옮기려다 창이 뜨지 않는다 */
     board.addEventListener('click',e=>{
       /* 메모에 걸린 링크는 카드 고르기보다 앞선다 · 그냥 두면 브라우저가 새 탭에서 연다 */
       if(e.target.closest('a.pj-link')) return;
@@ -14000,18 +14026,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       }
       /* 방금 옮긴 뒤 따라오는 click은 흘려보낸다 */
       if(justDragged){ justDragged=false; return; }
-      /* 한 번 누름은 고르기까지 · 여는 것은 빠르게 두 번 누를 때만 ·
-         이미 고른 카드를 또 누르면 아무것도 하지 않는다(고른 것이 풀려 보이지 않게) */
+      /* 한 번 누르면 바로 수정창이 열린다(10-01 사용자 요청 · 예전엔 두 번 눌러야 열렸다) ·
+         끌어 옮긴 뒤의 click 은 위에서 이미 걸러져 창이 뜨지 않는다 */
       const card=e.target.closest('.pj-card');
       const id=card?card.dataset.id:null;
-      if(id&&id===pickedCard) return;
       pickCard(id);
-    });
-    board.addEventListener('dblclick',e=>{
-      if(e.target.closest('.pj-card-tool')||e.target.closest('a.pj-link')) return;
-      const card=e.target.closest('.pj-card'); if(!card) return;
-      const t=state.projects.find(x=>x.id===card.dataset.id);
-      if(t){ pickCard(card.dataset.id); openProjectDialog(t); }
+      const t=id&&state.projects.find(x=>x.id===id);
+      if(t) openProjectDialog(t);
     });
     /* 카드가 아닌 곳을 누르면 고른 표시를 푼다 · 카드 클릭은 위에서 이미 처리한 뒤 여기로 올라온다 */
     document.addEventListener('click',e=>{ if(!e.target.closest('.pj-card')) pickCard(null); });
@@ -14122,11 +14143,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         renderCal();
         return;
       }
-      /* 날짜 칸 + · 그날 하루를 진행 날짜로 잡은 새 프로젝트 · 앞으로의 날이면 예정, 아니면 진행중 */
+      /* 날짜 칸 + · 그날 시작해 그날 마감인 새 프로젝트 · 앞으로의 날이면 예정, 아니면 진행중 */
       const addDay=e.target.closest('[data-add-date]');
       if(addDay){
         const d=addDay.dataset.addDate;
-        openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,workFrom:d,workTo:d});
+        openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,start:d,due:d});
         return;
       }
       const bar=e.target.closest('.pj-mcal-bar');
@@ -14158,8 +14179,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       calJustDragged=true;
       setTimeout(()=>{ calJustDragged=false; },0);
       const t=state.projects.find(x=>x.id===d.id);
-      if(apply&&t&&(t.workFrom!==d.s||t.workTo!==d.e)){
-        t.workFrom=d.s; t.workTo=d.e;
+      if(apply&&t&&(t.start!==d.s||t.due!==d.e)){
+        t.start=d.s; t.due=d.e;
+        delete t.workFrom; delete t.workTo;              /* 예전 진행 날짜 칸은 더 쓰지 않는다 */
         save();
       }
       renderBoard();
