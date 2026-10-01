@@ -2275,8 +2275,8 @@ window.BAROYAM_ACCESS=(function(){
   /* 프로젝트 수정창 · 상태와 우선순위를 펼침목록 대신 색 칩으로 고르고, 마감일 옆에 D-day를 띄운다 ·
      링크 추가 같은 다른 대화상자는 예전 모습 그대로 쓰고 이 화면만 넓게 연다 */
   .settings-panel.mh-dialog.is-project{max-width:720px}
-  /* 프로젝트 창 맨 아래 · 저장은 저절로 되니 단추는 삭제 하나뿐이다 */
-  .pjf-foot{display:flex;justify-content:flex-end;margin-top:12px}
+  /* 프로젝트 창 맨 아래 · 삭제와 완료(저장은 저절로 되고, 완료는 닫기) */
+  .pjf-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
   /* 겉틀 · 위쪽에 강조색이 아주 옅게 깔리고 아래로 사라진다 · 테두리도 한 줄 둘러 떠 보이게 */
   .mh-dialog.is-project{border:1px solid color-mix(in srgb,var(--mh-accent) 22%,var(--line));
     border-radius:22px;overflow:visible;
@@ -4247,6 +4247,9 @@ window.BAROYAM_ACCESS=(function(){
   .ui-btn.ghost:hover{background:var(--chip-flat);color:var(--ink)}
   .ui-btn.danger{background:var(--neg-soft);border-color:transparent;color:var(--neg)}
   .ui-btn.danger:hover{border-color:var(--neg)}
+  /* 완료 · 끝맺는 단추는 초록(--pos) · 다크 모드에서는 --pos 가 밝은 초록으로 바뀐다 */
+  .ui-btn.success{background:var(--pos);border-color:transparent;color:#fff}
+  .ui-btn.success:hover{background:color-mix(in srgb,var(--pos) 86%,#000)}
   .ui-btn.sm{height:var(--ui-h-sm);padding:0 11px;border-radius:var(--ui-r-sm);font-size:var(--ui-fs-sm)}
   .ui-btn.icon{width:var(--ui-h);padding:0}
   .ui-btn.icon.sm{width:var(--ui-h-sm)}
@@ -13228,7 +13231,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   form.addEventListener('submit',e=>{ e.preventDefault(); if(onSubmit&&onSubmit(new FormData(form))!==false) closeDialog(); });
   form.addEventListener('click',e=>{
     const b=e.target.closest('[data-act]'); if(!b) return;
-    if(b.dataset.act==='cancel') closeDialog();
+    if(b.dataset.act==='cancel'||b.dataset.act==='done') closeDialog();   /* 완료 = 남은 입력까지 저장하고 닫기 */
     else if(b.dataset.act==='delete'&&form.__onDelete){
       /* 확인창이 답을 늦게 주므로 기다렸다가 닫는다 · 바로 값을 돌려주는 옛 방식도 그대로 받는다 */
       Promise.resolve(form.__onDelete()).then(r=>{ if(r!==false) closeDialog(); });
@@ -13652,6 +13655,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
        </div>
        <div class="pjf-foot">
          <button type="button" class="ui-btn danger sm" data-act="delete">삭제</button>
+         <button type="button" class="ui-btn success sm" data-act="done">완료</button>
        </div>`,
       ()=>{},{project:true,icon:ICON_PENCIL});
     /* 삭제 · 지우는 프로젝트에 남은 입력을 다시 저장하지 않게 수정 중 표시를 먼저 푼다 */
