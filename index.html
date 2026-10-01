@@ -13350,8 +13350,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const PJ_DOW=['일','월','화','수','목','금','토'];
   const ICON_CAL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3.5V6M15 3.5V6"/></svg>';
   let pjCalY=0, pjCalM=0;                 /* 지금 펼쳐 놓은 달 */
-  function pjFmtDate(iso){
-    if(!iso) return '날짜 없음';
+  /* 비어 있을 때 글자 · 시작날짜는 '미지정'(직접 골라야 정해진다), 마감기한은 '날짜 없음' */
+  const PJ_DATE_EMPTY={start:'미지정'};
+  function pjFmtDate(iso,name){
+    if(!iso) return PJ_DATE_EMPTY[name]||'날짜 없음';
     const [y,m,d]=iso.split('-').map(Number);
     return `${y}년 ${m}월 ${d}일`;
   }
@@ -13359,7 +13361,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     return `<span class="pjf-date" data-date="${name}">
       <input type="hidden" name="${name}" value="${esc(cur||'')}">
       <button type="button" class="pjf-sel pjf-datebtn" aria-haspopup="dialog" aria-expanded="false">
-        ${ICON_CAL}<span class="pjf-sel-t">${esc(pjFmtDate(cur))}</span>
+        ${ICON_CAL}<span class="pjf-sel-t">${esc(pjFmtDate(cur,name))}</span>
       </button>
       <div class="ag-calendar pjf-cal" hidden>
         <div class="ag-cal-head">
@@ -13393,8 +13395,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   function pjSetDate(wrap,iso){
     wrap.querySelector('input[type=hidden]').value=iso;
-    wrap.querySelector('.pjf-sel-t').textContent=pjFmtDate(iso);
-    const slot=form.querySelector('[data-dday]');
+    wrap.querySelector('.pjf-sel-t').textContent=pjFmtDate(iso,wrap.dataset.date);
+    /* D-day 는 마감기한 옆에만 · 시작날짜를 골라도 마감 D-day 는 그대로 */
+    const slot=wrap.dataset.date==='due'&&form.querySelector('[data-dday]');
     if(slot) slot.innerHTML=pjDdayHtml(iso);
     closeDateCals(null);
     flushProjectSave();
@@ -13913,7 +13916,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      보드판은 '지금 어디까지 왔나', 캘린더는 '언제 무엇을 했나'를 본다 ·
      프로젝트 이름만 막대로 얹는다 · 왼쪽 끝 = 시작날짜(start), 오른쪽 끝 = 마감기한(due) ·
      막대를 끌어 옮기면 두 날짜가 함께 움직이고, 왼쪽 끝을 끌면 시작날짜, 오른쪽 끝을 끌면 마감기한이 바뀐다 ·
-     비어 있으면: 시작 = 예전 진행 날짜(workFrom, 10-01 하루 쓰던 칸) → 작성일 → 마감기한,
+     비어 있으면: 시작 = 예전 진행 날짜(workFrom, 10-01 하루 쓰던 칸) → 마감기한 → 작성일 (시작날짜 미지정이면 마감일 하루),
                  끝 = 마감기한 → 예전 진행 날짜 끝(workTo) → 시작 (끝이 시작보다 앞이면 시작 하루) ·
      거르는 조건은 보드와 같다(회원·상태 칩, 마감일, 검색) */
   const PJ_VIEW_KEY='baroyam_pj_view_v1';
@@ -13925,7 +13928,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function dayAdd(d,n){ const [y,m,dd]=d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); }
   function pjSpan(p){
     if(calDrag&&calDrag.moved&&calDrag.id===p.id) return {s:calDrag.s,e:calDrag.e};   /* 끄는 중인 막대는 미리보기 자리 */
-    const s=[p.start,p.workFrom,p.created,p.due].find(isDay);
+    const s=[p.start,p.workFrom,p.due,p.created].find(isDay);
     if(!s) return null;
     let e=[p.due,p.workTo].find(isDay)||s;
     if(e<s) e=s;
@@ -14143,11 +14146,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         renderCal();
         return;
       }
-      /* 날짜 칸 + · 그날 시작해 그날 마감인 새 프로젝트 · 앞으로의 날이면 예정, 아니면 진행중 */
+      /* 날짜 칸 + · 그날을 마감기한으로 잡은 새 프로젝트 · 시작날짜는 미지정으로 두고 사람이 직접 고른다 ·
+         앞으로의 날이면 예정, 아니면 진행중 */
       const addDay=e.target.closest('[data-add-date]');
       if(addDay){
         const d=addDay.dataset.addDate;
-        openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,start:d,due:d});
+        openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,due:d});
         return;
       }
       const bar=e.target.closest('.pj-mcal-bar');
