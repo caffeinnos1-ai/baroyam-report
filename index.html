@@ -1687,18 +1687,50 @@ window.BAROYAM_ACCESS=(function(){
   #revDateRangeText{white-space:nowrap}
   #revRecentTable td:nth-child(3),#revRecentTable th:nth-child(3){text-align:center}
   #revRecentTable td:nth-child(4),#revRecentTable th:nth-child(4){text-align:center}
-  .tbars{display:flex;align-items:flex-end;gap:16px;height:280px;margin-top:24px;padding:0 4px;border-bottom:2px solid var(--line)}
-  .tcol{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:10px}
+  /* 월별 전체매출 · 막대 높이는 그림 칸(눈금 최댓값) 대비 매출 비율 그대로 ·
+     금액 라벨은 막대 위에 띄워 두어 막대 높이를 깎아먹지 않는다 · 왼쪽 눈금선으로 크기를 읽는다 */
+  .tchart{position:relative;margin-top:30px;padding-left:58px}
+  .tgrid{position:absolute;left:0;right:0;top:0;height:300px;pointer-events:none}
+  .tgrid .gl{position:absolute;left:58px;right:0;height:0;border-top:1px dashed var(--line)}
+  .tgrid .gl.is-zero{border-top:2px solid var(--line)}
+  .tgrid .gl span{position:absolute;right:calc(100% + 10px);top:0;transform:translateY(-50%);
+    font-size:11.5px;font-weight:700;color:var(--mute);white-space:nowrap}
+  .tbars{position:relative;display:flex;align-items:flex-end;gap:16px;height:300px;padding:0 4px}
+  .tcol{position:relative;flex:1;min-width:0;height:100%;display:flex;justify-content:center;align-items:flex-end;cursor:default}
   /* 좁은 노트북 화면에서는 금액 라벨이 작아지고 두 줄로 접혀 옆 막대 라벨과 겹치지 않는다 */
-  .ttot{max-width:100%;font-size:clamp(11px,1.05vw,14px);font-weight:800;letter-spacing:-.4px;color:var(--ink);text-align:center;line-height:1.3;overflow-wrap:anywhere}
-  .tbar{width:100%;max-width:88px;border-radius:9px 9px 0 0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
-  .tbar .seg{width:100%}
+  .ttot{position:absolute;left:0;right:0;bottom:calc(var(--h) + 8px);font-size:clamp(11px,1.05vw,14px);font-weight:800;
+    letter-spacing:-.4px;color:var(--ink);text-align:center;line-height:1.3;overflow-wrap:anywhere}
+  .tcol.is-best .ttot{color:var(--indigo)}
+  .tbar{position:relative;width:100%;max-width:88px;height:var(--h);min-height:2px;border-radius:9px 9px 0 0;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:flex-end;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);
+    transition:filter .15s,transform .15s;transform-origin:bottom}
+  .tcol:hover .tbar{filter:brightness(1.06)}
+  .tbar .seg{width:100%;flex:none}
+  .tbar .seg+.seg{box-shadow:0 1px 0 rgba(255,255,255,.55)}
   .tbar .seg.coupang{background:var(--coupang)}
   .tbar .seg.naver{background:var(--naver)}
   .tbar .seg.self{background:var(--self)}
-  .tx{display:flex;gap:16px;padding:13px 4px 0}
+  /* 진행 중인 달 · 잠정치라 빗금으로 구분한다 */
+  .tcol.is-partial .tbar::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(135deg,rgba(255,255,255,.28) 0 6px,transparent 6px 12px)}
+  /* 막대에 마우스를 올리면 채널별 금액·비중 */
+  .ttip{position:absolute;left:50%;bottom:calc(var(--h) + 34px);transform:translateX(-50%);z-index:5;min-width:178px;
+    padding:10px 12px;border-radius:12px;background:var(--paper);border:1px solid var(--line);
+    box-shadow:0 10px 28px rgba(0,0,0,.12);font-size:12.5px;line-height:1.5;color:var(--body);
+    opacity:0;visibility:hidden;transition:opacity .12s;pointer-events:none;white-space:nowrap}
+  .tcol:hover .ttip{opacity:1;visibility:visible}
+  .ttip b{display:block;font-size:13px;color:var(--ink);margin-bottom:4px}
+  .ttip .tr{display:flex;align-items:center;gap:6px}
+  .ttip .tr i{width:8px;height:8px;border-radius:2px;flex:none}
+  .ttip .tr em{font-style:normal;margin-left:auto;padding-left:12px;font-weight:700;color:var(--ink)}
+  .ttip .tr small{color:var(--mute);font-size:11px;width:34px;text-align:right}
+  .tx{display:flex;gap:16px;padding:13px 4px 0 62px}
   .tx span{flex:1;text-align:center;font-size:16px;font-weight:800;color:var(--body)}
+  .tx span small{display:block;font-size:11px;font-weight:700;color:var(--mute);margin-top:2px}
+  @media (max-width:700px){
+    .tchart{padding-left:44px}.tgrid .gl{left:44px}.tx{padding-left:48px}
+    .tbars,.tx{gap:8px}.tx span{font-size:13px}
+  }
   .admon-head{display:inline-block;font-size:16px;font-weight:800;letter-spacing:-.3px;color:#fff;
     padding:8px 18px;border-radius:999px;margin-bottom:12px}
   .admon-head.prev{background:var(--prev-ink)}
@@ -5499,7 +5531,10 @@ window.BAROYAM_ACCESS=(function(){
               <span><i style="background:var(--naver)"></i>네이버</span>
               <span><i style="background:var(--self)"></i>자사몰</span>
             </div>
-            <div class="tbars" id="mTrendBars"></div>
+            <div class="tchart">
+              <div class="tgrid" id="mTrendGrid" aria-hidden="true"></div>
+              <div class="tbars" id="mTrendBars"></div>
+            </div>
             <div class="tx" id="mTrendX"></div>
           </div>
         </section>
@@ -7639,15 +7674,33 @@ function renderReport(data){
     `<div class="kpi"><div class="k-label">최고 매출 월</div><div class="k-val num" data-nocount>${MONTHS[best]} · ${eok(monthTotal[best])}<small>원</small></div><div class="k-sub">${wonRaw(monthTotal[best])}원</div></div>`+
     `<div class="kpi"><div class="k-label">${MONTHS[CURR]} 매출</div><div class="k-val num">${wonRaw(totMCurr)}<small>원</small></div><div class="k-sub">전월 대비 ${pct(totMCurr,totMPrev)>0?'+':''}${pct(totMCurr,totMPrev)}%</div></div>`;
 
-  /* M01 trend stacked bars */
-  const tMax=Math.max(...monthTotal)||1;
+  /* M01 trend stacked bars · 높이 = 매출 ÷ 눈금 최댓값 (구글시트 월별 매출 그대로) */
+  const tMax=Math.max(...monthTotal)||100000000;   /* 시트를 불러오기 전(모두 0)에는 1억 눈금 */
+  /* 눈금 · 1·2·2.5·5 ×10ⁿ 단위로 4~5칸 · 최댓값 막대 위에 금액 라벨 자리가 남도록 맨 위 칸에 여유를 둔다 */
+  const tStep=(()=>{const raw=tMax*1.12/4, p=Math.pow(10,Math.floor(Math.log10(raw)));
+    return [1,2,2.5,5,10].map(k=>k*p).find(v=>v>=raw);})();
+  const tTop=Math.ceil(tMax*1.12/tStep)*tStep;
+  const tickLabel=v=>v===0?'0':v>=100000000?(+(v/100000000).toFixed(2))+'억':Math.round(v/10000).toLocaleString('ko-KR')+'만';
+  const ticks=[]; for(let v=0;v<=tTop+1;v+=tStep) ticks.push(v);
+  document.getElementById('mTrendGrid').innerHTML=ticks.map(v=>
+    `<div class="gl${v===0?' is-zero':''}" style="top:${(1-v/tTop)*100}%"><span>${tickLabel(v)}</span></div>`).join('');
+  const CH_CLS={'쿠팡':'coupang','네이버':'naver','자사몰':'self'};
+  /* 마지막 달이 아직 진행 중이면(오늘이 말일 전) 잠정치로 표시한다 */
+  const partialIdx=(MONTHS[CURR]===data.currLabel&&data.currDay<data.daysInCurrMonth)?CURR:-1;
   document.getElementById('mTrendBars').innerHTML=MONTHS.map((m,i)=>{
-    const totH=monthTotal[i]/tMax*100;
-    const segs=CH.map(c=>{const h=monthTotal[i]?M[c][i]/monthTotal[i]*100:0;
-      return `<div class="seg ${c==='쿠팡'?'coupang':c==='네이버'?'naver':'self'}" style="height:${h}%"></div>`;}).join('');
-    return `<div class="tcol"><div class="ttot num">${eok(monthTotal[i])}</div>
-      <div class="tbar" style="height:${totH}%">${segs}</div></div>`;}).join('');
-  document.getElementById('mTrendX').innerHTML=MONTHS.map(m=>`<span>${m}</span>`).join('');
+    const tot=monthTotal[i];
+    const h=(tot/tTop*100).toFixed(2)+'%';
+    /* 위에서부터 자사몰·네이버·쿠팡 순으로 쌓아 범례와 같은 순서가 아래에서 위로 오게 한다 */
+    const segs=CH.slice().reverse().map(c=>{const sh=tot?M[c][i]/tot*100:0;
+      return `<div class="seg ${CH_CLS[c]||'self'}" style="height:${sh}%"></div>`;}).join('');
+    const tip=`<div class="ttip"><b>${m} 전체 ${wonRaw(tot)}원${i===partialIdx?' · 진행 중':''}</b>`+
+      CH.map(c=>`<div class="tr"><i style="background:var(--${CH_CLS[c]||'self'})"></i>${c}<em>${wonRaw(M[c][i])}원</em><small>${tot?Math.round(M[c][i]/tot*100):0}%</small></div>`).join('')+
+      `</div>`;
+    return `<div class="tcol${i===best?' is-best':''}${i===partialIdx?' is-partial':''}" style="--h:${h}">
+      <div class="ttot num">${eok(tot)}</div>${tip}
+      <div class="tbar">${segs}</div></div>`;}).join('');
+  document.getElementById('mTrendX').innerHTML=MONTHS.map((m,i)=>
+    `<span>${m}${i===partialIdx?`<small>${data.currDay}일까지</small>`:''}</span>`).join('');
 
   /* M02 sales table */
   let mst=`<thead><tr><th>플랫폼</th><th>${MONTHS[PREV]} 매출</th><th>${MONTHS[CURR]} 매출</th><th>증감액</th><th>증감률</th></tr></thead><tbody>`;
