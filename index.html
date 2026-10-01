@@ -2206,6 +2206,62 @@ window.BAROYAM_ACCESS=(function(){
     .pj-board{width:auto}
     .pj-col{flex:0 0 240px;width:240px}
   }
+  /* 프로젝트 캘린더 보기 · 한 주가 한 줄이고, 프로젝트 이름이 시작일~끝난 날에 걸친 막대로 얹힌다 ·
+     날짜 칸(.pj-mcal-day)은 주 줄의 모든 행을 세로로 덮는 둥근 네모이고, 막대는 그 위 행에 차례로 쌓인다 ·
+     칸 사이는 --mcal-gap 만큼 띄우고, 여러 날에 걸친 막대는 그 틈을 건너 이어진다 ·
+     한 주 줄은 기본 136px 이고, 그 주에 막대가 많아 줄이 넘치면 막대 수만큼 아래로 늘어난다(줄 수는 renderCal 이 정한다) */
+  .pj-board[hidden],.pj-mcal[hidden]{display:none}
+  .pj-mcal{padding:16px;border-radius:20px;background:var(--paper);box-shadow:var(--mh-card-shadow)}
+  .pj-mcal{--mcal-gap:6px}
+  .pj-mcal-box{padding:12px 12px 6px;border-radius:14px;background:var(--bg)}
+  .pj-mcal-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .pj-mcal-move{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .pj-mcal-month{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin:0 4px;min-width:108px;text-align:center}
+  .pj-mcal-count{font-size:12px;font-weight:700;color:var(--mute)}
+  .pj-mcal-hint{font-size:12px;color:var(--mute)}
+  .pj-mcal-dow,.pj-mcal-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));column-gap:var(--mcal-gap)}
+  .pj-mcal-dow span{padding:0 10px 8px;font-size:12px;font-weight:800;color:var(--mute)}
+  .pj-mcal-dow span:first-child,.pj-mcal-day:nth-child(7n+1) .pj-mcal-num{color:var(--neg)}
+  .pj-mcal-week{row-gap:3px;min-height:136px;margin-bottom:var(--mcal-gap);padding-bottom:10px}
+  .pj-mcal-day{grid-row:1/-1;min-width:0;border:1px solid transparent;border-radius:12px;background:var(--paper);
+    margin-bottom:-10px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:border-color .12s}
+  .pj-mcal-day:hover{border-color:color-mix(in srgb,var(--btn) 35%,var(--line))}
+  .pj-mcal-day.is-out{background:transparent;box-shadow:none}
+  .pj-mcal-day.is-today{border-color:var(--btn)}
+  .pj-mcal-day.is-out .pj-mcal-num{opacity:.45}
+  .pj-mcal-num{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;margin:5px 6px 0;padding:0 5px;
+    border-radius:99px;font-size:12.5px;font-weight:700;color:var(--body)}
+  .pj-mcal-day.is-today .pj-mcal-num{background:var(--btn);color:#fff}
+  .pj-mcal-bar{all:unset;box-sizing:border-box;z-index:1;min-width:0;height:22px;margin:0 4px;padding:0 8px;display:flex;align-items:center;
+    border-radius:6px;border-left:3px solid var(--bar);background:color-mix(in srgb,var(--bar) 14%,var(--paper));
+    font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .pj-mcal-bar:hover{background:color-mix(in srgb,var(--bar) 24%,var(--paper))}
+  .pj-mcal-bar:focus-visible{box-shadow:var(--ui-ring)}
+  /* 끌어서 옮기거나 양 끝을 끌어 늘일 수 있는 막대 · 손대지 못하는 막대(남의 프로젝트)는 그냥 누르기만 된다 */
+  .pj-mcal-bar.can-drag{position:relative;cursor:grab;touch-action:none}
+  .pj-mcal-grip{position:absolute;top:0;bottom:0;width:8px;cursor:ew-resize}
+  .pj-mcal-grip.is-l{left:-3px}
+  .pj-mcal-grip.is-r{right:0}
+  .pj-mcal-grip.is-r::after{content:"";position:absolute;right:2px;top:6px;bottom:6px;width:2px;border-radius:2px;
+    background:var(--bar);opacity:0;transition:opacity .12s}
+  .pj-mcal-bar:hover .pj-mcal-grip.is-r::after{opacity:.7}
+  .pj-mcal-bar.is-dragging{box-shadow:0 0 0 2px var(--bar),0 6px 16px rgba(0,0,0,.14)}
+  body.pj-mcal-dragging,body.pj-mcal-dragging *{cursor:grabbing!important;user-select:none}
+  body.pj-mcal-dragging.is-resize,body.pj-mcal-dragging.is-resize *{cursor:ew-resize!important}
+  /* 앞 주에서 이어지는 막대는 왼쪽 강조선을 빼고, 다음 주로 넘어가는 막대는 오른쪽 모서리를 잘라 이어짐을 보인다 */
+  .pj-mcal-bar.is-cont-l{border-left-width:0;border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0}
+  .pj-mcal-bar.is-cont-r{border-top-right-radius:0;border-bottom-right-radius:0;margin-right:0}
+  .pj-mcal-empty{padding:14px 0 10px;text-align:center;font-size:12px;color:var(--mute)}
+  @media(max-width:760px){
+    .pj-mcal{padding:10px}
+    .pj-mcal{--mcal-gap:3px}
+    .pj-mcal-box{padding:8px 6px 4px}
+    .pj-mcal-week{min-height:100px}
+    .pj-mcal-day{border-radius:8px}
+    .pj-mcal-move{margin-left:0;width:100%}
+    .pj-mcal-num{margin:4px 2px 0;font-size:11.5px}
+    .pj-mcal-bar{margin:0 2px;padding:0 4px;font-size:11px}
+  }
   .settings-panel.mh-dialog{max-width:420px;height:auto}
   /* 프로젝트 수정창 · 상태와 우선순위를 펼침목록 대신 색 칩으로 고르고, 마감일 옆에 D-day를 띄운다 ·
      링크 추가 같은 다른 대화상자는 예전 모습 그대로 쓰고 이 화면만 넓게 연다 */
@@ -5230,6 +5286,11 @@ window.BAROYAM_ACCESS=(function(){
         <div class="pj">
           <div class="pj-head">
             <div class="pj-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg>프로젝트</div>
+            <!-- 보기 전환 · 보드판은 지금 상태를, 캘린더는 언제 무엇을 했는지를 본다 -->
+            <div class="ui-tabs" id="pjViewTabs" aria-label="프로젝트 보기">
+              <button type="button" class="ui-tab" data-value="board" aria-selected="true">보드판</button>
+              <button type="button" class="ui-tab" data-value="cal">캘린더</button>
+            </div>
             <div class="pj-filters" id="pjFilters">
               <button type="button" class="pj-filter" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>마감일<span class="pj-filter-n"></span></button>
               <button type="button" class="pj-filter pj-filter-reset" id="pjFilterReset" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.5 8.5A7 7 0 1 0 19 12"/><path d="M19 4.5V9h-4.5"/></svg>필터 초기화</button>
@@ -5242,6 +5303,7 @@ window.BAROYAM_ACCESS=(function(){
             <div class="pj-facet-rows" id="pjFacets"></div>
           </div>
           <div class="pj-board" id="pjBoard"></div>
+          <div class="pj-mcal" id="pjCal" hidden></div>
         </div>
       </div>
 
@@ -13806,7 +13868,96 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const reset=$('pjFilterReset');
     if(reset) reset.hidden=!(pf.status.size||pf.owner.size||pf.channel.size||pf.from||pf.to||pf.q);
     renderFacets();
+    renderCal();
   }
+  /* ---------- 캘린더 보기 ----------
+     보드판은 '지금 어디까지 왔나', 캘린더는 '언제 무엇을 했나'를 본다 ·
+     프로젝트 이름만 '진행한 날짜'(workFrom~workTo)에 막대로 얹는다 ·
+     막대를 끌어 다른 날로 옮기거나 양 끝을 끌어 늘이면 진행 날짜가 바뀐다(마감일·시작일은 그대로) ·
+     진행 날짜를 아직 안 정한 프로젝트는 짐작해서 보여 준다:
+       시작 = 시작일 → 없으면 작성일 → 없으면 마감일 ·
+       끝 = 완료·종료면 끝낸 날(doneAt) → 마감일 → 진행중이면 오늘 → 시작일 ·
+     진행 날짜는 표에 따로 칸이 없어 projects.data(나머지 값 칸)에 함께 저장된다 ·
+     거르는 조건은 보드와 같다(회원·상태 칩, 마감일, 검색) */
+  const PJ_VIEW_KEY='baroyam_pj_view_v1';
+  let pjView='board';
+  try{ if(localStorage.getItem(PJ_VIEW_KEY)==='cal') pjView='cal'; }catch(e){}
+  let calMonth=kstToday().slice(0,7);               /* 보고 있는 달 'YYYY-MM' */
+  let calDrag=null;                                   /* 끌고 있는 막대 {id,mode,from0,to0,anchor,s,e,moved} */
+  const isDay=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''));
+  function dayAdd(d,n){ const [y,m,dd]=d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); }
+  function pjSpan(p){
+    if(calDrag&&calDrag.moved&&calDrag.id===p.id) return {s:calDrag.s,e:calDrag.e};   /* 끄는 중인 막대는 미리보기 자리 */
+    if(isDay(p.workFrom)) return {s:p.workFrom,e:isDay(p.workTo)&&p.workTo>=p.workFrom?p.workTo:p.workFrom};
+    const s=[p.start,p.created,p.due].find(isDay);
+    if(!s) return null;
+    const done=p.status==='완료'||p.status==='종료';
+    let e=(done&&isDay(p.doneAt))?p.doneAt:isDay(p.due)?p.due:(p.status==='진행중'&&kstToday()>s)?kstToday():s;
+    if(e<s) e=s;
+    return {s:s,e:e};
+  }
+  function renderCal(){
+    const host=$('pjCal');
+    if(!host) return;
+    host.hidden=pjView!=='cal';
+    if(board) board.hidden=pjView==='cal';
+    if(pjView!=='cal') return;
+    const today=kstToday();
+    const [y,m]=calMonth.split('-').map(Number);
+    const firstDow=new Date(Date.UTC(y,m-1,1)).getUTCDay();          /* 일요일부터 시작 */
+    const days=new Date(Date.UTC(y,m,0)).getUTCDate();
+    const weeks=Math.ceil((firstDow+days)/7);
+    const gridStart=dayAdd(calMonth+'-01',-firstDow), gridEnd=dayAdd(gridStart,weeks*7-1);
+    const monthStart=calMonth+'-01', monthEnd=dayAdd(monthStart,days-1);
+    const items=state.projects.filter(p=>pjMatch(p)).map(p=>({p:p,sp:pjSpan(p)}))
+      .filter(x=>x.sp&&x.sp.s<=gridEnd&&x.sp.e>=gridStart)
+      .sort((a,b)=>a.sp.s.localeCompare(b.sp.s)||b.sp.e.localeCompare(a.sp.e)||String(a.p.name||'').localeCompare(String(b.p.name||'')));
+    const inMonth=items.filter(x=>x.sp.s<=monthEnd&&x.sp.e>=monthStart).length;
+    const colorOf=st=>(STATUSES.find(x=>x.k===st)||STATUSES[1]).c;
+    let body='';
+    for(let w=0;w<weeks;w++){
+      const ws=dayAdd(gridStart,w*7), we=dayAdd(ws,6);
+      const lanes=[];                                               /* 줄마다 막대가 끝난 칸 번호 */
+      let bars='';
+      items.forEach(({p,sp})=>{
+        if(sp.s>we||sp.e<ws) return;
+        const a=sp.s<ws?ws:sp.s, b=sp.e>we?we:sp.e;
+        const c0=dayDiff(ws,a), c1=dayDiff(ws,b);
+        let lane=lanes.findIndex(end=>end<c0);
+        if(lane<0){ lane=lanes.length; lanes.push(c1); } else lanes[lane]=c1;
+        const range=sp.s===sp.e?fmtKDate(sp.s):fmtKDate(sp.s)+' ~ '+fmtKDate(sp.e);
+        const drag=canManageProject(p);
+        /* 늘이는 손잡이는 막대의 진짜 끝에만 · 다른 주로 이어지는 쪽에는 달지 않는다 */
+        const grips=drag?(sp.s>=ws?'<i class="pj-mcal-grip is-l" data-grip="l"></i>':'')+(sp.e<=we?'<i class="pj-mcal-grip is-r" data-grip="r"></i>':''):'';
+        bars+=`<button type="button" class="pj-mcal-bar${sp.s<ws?' is-cont-l':''}${sp.e>we?' is-cont-r':''}${drag?' can-drag':''}${calDrag&&calDrag.moved&&calDrag.id===p.id?' is-dragging':''}" data-id="${esc(p.id)}"
+          style="grid-column:${c0+1}/${c1+2};grid-row:${lane+2};--bar:${esc(colorOf(p.status))}"
+          title="${esc(p.name)} · ${esc(p.status||'')} · 진행 ${range}${drag?' · 끌어서 옮기기, 끝을 끌어 늘이기':''}">${grips}${esc(p.name||'이름 없음')}</button>`;
+      });
+      let cells='';
+      for(let i=0;i<7;i++){
+        const d=dayAdd(ws,i);
+        cells+=`<div class="pj-mcal-day${d.slice(0,7)!==calMonth?' is-out':''}${d===today?' is-today':''}" data-date="${d}" style="grid-column:${i+1}">
+          <span class="pj-mcal-num num">${+d.slice(8)}</span></div>`;
+      }
+      body+=`<div class="pj-mcal-week" style="grid-template-rows:32px repeat(${lanes.length},22px) minmax(8px,1fr)">${cells}${bars}</div>`;
+    }
+    host.innerHTML=`<div class="pj-mcal-head">
+        <span class="pj-mcal-count">이 달 ${inMonth}개</span>
+        <span class="pj-mcal-hint">막대 = 진행한 날짜 · 끌어서 옮기고 끝을 끌어 늘입니다 · 누르면 열립니다</span>
+        <div class="pj-mcal-move">
+          <button type="button" class="ui-btn ghost sm icon" data-cal="prev" aria-label="이전 달">‹</button>
+          <b class="pj-mcal-month">${y}년 ${m}월</b>
+          <button type="button" class="ui-btn ghost sm icon" data-cal="next" aria-label="다음 달">›</button>
+          <button type="button" class="ui-btn soft sm" data-cal="today">이번 달</button>
+        </div>
+      </div>
+      <div class="pj-mcal-box">
+        <div class="pj-mcal-dow">${['일','월','화','수','목','금','토'].map(d=>`<span>${d}</span>`).join('')}</div>
+        ${body}
+        ${inMonth?'':'<div class="pj-mcal-empty">이 달에 걸친 프로젝트가 없습니다</div>'}
+      </div>`;
+  }
+
   if(board){
     /* 카드는 두 번 눌러야 열린다 · 첫 번째는 고르기(테두리에 은은한 빛), 두 번째에 수정창 ·
        옮기려다 창이 뜨는 일이 없고, 지금 어느 카드를 보고 있는지도 드러난다 */
@@ -13950,6 +14101,100 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&dragArm) endDrag(false); });
 
     $('pjSearch').addEventListener('input',e=>{ pf.q=e.target.value.trim().toLowerCase(); renderBoard(); });
+
+    /* 보드판 / 캘린더 전환 · 고른 보기는 이 브라우저에 기억해 둔다 */
+    const viewTabs=$('pjViewTabs');
+    if(viewTabs&&window.UI&&window.UI.tabs){
+      window.UI.tabs(viewTabs,v=>{
+        pjView=v==='cal'?'cal':'board';
+        try{ localStorage.setItem(PJ_VIEW_KEY,pjView); }catch(e){}
+        pickCard(null);
+        renderCal();
+      }).set(pjView);
+    }
+    const cal=$('pjCal');
+    if(cal) cal.addEventListener('click',e=>{
+      const nav=e.target.closest('[data-cal]');
+      if(nav){
+        const k=nav.dataset.cal;
+        if(k==='today') calMonth=kstToday().slice(0,7);
+        else{ const [y,m]=calMonth.split('-').map(Number); calMonth=new Date(Date.UTC(y,m-1+(k==='next'?1:-1),1)).toISOString().slice(0,7); }
+        renderCal();
+        return;
+      }
+      const bar=e.target.closest('.pj-mcal-bar');
+      if(!bar) return;
+      /* 방금 끌어 옮긴 뒤 따라오는 click은 창을 열지 않는다 */
+      if(calJustDragged){ calJustDragged=false; return; }
+      const t=state.projects.find(x=>x.id===bar.dataset.id);
+      if(t) openProjectDialog(t);
+    });
+    /* 막대 끌기 · 몸통을 끌면 기간 길이를 그대로 두고 옮기고, 양 끝 손잡이를 끌면 그쪽 날짜만 늘이거나 줄인다 ·
+       보드 카드처럼 포인터를 직접 따라간다(마우스·터치 같은 길) · 놓는 순간 진행 날짜를 저장한다 */
+    let calJustDragged=false, calPt=null;
+    /* 포인터 아래 날짜 · 막대가 날짜 칸을 덮고 있어 요소로 찾지 않고 좌표로 계산한다 ·
+       세로는 가장 가까운 주 줄, 가로는 그 줄을 7칸으로 나눠 고른다(달력 밖으로 나가도 끝 칸에 붙는다) */
+    function calDateAt(x,y){
+      const weeks=[...cal.querySelectorAll('.pj-mcal-week')];
+      if(!weeks.length) return null;
+      let wk=weeks[0], best=Infinity;
+      weeks.forEach(w=>{ const r=w.getBoundingClientRect(); const d=y<r.top?r.top-y:y>r.bottom?y-r.bottom:0; if(d<best){ best=d; wk=w; } });
+      let day=null; best=Infinity;
+      wk.querySelectorAll('.pj-mcal-day').forEach(c=>{ const r=c.getBoundingClientRect(); if(!r.width) return;
+        const d=x<r.left?r.left-x:x>r.right?x-r.right:0; if(d<best){ best=d; day=c; } });
+      return day?day.dataset.date:null;
+    }
+    function calEndDrag(apply){
+      const d=calDrag; calDrag=null;
+      document.body.classList.remove('pj-mcal-dragging','is-resize');
+      if(!d||!d.moved) return;
+      calJustDragged=true;
+      setTimeout(()=>{ calJustDragged=false; },0);
+      const t=state.projects.find(x=>x.id===d.id);
+      if(apply&&t&&(t.workFrom!==d.s||t.workTo!==d.e)){
+        t.workFrom=d.s; t.workTo=d.e;
+        save();
+      }
+      renderBoard();
+    }
+    if(cal){
+      cal.addEventListener('pointerdown',e=>{
+        if(e.button!==0) return;
+        const bar=e.target.closest('.pj-mcal-bar.can-drag');
+        if(!bar) return;
+        const t=state.projects.find(x=>x.id===bar.dataset.id);
+        if(!t||!canManageProject(t)) return;
+        const anchor=calDateAt(e.clientX,e.clientY);
+        if(!anchor) return;
+        const sp=pjSpan(t);
+        const grip=e.target.closest('[data-grip]');
+        calDrag={id:t.id,mode:grip?grip.dataset.grip:'move',from0:sp.s,to0:sp.e,anchor:anchor,s:sp.s,e:sp.e,moved:false};
+        calPt={x:e.clientX,y:e.clientY};
+        e.preventDefault();
+      });
+      window.addEventListener('pointermove',e=>{
+        if(!calDrag) return;
+        if(!calDrag.moved){
+          if(Math.abs(e.clientX-calPt.x)+Math.abs(e.clientY-calPt.y)<5) return;   /* 이만큼은 그냥 누름 */
+          calDrag.moved=true;
+          document.body.classList.add('pj-mcal-dragging');
+          document.body.classList.toggle('is-resize',calDrag.mode!=='move');
+        }
+        const at=calDateAt(e.clientX,e.clientY);
+        if(!at) return;
+        const delta=dayDiff(calDrag.anchor,at);
+        let s=calDrag.from0, en=calDrag.to0;
+        if(calDrag.mode==='move'){ s=dayAdd(s,delta); en=dayAdd(en,delta); }
+        else if(calDrag.mode==='l'){ s=dayAdd(s,delta); if(s>en) s=en; }
+        else{ en=dayAdd(en,delta); if(en<s) en=s; }
+        if(s===calDrag.s&&en===calDrag.e&&cal.querySelector('.pj-mcal-bar.is-dragging')) return;
+        calDrag.s=s; calDrag.e=en;
+        renderCal();
+      });
+      window.addEventListener('pointerup',()=>{ if(calDrag) calEndDrag(true); });
+      window.addEventListener('pointercancel',()=>{ if(calDrag) calEndDrag(false); });
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&calDrag) calEndDrag(false); });
+    }
 
     /* 칩 줄 · 같은 줄에서는 여러 개를 겹쳐 고를 수 있고, '전체'를 누르면 그 줄만 초기화된다 */
     $('pjFacets').addEventListener('click',e=>{
