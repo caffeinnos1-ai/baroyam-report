@@ -91,6 +91,7 @@
     <p class="use"><code>&lt;input type="date"&gt;</code> 나 새 달력을 만들지 말고 이것을 씁니다.</p>
     <div class="row"><button id="dp1"></button><span class="out" id="dp1Out"></span></div>
     <div class="row"><button id="dp2"></button><span class="out" id="dp2Out"></span></div>
+    <div class="row"><button id="dp3"></button><span class="out" id="dp3Out"></span></div>
   </section>
 </div>
 <script>
@@ -113,6 +114,8 @@
   const o1=document.getElementById('dp1Out'), o2=document.getElementById('dp2Out');
   UI.datePicker(document.getElementById('dp1'),{placeholder:'회의 날짜',onChange:v=>{ o1.textContent='값: '+JSON.stringify(v); }});
   UI.datePicker(document.getElementById('dp2'),{mode:'range',presets:['today','week','month','prevMonth','custom'],onChange:v=>{ o2.textContent='값: '+JSON.stringify(v); }});
+  UI.datePicker(document.getElementById('dp3'),{placeholder:'출시일',yearNav:true,onChange:v=>{ document.getElementById('dp3Out').textContent='값: '+JSON.stringify(v); }});
+  document.getElementById('dp3Out').textContent='yearNav:true · « » 로 한 해씩 넘김 (브랜드 출시일)';
   o1.textContent='한 날짜'; o2.textContent='기간 · 빠른 선택 → 시작일~종료일 → 적용 (프로젝트 마감일·판매채널 기간과 같은 모양)';
 })();
 </script>

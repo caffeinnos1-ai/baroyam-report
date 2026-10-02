@@ -185,7 +185,7 @@ window.BAROYAM_DB=(function(){
       /* 드라이브 색인·사전과 계정관리 목록은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 ·
          계정관리(accounts_v1)는 아이디·비밀번호와 올린 로고 그림이 들어 있어, 첫 화면에서 받으면
          느려지고 계정관리 비밀번호를 통과하기 전에 브라우저에 와 버린다 */
-      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1)');
+      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1)');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
@@ -912,6 +912,23 @@ window.BAROYAM_DB=(function(){
     if(r.error) throw r.error;
     return r.data||[];
   }
+  /* ---------- 파일 보관함 (Supabase Storage) · 브랜드전략실 첨부 ----------
+     버킷은 supabase/11-brand-files-storage.sql 로 만든다(비공개 · 올리기·읽기만, 지우기는 화면에서 못 함) ·
+     읽을 때는 잠깐(5분) 쓰는 서명 주소를 받아 연다 */
+  async function fileUpload(bucket,path,file){
+    if(!(await ensureSession())) throw new Error('로그인되지 않았습니다');
+    const c=await client();
+    const r=await c.storage.from(bucket).upload(path,file,{upsert:false,contentType:file.type||undefined});
+    if(r.error) throw r.error;
+    return r.data;
+  }
+  async function fileUrl(bucket,path){
+    if(!(await ensureSession())) throw new Error('로그인되지 않았습니다');
+    const c=await client();
+    const r=await c.storage.from(bucket).createSignedUrl(path,300);
+    if(r.error) throw r.error;
+    return r.data.signedUrl;
+  }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
     trendGoogle:trendGoogle,trendNaver:trendNaver,automationRuns:automationRuns,
     agendaList:agendaList,agendaUpsert:agendaUpsert,agendaSetTrashed:agendaSetTrashed,
@@ -920,7 +937,7 @@ window.BAROYAM_DB=(function(){
     migrateAgendaAndGuide:migrateAgendaAndGuide,
     listNotes:listNotes,syncNotes:syncNotes,
     saveSetting:saveSetting,loadSettings:loadSettings,loadSetting:loadSetting,migrateFromSheets:migrateFromSheets,
-    saveMerged:saveMerged,blobSync:blobSync,merge3:merge3,union:union,
+    saveMerged:saveMerged,blobSync:blobSync,merge3:merge3,union:union,fileUpload:fileUpload,fileUrl:fileUrl,
     saveIfVersion:saveIfVersion,loadSettingRows:loadSettingRows,saveNotice:saveNotice,
     mirrorAll:mirrorAll,mirrorMine:mirrorMine,
     loadProjects:loadProjects,saveProject:saveProject,saveProjectOrder:saveProjectOrder,deleteProject:deleteProject,
@@ -3630,6 +3647,7 @@ window.BAROYAM_ACCESS=(function(){
 
   /* 관리자 설정 · 워크플로우(자동화 수집 일정과 최근 실행 결과) */
   .settings-view[data-settings-panel="workflow"]{height:auto}
+  .settings-view[data-settings-panel="brand"]{height:auto}
   .wf-manager{display:flex;flex-direction:column;gap:12px}
   .wf-list{display:flex;flex-direction:column;gap:10px}
   .wf-card{border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:var(--bg);display:flex;flex-direction:column;gap:10px}
@@ -4383,6 +4401,7 @@ window.BAROYAM_ACCESS=(function(){
   .ui-cal{width:280px;display:flex;flex-direction:column;gap:10px}
   .ui-cal.range{width:350px;max-width:calc(100vw - 16px)}
   .ui-cal-head{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+  .ui-cal-navs{display:inline-flex;gap:2px}
   .ui-cal-title{font-size:13.5px;font-weight:800;color:var(--ink)}
   .ui-cal-quick{display:flex;flex-wrap:wrap;gap:5px}
   .ui-cal-quick .ui-chip{height:30px;padding:0 11px;font-size:12px;font-weight:800}
@@ -4417,6 +4436,148 @@ window.BAROYAM_ACCESS=(function(){
     .sidebar{display:none} .hero-view-tabs{display:none} .topbar{display:none}
     .settings-overlay{display:none}
   }
+  /* ===== 브랜드전략실 · 버튼·칩·입력칸은 ui-* 만 쓰고, 여기는 배치(카드·진행 막대·체크리스트)만 둔다 ===== */
+  .bs-wrap{padding:26px 48px 48px}
+  @media (max-width:760px){ .bs-wrap{padding:20px 16px 32px} }
+  /* 왼쪽 목록 + 오른쪽 상세 */
+  .bs-split{display:block}
+  /* 미니 대시보드 · 브랜드전략실일 때만 .wrap 을 [미니 | 대시보드] 두 칸으로 벌린다 ·
+     .wrap 에는 overflow 가 없어 sticky 가 먹는다(.paper 안쪽은 overflow:hidden 이라 안 먹는다) */
+  .bs-mini{display:none}
+  body.view-is-brand .wrap{display:flex;align-items:flex-start;gap:22px;max-width:1440px}
+  body.view-is-brand .wrap>.paper{flex:1;min-width:0}
+  body.view-is-brand .bs-mini{display:flex;flex-direction:column;gap:12px;flex:none;width:264px;
+    position:sticky;top:78px;max-height:calc(100vh - 96px);overflow-y:auto;padding:18px 14px 14px;
+    background:var(--paper);border-radius:20px;
+    box-shadow:0 24px 60px -28px rgba(38,38,46,.24),0 2px 8px rgba(38,38,46,.05)}
+  @media (max-width:980px){
+    body.view-is-brand .wrap{flex-direction:column}
+    body.view-is-brand .bs-mini{position:static;width:auto;max-height:none}
+  }
+  .bs-mini-tools{display:flex;flex-direction:column;gap:8px}
+  .bs-search input{all:unset;flex:1;min-width:0;font:inherit;color:var(--ink)}
+  .bs-search input::placeholder{color:var(--mute);font-weight:500}
+  .bs-search:focus-within{border-color:var(--btn);box-shadow:var(--ui-ring)}
+  .bs-mini .ui-tab{height:28px;padding:0 10px;font-size:12px}
+  /* 체크 단추 · 글자만 있던 것을 테두리 있는 단추 + 체크 아이콘으로 */
+  .bs-check-btn svg{width:14px;height:14px}
+  .bs-check-btn.is-full{background:var(--pos-soft);border-color:transparent;color:var(--pos)}
+  .bs-check-btn.is-full:hover{border-color:var(--pos);color:var(--pos)}
+  .bs-mini-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:0 4px}
+  .bs-mini-head h2{margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  .bs-mini-head span{font-size:12.5px;font-weight:800;color:var(--mute);font-variant-numeric:tabular-nums}
+  .bs-mini .bs-empty{border:0;padding:20px 8px;font-size:12.5px}
+  /* 브랜드 한 개 = 테두리 있는 네모 상자 · 고른 브랜드는 강조색 테두리 */
+  .bs-mini .bs-list{gap:8px}
+  .bs-mini .bs-item{border:1px solid var(--line);background:var(--paper)}
+  .bs-mini .bs-item:hover{border-color:color-mix(in srgb,var(--btn) 45%,var(--line));background:var(--paper)}
+  .bs-mini .bs-item[aria-current="true"]{background:var(--btn-soft);border-color:var(--btn);box-shadow:none}
+  .bs-list{display:flex;flex-direction:column;gap:4px}
+  .bs-item{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;
+    border:1px solid transparent;cursor:pointer;transition:var(--ui-ease)}
+  .bs-item:hover{background:var(--chip-flat)}
+  .bs-item:focus-visible{box-shadow:var(--ui-ring)}
+  .bs-item[aria-current="true"]{background:var(--paper);border-color:var(--btn);box-shadow:var(--mh-card-shadow)}
+  .bs-item-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .bs-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:800;color:var(--ink)}
+  .bs-item-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:var(--mute)}
+  .bs-item-meta .bs-prog-bar{height:5px}
+  .bs-empty{padding:40px 16px;text-align:center;border:1px dashed var(--line);border-radius:14px;
+    color:var(--mute);font-size:13.5px;font-weight:600;line-height:1.7}
+  .bs-main{min-width:0;border:1px solid var(--line);border-radius:18px;background:var(--paper);overflow:hidden}
+  .bs-main-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .bs-main-head .bs-title{flex:1 1 220px}
+  .bs-date-lbl{font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}
+  .bs-main-head[hidden]{display:none}
+  /* 제목이 곧 이름 입력칸 · 평소엔 글자처럼, 올리면 테두리, 누르면 입력 */
+  .bs-title{all:unset;box-sizing:border-box;flex:1;min-width:0;margin-left:-10px;padding:5px 10px;border-radius:10px;
+    border:1px solid transparent;font-family:inherit;font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--ink);
+    cursor:text;transition:var(--ui-ease)}
+  .bs-title::placeholder{color:var(--mute)}
+  .bs-title:hover{border-color:var(--line)}
+  .bs-title:focus{border-color:var(--btn);box-shadow:var(--ui-ring)}
+  /* HISTORY · 장점·인사이트 칸도 단계 상자(.bs-group)와 같은 테두리 상자에 담는다 */
+  .bs-summary{padding:14px 16px 16px}
+  .bs-summary textarea{min-height:96px;line-height:1.6;font-weight:500;resize:vertical;overflow:hidden}
+  .bs-history .bs-group-head h3{letter-spacing:.06em}
+  /* 대표 이미지 · 머리줄 이름 왼쪽(52px) · 목록 썸네일(36px) · 둥근 네모 */
+  .bs-logo{all:unset;box-sizing:border-box;flex:none;width:52px;height:52px;border-radius:14px;overflow:hidden;cursor:pointer;
+    display:grid;place-items:center;background:var(--bg);color:var(--mute);border:1.5px dashed var(--line);transition:var(--ui-ease)}
+  .bs-logo:hover{border-color:var(--btn);color:var(--btn-soft-ink)}
+  .bs-logo:focus-visible{box-shadow:var(--ui-ring)}
+  .bs-logo.has-img{border:1px solid var(--line)}
+  .bs-logo img,.bs-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .bs-logo svg{width:22px;height:22px}
+  .bs-main-head .bs-title{margin-left:2px}
+  .bs-thumb{flex:none;width:36px;height:36px;border-radius:10px;overflow:hidden;display:grid;place-items:center;
+    background:var(--bg);color:var(--mute);border:1px solid var(--line);font-size:14px;font-weight:800}
+  .bs-item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+  .bs-mini .bs-item{flex-direction:row;align-items:center;gap:10px}
+  .bs-av .av-preview{border-radius:22px}
+  .bs-av .av-stage-mask{border-radius:18%}
+  .bs-av .av-foot .ui-btn.danger{margin-right:auto}
+  .bs-dday{flex:none;padding:3px 8px;border-radius:999px;background:var(--chip-flat);font-size:11.5px;font-weight:800;color:var(--body)}
+  .bs-dday.soon{background:var(--warn-soft);color:var(--warn)}
+  .bs-dday.over{background:var(--neg-soft);color:var(--neg)}
+  .bs-dday.done{background:var(--pos-soft);color:var(--pos)}
+  .bs-prog{display:flex;align-items:center;gap:10px}
+  .bs-prog-bar{flex:1;height:8px;border-radius:999px;background:var(--chip-flat);overflow:hidden}
+  .bs-prog-bar i{display:block;height:100%;border-radius:inherit;background:var(--btn);transition:width .3s}
+  .bs-prog-n{font-size:12.5px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+  /* 새 브랜드 창 */
+  .bs-panel{width:100%;max-width:880px;max-height:90vh;background:var(--paper);border-radius:20px;border:1px solid var(--line);
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
+  .bs-panel-sm{max-width:560px}
+  .bs-form{padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;overflow:auto}
+  @media (max-width:560px){ .bs-form{grid-template-columns:1fr} }
+  .bs-lbl{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:700;color:var(--body)}
+  .bs-lbl b{color:var(--neg);font-weight:800}
+  .bs-lbl .ui-field{width:100%}
+  .bs-full{grid-column:1/-1}
+  .bs-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--line)}
+  .bs-detail{padding:18px 22px 26px}
+  .bs-detail .bs-form{padding:0 0 18px;overflow:visible;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .bs-sum{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .bs-sum .bs-prog{flex:1}
+  .bs-sum-stage{font-size:13px;font-weight:700;color:var(--body);white-space:nowrap}
+  .bs-sum-stage b{color:var(--btn-soft-ink)}
+  .bs-group{margin-bottom:16px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .bs-group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:var(--bg)}
+  .bs-group-head h3{margin:0;font-size:14.5px;font-weight:800;color:var(--ink)}
+  .bs-group-head h3{margin-right:auto!important}
+  .bs-group-head span{font-size:12.5px;font-weight:800;color:var(--mute);font-variant-numeric:tabular-nums}
+  .bs-sum .ui-btn{flex:none}
+  .bs-group.complete .bs-group-head span{color:var(--pos)}
+  .bs-step{display:grid;grid-template-columns:22px minmax(0,1fr);align-items:start;gap:10px;padding:13px 16px 14px;
+    border-top:1px solid var(--line)}
+  /* 항목 본문 · 제목·설명 → 메모(넉넉한 여러 줄) → 링크·파일 */
+  .bs-step-body{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .bs-memo.ui-field{min-height:58px;padding:9px 12px;font-weight:500;line-height:1.55;resize:vertical;overflow:hidden}
+  .bs-att{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .bs-att-item{display:inline-flex;align-items:center;max-width:100%}
+  .bs-att-item .ui-chip{max-width:min(320px,100%);text-decoration:none}
+  .bs-att-item .ui-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .bs-att-item .ui-chip svg{width:13px;height:13px;flex:none}
+  .bs-att-item .ui-btn.icon{width:24px;height:24px;margin-left:-2px;color:var(--mute);font-size:11px}
+  .bs-att-item .ui-btn.icon:hover{color:var(--neg);border-color:transparent;background:var(--neg-soft)}
+  .bs-att-item.busy .ui-chip{opacity:.6;cursor:progress}
+  .bs-link-form{display:flex;flex-wrap:wrap;gap:6px;width:100%}
+  .bs-link-form .ui-field{flex:1 1 180px}
+  .bs-step input[type=checkbox]{width:18px;height:18px;margin:2px 0 0;accent-color:var(--btn);cursor:pointer}
+  /* 제목 줄은 처음부터 완료 알약 높이(22px)를 잡아 둔다 · 체크해도 줄 높이가 변하지 않게 */
+  .bs-step-t{display:flex;align-items:center;gap:8px;min-height:22px;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer}
+  .bs-step-d{margin-top:2px;font-size:12px;font-weight:500;line-height:1.5;color:var(--mute)}
+  /* 완료 · 취소선 없이 제목 옆에 초록 알약으로 "26.10.02 완료" */
+  .bs-step-at{flex:none;display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;
+    background:var(--pos);color:#fff;font-size:11.5px;font-weight:800;white-space:nowrap}
+  .bs-step-at:empty{display:none}
+  /* 관리자 문구 편집 · 단계 이름·항목 제목·설명을 칸으로 바꿔 보여 준다 */
+  /* 설정 > 브랜드전략실설정 · 메뉴얼가이드설정(mg-*) 모양에 항목 설명 칸만 더한다 */
+  .bs-tpl-fields{flex:1;min-width:0;display:flex;flex-direction:column}
+  .bs-tpl-fields .mg-name.bs-tpl-desc{padding-top:3px;padding-bottom:5px;font-size:12px;font-weight:500;color:var(--body)}
+  .bs-tpl-fields .mg-name.bs-tpl-desc::placeholder{color:var(--mute)}
+  #bsLabelEditor .mg-items>.mg-row{align-items:flex-start;padding:2px 0}
+  #bsLabelEditor .mg-items>.mg-row .mg-move,#bsLabelEditor .mg-items>.mg-row .mg-del{margin-top:3px}
 </style>
 <script>
 /* ===== 표준 UI 동작 (window.UI) · 위 ui-* 부품과 짝 · 새 화면은 여기 것만 쓴다 =====
@@ -4523,9 +4684,12 @@ window.BAROYAM_ACCESS=(function(){
           '<span>'+t+'</span><b>'+(draft[k]?dot(draft[k]):'선택')+'</b></button>';
         html+='<div class="ui-dfields">'+field('start','시작일')+'<span class="ui-dfield-sep">~</span>'+field('end','종료일')+'</div>';
       }
-      html+='<div class="ui-cal-head"><button type="button" class="ui-btn ghost icon sm" data-nav="-1" aria-label="이전 달">‹</button>'+
+      /* yearNav · 출시일처럼 멀리 고를 일이 있으면 « » 로 한 해씩 넘긴다 */
+      const yPrev=opts.yearNav?'<button type="button" class="ui-btn ghost icon sm" data-nav="-12" aria-label="이전 해">«</button>':'';
+      const yNext=opts.yearNav?'<button type="button" class="ui-btn ghost icon sm" data-nav="12" aria-label="다음 해">»</button>':'';
+      html+='<div class="ui-cal-head"><span class="ui-cal-navs">'+yPrev+'<button type="button" class="ui-btn ghost icon sm" data-nav="-1" aria-label="이전 달">‹</button></span>'+
         '<span class="ui-cal-title">'+viewY+'년 '+(viewM+1)+'월</span>'+
-        '<button type="button" class="ui-btn ghost icon sm" data-nav="1" aria-label="다음 달">›</button></div>';
+        '<span class="ui-cal-navs"><button type="button" class="ui-btn ghost icon sm" data-nav="1" aria-label="다음 달">›</button>'+yNext+'</span></div>';
       html+='<div class="ui-cal-grid">'+DOW.map((d,i)=>'<div class="ui-cal-dow'+(i===0?' sun':'')+'">'+d+'</div>').join('');
       for(let i=0;i<weeks*7;i++){
         const d=new Date(start); d.setDate(start.getDate()+i);
@@ -4549,7 +4713,7 @@ window.BAROYAM_ACCESS=(function(){
 
     pop.addEventListener('click',e=>{
       const t=e.target.closest('button'); if(!t||t.disabled) return;
-      if(t.dataset.nav){ viewM+=+t.dataset.nav; if(viewM<0){viewM=11;viewY--;} if(viewM>11){viewM=0;viewY++;} render(); return; }
+      if(t.dataset.nav){ const m=viewY*12+viewM+(+t.dataset.nav); viewY=Math.floor(m/12); viewM=m-viewY*12; render(); return; }
       const act=t.dataset.act;
       if(act==='today'){ commit(iso(new Date())); return; }
       if(act==='clear'){ commit(null); return; }
@@ -5036,6 +5200,10 @@ window.BAROYAM_ACCESS=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.6C10.5 5.2 8.4 4.5 5.6 4.5c-.9 0-1.6.6-1.6 1.4v10.4c0 .8.7 1.4 1.6 1.4 2.8 0 4.9.7 6.4 2.1 1.5-1.4 3.6-2.1 6.4-2.1.9 0 1.6-.6 1.6-1.4V5.9c0-.8-.7-1.4-1.6-1.4-2.8 0-4.9.7-6.4 2.1Z"/><path d="M12 6.6v13.2"/></svg>
               <span>메뉴얼가이드설정</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="brand" id="bsSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6l2.5 5.1 5.6.8-4.05 3.95.96 5.6L12 16.4l-5.01 2.65.96-5.6L3.9 9.5l5.6-.8Z"/></svg>
+              <span>브랜드전략실설정</span>
+            </button>
             <button class="mini-sb-item" type="button" data-settings-view="workflow" id="wfSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="6" height="5" rx="1.4"/><rect x="14.5" y="15" width="6" height="5" rx="1.4"/><path d="M6.5 9v3.5a2 2 0 0 0 2 2h9V15"/></svg>
               <span>워크플로우</span>
@@ -5092,6 +5260,18 @@ window.BAROYAM_ACCESS=(function(){
                 </form>
                 <p class="mg-hint">이름을 눌러 바로 고칠 수 있어요. 바꾼 목차는 구글시트에 저장돼 다른 기기에도 반영됩니다.</p>
                 <div class="mg-list" id="mgList"></div>
+              </div>
+            </section>
+            <!-- 브랜드전략실 체크리스트 틀(단계·항목의 이름·순서·추가·삭제) · 모든 브랜드가 같이 쓴다 ·
+                 모양은 메뉴얼가이드설정(mg-*)과 같다 -->
+            <section class="settings-view" data-settings-panel="brand" hidden>
+              <div class="mg-manager">
+                <form class="member-add-form" id="bsStageAddForm">
+                  <input type="text" id="bsStageNameInput" placeholder="새 단계 이름 입력" maxlength="30" autocomplete="off">
+                  <button type="submit">추가</button>
+                </form>
+                <p class="mg-hint">이름·설명을 눌러 바로 고치고, ▲▼로 순서를 바꿔요. 바꾼 틀은 모든 브랜드·다른 PC에 똑같이 적용됩니다.<br>항목을 지워도 브랜드에 체크해 둔 기록은 남아 있다가, 같은 항목이 없으면 보이지 않을 뿐이에요.</p>
+                <div class="mg-list" id="bsLabelEditor"></div>
               </div>
             </section>
             <section class="settings-view" data-settings-panel="workflow" hidden>
@@ -5185,6 +5365,25 @@ window.BAROYAM_ACCESS=(function(){
       </div>
     </div>
     <div class="wrap" id="mainWrap">
+    <!-- 브랜드전략실 브랜드 목록 · 대시보드(.paper) 바깥 왼쪽에 따로 뜬 작은 대시보드 ·
+         브랜드전략실 화면(body.view-is-brand)에서만 보이고, 스크롤을 따라온다 -->
+    <aside class="bs-mini" id="bsMini" aria-label="브랜드 목록">
+      <div class="bs-mini-head"><h2>브랜드 목록</h2><span id="bsCount"></span></div>
+      <button type="button" class="ui-btn primary block" id="bsNewBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>새 브랜드
+      </button>
+      <div class="bs-mini-tools">
+        <label class="ui-field sm block bs-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input type="search" id="bsSearch" placeholder="브랜드 검색" autocomplete="off" aria-label="브랜드 검색">
+        </label>
+        <div class="ui-tabs block" id="bsSort" aria-label="출시일 정렬">
+          <button class="ui-tab" data-value="asc">출시일 오름차순</button>
+          <button class="ui-tab" data-value="desc">내림차순</button>
+        </div>
+      </div>
+      <div class="bs-list" id="bsGrid"></div>
+    </aside>
     <div class="paper" data-screen-label="매출·광고 성과 보고서">
 
       <div class="hero-view-tabs" id="heroViewTabs" style="display:none">
@@ -6976,14 +7175,117 @@ window.BAROYAM_ACCESS=(function(){
           </div>
         </section>
       </div><!-- /view-content -->
-      <!-- 브랜드전략실 · 자리만 있다(내용은 아직 비어 있다) -->
+      <!-- 브랜드전략실 · 브랜드(제품)마다 시장조사→제조→패키지→판매준비→출시→판매후관리 체크리스트로 진행도를 본다 ·
+           목록은 app_settings 의 brand_strategy_v1 한 칸에 있고, 이 화면을 열 때 읽는다 -->
       <div id="view-brand" style="display:none">
         <section>
           <div class="plan-hero">
             <div class="ptag">BRAND STRATEGY</div>
             <div class="ptitle">브랜드전략실</div>
+            <div class="psub">출시 준비부터 판매 이후까지, 브랜드마다 어디까지 왔는지 한눈에 봅니다.</div>
+          </div>
+          <div class="bs-wrap">
+            <div class="bs-msg" id="bsMsg" hidden></div>
+            <!-- 브랜드 목록은 대시보드 바깥 왼쪽 미니 대시보드(#bsMini)에 있다 · 여기는 고른 브랜드의 상세만 -->
+            <div class="bs-split">
+              <div class="bs-main">
+                <div class="bs-main-head" id="bsMainHead" hidden>
+                  <button type="button" class="bs-logo" id="bsLogoBtn" aria-label="브랜드 대표 이미지 넣기" title="브랜드 대표 이미지"></button>
+                  <input class="bs-title" id="bsDetailTitle" data-f="name" maxlength="60" placeholder="브랜드·제품명" aria-label="브랜드·제품명 (눌러서 고치기)">
+                  <div class="ui-btn-row">
+                    <div class="ui-tabs" id="bsStatusTabs" aria-label="출시 상태">
+                      <button class="ui-tab" data-value="planned">출시 예정</button>
+                      <button class="ui-tab" data-value="launched">출시 완료</button>
+                    </div>
+                    <span class="bs-date-lbl" id="bsDateLbl">출시 예정일</span>
+                    <button type="button" id="bsDetailDate" aria-label="출시 예정일"></button>
+                    <button type="button" class="ui-btn danger sm" id="bsDeleteBtn">삭제</button>
+                  </div>
+                </div>
+                <div class="bs-detail" id="bsDetailBody"></div>
+                <input type="file" id="bsFileInput" multiple hidden>
+              </div>
+            </div>
           </div>
         </section>
+
+        <!-- 브랜드 대표 이미지 창 · 모양은 프로필 사진 창(#mhAvatarDialog, av-*)과 같고 가늠자만 둥근 네모 -->
+        <div class="settings-overlay" id="bsAvDlg" hidden>
+          <div class="settings-panel av-panel bs-av" role="dialog" aria-modal="true" aria-labelledby="bsAvTitle">
+            <div class="settings-head">
+              <h2 id="bsAvTitle">브랜드 대표 이미지</h2>
+              <button class="settings-close" type="button" data-bs-av-close aria-label="닫기" title="닫기">✕</button>
+            </div>
+            <div class="av-body">
+              <div class="av-row">
+                <div class="av-col">
+                  <div class="av-col-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M8 7.5L12 3.5l4 4"/><path d="M4 15v4.5h16V15"/></svg>이미지 넣기</div>
+                  <button type="button" class="av-drop" id="bsAvDrop">
+                    <span class="av-preview" id="bsAvPreview" aria-hidden="true"></span>
+                    <span class="av-drop-text">
+                      <b>여기로 끌어다 놓거나 눌러서 고르기</b>
+                      <span>지금 브랜드 목록·대시보드에 보이는 이미지예요</span>
+                    </span>
+                  </button>
+                  <dl class="av-spec">
+                    <div><dt>권장 크기</dt><dd>480 × 480px 이상 · 정사각형(1:1)</dd></div>
+                    <div><dt>파일 형식</dt><dd>JPG · PNG · WebP · GIF(첫 장면만)</dd></div>
+                    <div><dt>용량</dt><dd>5MB 이하</dd></div>
+                  </dl>
+                </div>
+                <div class="av-col">
+                  <div class="av-col-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v13.5A1.5 1.5 0 0 0 7.5 18H21"/><path d="M3 6h13.5A1.5 1.5 0 0 1 18 7.5V21"/></svg>이미지 자르기</div>
+                  <div class="av-stage is-empty" id="bsAvStage" tabindex="0" role="application"
+                       aria-label="이미지 자르기 · 끌어서 위치를 옮기고 방향키로 미세 조정해요">
+                    <canvas id="bsAvCanvas" width="392" height="392"></canvas>
+                    <div class="av-stage-mask" aria-hidden="true"></div>
+                    <div class="av-stage-empty">이미지를 고르면<br>여기서 자를 수 있어요</div>
+                  </div>
+                  <div class="av-crop-tools" id="bsAvTools" aria-disabled="true">
+                    <label class="av-zoom"><span aria-hidden="true">－</span>
+                      <input type="range" id="bsAvZoom" min="1" max="3" step="0.01" value="1" aria-label="이미지 크기">
+                      <span aria-hidden="true">＋</span></label>
+                    <button type="button" class="av-crop-reset" id="bsAvReset">가운데로</button>
+                  </div>
+                  <p class="av-crop-hint">끌어서 위치를 옮기고, 슬라이더나 마우스 휠로 크기를 맞춰요</p>
+                </div>
+              </div>
+              <p class="av-msg" id="bsAvMsg" role="status" aria-live="polite"></p>
+            </div>
+            <div class="av-foot">
+              <button type="button" class="ui-btn danger" id="bsAvClear" hidden>이미지 삭제</button>
+              <button type="button" class="ui-btn ghost" data-bs-av-close>취소</button>
+              <button type="button" class="ui-btn primary" id="bsAvSave">완료</button>
+            </div>
+            <input type="file" id="bsAvFile" accept="image/*" hidden>
+          </div>
+        </div>
+
+        <!-- 새 브랜드 입력창 -->
+        <div class="settings-overlay" id="bsNewDlg" hidden>
+          <form class="bs-panel bs-panel-sm" id="bsNewForm" role="dialog" aria-modal="true" aria-labelledby="bsNewTitle" autocomplete="off">
+            <div class="settings-head">
+              <h2 id="bsNewTitle">새 브랜드 등록</h2>
+              <button type="button" class="settings-close" data-bs-close aria-label="닫기">✕</button>
+            </div>
+            <div class="bs-form">
+              <label class="bs-lbl"><span>브랜드·제품명 <b>*</b></span><input class="ui-field block" name="name" maxlength="60" placeholder="예) 바로얌 콜드브루 원액" required></label>
+              <div class="bs-lbl"><span>출시 상태</span>
+                <div class="ui-tabs block" id="bsNewStatus" aria-label="출시 상태">
+                  <button class="ui-tab" data-value="planned">출시 예정</button>
+                  <button class="ui-tab" data-value="launched">출시 완료</button>
+                </div>
+              </div>
+              <div class="bs-lbl bs-full"><span id="bsNewDateLbl">출시 예정일</span><button type="button" id="bsNewDate"></button></div>
+              <label class="bs-lbl bs-full"><span>제품 장점·인사이트</span><textarea class="ui-field block" name="summary" maxlength="3000" placeholder="제품에 대한 모든 장점과 인사이트를 입력하세요"></textarea></label>
+            </div>
+            <div class="bs-foot">
+              <button type="button" class="ui-btn ghost" data-bs-close>취소</button>
+              <button type="submit" class="ui-btn primary">등록</button>
+            </div>
+          </form>
+        </div>
+
       </div><!-- /view-brand -->
 
       <!-- 계정관리 · 쇼핑몰 라인 / 운영관리 / 카페이노스매장 구역 상자마다 계정을 모아 둔다 ·
@@ -9533,6 +9835,7 @@ window.CsGuide=(function(){
     if(v==='account'&&window.baroyamAccountOpen) window.baroyamAccountOpen();
     /* 드라이브 목록은 덩어리가 커서 이 화면을 열 때 한 번만 읽는다 */
     if(v==='drive'&&window.baroyamDriveOpen) window.baroyamDriveOpen();
+    if(v==='brand'&&window.baroyamBrandOpen) window.baroyamBrandOpen();
     document.body.classList.toggle('view-is-manual',v==='manual');
     document.getElementById('view-project').style.display=v==='project'?'':'none';
     document.getElementById('view-channel').style.display=v==='channel'?'':'none';
@@ -9541,6 +9844,7 @@ window.CsGuide=(function(){
     /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브·계정관리)은 1720px 를 쓴다 */
     document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account');
     document.body.classList.toggle('view-is-project',v==='project');
+    document.body.classList.toggle('view-is-brand',v==='brand');
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
@@ -17035,6 +17339,1029 @@ window.baroyamAsk=function(title,body,okText){
   });
 
   window.baroyamAccountOpen=열기;
+})();
+</script>
+<script>
+/* ===== 브랜드전략실 · 브랜드(제품) 하나 = 출시까지의 체크리스트 하나 =====
+   저장은 app_settings 의 brand_strategy_v1 한 칸({brands:[...], updatedAt}) ·
+   여러 PC가 같이 고치므로 통째로 덮어쓰지 않고, 저장 직전 서버 최신본을 읽어 내가 고친 칸만 얹는다(saveMerged) ·
+   삭제도 지우지 않고 deletedAt 만 단다(삭제 단추 외에는 아무것도 사라지지 않게) */
+(function(){
+  const KEY='brand_strategy_v1', CACHE='baroyam_brand_cache_v1';
+  /* 기본 틀(출시 과정 6단계) · 관리자가 틀을 한 번도 저장하지 않았을 때만 쓴다 · id 는 체크 기록의 열쇠라 바꾸지 않는다 */
+  const STAGES=[
+    {id:'research',name:'시장조사·기획',steps:[
+      ['market','시장·트렌드 조사','카테고리 규모·성장세·검색량(데이터랩) 확인'],
+      ['compete','경쟁사 분석','상위 제품의 가격·구성·상세페이지·리뷰 불만점'],
+      ['target','타깃 고객 정의','누가·왜·언제 사는지, 핵심 구매 이유'],
+      ['concept','제품 콘셉트 확정','차별점(USP), 목표 판매가·원가율·판매량'],
+      ['profit','수익성 계산','판매가 − 원가·수수료·배송비·광고비 = 공헌이익']]},
+    {id:'make',name:'개발·제조',steps:[
+      ['maker','제조사(OEM/ODM) 선정','견적 비교 · 최소주문수량·단가·납기'],
+      ['sample','샘플 개발·테스트','샘플 수정, 내부·소비자 테스트'],
+      ['cert','인증·법규 확인','품목제조보고·책임판매업·KC 등 필수 인증, 표시 기준'],
+      ['material','원부자재 확정·발주','원료·부자재 단가와 수량'],
+      ['produce','본생산·품질검사','첫 생산분 품질·불량률, 시험성적서']]},
+    {id:'package',name:'패키지·브랜딩',steps:[
+      ['naming','브랜드·제품명 확정','상표 검색·출원'],
+      ['design','패키지 디자인','용기·단상자·라벨 + 법정 표기사항 검수'],
+      ['print','인쇄·부자재 제작','인쇄 감리, 제조사 입고 일정 맞추기'],
+      ['barcode','바코드 등록','GS1 코리아 발급(유통 입점 필수)']]},
+    {id:'ready',name:'판매 준비',steps:[
+      ['price','가격 정책 확정','정가·할인가·채널별 가격, 최저가 관리'],
+      ['channel','판매 채널 입점','자사몰·스마트스토어·쿠팡·오프라인'],
+      ['detail','상세페이지·콘텐츠','제품 촬영·상세페이지·썸네일·영상'],
+      ['logistics','물류 세팅','자체 출고/3PL, 재고 입고·포장·택배 계약'],
+      ['cs','CS 준비','FAQ·교환/환불 정책·응대 매뉴얼']]},
+    {id:'launch',name:'출시·마케팅',steps:[
+      ['seeding','사전 마케팅','체험단·인플루언서 시딩, 초기 리뷰 확보'],
+      ['launch','런칭','출시 이벤트·할인, 검색·SNS 광고 시작'],
+      ['promo','채널별 프로모션','기획전·라이브커머스 등 플랫폼 행사']]},
+    {id:'after',name:'판매 후 관리',steps:[
+      ['data','판매 데이터 분석','채널별 매출·ROAS·재구매율'],
+      ['voc','리뷰·VOC 수집','불만·칭찬 → 제품·상세·광고 문구 개선'],
+      ['stock','재고·재생산 관리','판매 속도 보고 재발주, 품절·과잉 방지'],
+      ['next','개선·확장','리뉴얼·세트·후속 제품 기획']]}
+  ];
+  /* launchDate = 출시 예정일 · releasedDate = 실제 출시일 · status = planned(출시 예정) | launched(출시 완료) */
+  const INFO=['name','status','launchDate','releasedDate','summary'];
+  /* 저장 형식의 판 번호 · 서버(12-protect-brands.sql)는 이보다 낮은 판의 저장(옛 창)을 거절한다 ·
+     저장 모양을 바꾸면 이 숫자를 올린다 */
+  const BRAND_REV=1;
+  /* ---------- 체크리스트 틀 · 단계·항목의 이름·순서·개수 ----------
+     app_settings 의 brand_template_v1 = {stages:[{id,name,steps:[{id,t,d}]}], updatedAt} ·
+     관리자 설정 > 브랜드전략실설정에서 고친다 · 서버에 틀이 없으면 위 STAGES 기본값을 쓴다
+     (예전 brand_labels_v1 의 문구 고침도 얹어서) · 브랜드의 체크 기록은 항목 id 로 이어지므로
+     항목을 지워도 기록은 남고, 틀에 없는 항목은 진행률에서 빠진다 */
+  const TKEY='brand_template_v1', TCACHE='baroyam_brand_template_v1', OLD_LKEY='brand_labels_v1';
+  function parseObj(v){ if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } } return v&&typeof v==='object'?v:null; }
+  function defaultTemplate(oldLabels){
+    const lab=parseObj(oldLabels)||{}, lg=lab.g||{}, ls=lab.s||{};
+    return {stages:STAGES.map(function(g){
+      return {id:g.id,name:lg[g.id]||g.name,steps:g.steps.map(function(x){
+        const o=ls[x[0]]||{}; return {id:x[0],t:o.t||x[1],d:o.d||x[2]};
+      })};
+    })};
+  }
+  function normT(v){
+    v=parseObj(v);
+    if(!v||!Array.isArray(v.stages)) return null;
+    const out={stages:v.stages.filter(function(g){ return g&&g.id; }).map(function(g){
+      return {id:String(g.id),name:String(g.name||''),steps:(Array.isArray(g.steps)?g.steps:[]).filter(function(x){ return x&&x.id; })
+        .map(function(x){ return {id:String(x.id),t:String(x.t||''),d:String(x.d||'')}; })};
+    })};
+    if(v.updatedAt) out.updatedAt=v.updatedAt;
+    return out;
+  }
+  let tpl=defaultTemplate(null), tbase=null, ttimer=null, tbusy=false, tdirty=false;
+  try{ const c=normT(JSON.parse(localStorage.getItem(TCACHE)||'null')); if(c) tpl=c; }catch(e){}
+  function cacheT(){ try{ localStorage.setItem(TCACHE,JSON.stringify(tpl)); }catch(e){} }
+  function stages(){ return tpl.stages; }
+  function allSteps(){ const out=[]; tpl.stages.forEach(function(g){ g.steps.forEach(function(x){ out.push(x.id); }); }); return out; }
+  function gName(g){ return g.name||'(이름 없는 단계)'; }
+  function sTitle(x){ return x.t||'(제목 없음)'; }
+  function sDesc(x){ return x.d||''; }
+  function newId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  /* 서버에서 받은 틀 · 보낼 고침이 남았으면 보낼 때 합치므로 지금 것은 그대로 둔다 */
+  function adoptT(server,oldLabels){
+    const t=normT(server);
+    if(tdirty||tbusy||ttimer) return;
+    if(t){ tbase=clone(t); tpl=t; }
+    else{ tbase=null; tpl=defaultTemplate(oldLabels); }
+    cacheT();
+  }
+  async function loadT(db){
+    const got=await Promise.all([db.loadSetting(TKEY,true),db.loadSetting(OLD_LKEY,true)]);
+    if(restoreT()){ clearTimeout(ttimer); ttimer=setTimeout(flushT,300); return; }
+    adoptT(got[0],got[1]);
+  }
+  /* 못 보낸 틀 고침 · 창이 꺼져도 다음에 열면 이어서 보낸다(브랜드 기록과 같은 방식) */
+  const TDRAFT='baroyam_brand_tpl_draft_v1';
+  function persistT(){
+    try{
+      if(tdirty||tbusy) localStorage.setItem(TDRAFT,JSON.stringify({at:Date.now(),tab:TAB,local:tpl,base:tbase}));
+      else localStorage.removeItem(TDRAFT);
+    }catch(e){}
+  }
+  function restoreT(){
+    try{
+      const d=JSON.parse(localStorage.getItem(TDRAFT)||'null');
+      if(!d||d.tab===TAB||Date.now()-(d.at||0)<30000) return false;
+      const t=normT(d.local); if(!t) return false;
+      tpl=t; tbase=normT(d.base); tdirty=true; return true;
+    }catch(e){ return false; }
+  }
+  function markT(){
+    tdirty=true; tpl.updatedAt=Date.now(); cacheT(); persistT();
+    const db=DB(); if(db&&db.saveNotice) db.saveNotice(TKEY,'pending');
+    clearTimeout(ttimer); ttimer=setTimeout(flushT,700);
+  }
+  async function flushT(){
+    ttimer=null;
+    if(tbusy){ ttimer=setTimeout(flushT,400); return; }
+    if(!tdirty) return;
+    const db=DB(); if(!db||!db.saveMerged) return;
+    tbusy=true; tdirty=false;
+    const sent=clone(tpl), base=tbase;
+    let r=null;
+    try{
+      r=await db.saveMerged(TKEY,function(server){
+        const sv=normT(server);
+        /* 서버에 이미 틀이 있으면 내가 base 에서 바꾼 것만 얹는다(다른 관리자의 고침을 지우지 않게) */
+        const next=!sv?sent:(base?db.merge3(base,sent,sv):db.union(sent,sv));
+        return Object.assign({},next,{updatedAt:Date.now()});
+      });
+    }catch(e){ console.error(e); r=null; }
+    tbusy=false;
+    if(!r){
+      tdirty=true; persistT();
+      if(db.saveNotice) db.saveNotice(TKEY,'failing');
+      clearTimeout(ttimer); ttimer=setTimeout(flushT,15000);
+      return;
+    }
+    const res=normT(r)||sent;
+    tbase=clone(res);
+    tpl=JSON.stringify(tpl)===JSON.stringify(sent)?res:normT(db.merge3(sent,tpl,res));
+    cacheT(); persistT();
+    if(!tdirty&&db.saveNotice) db.saveNotice(TKEY,'ok');
+  }
+  function isAdmin(){ const AM=window.baroyamAdminMode; return !!(AM&&AM.isOn()); }
+
+  let brands=[], loaded=false, loading=false, online=false, openId=null;
+  let newPicker=null, detailPicker=null;
+  /* ---------- 여러 PC 동시 저장 ----------
+     base   = 브랜드마다 서버와 마지막으로 맞춘 사본(이 창 메모리에만 · 창끼리 섞이지 않게)
+     dirty  = 아직 서버에 못 보낸 브랜드 id
+     저장할 때 서버 최신본을 읽고 merge3(base, 이 PC 것, 서버 것)으로 합친다 ·
+     그래서 같은 브랜드의 다른 칸·다른 항목·다른 링크/파일을 두 PC가 동시에 고쳐도 둘 다 남는다
+     (같은 칸 같은 글자를 동시에 고친 경우만 나중에 저장한 쪽) ·
+     못 보낸 고침은 localStorage 에 짝(base+고침)으로 남겨, 창이 꺼져도 다음에 열 때 이어서 보낸다 */
+  const dirty=new Set();
+  let base={}, sendingIds=[];
+  const TAB=Date.now().toString(36)+Math.random().toString(36).slice(2,6), DRAFT='baroyam_brand_draft_v1:';
+  let timer=null, busy=false;
+
+  const $=function(id){ return document.getElementById(id); };
+  const DB=function(){ return window.BAROYAM_DB||null; };
+  function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function clone(v){ return v==null?v:JSON.parse(JSON.stringify(v)); }
+  function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function parse(v){
+    if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+    return v&&Array.isArray(v.brands)?v:{brands:[]};
+  }
+  function live(){ return brands.filter(function(b){ return !b.deletedAt; }); }
+  function find(id){ return brands.find(function(b){ return b.id===id; }); }
+
+  /* ---------- 진행도 ---------- */
+  function isDone(b,sid){ return !!(b.steps&&b.steps[sid]&&b.steps[sid].done); }
+  function progress(b){
+    const ids=allSteps();
+    const done=ids.filter(function(s){ return isDone(b,s); }).length;
+    const groups=stages().map(function(g){
+      const n=g.steps.filter(function(x){ return isDone(b,x.id); }).length;
+      return {g:g,n:n,total:g.steps.length};
+    });
+    const cur=groups.findIndex(function(x){ return x.n<x.total; });
+    return {done:done,total:ids.length,pct:ids.length?Math.round(done/ids.length*100):0,groups:groups,cur:cur};
+  }
+  function days(d){ return Math.round((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/864e5); }
+  function launched(b){ return b.status==='launched'; }
+  /* 출시 예정 · 예정일까지 D-n(지나면 지연) / 출시 완료 · 날 수 없이 "출시 완료"만(출시일은 머리줄 날짜 버튼에 보인다) */
+  function dday(b){
+    if(launched(b)) return {t:'출시 완료',c:'done'};
+    if(!b.launchDate) return {t:'출시일 미정',c:''};
+    const n=days(b.launchDate);
+    if(n>0) return {t:'D-'+n,c:n<=14?'soon':''};
+    if(n===0) return {t:'D-DAY',c:'soon'};
+    return {t:'D+'+(-n)+' 지연',c:'over'};
+  }
+  function dot(s){ return s?s.slice(2).replace(/-/g,'.'):''; }
+
+  /* ---------- 왼쪽 목록 ---------- */
+  function renderGrid(){
+    const list=live();
+    $('bsCount').textContent=list.length?list.length+'개':'';
+    /* 고른 브랜드가 없거나 지워졌으면 첫 브랜드를 고른다 */
+    if(!openId||!list.some(function(b){ return b.id===openId; })){
+      openId=null;
+      $('bsDetailBody').dataset.id='';
+    }
+    if(!list.length){
+      $('bsGrid').innerHTML='<div class="bs-empty">'+(loading?'불러오는 중…':'아직 등록된 브랜드가 없어요.<br>위 <b>새 브랜드</b>로 등록해 보세요.')+'</div>';
+      $('bsMainHead').hidden=true;
+      $('bsDetailBody').innerHTML='<div class="bs-empty">'+(loading?'불러오는 중…':'브랜드를 등록하면 여기에 출시 체크리스트가 펼쳐져요.')+'</div>';
+      return;
+    }
+    /* 출시일 정렬 · 출시 완료면 출시일, 예정이면 출시 예정일로 · 날짜 없는 브랜드는 늘 맨 뒤 */
+    const dir=sortDir==='desc'?-1:1;
+    list.sort(function(a,b){
+      const ka=a[dateKey(a)]||'', kb=b[dateKey(b)]||'';
+      if(!ka!==!kb) return ka?-1:1;
+      if(ka!==kb) return (ka<kb?-1:1)*dir;
+      return (a.createdAt||0)-(b.createdAt||0);
+    });
+    if(!openId) openId=list[0].id;
+    /* 검색 · 이름과 장점·인사이트에서 찾는다(고른 브랜드는 목록에서 안 보여도 오른쪽에 그대로 둔다) */
+    const q=query.trim().toLowerCase();
+    const shown=q?list.filter(function(b){ return ((b.name||'')+' '+(b.summary||'')).toLowerCase().indexOf(q)>=0; }):list;
+    $('bsGrid').innerHTML=shown.length?shown.map(item).join(''):'<div class="bs-empty">"'+esc(query.trim())+'"에 맞는 브랜드가 없어요.</div>';
+    if($('bsDetailBody').dataset.id!==openId) openDetail(openId);
+  }
+  /* 검색어·정렬 · 정렬은 이 브라우저에 기억한다 */
+  const SORT_KEY='baroyam_brand_sort';
+  let query='', sortDir='asc';
+  try{ if(localStorage.getItem(SORT_KEY)==='desc') sortDir='desc'; }catch(e){}
+  $('bsSearch').addEventListener('input',function(){ query=this.value; renderGrid(); });
+  const sortTabs=window.UI?UI.tabs($('bsSort'),function(v){
+    sortDir=v==='desc'?'desc':'asc';
+    try{ localStorage.setItem(SORT_KEY,sortDir); }catch(e){}
+    renderGrid();
+  }):null;
+  if(sortTabs) sortTabs.set(sortDir);
+  function item(b){
+    const p=progress(b), d=dday(b);
+    return '<button type="button" class="bs-item" data-id="'+esc(b.id)+'" aria-current="'+(b.id===openId)+'">'
+      +'<span class="bs-thumb" aria-hidden="true">'+(imageOf(b)?'<img alt="" src="'+esc(imageOf(b))+'">':esc((b.name||'?').trim().charAt(0)))+'</span>'
+      +'<span class="bs-item-main"><div class="bs-item-top"><span class="bs-item-name">'+esc(b.name||'(이름 없음)')+'</span><span class="bs-dday '+d.c+'">'+esc(d.t)+'</span></div>'
+      +'<div class="bs-item-meta"><div class="bs-prog-bar"><i style="width:'+p.pct+'%"></i></div><span>'+p.pct+'%</span></div>'
+      +'</span></button>';
+  }
+  function msg(t){ const m=$('bsMsg'); m.textContent=t||''; m.hidden=!t; }
+
+  /* ---------- 불러오기 · 이 화면을 열 때마다 서버 최신본을 받는다(보낼 고침이 남았으면 그 위에 다시 얹는다) ---------- */
+  async function open(){
+    if(loading) return;
+    if(!loaded){
+      try{ brands=parse(JSON.parse(localStorage.getItem(CACHE)||'null')).brands; }catch(e){}
+      restoreDrafts();
+    }
+    loading=true; if(!brands.length) renderGrid();
+    let server=null, ok=false;
+    try{
+      const db=DB();
+      if(db&&db.loadSetting&&(await db.ensureSession())){
+        const got=await Promise.all([db.loadSetting(KEY,true),loadT(db),db.loadSetting(IKEY,true)]);
+        server=parse(got[0]); adoptImgs(got[2]); ok=true;
+      }
+    }catch(e){ console.error('[브랜드전략실] 불러오기 실패',e); }
+    loading=false; online=ok;
+    if(ok){
+      const before=openId?JSON.stringify(find(openId)||null):'';
+      const next=server.brands.map(clone);
+      /* 못 보낸 고침이 있는 브랜드는 서버본 위에 다시 얹는다(아직 보내는 중인 것 포함) */
+      new Set(Array.from(dirty).concat(sendingIds)).forEach(function(id){
+        const i=next.findIndex(function(x){ return x.id===id; });
+        const m=mergeOne(id,find(id),i>=0?next[i]:null);
+        if(!m) return;
+        if(i>=0) next[i]=m; else next.push(m);
+      });
+      setBase(server.brands);
+      brands=next; loaded=true; cache(); msg('');
+      /* 보고 있던 브랜드가 바뀌었을 때만 오른쪽을 다시 그린다(입력 중이면 그대로) */
+      if(openId&&JSON.stringify(find(openId)||null)!==before&&!document.querySelector('#view-brand .bs-main :focus')) $('bsDetailBody').dataset.id='';
+      moveOldImages();
+      if(dirty.size){ clearTimeout(timer); timer=setTimeout(flush,300); }
+    }else{
+      loaded=true;
+      msg('서버에 연결하지 못해 이 PC에 남은 사본을 보여 줍니다. 로그인 후 새로고침하면 다른 PC와 맞춰집니다.');
+    }
+    renderGrid();
+  }
+  function cache(){ try{ localStorage.setItem(CACHE,JSON.stringify({brands:brands})); }catch(e){} }
+
+  /* ---------- 대표 이미지 칸 ----------
+     이미지는 브랜드 기록(brand_strategy_v1)과 따로 brand_images_v1 = {images:{브랜드id:dataURL}} 에 둔다 ·
+     글을 고칠 때마다 이미지까지 서버 이력에 통째로 쌓이지 않게(이력이 커져 저장이 막히는 일을 막는다) ·
+     예전에 브랜드 안(b.image)에 담긴 것은 열 때 이 칸으로 옮긴다 */
+  const IKEY='brand_images_v1', ICACHE='baroyam_brand_images_v1';
+  let imgs={}, idirty={}, itimer=null, ibusy=false;
+  try{ imgs=(JSON.parse(localStorage.getItem(ICACHE)||'null')||{}).images||{}; }catch(e){}
+  function imageOf(b){ return b?(imgs[b.id]||b.image||''):''; }
+  function cacheImgs(){ try{ localStorage.setItem(ICACHE,JSON.stringify({images:imgs})); }catch(e){} }
+  function parseImgs(v){ if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } } return (v&&v.images&&typeof v.images==='object')?v.images:{}; }
+  function adoptImgs(server){
+    const next=Object.assign({},parseImgs(server));
+    Object.keys(idirty).forEach(function(id){ if(idirty[id]) next[id]=idirty[id]; else delete next[id]; });
+    imgs=next; cacheImgs();
+  }
+  function saveImage(id,url){
+    idirty[id]=url||''; if(url) imgs[id]=url; else delete imgs[id];
+    cacheImgs();
+    const db=DB(); if(db&&db.saveNotice) db.saveNotice(IKEY,'pending');
+    clearTimeout(itimer); itimer=setTimeout(flushImgs,300);
+  }
+  async function flushImgs(){
+    itimer=null;
+    if(ibusy){ itimer=setTimeout(flushImgs,400); return; }
+    const ids=Object.keys(idirty); if(!ids.length) return;
+    const db=DB(); if(!db||!db.saveMerged) return;
+    ibusy=true;
+    const sent={}; ids.forEach(function(id){ sent[id]=idirty[id]; }); idirty={};
+    let r=null;
+    try{
+      r=await db.saveMerged(IKEY,function(server){
+        const v=Object.assign({},parseImgs(server));
+        ids.forEach(function(id){ if(sent[id]) v[id]=sent[id]; else delete v[id]; });
+        return {images:v,updatedAt:Date.now()};
+      });
+    }catch(e){ console.error(e); r=null; }
+    ibusy=false;
+    if(!r){
+      ids.forEach(function(id){ if(!(id in idirty)) idirty[id]=sent[id]; });
+      if(db.saveNotice) db.saveNotice(IKEY,'failing');
+      clearTimeout(itimer); itimer=setTimeout(flushImgs,15000);
+      return;
+    }
+    adoptImgs(r);
+    if(!Object.keys(idirty).length&&db.saveNotice) db.saveNotice(IKEY,'ok');
+  }
+  /* 브랜드 안에 담겨 있던 옛 이미지를 이미지 칸으로 옮기고 브랜드에서는 뺀다 */
+  function moveOldImages(){
+    brands.forEach(function(b){
+      if(!b.image) return;
+      if(!imgs[b.id]) saveImage(b.id,b.image);
+      delete b.image; mark(b.id);
+    });
+  }
+
+  /* ---------- 저장 ---------- */
+  function setBase(list){ base={}; (list||[]).forEach(function(b){ if(b&&b.id) base[b.id]=clone(b); }); }
+  /* 브랜드 하나 합치기 · 서버에 없으면 이 PC 것 · base 를 알면 세 갈래, 모르면 양쪽을 살린다 */
+  function mergeOne(id,local,server){
+    if(!local) return server||null;
+    if(!server) return clone(local);
+    const db=DB(), b0=base[id];
+    if(!db||!db.merge3) return clone(local);
+    const m=clone(b0?db.merge3(b0,local,server):db.union(local,server));
+    if(b0) keepBoth(b0,local,server,m);
+    return m;
+  }
+  /* 장점·인사이트(summary)와 항목 메모는 두 PC가 같은 칸을 서로 다르게 고쳤으면 한쪽을 버리지 않고
+     이 PC 글 아래에 다른 PC 글을 붙여 둔다 · 어느 것을 남길지는 사람이 보고 정리한다 */
+  const CONFLICT_MARK='\n\n── 다른 PC에서 동시에 고친 내용 ──\n';
+  function both(b,l,s){
+    b=b||''; l=l||''; s=s||'';
+    if(l===s||l===b||s===b||!l||!s) return null;
+    if(l.indexOf(s)>=0) return l;               /* 이미 붙어 있다 */
+    return l+CONFLICT_MARK+s;
+  }
+  function keepBoth(b0,l,s,out){
+    const t=both(b0.summary,l.summary,s.summary); if(t!=null) out.summary=t;
+    const bs=b0.steps||{}, ls=l.steps||{}, ss=s.steps||{};
+    Object.keys(ls).forEach(function(sid){
+      if(!ss[sid]||!out.steps||!out.steps[sid]) return;
+      const v=both(bs[sid]&&bs[sid].memo,ls[sid].memo,ss[sid].memo);
+      if(v!=null) out.steps[sid].memo=v;
+    });
+  }
+  /* 못 보낸 고침 기록 · 이 창 몫만 쓴다(키에 창 이름표) · 다 보내면 지운다 */
+  function persistDraft(){
+    const ids=Array.from(new Set(Array.from(dirty).concat(sendingIds)));
+    try{
+      if(!ids.length){ localStorage.removeItem(DRAFT+TAB); return; }
+      const local={}, b0={};
+      ids.forEach(function(id){ const b=find(id); if(b) local[id]=b; if(base[id]) b0[id]=base[id]; });
+      localStorage.setItem(DRAFT+TAB,JSON.stringify({at:Date.now(),local:local,base:b0}));
+    }catch(e){}
+  }
+  /* 지난번에 꺼진 창(또는 30초 넘게 소식 없는 창)이 남긴 고침을 이어받는다 */
+  function restoreDrafts(){
+    try{
+      for(let i=localStorage.length-1;i>=0;i--){
+        const k=localStorage.key(i);
+        if(!k||k.indexOf(DRAFT)!==0||k===DRAFT+TAB) continue;
+        const d=JSON.parse(localStorage.getItem(k)||'null');
+        if(d&&Date.now()-(d.at||0)<30000) continue;          /* 아직 살아 있는 다른 창 · 그 창이 보낸다 */
+        if(d&&d.local) Object.keys(d.local).forEach(function(id){
+          const b=d.local[id], j=brands.findIndex(function(x){ return x.id===id; });
+          if(j>=0) brands[j]=b; else brands.push(b);
+          if(d.base&&d.base[id]) base[id]=d.base[id];
+          dirty.add(id);
+        });
+        localStorage.removeItem(k);
+      }
+    }catch(e){}
+    persistDraft();
+  }
+  function mark(id){
+    dirty.add(id);
+    const b=find(id); if(b) b.updatedAt=Date.now();
+    cache(); persistDraft();
+    const db=DB(); if(db&&db.saveNotice) db.saveNotice(KEY,'pending');
+    clearTimeout(timer); timer=setTimeout(flush,700);
+  }
+  async function flush(){
+    timer=null;
+    if(busy){ timer=setTimeout(flush,400); return; }
+    if(!dirty.size) return;
+    const db=DB();
+    if(!db||!db.saveMerged){ return; }
+    busy=true;
+    const ids=Array.from(dirty); dirty.clear(); sendingIds=ids;
+    const snap={}; ids.forEach(function(id){ snap[id]=clone(find(id)); });
+    let result=null;
+    try{
+      result=await db.saveMerged(KEY,function(server){
+        const v=parse(server==null?null:clone(server));
+        ids.forEach(function(id){
+          const i=v.brands.findIndex(function(x){ return x.id===id; });
+          const m=mergeOne(id,snap[id],i>=0?v.brands[i]:null);
+          if(!m) return;
+          if(i>=0) v.brands[i]=m; else v.brands.push(m);
+        });
+        return {brands:v.brands,updatedAt:Date.now(),_rev:BRAND_REV};
+      });
+    }catch(e){ console.error(e); result=null; }
+    busy=false; sendingIds=[];
+    if(!result){
+      /* 못 보낸 것은 다시 담아 15초 뒤 재시도 · 이 PC(localStorage)에 짝으로 남아 있다 */
+      ids.forEach(function(id){ dirty.add(id); });
+      persistDraft();
+      if(db.saveNotice) db.saveNotice(KEY,'failing');
+      online=false;
+      clearTimeout(timer); timer=setTimeout(flush,15000);
+      return;
+    }
+    online=true;
+    const saved=parse(result).brands, next=saved.map(clone);
+    /* 보내는 사이에 또 고친 것 · 보낸 사본(snap) 기준으로 결과 위에 다시 얹는다 */
+    dirty.forEach(function(id){
+      const i=next.findIndex(function(x){ return x.id===id; }), cur=find(id);
+      if(!cur) return;
+      if(i<0){ next.push(clone(cur)); return; }
+      next[i]=clone(snap[id]?db.merge3(snap[id],cur,next[i]):cur);
+    });
+    setBase(saved);
+    brands=next; cache(); persistDraft();
+    if(!dirty.size&&db.saveNotice) db.saveNotice(KEY,'ok');
+    renderGrid();
+    if(openId) paintSummary();
+  }
+
+  /* 다른 PC의 고침을 보이게 · 이 탭으로 돌아오거나 1분마다(브랜드전략실을 보고 있고, 보낼 것도 입력 중인 것도 없을 때) 다시 받는다 */
+  function idleRefresh(){
+    if(window.baroyamCurrentView!=='brand'||document.visibilityState!=='visible') return;
+    if(dirty.size||busy||loading) return;
+    if(document.querySelector('#view-brand :focus')||!$('bsNewDlg').hidden||!av.dlg.hidden) return;
+    open();
+  }
+  document.addEventListener('visibilitychange',idleRefresh);
+  setInterval(idleRefresh,60000);
+
+  /* ---------- 새 브랜드 ---------- */
+  const newStatus=window.UI?UI.tabs($('bsNewStatus'),function(v){
+    $('bsNewDateLbl').textContent=v==='launched'?'출시일':'출시 예정일';
+  }):null;
+  function openNew(){
+    const f=$('bsNewForm'); f.reset();
+    if(!newPicker&&window.UI) newPicker=UI.datePicker($('bsNewDate'),{mode:'single',placeholder:'날짜 선택',yearNav:true});
+    if(newPicker) newPicker.set(null);
+    if(newStatus) newStatus.set('planned');
+    $('bsNewDateLbl').textContent='출시 예정일';
+    $('bsNewDlg').hidden=false;
+    setTimeout(function(){ f.elements.name.focus(); },0);
+  }
+  $('bsNewForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const f=e.currentTarget, name=f.elements.name.value.trim();
+    if(!name){ f.elements.name.focus(); return; }
+    const b={id:'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),createdAt:Date.now(),steps:{},
+      name:name,status:(newStatus&&newStatus.value)||'planned',launchDate:'',releasedDate:'',summary:f.elements.summary.value.trim()};
+    b[b.status==='launched'?'releasedDate':'launchDate']=(newPicker&&newPicker.value)||'';
+    brands.push(b);
+    mark(b.id);
+    $('bsNewDlg').hidden=true;
+    openId=b.id; renderGrid();
+  });
+
+  /* ---------- 상세 ---------- */
+  function openDetail(id){
+    const b=find(id); if(!b) return;
+    openId=id; linkFormFor=null;
+    $('bsDetailTitle').value=b.name||'';
+    paintLogo(b);
+    $('bsMainHead').hidden=false;
+    paintLaunch(b);
+    $('bsGrid').querySelectorAll('.bs-item').forEach(function(x){ x.setAttribute('aria-current',String(x.dataset.id===id)); });
+    const info='<div class="bs-group bs-history"><div class="bs-group-head"><h3>HISTORY</h3></div>'
+      +'<div class="bs-summary"><textarea class="ui-field block" data-f="summary" maxlength="3000" aria-label="제품 장점·인사이트"'
+      +' placeholder="제품에 대한 모든 장점과 인사이트를 입력하세요">'+esc(b.summary)+'</textarea></div></div>';
+    const groups=stages().map(function(g,gi){
+      return '<div class="bs-group" data-g="'+esc(g.id)+'"><div class="bs-group-head"><h3>'+(gi+1)+'. '+esc(gName(g))+'</h3><span></span>'
+        +(g.steps.length?'<button type="button" class="ui-btn sm bs-check-btn" data-check-group="'+esc(g.id)+'">'+checkLabel(false,'전체')+'</button>':'')+'</div>'
+        +g.steps.map(function(s){
+          const st=(b.steps&&b.steps[s.id])||{};
+          return '<div class="bs-step'+(st.done?' on':'')+'" data-s="'+esc(s.id)+'">'
+            +'<input type="checkbox" id="bsS_'+esc(s.id)+'"'+(st.done?' checked':'')+'>'
+            +'<div class="bs-step-body">'
+            +'<label for="bsS_'+esc(s.id)+'"><div class="bs-step-t">'+esc(sTitle(s))+'<span class="bs-step-at">'+(st.done&&st.at?dot(st.at)+' 완료':'')+'</span></div>'
+            +(sDesc(s)?'<div class="bs-step-d">'+esc(sDesc(s))+'</div>':'')+'</label>'
+            +'<textarea class="ui-field block bs-memo" data-memo maxlength="2000" rows="2" placeholder="메모 · 진행 상황을 적어 주세요">'+esc(st.memo)+'</textarea>'
+            +'<div class="bs-att">'+attHtml(b.id,s.id,st)+'</div>'
+            +'</div></div>';
+        }).join('')+'</div>';
+    }).join('');
+    $('bsDetailBody').innerHTML='<div class="bs-sum" id="bsSum"></div>'+info+groups;
+    $('bsDetailBody').dataset.id=id;
+    $('bsDetailBody').querySelectorAll('.bs-memo,.bs-summary textarea').forEach(grow);
+    paintSummary();
+  }
+  /* 체크 단추 글자 · 다 체크됐으면 "해제", 아니면 체크 아이콘 + "체크" */
+  const IC_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+  const IC_UNDO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  function checkLabel(full,word){ return full?IC_UNDO+word+' 해제':IC_CHECK+word+' 체크'; }
+  function paintSummary(){
+    const b=find(openId); if(!b) return;
+    const p=progress(b), d=dday(b);
+    $('bsSum').innerHTML='<span class="bs-dday '+d.c+'">'+esc(d.t)+'</span>'
+      +'<span class="bs-sum-stage">'+(p.cur<0?'<b>모든 단계 완료</b>':'지금 단계 · <b>'+(p.cur+1)+'. '+esc(gName(stages()[p.cur]))+'</b>')+'</span>'
+      +'<div class="bs-prog"><div class="bs-prog-bar"><i style="width:'+p.pct+'%"></i></div><span class="bs-prog-n">'+p.done+'/'+p.total+' · '+p.pct+'%</span></div>'
+      +(p.total?'<button type="button" class="ui-btn sm bs-check-btn'+(p.done===p.total?' is-full':'')+'" data-check-all>'+checkLabel(p.done===p.total,'모두')+'</button>':'');
+    p.groups.forEach(function(x){
+      const el=[].find.call($('bsDetailBody').querySelectorAll('.bs-group'),function(n){ return n.dataset.g===x.g.id; }); if(!el) return;
+      const full=x.total>0&&x.n===x.total;
+      el.classList.toggle('complete',full);
+      el.querySelector('.bs-group-head span').textContent=x.n+' / '+x.total;
+      const btn=el.querySelector('[data-check-group]');
+      if(btn){ btn.innerHTML=checkLabel(full,'전체'); btn.classList.toggle('is-full',full); }
+    });
+  }
+  /* 출시 상태·날짜는 머리줄에 하나씩만 두고, 브랜드를 바꿀 때 값만 갈아 끼운다 ·
+     날짜 버튼 하나가 상태에 따라 출시 예정일(launchDate) 또는 출시일(releasedDate)을 고친다 */
+  function dateKey(b){ return launched(b)?'releasedDate':'launchDate'; }
+  function paintLaunch(b){
+    const on=launched(b), lbl=on?'출시일':'출시 예정일';
+    if(statusTabs) statusTabs.set(on?'launched':'planned');
+    $('bsDateLbl').textContent=lbl;
+    $('bsDetailDate').setAttribute('aria-label',lbl);
+    if(detailPicker) detailPicker.set(b[dateKey(b)]||null);
+  }
+  const statusTabs=window.UI?UI.tabs($('bsStatusTabs'),function(v){
+    const x=find(openId); if(!x) return;
+    x.status=v; mark(x.id,'info','status');
+    /* 출시 완료로 바꿨는데 출시일이 비었으면 오늘로 채워 둔다(바로 고칠 수 있다) */
+    if(v==='launched'&&!x.releasedDate){ x.releasedDate=today(); mark(x.id,'info','releasedDate'); }
+    paintLaunch(x); paintSummary(); renderGrid();
+  }):null;
+  detailPicker=window.UI?UI.datePicker($('bsDetailDate'),{mode:'single',placeholder:'날짜 정하기',yearNav:true,
+    onChange:function(v){ const x=find(openId); if(!x) return; const k=dateKey(x); x[k]=v||''; mark(x.id,'info',k); paintSummary(); renderGrid(); }}):null;
+  if(detailPicker) $('bsDetailDate').classList.add('sm');
+  /* 이름(머리줄)·설명·메모 입력 · 머리줄과 본문을 함께 받도록 오른쪽 칸 전체에 건다 */
+  document.querySelector('#view-brand .bs-main').addEventListener('input',function(e){
+    const b=find(openId); if(!b) return;
+    const t=e.target;
+    if(t.dataset.f){
+      if(t.tagName==='TEXTAREA') grow(t);
+      b[t.dataset.f]=t.value; mark(b.id,'info',t.dataset.f);
+      renderGrid();
+    }else if(t.hasAttribute('data-memo')){
+      grow(t);
+      stepSet(b,t.closest('.bs-step').dataset.s,function(st){ st.memo=t.value; });
+    }
+  });
+  $('bsDetailBody').addEventListener('change',function(e){
+    const t=e.target, b=find(openId);
+    if(!b||t.type!=='checkbox') return;
+    const row=t.closest('.bs-step');
+    checkStep(b,row,t.checked);
+    paintSummary(); renderGrid();
+  });
+  /* ---------- 항목 한 줄의 저장 · 비어 있으면(체크·메모·링크·파일 모두 없음) 칸을 뺀다 ---------- */
+  function stepSet(b,sid,fn){
+    b.steps=b.steps||{};
+    const st=Object.assign({},b.steps[sid]);
+    fn(st);
+    if(st.links&&!st.links.length) delete st.links;
+    if(st.files&&!st.files.length) delete st.files;
+    if(!st.done&&!st.memo&&!st.links&&!st.files) delete b.steps[sid]; else b.steps[sid]=st;
+    mark(b.id,'steps',sid);
+    return st;
+  }
+  /* 체크 한 줄 · 이미 체크된 줄을 다시 체크해도 완료 날짜는 그대로 둔다 */
+  function checkStep(b,row,on){
+    const sid=row.dataset.s;
+    const st=stepSet(b,sid,function(st){
+      if(on){ if(!st.done){ st.done=true; st.at=today(); } }
+      else{ delete st.done; delete st.at; }
+    });
+    row.classList.toggle('on',on);
+    row.querySelector('input[type=checkbox]').checked=on;
+    row.querySelector('.bs-step-at').textContent=on&&st.at?dot(st.at)+' 완료':'';
+  }
+  /* 단계 전체 / 브랜드 전체 체크 · 해제는 완료 날짜가 지워지므로 한 번 묻는다 */
+  async function checkRows(b,rows,label){
+    const on=rows.some(function(r){ return !r.querySelector('input[type=checkbox]').checked; });
+    if(!on){
+      const ok=window.baroyamAsk?await window.baroyamAsk(label+' 체크를 모두 풀까요?','완료 날짜도 함께 지워집니다.','해제'):confirm('모두 풀까요?');
+      if(!ok) return;
+    }
+    rows.forEach(function(r){ checkStep(b,r,on); });
+    paintSummary(); renderGrid();
+  }
+  $('bsDetailBody').addEventListener('click',function(e){
+    const b=find(openId); if(!b) return;
+    const g=e.target.closest('[data-check-group]');
+    if(g){
+      const box=g.closest('.bs-group');
+      checkRows(b,[].slice.call(box.querySelectorAll('.bs-step')),'"'+box.querySelector('h3').textContent+'"');
+      return;
+    }
+    if(e.target.closest('[data-check-all]')) checkRows(b,[].slice.call($('bsDetailBody').querySelectorAll('.bs-step')),'이 브랜드의');
+  });
+  /* 메모칸 · 적는 만큼 늘어난다(최소 두 줄) */
+  function grow(el){ el.style.height='auto'; el.style.height=Math.max(el.classList.contains('bs-memo')?58:96,el.scrollHeight+2)+'px'; }
+
+  /* ---------- 링크·파일 ----------
+     항목마다 st.links=[{id,url,title}] · st.files=[{id,name,path,size,type,at}] ·
+     파일 본체는 Supabase Storage 의 brand-files 버킷(경로는 브랜드id/항목id/임의이름) · 여기에는 이름·경로만 둔다 ·
+     ✕는 목록에서만 뺀다(보관함의 파일은 남는다 · 실수로 지워도 되살릴 수 있게) */
+  const BUCKET='brand-files', MAX_FILE=50*1024*1024;
+  const IC_LINK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>';
+  const IC_FILE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12.4 19a5 5 0 0 1-7-7l7.8-7.8a3.3 3.3 0 0 1 4.7 4.7l-7.6 7.6a1.7 1.7 0 0 1-2.4-2.4l7-7"/></svg>';
+  const uploading=new Map();   /* 'brandId|항목id' → [파일 이름…] · 올리는 동안 흐린 칩으로 보인다 */
+  let linkFormFor=null, fileTarget=null;
+  function size(n){ n=+n||0; return n>=1048576?(n/1048576).toFixed(1)+'MB':Math.max(1,Math.round(n/1024))+'KB'; }
+  function attHtml(bid,sid,st){
+    const links=(st&&st.links)||[], files=(st&&st.files)||[], busy=uploading.get(bid+'|'+sid)||[];
+    let h=links.map(function(l){
+      return '<span class="bs-att-item"><a class="ui-chip" href="'+esc(l.url)+'" target="_blank" rel="noopener noreferrer" title="'+esc(l.url)+'">'
+        +IC_LINK+'<span>'+esc(l.title||l.url.replace(/^https?:\/\//,''))+'</span></a>'
+        +'<button type="button" class="ui-btn ghost icon sm" data-att-del="links" data-id="'+esc(l.id)+'" aria-label="링크 빼기">✕</button></span>';
+    }).join('')
+    +files.map(function(f){
+      return '<span class="bs-att-item"><button type="button" class="ui-chip" data-file="'+esc(f.id)+'" title="'+esc(f.name)+' 열기">'
+        +IC_FILE+'<span>'+esc(f.name)+'</span><b>'+size(f.size)+'</b></button>'
+        +'<button type="button" class="ui-btn ghost icon sm" data-att-del="files" data-id="'+esc(f.id)+'" aria-label="파일 빼기">✕</button></span>';
+    }).join('')
+    +busy.map(function(n){ return '<span class="bs-att-item busy"><span class="ui-chip">'+IC_FILE+'<span>올리는 중 · '+esc(n)+'</span></span></span>'; }).join('');
+    if(linkFormFor===bid+'|'+sid){
+      h+='<form class="bs-link-form" data-link-form><input class="ui-field sm" name="url" placeholder="https:// 주소" autocomplete="off" required>'
+        +'<input class="ui-field sm" name="title" placeholder="이름 (선택)" maxlength="60" autocomplete="off">'
+        +'<button type="submit" class="ui-btn soft sm">추가</button><button type="button" class="ui-btn ghost sm" data-att-cancel>취소</button></form>';
+    }else{
+      h+='<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>'
+        +'<button type="button" class="ui-btn ghost sm" data-att-add="file">'+IC_FILE+'파일</button>';
+    }
+    return h;
+  }
+  /* 한 항목의 첨부 줄만 다시 그린다(메모를 적는 중이어도 끊기지 않게) */
+  function paintAtt(bid,sid){
+    if(openId!==bid) return;
+    const row=[].find.call($('bsDetailBody').querySelectorAll('.bs-step'),function(n){ return n.dataset.s===sid; });
+    if(!row) return;
+    const b=find(bid);
+    row.querySelector('.bs-att').innerHTML=attHtml(bid,sid,b&&b.steps&&b.steps[sid]);
+  }
+  function normUrl(v){
+    v=String(v||'').trim(); if(!v) return '';
+    if(!/^[a-z][a-z0-9+.-]*:/i.test(v)) v='https://'+v;
+    try{ const u=new URL(v); return /^https?:$/.test(u.protocol)?u.href:''; }catch(e){ return ''; }
+  }
+  $('bsDetailBody').addEventListener('click',async function(e){
+    const b=find(openId); if(!b) return;
+    const row=e.target.closest('.bs-step'); if(!row) return;
+    const sid=row.dataset.s, key=b.id+'|'+sid;
+    const add=e.target.closest('[data-att-add]');
+    if(add){
+      if(add.dataset.attAdd==='link'){
+        const prev=linkFormFor; linkFormFor=key;
+        if(prev&&prev!==key) paintAtt(prev.split('|')[0],prev.split('|')[1]);
+        paintAtt(b.id,sid);
+        const f=row.querySelector('[data-link-form] input'); if(f) f.focus();
+      }else{
+        fileTarget={bid:b.id,sid:sid};
+        $('bsFileInput').value=''; $('bsFileInput').click();
+      }
+      return;
+    }
+    if(e.target.closest('[data-att-cancel]')){ linkFormFor=null; paintAtt(b.id,sid); return; }
+    const del=e.target.closest('[data-att-del]');
+    if(del){
+      const kind=del.dataset.attDel, list=((b.steps&&b.steps[sid]&&b.steps[sid][kind])||[]);
+      const it=list.find(function(x){ return x.id===del.dataset.id; }); if(!it) return;
+      const label=kind==='files'?it.name:(it.title||it.url);
+      const ok=window.baroyamAsk?await window.baroyamAsk('"'+label+'"을(를) 뺄까요?',kind==='files'?'이 항목 목록에서만 빠지고, 보관함의 파일은 남아요.':''):confirm('뺄까요?');
+      if(!ok) return;
+      stepSet(b,sid,function(st){ st[kind]=(st[kind]||[]).filter(function(x){ return x.id!==it.id; }); });
+      paintAtt(b.id,sid);
+      return;
+    }
+    const fb=e.target.closest('[data-file]');
+    if(fb){
+      const f=((b.steps&&b.steps[sid]&&b.steps[sid].files)||[]).find(function(x){ return x.id===fb.dataset.file; });
+      const db=DB(); if(!f||!db||!db.fileUrl) return;
+      /* 팝업 차단을 피하려고 누른 순간 빈 창을 먼저 연다 */
+      const win=window.open('','_blank');
+      try{ const url=await db.fileUrl(BUCKET,f.path); if(win) win.location.href=url; else location.href=url; }
+      catch(err){ if(win) win.close(); console.error(err); msg('파일을 열지 못했어요 · '+(err&&err.message||err)); }
+    }
+  });
+  $('bsDetailBody').addEventListener('submit',function(e){
+    const form=e.target.closest('[data-link-form]'); if(!form) return;
+    e.preventDefault();
+    const b=find(openId), row=form.closest('.bs-step'); if(!b||!row) return;
+    const url=normUrl(form.elements.url.value);
+    if(!url){ form.elements.url.focus(); form.elements.url.select(); return; }
+    const title=form.elements.title.value.trim();
+    stepSet(b,row.dataset.s,function(st){ st.links=(st.links||[]).concat([{id:newId('l'),url:url,title:title}]); });
+    linkFormFor=null; paintAtt(b.id,row.dataset.s);
+  });
+  $('bsDetailBody').addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&e.target.closest('[data-link-form]')){
+      e.stopPropagation(); const row=e.target.closest('.bs-step'); linkFormFor=null; if(row) paintAtt(openId,row.dataset.s);
+    }
+  });
+  $('bsFileInput').addEventListener('change',async function(){
+    const t=fileTarget, files=Array.from(this.files||[]); fileTarget=null;
+    const db=DB(); if(!t||!files.length) return;
+    if(!db||!db.fileUpload){ msg('파일을 올리려면 로그인이 필요해요.'); return; }
+    const key=t.bid+'|'+t.sid;
+    for(const file of files){
+      if(file.size>MAX_FILE){ msg('"'+file.name+'"은(는) 50MB가 넘어서 올리지 않았어요. 큰 파일은 드라이브 링크로 붙여 주세요.'); continue; }
+      const ext=(file.name.split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8);
+      const path=t.bid+'/'+t.sid+'/'+newId('f')+(ext&&file.name.indexOf('.')>=0?'.'+ext:'');
+      uploading.set(key,(uploading.get(key)||[]).concat([file.name])); paintAtt(t.bid,t.sid);
+      try{
+        await db.fileUpload(BUCKET,path,file);
+        const b=find(t.bid);
+        if(b) stepSet(b,t.sid,function(st){ st.files=(st.files||[]).concat([{id:newId('f'),name:file.name,path:path,size:file.size,type:file.type||'',at:today()}]); });
+        msg('');
+      }catch(err){
+        console.error(err);
+        const m=String(err&&err.message||err);
+        msg(/bucket/i.test(m)?'파일 보관함이 아직 준비되지 않았어요 · 관리자가 Supabase 에서 11-brand-files-storage.sql 을 실행하면 올릴 수 있어요.'
+          :'"'+file.name+'"을(를) 올리지 못했어요 · '+m);
+      }
+      const left=(uploading.get(key)||[]).slice(); left.splice(left.indexOf(file.name),1);
+      if(left.length) uploading.set(key,left); else uploading.delete(key);
+      paintAtt(t.bid,t.sid);
+    }
+  });
+
+  $('bsDeleteBtn').addEventListener('click',async function(){
+    const b=find(openId); if(!b) return;
+    const ok=window.baroyamAsk?await window.baroyamAsk('"'+(b.name||'브랜드')+'"를 지울까요?','체크리스트와 메모도 함께 목록에서 사라집니다.'):confirm('지울까요?');
+    if(!ok) return;
+    b.deletedAt=Date.now(); mark(b.id,'info','deletedAt');
+    openId=null; renderGrid();
+  });
+
+  /* ---------- 공통 ---------- */
+  $('bsNewBtn').addEventListener('click',openNew);
+  $('bsGrid').addEventListener('click',function(e){
+    const c=e.target.closest('.bs-item'); if(c&&c.dataset.id!==openId) openDetail(c.dataset.id);
+  });
+  $('bsNewDlg').addEventListener('click',function(e){
+    if(e.target===$('bsNewDlg')||e.target.closest('[data-bs-close]')) $('bsNewDlg').hidden=true;
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!$('bsNewDlg').hidden&&(!$('askDlg')||$('askDlg').hidden)) $('bsNewDlg').hidden=true;
+  });
+
+  /* ---------- 관리자 설정 > 브랜드전략실설정 · 틀 편집기(메뉴얼가이드설정과 같은 모양) ----------
+     탭을 누를 때 서버 최신 틀을 받아 그린다 · 글자를 고치는 동안에는 다시 그리지 않는다(입력이 끊기지 않게) */
+  const MOVE=function(kind,id,gid,label,first,last){
+    const g=gid?' data-g="'+esc(gid)+'"':'';
+    return '<span class="mg-move">'
+      +'<button type="button" data-bs-move="'+kind+'" data-id="'+esc(id)+'"'+g+' data-dir="-1"'+(first?' disabled':'')+' title="위로" aria-label="'+label+' 위로 옮기기">▲</button>'
+      +'<button type="button" data-bs-move="'+kind+'" data-id="'+esc(id)+'"'+g+' data-dir="1"'+(last?' disabled':'')+' title="아래로" aria-label="'+label+' 아래로 옮기기">▼</button>'
+      +'</span>';
+  };
+  function renderLabelEditor(){
+    const list=stages();
+    if(!list.length){
+      $('bsLabelEditor').innerHTML='<div class="mg-empty">단계가 없어요.<br>위 입력란에 이름을 넣고 추가해 보세요.</div>';
+      return;
+    }
+    $('bsLabelEditor').innerHTML=list.map(function(g,gi){
+      const gl=esc(gName(g));
+      return '<div class="mg-group" data-group="'+esc(g.id)+'">'
+        +'<div class="mg-row"><span class="mg-no">'+(gi+1)+'</span>'
+        +'<input class="mg-name" type="text" maxlength="30" value="'+esc(g.name)+'" data-bs-g="'+esc(g.id)+'" placeholder="단계 이름" aria-label="단계 이름">'
+        +MOVE('g',g.id,'',gl,gi===0,gi===list.length-1)
+        +'<button type="button" class="mg-del" data-bs-del="g" data-id="'+esc(g.id)+'" title="이 단계 삭제" aria-label="'+gl+' 단계 삭제">✕</button></div>'
+        +'<div class="mg-items">'
+        +g.steps.map(function(x,si){
+          const xl=esc(sTitle(x));
+          return '<div class="mg-row"><div class="bs-tpl-fields">'
+            +'<input class="mg-name" type="text" maxlength="40" value="'+esc(x.t)+'" data-bs-t="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="항목 이름" aria-label="항목 이름">'
+            +'<input class="mg-name bs-tpl-desc" type="text" maxlength="120" value="'+esc(x.d)+'" data-bs-d="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="설명 (선택)" aria-label="항목 설명">'
+            +'</div>'
+            +MOVE('s',x.id,g.id,xl,gi===0&&si===0,gi===list.length-1&&si===g.steps.length-1)
+            +'<button type="button" class="mg-del" data-bs-del="s" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" title="이 항목 삭제" aria-label="'+xl+' 항목 삭제">✕</button></div>';
+        }).join('')
+        +'<form class="mg-add-item" data-bs-add="'+esc(g.id)+'"><input type="text" maxlength="40" placeholder="새 항목 이름" autocomplete="off" aria-label="'+gl+'에 새 항목 추가"><button type="submit">추가</button></form>'
+        +'</div></div>';
+    }).join('');
+  }
+  function stageOf(id){ return stages().find(function(g){ return g.id===id; }); }
+  /* 틀이 바뀌면 · 저장하고, 설정 화면과 뒤의 브랜드 화면을 다시 그린다 */
+  function tplChanged(redraw){
+    markT();
+    if(redraw) renderLabelEditor();
+    if(openId) $('bsDetailBody').dataset.id='';
+    renderGrid();
+  }
+  $('bsSettingsTab').addEventListener('click',async function(){
+    renderLabelEditor();
+    if(tdirty||tbusy||ttimer) return;            /* 보낼 고침이 남았으면 지금 화면 그대로 */
+    try{
+      const db=DB();
+      if(db&&db.loadSetting&&(await db.ensureSession())){
+        await loadT(db);
+        if(!$('bsLabelEditor').contains(document.activeElement)) renderLabelEditor();
+      }
+    }catch(e){ console.error('[브랜드전략실] 틀 불러오기 실패',e); }
+  });
+  $('bsStageAddForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    const inp=$('bsStageNameInput'), name=inp.value.trim();
+    if(!name||!isAdmin()) return;
+    stages().push({id:newId('g'),name:name,steps:[]});
+    inp.value='';
+    tplChanged(true);
+    inp.focus();
+  });
+  $('bsLabelEditor').addEventListener('submit',function(e){
+    const f=e.target.closest('[data-bs-add]'); if(!f) return;
+    e.preventDefault();
+    const g=stageOf(f.dataset.bsAdd), name=f.querySelector('input').value.trim();
+    if(!g||!name||!isAdmin()) return;
+    g.steps.push({id:newId('s'),t:name,d:''});
+    tplChanged(true);
+    /* 같은 단계 입력칸에 커서를 돌려놔 연달아 추가할 수 있게 */
+    const again=[].find.call($('bsLabelEditor').querySelectorAll('[data-bs-add]'),function(n){ return n.dataset.bsAdd===g.id; });
+    if(again) again.querySelector('input').focus();
+  });
+  $('bsLabelEditor').addEventListener('input',function(e){
+    const t=e.target; if(!isAdmin()) return;
+    if(t.dataset.bsG!=null){ const g=stageOf(t.dataset.bsG); if(!g) return; g.name=t.value; }
+    else if(t.dataset.bsT!=null||t.dataset.bsD!=null){
+      const g=stageOf(t.dataset.g); if(!g) return;
+      const x=g.steps.find(function(y){ return y.id===(t.dataset.bsT||t.dataset.bsD); }); if(!x) return;
+      if(t.dataset.bsT!=null) x.t=t.value; else x.d=t.value;
+    }else return;
+    tplChanged(false);
+  });
+  $('bsLabelEditor').addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&e.target.classList.contains('mg-name')){ e.preventDefault(); e.target.blur(); }
+  });
+  $('bsLabelEditor').addEventListener('click',async function(e){
+    if(!isAdmin()) return;
+    const mv=e.target.closest('[data-bs-move]');
+    if(mv){
+      const dir=+mv.dataset.dir, list=stages();
+      if(mv.dataset.bsMove==='g'){
+        const i=list.findIndex(function(g){ return g.id===mv.dataset.id; }), j=i+dir;
+        if(i<0||j<0||j>=list.length) return;
+        const t=list[i]; list[i]=list[j]; list[j]=t;
+      }else{
+        /* 항목 · 단계 안에서 자리를 바꾸고, 끝에 닿으면 옆 단계로 넘어간다(메뉴얼가이드설정과 같다) */
+        const gi=list.findIndex(function(g){ return g.id===mv.dataset.g; }); if(gi<0) return;
+        const items=list[gi].steps, i=items.findIndex(function(x){ return x.id===mv.dataset.id; }), j=i+dir;
+        if(i<0) return;
+        if(j>=0&&j<items.length){ const t=items[i]; items[i]=items[j]; items[j]=t; }
+        else{
+          const next=list[gi+dir]; if(!next) return;
+          const it=items.splice(i,1)[0];
+          if(dir<0) next.steps.push(it); else next.steps.unshift(it);
+        }
+      }
+      tplChanged(true);
+      return;
+    }
+    const del=e.target.closest('[data-bs-del]');
+    if(!del) return;
+    if(del.dataset.bsDel==='g'){
+      const g=stageOf(del.dataset.id); if(!g) return;
+      const ok=window.baroyamAsk?await window.baroyamAsk('"'+gName(g)+'" 단계를 지울까요?','이 단계의 항목 '+g.steps.length+'개도 함께 빠집니다. 브랜드에 체크해 둔 기록은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
+      if(!ok) return;
+      const list=stages(), i=list.indexOf(g); if(i>=0) list.splice(i,1);
+    }else{
+      const g=stageOf(del.dataset.g); if(!g) return;
+      const x=g.steps.find(function(y){ return y.id===del.dataset.id; }); if(!x) return;
+      const ok=window.baroyamAsk?await window.baroyamAsk('"'+sTitle(x)+'" 항목을 지울까요?','브랜드에 체크해 둔 기록은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
+      if(!ok) return;
+      g.steps.splice(g.steps.indexOf(x),1);
+    }
+    tplChanged(true);
+  });
+
+  /* ---------- 대표 이미지 · 프로필 사진 창과 같은 순서(규격 확인 → 자르기 → 완료) ----------
+     256px 정사각형 JPEG(data URL)로 줄여 브랜드의 image 칸에 담는다 · 다른 PC에도 같이 보인다 */
+  const IC_IMG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m4.5 18 5.2-5.2a1.6 1.6 0 0 1 2.3 0L19.5 20"/></svg>';
+  const BS_AV_MAX=5*1024*1024, BS_AV_MIN=200, BS_AV_PX=256;
+  function paintLogo(b){
+    const el=$('bsLogoBtn'), src=imageOf(b);
+    el.classList.toggle('has-img',!!src);
+    el.innerHTML=src?'<img alt="" src="'+esc(src)+'">':IC_IMG;
+  }
+  const av={dlg:$('bsAvDlg'),stage:$('bsAvStage'),cv:$('bsAvCanvas'),zoom:$('bsAvZoom'),tools:$('bsAvTools'),
+    msg:$('bsAvMsg'),file:$('bsAvFile'),drop:$('bsAvDrop'),preview:$('bsAvPreview'),clear:$('bsAvClear')};
+  let avImg=null, avZ=1, avX=0, avY=0, avDrag=null, avFor=null;
+  function avSay(t,ok){ av.msg.textContent=t||''; av.msg.classList.toggle('is-ok',!!ok); }
+  function avSide(){ return avImg?Math.min(avImg.width,avImg.height)/avZ:0; }
+  function avClamp(){ const h=avSide()/2; avX=Math.min(Math.max(avX,h),avImg.width-h); avY=Math.min(Math.max(avY,h),avImg.height-h); }
+  function avDraw(){
+    const c=av.cv.getContext('2d'); c.clearRect(0,0,av.cv.width,av.cv.height);
+    if(!avImg) return;
+    avClamp(); const r=avSide(); c.imageSmoothingQuality='high';
+    c.drawImage(avImg,avX-r/2,avY-r/2,r,r,0,0,av.cv.width,av.cv.height);
+  }
+  function avSet(img){
+    avImg=img; avZ=1; av.zoom.value='1';
+    if(img){ avX=img.width/2; avY=img.height/2; }
+    av.stage.classList.toggle('is-empty',!img);
+    av.tools.setAttribute('aria-disabled',img?'false':'true');
+    avDraw();
+  }
+  function avZoomTo(z){ if(!avImg) return; avZ=Math.min(Math.max(z,1),3); av.zoom.value=String(avZ); avDraw(); }
+  function avPaintPreview(){
+    const b=find(avFor);
+    const src=imageOf(b);
+    av.preview.innerHTML=src?'<img alt="" src="'+esc(src)+'">':IC_IMG;
+    av.clear.hidden=!src;
+  }
+  function avOpen(){
+    if(!openId) return;
+    avFor=openId; avSay(''); avSet(null); avPaintPreview();
+    av.dlg.hidden=false; av.drop.focus();
+  }
+  function avClose(){ av.dlg.hidden=true; avSet(null); $('bsLogoBtn').focus(); }
+  function avTake(f){
+    if(!/^image\//.test(f.type||'')) return avSay('이미지 파일만 넣을 수 있어요 (JPG · PNG · WebP · GIF)');
+    if(f.size>BS_AV_MAX) return avSay('용량이 '+(f.size/1048576).toFixed(1)+'MB예요. 5MB 이하로 줄여 주세요');
+    const rd=new FileReader();
+    rd.onerror=function(){ avSay('이미지를 읽지 못했어요. 다른 파일로 해 볼까요?'); };
+    rd.onload=function(){
+      const img=new Image();
+      img.onerror=function(){ avSay('이미지를 읽지 못했어요. 다른 파일로 해 볼까요?'); };
+      img.onload=function(){
+        const side=Math.min(img.width,img.height);
+        if(side<BS_AV_MIN) return avSay('짧은 쪽이 '+side+'px이에요. '+BS_AV_MIN+'px 이상인 이미지를 넣어 주세요');
+        avSet(img); avSay('규격을 확인했어요 · 오른쪽에서 자를 곳을 맞추고 완료를 눌러 주세요',true);
+      };
+      img.src=rd.result;
+    };
+    rd.readAsDataURL(f);
+  }
+  /* 투명 PNG 로고도 흰 바탕 위에 얹어 담는다(JPEG 는 투명이 검게 나온다) · 너무 크면 화질을 한 단계씩 낮춘다 */
+  function avExport(){
+    avClamp();
+    const r=avSide(), cv=document.createElement('canvas'); cv.width=cv.height=BS_AV_PX;
+    const c=cv.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,BS_AV_PX,BS_AV_PX);
+    c.imageSmoothingQuality='high'; c.drawImage(avImg,avX-r/2,avY-r/2,r,r,0,0,BS_AV_PX,BS_AV_PX);
+    let url='';
+    for(const q of [.88,.78,.65,.5]){ url=cv.toDataURL('image/jpeg',q); if(url.length<=60000) break; }
+    return url;
+  }
+  $('bsLogoBtn').addEventListener('click',avOpen);
+  av.dlg.addEventListener('click',function(e){ if(e.target===av.dlg||e.target.closest('[data-bs-av-close]')) avClose(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!av.dlg.hidden) avClose(); });
+  av.drop.addEventListener('click',function(){ av.file.value=''; av.file.click(); });
+  av.file.addEventListener('change',function(){ const f=av.file.files&&av.file.files[0]; if(f) avTake(f); });
+  ['dragenter','dragover'].forEach(function(t){ av.drop.addEventListener(t,function(e){ e.preventDefault(); av.drop.classList.add('is-over'); }); });
+  ['dragleave','dragend'].forEach(function(t){ av.drop.addEventListener(t,function(){ av.drop.classList.remove('is-over'); }); });
+  av.drop.addEventListener('drop',function(e){
+    e.preventDefault(); av.drop.classList.remove('is-over');
+    const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) avTake(f);
+  });
+  av.zoom.addEventListener('input',function(){ avZoomTo(parseFloat(av.zoom.value)||1); });
+  $('bsAvReset').addEventListener('click',function(){ if(!avImg) return; avZ=1; avX=avImg.width/2; avY=avImg.height/2; av.zoom.value='1'; avDraw(); });
+  av.stage.addEventListener('pointerdown',function(e){ if(!avImg) return; avDrag={x:e.clientX,y:e.clientY}; av.stage.classList.add('is-drag'); try{ av.stage.setPointerCapture(e.pointerId); }catch(err){} });
+  av.stage.addEventListener('pointermove',function(e){
+    if(!avDrag||!avImg) return;
+    const k=avSide()/(av.stage.getBoundingClientRect().width||1);
+    avX-=(e.clientX-avDrag.x)*k; avY-=(e.clientY-avDrag.y)*k; avDrag={x:e.clientX,y:e.clientY}; avDraw();
+  });
+  ['pointerup','pointercancel'].forEach(function(t){ av.stage.addEventListener(t,function(){ avDrag=null; av.stage.classList.remove('is-drag'); }); });
+  av.stage.addEventListener('wheel',function(e){ if(!avImg) return; e.preventDefault(); avZoomTo(avZ*(e.deltaY<0?1.08:1/1.08)); },{passive:false});
+  av.stage.addEventListener('keydown',function(e){
+    if(!avImg) return;
+    const st=avSide()/20;
+    if(e.key==='ArrowLeft') avX-=st; else if(e.key==='ArrowRight') avX+=st;
+    else if(e.key==='ArrowUp') avY-=st; else if(e.key==='ArrowDown') avY+=st;
+    else if(e.key==='+'||e.key==='=') return avZoomTo(avZ*1.1);
+    else if(e.key==='-'||e.key==='_') return avZoomTo(avZ/1.1);
+    else return;
+    e.preventDefault(); avDraw();
+  });
+  function setImage(url){
+    const b=find(avFor); if(!b) return;
+    saveImage(b.id,url);
+    if(openId===b.id) paintLogo(b);
+    renderGrid();
+  }
+  $('bsAvSave').addEventListener('click',function(){
+    if(!avImg) return avClose();
+    const url=avExport();
+    if(!url) return avSay('이미지를 줄이지 못했어요. 다른 이미지로 해 볼까요?');
+    setImage(url); avClose();
+  });
+  av.clear.addEventListener('click',function(){ setImage(''); avPaintPreview(); avSay('이미지를 지웠어요',true); });
+
+  window.baroyamBrandOpen=open;
 })();
 </script>
 </body>
