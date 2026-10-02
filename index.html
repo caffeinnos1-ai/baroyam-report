@@ -912,6 +912,9 @@ window.BAROYAM_DB=(function(){
     if(r.error) throw r.error;
     return r.data||[];
   }
+  /* ---------- 카페24 자사몰 일별 매출 (cafe24_sales_daily) ----------
+     VPS 수집기(caffeinnos-automation/cafe24_sales.js)가 매시간 채운다 · day 는 한국 시간 주문일,
+     paid_amount 는 실결제금액(취소·환불 차감) · 로그인이 안 돼 있으면 null(시트 숫자를 그대로 쓴다) */
   /* ---------- 파일 보관함 (Supabase Storage) · 브랜드전략실 첨부 ----------
      버킷은 supabase/11-brand-files-storage.sql 로 만든다(비공개 · 올리기·읽기만, 지우기는 화면에서 못 함) ·
      읽을 때는 잠깐(5분) 쓰는 서명 주소를 받아 연다 */
@@ -929,8 +932,16 @@ window.BAROYAM_DB=(function(){
     if(r.error) throw r.error;
     return r.data.signedUrl;
   }
+  async function cafe24Daily(fromDay){
+    if(!(await ensureSession())) return null;
+    const c=await client();
+    const r=await c.from('cafe24_sales_daily').select('day,orders,paid_amount')
+      .gte('day',fromDay).order('day',{ascending:true}).limit(1000);
+    if(r.error) throw r.error;
+    return r.data||[];
+  }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
-    trendGoogle:trendGoogle,trendNaver:trendNaver,automationRuns:automationRuns,
+    trendGoogle:trendGoogle,trendNaver:trendNaver,automationRuns:automationRuns,cafe24Daily:cafe24Daily,
     agendaList:agendaList,agendaUpsert:agendaUpsert,agendaSetTrashed:agendaSetTrashed,
     agendaSave:agendaSave,agendaHide:agendaHide,
     agendaPurge:agendaPurge,guideList:guideList,guideSave:guideSave,guideDelete:guideDelete,
@@ -958,7 +969,10 @@ window.BAROYAM_AUTH={
   lsKey:'baroyam_auth_v1',
   /* 팀장 비밀번호 · 역할이 '팀장'인 회원으로 들어갈 때와 관리자 설정을 열 때 같은 값을 쓴다 ·
      공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적어 둔다 */
-  lead:{salt:'baroyam-settings-v1',iterations:200000,hash:'07c5a2ec5f29bb6acac450eb60e9c27bd120fa0750f9cfb120b02b5d8b2b9ac2'}
+  lead:{salt:'baroyam-settings-v1',iterations:200000,hash:'c9c998abd596d4815b548f074090c4416ddd3c2fe07be8523d5fc45c717b7750'},
+  /* 관리자 설정 비밀번호 · 팀장이 아닌 회원이 관리자 설정을 열 때 묻는다 (팀장은 묻지 않는다) ·
+     같은 소금·횟수로 만든 해시라 baroyamLeadHash 로 확인한다 */
+  settingsHash:'87e4ebdd8f864937981a8ecfd063c2fcc8e8fce24b9303b5290a1631ece8ede3'
 };
 document.documentElement.classList.add('auth-locked','auth-checking');
 window.baroyamAuthHash=async function(email){
@@ -1438,7 +1452,8 @@ window.BAROYAM_ACCESS=(function(){
   }
   @media (max-width:420px){ #memberGate .mp-card{padding:32px 18px 16px} #memberGate .mp-foot{margin:18px -18px 0;padding:14px 18px 0} }
   /* 비밀번호 칸은 type=text + 글자 가림 · type=password 면 크롬이 autocomplete=off 를 무시하고 저장·업데이트 창을 띄운다 */
-  .pw-mask{-webkit-text-security:disc;text-security:disc}
+  /* .ui-field 는 all:unset 으로 시작해서 뒤에 오면 가림까지 지운다 · .ui-field.pw-mask 로 한 단계 세게 걸어 둔다 */
+  .pw-mask,.ui-field.pw-mask{-webkit-text-security:disc;text-security:disc}
 </style>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
@@ -5166,8 +5181,7 @@ window.BAROYAM_ACCESS=(function(){
           <h2 id="settingsPwTitle">관리자 확인</h2>
           <button class="settings-close" type="button" id="settingsPwCloseBtn" aria-label="닫기">✕</button>
         </div>
-        <p class="pw-hint" id="settingsPwHint">아직 팀장이 없어요. 팀장 비밀번호를 입력하면 들어가서 팀장을 정할 수 있어요.</p>
-        <p class="pw-hint" id="settingsPwDenied" hidden>관리자 설정은 <b>팀장</b>만 들어갈 수 있어요.<br>팀장에게 요청하거나, 로그인 화면에서 팀장으로 다시 들어와 주세요.</p>
+        <p class="pw-hint" id="settingsPwHint">관리자 설정 비밀번호를 입력해 주세요.<br>팀장으로 들어오면 비밀번호 없이 바로 열려요.</p>
         <form class="member-add-form" id="settingsPwForm" autocomplete="off">
           <input type="text" class="pw-mask" id="settingsPwInput" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="관리자 비밀번호" aria-describedby="settingsPwError">
           <button type="submit">확인</button>
@@ -8430,8 +8444,33 @@ function parseMembersSheet(base){
   };
 }
 
-function buildDataFromSheets(salesJson,memberData){
+/* 자사몰 매출은 카페24 API 값(Supabase cafe24_sales_daily)으로 바꿔 끼운다 · 쿠팡·네이버와 광고비는 시트 그대로.
+   시트의 진행 중인 달("9월 26일")은 그날까지만 더해서 다른 채널과 같은 날짜까지 비교되게 한다.
+   카페24 값이 하나도 없는 달은 시트 숫자를 그대로 둔다(과거분을 아직 안 받았을 때) */
+async function loadCafe24Daily(){
+  if(!window.BAROYAM_DB||!window.BAROYAM_DB.cafe24Daily) return null;
+  try{ return await window.BAROYAM_DB.cafe24Daily((new Date().getFullYear()-1)+'-01-01'); }
+  catch(e){ console.error('카페24 매출 불러오기 실패 · 자사몰은 시트 숫자로 봅니다',e); return null; }
+}
+function applyCafe24(blocks,rows){
+  if(!rows||!rows.length) return;
+  const now=new Date(), nowMonth=now.getMonth()+1, nowYear=now.getFullYear();
+  blocks.forEach(b=>{
+    if(!b.monthNum) return;
+    /* 시트에는 연도가 없다 · 이번 달보다 뒤의 달은 작년으로 본다 */
+    const ym=(b.monthNum>nowMonth?nowYear-1:nowYear)+'-'+String(b.monthNum).padStart(2,'0');
+    const lastDay=b.day?ym+'-'+String(b.day).padStart(2,'0'):ym+'-31';
+    const mine=rows.filter(r=>String(r.day).slice(0,7)===ym&&String(r.day)<=lastDay);
+    if(!mine.length) return;
+    const p=b.platforms['자사몰']||(b.platforms['자사몰']={sales:0,cost:0,rev:0,mediaCost:[0,0,0]});
+    p.sales=mine.reduce((s,r)=>s+(+r.paid_amount||0),0);
+    p.fromCafe24=true;
+  });
+}
+
+function buildDataFromSheets(salesJson,memberData,cafe24Rows){
   const blocks=parseSalesSheet(salesJson);
+  applyCafe24(blocks,cafe24Rows);
   const complete=blocks.filter(b=>!b.isPartial);
   const partial=blocks.find(b=>b.isPartial);
   if(!blocks.length) throw new Error('월 데이터를 찾지 못했습니다');
@@ -8492,8 +8531,8 @@ try{
    기억해 둔 구글 권한이 있으면 백그라운드에서 시트 최신값으로 자동 갱신한다 ·
    권한이 없으면(탭을 새로 열었을 때) 새로고침 버튼을 누르라고 알린다 */
 async function syncFromSheets(interactive){
-  const [salesJson,membersJson]=await fetchSheetTables(interactive);
-  const data=buildDataFromSheets(salesJson,parseMembersSheet(membersJson));
+  const [[salesJson,membersJson],cafe24Rows]=await Promise.all([fetchSheetTables(interactive),loadCafe24Daily()]);
+  const data=buildDataFromSheets(salesJson,parseMembersSheet(membersJson),cafe24Rows);
   renderReport(data);
   const at=Date.now();
   localStorage.setItem(SHEET_CACHE_KEY,JSON.stringify({data,at}));
@@ -8939,29 +8978,18 @@ window.CsGuide=(function(){
   const pwSubmit=pwForm.querySelector('button[type="submit"]');
   let unlocked=false, pwBusy=false;
   try{ unlocked=sessionStorage.getItem(UNLOCK_KEY)==='1'; }catch(e){}
-  /* 팀장으로 들어온 사람은 회원 선택 화면에서 이미 같은 비밀번호를 통과했다 ·
-     설정에 들어갈 때 또 묻지 않는다 · 다른 회원은 종전대로 묻는다 */
+  /* 팀장으로 들어온 사람은 회원 선택 화면에서 이미 팀장 비밀번호를 통과했다 ·
+     설정에 들어갈 때 또 묻지 않는다 · 다른 회원은 관리자 설정 비밀번호를 묻는다 */
   if(window.BAROYAM_LEAD.isOn()) unlocked=true;
 
   const hashPw=window.baroyamLeadHash;
-  /* 관리자 설정은 팀장만 연다 · 다만 회원 중에 팀장이 아직 한 명도 없으면
-     아무도 들어가서 팀장을 정할 수 없으므로, 그때만 예전처럼 비밀번호로 열어 준다 */
   const pwTitle=document.getElementById('settingsPwTitle');
-  const pwHint=document.getElementById('settingsPwHint');
-  const pwDenied=document.getElementById('settingsPwDenied');
-  const pwClose=document.getElementById('settingsPwCloseBtn');
-  function anyLead(){
-    try{ return window.BAROYAM_MEMBERS.load().some(m=>window.BAROYAM_LEAD.isLeadRole(m.id)); }
-    catch(e){ return false; }
-  }
   function openPw(){
-    const bootstrap=!anyLead();
-    pwTitle.textContent=bootstrap?'팀장 확인':'팀장만 들어갈 수 있어요';
-    pwHint.hidden=!bootstrap; pwForm.hidden=!bootstrap; pwDenied.hidden=bootstrap;
+    pwTitle.textContent='관리자 확인';
     pwInput.value='';
     pwError.textContent='';
     pwOverlay.hidden=false;
-    if(bootstrap) pwInput.focus(); else pwClose.focus();
+    pwInput.focus();
     document.addEventListener('keydown',onPwKeydown);
   }
   function closePw(returnFocus){
@@ -8982,7 +9010,11 @@ window.CsGuide=(function(){
   function emitAdmin(){ document.dispatchEvent(new CustomEvent('baroyam:adminmode',{detail:{on:unlocked}})); }
   window.baroyamAdminMode={
     isOn:()=>unlocked,
-    openSettings(){ if(unlocked) openSettings(); else openPw(); }
+    openSettings(){
+      /* 페이지를 연 뒤에 팀장으로 바뀐 경우도 바로 연다 */
+      if(!unlocked && window.BAROYAM_LEAD.isOn()){ unlocked=true; emitAdmin(); }
+      if(unlocked) openSettings(); else openPw();
+    }
   };
   pwForm.addEventListener('submit',e=>{
     e.preventDefault();
@@ -8992,7 +9024,9 @@ window.CsGuide=(function(){
     if(!(window.crypto&&crypto.subtle)){ pwFail('이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'); return; }
     pwBusy=true; pwSubmit.disabled=true;
     hashPw(v).then(h=>{
-      if(h!==window.BAROYAM_AUTH.lead.hash){ pwFail('비밀번호가 맞지 않아요.'); return; }
+      /* 관리자 설정 비밀번호가 기본 · 팀장 비밀번호도 예전처럼 받아 준다 */
+      const A=window.BAROYAM_AUTH;
+      if(h!==A.settingsHash && h!==A.lead.hash){ pwFail('비밀번호가 맞지 않아요.'); return; }
       unlocked=true;
       try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(err){}
       closePw(false);
@@ -9127,6 +9161,10 @@ window.CsGuide=(function(){
      desc:'그날 출근하는 회원 모두에게 좋은 아침 인사와 맡은 프로젝트 현황(긴급·오늘/내일 마감)을 보내요.', record:'아침 프로젝트 인사', task:'cron'},
     {name:'퇴근 전 프로젝트 체크', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['16:00'],
      desc:'그날 출근하는 회원 모두에게 긴급·내일 마감 프로젝트를 알리고 완료·수정·진행도 업데이트를 부탁해요 + 응원 한마디.', record:'퇴근 전 프로젝트 체크', task:'cron'},
+    /* caffeinnos-automation/cafe24_sales.js · 매시간 7분 최근 3일, 새벽 4:37 최근 60일 */
+    {name:'카페24 매출 수집', where:'ERP 매출 · 자사몰', days:[0,1,2,3,4,5,6],
+     times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':07'), record:'카페24 매출 수집',
+     desc:'카페24 주문을 받아 날짜별 실결제금액(취소·환불 차감)을 저장해요. 매출 화면의 자사몰 숫자가 이 값으로 바뀌어요.', task:'cron'},
     {name:'김비서 대화', where:'김비서 개인 메시지', always:true,
      record:'김비서 대화',
      desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. 서버에서 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd',
@@ -9310,6 +9348,8 @@ window.CsGuide=(function(){
   changeMemberBtn.addEventListener('click',()=>{
     P.setMe('');
     window.BAROYAM_LEAD.clear();
+    /* 관리자 설정 비밀번호 통과 기록도 지워서, 다음 회원이 물려받지 않게 한다 */
+    try{ sessionStorage.removeItem('baroyam_settings_unlocked_v1'); }catch(e){}
     location.reload();
   });
   document.getElementById('tbSignOut').addEventListener('click',()=>{
