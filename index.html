@@ -1905,22 +1905,23 @@ window.BAROYAM_ACCESS=(function(){
   /* 조각 이름표(선 + 이름 + 비중) · 목록 대신 */
   #view-month .donut.is-ring svg.rcall{inset:auto;transform:none;pointer-events:none;z-index:2}
   #view-month .donut.is-ring svg.rcall g{animation:mFadeUp .5s ease both;animation-delay:.45s;transition:opacity .15s}
-  #view-month .rcl polyline{fill:none;stroke:var(--cb);stroke-width:1.4;stroke-linejoin:round}
-  #view-month .rcl circle{fill:var(--cb);stroke:var(--paper);stroke-width:1.5}
-  #view-month .rcl text{font-size:13px;fill:var(--body);font-weight:700}
-  #view-month .rcl .rp{fill:var(--ink);font-weight:800;font-size:14px}
+  #view-month .rcl polyline{fill:none;stroke:var(--cb);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+  #view-month .rcl circle{fill:var(--cb);stroke:var(--paper);stroke-width:2}
+  #view-month .rcl text{font-size:16px;fill:var(--body);font-weight:700;letter-spacing:-.3px}
+  #view-month .rcl .rp{fill:var(--ink);font-weight:800;font-size:25px;letter-spacing:-.8px}
+  #view-month .rcl .ra{font-size:13.5px;fill:var(--mute);font-weight:600}
   #view-month .rcl>*{transition:opacity .15s}
   #view-month .donut.is-ring.has-hi .rcl:not(.hi)>*{opacity:.3}
-  #view-month .donut-wrap{justify-content:center;padding:26px 104px;margin-top:8px!important}
+  #view-month .donut-wrap{justify-content:center;padding:52px 168px;margin-top:0!important}
   #view-month .donut-wrap+.dlist,#view-month .donut-wrap .dlist{display:none}
-  #view-month .chart-grid{grid-template-columns:1fr 1fr}
+  #view-month .chart-grid{grid-template-columns:1fr}
   #view-month .donut.is-ring .rseg{fill:none;stroke-width:15;stroke-linecap:round;transition:stroke-width .15s,opacity .15s;cursor:default}
   #view-month .donut.is-ring .rtrack{fill:none;stroke:color-mix(in srgb,var(--line) 55%,transparent);stroke-width:15}
   #view-month .donut.is-ring.has-hi .rseg:not(.hi){opacity:.3}
   #view-month .donut.is-ring .rseg.hi{stroke-width:18}
   #view-month .donut .center{padding:0 34px;text-align:center}
-  #view-month .donut .center .c-amt{font-size:19px;white-space:nowrap}
-  #view-month #mAdDonut .center .c-amt{font-size:17px}
+  #view-month .donut .center .c-amt{font-size:24px;white-space:nowrap;letter-spacing:-.8px}
+  #view-month .donut .center .c-lab{font-size:12.5px;margin-top:4px}
   #view-month .donut .center .c-lab{white-space:nowrap}
   #view-month .drow{padding:12px 6px;border-radius:10px;transition:background .15s,opacity .15s}
   #view-month .drow .sw{width:10px;height:10px;border-radius:50%}
@@ -1942,6 +1943,7 @@ window.BAROYAM_ACCESS=(function(){
     #view-month .tgrid .avgline{left:44px}
     #view-month .kpi .k-spark{display:none}
     #view-month .gbars,#view-month .gbars-x{gap:10px!important}
+    #view-month .donut-wrap{zoom:.6}
   }
 
   /* 05 다음달 계획 슬라이드 */
@@ -8215,11 +8217,12 @@ function ringDonut(donutId,listId,parts,size=196){
   }).join('');
   el.querySelectorAll('svg').forEach(v=>v.remove());
   el.insertAdjacentHTML('afterbegin',`<svg viewBox="0 0 100 100" aria-hidden="true"><defs>${defs}</defs><g>${tot?segs:`<circle class="rtrack" cx="50" cy="50" r="${R}"/>`}</g></svg>`);
-  /* 조각 이름표 · 조각 가운데에서 바깥으로 선을 뽑아 꺾은 뒤, 그 방향(왼쪽/오른쪽)에 "이름 비중%" ·
+  /* 조각 이름표 · 조각 가운데에서 바깥으로 선을 뽑아 꺾은 뒤 그 방향(왼쪽/오른쪽)으로 긴 가로선 ·
+     가로선 위에 "이름 + 큰 비중%", 아래에 금액 ·
      고리 그림은 -90° 돌려 그리므로 화면 각도 = 조각 가운데 각도 − 90° · 같은 쪽 이름표가 겹치면 아래로 민다 */
   if(tot){
-    const PX=CALL_PX, PY=26, W=size+PX*2, H=size+PY*2, cx=W/2, cy=H/2;
-    const OUT=size*(R+SW/2)/100, E=OUT+12, HL=12, GAPY=20;
+    const PX=CALL_PX, PY=52, W=size+PX*2, H=size+PY*2, cx=W/2, cy=H/2;
+    const OUT=size*(R+SW/2)/100, E=OUT+26, LEG=CALL_PX-48, GAPY=62;
     let a0=0;
     const calls=parts.map((p,i)=>{
       const len=p.v/tot*C, mid=(a0+len/2)/R-Math.PI/2; a0+=len;
@@ -8231,16 +8234,22 @@ function ringDonut(donutId,listId,parts,size=196){
       const g=calls.filter(k=>k.right===side).sort((a,b)=>a.ey-b.ey);
       g.forEach((k,j)=>{ if(j&&k.ey-g[j-1].ey<GAPY) k.ey=g[j-1].ey+GAPY; });
       /* 아래로 밀다 그림 밖으로 나가면 전체를 위로 당긴다 */
-      const over=g.length?g[g.length-1].ey-(H-8):0;
+      const over=g.length?g[g.length-1].ey-(H-24):0;
       if(over>0) g.forEach(k=>k.ey-=over);
+      const under=g.length?34-g[0].ey:0;
+      if(under>0) g.forEach(k=>k.ey+=under);
     });
     const tags=calls.map(k=>{
       const ex=k.right?Math.max(k.ex,cx+OUT*.55):Math.min(k.ex,cx-OUT*.55);
-      const tx=ex+(k.right?HL:-HL);
+      const tx=ex+(k.right?LEG:-LEG), lx=(ex+(k.right?4:-4)).toFixed(1), anc=k.right?'start':'end';
       return `<g class="rcl ch-${k.p.key||'self'}" data-i="${k.i}">
         <polyline points="${k.ax.toFixed(1)},${k.ay.toFixed(1)} ${ex.toFixed(1)},${k.ey.toFixed(1)} ${tx.toFixed(1)},${k.ey.toFixed(1)}"/>
-        <circle cx="${k.ax.toFixed(1)}" cy="${k.ay.toFixed(1)}" r="2.6"/>
-        <text x="${(tx+(k.right?5:-5)).toFixed(1)}" y="${k.ey.toFixed(1)}" text-anchor="${k.right?'start':'end'}" dominant-baseline="central"><tspan class="rn">${k.p.name}</tspan><tspan class="rp" dx="5">${k.pc}%</tspan></text></g>`;
+        <circle class="rdot" cx="${k.ax.toFixed(1)}" cy="${k.ay.toFixed(1)}" r="3.6"/>
+        <circle class="rend" cx="${tx.toFixed(1)}" cy="${k.ey.toFixed(1)}" r="3"/>
+        <text x="${lx}" y="${(k.ey-9).toFixed(1)}" text-anchor="${anc}">${k.right
+          ?`<tspan class="rn">${k.p.name}</tspan><tspan class="rp" dx="7">${k.pc}%</tspan>`
+          :`<tspan class="rp">${k.pc}%</tspan><tspan class="rn" dx="7">${k.p.name}</tspan>`}</text>
+        <text class="ra" x="${lx}" y="${(k.ey+20).toFixed(1)}" text-anchor="${anc}">${k.p.amt||''}</text></g>`;
     }).join('');
     el.insertAdjacentHTML('beforeend',`<svg class="rcall" viewBox="0 0 ${W} ${H}" style="left:${-PX}px;top:${-PY}px;width:${W}px;height:${H}px" aria-hidden="true">${tags}</svg>`);
   }
@@ -8260,7 +8269,7 @@ function ringDonut(donutId,listId,parts,size=196){
   rows.forEach((r,j)=>{ r.onmouseenter=()=>hi(j); r.onmouseleave=()=>hi(null); });
 }
 
-const CALL_PX=104;   /* 도넛 이름표가 쓰는 좌우 여백(px) · CSS .donut-wrap 의 좌우 여백과 맞춘다 */
+const CALL_PX=168;   /* 도넛 이름표가 쓰는 좌우 여백(px) · CSS .donut-wrap 의 좌우 여백과 맞춘다 */
 
 /* ===== 전체 리포트 렌더링 (기본 데이터 / 구글시트 데이터 공용) ===== */
 let lastReportData=null;
@@ -8507,7 +8516,7 @@ function renderReport(data){
     <div class="drow"><span class="sw" style="background:${adDColors[i]}"></span><span class="dn">${c}</span>
       <span class="dpct num">${Math.round(share(AD[c].curr.cost,adDTot)*100)}%</span>
       <span class="damt num">${wonRaw(AD[c].curr.cost)}원</span></div>`).join('');
-  ringDonut('mAdDonut','mAdDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:AD[c].curr.cost,color:adDColors[i],amt:eokCheon(AD[c].curr.cost)+'원'})),156);
+  ringDonut('mAdDonut','mAdDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:AD[c].curr.cost,color:adDColors[i],amt:eokCheon(AD[c].curr.cost)+'원'})),220);
 
   /* M04 total */
   document.getElementById('mGrandTotal').textContent=wonRaw(grand)+'원';
