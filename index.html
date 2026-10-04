@@ -1524,13 +1524,17 @@ window.BAROYAM_ACCESS=(function(){
   *{box-sizing:border-box;margin:0;padding:0}
   /* 스크롤바 · 화면 전체 공통 · 사이드바 주황보다 한 톤 연한 색, 양 끝이 둥근 알약 모양(다크는 파란 계열로 자동) ·
      크롬은 scrollbar-color/scrollbar-width 를 준 요소에서 아래 ::-webkit-scrollbar 를 무시하므로 그 둘은 쓰지 않는다(파이어폭스만 @supports 로) */
-  :root{--sc-thumb:color-mix(in srgb,var(--indigo) 36%,transparent);--sc-thumb-hover:color-mix(in srgb,var(--indigo) 60%,transparent)}
-  ::-webkit-scrollbar{width:11px;height:11px}
+  /* 사이드바 주황(#e2672a 계열)과 나란히 있어도 갈리도록 한 단계 진한 갈색빛 주황 · 다크는 파란 강조색 */
+  :root{--sc-thumb:color-mix(in srgb,var(--indigo) 82%,#3b1606);--sc-thumb-hover:color-mix(in srgb,var(--indigo) 66%,#3b1606)}
+  html[data-theme="dark"]{--sc-thumb:color-mix(in srgb,var(--indigo) 75%,transparent);--sc-thumb-hover:var(--indigo)}
+  ::-webkit-scrollbar{width:14px;height:14px}
   ::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
   ::-webkit-scrollbar-button{display:none;width:0;height:0}
   ::-webkit-scrollbar-thumb{background:var(--sc-thumb);border-radius:999px;border:3px solid transparent;background-clip:padding-box;min-height:44px;min-width:44px}
   ::-webkit-scrollbar-thumb:hover{background:var(--sc-thumb-hover);background-clip:padding-box}
-  ::-webkit-scrollbar-thumb:active{background:var(--indigo);background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:active{background:var(--sc-thumb-hover);background-clip:padding-box}
+  /* 주황 사이드바 안의 스크롤바는 흰빛으로 */
+  .sidebar ::-webkit-scrollbar-thumb,.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.6);background-clip:padding-box}
   @supports not selector(::-webkit-scrollbar){ *{scrollbar-width:thin;scrollbar-color:var(--sc-thumb) transparent} }
   html{background:var(--bg)}
   body{background:var(--app-bg);background-attachment:fixed;min-height:100vh}
