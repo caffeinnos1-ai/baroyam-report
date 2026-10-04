@@ -1844,13 +1844,13 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .tbar .seg.self{background:linear-gradient(180deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))}
   /* 판매처 색 묶음 · --ca 위(밝은 쪽) · --cb 아래(진한 쪽) · --cl 지난달처럼 한참 옅은 색 ·
      02 비교 막대·03 ROAS 막대·도넛·누적 비중 막대가 모두 01 막대와 같은 그라데이션을 쓴다 */
-  #view-month .ch-coupang{--ca:color-mix(in srgb,var(--coupang) 55%,var(--paper));--cb:color-mix(in srgb,var(--coupang) 78%,var(--paper));--cl:color-mix(in srgb,var(--coupang) 22%,var(--paper))}
-  #view-month .ch-naver{--ca:color-mix(in srgb,var(--naver) 55%,var(--paper));--cb:color-mix(in srgb,var(--naver) 78%,var(--paper));--cl:color-mix(in srgb,var(--naver) 22%,var(--paper))}
-  #view-month .ch-self{--ca:color-mix(in srgb,var(--self) 55%,var(--paper));--cb:color-mix(in srgb,var(--self) 78%,var(--paper));--cl:color-mix(in srgb,var(--self) 22%,var(--paper))}
+  :is(#view-month,#view-week) .ch-coupang{--ca:color-mix(in srgb,var(--coupang) 55%,var(--paper));--cb:color-mix(in srgb,var(--coupang) 78%,var(--paper));--cl:color-mix(in srgb,var(--coupang) 22%,var(--paper))}
+  :is(#view-month,#view-week) .ch-naver{--ca:color-mix(in srgb,var(--naver) 55%,var(--paper));--cb:color-mix(in srgb,var(--naver) 78%,var(--paper));--cl:color-mix(in srgb,var(--naver) 22%,var(--paper))}
+  :is(#view-month,#view-week) .ch-self{--ca:color-mix(in srgb,var(--self) 55%,var(--paper));--cb:color-mix(in srgb,var(--self) 78%,var(--paper));--cl:color-mix(in srgb,var(--self) 22%,var(--paper))}
   /* 범례·말풍선·목록 점도 막대와 같은 연한 그라데이션 */
-  #view-month :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--coupang"]{background:linear-gradient(160deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 78%,var(--paper)))!important}
-  #view-month :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--naver"]{background:linear-gradient(160deg,color-mix(in srgb,var(--naver) 55%,var(--paper)),color-mix(in srgb,var(--naver) 78%,var(--paper)))!important}
-  #view-month :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--self"]{background:linear-gradient(160deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))!important}
+  :is(#view-month,#view-week) :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--coupang"]{background:linear-gradient(160deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 78%,var(--paper)))!important}
+  :is(#view-month,#view-week) :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--naver"]{background:linear-gradient(160deg,color-mix(in srgb,var(--naver) 55%,var(--paper)),color-mix(in srgb,var(--naver) 78%,var(--paper)))!important}
+  :is(#view-month,#view-week) :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--self"]{background:linear-gradient(160deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))!important}
   #view-month .legend i.lg-prev{background:color-mix(in srgb,var(--mute) 22%,var(--paper))}
   #view-month .legend i.lg-curr{background:linear-gradient(160deg,color-mix(in srgb,var(--mute) 55%,var(--paper)),var(--mute))}
   #view-month .ttot{font-size:clamp(10.5px,.95vw,12.5px);font-weight:700;color:var(--body);bottom:calc(var(--h) + 7px);
@@ -1885,44 +1885,44 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .gcat .achip{font-size:11.5px;padding:2px 8px}
   /* 03 ROAS · 플랫폼마다 이름+증감 한 줄, 그 아래 두 달 얇은 막대 */
   #view-month .roasbars{gap:18px;margin-top:20px}
-  #view-month .mr-grp{display:flex;flex-direction:column;gap:7px}
-  #view-month .mr-head{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800;color:var(--ink)}
-  #view-month .mr-head i{width:9px;height:9px;border-radius:50%;flex:none}
-  #view-month .mr-head .achip{margin-left:auto;font-size:11.5px;padding:2px 8px}
-  #view-month .mr-line{display:grid;grid-template-columns:34px 1fr 58px;align-items:center;gap:10px}
-  #view-month .mr-line .rm{font-size:11.5px;font-weight:700;color:var(--mute)}
-  #view-month .mr-line .rtrack{height:12px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
-  #view-month .mr-line .rfill{height:100%;border-radius:999px;transform-origin:left;animation:mGrowX .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
-  #view-month .mr-line.prev .rfill{background:var(--cl,var(--prev))}
-  #view-month .mr-line.curr .rfill{background:linear-gradient(90deg,var(--ca,var(--curr)),var(--cb,var(--curr)))}
-  #view-month .mr-line .rval{font-size:13.5px;font-weight:700;color:var(--mute);text-align:right;white-space:nowrap}
-  #view-month .mr-line.curr .rval{font-size:14.5px;font-weight:800;color:var(--ink)}
+  :is(#view-month,#view-week) .mr-grp{display:flex;flex-direction:column;gap:7px}
+  :is(#view-month,#view-week) .mr-head{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800;color:var(--ink)}
+  :is(#view-month,#view-week) .mr-head i{width:9px;height:9px;border-radius:50%;flex:none}
+  :is(#view-month,#view-week) .mr-head .achip{margin-left:auto;font-size:11.5px;padding:2px 8px}
+  :is(#view-month,#view-week) .mr-line{display:grid;grid-template-columns:34px 1fr 58px;align-items:center;gap:10px}
+  :is(#view-month,#view-week) .mr-line .rm{font-size:11.5px;font-weight:700;color:var(--mute)}
+  :is(#view-month,#view-week) .mr-line .rtrack{height:12px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
+  :is(#view-month,#view-week) .mr-line .rfill{height:100%;border-radius:999px;transform-origin:left;animation:mGrowX .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+  :is(#view-month,#view-week) .mr-line.prev .rfill{background:var(--cl,var(--prev))}
+  :is(#view-month,#view-week) .mr-line.curr .rfill{background:linear-gradient(90deg,var(--ca,var(--curr)),var(--cb,var(--curr)))}
+  :is(#view-month,#view-week) .mr-line .rval{font-size:13.5px;font-weight:700;color:var(--mute);text-align:right;white-space:nowrap}
+  :is(#view-month,#view-week) .mr-line.curr .rval{font-size:14.5px;font-weight:800;color:var(--ink)}
   /* 도넛 · 얇은 고리 + 조각 사이 틈 · 조각이나 목록에 올리면 가운데에 그 플랫폼 숫자 */
-  #view-month .donut.is-ring{width:196px;height:196px;background:none!important}
-  #view-month .donut.is-ring::after{display:none}
-  #view-month .donut.is-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
-  #view-month .donut.is-ring svg g{transform-origin:50% 50%;animation:mRingIn .8s cubic-bezier(.2,.8,.2,1) both}
+  :is(#view-month,#view-week) .donut.is-ring{width:196px;height:196px;background:none!important}
+  :is(#view-month,#view-week) .donut.is-ring::after{display:none}
+  :is(#view-month,#view-week) .donut.is-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+  :is(#view-month,#view-week) .donut.is-ring svg g{transform-origin:50% 50%;animation:mRingIn .8s cubic-bezier(.2,.8,.2,1) both}
   /* 조각 이름표(선 + 이름 + 비중) · 목록 대신 */
-  #view-month .donut.is-ring svg.rcall{inset:auto;transform:none;pointer-events:none;z-index:2}
-  #view-month .donut.is-ring svg.rcall g{animation:mFadeUp .5s ease both;animation-delay:.45s;transition:opacity .15s}
-  #view-month .rcl polyline{fill:none;stroke:var(--cb);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
-  #view-month .rcl circle{fill:var(--cb);stroke:var(--paper);stroke-width:2}
-  #view-month .rcl text{font-size:16px;fill:var(--body);font-weight:700;letter-spacing:-.3px}
-  #view-month .rcl .rp{fill:var(--ink);font-weight:800;font-size:25px;letter-spacing:-.8px}
-  #view-month .rcl .ra{font-size:13.5px;fill:var(--mute);font-weight:600}
-  #view-month .rcl>*{transition:opacity .15s}
-  #view-month .donut.is-ring.has-hi .rcl:not(.hi)>*{opacity:.3}
-  #view-month .donut-wrap{justify-content:center;padding:52px 168px;margin-top:0!important}
-  #view-month .donut-wrap+.dlist,#view-month .donut-wrap .dlist{display:none}
-  #view-month .chart-grid{grid-template-columns:1fr}
-  #view-month .donut.is-ring .rseg{fill:none;stroke-width:15;stroke-linecap:round;transition:stroke-width .15s,opacity .15s;cursor:default}
-  #view-month .donut.is-ring .rtrack{fill:none;stroke:color-mix(in srgb,var(--line) 55%,transparent);stroke-width:15}
-  #view-month .donut.is-ring.has-hi .rseg:not(.hi){opacity:.3}
-  #view-month .donut.is-ring .rseg.hi{stroke-width:18}
-  #view-month .donut .center{padding:0 34px;text-align:center}
-  #view-month .donut .center .c-amt{font-size:24px;white-space:nowrap;letter-spacing:-.8px}
-  #view-month .donut .center .c-lab{font-size:12.5px;margin-top:4px}
-  #view-month .donut .center .c-lab{white-space:nowrap}
+  :is(#view-month,#view-week) .donut.is-ring svg.rcall{inset:auto;transform:none;pointer-events:none;z-index:2}
+  :is(#view-month,#view-week) .donut.is-ring svg.rcall g{animation:mFadeUp .5s ease both;animation-delay:.45s;transition:opacity .15s}
+  :is(#view-month,#view-week) .rcl polyline{fill:none;stroke:var(--cb);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+  :is(#view-month,#view-week) .rcl circle{fill:var(--cb);stroke:var(--paper);stroke-width:2}
+  :is(#view-month,#view-week) .rcl text{font-size:16px;fill:var(--body);font-weight:700;letter-spacing:-.3px}
+  :is(#view-month,#view-week) .rcl .rp{fill:var(--ink);font-weight:800;font-size:25px;letter-spacing:-.8px}
+  :is(#view-month,#view-week) .rcl .ra{font-size:13.5px;fill:var(--mute);font-weight:600}
+  :is(#view-month,#view-week) .rcl>*{transition:opacity .15s}
+  :is(#view-month,#view-week) .donut.is-ring.has-hi .rcl:not(.hi)>*{opacity:.3}
+  :is(#view-month,#view-week) .donut-wrap{justify-content:center;padding:52px 168px;margin-top:0!important}
+  :is(#view-month,#view-week) .donut-wrap+.dlist,:is(#view-month,#view-week) .donut-wrap .dlist{display:none}
+  :is(#view-month,#view-week) .chart-grid{grid-template-columns:1fr}
+  :is(#view-month,#view-week) .donut.is-ring .rseg{fill:none;stroke-width:15;stroke-linecap:round;transition:stroke-width .15s,opacity .15s;cursor:default}
+  :is(#view-month,#view-week) .donut.is-ring .rtrack{fill:none;stroke:color-mix(in srgb,var(--line) 55%,transparent);stroke-width:15}
+  :is(#view-month,#view-week) .donut.is-ring.has-hi .rseg:not(.hi){opacity:.3}
+  :is(#view-month,#view-week) .donut.is-ring .rseg.hi{stroke-width:18}
+  :is(#view-month,#view-week) .donut .center{padding:0 34px;text-align:center}
+  :is(#view-month,#view-week) .donut .center .c-amt{font-size:24px;white-space:nowrap;letter-spacing:-.8px}
+  :is(#view-month,#view-week) .donut .center .c-lab{font-size:12.5px;margin-top:4px}
+  :is(#view-month,#view-week) .donut .center .c-lab{white-space:nowrap}
   #view-month .drow{padding:12px 6px;border-radius:10px;transition:background .15s,opacity .15s}
   #view-month .drow .sw{width:10px;height:10px;border-radius:50%}
   #view-month .drow .dn{font-size:15px}
@@ -1937,14 +1937,69 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .totband .tcell .l span{border-radius:50%!important}
   @media (prefers-reduced-motion:reduce){
     #view-month .tbar,#view-month .ttot,#view-month .gbar,#view-month .gv,#view-month .rfill,
-    #view-month .donut.is-ring svg g,#view-month .tshare i{animation:none}
+    :is(#view-month,#view-week) .donut.is-ring svg g,:is(#view-month,#view-week) .rfill,#view-week .track .fill,#view-week .vbar,#view-month .tshare i{animation:none}
   }
   @media (max-width:700px){
     #view-month .tgrid .avgline{left:44px}
     #view-month .kpi .k-spark{display:none}
     #view-month .gbars,#view-month .gbars-x{gap:10px!important}
-    #view-month .donut-wrap{zoom:.6}
+    :is(#view-month,#view-week) .donut-wrap{zoom:.6}
   }
+
+  /* ===== 주간데이터 그래프 (2026-10 다듬기) · 월간과 같은 규칙(AGENTS.md 그래프 규칙) =====
+     달성률 막대·채널 달성률 미니 막대·광고 카드·자사몰 도넛·방문자 막대·회원수 선 */
+  #view-week .ach{background:linear-gradient(180deg,var(--paper),color-mix(in srgb,var(--bg) 35%,var(--paper)))}
+  #view-week .track{height:16px;margin-top:34px;background:color-mix(in srgb,var(--line) 60%,transparent)}
+  #view-week .track .fill{min-width:16px;background:linear-gradient(90deg,color-mix(in srgb,var(--indigo) 50%,var(--paper)),var(--indigo));
+    transform-origin:left;animation:mGrowX 1s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 4px 14px -6px rgba(var(--indigo-rgb),.6)}
+  #view-week .track .pace{top:-6px;bottom:-6px;width:2px;background:var(--ink);opacity:.75}
+  #view-week .track .pace::after{top:-26px;background:var(--ink);color:var(--paper);font-size:11px;padding:2px 8px;border-radius:999px}
+  #view-week .astat{background:var(--paper);border-radius:14px}
+  /* 채널별 달성률 칸 · 판매처 색 미니 막대 + 시간경과 눈금 + 칩 */
+  #view-week .wk-ach{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+  #view-week .wk-bar{position:relative;width:120px;height:8px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent)}
+  #view-week .wk-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,var(--ca),var(--cb));
+    transform-origin:left;animation:mGrowX .9s cubic-bezier(.2,.8,.2,1) both}
+  #view-week .wk-bar b{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:2px;background:var(--ink);opacity:.45}
+  #view-week tbody td .ch-dot{border-radius:50%;width:10px;height:10px}
+  #view-week tbody td .ch-dot.ch-coupang,#view-week tbody td .ch-dot.ch-naver,#view-week tbody td .ch-dot.ch-self{background:linear-gradient(160deg,var(--ca),var(--cb))!important}
+  /* 광고 카드 · 왼쪽 굵은 띠 대신 위쪽 그라데이션 띠, ROAS 숫자는 글자색, 두 달 ROAS 얇은 막대 */
+  #view-week .chcard{background:linear-gradient(180deg,var(--paper),color-mix(in srgb,var(--bg) 35%,var(--paper)));padding:24px 24px 20px}
+  #view-week .chcard::before{left:0;right:0;bottom:auto;width:auto;height:4px;background:linear-gradient(90deg,var(--ca),var(--cb))}
+  #view-week .chcard .ch-name{font-size:17px}
+  #view-week .chcard .ch-name i{width:10px;height:10px;border-radius:50%;background:linear-gradient(160deg,var(--ca),var(--cb))}
+  #view-week .chcard .ch-name .achip{margin-left:auto;font-size:11.5px;padding:2px 8px}
+  #view-week .chcard .roas-big{color:var(--ink);font-size:36px;margin:12px 0 0}
+  #view-week .chcard .roas-big small{font-size:14px;font-weight:700;color:var(--mute);margin-left:6px;letter-spacing:0}
+  #view-week .chcard .mr-lines{display:flex;flex-direction:column;gap:6px;margin:12px 0 4px}
+  #view-week .chcard .mr-line{grid-template-columns:34px 1fr 52px}
+  #view-week .chcard .crow:first-of-type{margin-top:12px}
+  #view-week .chcard .crow{padding:11px 0}
+  #view-week .chcard .crow .cmp{font-size:15px}
+  /* 방문자 막대 · 신규(진한 그라데이션) 위, 재방문(옅은 색) 아래, 칸 사이 2px 틈 */
+  #view-week .vbars{gap:12px;height:240px;margin-top:34px;border-bottom:1px solid color-mix(in srgb,var(--mute) 45%,transparent);
+    background:repeating-linear-gradient(to top,transparent 0 calc(25% - 1px),color-mix(in srgb,var(--line) 70%,transparent) calc(25% - 1px) 25%)}
+  #view-week .vcol{gap:7px;border-radius:12px 12px 0 0;transition:opacity .18s,background .15s;cursor:default}
+  #view-week .vbars:hover .vcol:not(:hover){opacity:.42}
+  #view-week .vcol:hover{background:color-mix(in srgb,var(--bg) 75%,transparent)}
+  #view-week .vtot{font-size:12.5px;font-weight:700;color:var(--body)}
+  #view-week .vcol:last-child .vtot{color:var(--ink);font-weight:800}
+  #view-week .vbar{flex:none;max-width:44px;transform-origin:bottom;animation:mGrowY .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 45ms)}
+  #view-week .vbar .seg-new{background:linear-gradient(180deg,var(--ca),var(--cb))}
+  #view-week .vbar .seg-re{background:var(--cl);border-top:2px solid var(--paper)}
+  #view-week .vx span{font-size:13.5px;color:var(--mute)}
+  #view-week .legend{gap:16px!important}
+  #view-week .legend span{font-size:13px!important}
+  #view-week .legend i.lg-new{width:9px!important;height:9px!important;border-radius:50%!important;background:linear-gradient(160deg,var(--ca),var(--cb))!important}
+  #view-week .legend i.lg-re{width:9px!important;height:9px!important;border-radius:50%!important;background:var(--cl)!important}
+  /* 회원수 선 · 부드러운 곡선 + 위에서 아래로 옅어지는 면 + 마지막 점만 강조 */
+  #view-week svg.line .ln-grid{stroke:color-mix(in srgb,var(--line) 70%,transparent)}
+  #view-week svg.line .ln-path{fill:none;stroke:var(--indigo);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+  #view-week svg.line .ln-dot{fill:var(--paper);stroke:var(--indigo);stroke-width:2}
+  #view-week svg.line .ln-dot.last{fill:var(--indigo);stroke:var(--paper);stroke-width:3}
+  #view-week svg.line .ln-val{font-size:11.5px;font-weight:700;fill:var(--mute)}
+  #view-week svg.line .ln-val.last{font-size:13px;font-weight:800;fill:var(--ink)}
+  #view-week svg.line .ln-x{font-size:12px;font-weight:600;fill:var(--mute)}
 
   /* 05 다음달 계획 슬라이드 */
   .plan-hero{--hero-accent:var(--indigo);border-radius:20px;padding:38px 48px 40px;color:var(--body);
@@ -6011,9 +6066,9 @@ window.BAROYAM_ACCESS=(function(){
         <div class="panel">
           <h3>월별 총 방문자수</h3>
           <div class="unit" id="visUnit">단위: 명 · 총방문 = 신규 + 재방문 · 8월은 시트 미입력으로 제외</div>
-          <div class="legend" style="display:flex;gap:16px;margin-top:14px">
-            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--body);font-weight:600"><i style="width:11px;height:11px;border-radius:3px;background:var(--curr);display:inline-block"></i>신규 방문자</span>
-            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--body);font-weight:600"><i style="width:11px;height:11px;border-radius:3px;background:var(--c3);display:inline-block"></i>재방문자</span>
+          <div class="legend ch-self" style="display:flex;gap:16px;margin-top:14px">
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--body);font-weight:600"><i class="lg-new" style="width:11px;height:11px;border-radius:3px;background:var(--curr);display:inline-block"></i>신규 방문자</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--body);font-weight:600"><i class="lg-re" style="width:11px;height:11px;border-radius:3px;background:var(--c3);display:inline-block"></i>재방문자</span>
           </div>
           <div class="vbars" id="vbars"></div>
           <div class="vx" id="vx"></div>
@@ -8070,6 +8125,10 @@ const goalMonthListeners=[];
 const won=n=>Math.round(n).toLocaleString('ko-KR')+'원';
 const wonRaw=n=>Math.round(n).toLocaleString('ko-KR');
 const cnt=n=>Math.round(n).toLocaleString('ko-KR');
+/* 그래프 위 금액은 억·천(천만) 단위까지만 · 5억5천 / 4천만 · 정확한 금액은 말풍선·표에 (월간·주간 그래프 공용) */
+function eokCheon(n){const c=Math.round(n/10000000); if(!c) return eok(n);
+  const e=Math.floor(c/10), r=c%10;
+  return e?`${e}억${r?r+'천':''}`:`${r}천만`;}
 function eok(n){
   if(n<100000000) return Math.round(n/10000).toLocaleString('ko-KR')+'만';
   const eokPart=Math.floor(n/100000000);
@@ -8096,18 +8155,29 @@ function achChip(p,ok){
   return `<span class="achip" style="background:${ok?'var(--pos-soft)':'var(--warn-soft)'};color:${ok?'var(--pos)':'var(--warn)'}">${p}%</span>`;}
 function achipDelta(p){
   return `<span class="achip" style="background:${p>0?'var(--pos-soft)':(p<0?'var(--warn-soft)':'var(--chip-flat)')};color:${p>0?'var(--pos)':(p<0?'var(--warn)':'var(--mute)')}">${p>0?'+':''}${p}%</span>`;}
+/* 회원수 선 그래프 · 부드러운 곡선(Catmull-Rom → 베지어) + 위에서 아래로 옅어지는 면 · 마지막 점만 강조 */
 function lineChart(vals,labels,fmt){
-  const W=620,H=200,pX=54,pT=22,pB=32,iW=W-pX*2,iH=H-pT-pB,L=vals.length-1;
+  const W=620,H=210,pX=40,pT=30,pB=32,iW=W-pX*2,iH=H-pT-pB,L=vals.length-1;
+  if(L<0) return '';
   const mn=Math.min(...vals),mx=Math.max(...vals),r=(mx-mn)||1;
-  const x=i=>pX+iW*(i/L), y=v=>pT+iH*(1-(v-mn)/r);
-  let s=`<svg class="line" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
-  for(let g=0;g<=3;g++){const yy=pT+iH*g/3;s+=`<line x1="${pX}" y1="${yy}" x2="${W-pX}" y2="${yy}" stroke="var(--line)"/>`;}
-  const pts=vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
-  s+=`<polygon points="${pX},${H-pB} ${pts} ${W-pX},${H-pB}" fill="var(--indigo)" opacity=".09"/>`;
-  s+=`<polyline points="${pts}" fill="none" stroke="var(--indigo)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
-  vals.forEach((v,i)=>{s+=`<circle cx="${x(i)}" cy="${y(v)}" r="${i===L?5:3.5}" fill="#fff" stroke="var(--indigo)" stroke-width="2.5"/>`;
-    s+=`<text x="${x(i)}" y="${y(v)-12}" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--indigo)" font-family="Pretendard">${fmt(v)}</text>`;});
-  labels.forEach((m,i)=>s+=`<text x="${x(i)}" y="${H-9}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--mute)" font-family="Pretendard">${m}</text>`);
+  const x=i=>pX+(L?iW*(i/L):iW/2), y=v=>pT+iH*(1-(v-mn)/r);
+  const P=vals.map((v,i)=>[x(i),y(v)]);
+  let d=`M${P[0][0]},${P[0][1]}`;
+  for(let i=0;i<P.length-1;i++){
+    const p0=P[i-1]||P[i], p1=P[i], p2=P[i+1], p3=P[i+2]||p2;
+    const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6], c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+    d+=` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  const gid='lnFill'+Math.random().toString(36).slice(2,7);
+  let s=`<svg class="line" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--indigo)" stop-opacity=".22"/><stop offset="1" stop-color="var(--indigo)" stop-opacity="0"/></linearGradient></defs>`;
+  for(let g=0;g<=3;g++){const yy=pT+iH*g/3;s+=`<line class="ln-grid" x1="${pX}" y1="${yy}" x2="${W-pX}" y2="${yy}"/>`;}
+  s+=`<path d="${d} L${P[L][0]},${H-pB} L${P[0][0]},${H-pB} Z" fill="url(#${gid})"/>`;
+  s+=`<path class="ln-path" d="${d}"/>`;
+  vals.forEach((v,i)=>{const last=i===L;
+    s+=`<circle class="ln-dot${last?' last':''}" cx="${P[i][0]}" cy="${P[i][1]}" r="${last?6:3.5}"><title>${labels[i]} ${fmt(v)}명</title></circle>`;
+    s+=`<text class="ln-val${last?' last':''}" x="${P[i][0]}" y="${P[i][1]-(last?14:11)}" text-anchor="middle" font-family="Pretendard">${fmt(v)}</text>`;});
+  labels.forEach((m,i)=>s+=`<text class="ln-x" x="${x(i)}" y="${H-9}" text-anchor="middle" font-family="Pretendard">${m}</text>`);
   return s+'</svg>';
 }
 
@@ -8311,12 +8381,14 @@ function renderReport(data){
   /* 이번달목표 */
   renderGoalPlan();
 
-  /* 2. 채널 매출 표 */
+  /* 2. 채널 매출 표 · 달성률 칸에 판매처 색 미니 막대(세로 눈금 = 시간경과) */
+  const WK_CLS={'쿠팡':'coupang','네이버':'naver','자사몰':'self'};
   document.getElementById('salesSsub').textContent=`쿠팡 · 네이버 · 자사몰 · ${data.prevLabel} vs ${data.currMonthNum}/1-${data.currMonthNum}/${data.currDay}`;
   let st=`<thead><tr><th>채널</th><th>${data.prevLabel} 전체매출</th><th>${data.currMonthNum}/${data.currDay} 누적매출</th><th>달성률</th></tr></thead><tbody>`;
   CH.forEach(c=>{const a=Math.round(share(data.salesCurr[c],data.salesPrev[c])*100);
-    st+=`<tr><td><span class="ch-dot" style="background:${CH_COLOR[c]}"></span>${c}</td>
-      <td>${wonRaw(data.salesPrev[c])}</td><td class="colhi">${wonRaw(data.salesCurr[c])}</td><td>${achChip(a,paceOk(a))}</td></tr>`;});
+    st+=`<tr><td><span class="ch-dot ch-${WK_CLS[c]||'self'}" style="background:${CH_COLOR[c]}"></span>${c}</td>
+      <td>${wonRaw(data.salesPrev[c])}</td><td class="colhi">${wonRaw(data.salesCurr[c])}</td>
+      <td><div class="wk-ach"><span class="wk-bar ch-${WK_CLS[c]||'self'}" title="세로 눈금 = 시간경과 ${pacePct}%"><i style="width:${Math.min(a,100)}%"></i><b style="left:${Math.min(pacePct,100)}%"></b></span>${achChip(a,paceOk(a))}</div></td></tr>`;});
   st+=`<tr class="sum"><td>합계</td><td>${wonRaw(totPrev)}</td><td>${wonRaw(totCurr)}</td><td>${achChip(Math.round(achTotal),paceOk(achTotal))}</td></tr></tbody>`;
   document.getElementById('salesTable').innerHTML=st;
 
@@ -8324,10 +8396,15 @@ function renderReport(data){
   document.getElementById('adTitle').textContent=`${data.currLabel} 채널별 광고 성과`;
   document.getElementById('adCards').innerHTML=CH.map(c=>{
     const j=data.adCurr[c], m=data.adPrev[c]; const rj=roasPct(j.rev,j.cost), rm=roasPct(m.rev,m.cost);
-    return `<div class="chcard" style="--cc:${CH_COLOR[c]}">
-      <div class="ch-name">${c}</div>
-      <div class="roas-big num">${rj}%</div>
-      <div class="roas-cap">${data.currLabel} ROAS(${data.currMonthNum}/${data.currDay}) · ${data.prevLabel} ${rm}%</div>
+    const rMx=Math.max(rj,rm)||1, k=WK_CLS[c]||'self';
+    return `<div class="chcard ch-${k}" style="--cc:${CH_COLOR[c]}">
+      <div class="ch-name"><i></i>${c}${achipDelta(pct(rj,rm))}</div>
+      <div class="roas-big num">${rj}%<small>ROAS</small></div>
+      <div class="roas-cap">${data.currLabel} ${data.currMonthNum}/${data.currDay}까지 · ${data.prevLabel} ${rm}%</div>
+      <div class="mr-lines">
+        <div class="mr-line prev ch-${k}"><span class="rm">${data.prevLabel}</span><div class="rtrack"><div class="rfill" style="width:${rm/rMx*100}%"></div></div><span class="rval num">${rm}%</span></div>
+        <div class="mr-line curr ch-${k}"><span class="rm">${data.currLabel}</span><div class="rtrack"><div class="rfill" style="width:${rj/rMx*100}%;--i:1"></div></div><span class="rval num">${rj}%</span></div>
+      </div>
       <div class="crow"><span class="lab">광고비</span><span class="cmp num">${wonRaw(j.cost)}원</span></div>
       <div class="crow"><span class="lab">광고매출</span><span class="cmp num">${wonRaw(j.rev)}원</span></div>
     </div>`;}).join('');
@@ -8338,15 +8415,16 @@ function renderReport(data){
   document.getElementById('donutCLab').textContent=`${data.currLabel} 광고비`;
   const dColors=['var(--c1)','var(--c2)','var(--c3)'];
   const dTot=sumArr(data.siteAdCurr)||1;
-  let acc=0; const stops=data.siteAdCurr.map((v,i)=>{const s=acc/dTot*360;acc+=v;return `${dColors[i]} ${s}deg ${acc/dTot*360}deg`;});
-  document.getElementById('donut').style.background=`conic-gradient(${stops.join(',')})`;
-  document.getElementById('donutTotal').textContent=wonRaw(dTot);
+  document.getElementById('donutTotal').textContent=eokCheon(dTot);
   document.getElementById('donutList').innerHTML=data.siteAdParts.map((p,i)=>`
     <div class="drow"><span class="sw" style="background:${dColors[i]}"></span>
       <span class="dn">${p}</span>
       <span class="dpct num">${Math.round(share(data.siteAdCurr[i],dTot)*100)}%</span>
       <span class="damt num">${wonRaw(data.siteAdCurr[i])}원</span>
     </div>`).join('');
+  /* 매체 색 · 네이버광고 = 네이버 초록, 메타광고 = 파랑, 구글광고 = 주황 (판매처 색 묶음을 빌려 씀) */
+  const mediaKey=n=>/네이버/.test(n)?'naver':/메타|페이스북|인스타/.test(n)?'coupang':'self';
+  ringDonut('donut','donutList',data.siteAdParts.map((n,i)=>({name:n,key:mediaKey(n),v:data.siteAdCurr[i]||0,color:dColors[i],amt:eokCheon(data.siteAdCurr[i]||0)+'원'})),220);
 
   /* 4. 방문자 stacked bars */
   document.getElementById('visSsub').textContent=`${data.visMonths[0]} – ${data.visMonths[data.visMonths.length-1]}`;
@@ -8355,8 +8433,8 @@ function renderReport(data){
   document.getElementById('vbars').innerHTML=data.visMonths.map((m,i)=>{
     const totH=data.visTotal[i]/vMax*100;
     const newH=data.visTotal[i]?data.visNew[i]/data.visTotal[i]*100:0;
-    return `<div class="vcol"><div class="vtot num">${cnt(data.visTotal[i])}</div>
-      <div class="vbar" style="height:${totH}%">
+    return `<div class="vcol ch-self" title="${m} · 총 ${cnt(data.visTotal[i])}명 (신규 ${cnt(data.visNew[i]||0)} · 재방문 ${cnt(data.visTotal[i]-(data.visNew[i]||0))})"><div class="vtot num">${cnt(data.visTotal[i])}</div>
+      <div class="vbar" style="height:${totH}%;--i:${i}">
         <div class="seg-new" style="height:${newH}%"></div>
         <div class="seg-re" style="height:${100-newH}%"></div>
       </div></div>`;}).join('');
@@ -8445,10 +8523,6 @@ function renderReport(data){
   const CH_CLS={'쿠팡':'coupang','네이버':'naver','자사몰':'self'};
   /* 마지막 달이 아직 진행 중이면(오늘이 말일 전) 잠정치로 표시한다 */
   const partialIdx=(MONTHS[CURR]===data.currLabel&&data.currDay<data.daysInCurrMonth)?CURR:-1;
-  /* 그래프 위 금액은 억·천(천만) 단위까지만 · 5억5천 / 4천만 · 정확한 금액은 말풍선·표에 (01·02 막대, 04 도넛 공용) */
-  const eokCheon=n=>{const c=Math.round(n/10000000); if(!c) return eok(n);
-    const e=Math.floor(c/10), r=c%10;
-    return e?`${e}억${r?r+'천':''}`:`${r}천만`;};
   document.getElementById('mTrendBars').innerHTML=MONTHS.map((m,i)=>{
     const tot=monthTotal[i];
     const h=(tot/tTop*100).toFixed(2)+'%';
