@@ -3759,11 +3759,12 @@ window.BAROYAM_ACCESS=(function(){
 
   /* 메뉴얼가이드 · 사이드바 아이콘을 누르면 사이드바 옆에 붙는 중분류 사이드탭(실제 레이아웃 컬럼) ·
      .paper 바깥이라 sticky가 먹고, 문서가 늘어나도 컬럼 안에서만 스크롤된다 */
-  /* 배경은 비워 대시보드 배경(--app-bg)이 그대로 비치게 · 경계선도 없애 본문과 한 판으로 넓어 보이게 */
-  .sb-subnav{flex:none;width:228px;background:transparent;
+  /* 대시보드 배경(--app-bg)이 비치게 두고 아주 옅은 막만 덮어 미세하게 진하게 · 얇은 경계선으로 구분 */
+  .sb-subnav{flex:none;width:228px;background:rgba(40,30,20,.025);border-right:1px solid var(--sn-line);
     padding:18px 10px 24px;display:flex;flex-direction:column;position:sticky;top:0;
     align-self:flex-start;height:100vh;overflow-y:auto;scrollbar-width:thin;
     scrollbar-color:var(--sn-line) transparent}
+  html[data-theme="dark"] .sb-subnav{background:rgba(0,0,0,.14)}
   .sb-subnav[hidden]{display:none}
   .sb-subnav::-webkit-scrollbar{width:8px}
   .sb-subnav::-webkit-scrollbar-thumb{background:var(--sn-line);border-radius:99px;
