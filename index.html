@@ -1817,7 +1817,6 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .kpi{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--paper),color-mix(in srgb,var(--bg) 35%,var(--paper)))}
   #view-month .kpi .k-sub{display:flex;align-items:center;gap:6px}
   #view-month .kpi .k-spark{position:absolute;right:16px;top:18px;width:38%;max-width:150px;height:44px;overflow:visible}
-  #view-month .kpi .k-spark .sp-area{fill:var(--indigo);opacity:.1}
   #view-month .kpi .k-spark .sp-line{fill:none;stroke:var(--indigo);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
   #view-month .kpi .k-spark .sp-dot{fill:var(--indigo);stroke:var(--paper);stroke-width:2}
   #view-month .kpi .achip{font-size:11.5px;padding:3px 8px}
@@ -1839,6 +1838,14 @@ window.BAROYAM_ACCESS=(function(){
     animation:mGrowY .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 45ms)}
   #view-month .tcol:hover .tbar{filter:none}
   #view-month .tbar .seg+.seg{box-shadow:none;border-top:2px solid var(--paper)}
+  /* 판매처 색을 한 톤 연하게 + 위가 더 밝은 세로 그라데이션 · 바탕색(paper)과 섞어 다크 모드에서도 같은 느낌 */
+  #view-month .tbar .seg.coupang{background:linear-gradient(180deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 78%,var(--paper)))}
+  #view-month .tbar .seg.naver{background:linear-gradient(180deg,color-mix(in srgb,var(--naver) 55%,var(--paper)),color-mix(in srgb,var(--naver) 78%,var(--paper)))}
+  #view-month .tbar .seg.self{background:linear-gradient(180deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))}
+  /* 범례·말풍선 점도 막대와 같은 연한 색 */
+  #view-month .legend i[style*="--coupang"],#view-month .ttip .tr i[style*="--coupang"]{background:color-mix(in srgb,var(--coupang) 70%,var(--paper))!important}
+  #view-month .legend i[style*="--naver"],#view-month .ttip .tr i[style*="--naver"]{background:color-mix(in srgb,var(--naver) 70%,var(--paper))!important}
+  #view-month .legend i[style*="--self"],#view-month .ttip .tr i[style*="--self"]{background:color-mix(in srgb,var(--self) 70%,var(--paper))!important}
   #view-month .ttot{font-size:clamp(10.5px,.95vw,12.5px);font-weight:700;color:var(--body);bottom:calc(var(--h) + 7px);
     animation:mFadeUp .4s ease both;animation-delay:calc(var(--i,0) * 45ms + .35s)}
   #view-month .tcol.is-best .ttot{color:var(--indigo)}
@@ -8340,7 +8347,7 @@ function renderReport(data){
     const mx=Math.max(...monthTotal)||1, X=i=>i/(n-1)*100, Y=v=>36-v/mx*32;
     const pts=monthTotal.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
     return `<svg class="k-spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-      <polygon class="sp-area" points="0,40 ${pts} 100,40"/><polyline class="sp-line" points="${pts}"/></svg>`;})();
+      <polyline class="sp-line" points="${pts}"/></svg>`;})();
   const momP=pct(totMCurr,totMPrev);
   document.getElementById('mTrendKpis').innerHTML=
     `<div class="kpi">${spark}<div class="k-label">월평균 매출</div><div class="k-val num">${wonRaw(Math.round(grand/MONTHS.length))}<small>원</small></div><div class="k-sub">${MONTHS.length}개월 평균</div></div>`+
@@ -8368,6 +8375,10 @@ function renderReport(data){
   const CH_CLS={'쿠팡':'coupang','네이버':'naver','자사몰':'self'};
   /* 마지막 달이 아직 진행 중이면(오늘이 말일 전) 잠정치로 표시한다 */
   const partialIdx=(MONTHS[CURR]===data.currLabel&&data.currDay<data.daysInCurrMonth)?CURR:-1;
+  /* 막대 위 금액은 억·천(천만) 단위까지만 · 5억5천 / 4천만 · 정확한 금액은 말풍선에 */
+  const eokCheon=n=>{const c=Math.round(n/10000000); if(!c) return eok(n);
+    const e=Math.floor(c/10), r=c%10;
+    return e?`${e}억${r?r+'천':''}`:`${r}천만`;};
   document.getElementById('mTrendBars').innerHTML=MONTHS.map((m,i)=>{
     const tot=monthTotal[i];
     const h=(tot/tTop*100).toFixed(2)+'%';
@@ -8378,7 +8389,7 @@ function renderReport(data){
       CH.map(c=>`<div class="tr"><i style="background:var(--${CH_CLS[c]||'self'})"></i>${c}<em>${wonRaw(M[c][i])}원</em><small>${tot?Math.round(M[c][i]/tot*100):0}%</small></div>`).join('')+
       `</div>`;
     return `<div class="tcol${i===best?' is-best':''}${i===partialIdx?' is-partial':''}" style="--h:${h};--i:${i}">
-      <div class="ttot num">${i===best?'<b>최고</b>':''}${eok(tot)}</div>${tip}
+      <div class="ttot num">${i===best?'<b>최고</b>':''}${eokCheon(tot)}</div>${tip}
       <div class="tbar">${segs}</div></div>`;}).join('');
   document.getElementById('mTrendX').innerHTML=MONTHS.map((m,i)=>
     `<span${i===best?' class="is-best"':''}>${m}${i===partialIdx?`<small>${data.currDay}일까지</small>`:''}</span>`).join('');
