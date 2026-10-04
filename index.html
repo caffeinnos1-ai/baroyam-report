@@ -1902,12 +1902,26 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .donut.is-ring::after{display:none}
   #view-month .donut.is-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
   #view-month .donut.is-ring svg g{transform-origin:50% 50%;animation:mRingIn .8s cubic-bezier(.2,.8,.2,1) both}
+  /* 조각 이름표(선 + 이름 + 비중) · 목록 대신 */
+  #view-month .donut.is-ring svg.rcall{inset:auto;transform:none;pointer-events:none;z-index:2}
+  #view-month .donut.is-ring svg.rcall g{animation:mFadeUp .5s ease both;animation-delay:.45s;transition:opacity .15s}
+  #view-month .rcl polyline{fill:none;stroke:var(--cb);stroke-width:1.4;stroke-linejoin:round}
+  #view-month .rcl circle{fill:var(--cb);stroke:var(--paper);stroke-width:1.5}
+  #view-month .rcl text{font-size:13px;fill:var(--body);font-weight:700}
+  #view-month .rcl .rp{fill:var(--ink);font-weight:800;font-size:14px}
+  #view-month .rcl>*{transition:opacity .15s}
+  #view-month .donut.is-ring.has-hi .rcl:not(.hi)>*{opacity:.3}
+  #view-month .donut-wrap{justify-content:center;padding:26px 104px;margin-top:8px!important}
+  #view-month .donut-wrap+.dlist,#view-month .donut-wrap .dlist{display:none}
+  #view-month .chart-grid{grid-template-columns:1fr 1fr}
   #view-month .donut.is-ring .rseg{fill:none;stroke-width:15;stroke-linecap:round;transition:stroke-width .15s,opacity .15s;cursor:default}
   #view-month .donut.is-ring .rtrack{fill:none;stroke:color-mix(in srgb,var(--line) 55%,transparent);stroke-width:15}
   #view-month .donut.is-ring.has-hi .rseg:not(.hi){opacity:.3}
   #view-month .donut.is-ring .rseg.hi{stroke-width:18}
   #view-month .donut .center{padding:0 34px;text-align:center}
   #view-month .donut .center .c-amt{font-size:19px;white-space:nowrap}
+  #view-month #mAdDonut .center .c-amt{font-size:17px}
+  #view-month .donut .center .c-lab{white-space:nowrap}
   #view-month .drow{padding:12px 6px;border-radius:10px;transition:background .15s,opacity .15s}
   #view-month .drow .sw{width:10px;height:10px;border-radius:50%}
   #view-month .drow .dn{font-size:15px}
@@ -8178,10 +8192,11 @@ function countUpVisibleReport(){
 
 /* 월간 도넛 · 얇은 SVG 고리에 조각 사이 틈을 둔다 ·
    조각이나 옆 목록 줄에 올리면 그 플랫폼만 진하게, 가운데 숫자가 그 플랫폼 비중·금액으로 바뀐다 */
-function ringDonut(donutId,listId,parts){
+function ringDonut(donutId,listId,parts,size=196){
   const el=document.getElementById(donutId), list=document.getElementById(listId);
   if(!el) return;
   el.classList.add('is-ring'); el.style.background='';
+  el.style.width=el.style.height=size+'px';
   const tot=parts.reduce((s,p)=>s+(p.v||0),0);
   /* 두꺼운 고리 + 둥근 끝 · 둥근 끝이 반지름(SW/2)만큼 튀어나오므로 그만큼 줄여 그려 조각 사이 틈(GAP)을 지킨다 ·
      조각마다 시작점→끝점 방향 그라데이션(01 막대와 같은 --ca→--cb) */
@@ -8198,15 +8213,44 @@ function ringDonut(donutId,listId,parts){
     return `<circle class="rseg" data-i="${i}" cx="50" cy="50" r="${R}" stroke="url(#${gid})"
       stroke-dasharray="${L.toFixed(3)} ${(C-L).toFixed(3)}" stroke-dashoffset="${(-off).toFixed(3)}"><title>${p.name} ${Math.round(p.v/tot*100)}%</title></circle>`;
   }).join('');
-  el.querySelector('svg')?.remove();
+  el.querySelectorAll('svg').forEach(v=>v.remove());
   el.insertAdjacentHTML('afterbegin',`<svg viewBox="0 0 100 100" aria-hidden="true"><defs>${defs}</defs><g>${tot?segs:`<circle class="rtrack" cx="50" cy="50" r="${R}"/>`}</g></svg>`);
+  /* 조각 이름표 · 조각 가운데에서 바깥으로 선을 뽑아 꺾은 뒤, 그 방향(왼쪽/오른쪽)에 "이름 비중%" ·
+     고리 그림은 -90° 돌려 그리므로 화면 각도 = 조각 가운데 각도 − 90° · 같은 쪽 이름표가 겹치면 아래로 민다 */
+  if(tot){
+    const PX=CALL_PX, PY=26, W=size+PX*2, H=size+PY*2, cx=W/2, cy=H/2;
+    const OUT=size*(R+SW/2)/100, E=OUT+12, HL=12, GAPY=20;
+    let a0=0;
+    const calls=parts.map((p,i)=>{
+      const len=p.v/tot*C, mid=(a0+len/2)/R-Math.PI/2; a0+=len;
+      if(!(p.v>0)) return null;
+      const c=Math.cos(mid), sn=Math.sin(mid), right=c>=0;
+      return {i,p,right,ax:cx+(OUT+3)*c,ay:cy+(OUT+3)*sn,ex:cx+E*c,ey:cy+E*sn,pc:Math.round(p.v/tot*100)};
+    }).filter(Boolean);
+    [true,false].forEach(side=>{
+      const g=calls.filter(k=>k.right===side).sort((a,b)=>a.ey-b.ey);
+      g.forEach((k,j)=>{ if(j&&k.ey-g[j-1].ey<GAPY) k.ey=g[j-1].ey+GAPY; });
+      /* 아래로 밀다 그림 밖으로 나가면 전체를 위로 당긴다 */
+      const over=g.length?g[g.length-1].ey-(H-8):0;
+      if(over>0) g.forEach(k=>k.ey-=over);
+    });
+    const tags=calls.map(k=>{
+      const ex=k.right?Math.max(k.ex,cx+OUT*.55):Math.min(k.ex,cx-OUT*.55);
+      const tx=ex+(k.right?HL:-HL);
+      return `<g class="rcl ch-${k.p.key||'self'}" data-i="${k.i}">
+        <polyline points="${k.ax.toFixed(1)},${k.ay.toFixed(1)} ${ex.toFixed(1)},${k.ey.toFixed(1)} ${tx.toFixed(1)},${k.ey.toFixed(1)}"/>
+        <circle cx="${k.ax.toFixed(1)}" cy="${k.ay.toFixed(1)}" r="2.6"/>
+        <text x="${(tx+(k.right?5:-5)).toFixed(1)}" y="${k.ey.toFixed(1)}" text-anchor="${k.right?'start':'end'}" dominant-baseline="central"><tspan class="rn">${k.p.name}</tspan><tspan class="rp" dx="5">${k.pc}%</tspan></text></g>`;
+    }).join('');
+    el.insertAdjacentHTML('beforeend',`<svg class="rcall" viewBox="0 0 ${W} ${H}" style="left:${-PX}px;top:${-PY}px;width:${W}px;height:${H}px" aria-hidden="true">${tags}</svg>`);
+  }
   const amt=el.querySelector('.c-amt'), lab=el.querySelector('.c-lab');
   const rows=list?[...list.querySelectorAll('.drow')]:[];
   let keep=null;
   const hi=i=>{
     if(keep===null) keep={a:amt.textContent,l:lab.textContent};
     el.classList.toggle('has-hi',i!=null); list&&list.classList.toggle('has-hi',i!=null);
-    el.querySelectorAll('.rseg').forEach(s=>s.classList.toggle('hi',+s.dataset.i===i));
+    el.querySelectorAll('.rseg,.rcl').forEach(s=>s.classList.toggle('hi',+s.dataset.i===i));
     rows.forEach((r,j)=>r.classList.toggle('hi',j===i));
     if(i==null){ amt.textContent=keep.a; lab.textContent=keep.l; keep=null; return; }
     amt.textContent=`${tot?Math.round(parts[i].v/tot*100):0}%`; lab.textContent=`${parts[i].name} · ${parts[i].amt}`;
@@ -8215,6 +8259,8 @@ function ringDonut(donutId,listId,parts){
   el.onmouseout=e=>{if(e.target.closest('.rseg')) hi(null);};
   rows.forEach((r,j)=>{ r.onmouseenter=()=>hi(j); r.onmouseleave=()=>hi(null); });
 }
+
+const CALL_PX=104;   /* 도넛 이름표가 쓰는 좌우 여백(px) · CSS .donut-wrap 의 좌우 여백과 맞춘다 */
 
 /* ===== 전체 리포트 렌더링 (기본 데이터 / 구글시트 데이터 공용) ===== */
 let lastReportData=null;
@@ -8456,12 +8502,12 @@ function renderReport(data){
   /* M03 광고비 구성 도넛 */
   const adDColors=['var(--coupang)','var(--naver)','var(--self)'];
   const adDTot=CH.reduce((s,c)=>s+AD[c].curr.cost,0)||1;
-  document.getElementById('mAdDonutTot').textContent=wonRaw(adDTot);
+  document.getElementById('mAdDonutTot').textContent=eokCheon(adDTot);
   document.getElementById('mAdDonutList').innerHTML=CH.map((c,i)=>`
     <div class="drow"><span class="sw" style="background:${adDColors[i]}"></span><span class="dn">${c}</span>
       <span class="dpct num">${Math.round(share(AD[c].curr.cost,adDTot)*100)}%</span>
       <span class="damt num">${wonRaw(AD[c].curr.cost)}원</span></div>`).join('');
-  ringDonut('mAdDonut','mAdDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:AD[c].curr.cost,color:adDColors[i],amt:wonRaw(AD[c].curr.cost)+'원'})));
+  ringDonut('mAdDonut','mAdDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:AD[c].curr.cost,color:adDColors[i],amt:eokCheon(AD[c].curr.cost)+'원'})),156);
 
   /* M04 total */
   document.getElementById('mGrandTotal').textContent=wonRaw(grand)+'원';
@@ -8477,7 +8523,7 @@ function renderReport(data){
     <div class="drow"><span class="sw" style="background:${totDColors[i]}"></span><span class="dn">${c}</span>
       <span class="dpct num">${Math.round(share(chTotal(c),grand)*100)}%</span>
       <span class="damt num">${wonRaw(chTotal(c))}원</span></div>`).join('');
-  ringDonut('mTotDonut','mTotDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:chTotal(c),color:totDColors[i],amt:eokCheon(chTotal(c))+'원'})));
+  ringDonut('mTotDonut','mTotDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:chTotal(c),color:totDColors[i],amt:eokCheon(chTotal(c))+'원'})),220);
   /* 큰 합계 아래 플랫폼 비중 한 줄 막대 */
   let shareBar=document.getElementById('mTotShare');
   if(!shareBar){ shareBar=document.createElement('div'); shareBar.id='mTotShare'; shareBar.className='tshare';
