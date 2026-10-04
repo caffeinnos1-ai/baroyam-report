@@ -1842,10 +1842,17 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .tbar .seg.coupang{background:linear-gradient(180deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 78%,var(--paper)))}
   #view-month .tbar .seg.naver{background:linear-gradient(180deg,color-mix(in srgb,var(--naver) 55%,var(--paper)),color-mix(in srgb,var(--naver) 78%,var(--paper)))}
   #view-month .tbar .seg.self{background:linear-gradient(180deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))}
-  /* 범례·말풍선 점도 막대와 같은 연한 색 */
-  #view-month .legend i[style*="--coupang"],#view-month .ttip .tr i[style*="--coupang"]{background:color-mix(in srgb,var(--coupang) 70%,var(--paper))!important}
-  #view-month .legend i[style*="--naver"],#view-month .ttip .tr i[style*="--naver"]{background:color-mix(in srgb,var(--naver) 70%,var(--paper))!important}
-  #view-month .legend i[style*="--self"],#view-month .ttip .tr i[style*="--self"]{background:color-mix(in srgb,var(--self) 70%,var(--paper))!important}
+  /* 판매처 색 묶음 · --ca 위(밝은 쪽) · --cb 아래(진한 쪽) · --cl 지난달처럼 한참 옅은 색 ·
+     02 비교 막대·03 ROAS 막대·도넛·누적 비중 막대가 모두 01 막대와 같은 그라데이션을 쓴다 */
+  #view-month .ch-coupang{--ca:color-mix(in srgb,var(--coupang) 55%,var(--paper));--cb:color-mix(in srgb,var(--coupang) 78%,var(--paper));--cl:color-mix(in srgb,var(--coupang) 22%,var(--paper))}
+  #view-month .ch-naver{--ca:color-mix(in srgb,var(--naver) 55%,var(--paper));--cb:color-mix(in srgb,var(--naver) 78%,var(--paper));--cl:color-mix(in srgb,var(--naver) 22%,var(--paper))}
+  #view-month .ch-self{--ca:color-mix(in srgb,var(--self) 55%,var(--paper));--cb:color-mix(in srgb,var(--self) 78%,var(--paper));--cl:color-mix(in srgb,var(--self) 22%,var(--paper))}
+  /* 범례·말풍선·목록 점도 막대와 같은 연한 그라데이션 */
+  #view-month :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--coupang"]{background:linear-gradient(160deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 78%,var(--paper)))!important}
+  #view-month :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--naver"]{background:linear-gradient(160deg,color-mix(in srgb,var(--naver) 55%,var(--paper)),color-mix(in srgb,var(--naver) 78%,var(--paper)))!important}
+  #view-month :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--self"]{background:linear-gradient(160deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))!important}
+  #view-month .legend i.lg-prev{background:color-mix(in srgb,var(--mute) 22%,var(--paper))}
+  #view-month .legend i.lg-curr{background:linear-gradient(160deg,color-mix(in srgb,var(--mute) 55%,var(--paper)),var(--mute))}
   #view-month .ttot{font-size:clamp(10.5px,.95vw,12.5px);font-weight:700;color:var(--body);bottom:calc(var(--h) + 7px);
     animation:mFadeUp .4s ease both;animation-delay:calc(var(--i,0) * 45ms + .35s)}
   #view-month .tcol.is-best .ttot{color:var(--indigo)}
@@ -1871,8 +1878,8 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .gv{font-size:12.5px;font-weight:700;color:var(--mute);margin-bottom:6px;animation:mFadeUp .4s ease both;animation-delay:.45s}
   #view-month .gb.is-curr .gv{color:var(--ink);font-weight:800}
   #view-month .gbar{border-radius:7px 7px 0 0;transform-origin:bottom;animation:mGrowY .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
-  #view-month .gbar.prevb{background:var(--prev)}
-  #view-month .gbar.currb{background:var(--curr)}
+  #view-month .gbar.prevb{background:var(--cl,var(--prev))}
+  #view-month .gbar.currb{background:linear-gradient(180deg,var(--ca,var(--curr)),var(--cb,var(--curr)))}
   #view-month .gbars-x{gap:24px!important}
   #view-month .gcat{font-size:14px;font-weight:700;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:6px}
   #view-month .gcat .achip{font-size:11.5px;padding:2px 8px}
@@ -1884,21 +1891,23 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .mr-head .achip{margin-left:auto;font-size:11.5px;padding:2px 8px}
   #view-month .mr-line{display:grid;grid-template-columns:34px 1fr 58px;align-items:center;gap:10px}
   #view-month .mr-line .rm{font-size:11.5px;font-weight:700;color:var(--mute)}
-  #view-month .mr-line .rtrack{height:10px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
+  #view-month .mr-line .rtrack{height:12px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
   #view-month .mr-line .rfill{height:100%;border-radius:999px;transform-origin:left;animation:mGrowX .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
-  #view-month .mr-line.prev .rfill{background:var(--prev-ink);opacity:.5}
-  #view-month .mr-line.curr .rfill{background:var(--curr)}
+  #view-month .mr-line.prev .rfill{background:var(--cl,var(--prev))}
+  #view-month .mr-line.curr .rfill{background:linear-gradient(90deg,var(--ca,var(--curr)),var(--cb,var(--curr)))}
   #view-month .mr-line .rval{font-size:13.5px;font-weight:700;color:var(--mute);text-align:right;white-space:nowrap}
   #view-month .mr-line.curr .rval{font-size:14.5px;font-weight:800;color:var(--ink)}
   /* 도넛 · 얇은 고리 + 조각 사이 틈 · 조각이나 목록에 올리면 가운데에 그 플랫폼 숫자 */
-  #view-month .donut.is-ring{width:180px;height:180px;background:none!important}
+  #view-month .donut.is-ring{width:196px;height:196px;background:none!important}
   #view-month .donut.is-ring::after{display:none}
   #view-month .donut.is-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
   #view-month .donut.is-ring svg g{transform-origin:50% 50%;animation:mRingIn .8s cubic-bezier(.2,.8,.2,1) both}
-  #view-month .donut.is-ring .rseg{fill:none;stroke-width:11;transition:stroke-width .15s,opacity .15s;cursor:default}
+  #view-month .donut.is-ring .rseg{fill:none;stroke-width:15;stroke-linecap:round;transition:stroke-width .15s,opacity .15s;cursor:default}
+  #view-month .donut.is-ring .rtrack{fill:none;stroke:color-mix(in srgb,var(--line) 55%,transparent);stroke-width:15}
   #view-month .donut.is-ring.has-hi .rseg:not(.hi){opacity:.3}
-  #view-month .donut.is-ring .rseg.hi{stroke-width:14}
-  #view-month .donut .center .c-amt{font-size:21px}
+  #view-month .donut.is-ring .rseg.hi{stroke-width:18}
+  #view-month .donut .center{padding:0 34px;text-align:center}
+  #view-month .donut .center .c-amt{font-size:19px;white-space:nowrap}
   #view-month .drow{padding:12px 6px;border-radius:10px;transition:background .15s,opacity .15s}
   #view-month .drow .sw{width:10px;height:10px;border-radius:50%}
   #view-month .drow .dn{font-size:15px}
@@ -1908,7 +1917,7 @@ window.BAROYAM_ACCESS=(function(){
   #view-month .drow.hi{background:color-mix(in srgb,var(--bg) 80%,transparent)}
   /* 04 누적 · 큰 숫자 아래 플랫폼 비중 한 줄 막대 */
   #view-month .tshare{display:flex;gap:3px;height:12px;margin-top:24px;border-radius:999px;overflow:hidden}
-  #view-month .tshare i{display:block;height:100%;transform-origin:left;animation:mGrowX .9s cubic-bezier(.2,.8,.2,1) both}
+  #view-month .tshare i{display:block;height:100%;background:linear-gradient(90deg,var(--ca),var(--cb));transform-origin:left;animation:mGrowX .9s cubic-bezier(.2,.8,.2,1) both}
   #view-month .totband .trow{margin-top:18px}
   #view-month .totband .tcell .l span{border-radius:50%!important}
   @media (prefers-reduced-motion:reduce){
@@ -8174,17 +8183,23 @@ function ringDonut(donutId,listId,parts){
   if(!el) return;
   el.classList.add('is-ring'); el.style.background='';
   const tot=parts.reduce((s,p)=>s+(p.v||0),0);
-  const R=42, C=2*Math.PI*R, live=parts.filter(p=>p.v>0).length, GAP=live>1?1.6:0;
-  let acc=0;
+  /* 두꺼운 고리 + 둥근 끝 · 둥근 끝이 반지름(SW/2)만큼 튀어나오므로 그만큼 줄여 그려 조각 사이 틈(GAP)을 지킨다 ·
+     조각마다 시작점→끝점 방향 그라데이션(01 막대와 같은 --ca→--cb) */
+  const R=40, SW=15, C=2*Math.PI*R, live=parts.filter(p=>p.v>0).length, GAP=live>1?3.2:0, CAP=live>1?SW:0;
+  const pt=a=>[50+R*Math.cos(a),50+R*Math.sin(a)].map(v=>v.toFixed(2));
+  let acc=0, defs='';
   const segs=parts.map((p,i)=>{
     const len=tot?p.v/tot*C:0, start=acc; acc+=len;
     if(len<=0) return '';
-    const L=Math.max(len-GAP,.4);
-    return `<circle class="rseg" data-i="${i}" cx="50" cy="50" r="${R}" stroke="${p.color}"
-      stroke-dasharray="${L.toFixed(3)} ${(C-L).toFixed(3)}" stroke-dashoffset="${(-start-GAP/2).toFixed(3)}"><title>${p.name} ${Math.round(p.v/tot*100)}%</title></circle>`;
+    const L=Math.max(len-GAP-CAP,.01), off=start+(GAP+CAP)/2;
+    const [x1,y1]=pt(off/R), [x2,y2]=pt((off+L)/R), gid=`${donutId}-g${i}`;
+    defs+=`<linearGradient id="${gid}" class="ch-${p.key||'self'}" gradientUnits="userSpaceOnUse" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">
+      <stop offset="0" style="stop-color:var(--ca,${p.color})"/><stop offset="1" style="stop-color:var(--cb,${p.color})"/></linearGradient>`;
+    return `<circle class="rseg" data-i="${i}" cx="50" cy="50" r="${R}" stroke="url(#${gid})"
+      stroke-dasharray="${L.toFixed(3)} ${(C-L).toFixed(3)}" stroke-dashoffset="${(-off).toFixed(3)}"><title>${p.name} ${Math.round(p.v/tot*100)}%</title></circle>`;
   }).join('');
   el.querySelector('svg')?.remove();
-  el.insertAdjacentHTML('afterbegin',`<svg viewBox="0 0 100 100" aria-hidden="true"><g>${tot?segs:`<circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--line)" stroke-width="11"/>`}</g></svg>`);
+  el.insertAdjacentHTML('afterbegin',`<svg viewBox="0 0 100 100" aria-hidden="true"><defs>${defs}</defs><g>${tot?segs:`<circle class="rtrack" cx="50" cy="50" r="${R}"/>`}</g></svg>`);
   const amt=el.querySelector('.c-amt'), lab=el.querySelector('.c-lab');
   const rows=list?[...list.querySelectorAll('.drow')]:[];
   let keep=null;
@@ -8329,7 +8344,7 @@ function renderReport(data){
   document.getElementById('mTrendSsub').textContent=`${MONTHS[0]} – ${MONTHS[MONTHS.length-1]} · 플랫폼 누적`;
   document.getElementById('mCompareTitle').textContent=`${MONTHS[PREV]} vs ${MONTHS[CURR]} 매출 비교`;
   document.getElementById('mSalesUnit').textContent=`단위: 원 · ${MONTHS[PREV]} vs ${MONTHS[CURR]}`;
-  document.getElementById('mSalesLegend').innerHTML=`<span><i style="background:var(--prev)"></i>${MONTHS[PREV]}</span><span><i style="background:var(--curr)"></i>${MONTHS[CURR]}</span>`;
+  document.getElementById('mSalesLegend').innerHTML=`<span><i class="lg-prev"></i>${MONTHS[PREV]} (연한 막대)</span><span><i class="lg-curr"></i>${MONTHS[CURR]} (진한 막대)</span>`;
   document.getElementById('mAdSectionTitle').textContent=`${MONTHS[PREV]} vs ${MONTHS[CURR]} 광고 성과`;
   document.getElementById('mRoasUnit').textContent=`단위: % · 플랫폼마다 위 ${MONTHS[PREV]} · 아래 ${MONTHS[CURR]}`;
   document.getElementById('mAdDonutTitle').textContent=`${MONTHS[CURR]} 광고비 구성`;
@@ -8375,7 +8390,7 @@ function renderReport(data){
   const CH_CLS={'쿠팡':'coupang','네이버':'naver','자사몰':'self'};
   /* 마지막 달이 아직 진행 중이면(오늘이 말일 전) 잠정치로 표시한다 */
   const partialIdx=(MONTHS[CURR]===data.currLabel&&data.currDay<data.daysInCurrMonth)?CURR:-1;
-  /* 막대 위 금액은 억·천(천만) 단위까지만 · 5억5천 / 4천만 · 정확한 금액은 말풍선에 */
+  /* 그래프 위 금액은 억·천(천만) 단위까지만 · 5억5천 / 4천만 · 정확한 금액은 말풍선·표에 (01·02 막대, 04 도넛 공용) */
   const eokCheon=n=>{const c=Math.round(n/10000000); if(!c) return eok(n);
     const e=Math.floor(c/10), r=c%10;
     return e?`${e}억${r?r+'천':''}`:`${r}천만`;};
@@ -8408,8 +8423,8 @@ function renderReport(data){
   const sMax=Math.max(...CH.map(c=>Math.max(M[c][PREV],M[c][CURR])))||1;
   document.getElementById('mSalesBars').innerHTML=CH.map((c,j)=>`
     <div class="gcol" title="${c} · ${MONTHS[PREV]} ${wonRaw(M[c][PREV])}원 → ${MONTHS[CURR]} ${wonRaw(M[c][CURR])}원"><div class="gpair">
-      <div class="gb"><span class="gv num">${eok(M[c][PREV])}</span><div class="gbar prevb" style="height:${M[c][PREV]/sMax*100}%;--i:${j*2}"></div></div>
-      <div class="gb is-curr"><span class="gv num">${eok(M[c][CURR])}</span><div class="gbar currb" style="height:${M[c][CURR]/sMax*100}%;--i:${j*2+1}"></div></div>
+      <div class="gb"><span class="gv num">${eokCheon(M[c][PREV])}</span><div class="gbar prevb ch-${CH_CLS[c]||'self'}" style="height:${M[c][PREV]/sMax*100}%;--i:${j*2}"></div></div>
+      <div class="gb is-curr"><span class="gv num">${eokCheon(M[c][CURR])}</span><div class="gbar currb ch-${CH_CLS[c]||'self'}" style="height:${M[c][CURR]/sMax*100}%;--i:${j*2+1}"></div></div>
     </div></div>`).join('');
   document.getElementById('mSalesCats').innerHTML=CH.map(c=>`<div class="gcat" style="flex:1">${c}${achipDelta(pct(M[c][CURR],M[c][PREV]))}</div>`).join('');
 
@@ -8432,9 +8447,9 @@ function renderReport(data){
   document.getElementById('mRoasBars').innerHTML=roasPairs.map((r,j)=>`
     <div class="mr-grp">
       <div class="mr-head"><i style="background:${CH_COLOR[r.c]}"></i>${r.c}${achipDelta(pct(r.rc,r.rp))}</div>
-      <div class="mr-line prev"><span class="rm">${MONTHS[PREV]}</span>
+      <div class="mr-line prev ch-${CH_CLS[r.c]||'self'}"><span class="rm">${MONTHS[PREV]}</span>
         <div class="rtrack"><div class="rfill" style="width:${r.rp/rMax*100}%;--i:${j*2}"></div></div><span class="rval num">${r.rp}%</span></div>
-      <div class="mr-line curr"><span class="rm">${MONTHS[CURR]}</span>
+      <div class="mr-line curr ch-${CH_CLS[r.c]||'self'}"><span class="rm">${MONTHS[CURR]}</span>
         <div class="rtrack"><div class="rfill" style="width:${r.rc/rMax*100}%;--i:${j*2+1}"></div></div><span class="rval num">${r.rc}%</span></div>
     </div>`).join('');
 
@@ -8446,7 +8461,7 @@ function renderReport(data){
     <div class="drow"><span class="sw" style="background:${adDColors[i]}"></span><span class="dn">${c}</span>
       <span class="dpct num">${Math.round(share(AD[c].curr.cost,adDTot)*100)}%</span>
       <span class="damt num">${wonRaw(AD[c].curr.cost)}원</span></div>`).join('');
-  ringDonut('mAdDonut','mAdDonutList',CH.map((c,i)=>({name:c,v:AD[c].curr.cost,color:adDColors[i],amt:wonRaw(AD[c].curr.cost)+'원'})));
+  ringDonut('mAdDonut','mAdDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:AD[c].curr.cost,color:adDColors[i],amt:wonRaw(AD[c].curr.cost)+'원'})));
 
   /* M04 total */
   document.getElementById('mGrandTotal').textContent=wonRaw(grand)+'원';
@@ -8457,18 +8472,18 @@ function renderReport(data){
 
   /* M04 누적 비중 도넛 */
   const totDColors=['var(--coupang)','var(--naver)','var(--self)'];
-  document.getElementById('mTotDonutTot').textContent=eok(grand);
+  document.getElementById('mTotDonutTot').textContent=eokCheon(grand);
   document.getElementById('mTotDonutList').innerHTML=CH.map((c,i)=>`
     <div class="drow"><span class="sw" style="background:${totDColors[i]}"></span><span class="dn">${c}</span>
       <span class="dpct num">${Math.round(share(chTotal(c),grand)*100)}%</span>
       <span class="damt num">${wonRaw(chTotal(c))}원</span></div>`).join('');
-  ringDonut('mTotDonut','mTotDonutList',CH.map((c,i)=>({name:c,v:chTotal(c),color:totDColors[i],amt:eok(chTotal(c))+'원'})));
+  ringDonut('mTotDonut','mTotDonutList',CH.map((c,i)=>({name:c,key:CH_CLS[c]||'self',v:chTotal(c),color:totDColors[i],amt:eokCheon(chTotal(c))+'원'})));
   /* 큰 합계 아래 플랫폼 비중 한 줄 막대 */
   let shareBar=document.getElementById('mTotShare');
   if(!shareBar){ shareBar=document.createElement('div'); shareBar.id='mTotShare'; shareBar.className='tshare';
     document.getElementById('mTotCells').before(shareBar); }
   shareBar.innerHTML=CH.map((c,i)=>{const w=share(chTotal(c),grand)*100;
-    return w>0?`<i style="flex:${w.toFixed(3)} 1 0;background:${totDColors[i]}" title="${c} ${Math.round(w)}%"></i>`:'';}).join('');
+    return w>0?`<i class="ch-${CH_CLS[c]||'self'}" style="flex:${w.toFixed(3)} 1 0" title="${c} ${Math.round(w)}%"></i>`:'';}).join('');
 
   /* M footnote */
   document.getElementById('mFoot').innerHTML=
