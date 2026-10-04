@@ -4624,6 +4624,7 @@ window.BAROYAM_ACCESS=(function(){
   .bs-drv-card-pick{display:flex;flex-direction:column;gap:6px;color:inherit;border-radius:12px;cursor:pointer;outline:0;
     user-select:none;-webkit-user-select:none}
   .bs-drv-card-pick:focus-visible{box-shadow:var(--ui-ring)}
+  .bs-drv-card .drv-check svg{width:26px;height:26px}   /* 드라이브 화면(.drv-thumb svg)과 같은 크기 */
   .bs-drv-card:hover .drv-check{opacity:1;transform:none}
   .bs-drv-card.on .drv-check{opacity:1;transform:none;background:var(--drv-pick);color:var(--drv-pick-ink)}
   .bs-drv-card.on .bs-drv-card-img{border-color:var(--btn);box-shadow:inset 0 0 0 1px var(--btn)}
@@ -18306,7 +18307,7 @@ window.baroyamAsk=function(title,body,okText){
       const ext=((l.title||'').split('.').pop()||'').slice(0,4).toUpperCase();
       const on=pickSet(bid,sid).has(l.id);
       return '<span class="bs-drv-card'+(on?' on':'')+'"><span class="bs-drv-card-pick" role="button" tabindex="0" data-drv-card="'+esc(l.id)+'" aria-pressed="'+on+'"'
-        +' title="'+esc(l.title||'')+'&#10;한 번: 선택 · 두 번: 드라이브에서 열기">'
+        +' title="'+esc(l.title||'')+'&#10;한 번: 선택 · Shift: 여기까지 · Ctrl: 하나씩 더하기 · 두 번: 드라이브에서 열기">'
         +'<span class="bs-drv-card-img"><span class="drv-check">'+IC_PICK+'</span><span>'+esc(ext||'파일')+'</span>'
         +'<img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+esc(l.drive)+'&amp;sz=w400"></span>'
         +'<span class="bs-drv-card-name">'+IC_DRIVE+'<span>'+esc(l.title||'드라이브 파일')+'</span></span></span>'
@@ -18434,16 +18435,36 @@ window.baroyamAsk=function(title,body,okText){
 
   /* ---------- 연동 카드 · 한 번 누르면 선택(드라이브 화면과 같은 체크), 두 번 누르면 드라이브에서 열기 · 저장은 개별/ZIP ---------- */
   function drvLinks(bid,sid){ const b=find(bid), st=b&&b.steps&&b.steps[sid]; return ((st&&st.links)||[]).filter(function(l){ return l.drive; }); }
-  function togglePick(card){
+  /* 고르기 · 드라이브 화면과 같은 규칙 · 그냥 클릭: 그것 하나만(다시 누르면 취소) · Ctrl(⌘): 하나씩 더하고 빼기 ·
+     Shift: 마지막으로 고른 것부터 여기까지 · 두 번 클릭의 두 번째 클릭은 선택을 건드리지 않는다 */
+  const pickAnchor=new Map();
+  function togglePick(card,e){
+    e=e||{};
+    if(e.detail>1) return;
     const row=card.closest('.bs-step'); if(!row||!openId) return;
-    const set=pickSet(openId,row.dataset.s), id=card.dataset.drvCard;
-    if(set.has(id)) set.delete(id); else set.add(id);
-    const on=set.has(id);
-    card.parentNode.classList.toggle('on',on); card.setAttribute('aria-pressed',String(on));
+    const key=openId+'|'+row.dataset.s, set=pickSet(openId,row.dataset.s), id=card.dataset.drvCard;
+    const cards=[].slice.call(row.querySelectorAll('[data-drv-card]')), order=cards.map(function(c){ return c.dataset.drvCard; });
+    const anchor=pickAnchor.get(key)||'', multi=e.ctrlKey||e.metaKey;
+    if(e.shiftKey&&anchor&&order.indexOf(anchor)>=0){
+      const a=order.indexOf(anchor), b=order.indexOf(id);
+      if(!multi) set.clear();
+      order.slice(Math.min(a,b),Math.max(a,b)+1).forEach(function(k){ set.add(k); });
+    }else if(multi||e.toggle){
+      if(set.has(id)) set.delete(id); else set.add(id);
+      pickAnchor.set(key,id);
+    }else if(set.has(id)){
+      set.delete(id); if(anchor===id) pickAnchor.delete(key);
+    }else{
+      set.clear(); set.add(id); pickAnchor.set(key,id);
+    }
+    cards.forEach(function(c){
+      const on=set.has(c.dataset.drvCard);
+      c.parentNode.classList.toggle('on',on); c.setAttribute('aria-pressed',String(on));
+    });
     const sv=row.querySelector('[data-drv-save] span'); if(sv) sv.textContent=saveLabel(openId,row.dataset.s);
   }
   $('bsDetailBody').addEventListener('click',function(e){
-    const c=e.target.closest('[data-drv-card]'); if(c){ togglePick(c); return; }
+    const c=e.target.closest('[data-drv-card]'); if(c){ togglePick(c,e); return; }
     const sv=e.target.closest('[data-drv-save]'); if(sv) saveOpen(sv);
   });
   $('bsDetailBody').addEventListener('dblclick',function(e){
@@ -18453,7 +18474,7 @@ window.baroyamAsk=function(title,body,okText){
   });
   $('bsDetailBody').addEventListener('keydown',function(e){
     const c=e.target.closest('[data-drv-card]'); if(!c) return;
-    if(e.key===' '){ e.preventDefault(); togglePick(c); }
+    if(e.key===' '){ e.preventDefault(); togglePick(c,{toggle:true,shiftKey:e.shiftKey}); }
     else if(e.key==='Enter'){ e.preventDefault(); c.dispatchEvent(new MouseEvent('dblclick',{bubbles:true})); }
   });
   /* 저장 · 고른 것(없으면 이 항목 전체) · 하나면 바로 받고, 여럿이면 개별/ZIP 을 묻는다(드라이브 화면과 같은 창) */
