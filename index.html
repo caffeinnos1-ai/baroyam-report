@@ -1486,7 +1486,7 @@ window.BAROYAM_ACCESS=(function(){
     --bg:#0d1117; --paper:#161b22; --ink:#e6edf3; --body:#c9d1d9; --mute:#8b949e;
     --line:#30363d; --indigo:#4493f8; --indigo-soft:#172a45;
     --prev:#30363d; --prev-ink:#6e7681; --curr:#388bfd;
-    --coupang:#58a6ff; --naver:#2ea043; --self:#db6d28;
+    --coupang:#4493f8; --naver:#2ea043; --self:#db6d28;
     --pos:#3fb950; --pos-soft:#15291d; --warn:#d29922; --warn-soft:#2b2414;
     --neg:#f85149; --neg-soft:#2d1b1e;
     --c1:#1f6feb; --c2:#58a6ff; --c3:#3b5f8f; --chip-flat:rgba(177,186,196,.12);
@@ -1802,6 +1802,117 @@ window.BAROYAM_ACCESS=(function(){
   .rbrow .rfill.prevf{background:var(--prev-ink);opacity:.55}
   .rbrow .rfill.currf{background:var(--curr)}
   .rbrow .rval{font-size:16px;font-weight:800;color:var(--ink);text-align:right;white-space:nowrap}
+
+  /* ===== 월간데이터 그래프 (2026-10 다듬기) · #view-month 안에서만 · 주간 화면이 같이 쓰는 부품은 그대로 =====
+     얇은 막대 + 위만 둥근 끝 · 쌓인 칸 사이 2px 흰 틈 · 실선 눈금(흐리게) · 숫자는 글자색(데이터 색 X) ·
+     올리면 나머지가 흐려지고 어두운 말풍선 · 화면을 열 때 막대가 바닥에서 자라고 도넛이 돌며 나타남 */
+  @keyframes mGrowY{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes mGrowX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes mFadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes mRingIn{from{opacity:0;transform:rotate(-40deg) scale(.92)}to{opacity:1;transform:none}}
+  #view-month .legend{gap:16px;margin-top:12px}
+  #view-month .legend span{font-size:13px;color:var(--body)}
+  #view-month .legend i{width:9px;height:9px;border-radius:50%}
+  /* KPI · 월평균 카드에 작은 추이선, 이번달 카드에 증감 칩 */
+  #view-month .kpi{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--paper),color-mix(in srgb,var(--bg) 35%,var(--paper)))}
+  #view-month .kpi .k-sub{display:flex;align-items:center;gap:6px}
+  #view-month .kpi .k-spark{position:absolute;right:16px;top:18px;width:38%;max-width:150px;height:44px;overflow:visible}
+  #view-month .kpi .k-spark .sp-area{fill:var(--indigo);opacity:.1}
+  #view-month .kpi .k-spark .sp-line{fill:none;stroke:var(--indigo);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  #view-month .kpi .k-spark .sp-dot{fill:var(--indigo);stroke:var(--paper);stroke-width:2}
+  #view-month .kpi .achip{font-size:11.5px;padding:3px 8px}
+  /* 01 월별 전체매출 */
+  #view-month .tchart{margin-top:34px}
+  #view-month .tgrid .gl{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+  #view-month .tgrid .gl.is-zero{border-top:1px solid color-mix(in srgb,var(--mute) 45%,transparent)}
+  #view-month .tgrid .gl span{font-size:11px;font-weight:600}
+  #view-month .tgrid .avgline{position:absolute;left:58px;right:0;height:0;border-top:1.5px dashed color-mix(in srgb,var(--indigo) 55%,transparent);z-index:2}
+  #view-month .legend .lg-avg{margin-left:auto;color:var(--mute)}
+  #view-month .legend .lg-avg[hidden]{display:none}
+  #view-month .legend .lg-avg i{width:16px;height:0;border-radius:0;border-top:1.5px dashed var(--indigo)}
+  #view-month .tbars{gap:10px}
+  #view-month .tcol{transition:opacity .18s}
+  #view-month .tcol::before{content:"";position:absolute;inset:-6px 0 -2px;border-radius:12px;background:var(--bg);opacity:0;transition:opacity .15s;pointer-events:none}
+  #view-month .tcol:hover::before{opacity:.75}
+  #view-month .tbars:hover .tcol:not(:hover){opacity:.42}
+  #view-month .tbar{max-width:44px;border-radius:8px 8px 0 0;box-shadow:none;transform-origin:bottom;
+    animation:mGrowY .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 45ms)}
+  #view-month .tcol:hover .tbar{filter:none}
+  #view-month .tbar .seg+.seg{box-shadow:none;border-top:2px solid var(--paper)}
+  #view-month .ttot{font-size:clamp(10.5px,.95vw,12.5px);font-weight:700;color:var(--body);bottom:calc(var(--h) + 7px);
+    animation:mFadeUp .4s ease both;animation-delay:calc(var(--i,0) * 45ms + .35s)}
+  #view-month .tcol.is-best .ttot{color:var(--indigo)}
+  #view-month .tcol.is-best .ttot b{display:inline-block;font-size:10px;font-weight:800;color:#fff;background:var(--indigo);
+    border-radius:999px;padding:1px 6px;margin-right:4px;vertical-align:1px}
+  #view-month .tcol.is-partial .tbar{opacity:.75}
+  #view-month .ttip{background:var(--ink);border:0;color:color-mix(in srgb,var(--paper) 80%,transparent);
+    box-shadow:0 14px 34px -10px rgba(0,0,0,.45);border-radius:12px;padding:11px 13px;bottom:calc(var(--h) + 30px)}
+  #view-month .ttip b{color:var(--paper)}
+  #view-month .ttip .tr em{color:var(--paper)}
+  #view-month .ttip .tr small{color:color-mix(in srgb,var(--paper) 60%,transparent)}
+  #view-month .ttip .tr i{border-radius:50%}
+  #view-month .tx span{font-size:13.5px;font-weight:700;color:var(--mute)}
+  #view-month .tx span.is-best{color:var(--ink)}
+  /* 02 플랫폼별 매출 비교 */
+  #view-month .gbars{gap:24px;height:250px;border-bottom:1px solid color-mix(in srgb,var(--mute) 45%,transparent);
+    background:repeating-linear-gradient(to top,transparent 0 calc(25% - 1px),color-mix(in srgb,var(--line) 70%,transparent) calc(25% - 1px) 25%)}
+  #view-month .gcol{position:relative;border-radius:12px 12px 0 0;transition:opacity .18s,background .15s}
+  #view-month .gbars:hover .gcol:not(:hover){opacity:.42}
+  #view-month .gcol:hover{background:color-mix(in srgb,var(--bg) 75%,transparent)}
+  #view-month .gpair{gap:5px}
+  #view-month .gb{max-width:40px}
+  #view-month .gv{font-size:12.5px;font-weight:700;color:var(--mute);margin-bottom:6px;animation:mFadeUp .4s ease both;animation-delay:.45s}
+  #view-month .gb.is-curr .gv{color:var(--ink);font-weight:800}
+  #view-month .gbar{border-radius:7px 7px 0 0;transform-origin:bottom;animation:mGrowY .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+  #view-month .gbar.prevb{background:var(--prev)}
+  #view-month .gbar.currb{background:var(--curr)}
+  #view-month .gbars-x{gap:24px!important}
+  #view-month .gcat{font-size:14px;font-weight:700;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:6px}
+  #view-month .gcat .achip{font-size:11.5px;padding:2px 8px}
+  /* 03 ROAS · 플랫폼마다 이름+증감 한 줄, 그 아래 두 달 얇은 막대 */
+  #view-month .roasbars{gap:18px;margin-top:20px}
+  #view-month .mr-grp{display:flex;flex-direction:column;gap:7px}
+  #view-month .mr-head{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800;color:var(--ink)}
+  #view-month .mr-head i{width:9px;height:9px;border-radius:50%;flex:none}
+  #view-month .mr-head .achip{margin-left:auto;font-size:11.5px;padding:2px 8px}
+  #view-month .mr-line{display:grid;grid-template-columns:34px 1fr 58px;align-items:center;gap:10px}
+  #view-month .mr-line .rm{font-size:11.5px;font-weight:700;color:var(--mute)}
+  #view-month .mr-line .rtrack{height:10px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
+  #view-month .mr-line .rfill{height:100%;border-radius:999px;transform-origin:left;animation:mGrowX .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+  #view-month .mr-line.prev .rfill{background:var(--prev-ink);opacity:.5}
+  #view-month .mr-line.curr .rfill{background:var(--curr)}
+  #view-month .mr-line .rval{font-size:13.5px;font-weight:700;color:var(--mute);text-align:right;white-space:nowrap}
+  #view-month .mr-line.curr .rval{font-size:14.5px;font-weight:800;color:var(--ink)}
+  /* 도넛 · 얇은 고리 + 조각 사이 틈 · 조각이나 목록에 올리면 가운데에 그 플랫폼 숫자 */
+  #view-month .donut.is-ring{width:180px;height:180px;background:none!important}
+  #view-month .donut.is-ring::after{display:none}
+  #view-month .donut.is-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+  #view-month .donut.is-ring svg g{transform-origin:50% 50%;animation:mRingIn .8s cubic-bezier(.2,.8,.2,1) both}
+  #view-month .donut.is-ring .rseg{fill:none;stroke-width:11;transition:stroke-width .15s,opacity .15s;cursor:default}
+  #view-month .donut.is-ring.has-hi .rseg:not(.hi){opacity:.3}
+  #view-month .donut.is-ring .rseg.hi{stroke-width:14}
+  #view-month .donut .center .c-amt{font-size:21px}
+  #view-month .drow{padding:12px 6px;border-radius:10px;transition:background .15s,opacity .15s}
+  #view-month .drow .sw{width:10px;height:10px;border-radius:50%}
+  #view-month .drow .dn{font-size:15px}
+  #view-month .drow .dpct{font-size:14px;color:var(--ink)}
+  #view-month .drow .damt{font-size:14px;color:var(--mute);font-weight:600}
+  #view-month .dlist.has-hi .drow:not(.hi){opacity:.45}
+  #view-month .drow.hi{background:color-mix(in srgb,var(--bg) 80%,transparent)}
+  /* 04 누적 · 큰 숫자 아래 플랫폼 비중 한 줄 막대 */
+  #view-month .tshare{display:flex;gap:3px;height:12px;margin-top:24px;border-radius:999px;overflow:hidden}
+  #view-month .tshare i{display:block;height:100%;transform-origin:left;animation:mGrowX .9s cubic-bezier(.2,.8,.2,1) both}
+  #view-month .totband .trow{margin-top:18px}
+  #view-month .totband .tcell .l span{border-radius:50%!important}
+  @media (prefers-reduced-motion:reduce){
+    #view-month .tbar,#view-month .ttot,#view-month .gbar,#view-month .gv,#view-month .rfill,
+    #view-month .donut.is-ring svg g,#view-month .tshare i{animation:none}
+  }
+  @media (max-width:700px){
+    #view-month .tgrid .avgline{left:44px}
+    #view-month .kpi .k-spark{display:none}
+    #view-month .gbars,#view-month .gbars-x{gap:10px!important}
+  }
 
   /* 05 다음달 계획 슬라이드 */
   .plan-hero{--hero-accent:var(--indigo);border-radius:20px;padding:38px 48px 40px;color:var(--body);
@@ -8049,6 +8160,40 @@ function countUpVisibleReport(){
   });
 }
 
+/* 월간 도넛 · 얇은 SVG 고리에 조각 사이 틈을 둔다 ·
+   조각이나 옆 목록 줄에 올리면 그 플랫폼만 진하게, 가운데 숫자가 그 플랫폼 비중·금액으로 바뀐다 */
+function ringDonut(donutId,listId,parts){
+  const el=document.getElementById(donutId), list=document.getElementById(listId);
+  if(!el) return;
+  el.classList.add('is-ring'); el.style.background='';
+  const tot=parts.reduce((s,p)=>s+(p.v||0),0);
+  const R=42, C=2*Math.PI*R, live=parts.filter(p=>p.v>0).length, GAP=live>1?1.6:0;
+  let acc=0;
+  const segs=parts.map((p,i)=>{
+    const len=tot?p.v/tot*C:0, start=acc; acc+=len;
+    if(len<=0) return '';
+    const L=Math.max(len-GAP,.4);
+    return `<circle class="rseg" data-i="${i}" cx="50" cy="50" r="${R}" stroke="${p.color}"
+      stroke-dasharray="${L.toFixed(3)} ${(C-L).toFixed(3)}" stroke-dashoffset="${(-start-GAP/2).toFixed(3)}"><title>${p.name} ${Math.round(p.v/tot*100)}%</title></circle>`;
+  }).join('');
+  el.querySelector('svg')?.remove();
+  el.insertAdjacentHTML('afterbegin',`<svg viewBox="0 0 100 100" aria-hidden="true"><g>${tot?segs:`<circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--line)" stroke-width="11"/>`}</g></svg>`);
+  const amt=el.querySelector('.c-amt'), lab=el.querySelector('.c-lab');
+  const rows=list?[...list.querySelectorAll('.drow')]:[];
+  let keep=null;
+  const hi=i=>{
+    if(keep===null) keep={a:amt.textContent,l:lab.textContent};
+    el.classList.toggle('has-hi',i!=null); list&&list.classList.toggle('has-hi',i!=null);
+    el.querySelectorAll('.rseg').forEach(s=>s.classList.toggle('hi',+s.dataset.i===i));
+    rows.forEach((r,j)=>r.classList.toggle('hi',j===i));
+    if(i==null){ amt.textContent=keep.a; lab.textContent=keep.l; keep=null; return; }
+    amt.textContent=`${tot?Math.round(parts[i].v/tot*100):0}%`; lab.textContent=`${parts[i].name} · ${parts[i].amt}`;
+  };
+  el.onmouseover=e=>{const s=e.target.closest('.rseg'); if(s) hi(+s.dataset.i);};
+  el.onmouseout=e=>{if(e.target.closest('.rseg')) hi(null);};
+  rows.forEach((r,j)=>{ r.onmouseenter=()=>hi(j); r.onmouseleave=()=>hi(null); });
+}
+
 /* ===== 전체 리포트 렌더링 (기본 데이터 / 구글시트 데이터 공용) ===== */
 let lastReportData=null;
 function renderReport(data){
@@ -8179,7 +8324,7 @@ function renderReport(data){
   document.getElementById('mSalesUnit').textContent=`단위: 원 · ${MONTHS[PREV]} vs ${MONTHS[CURR]}`;
   document.getElementById('mSalesLegend').innerHTML=`<span><i style="background:var(--prev)"></i>${MONTHS[PREV]}</span><span><i style="background:var(--curr)"></i>${MONTHS[CURR]}</span>`;
   document.getElementById('mAdSectionTitle').textContent=`${MONTHS[PREV]} vs ${MONTHS[CURR]} 광고 성과`;
-  document.getElementById('mRoasUnit').textContent=`단위: % · 옅은 색 ${MONTHS[PREV]} · 진한 색 ${MONTHS[CURR]}`;
+  document.getElementById('mRoasUnit').textContent=`단위: % · 플랫폼마다 위 ${MONTHS[PREV]} · 아래 ${MONTHS[CURR]}`;
   document.getElementById('mAdDonutTitle').textContent=`${MONTHS[CURR]} 광고비 구성`;
   document.getElementById('mAdDonutCLab').textContent=`${MONTHS[CURR]} 광고비`;
   document.getElementById('mAdHeadPrev').textContent=`${MONTHS[PREV]} · 매체별 광고`;
@@ -8190,10 +8335,17 @@ function renderReport(data){
 
   /* M01 trend KPIs */
   const best=monthTotal.indexOf(Math.max(...monthTotal));
+  /* 월평균 카드 오른쪽 위 작은 추이선 (마지막 점 = 최근 달) */
+  const spark=(()=>{const n=monthTotal.length; if(n<2) return '';
+    const mx=Math.max(...monthTotal)||1, X=i=>i/(n-1)*100, Y=v=>36-v/mx*32;
+    const pts=monthTotal.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    return `<svg class="k-spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+      <polygon class="sp-area" points="0,40 ${pts} 100,40"/><polyline class="sp-line" points="${pts}"/></svg>`;})();
+  const momP=pct(totMCurr,totMPrev);
   document.getElementById('mTrendKpis').innerHTML=
-    `<div class="kpi"><div class="k-label">월평균 매출</div><div class="k-val num">${wonRaw(Math.round(grand/MONTHS.length))}<small>원</small></div><div class="k-sub">${MONTHS.length}개월 평균</div></div>`+
+    `<div class="kpi">${spark}<div class="k-label">월평균 매출</div><div class="k-val num">${wonRaw(Math.round(grand/MONTHS.length))}<small>원</small></div><div class="k-sub">${MONTHS.length}개월 평균</div></div>`+
     `<div class="kpi"><div class="k-label">최고 매출 월</div><div class="k-val num" data-nocount>${MONTHS[best]} · ${eok(monthTotal[best])}<small>원</small></div><div class="k-sub">${wonRaw(monthTotal[best])}원</div></div>`+
-    `<div class="kpi"><div class="k-label">${MONTHS[CURR]} 매출</div><div class="k-val num">${wonRaw(totMCurr)}<small>원</small></div><div class="k-sub">전월 대비 ${pct(totMCurr,totMPrev)>0?'+':''}${pct(totMCurr,totMPrev)}%</div></div>`;
+    `<div class="kpi"><div class="k-label">${MONTHS[CURR]} 매출</div><div class="k-val num">${wonRaw(totMCurr)}<small>원</small></div><div class="k-sub">전월 대비 ${achipDelta(momP)}</div></div>`;
 
   /* M01 trend stacked bars · 높이 = 매출 ÷ 눈금 최댓값 (구글시트 월별 매출 그대로) */
   const tMax=Math.max(...monthTotal)||100000000;   /* 시트를 불러오기 전(모두 0)에는 1억 눈금 */
@@ -8204,7 +8356,15 @@ function renderReport(data){
   const tickLabel=v=>v===0?'0':v>=100000000?(+(v/100000000).toFixed(2))+'억':Math.round(v/10000).toLocaleString('ko-KR')+'만';
   const ticks=[]; for(let v=0;v<=tTop+1;v+=tStep) ticks.push(v);
   document.getElementById('mTrendGrid').innerHTML=ticks.map(v=>
-    `<div class="gl${v===0?' is-zero':''}" style="top:${(1-v/tTop)*100}%"><span>${tickLabel(v)}</span></div>`).join('');
+    `<div class="gl${v===0?' is-zero':''}" style="top:${(1-v/tTop)*100}%"><span>${tickLabel(v)}</span></div>`).join('')+
+    /* 월평균 기준선 · 진행 중인 달은 평균에서 뺀다 */
+    (()=>{const done=monthTotal.filter((_,i)=>!(i===CURR&&MONTHS[CURR]===data.currLabel&&data.currDay<data.daysInCurrMonth));
+      const avg=done.length?sumArr(done)/done.length:0;
+      const lg=document.getElementById('mTrendGrid').closest('.panel').querySelector('.legend');
+      let it=lg.querySelector('.lg-avg');
+      if(!it){ it=document.createElement('span'); it.className='lg-avg'; lg.appendChild(it); }
+      it.hidden=!avg; it.innerHTML=`<i></i>월평균 ${tickLabel(Math.round(avg/1e6)*1e6)}`;
+      return avg?`<div class="avgline" style="top:${(1-avg/tTop)*100}%"></div>`:'';})();
   const CH_CLS={'쿠팡':'coupang','네이버':'naver','자사몰':'self'};
   /* 마지막 달이 아직 진행 중이면(오늘이 말일 전) 잠정치로 표시한다 */
   const partialIdx=(MONTHS[CURR]===data.currLabel&&data.currDay<data.daysInCurrMonth)?CURR:-1;
@@ -8217,11 +8377,11 @@ function renderReport(data){
     const tip=`<div class="ttip"><b>${m} 전체 ${wonRaw(tot)}원${i===partialIdx?' · 진행 중':''}</b>`+
       CH.map(c=>`<div class="tr"><i style="background:var(--${CH_CLS[c]||'self'})"></i>${c}<em>${wonRaw(M[c][i])}원</em><small>${tot?Math.round(M[c][i]/tot*100):0}%</small></div>`).join('')+
       `</div>`;
-    return `<div class="tcol${i===best?' is-best':''}${i===partialIdx?' is-partial':''}" style="--h:${h}">
-      <div class="ttot num">${eok(tot)}</div>${tip}
+    return `<div class="tcol${i===best?' is-best':''}${i===partialIdx?' is-partial':''}" style="--h:${h};--i:${i}">
+      <div class="ttot num">${i===best?'<b>최고</b>':''}${eok(tot)}</div>${tip}
       <div class="tbar">${segs}</div></div>`;}).join('');
   document.getElementById('mTrendX').innerHTML=MONTHS.map((m,i)=>
-    `<span>${m}${i===partialIdx?`<small>${data.currDay}일까지</small>`:''}</span>`).join('');
+    `<span${i===best?' class="is-best"':''}>${m}${i===partialIdx?`<small>${data.currDay}일까지</small>`:''}</span>`).join('');
 
   /* M02 sales table */
   let mst=`<thead><tr><th>플랫폼</th><th>${MONTHS[PREV]} 매출</th><th>${MONTHS[CURR]} 매출</th><th>증감액</th><th>증감률</th></tr></thead><tbody>`;
@@ -8235,12 +8395,12 @@ function renderReport(data){
 
   /* M02 grouped bar chart */
   const sMax=Math.max(...CH.map(c=>Math.max(M[c][PREV],M[c][CURR])))||1;
-  document.getElementById('mSalesBars').innerHTML=CH.map(c=>`
-    <div class="gcol"><div class="gpair">
-      <div class="gb"><span class="gv" style="color:var(--prev-ink)">${eok(M[c][PREV])}</span><div class="gbar prevb" style="height:${M[c][PREV]/sMax*100}%"></div></div>
-      <div class="gb"><span class="gv" style="color:var(--curr)">${eok(M[c][CURR])}</span><div class="gbar currb" style="height:${M[c][CURR]/sMax*100}%"></div></div>
+  document.getElementById('mSalesBars').innerHTML=CH.map((c,j)=>`
+    <div class="gcol" title="${c} · ${MONTHS[PREV]} ${wonRaw(M[c][PREV])}원 → ${MONTHS[CURR]} ${wonRaw(M[c][CURR])}원"><div class="gpair">
+      <div class="gb"><span class="gv num">${eok(M[c][PREV])}</span><div class="gbar prevb" style="height:${M[c][PREV]/sMax*100}%;--i:${j*2}"></div></div>
+      <div class="gb is-curr"><span class="gv num">${eok(M[c][CURR])}</span><div class="gbar currb" style="height:${M[c][CURR]/sMax*100}%;--i:${j*2+1}"></div></div>
     </div></div>`).join('');
-  document.getElementById('mSalesCats').innerHTML=CH.map(c=>`<div class="gcat" style="flex:1">${c}</div>`).join('');
+  document.getElementById('mSalesCats').innerHTML=CH.map(c=>`<div class="gcat" style="flex:1">${c}${achipDelta(pct(M[c][CURR],M[c][PREV]))}</div>`).join('');
 
   /* M03 매체별 광고 */
   function adTable(key){
@@ -8258,24 +8418,24 @@ function renderReport(data){
   /* M03 ROAS 비교 막대 */
   const roasPairs=CH.map(c=>({c,rp:roasPct(AD[c].prev.rev,AD[c].prev.cost),rc:roasPct(AD[c].curr.rev,AD[c].curr.cost)}));
   const rMax=Math.max(...roasPairs.map(r=>Math.max(r.rp,r.rc)))||1;
-  document.getElementById('mRoasBars').innerHTML=roasPairs.map(r=>`
-    <div class="rbrow"><div class="rn">${r.c}</div>
-      <div class="rtrack"><div class="rfill prevf" style="width:${r.rp/rMax*100}%"></div></div>
-      <div class="rval" style="color:var(--prev-ink)">${r.rp}%</div></div>
-    <div class="rbrow"><div class="rn"></div>
-      <div class="rtrack"><div class="rfill currf" style="width:${r.rc/rMax*100}%"></div></div>
-      <div class="rval" style="color:var(--curr)">${r.rc}%</div></div>`).join('');
+  document.getElementById('mRoasBars').innerHTML=roasPairs.map((r,j)=>`
+    <div class="mr-grp">
+      <div class="mr-head"><i style="background:${CH_COLOR[r.c]}"></i>${r.c}${achipDelta(pct(r.rc,r.rp))}</div>
+      <div class="mr-line prev"><span class="rm">${MONTHS[PREV]}</span>
+        <div class="rtrack"><div class="rfill" style="width:${r.rp/rMax*100}%;--i:${j*2}"></div></div><span class="rval num">${r.rp}%</span></div>
+      <div class="mr-line curr"><span class="rm">${MONTHS[CURR]}</span>
+        <div class="rtrack"><div class="rfill" style="width:${r.rc/rMax*100}%;--i:${j*2+1}"></div></div><span class="rval num">${r.rc}%</span></div>
+    </div>`).join('');
 
   /* M03 광고비 구성 도넛 */
   const adDColors=['var(--coupang)','var(--naver)','var(--self)'];
   const adDTot=CH.reduce((s,c)=>s+AD[c].curr.cost,0)||1;
-  let adAcc=0; const adStops=CH.map((c,i)=>{const s0=adAcc/adDTot*360;adAcc+=AD[c].curr.cost;return `${adDColors[i]} ${s0}deg ${adAcc/adDTot*360}deg`;});
-  document.getElementById('mAdDonut').style.background=`conic-gradient(${adStops.join(',')})`;
   document.getElementById('mAdDonutTot').textContent=wonRaw(adDTot);
   document.getElementById('mAdDonutList').innerHTML=CH.map((c,i)=>`
     <div class="drow"><span class="sw" style="background:${adDColors[i]}"></span><span class="dn">${c}</span>
       <span class="dpct num">${Math.round(share(AD[c].curr.cost,adDTot)*100)}%</span>
       <span class="damt num">${wonRaw(AD[c].curr.cost)}원</span></div>`).join('');
+  ringDonut('mAdDonut','mAdDonutList',CH.map((c,i)=>({name:c,v:AD[c].curr.cost,color:adDColors[i],amt:wonRaw(AD[c].curr.cost)+'원'})));
 
   /* M04 total */
   document.getElementById('mGrandTotal').textContent=wonRaw(grand)+'원';
@@ -8286,13 +8446,18 @@ function renderReport(data){
 
   /* M04 누적 비중 도넛 */
   const totDColors=['var(--coupang)','var(--naver)','var(--self)'];
-  let totAcc=0; const totStops=CH.map((c,i)=>{const s0=totAcc/grand*360;totAcc+=chTotal(c);return `${totDColors[i]} ${s0}deg ${totAcc/grand*360}deg`;});
-  document.getElementById('mTotDonut').style.background=`conic-gradient(${totStops.join(',')})`;
   document.getElementById('mTotDonutTot').textContent=eok(grand);
   document.getElementById('mTotDonutList').innerHTML=CH.map((c,i)=>`
     <div class="drow"><span class="sw" style="background:${totDColors[i]}"></span><span class="dn">${c}</span>
       <span class="dpct num">${Math.round(share(chTotal(c),grand)*100)}%</span>
       <span class="damt num">${wonRaw(chTotal(c))}원</span></div>`).join('');
+  ringDonut('mTotDonut','mTotDonutList',CH.map((c,i)=>({name:c,v:chTotal(c),color:totDColors[i],amt:eok(chTotal(c))+'원'})));
+  /* 큰 합계 아래 플랫폼 비중 한 줄 막대 */
+  let shareBar=document.getElementById('mTotShare');
+  if(!shareBar){ shareBar=document.createElement('div'); shareBar.id='mTotShare'; shareBar.className='tshare';
+    document.getElementById('mTotCells').before(shareBar); }
+  shareBar.innerHTML=CH.map((c,i)=>{const w=share(chTotal(c),grand)*100;
+    return w>0?`<i style="flex:${w.toFixed(3)} 1 0;background:${totDColors[i]}" title="${c} ${Math.round(w)}%"></i>`:'';}).join('');
 
   /* M footnote */
   document.getElementById('mFoot').innerHTML=
