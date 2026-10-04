@@ -3294,27 +3294,36 @@ window.BAROYAM_ACCESS=(function(){
   @media (prefers-reduced-motion:reduce){
     .logo-fab::after{animation:none}
   }
-  /* 브랜드전략실 진행도 상자 · 로고 버튼 왼쪽에 가로로 긴 네모 · 전체 진행도 막대 하나 */
-  .bs-float{all:unset;box-sizing:border-box;position:fixed;right:116px;bottom:24px;z-index:70;width:340px;min-height:76px;
-    display:none;flex-direction:column;justify-content:center;gap:8px;padding:12px 16px;cursor:pointer;
-    background:var(--paper);border:1px solid var(--line);border-radius:18px;
-    box-shadow:0 12px 28px -10px rgba(0,0,0,.28);transition:transform .18s,box-shadow .18s}
+  /* 브랜드전략실 진행도 상자 · 로고 버튼 왼쪽에 가로로 긴 네모 · 전체 진행도 막대 하나 ·
+     처음 보일 때·브랜드를 바꿀 때 막대가 0%에서 차오른다(.run · 숫자는 스크립트가 함께 센다) */
+  .bs-float{all:unset;box-sizing:border-box;position:fixed;right:116px;bottom:24px;z-index:70;width:680px;max-width:calc(100vw - 260px);min-height:152px;
+    display:none;flex-direction:column;justify-content:center;gap:16px;padding:24px 32px;cursor:pointer;
+    background:var(--paper);border:1px solid var(--line);border-radius:28px;
+    box-shadow:0 16px 36px -12px rgba(0,0,0,.3);transition:transform .18s,box-shadow .18s}
   body.view-is-brand .bs-float:not([hidden]){display:flex}
-  .bs-float:hover{transform:translateY(-2px);box-shadow:0 18px 32px -12px rgba(0,0,0,.34)}
+  .bs-float:hover{transform:translateY(-2px);box-shadow:0 22px 40px -14px rgba(0,0,0,.36)}
   .bs-float:focus-visible{outline:2px solid var(--btn);outline-offset:3px}
-  .bs-float-top{display:flex;align-items:center;gap:8px;min-width:0}
-  .bs-float-name{flex:0 1 auto;min-width:0;font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .bs-float-stage{flex:0 1 auto;min-width:0;font-size:11px;font-weight:800;color:var(--btn-soft-ink);background:var(--btn-soft);
-    padding:2px 8px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .bs-float-pct{margin-left:auto;flex:none;font-size:22px;font-weight:900;line-height:1;color:var(--btn);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
-  .bs-float-pct small{font-size:13px;font-weight:800;margin-left:1px}
-  .bs-float-bar{height:10px;border-radius:999px;background:var(--chip-flat);overflow:hidden}
+  .bs-float-top{display:flex;align-items:center;gap:14px;min-width:0}
+  .bs-float-name{flex:0 1 auto;min-width:0;font-size:26px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bs-float-stage{flex:0 1 auto;min-width:0;font-size:20px;font-weight:800;color:var(--btn-soft-ink);background:var(--btn-soft);
+    padding:4px 16px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bs-float-pct{margin-left:auto;flex:none;font-size:44px;font-weight:900;line-height:1;color:var(--btn);font-variant-numeric:tabular-nums;letter-spacing:-1px}
+  .bs-float-pct em{font-style:normal}
+  .bs-float-pct small{font-size:26px;font-weight:800;margin-left:2px}
+  .bs-float-bar{height:20px;border-radius:999px;background:var(--chip-flat);overflow:hidden}
   .bs-float-bar i{display:block;height:100%;border-radius:inherit;background:var(--btn);transition:width .3s}
-  .bs-float-n{font-size:11.5px;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
+  .bs-float-bar.run i{transition:width 1.4s cubic-bezier(.22,1,.36,1)}
+  .bs-float-n{font-size:23px;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
   @media (max-width:1280px),(max-height:720px){
-    .bs-float{right:90px;bottom:18px;width:290px;min-height:58px;padding:9px 13px;gap:6px}
-    .bs-float-pct{font-size:19px}
+    .bs-float{right:90px;bottom:18px;width:580px;max-width:calc(100vw - 120px);min-height:116px;padding:18px 26px;gap:12px}
+    .bs-float-name{font-size:21px}
+    .bs-float-stage{font-size:16px;padding:3px 12px}
+    .bs-float-pct{font-size:38px}
+    .bs-float-pct small{font-size:22px}
+    .bs-float-bar{height:16px}
+    .bs-float-n{font-size:19px}
   }
+  @media (prefers-reduced-motion:reduce){ .bs-float-bar.run i{transition:none} }
 
   /* 상담 콘솔 · 설정창(.settings-overlay/.settings-panel)을 그대로 쓰고 크기만 키웠다 ·
      그래서 배경 어두워짐·바깥 클릭 닫기·둥근 모서리가 설정창과 똑같이 동작한다 */
@@ -18458,20 +18467,41 @@ window.baroyamAsk=function(title,body,okText){
     });
     paintFloat(b,p);
   }
-  /* 로고 버튼 왼쪽 진행도 상자 · 브랜드 이름 · 지금 단계 · 퍼센트 · 전체 진행도 막대 · 완료 수 */
+  /* 로고 버튼 왼쪽 진행도 상자 · 브랜드 이름 · 지금 단계 · 퍼센트 · 전체 진행도 막대 · 완료 수 ·
+     처음 보일 때와 다른 브랜드를 고를 때는 0%에서 달성률까지 게이지·숫자가 함께 오른다(체크할 때는 지난 값에서 이어서) */
+  const floatAt={id:null,pct:0}; let floatRaf=0;
   function paintFloat(b,p){
     const el=$('bsFloat'); if(!el) return;
-    if(!b){ el.hidden=true; return; }
+    if(!b){ el.hidden=true; floatAt.id=null; return; }
     const tip=p.groups.map(function(x,i){ return (i+1)+'. '+gName(x.g)+'  '+x.n+'/'+x.total; }).join('\n');
     el.title=(b.name||'브랜드')+' 진행도 '+p.pct+'%\n'+tip+'\n\n누르면 지금 단계로 이동';
     el.setAttribute('aria-label',(b.name||'브랜드')+' 진행도 '+p.pct+'퍼센트, '+p.done+'/'+p.total+' 완료');
+    const run=floatAt.id!==b.id, from=run?0:floatAt.pct;
     el.innerHTML='<span class="bs-float-top"><span class="bs-float-name">'+esc(b.name||'브랜드')+'</span>'
       +'<span class="bs-float-stage">'+(p.cur<0?'모두 완료':(p.cur+1)+'. '+esc(gName(stages()[p.cur])))+'</span>'
-      +'<span class="bs-float-pct">'+p.pct+'<small>%</small></span></span>'
-      +'<span class="bs-float-bar" aria-hidden="true"><i style="width:'+p.pct+'%"></i></span>'
+      +'<span class="bs-float-pct"><em>'+from+'</em><small>%</small></span></span>'
+      +'<span class="bs-float-bar'+(run?' run':'')+'" aria-hidden="true"><i style="width:'+from+'%"></i></span>'
       +'<span class="bs-float-n">'+p.done+' / '+p.total+' 완료</span>';
     el.hidden=false;
+    floatAt.id=b.id; floatAt.pct=p.pct;
+    const bar=el.querySelector('.bs-float-bar i'), num=el.querySelector('.bs-float-pct em');
+    void bar.offsetWidth;
+    bar.style.width=p.pct+'%';
+    cancelAnimationFrame(floatRaf);
+    if(from===p.pct) return;
+    const dur=run?1400:300, t0=performance.now();
+    (function tick(t){
+      const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3);
+      num.textContent=Math.round(from+(p.pct-from)*e);
+      if(k<1) floatRaf=requestAnimationFrame(tick);
+    })(t0);
   }
+  /* 다른 화면에 있다가 브랜드전략실로 들어오면 게이지를 다시 0%부터 올린다(숨어 있을 때 오른 것은 안 보였으므로) */
+  new MutationObserver(function(){
+    const on=document.body.classList.contains('view-is-brand');
+    if(on&&!floatAt.on&&openId&&find(openId)){ floatAt.id=null; paintSummary(); }
+    floatAt.on=on;
+  }).observe(document.body,{attributes:true,attributeFilter:['class']});
   $('bsFloat').addEventListener('click',function(){
     const b=find(openId); if(!b) return;
     const p=progress(b), g=p.cur<0?null:stages()[p.cur];
