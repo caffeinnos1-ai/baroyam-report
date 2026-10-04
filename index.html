@@ -3294,6 +3294,29 @@ window.BAROYAM_ACCESS=(function(){
   @media (prefers-reduced-motion:reduce){
     .logo-fab::after{animation:none}
   }
+  /* 브랜드전략실 진행도 상자 · 로고 버튼 왼쪽에 세로로 긴 네모 · 아래 막대는 단계마다 하나(왼쪽=1단계)씩 아래에서 위로 찬다 */
+  .bs-float{all:unset;box-sizing:border-box;position:fixed;right:116px;bottom:24px;z-index:70;width:112px;height:200px;
+    display:none;flex-direction:column;align-items:center;gap:6px;padding:12px 10px 11px;cursor:pointer;
+    background:var(--paper);border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 12px 28px -10px rgba(0,0,0,.28);transition:transform .18s,box-shadow .18s}
+  body.view-is-brand .bs-float:not([hidden]){display:flex}
+  .bs-float:hover{transform:translateY(-2px);box-shadow:0 18px 32px -12px rgba(0,0,0,.34)}
+  .bs-float:focus-visible{outline:2px solid var(--btn);outline-offset:3px}
+  .bs-float-name{max-width:100%;font-size:11.5px;font-weight:700;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bs-float-pct{font-size:26px;font-weight:900;line-height:1;color:var(--btn);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .bs-float-pct small{font-size:14px;font-weight:800;margin-left:1px}
+  .bs-float-bars{flex:1;width:100%;display:flex;align-items:stretch;gap:4px;padding:4px 2px 0}
+  .bs-float-bars i{flex:1;position:relative;border-radius:5px;background:var(--chip-flat);overflow:hidden}
+  .bs-float-bars i b{position:absolute;left:0;right:0;bottom:0;background:var(--btn);border-radius:inherit;transition:height .3s}
+  .bs-float-bars i.cur{box-shadow:inset 0 0 0 1.5px var(--btn)}
+  .bs-float-bars i.cur b{background:var(--btn-hover)}
+  .bs-float-n{font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+  .bs-float-stage{max-width:100%;font-size:11px;font-weight:800;color:var(--btn-soft-ink);background:var(--btn-soft);
+    padding:2px 8px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media (max-width:1280px),(max-height:720px){
+    .bs-float{right:90px;bottom:18px;width:96px;height:168px;padding:10px 8px 9px}
+    .bs-float-pct{font-size:22px}
+  }
 
   /* 상담 콘솔 · 설정창(.settings-overlay/.settings-panel)을 그대로 쓰고 크기만 키웠다 ·
      그래서 배경 어두워짐·바깥 클릭 닫기·둥근 모서리가 설정창과 똑같이 동작한다 */
@@ -7751,6 +7774,8 @@ window.BAROYAM_ACCESS=(function(){
     <img class="logo-fab-white" src="data:image/png;base64,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" alt="" aria-hidden="true">
   </button>
   <script>document.getElementById('logoFabImg').src=document.querySelector('.sb-logo').src;</script>
+  <!-- 브랜드전략실 진행도 · 로고 버튼 바로 왼쪽에 떠 있어 스크롤해도 늘 보인다 · 누르면 지금 단계로 내려간다 -->
+  <button type="button" class="bs-float" id="bsFloat" hidden></button>
 
   <!-- 상담 콘솔 · 설정창과 같은 방식으로 대시보드 위에 띄우되 크기만 크게 · 로고 버튼으로 연다 -->
   <div class="settings-overlay" id="consoleOverlay" hidden>
@@ -18016,6 +18041,7 @@ window.baroyamAsk=function(title,body,okText){
     if(!list.length){
       $('bsGrid').innerHTML='<div class="bs-empty">'+(loading?'불러오는 중…':'아직 등록된 브랜드가 없어요.<br>위 <b>새 브랜드</b>로 등록해 보세요.')+'</div>';
       $('bsMainHead').hidden=true;
+      paintFloat(null);
       $('bsDetailBody').innerHTML='<div class="bs-empty">'+(loading?'불러오는 중…':'브랜드를 등록하면 여기에 출시 체크리스트가 펼쳐져요.')+'</div>';
       return;
     }
@@ -18434,7 +18460,31 @@ window.baroyamAsk=function(title,body,okText){
       const btn=el.querySelector('[data-check-group]');
       if(btn){ btn.innerHTML=checkLabel(full,'전체'); btn.classList.toggle('is-full',full); }
     });
+    paintFloat(b,p);
   }
+  /* 로고 버튼 왼쪽 진행도 상자 · 브랜드 이름 · 퍼센트 · 단계별 막대 · 완료 수 · 지금 단계 */
+  function paintFloat(b,p){
+    const el=$('bsFloat'); if(!el) return;
+    if(!b){ el.hidden=true; return; }
+    const tip=p.groups.map(function(x,i){ return (i+1)+'. '+gName(x.g)+'  '+x.n+'/'+x.total; }).join('\n');
+    el.title=(b.name||'브랜드')+' 진행도 '+p.pct+'%\n'+tip+'\n\n누르면 지금 단계로 이동';
+    el.setAttribute('aria-label',(b.name||'브랜드')+' 진행도 '+p.pct+'퍼센트, '+p.done+'/'+p.total+' 완료');
+    el.innerHTML='<span class="bs-float-name">'+esc(b.name||'브랜드')+'</span>'
+      +'<span class="bs-float-pct">'+p.pct+'<small>%</small></span>'
+      +'<span class="bs-float-bars" aria-hidden="true">'+p.groups.map(function(x,i){
+        const h=x.total?Math.round(x.n/x.total*100):0;
+        return '<i'+(i===p.cur?' class="cur"':'')+'><b style="height:'+h+'%"></b></i>';
+      }).join('')+'</span>'
+      +'<span class="bs-float-n">'+p.done+' / '+p.total+'</span>'
+      +'<span class="bs-float-stage">'+(p.cur<0?'모두 완료':(p.cur+1)+'단계 진행')+'</span>';
+    el.hidden=false;
+  }
+  $('bsFloat').addEventListener('click',function(){
+    const b=find(openId); if(!b) return;
+    const p=progress(b), g=p.cur<0?null:stages()[p.cur];
+    const box=g?[].find.call($('bsDetailBody').querySelectorAll('.bs-group'),function(n){ return n.dataset.g===g.id; }):$('bsSum');
+    if(box) box.scrollIntoView({behavior:'smooth',block:'start'});
+  });
   /* 출시 상태·날짜는 머리줄에 하나씩만 두고, 브랜드를 바꿀 때 값만 갈아 끼운다 ·
      날짜 버튼 하나가 상태에 따라 출시 예정일(launchDate) 또는 출시일(releasedDate)을 고친다 */
   function dateKey(b){ return launched(b)?'releasedDate':'launchDate'; }
