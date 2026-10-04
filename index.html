@@ -4462,7 +4462,8 @@ window.BAROYAM_ACCESS=(function(){
   /* 미니 대시보드 · 브랜드전략실일 때만 .wrap 을 [미니 | 대시보드] 두 칸으로 벌린다 ·
      .wrap 에는 overflow 가 없어 sticky 가 먹는다(.paper 안쪽은 overflow:hidden 이라 안 먹는다) */
   .bs-mini{display:none}
-  body.view-is-brand .wrap{display:flex;align-items:flex-start;gap:22px;max-width:1440px}
+  /* 프로젝트 화면처럼 가운데가 아니라 왼쪽(사이드바 쪽)에 붙인다 */
+  body.view-is-brand .wrap{display:flex;align-items:flex-start;gap:22px;max-width:1440px;margin:0;padding-left:24px}
   body.view-is-brand .wrap>.paper{flex:1;min-width:0}
   body.view-is-brand .bs-mini{display:flex;flex-direction:column;gap:12px;flex:none;width:264px;
     position:sticky;top:78px;max-height:calc(100vh - 96px);overflow:hidden;padding:18px 14px 14px;
