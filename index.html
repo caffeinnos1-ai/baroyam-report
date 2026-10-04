@@ -4596,10 +4596,17 @@ window.BAROYAM_ACCESS=(function(){
   .bs-tpl-fields .mg-name.bs-tpl-desc::placeholder{color:var(--mute)}
   #bsLabelEditor .mg-items>.mg-row{align-items:flex-start;padding:2px 0}
   /* 항목에 더 단 입력란 · 설명 칸 한 줄 + 지우기 */
-  .bs-tpl-fld{display:flex;align-items:center;gap:6px;padding-left:9px}
-  .bs-tpl-fld-tag{flex:none;font-size:11px;font-weight:800;color:var(--mute);white-space:nowrap}
-  .bs-tpl-fadd.ui-btn{align-self:flex-start;margin:2px 0 4px 9px;height:24px;padding:0 9px;font-size:11.5px}
-  .bs-fv{display:flex;flex-direction:column;gap:4px}
+  /* 항목 안 입력란 · 이름(USP1 같은)은 글자처럼 보이다가 올리면 테두리, 누르면 입력 */
+  .bs-fls{display:flex;flex-direction:column;gap:8px}
+  .bs-fv{display:flex;flex-direction:column;gap:3px}
+  .bs-fv-head{display:flex;align-items:center;gap:4px}
+  .bs-fl-l{all:unset;box-sizing:border-box;flex:1;min-width:0;margin-left:-6px;padding:2px 6px;border-radius:7px;border:1px solid transparent;
+    font-family:inherit;font-size:12px;font-weight:700;color:var(--body);cursor:text;transition:var(--ui-ease)}
+  .bs-fl-l::placeholder{color:var(--mute);font-weight:600}
+  .bs-fl-l:hover{border-color:var(--line)}
+  .bs-fl-l:focus{border-color:var(--btn);box-shadow:var(--ui-ring)}
+  .bs-fv-head .ui-btn.icon{width:22px;height:22px;color:var(--mute);font-size:10.5px}
+  .bs-fv-head .ui-btn.icon:hover{color:var(--neg);border-color:transparent;background:var(--neg-soft)}
   #bsLabelEditor .mg-items>.mg-row .mg-move,#bsLabelEditor .mg-items>.mg-row .mg-del{margin-top:3px}
 </style>
 <script>
@@ -17769,10 +17776,9 @@ window.baroyamAsk=function(title,body,okText){
       const v=both(bs[sid]&&bs[sid].memo,ls[sid].memo,ss[sid].memo);
       if(v!=null) out.steps[sid].memo=v;
       /* 관리자가 단 입력란도 같은 방식 */
-      const bf=(bs[sid]&&bs[sid].fv)||{}, lf=ls[sid].fv||{}, sf=ss[sid].fv||{};
-      Object.keys(lf).forEach(function(fid){
-        const w=both(bf[fid],lf[fid],sf[fid]);
-        if(w!=null){ out.steps[sid].fv=Object.assign({},out.steps[sid].fv); out.steps[sid].fv[fid]=w; }
+      const by=function(o,id){ return ((o&&o.fl)||[]).find(function(y){ return y.id===id; })||{}; };
+      (out.steps[sid].fl||[]).forEach(function(f){
+        const w=both(by(bs[sid],f.id).v,by(ls[sid],f.id).v,by(ss[sid],f.id).v); if(w!=null) f.v=w;
       });
     });
   }
@@ -17900,6 +17906,7 @@ window.baroyamAsk=function(title,body,okText){
   function openDetail(id){
     const b=find(id); if(!b) return;
     openId=id; linkFormFor=null;
+    moveOldFv(b);
     $('bsDetailTitle').value=b.name||'';
     paintLogo(b);
     $('bsMainHead').hidden=false;
@@ -17918,12 +17925,7 @@ window.baroyamAsk=function(title,body,okText){
             +'<div class="bs-step-body">'
             +'<label for="bsS_'+esc(s.id)+'"><div class="bs-step-t">'+esc(sTitle(s))+'<span class="bs-step-at">'+(st.done&&st.at?dot(st.at)+' 완료':'')+'</span></div>'
             +(sDesc(s)?'<div class="bs-step-d">'+esc(sDesc(s))+'</div>':'')+'</label>'
-            +'<textarea class="ui-field block bs-memo" data-memo maxlength="2000" rows="2" placeholder="메모 · 진행 상황을 적어 주세요">'+esc(st.memo)+'</textarea>'
-            +sFields(s).map(function(f){
-              return '<div class="bs-fv">'+(f.d?'<div class="bs-step-d">'+esc(f.d)+'</div>':'')
-                +'<textarea class="ui-field block bs-memo" data-fv="'+esc(f.id)+'" maxlength="2000" rows="2" aria-label="'+esc(f.d||'입력란')+'" placeholder="입력하세요">'
-                +esc(st.fv&&st.fv[f.id])+'</textarea></div>';
-            }).join('')
+            +'<div class="bs-fls">'+flsHtml(st)+'</div>'
             +'<div class="bs-att">'+attHtml(b.id,s.id,st)+'</div>'
             +'</div></div>';
         }).join('')+'</div>';
@@ -17933,6 +17935,69 @@ window.baroyamAsk=function(title,body,okText){
     $('bsDetailBody').querySelectorAll('.bs-memo,.bs-summary textarea').forEach(grow);
     paintSummary();
   }
+  /* ---------- 항목 안 입력란 · 브랜드마다 대시보드에서 더한다 ----------
+     첫 칸은 원래 메모(st.memo · 이름 st.ml) · 더한 칸은 st.fl=[{id,l,v}] (l = 칸 이름 · id 목록이라 두 PC가 동시에 더해도 합쳐진다) ·
+     더한 칸이 있을 때만 메모칸에도 이름 칸을 보인다(26개 항목마다 빈 이름 칸이 늘어서지 않게) */
+  function flsHtml(st){
+    st=st||{};
+    const fl=st.fl||[], named=fl.length||st.ml;
+    return '<div class="bs-fv">'
+      +(named?'<div class="bs-fv-head"><input class="bs-fl-l" data-ml maxlength="40" placeholder="입력란 이름" aria-label="첫 입력란 이름" value="'+esc(st.ml)+'"></div>':'')
+      +'<textarea class="ui-field block bs-memo" data-memo maxlength="2000" rows="2" placeholder="메모 · 진행 상황을 적어 주세요">'+esc(st.memo)+'</textarea></div>'
+      +fl.map(function(f){
+        return '<div class="bs-fv" data-fl="'+esc(f.id)+'"><div class="bs-fv-head">'
+          +'<input class="bs-fl-l" data-fl-l maxlength="40" placeholder="입력란 이름" aria-label="입력란 이름" value="'+esc(f.l)+'">'
+          +'<button type="button" class="ui-btn ghost icon sm" data-fl-del aria-label="입력란 지우기">✕</button></div>'
+          +'<textarea class="ui-field block bs-memo" data-fl-v maxlength="2000" rows="2" placeholder="입력하세요" aria-label="'+esc(f.l||'입력란')+'">'+esc(f.v)+'</textarea></div>';
+      }).join('');
+  }
+  function paintFls(bid,sid){
+    const row=[].find.call($('bsDetailBody').querySelectorAll('.bs-step'),function(n){ return n.dataset.s===sid; });
+    const b=find(bid); if(!row||!b) return;
+    const box=row.querySelector('.bs-fls');
+    box.innerHTML=flsHtml(b.steps&&b.steps[sid]);
+    box.querySelectorAll('.bs-memo').forEach(grow);
+  }
+  /* 새 칸 이름 · 바로 위 칸 이름이 숫자로 끝나면(USP1) 다음 숫자(USP2)를 미리 넣어 준다 */
+  function nextLabel(st){
+    const fl=st.fl||[], prev=fl.length?fl[fl.length-1].l:st.ml, m=/^(.*?)(\d+)$/.exec(prev||'');
+    return m?m[1]+(+m[2]+1):'';
+  }
+  /* 예전에 관리자 설정에서 단 입력란(틀의 f · 값은 st.fv)에 적어 둔 글은 이 브랜드의 입력란으로 옮긴다 */
+  function moveOldFv(b){
+    stages().forEach(function(g){ g.steps.forEach(function(x){
+      const st=b.steps&&b.steps[x.id]; if(!st||!st.fv) return;
+      const fl=(st.fl||[]).slice();
+      Object.keys(st.fv).forEach(function(fid){
+        if(!st.fv[fid]||fl.some(function(y){ return y.id===fid; })) return;
+        const f=sFields(x).find(function(y){ return y.id===fid; });
+        fl.push({id:fid,l:f?f.d:'',v:st.fv[fid]});
+      });
+      stepSet(b,x.id,function(o){ o.fl=fl; delete o.fv; });
+    }); });
+  }
+  $('bsDetailBody').addEventListener('click',async function(e){
+    const b=find(openId); if(!b) return;
+    const row=e.target.closest('.bs-step'); if(!row) return;
+    const sid=row.dataset.s;
+    if(e.target.closest('[data-fl-add]')){
+      const id=newId('i');
+      stepSet(b,sid,function(st){ st.fl=(st.fl||[]).concat([{id:id,l:nextLabel(st),v:''}]); });
+      paintFls(b.id,sid);
+      const box=row.querySelector('[data-fl="'+id+'"]');
+      if(box){ const inp=box.querySelector(box.querySelector('.bs-fl-l').value?'textarea':'.bs-fl-l'); if(inp) inp.focus(); }
+      return;
+    }
+    const del=e.target.closest('[data-fl-del]'); if(!del) return;
+    const fid=del.closest('[data-fl]').dataset.fl, st=(b.steps&&b.steps[sid])||{};
+    const f=(st.fl||[]).find(function(y){ return y.id===fid; }); if(!f) return;
+    if(f.v){
+      const ok=window.baroyamAsk?await window.baroyamAsk('"'+(f.l||'이름 없는 입력란')+'"을(를) 지울까요?','적어 둔 내용도 함께 지워집니다.'):confirm('지울까요?');
+      if(!ok) return;
+    }
+    stepSet(b,sid,function(o){ o.fl=(o.fl||[]).filter(function(y){ return y.id!==fid; }); });
+    paintFls(b.id,sid);
+  });
   /* 체크 단추 글자 · 다 체크됐으면 "해제", 아니면 체크 아이콘 + "체크" */
   const IC_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
   const IC_UNDO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
@@ -17981,11 +18046,13 @@ window.baroyamAsk=function(title,body,okText){
       if(t.tagName==='TEXTAREA') grow(t);
       b[t.dataset.f]=t.value; mark(b.id,'info',t.dataset.f);
       renderGrid();
-    }else if(t.dataset.fv){
-      grow(t);
-      const fid=t.dataset.fv;
+    }else if(t.hasAttribute('data-ml')){
+      stepSet(b,t.closest('.bs-step').dataset.s,function(st){ if(t.value) st.ml=t.value; else delete st.ml; });
+    }else if(t.hasAttribute('data-fl-l')||t.hasAttribute('data-fl-v')){
+      const fid=t.closest('[data-fl]').dataset.fl, isV=t.tagName==='TEXTAREA';
+      if(isV) grow(t);
       stepSet(b,t.closest('.bs-step').dataset.s,function(st){
-        st.fv=Object.assign({},st.fv); if(t.value) st.fv[fid]=t.value; else delete st.fv[fid];
+        st.fl=(st.fl||[]).map(function(y){ return y.id!==fid?y:Object.assign({},y,isV?{v:t.value}:{l:t.value}); });
       });
     }else if(t.hasAttribute('data-memo')){
       grow(t);
@@ -18007,7 +18074,8 @@ window.baroyamAsk=function(title,body,okText){
     if(st.links&&!st.links.length) delete st.links;
     if(st.files&&!st.files.length) delete st.files;
     if(st.fv&&!Object.keys(st.fv).length) delete st.fv;
-    if(!st.done&&!st.memo&&!st.links&&!st.files&&!st.fv) delete b.steps[sid]; else b.steps[sid]=st;
+    if(st.fl&&!st.fl.length) delete st.fl;
+    if(!st.done&&!st.memo&&!st.links&&!st.files&&!st.fv&&!st.fl&&!st.ml) delete b.steps[sid]; else b.steps[sid]=st;
     mark(b.id,'steps',sid);
     return st;
   }
@@ -18073,7 +18141,8 @@ window.baroyamAsk=function(title,body,okText){
         +'<input class="ui-field sm" name="title" placeholder="이름 (선택)" maxlength="60" autocomplete="off">'
         +'<button type="submit" class="ui-btn soft sm">추가</button><button type="button" class="ui-btn ghost sm" data-att-cancel>취소</button></form>';
     }else{
-      h+='<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>'
+      h+='<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>'
+        +'<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>'
         +'<button type="button" class="ui-btn ghost sm" data-att-add="file">'+IC_FILE+'파일</button>';
     }
     return h;
@@ -18220,13 +18289,6 @@ window.baroyamAsk=function(title,body,okText){
           return '<div class="mg-row"><div class="bs-tpl-fields">'
             +'<input class="mg-name" type="text" maxlength="40" value="'+esc(x.t)+'" data-bs-t="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="항목 이름" aria-label="항목 이름">'
             +'<input class="mg-name bs-tpl-desc" type="text" maxlength="120" value="'+esc(x.d)+'" data-bs-d="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="설명 (선택)" aria-label="항목 설명">'
-            +sFields(x).map(function(f,fi){
-              const at=' data-s="'+esc(x.id)+'" data-g="'+esc(g.id)+'"';
-              return '<div class="bs-tpl-fld"><span class="bs-tpl-fld-tag">입력란 '+(fi+2)+'</span>'
-                +'<input class="mg-name bs-tpl-desc" type="text" maxlength="120" value="'+esc(f.d)+'" data-bs-f="'+esc(f.id)+'"'+at+' placeholder="입력란 설명 (선택)" aria-label="입력란 설명">'
-                +'<button type="button" class="mg-del" data-bs-del="f" data-id="'+esc(f.id)+'"'+at+' title="이 입력란 삭제" aria-label="입력란 삭제">✕</button></div>';
-            }).join('')
-            +'<button type="button" class="ui-btn ghost sm bs-tpl-fadd" data-bs-fadd="'+esc(x.id)+'" data-g="'+esc(g.id)+'">+ 입력란</button>'
             +'</div>'
             +MOVE('s',x.id,g.id,xl,gi===0&&si===0,gi===list.length-1&&si===g.steps.length-1)
             +'<button type="button" class="mg-del" data-bs-del="s" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" title="이 항목 삭제" aria-label="'+xl+' 항목 삭제">✕</button></div>';
@@ -18236,7 +18298,6 @@ window.baroyamAsk=function(title,body,okText){
     }).join('');
   }
   function stageOf(id){ return stages().find(function(g){ return g.id===id; }); }
-  function stepOf(gid,sid){ const g=stageOf(gid); return g&&g.steps.find(function(y){ return y.id===sid; }); }
   /* 틀이 바뀌면 · 저장하고, 설정 화면과 뒤의 브랜드 화면을 다시 그린다 */
   function tplChanged(redraw){
     markT();
@@ -18282,9 +18343,6 @@ window.baroyamAsk=function(title,body,okText){
       const g=stageOf(t.dataset.g); if(!g) return;
       const x=g.steps.find(function(y){ return y.id===(t.dataset.bsT||t.dataset.bsD); }); if(!x) return;
       if(t.dataset.bsT!=null) x.t=t.value; else x.d=t.value;
-    }else if(t.dataset.bsF!=null){
-      const f=sFields(stepOf(t.dataset.g,t.dataset.s)||{}).find(function(y){ return y.id===t.dataset.bsF; }); if(!f) return;
-      f.d=t.value;
     }else return;
     tplChanged(false);
   });
@@ -18293,15 +18351,6 @@ window.baroyamAsk=function(title,body,okText){
   });
   $('bsLabelEditor').addEventListener('click',async function(e){
     if(!isAdmin()) return;
-    const fa=e.target.closest('[data-bs-fadd]');
-    if(fa){
-      const x=stepOf(fa.dataset.g,fa.dataset.bsFadd); if(!x) return;
-      const id=newId('f');
-      x.f=sFields(x).concat([{id:id,d:''}]);
-      tplChanged(true);
-      const inp=$('bsLabelEditor').querySelector('[data-bs-f="'+id+'"]'); if(inp) inp.focus();
-      return;
-    }
     const mv=e.target.closest('[data-bs-move]');
     if(mv){
       const dir=+mv.dataset.dir, list=stages();
@@ -18326,14 +18375,7 @@ window.baroyamAsk=function(title,body,okText){
     }
     const del=e.target.closest('[data-bs-del]');
     if(!del) return;
-    if(del.dataset.bsDel==='f'){
-      const x=stepOf(del.dataset.g,del.dataset.s); if(!x) return;
-      const f=sFields(x).find(function(y){ return y.id===del.dataset.id; }); if(!f) return;
-      const ok=window.baroyamAsk?await window.baroyamAsk('"'+sTitle(x)+'" 항목의 입력란을 지울까요?','브랜드에 적어 둔 내용은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
-      if(!ok) return;
-      x.f=sFields(x).filter(function(y){ return y!==f; });
-      if(!x.f.length) delete x.f;
-    }else if(del.dataset.bsDel==='g'){
+    if(del.dataset.bsDel==='g'){
       const g=stageOf(del.dataset.id); if(!g) return;
       const ok=window.baroyamAsk?await window.baroyamAsk('"'+gName(g)+'" 단계를 지울까요?','이 단계의 항목 '+g.steps.length+'개도 함께 빠집니다. 브랜드에 체크해 둔 기록은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
       if(!ok) return;
