@@ -4596,6 +4596,24 @@ window.BAROYAM_ACCESS=(function(){
   .bs-tpl-fields .mg-name.bs-tpl-desc::placeholder{color:var(--mute)}
   #bsLabelEditor .mg-items>.mg-row{align-items:flex-start;padding:2px 0}
   /* 항목에 더 단 입력란 · 설명 칸 한 줄 + 지우기 */
+  /* SWOT 사분면 · 정사각형 2×2 · 칸마다 연한 색(강점 초록 · 약점 노랑 · 기회 강조색 · 위협 빨강) */
+  .bs-swot{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;width:100%;max-width:620px;aspect-ratio:1/1}
+  .bs-sw{--q:var(--pos);display:flex;flex-direction:column;min-height:0;padding:12px 14px 10px;border-radius:14px;cursor:text;
+    background:color-mix(in srgb,var(--q) 8%,var(--paper));border:1px solid color-mix(in srgb,var(--q) 24%,var(--paper));transition:var(--ui-ease)}
+  .bs-sw.is-w{--q:var(--warn)} .bs-sw.is-o{--q:var(--btn)} .bs-sw.is-t{--q:var(--neg)}
+  .bs-sw:focus-within{border-color:var(--q);box-shadow:0 0 0 3px color-mix(in srgb,var(--q) 16%,transparent)}
+  .bs-sw-h{flex:none;display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .bs-sw-h b{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;font-size:17px;font-weight:900;
+    color:var(--q);background:color-mix(in srgb,var(--q) 16%,var(--paper))}
+  .bs-sw-h span{display:flex;flex-direction:column;font-size:13px;font-weight:800;color:var(--ink);line-height:1.2}
+  .bs-sw-h i{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:color-mix(in srgb,var(--q) 70%,var(--mute))}
+  .bs-sw textarea{all:unset;box-sizing:border-box;flex:1;min-height:0;width:100%;overflow-y:auto;font-family:inherit;
+    font-size:13px;font-weight:500;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  .bs-sw textarea::placeholder{color:var(--mute)}
+  @media (max-width:560px){ .bs-sw{padding:10px 10px 8px} .bs-sw-h i{display:none} }
+  .bs-tpl-lock{display:flex;align-items:center;gap:6px;color:var(--mute);cursor:not-allowed}
+  .bs-tpl-lock svg{width:13px;height:13px;flex:none}
+  .bs-tpl-nodel{visibility:hidden}
   /* 항목 안 입력란 · 이름(USP1 같은)은 글자처럼 보이다가 올리면 테두리, 누르면 입력 */
   .bs-fls{display:flex;flex-direction:column;gap:8px}
   .bs-fv{display:flex;flex-direction:column;gap:3px}
@@ -17478,11 +17496,16 @@ window.baroyamAsk=function(title,body,okText){
   try{ const c=normT(JSON.parse(localStorage.getItem(TCACHE)||'null')); if(c) tpl=c; }catch(e){}
   function cacheT(){ try{ localStorage.setItem(TCACHE,JSON.stringify(tpl)); }catch(e){} }
   function stages(){ return tpl.stages; }
+  function stepById(id){ let r=null; tpl.stages.forEach(function(g){ g.steps.forEach(function(x){ if(x.id===id) r=x; }); }); return r; }
   function allSteps(){ const out=[]; tpl.stages.forEach(function(g){ g.steps.forEach(function(x){ out.push(x.id); }); }); return out; }
   function gName(g){ return g.name||'(이름 없는 단계)'; }
   function sTitle(x){ return x.t||'(제목 없음)'; }
   function sDesc(x){ return x.d||''; }
   function sFields(x){ return x.f||[]; }
+  /* SWOT 분석 항목 · 관리자 설정에서 이름을 고치거나 지울 수 없고(이름으로 알아보므로), 대시보드에서는 네 칸 사분면으로 보인다 */
+  function isSwot(x){ return /^\s*swot/i.test((x&&x.t)||''); }
+  const SWOT=[['s','S','강점','Strength','경쟁 제품보다 나은 점'],['w','W','약점','Weakness','부족하거나 보완할 점'],
+    ['o','O','기회','Opportunity','시장·트렌드에서 오는 기회'],['t','T','위협','Threat','경쟁·규제·원가 같은 위험']];
   function newId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   /* 서버에서 받은 틀 · 보낼 고침이 남았으면 보낼 때 합치므로 지금 것은 그대로 둔다 */
   function adoptT(server,oldLabels){
@@ -17780,6 +17803,11 @@ window.baroyamAsk=function(title,body,okText){
       (out.steps[sid].fl||[]).forEach(function(f){
         const w=both(by(bs[sid],f.id).v,by(ls[sid],f.id).v,by(ss[sid],f.id).v); if(w!=null) f.v=w;
       });
+      const osw=out.steps[sid].sw;
+      if(osw) Object.keys(osw).forEach(function(k){
+        const w=both(bs[sid]&&bs[sid].sw&&bs[sid].sw[k],ls[sid].sw&&ls[sid].sw[k],ss[sid].sw&&ss[sid].sw[k]);
+        if(w!=null) osw[k]=w;
+      });
     });
   }
   /* 못 보낸 고침 기록 · 이 창 몫만 쓴다(키에 창 이름표) · 다 보내면 지운다 */
@@ -17925,7 +17953,7 @@ window.baroyamAsk=function(title,body,okText){
             +'<div class="bs-step-body">'
             +'<label for="bsS_'+esc(s.id)+'"><div class="bs-step-t">'+esc(sTitle(s))+'<span class="bs-step-at">'+(st.done&&st.at?dot(st.at)+' 완료':'')+'</span></div>'
             +(sDesc(s)?'<div class="bs-step-d">'+esc(sDesc(s))+'</div>':'')+'</label>'
-            +'<div class="bs-fls">'+flsHtml(st)+'</div>'
+            +(isSwot(s)?swotHtml(st):'<div class="bs-fls">'+flsHtml(st)+'</div>')
             +'<div class="bs-att">'+attHtml(b.id,s.id,st)+'</div>'
             +'</div></div>';
         }).join('')+'</div>';
@@ -17950,6 +17978,15 @@ window.baroyamAsk=function(title,body,okText){
           +'<button type="button" class="ui-btn ghost icon sm" data-fl-del aria-label="입력란 지우기">✕</button></div>'
           +'<textarea class="ui-field block bs-memo" data-fl-v maxlength="2000" rows="2" placeholder="입력하세요" aria-label="'+esc(f.l||'입력란')+'">'+esc(f.v)+'</textarea></div>';
       }).join('');
+  }
+  /* SWOT 사분면 · 값은 st.sw={s,w,o,t} · 예전에 적어 둔 메모가 있으면 사분면 아래에 그대로 둔다 */
+  function swotHtml(st){
+    st=st||{}; const sw=st.sw||{};
+    return '<div class="bs-swot">'+SWOT.map(function(q){
+      return '<label class="bs-sw is-'+q[0]+'"><span class="bs-sw-h"><b>'+q[1]+'</b><span>'+q[2]+'<i>'+q[3]+'</i></span></span>'
+        +'<textarea data-sw="'+q[0]+'" maxlength="2000" placeholder="'+q[4]+'" aria-label="'+q[2]+'">'+esc(sw[q[0]])+'</textarea></label>';
+    }).join('')+'</div>'
+      +(st.memo?'<textarea class="ui-field block bs-memo" data-memo maxlength="2000" rows="2" placeholder="메모">'+esc(st.memo)+'</textarea>':'');
   }
   function paintFls(bid,sid){
     const row=[].find.call($('bsDetailBody').querySelectorAll('.bs-step'),function(n){ return n.dataset.s===sid; });
@@ -18046,6 +18083,11 @@ window.baroyamAsk=function(title,body,okText){
       if(t.tagName==='TEXTAREA') grow(t);
       b[t.dataset.f]=t.value; mark(b.id,'info',t.dataset.f);
       renderGrid();
+    }else if(t.dataset.sw){
+      const k=t.dataset.sw;
+      stepSet(b,t.closest('.bs-step').dataset.s,function(st){
+        st.sw=Object.assign({},st.sw); if(t.value) st.sw[k]=t.value; else delete st.sw[k];
+      });
     }else if(t.hasAttribute('data-ml')){
       stepSet(b,t.closest('.bs-step').dataset.s,function(st){ if(t.value) st.ml=t.value; else delete st.ml; });
     }else if(t.hasAttribute('data-fl-l')||t.hasAttribute('data-fl-v')){
@@ -18075,7 +18117,8 @@ window.baroyamAsk=function(title,body,okText){
     if(st.files&&!st.files.length) delete st.files;
     if(st.fv&&!Object.keys(st.fv).length) delete st.fv;
     if(st.fl&&!st.fl.length) delete st.fl;
-    if(!st.done&&!st.memo&&!st.links&&!st.files&&!st.fv&&!st.fl&&!st.ml) delete b.steps[sid]; else b.steps[sid]=st;
+    if(st.sw&&!Object.keys(st.sw).length) delete st.sw;
+    if(!st.done&&!st.memo&&!st.links&&!st.files&&!st.fv&&!st.fl&&!st.ml&&!st.sw) delete b.steps[sid]; else b.steps[sid]=st;
     mark(b.id,'steps',sid);
     return st;
   }
@@ -18141,7 +18184,7 @@ window.baroyamAsk=function(title,body,okText){
         +'<input class="ui-field sm" name="title" placeholder="이름 (선택)" maxlength="60" autocomplete="off">'
         +'<button type="submit" class="ui-btn soft sm">추가</button><button type="button" class="ui-btn ghost sm" data-att-cancel>취소</button></form>';
     }else{
-      h+='<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>'
+      h+=(isSwot(stepById(sid))?'':'<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>')
         +'<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>'
         +'<button type="button" class="ui-btn ghost sm" data-att-add="file">'+IC_FILE+'파일</button>';
     }
@@ -18270,6 +18313,7 @@ window.baroyamAsk=function(title,body,okText){
       +'<button type="button" data-bs-move="'+kind+'" data-id="'+esc(id)+'"'+g+' data-dir="1"'+(last?' disabled':'')+' title="아래로" aria-label="'+label+' 아래로 옮기기">▼</button>'
       +'</span>';
   };
+  const IC_LOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg>';
   function renderLabelEditor(){
     const list=stages();
     if(!list.length){
@@ -18282,16 +18326,20 @@ window.baroyamAsk=function(title,body,okText){
         +'<div class="mg-row"><span class="mg-no">'+(gi+1)+'</span>'
         +'<input class="mg-name" type="text" maxlength="30" value="'+esc(g.name)+'" data-bs-g="'+esc(g.id)+'" placeholder="단계 이름" aria-label="단계 이름">'
         +MOVE('g',g.id,'',gl,gi===0,gi===list.length-1)
-        +'<button type="button" class="mg-del" data-bs-del="g" data-id="'+esc(g.id)+'" title="이 단계 삭제" aria-label="'+gl+' 단계 삭제">✕</button></div>'
+        +(g.steps.some(isSwot)?'<span class="mg-del bs-tpl-nodel" title="SWOT 분석 항목이 들어 있어 지울 수 없어요"></span>'
+          :'<button type="button" class="mg-del" data-bs-del="g" data-id="'+esc(g.id)+'" title="이 단계 삭제" aria-label="'+gl+' 단계 삭제">✕</button>')+'</div>'
         +'<div class="mg-items">'
         +g.steps.map(function(x,si){
           const xl=esc(sTitle(x));
           return '<div class="mg-row"><div class="bs-tpl-fields">'
-            +'<input class="mg-name" type="text" maxlength="40" value="'+esc(x.t)+'" data-bs-t="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="항목 이름" aria-label="항목 이름">'
+            +(isSwot(x)
+              ?'<span class="mg-name bs-tpl-lock" title="대시보드에서 SWOT 사분면으로 보이는 항목이라 이름을 고칠 수 없어요">'+IC_LOCK+esc(x.t)+'</span>'
+              :'<input class="mg-name" type="text" maxlength="40" value="'+esc(x.t)+'" data-bs-t="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="항목 이름" aria-label="항목 이름">')
             +'<input class="mg-name bs-tpl-desc" type="text" maxlength="120" value="'+esc(x.d)+'" data-bs-d="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="설명 (선택)" aria-label="항목 설명">'
             +'</div>'
             +MOVE('s',x.id,g.id,xl,gi===0&&si===0,gi===list.length-1&&si===g.steps.length-1)
-            +'<button type="button" class="mg-del" data-bs-del="s" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" title="이 항목 삭제" aria-label="'+xl+' 항목 삭제">✕</button></div>';
+            +(isSwot(x)?'<span class="mg-del bs-tpl-nodel" aria-hidden="true"></span>'
+              :'<button type="button" class="mg-del" data-bs-del="s" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" title="이 항목 삭제" aria-label="'+xl+' 항목 삭제">✕</button>')+'</div>';
         }).join('')
         +'<form class="mg-add-item" data-bs-add="'+esc(g.id)+'"><input type="text" maxlength="40" placeholder="새 항목 이름" autocomplete="off" aria-label="'+gl+'에 새 항목 추가"><button type="submit">추가</button></form>'
         +'</div></div>';
@@ -18377,12 +18425,13 @@ window.baroyamAsk=function(title,body,okText){
     if(!del) return;
     if(del.dataset.bsDel==='g'){
       const g=stageOf(del.dataset.id); if(!g) return;
+      if(g.steps.some(isSwot)) return;          /* SWOT 항목이 든 단계는 지울 수 없다(단추도 숨긴다) */
       const ok=window.baroyamAsk?await window.baroyamAsk('"'+gName(g)+'" 단계를 지울까요?','이 단계의 항목 '+g.steps.length+'개도 함께 빠집니다. 브랜드에 체크해 둔 기록은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
       if(!ok) return;
       const list=stages(), i=list.indexOf(g); if(i>=0) list.splice(i,1);
     }else{
       const g=stageOf(del.dataset.g); if(!g) return;
-      const x=g.steps.find(function(y){ return y.id===del.dataset.id; }); if(!x) return;
+      const x=g.steps.find(function(y){ return y.id===del.dataset.id; }); if(!x||isSwot(x)) return;
       const ok=window.baroyamAsk?await window.baroyamAsk('"'+sTitle(x)+'" 항목을 지울까요?','브랜드에 체크해 둔 기록은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
       if(!ok) return;
       g.steps.splice(g.steps.indexOf(x),1);
