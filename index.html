@@ -4113,8 +4113,6 @@ window.BAROYAM_ACCESS=(function(){
     font-weight:700;background:color-mix(in srgb,var(--ink) 72%,transparent);color:var(--paper);
     backdrop-filter:blur(4px)}
   .man-imgframe b:empty{display:none}
-  /* 끄는 동안 폭이 손을 살짝 따라오게 */
-  .man-editor img.man-img.is-resizing{transition:width .12s cubic-bezier(.2,.7,.3,1)}
   .man-editor h1{font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.8px;
     line-height:1.3;margin:17px 0 6px}
   .man-editor h2{font-size:19.5px;font-weight:800;color:var(--ink);letter-spacing:-.5px;
@@ -11422,7 +11420,7 @@ window.CsGuide=(function(){
       if(parseFloat(im.style.width)>=99.5) im.style.width='';   /* 꽉 찬 폭은 기본값이라 적지 않는다 */
       if(!im.getAttribute('style')) im.removeAttribute('style');
       /* 표시용 class 는 저장본에 넣지 않도록 뗀 다음에 저장한다 */
-      setTimeout(()=>{ follow=false; cancelAnimationFrame(raf); im.classList.remove('is-resizing'); placeImgFrame(); afterEdit(); },160);
+      setTimeout(()=>{ follow=false; cancelAnimationFrame(raf); im.classList.remove('is-resizing'); placeImgFrame(); afterEdit(); },0);
     }
     document.body.style.cursor=getComputedStyle(h).cursor;
     document.addEventListener('mousemove',move);
