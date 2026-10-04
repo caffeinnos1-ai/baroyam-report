@@ -3777,7 +3777,7 @@ window.BAROYAM_ACCESS=(function(){
     letter-spacing:-.2px;cursor:pointer;transition:background .15s,color .15s}
   .sb-subnav-home svg{width:15px;height:15px;flex:none}
   .sb-subnav-home:hover{background:var(--indigo-soft);color:var(--indigo)}
-  .sb-subnav-home.active{background:var(--indigo);color:#fff}
+  .sb-subnav-home.active{background:var(--indigo-soft);color:var(--indigo)}
   .sb-subnav-home+.sb-subnav-home{margin-top:3px}
   .sb-subnav-home:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
   /* A/D·W/S로 가운데 사이드탭을 움직일 때 지금 위치가 보이게 */
@@ -3813,8 +3813,11 @@ window.BAROYAM_ACCESS=(function(){
     border-radius:8px;color:var(--body);font-size:12.5px;font-weight:600;letter-spacing:-.2px;
     line-height:1.45;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
   .sb-subnav-item:hover{background:var(--indigo-soft);color:var(--indigo)}
-  .sb-subnav-item.active{background:var(--indigo-soft);color:var(--indigo);font-weight:800;
-    box-shadow:inset 3px 0 0 var(--indigo)}
+  /* 선택된 칸 · 연한 바탕 + 진한 굵은 글자 + 앞에 작은 점 (점은 왼쪽 여백 안에 둬 글자가 밀리지 않게) */
+  .sb-subnav-item.active{background:var(--indigo-soft);color:var(--indigo);font-weight:800}
+  .sb-subnav-items .sb-subnav-item{position:relative;padding-left:17px}
+  .sb-subnav-items .sb-subnav-item.active::before{content:"";position:absolute;left:8px;top:50%;width:4px;height:4px;
+    margin-top:-2px;border-radius:50%;background:var(--indigo)}
   /* 드라이브 · 내용이 들어오기 전까지 보여 주는 빈 자리 안내 */
   .drive-empty{margin-top:22px;padding:56px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;
     border:1.5px dashed var(--line);border-radius:18px;background:var(--paper);text-align:center}
@@ -4311,7 +4314,7 @@ window.BAROYAM_ACCESS=(function(){
   html[data-theme="dark"]{--btn:#1f6feb;--btn-hover:#388bfd;--btn-soft:rgba(56,139,253,.15);--btn-soft-ink:#58a6ff}
   .ag-btn.primary,.ag-hist-page.active,.ag-nt-btn.active,.gm-btn.primary,.goal-edit-save,
   .man-editbtn.is-editing,.member-add-form button,.mg-add-item button:hover,.plan-edit-btn:hover,
-  .rev-date-quick.active,.sb-subnav-home.active,.mh-btn.primary,.mh-note-add,.hero-view-tab.active,
+  .rev-date-quick.active,.mh-btn.primary,.mh-note-add,.hero-view-tab.active,
   .trend-subcat-btn.active,.mini-sb-item.active,#memberGate .mp-pw-submit,
   .gv-cats button.on,html[data-theme="dark"] .gv-cats button.on{
     background:var(--btn);border-color:var(--btn);color:#fff;opacity:1}
@@ -4322,7 +4325,8 @@ window.BAROYAM_ACCESS=(function(){
   .theme-switch.active{background:var(--btn)}
   .mini-sb-item.active{box-shadow:none}
   .plan-edit-btn,.mg-add-item button,.ag-hist-filter-btn.active,.rev-csv-btn:hover,.sb-subnav-item.active,
-  .sb-subnav-home:hover{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .sb-subnav-home:hover,.sb-subnav-home.active{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .sb-subnav-item.active::before{background:var(--btn-soft-ink)}
   .rev-csv-btn:hover{border-color:var(--btn)}
   .hero-view-tab:hover,.gv-cats button:hover,.trend-subcat-btn:hover,.rev-date-quick:hover{border-color:var(--btn);color:var(--btn)}
   html[data-theme="dark"] .hero-view-tab:hover,html[data-theme="dark"] .gv-cats button:hover,
