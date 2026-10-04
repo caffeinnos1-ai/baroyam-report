@@ -4172,6 +4172,8 @@ window.BAROYAM_ACCESS=(function(){
   .man-fmt-block .man-fmt-blocklabel{font-size:13px;color:var(--ink)}
   .man-fmt-chev{width:11px;height:11px;color:var(--mute);flex:none}
   .man-fmt-wrap{position:relative}
+  .man-fmt-size{min-width:0;padding:0 6px 0 8px;gap:3px;font-size:13px;font-weight:700;color:var(--ink)}
+  .man-fmt-sizemenu{min-width:120px;max-height:300px;overflow-y:auto}
   /* 아래로 펼쳐지는 목록 (블록 종류 / 색상) */
   .man-fmt-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:186px;padding:5px;
     border-radius:11px;background:var(--paper);border:1px solid var(--line);
@@ -7559,8 +7561,14 @@ window.BAROYAM_ACCESS=(function(){
         <button type="button" class="man-fmt-btn" data-cmd="italic" title="기울임"><i>I</i></button>
         <button type="button" class="man-fmt-btn" data-cmd="underline" title="밑줄"><u>U</u></button>
         <button type="button" class="man-fmt-btn" data-cmd="strikeThrough" title="취소선"><s>S</s></button>
-        <button type="button" class="man-fmt-btn" id="manFmtCode" title="코드"><span class="man-fmt-code">&lt;/&gt;</span></button>
         <span class="man-fmt-sep"></span>
+        <span class="man-fmt-wrap">
+          <button type="button" class="man-fmt-btn man-fmt-size" id="manFmtSizeBtn" aria-haspopup="true" aria-expanded="false" title="글자 크기">
+            <span id="manFmtSizeLabel">15</span>
+            <svg class="man-fmt-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="man-fmt-menu man-fmt-sizemenu" id="manFmtSizeMenu" hidden role="menu"></div>
+        </span>
         <span class="man-fmt-wrap">
           <button type="button" class="man-fmt-btn" id="manFmtColorBtn" aria-haspopup="true" aria-expanded="false" title="글자색 · 형광펜">
             <span class="man-fmt-achip"><b>A</b><i id="manFmtColorChip" style="background:#241a14"></i></span>
@@ -7576,9 +7584,6 @@ window.BAROYAM_ACCESS=(function(){
         <span class="man-fmt-sep"></span>
         <button type="button" class="man-fmt-btn" id="manFmtLink" title="링크">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.1"/><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.1"/></svg>
-        </button>
-        <button type="button" class="man-fmt-btn" id="manFmtClear" title="서식 지우기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12M9.5 5 8 19M14.5 5 16 19"/><path d="m15 14 5 5m0-5-5 5"/></svg>
         </button>
       </div>
 
@@ -11334,6 +11339,7 @@ window.CsGuide=(function(){
       b.classList.toggle('active',on);
     });
     if(window.__manSyncBlockLabel) window.__manSyncBlockLabel();
+    if(window.__manSyncSizeLabel) window.__manSyncSizeLabel();
   }
   function placeFmtbar(range){
     fmtbar.hidden=false;
@@ -11710,27 +11716,74 @@ window.CsGuide=(function(){
     const colorMenu=document.getElementById('manFmtColorMenu');
     colorBtn.addEventListener('click',()=>toggleMenu(colorMenu,colorBtn));
 
-    /* 코드 · 선택한 글자를 <code>로 감싸거나 이미 코드면 푼다 */
-    document.getElementById('manFmtCode').addEventListener('click',()=>{
+    /* 글자 크기 · 선택한 글자를 <span style="font-size">로 감싼다 ('기본'은 크기 지정을 걷어낸다) */
+    const FONT_SIZES=[0,11,12,13,14,16,18,20,24,28,32,40];
+    const sizeBtn=document.getElementById('manFmtSizeBtn');
+    const sizeMenu=document.getElementById('manFmtSizeMenu');
+    const sizeLabel=document.getElementById('manFmtSizeLabel');
+    sizeMenu.innerHTML='<div class="man-fmt-menuhead">글자 크기</div>'+FONT_SIZES.map(n=>
+      '<button type="button" class="man-fmt-opt" role="menuitem" data-size="'+n+'">'+(n?n+'px':'기본')+'</button>').join('');
+    function applySize(px){
       const ed=editorEl();
-      const sel=window.getSelection();
-      if(!ed||!sel||!sel.rangeCount) return;
-      let n=sel.getRangeAt(0).startContainer;
-      if(n.nodeType===3) n=n.parentElement;
-      const inCode=n&&n.closest&&n.closest('code');
+      if(!ed) return;
       ed.focus();
-      if(inCode&&ed.contains(inCode)){
-        const text=document.createTextNode(inCode.textContent);
-        inCode.replaceWith(text);
-      }else{
-        const r=sel.getRangeAt(0);
-        if(r.collapsed) return;
-        const code=document.createElement('code');
-        try{ r.surroundContents(code); }
-        catch(e){ code.textContent=r.toString(); r.deleteContents(); r.insertNode(code); }
+      try{ document.execCommand('styleWithCSS',false,false); }catch(e){}
+      /* 표시용으로 가장 큰 크기(7)를 걸고, 생긴 <font>를 바로 원하는 크기의 span 으로 바꾼다 */
+      document.execCommand('fontSize',false,'7');
+      const sel=window.getSelection();
+      let last=null;
+      ed.querySelectorAll('font[size="7"]').forEach(f=>{
+        /* 안쪽에 남은 예전 크기 지정은 걷어낸다 */
+        f.querySelectorAll('[style*="font-size"]').forEach(x=>{
+          x.style.fontSize='';
+          if(x.getAttribute('style')) return;
+          if(x.tagName==='SPAN') x.replaceWith(...x.childNodes); else x.removeAttribute('style');
+        });
+        f.querySelectorAll('font[size]').forEach(x=>x.replaceWith(...x.childNodes));
+        if(px){
+          const sp=document.createElement('span');
+          sp.style.fontSize=px+'px';
+          while(f.firstChild) sp.appendChild(f.firstChild);
+          f.replaceWith(sp);
+          last=last||{first:sp}; last.end=sp;
+        }else{
+          const kids=[...f.childNodes];
+          f.replaceWith(...kids);
+          if(kids.length){ last=last||{first:kids[0]}; last.end=kids[kids.length-1]; }
+        }
+      });
+      ed.querySelectorAll('[style=""]').forEach(x=>x.removeAttribute('style'));
+      /* 바꾼 글자를 다시 선택해 두어 크기를 이어서 바꿀 수 있게 한다 */
+      if(last&&sel){
+        const r=document.createRange();
+        r.setStartBefore(last.first); r.setEndAfter(last.end);
+        sel.removeAllRanges(); sel.addRange(r);
       }
       afterEdit();
+      syncSizeLabel();
+      closeMenus();
+    }
+    function syncSizeLabel(){
+      const sel=window.getSelection();
+      let n=null;
+      if(sel&&sel.rangeCount){
+        const r=sel.getRangeAt(0);
+        n=r.startContainer;
+        /* 선택이 줄 경계에서 시작하면 그 다음 칸(글자)을 본다 */
+        if(n.nodeType===1&&n.childNodes[r.startOffset]) n=n.childNodes[r.startOffset];
+      }
+      if(n&&n.nodeType===3) n=n.parentElement;
+      const px=n&&n.nodeType===1?Math.round(parseFloat(getComputedStyle(n).fontSize)||0):0;
+      sizeLabel.textContent=px?String(px):'크기';
+      sizeMenu.querySelectorAll('.man-fmt-opt').forEach(o=>{
+        o.classList.toggle('active',Number(o.dataset.size)===px);
+      });
+    }
+    window.__manSyncSizeLabel=syncSizeLabel;
+    sizeMenu.querySelectorAll('.man-fmt-opt').forEach(o=>{
+      o.addEventListener('click',()=>applySize(Number(o.dataset.size)));
     });
+    sizeBtn.addEventListener('click',()=>{ syncSizeLabel(); toggleMenu(sizeMenu,sizeBtn); });
 
     document.getElementById('manFmtLink').addEventListener('click',()=>{
       const url=prompt('연결할 주소를 입력하세요','https://');
@@ -11917,10 +11970,6 @@ window.CsGuide=(function(){
         hideBlockMenu();
       });
     }
-    document.getElementById('manFmtClear').addEventListener('click',()=>{
-      runCmd('removeFormat');
-      runCmd('hiliteColor','transparent');
-    });
   }
   function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
 
