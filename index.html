@@ -3539,6 +3539,9 @@ window.BAROYAM_ACCESS=(function(){
     cursor:pointer;font-size:14px;font-weight:700}
   .settings-close:hover{background:var(--bg);color:var(--ink)}
   .settings-body{flex:1;display:flex;min-height:0}
+  /* 관리자 설정 · 다른 대화상자와 틀을 같이 쓰지만 이 창만 넓고 높게 */
+  .settings-panel.admin-panel{max-width:960px;height:min(780px,90vh)}
+  .admin-panel .mini-sidebar{width:200px}
   /* 설정창 왼쪽 탭 · 사이드바(--sb-bg)보다 한 단계 밝은 중분류 톤(--sn-bg)을 써서
      바깥 사이드바 → 설정창 탭 → 본문(paper) 순으로 밝아지게 맞췄다 */
   .mini-sidebar{flex:none;width:186px;background:var(--sn-bg);border-right:1px solid var(--sn-line);padding:14px;
@@ -4515,6 +4518,16 @@ window.BAROYAM_ACCESS=(function(){
   .bs-summary{padding:14px 16px 16px}
   .bs-summary textarea{min-height:96px;line-height:1.6;font-weight:500;resize:vertical;overflow:hidden}
   .bs-history .bs-group-head h3{letter-spacing:.06em}
+  /* 직접 만든 입력란 · HISTORY 와 같은 상자 · 제목도 그 자리에서 고친다 */
+  .bs-fld .bs-group-head{padding:8px 10px 8px 8px}
+  .bs-fld-t{all:unset;box-sizing:border-box;flex:1;min-width:0;padding:4px 8px;border-radius:8px;border:1px solid transparent;
+    font-family:inherit;font-size:14.5px;font-weight:800;color:var(--ink);cursor:text;transition:var(--ui-ease)}
+  .bs-fld-t::placeholder{color:var(--mute)}
+  .bs-fld-t:hover{border-color:var(--line)}
+  .bs-fld-t:focus{border-color:var(--btn);box-shadow:var(--ui-ring);background:var(--paper)}
+  .bs-fld .ui-btn.icon{color:var(--mute)}
+  .bs-fld .ui-btn.icon:hover{color:var(--neg);border-color:transparent;background:var(--neg-soft)}
+  .bs-fld-add{margin:-4px 0 16px}
   /* 대표 이미지 · 머리줄 이름 왼쪽(52px) · 목록 썸네일(36px) · 둥근 네모 */
   .bs-logo{all:unset;box-sizing:border-box;flex:none;width:52px;height:52px;border-radius:14px;overflow:hidden;cursor:pointer;
     display:grid;place-items:center;background:var(--bg);color:var(--mute);border:1.5px dashed var(--line);transition:var(--ui-ease)}
@@ -5191,7 +5204,7 @@ window.BAROYAM_ACCESS=(function(){
     </div>
 
     <div class="settings-overlay" id="settingsOverlay" hidden>
-      <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-panel admin-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
         <div class="settings-head">
           <h2 id="settingsTitle">관리자 설정</h2>
           <button class="settings-close" type="button" id="settingsCloseBtn" aria-label="설정 닫기">✕</button>
@@ -17604,7 +17617,7 @@ window.baroyamAsk=function(title,body,okText){
     if(!openId) openId=list[0].id;
     /* 검색 · 이름과 장점·인사이트에서 찾는다(고른 브랜드는 목록에서 안 보여도 오른쪽에 그대로 둔다) */
     const q=query.trim().toLowerCase();
-    const shown=q?list.filter(function(b){ return ((b.name||'')+' '+(b.summary||'')).toLowerCase().indexOf(q)>=0; }):list;
+    const shown=q?list.filter(function(b){ return ((b.name||'')+' '+(b.summary||'')+' '+(b.fields||[]).map(function(f){ return f.t+' '+f.v; }).join(' ')).toLowerCase().indexOf(q)>=0; }):list;
     $('bsGrid').innerHTML=shown.length?shown.map(item).join(''):'<div class="bs-empty">"'+esc(query.trim())+'"에 맞는 브랜드가 없어요.</div>';
     if($('bsDetailBody').dataset.id!==openId) openDetail(openId);
   }
@@ -17748,6 +17761,10 @@ window.baroyamAsk=function(title,body,okText){
   }
   function keepBoth(b0,l,s,out){
     const t=both(b0.summary,l.summary,s.summary); if(t!=null) out.summary=t;
+    (out.fields||[]).forEach(function(f){
+      const by=function(list){ return (list||[]).find(function(x){ return x.id===f.id; })||{}; };
+      const v=both(by(b0.fields).v,by(l.fields).v,by(s.fields).v); if(v!=null) f.v=v;
+    });
     const bs=b0.steps||{}, ls=l.steps||{}, ss=s.steps||{};
     Object.keys(ls).forEach(function(sid){
       if(!ss[sid]||!out.steps||!out.steps[sid]) return;
@@ -17902,11 +17919,51 @@ window.baroyamAsk=function(title,body,okText){
             +'</div></div>';
         }).join('')+'</div>';
     }).join('');
-    $('bsDetailBody').innerHTML='<div class="bs-sum" id="bsSum"></div>'+info+groups;
+    $('bsDetailBody').innerHTML='<div class="bs-sum" id="bsSum"></div>'+info+'<div id="bsFields">'+fieldsHtml(b)+'</div>'+groups;
     $('bsDetailBody').dataset.id=id;
     $('bsDetailBody').querySelectorAll('.bs-memo,.bs-summary textarea').forEach(grow);
     paintSummary();
   }
+  /* ---------- 직접 만든 입력란 · 체크리스트 항목이 아닌 자유 글칸(제목 + 글) ----------
+     브랜드마다 b.fields=[{id,t,v}] · id 목록이라 두 PC가 동시에 더하거나 고쳐도 merge3 가 합친다 */
+  const IC_DEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5"/></svg>';
+  function fieldsHtml(b){
+    return (b.fields||[]).map(function(f){
+      return '<div class="bs-group bs-history bs-fld" data-fld="'+esc(f.id)+'"><div class="bs-group-head">'
+        +'<input class="bs-fld-t" data-fld-t maxlength="40" placeholder="입력란 이름" aria-label="입력란 이름" value="'+esc(f.t)+'">'
+        +'<button type="button" class="ui-btn ghost icon sm" data-fld-del aria-label="입력란 지우기">'+IC_DEL+'</button></div>'
+        +'<div class="bs-summary"><textarea class="ui-field block" data-fld-v maxlength="3000" aria-label="'+esc(f.t||'입력란')+'"'
+        +' placeholder="내용을 입력하세요">'+esc(f.v)+'</textarea></div></div>';
+    }).join('')+'<button type="button" class="ui-btn ghost sm bs-fld-add" data-fld-add>+ 입력란 추가</button>';
+  }
+  function paintFields(b){
+    const box=$('bsFields'); if(!box) return;
+    box.innerHTML=fieldsHtml(b);
+    box.querySelectorAll('textarea').forEach(grow);
+  }
+  function fieldOf(b,el){
+    const box=el.closest('[data-fld]');
+    return box&&(b.fields||[]).find(function(f){ return f.id===box.dataset.fld; });
+  }
+  $('bsDetailBody').addEventListener('click',async function(e){
+    const b=find(openId); if(!b) return;
+    if(e.target.closest('[data-fld-add]')){
+      const id=newId('fd');
+      b.fields=(b.fields||[]).concat([{id:id,t:'',v:''}]); mark(b.id);
+      paintFields(b);
+      const t=$('bsFields').querySelector('[data-fld="'+id+'"] .bs-fld-t'); if(t) t.focus();
+      return;
+    }
+    const del=e.target.closest('[data-fld-del]'); if(!del) return;
+    const f=fieldOf(b,del); if(!f) return;
+    if(f.t||f.v){
+      const ok=window.baroyamAsk?await window.baroyamAsk('"'+(f.t||'이름 없는 입력란')+'"을(를) 지울까요?','적어 둔 내용도 함께 지워집니다.'):confirm('지울까요?');
+      if(!ok) return;
+    }
+    b.fields=(b.fields||[]).filter(function(x){ return x.id!==f.id; });
+    if(!b.fields.length) delete b.fields;
+    mark(b.id); paintFields(b);
+  });
   /* 체크 단추 글자 · 다 체크됐으면 "해제", 아니면 체크 아이콘 + "체크" */
   const IC_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
   const IC_UNDO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
@@ -17955,6 +18012,10 @@ window.baroyamAsk=function(title,body,okText){
       if(t.tagName==='TEXTAREA') grow(t);
       b[t.dataset.f]=t.value; mark(b.id,'info',t.dataset.f);
       renderGrid();
+    }else if(t.hasAttribute('data-fld-t')||t.hasAttribute('data-fld-v')){
+      const f=fieldOf(b,t); if(!f) return;
+      if(t.tagName==='TEXTAREA'){ grow(t); f.v=t.value; } else f.t=t.value;
+      mark(b.id);
     }else if(t.hasAttribute('data-memo')){
       grow(t);
       stepSet(b,t.closest('.bs-step').dataset.s,function(st){ st.memo=t.value; });
