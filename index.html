@@ -1522,6 +1522,16 @@ window.BAROYAM_ACCESS=(function(){
   html[data-theme="dark"] .track{background:rgba(255,255,255,.08)}
   html[data-theme="dark"] .paper{box-shadow:0 24px 60px -28px rgba(0,0,0,.6),0 2px 8px rgba(0,0,0,.3)}
   *{box-sizing:border-box;margin:0;padding:0}
+  /* 스크롤바 · 화면 전체 공통 · 사이드바 주황보다 한 톤 연한 색, 양 끝이 둥근 알약 모양(다크는 파란 계열로 자동) ·
+     크롬은 scrollbar-color/scrollbar-width 를 준 요소에서 아래 ::-webkit-scrollbar 를 무시하므로 그 둘은 쓰지 않는다(파이어폭스만 @supports 로) */
+  :root{--sc-thumb:color-mix(in srgb,var(--indigo) 36%,transparent);--sc-thumb-hover:color-mix(in srgb,var(--indigo) 60%,transparent)}
+  ::-webkit-scrollbar{width:11px;height:11px}
+  ::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+  ::-webkit-scrollbar-button{display:none;width:0;height:0}
+  ::-webkit-scrollbar-thumb{background:var(--sc-thumb);border-radius:999px;border:3px solid transparent;background-clip:padding-box;min-height:44px;min-width:44px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--sc-thumb-hover);background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:active{background:var(--indigo);background-clip:padding-box}
+  @supports not selector(::-webkit-scrollbar){ *{scrollbar-width:thin;scrollbar-color:var(--sc-thumb) transparent} }
   html{background:var(--bg)}
   body{background:var(--app-bg);background-attachment:fixed;min-height:100vh}
   html,body{font-family:'Pretendard',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;transition:background-color .2s,color .2s}
@@ -2125,8 +2135,7 @@ window.BAROYAM_ACCESS=(function(){
   .mh-statpop-x{all:unset;flex:none;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;
     border-radius:6px;font-size:12px;color:var(--mute)}
   .mh-statpop-x:hover{background:var(--bg);color:var(--ink)}
-  .mh-statpop-list{max-height:256px;overflow-y:auto;padding:6px;
-    scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .mh-statpop-list{max-height:256px;overflow-y:auto;padding:6px}
   .mh-statpop-item{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:9px;
     width:100%;padding:9px 8px;border-radius:9px}
   .mh-statpop-item:hover,.mh-statpop-item:focus-visible{background:var(--bg)}
@@ -3990,12 +3999,8 @@ window.BAROYAM_ACCESS=(function(){
   /* 하얀 바탕(--paper · 다크는 본문 카드색) + 얇은 경계선으로 구분 */
   .sb-subnav{flex:none;width:228px;background:var(--paper);border-right:1px solid var(--sn-line);
     padding:18px 10px 24px;display:flex;flex-direction:column;position:sticky;top:0;
-    align-self:flex-start;height:100vh;overflow-y:auto;scrollbar-width:thin;
-    scrollbar-color:var(--sn-line) transparent}
+    align-self:flex-start;height:100vh;overflow-y:auto}
   .sb-subnav[hidden]{display:none}
-  .sb-subnav::-webkit-scrollbar{width:8px}
-  .sb-subnav::-webkit-scrollbar-thumb{background:var(--sn-line);border-radius:99px;
-    border:2px solid transparent;background-clip:padding-box}
   .sb-subnav-head{padding:0 6px 12px}
   .sb-subnav-title{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.3px;line-height:1.2}
   /* 전체 목차(홈) · 중분류 목록과 구분되게 위쪽에 따로 둔다 */
@@ -4199,8 +4204,6 @@ window.BAROYAM_ACCESS=(function(){
      scroll-padding 을 같이 줘야 스냅이 첫 카드를 상자 끝에 딱 붙여 왼쪽 테두리를 자르지 않는다 */
   .drv-strip{display:flex;gap:11px;overflow-x:auto;padding:6px 10px 10px;margin:-6px -10px 0;
     scroll-padding-inline:10px;scroll-snap-type:x proximity}
-  .drv-strip::-webkit-scrollbar{height:8px}
-  .drv-strip::-webkit-scrollbar-thumb{border-radius:99px;background:var(--line)}
   .drv-strip.open{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));overflow:visible}
   .drv-card{all:unset;box-sizing:border-box;flex:none;width:148px;display:flex;flex-direction:column;gap:7px;
     padding:8px;border-radius:13px;border:1px solid var(--line);background:var(--paper);cursor:pointer;
