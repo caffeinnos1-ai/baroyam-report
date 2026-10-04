@@ -4615,6 +4615,10 @@ window.BAROYAM_ACCESS=(function(){
     font-size:13px;font-weight:500;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
   .bs-sw textarea::placeholder{color:var(--mute)}
   @media (max-width:560px){ .bs-sw{padding:10px 10px 8px} .bs-sw-h i{display:none} }
+  /* 항목마다 쓸 기능 칩 · 켜짐(눌림) = 대시보드에 단추가 보임 */
+  .bs-tpl-opts{gap:4px;padding:2px 0 6px 9px}
+  .bs-tpl-opts .ui-chip{height:22px;padding:0 8px;font-size:11px}
+  .bs-tpl-opts .ui-chip[aria-pressed="false"]{color:var(--mute);text-decoration:line-through}
   .bs-tpl-lock{display:flex;align-items:center;gap:6px;color:var(--mute);cursor:not-allowed}
   .bs-tpl-lock svg{width:13px;height:13px;flex:none}
   .bs-tpl-nodel{visibility:hidden}
@@ -17490,6 +17494,11 @@ window.baroyamAsk=function(title,body,okText){
           /* 항목에 더 단 입력란 · [{id,d}] · d 는 입력란 위에 보이는 설명 */
           const f=(Array.isArray(x.f)?x.f:[]).filter(function(y){ return y&&y.id; }).map(function(y){ return {id:String(y.id),d:String(y.d||'')}; });
           if(f.length) o.f=f;
+          /* 항목마다 끈 기능 · off={fl,link,file} (값이 true 면 대시보드에 그 단추가 안 보임) */
+          if(x.off&&typeof x.off==='object'){
+            const off={}; ['fl','link','file'].forEach(function(k){ if(x.off[k]) off[k]=true; });
+            if(Object.keys(off).length) o.off=off;
+          }
           return o;
         })};
     })};
@@ -17507,6 +17516,7 @@ window.baroyamAsk=function(title,body,okText){
   function sDesc(x){ return x.d||''; }
   function sFields(x){ return x.f||[]; }
   /* SWOT 분석 항목 · 관리자 설정에서 이름을 고치거나 지울 수 없고(이름으로 알아보므로), 대시보드에서는 네 칸 사분면으로 보인다 */
+  function isOn(x,k){ return !(x&&x.off&&x.off[k]); }
   function isSwot(x){ return /^\s*swot/i.test((x&&x.t)||''); }
   const SWOT=[['s','S','강점','Strength','경쟁 제품보다 나은 점'],['w','W','약점','Weakness','부족하거나 보완할 점'],
     ['o','O','기회','Opportunity','시장·트렌드에서 오는 기회'],['t','T','위협','Threat','경쟁·규제·원가 같은 위험']];
@@ -18187,9 +18197,11 @@ window.baroyamAsk=function(title,body,okText){
         +'<input class="ui-field sm" name="title" placeholder="이름 (선택)" maxlength="60" autocomplete="off">'
         +'<button type="submit" class="ui-btn soft sm">추가</button><button type="button" class="ui-btn ghost sm" data-att-cancel>취소</button></form>';
     }else{
-      h+=(isSwot(stepById(sid))?'':'<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>')
-        +'<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>'
-        +'<button type="button" class="ui-btn ghost sm" data-att-add="file">'+IC_FILE+'파일</button>';
+      /* 관리자 설정에서 끈 기능은 단추만 숨긴다(이미 붙인 링크·파일·입력란은 그대로 보인다) */
+      const x=stepById(sid);
+      h+=(isSwot(x)||!isOn(x,'fl')?'':'<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>')
+        +(isOn(x,'link')?'<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>':'')
+        +(isOn(x,'file')?'<button type="button" class="ui-btn ghost sm" data-att-add="file">'+IC_FILE+'파일</button>':'');
     }
     return h;
   }
@@ -18339,6 +18351,10 @@ window.baroyamAsk=function(title,body,okText){
               ?'<span class="mg-name bs-tpl-lock" title="대시보드에서 SWOT 사분면으로 보이는 항목이라 이름을 고칠 수 없어요">'+IC_LOCK+esc(x.t)+'</span>'
               :'<input class="mg-name" type="text" maxlength="40" value="'+esc(x.t)+'" data-bs-t="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="항목 이름" aria-label="항목 이름">')
             +'<input class="mg-name bs-tpl-desc" type="text" maxlength="120" value="'+esc(x.d)+'" data-bs-d="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="설명 (선택)" aria-label="항목 설명">'
+            +'<div class="ui-chips bs-tpl-opts" role="group" aria-label="'+xl+' 항목에서 쓸 기능">'
+            +[['fl','입력란+'],['link','링크'],['file','파일']].filter(function(o){ return !(o[0]==='fl'&&isSwot(x)); }).map(function(o){
+              return '<button type="button" class="ui-chip" data-bs-opt="'+o[0]+'" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" aria-pressed="'+isOn(x,o[0])+'">'+o[1]+'</button>';
+            }).join('')+'</div>'
             +'</div>'
             +MOVE('s',x.id,g.id,xl,gi===0&&si===0,gi===list.length-1&&si===g.steps.length-1)
             +(isSwot(x)?'<span class="mg-del bs-tpl-nodel" aria-hidden="true"></span>'
@@ -18402,6 +18418,16 @@ window.baroyamAsk=function(title,body,okText){
   });
   $('bsLabelEditor').addEventListener('click',async function(e){
     if(!isAdmin()) return;
+    const op=e.target.closest('[data-bs-opt]');
+    if(op){
+      const g=stageOf(op.dataset.g), x=g&&g.steps.find(function(y){ return y.id===op.dataset.id; }); if(!x) return;
+      const k=op.dataset.bsOpt, off=Object.assign({},x.off);
+      if(off[k]) delete off[k]; else off[k]=true;
+      if(Object.keys(off).length) x.off=off; else delete x.off;
+      op.setAttribute('aria-pressed',String(isOn(x,k)));
+      tplChanged(false);
+      return;
+    }
     const mv=e.target.closest('[data-bs-move]');
     if(mv){
       const dir=+mv.dataset.dir, list=stages();
