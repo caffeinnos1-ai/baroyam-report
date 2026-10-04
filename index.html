@@ -925,10 +925,10 @@ window.BAROYAM_DB=(function(){
     if(r.error) throw r.error;
     return r.data;
   }
-  async function fileUrl(bucket,path){
+  async function fileUrl(bucket,path,secs){
     if(!(await ensureSession())) throw new Error('로그인되지 않았습니다');
     const c=await client();
-    const r=await c.storage.from(bucket).createSignedUrl(path,300);
+    const r=await c.storage.from(bucket).createSignedUrl(path,secs||300);
     if(r.error) throw r.error;
     return r.data.signedUrl;
   }
@@ -4062,6 +4062,11 @@ window.BAROYAM_ACCESS=(function(){
      커서만 잡히지 않게 한다 · 안내문은 위 규칙에 따라 수정 모드에서만 나온다 */
   .man-editor:not(.is-editing){caret-color:transparent}
   .man-editor:focus{outline:none}
+  /* 붙여넣은 이미지 · 본문 폭을 넘지 않게 줄여 보이고, 올리는 동안은 흐리게 */
+  .man-editor img.man-img{display:block;max-width:100%;height:auto;margin:8px 0;
+    border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+  .man-editor img.man-img:not([src]){min-height:80px;min-width:160px}
+  .man-editor img.man-img.is-uploading{opacity:.45}
   .man-editor h1{font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.8px;
     line-height:1.3;margin:17px 0 6px}
   .man-editor h2{font-size:19.5px;font-weight:800;color:var(--ink);letter-spacing:-.5px;
@@ -10304,6 +10309,7 @@ window.CsGuide=(function(){
       '<div class="man-savestate" id="manSaveState" hidden></div>';
     const ed=document.getElementById('manEditor');
     ed.innerHTML=docs[id]||'';
+    showImages(ed);
     bindEditor(ed,id);
     editBtn.hidden=!manCanEdit();
     setEditMode(false);      /* 문서를 열면 항상 읽기 모드부터 */
@@ -10864,7 +10870,7 @@ window.CsGuide=(function(){
     DB().saveNotice(key,'ok');
     if(id===activeDoc){
       const ed=document.getElementById('manEditor');
-      if(ed) ed.innerHTML=r.value;
+      if(ed){ ed.innerHTML=r.value; showImages(ed); }
       setSaveState('다른 PC의 최신 내용을 불러왔습니다');
     }
   }
@@ -10905,8 +10911,9 @@ window.CsGuide=(function(){
       if(changed) persistLocal();
       /* 지금 열려 있는 문서라면 화면도 새로 받은 내용으로 바꾼다 */
       const ed=document.getElementById('manEditor');
-      if(ed && activeDoc && !saveTimer && !meta.dirty[activeDoc] && ed.innerHTML!==(docs[activeDoc]||'')){
+      if(ed && activeDoc && !saveTimer && !meta.dirty[activeDoc] && readEditorHtml(ed)!==(docs[activeDoc]||'')){
         ed.innerHTML=docs[activeDoc]||'';
+        showImages(ed);
         setSaveState(docs[activeDoc]?'저장됨':'');
       }
       pushAllDirty();
@@ -11204,11 +11211,99 @@ window.CsGuide=(function(){
        그 외에는 서식을 걷어내고 글자만 넣는다 */
     ed.addEventListener('paste',e=>{
       e.preventDefault();
-      const raw=(e.clipboardData||window.clipboardData).getData('text/plain')||'';
+      const cd=e.clipboardData||window.clipboardData;
+      /* 복사한 이미지(캡처 등)는 줄여서 보관함에 올리고 그 자리에 넣는다 */
+      const img=cd&&[...(cd.files||[])].find(f=>/^image\//.test(f.type));
+      if(img){ if(editMode) pasteImage(ed,id,img); return; }
+      const raw=cd.getData('text/plain')||'';
       if(pasteLink(raw)) return;
       document.execCommand('insertText',false,raw);
     });
     ed.addEventListener('blur',flushSave);
+  }
+  /* ---------- 문서 이미지 ----------
+     본문에는 이미지 자체를 넣지 않고 보관함(Supabase Storage brand-files 버킷의 manual/ 아래) 경로만
+     <img class="man-img" data-file="경로"> 로 적는다 · 문서 글이 무거워지면 저장·변경 이력·이 PC 사본(localStorage)이
+     함께 무거워지기 때문 · 볼 때 1시간짜리 서명 주소를 받아 src 에 넣고, 저장할 때는 src 를 뺀다(readEditorHtml) ·
+     크기: 긴 변 1600px 이하(본문 폭의 약 2배라 고해상도 화면에서도 선명) · WebP 화질 0.85 ·
+     400KB 를 넘으면 화질을 낮추고, 그래도 크면 크기를 줄인다 */
+  const IMG_BUCKET='brand-files', IMG_MAX_SIDE=1600, IMG_MAX_BYTES=400*1024;
+  const imgUrls=new Map();       /* 경로 → {url, until} */
+  function showImages(ed){
+    const db=DB();
+    if(!ed||!db||!db.fileUrl) return;
+    ed.querySelectorAll('img.man-img[data-file]').forEach(async im=>{
+      const path=im.dataset.file;
+      const hit=imgUrls.get(path);
+      if(hit&&hit.until>Date.now()){ im.src=hit.url; return; }
+      try{
+        const url=await db.fileUrl(IMG_BUCKET,path,3600);
+        imgUrls.set(path,{url,until:Date.now()+50*60*1000});
+        if(im.dataset.file===path) im.src=url;
+      }catch(err){ console.error(err); im.alt='이미지를 불러오지 못했습니다'; }
+    });
+  }
+  function canvasBlob(cv,type,q){ return new Promise(res=>cv.toBlob(res,type,q)); }
+  async function shrinkImage(file){
+    const bmp=await createImageBitmap(file);
+    let scale=Math.min(1,IMG_MAX_SIDE/Math.max(bmp.width,bmp.height));
+    let blob=null;
+    for(let round=0;round<4;round++){
+      const cv=document.createElement('canvas');
+      cv.width=Math.max(1,Math.round(bmp.width*scale));
+      cv.height=Math.max(1,Math.round(bmp.height*scale));
+      const g=cv.getContext('2d');
+      g.fillStyle='#fff'; g.fillRect(0,0,cv.width,cv.height);   /* 투명 부분은 흰 바탕으로 (JPEG 로 저장될 때 검게 되지 않게) */
+      g.drawImage(bmp,0,0,cv.width,cv.height);
+      for(const q of [0.85,0.75,0.65]){
+        blob=await canvasBlob(cv,'image/webp',q);
+        if(!blob||blob.type!=='image/webp') blob=await canvasBlob(cv,'image/jpeg',q);
+        if(blob&&blob.size<=IMG_MAX_BYTES) return blob;
+      }
+      scale*=0.8;
+    }
+    return blob;
+  }
+  async function pasteImage(ed,docId,file){
+    const db=DB();
+    if(!db||!db.fileUpload){ setSaveState('이미지를 넣으려면 로그인이 필요합니다',true); return; }
+    if(file.size>20*1024*1024){ setSaveState('20MB 가 넘는 이미지는 넣을 수 없습니다',true); return; }
+    /* 커서 자리에 흐린 미리보기를 먼저 넣는다 · 올리는 동안 저장되는 글에는 빠진다(readEditorHtml) */
+    const im=document.createElement('img');
+    im.className='man-img is-uploading';
+    im.alt='';
+    im.src=URL.createObjectURL(file);
+    const sel=window.getSelection();
+    if(sel&&sel.rangeCount&&ed.contains(sel.getRangeAt(0).commonAncestorContainer)){
+      const r=sel.getRangeAt(0);
+      r.deleteContents();
+      r.insertNode(im);
+      r.setStartAfter(im); r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+    }else ed.appendChild(im);
+    setSaveState('이미지 올리는 중...');
+    try{
+      const blob=await shrinkImage(file);
+      const ext=blob.type==='image/webp'?'webp':'jpg';
+      const path='manual/'+docId+'/'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+      await db.fileUpload(IMG_BUCKET,path,new File([blob],'image.'+ext,{type:blob.type}));
+      URL.revokeObjectURL(im.src);
+      if(!im.isConnected){ setSaveState('다른 문서로 옮겨서 이미지를 넣지 못했습니다',true); return; }
+      im.dataset.file=path;
+      im.classList.remove('is-uploading');
+      showImages(ed);
+      if(activeDoc===docId){
+        docs[docId]=readEditorHtml(ed);
+        persistLocal();
+        scheduleSave(docId);
+      }
+    }catch(err){
+      console.error(err);
+      im.remove();
+      const m=String(err&&err.message||err);
+      setSaveState(/bucket|policy|security|row-level|not found/i.test(m)
+        ?'이미지 보관함에 올릴 권한이 없습니다 · 관리자에게 알려 주세요':'이미지를 올리지 못했습니다 · 다시 붙여넣어 주세요',true);
+    }
   }
   /* 드래그한 글자 위에 주소를 붙여넣으면 링크를 건다 · 걸었으면 true */
   function pasteLink(raw){
@@ -11577,6 +11672,16 @@ window.CsGuide=(function(){
   }
   /* 표시용 클래스를 잠깐 떼고 HTML을 읽어 저장본이 깨끗하게 유지되도록 한다 */
   function readEditorHtml(ed){
+    /* 이미지의 서명 주소(곧 만료)와 올리는 중인 미리보기는 저장본에 넣지 않는다 */
+    if(ed.querySelector('img.man-img')){
+      const c=ed.cloneNode(true);
+      c.querySelectorAll('img.man-img').forEach(im=>{
+        if(!im.dataset.file) im.remove(); else im.removeAttribute('src');
+      });
+      const ac=c.querySelector('.man-col.is-active');
+      if(ac) ac.classList.remove('is-active');
+      return c.innerHTML;
+    }
     const active=ed.querySelector('.man-col.is-active');
     if(!active) return ed.innerHTML;
     active.classList.remove('is-active');
