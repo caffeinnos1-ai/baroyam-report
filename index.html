@@ -4041,8 +4041,11 @@ window.BAROYAM_ACCESS=(function(){
   }
   /* 리뷰수집 사이드탭 · 중분류 없이 판매처만 한 줄씩 놓는 평평한 목록(앞에 판매처 색 점) */
   .sb-subnav-flat{display:flex;flex-direction:column;gap:2px}
-  .sb-subnav-flat .sb-subnav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;font-weight:700}
-  .sb-subnav-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--mute)}
+  .sb-subnav-flat .sb-subnav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;font-weight:600}
+  .sb-subnav-flat .sb-subnav-item.active{font-weight:800}
+  /* 판매처 점 · 메뉴얼가이드 선택 점과 같은 작은 점, 선택되면 글자색(주황)으로 바뀐다 */
+  .sb-subnav-dot{flex:none;width:5px;height:5px;margin:0 1.5px;border-radius:50%;background:var(--mute)}
+  .sb-subnav-flat .sb-subnav-item.active .sb-subnav-dot{background:currentColor}
   .sb-subnav-dot.is-naver{background:var(--naver)}
   .sb-subnav-dot.is-cafe24{background:var(--self)}
   .sb-subnav-dot.is-coupang{background:var(--coupang)}
