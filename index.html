@@ -4616,6 +4616,56 @@ window.BAROYAM_ACCESS=(function(){
     font-size:13px;font-weight:500;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
   .bs-sw textarea::placeholder{color:var(--mute)}
   @media (max-width:560px){ .bs-sw{padding:10px 10px 8px} .bs-sw-h i{display:none} }
+  /* 파일 넣기 · 가져올 곳 메뉴 */
+  .bs-src-pop{padding:6px;width:268px;display:flex;flex-direction:column;gap:2px}
+  .bs-src-opt{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:10px;cursor:pointer;transition:var(--ui-ease)}
+  .bs-src-opt:hover,.bs-src-opt:focus-visible{background:var(--btn-soft)}
+  .bs-src-opt svg{flex:none;width:22px;height:22px;color:var(--btn-soft-ink)}
+  .bs-src-opt span{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .bs-src-opt b{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .bs-src-opt small{font-size:11.5px;font-weight:600;color:var(--mute)}
+  /* 드라이브에서 찾기 · 이름을 크게, 종류·브랜드·날짜는 한 줄, 폴더 경로는 맨 아래 흐리게 · 찾은 낱말은 형광펜 */
+  .bs-drv-panel{max-width:760px;height:min(760px,90vh)}
+  .bs-drv-tools{flex:none;display:flex;flex-direction:column;gap:10px;padding:14px 22px 12px;border-bottom:1px solid var(--line)}
+  .bs-drv-tools .bs-search{height:42px;font-size:14px}
+  .bs-drv-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .bs-drv-n{font-size:12.5px;font-weight:800;color:var(--mute);font-variant-numeric:tabular-nums}
+  .bs-drv-kinds{max-height:68px;overflow-y:auto}
+  .bs-drv-kinds .ui-chip{height:26px;padding:0 10px;font-size:12px}
+  .bs-drv-list{flex:1;min-height:0;overflow-y:auto;padding:10px 14px 14px;display:flex;flex-direction:column;gap:4px}
+  .bs-drv-item{all:unset;box-sizing:border-box;display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:14px;
+    padding:9px 12px 9px 9px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:var(--ui-ease)}
+  .bs-drv-item:hover{background:var(--chip-flat)}
+  .bs-drv-item:focus-visible{box-shadow:var(--ui-ring)}
+  .bs-drv-item.on{background:var(--btn-soft);border-color:var(--btn)}
+  .bs-drv-item:disabled{cursor:default;opacity:.55}
+  .bs-drv-thumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;display:grid;place-items:center;
+    background:var(--bg);border:1px solid var(--line);font-size:11px;font-weight:900;letter-spacing:.04em;color:var(--mute)}
+  .bs-drv-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .bs-drv-main{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .bs-drv-name{font-size:14px;font-weight:800;line-height:1.35;color:var(--ink);word-break:break-all;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .bs-drv-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12px;font-weight:700;color:var(--body)}
+  .bs-drv-meta>span:not(.bs-drv-kind)+span::before{content:'·';margin-right:8px;color:var(--mute)}
+  .bs-drv-kind{padding:1px 7px;border-radius:6px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:11px;font-weight:800}
+  .bs-drv-path{font-size:11.5px;font-weight:500;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bs-drv-main mark{background:color-mix(in srgb,var(--warn) 26%,var(--paper));color:inherit;border-radius:3px;padding:0 1px}
+  .bs-drv-check{display:grid;place-items:center;min-width:24px;height:24px;border-radius:999px;border:1.5px solid var(--line);color:transparent;
+    font-size:11px;font-weight:800;white-space:nowrap}
+  .bs-drv-check svg{width:14px;height:14px}
+  .bs-drv-item.on .bs-drv-check{background:var(--btn);border-color:var(--btn);color:#fff}
+  .bs-drv-item:disabled .bs-drv-check{border:0;padding:0 8px;background:var(--pos-soft);color:var(--pos)}
+  .bs-drv-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:60px 16px;text-align:center}
+  .bs-drv-empty b{font-size:14px;font-weight:800;color:var(--ink)}
+  .bs-drv-empty span{font-size:12.5px;font-weight:600;color:var(--mute)}
+  .bs-drv-list>.ui-btn{margin-top:6px;flex:none}
+  .bs-drv-panel .bs-foot{align-items:center}
+  .bs-drv-picked{margin-right:auto;font-size:13px;font-weight:800;color:var(--btn-soft-ink)}
+  @media (max-width:560px){
+    .bs-drv-item{grid-template-columns:48px minmax(0,1fr) auto;gap:10px}
+    .bs-drv-thumb{width:48px;height:48px}
+    .bs-drv-tools{padding:12px 14px}
+  }
   /* 항목마다 쓸 기능 칩 · 켜짐(눌림) = 대시보드에 단추가 보임 */
   .bs-tpl-opts{gap:4px;padding:2px 0 6px 9px}
   .bs-tpl-opts .ui-chip{height:22px;padding:0 8px;font-size:11px}
@@ -7318,6 +7368,46 @@ window.BAROYAM_ACCESS=(function(){
         </div>
 
         <!-- 새 브랜드 입력창 -->
+        <!-- 파일 넣기 · 어디서 가져올지 고르는 작은 메뉴 -->
+        <div class="ui-pop bs-src-pop" id="bsSrcPop" role="menu" aria-label="파일 가져올 곳" hidden>
+          <button type="button" class="bs-src-opt" data-src="drive" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 3.8h6.8l6 10.4-3.4 5.9H6l-3.4-5.9Z"/><path d="m8.6 3.8 6 10.4h6.8M15.4 3.8 9.3 14.2 6 20.1"/></svg>
+            <span><b>드라이브에서 찾기</b><small>회사 구글드라이브 자산을 검색해 붙여요</small></span>
+          </button>
+          <button type="button" class="bs-src-opt" data-src="pc" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16.5V20"/></svg>
+            <span><b>내 컴퓨터에서 찾기</b><small>파일을 올려 보관함에 둬요 · 50MB 이하</small></span>
+          </button>
+        </div>
+        <!-- 드라이브에서 찾기 · 드라이브 화면의 색인(drive_assets_v1)을 검색해 링크로 붙인다 -->
+        <div class="settings-overlay" id="bsDrvDlg" hidden>
+          <div class="bs-panel bs-drv-panel" role="dialog" aria-modal="true" aria-labelledby="bsDrvTitle">
+            <div class="settings-head">
+              <h2 id="bsDrvTitle">드라이브에서 찾기</h2>
+              <button type="button" class="settings-close" data-bs-drv-close aria-label="닫기">✕</button>
+            </div>
+            <div class="bs-drv-tools">
+              <label class="ui-field block bs-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                <input type="search" id="bsDrvQ" placeholder="파일 이름·브랜드·제품·폴더 · 띄어 쓰면 모두 들어간 것만" autocomplete="off" aria-label="드라이브 검색">
+              </label>
+              <div class="bs-drv-row">
+                <div class="ui-tabs" id="bsDrvOwner" aria-label="회사">
+                  <button class="ui-tab" data-value="바로얌">바로얌</button>
+                  <button class="ui-tab" data-value="카페이노스">카페이노스</button>
+                </div>
+                <span class="bs-drv-n" id="bsDrvN"></span>
+              </div>
+              <div class="ui-chips bs-drv-kinds" id="bsDrvKinds"></div>
+            </div>
+            <div class="bs-drv-list" id="bsDrvList"></div>
+            <div class="bs-foot">
+              <span class="bs-drv-picked" id="bsDrvPicked"></span>
+              <button type="button" class="ui-btn ghost" data-bs-drv-close>취소</button>
+              <button type="button" class="ui-btn primary" id="bsDrvAdd" disabled>붙이기</button>
+            </div>
+          </div>
+        </div>
         <div class="settings-overlay" id="bsNewDlg" hidden>
           <form class="bs-panel bs-panel-sm" id="bsNewForm" role="dialog" aria-modal="true" aria-labelledby="bsNewTitle" autocomplete="off">
             <div class="settings-head">
@@ -16792,6 +16882,15 @@ window.baroyamAsk=function(title,body,okText){
     });
   });
   window.baroyamDriveOpen=열기;
+  /* 다른 화면(브랜드전략실 파일 넣기)이 드라이브 색인을 빌려 쓴다 · 아직 안 읽었으면 이 화면과 같은 방법으로 한 번 읽는다 */
+  window.baroyamDriveIndex=async function(){
+    while(읽는중) await new Promise(function(r){ setTimeout(r,120); });
+    if(!줄들) await 열기();
+    return (줄들||[]).map(function(r){
+      return {id:r.아이디,name:String(r.이름||''),path:String(r.경로||''),brand:String(r.브랜드||''),product:String(r.제품||''),
+        kind:종류(r),company:회사(r),date:String(r.날짜||''),ext:확장자(r.이름),thumb:!!미리보기가능[확장자(r.이름)]};
+    });
+  };
 })();
 </script>
 <script>
@@ -17913,7 +18012,7 @@ window.baroyamAsk=function(title,body,okText){
   function idleRefresh(){
     if(window.baroyamCurrentView!=='brand'||document.visibilityState!=='visible') return;
     if(dirty.size||busy||loading) return;
-    if(document.querySelector('#view-brand :focus')||!$('bsNewDlg').hidden||!av.dlg.hidden) return;
+    if(document.querySelector('#view-brand :focus')||!$('bsNewDlg').hidden||!av.dlg.hidden||!$('bsDrvDlg').hidden) return;
     open();
   }
   document.addEventListener('visibilitychange',idleRefresh);
@@ -18176,6 +18275,7 @@ window.baroyamAsk=function(title,body,okText){
      ✕는 목록에서만 뺀다(보관함의 파일은 남는다 · 실수로 지워도 되살릴 수 있게) */
   const BUCKET='brand-files', MAX_FILE=50*1024*1024;
   const IC_LINK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>';
+  const IC_DRIVE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.6 3.8h6.8l6 10.4-3.4 5.9H6l-3.4-5.9Z"/><path d="m8.6 3.8 6 10.4h6.8M15.4 3.8 9.3 14.2 6 20.1"/></svg>';
   const IC_FILE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5 12.4 19a5 5 0 0 1-7-7l7.8-7.8a3.3 3.3 0 0 1 4.7 4.7l-7.6 7.6a1.7 1.7 0 0 1-2.4-2.4l7-7"/></svg>';
   const uploading=new Map();   /* 'brandId|항목id' → [파일 이름…] · 올리는 동안 흐린 칩으로 보인다 */
   let linkFormFor=null, fileTarget=null;
@@ -18184,7 +18284,7 @@ window.baroyamAsk=function(title,body,okText){
     const links=(st&&st.links)||[], files=(st&&st.files)||[], busy=uploading.get(bid+'|'+sid)||[];
     let h=links.map(function(l){
       return '<span class="bs-att-item"><a class="ui-chip" href="'+esc(l.url)+'" target="_blank" rel="noopener noreferrer" title="'+esc(l.url)+'">'
-        +IC_LINK+'<span>'+esc(l.title||l.url.replace(/^https?:\/\//,''))+'</span></a>'
+        +(l.drive?IC_DRIVE:IC_LINK)+'<span>'+esc(l.title||l.url.replace(/^https?:\/\//,''))+'</span></a>'
         +'<button type="button" class="ui-btn ghost icon sm" data-att-del="links" data-id="'+esc(l.id)+'" aria-label="링크 빼기">✕</button></span>';
     }).join('')
     +files.map(function(f){
@@ -18232,7 +18332,7 @@ window.baroyamAsk=function(title,body,okText){
         const f=row.querySelector('[data-link-form] input'); if(f) f.focus();
       }else{
         fileTarget={bid:b.id,sid:sid};
-        $('bsFileInput').value=''; $('bsFileInput').click();
+        srcOpen(add);
       }
       return;
     }
@@ -18298,6 +18398,146 @@ window.baroyamAsk=function(title,body,okText){
       if(left.length) uploading.set(key,left); else uploading.delete(key);
       paintAtt(t.bid,t.sid);
     }
+  });
+
+  /* ---------- 파일 넣기 · 드라이브에서 찾기 / 내 컴퓨터에서 찾기 ---------- */
+  const srcPop=$('bsSrcPop');
+  function srcOpen(btn){
+    srcPop.hidden=false;
+    const r=btn.getBoundingClientRect(), w=srcPop.offsetWidth, h=srcPop.offsetHeight;
+    srcPop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
+    srcPop.style.top=(r.bottom+6+h>window.innerHeight?Math.max(8,r.top-h-6):r.bottom+6)+'px';
+    srcPop.querySelector('.bs-src-opt').focus();
+  }
+  function srcClose(){ srcPop.hidden=true; }
+  srcPop.addEventListener('click',function(e){
+    const o=e.target.closest('[data-src]'); if(!o) return;
+    srcClose();
+    if(o.dataset.src==='pc'){ $('bsFileInput').value=''; $('bsFileInput').click(); }
+    else drvOpen();
+  });
+  document.addEventListener('click',function(e){
+    if(!srcPop.hidden&&!srcPop.contains(e.target)&&!e.target.closest('[data-att-add="file"]')) srcClose();
+  });
+  window.addEventListener('scroll',function(){ if(!srcPop.hidden) srcClose(); },true);
+
+  /* 드라이브 찾기 · 드라이브 화면의 색인을 빌려 검색한다 · 고른 파일은 그 항목의 링크(드라이브 표시)로 붙는다 */
+  const DRV_PAGE=60;
+  const drv={rows:null,q:'',owner:'바로얌',kind:'',picked:new Map(),limit:DRV_PAGE,loading:false};
+  const drvOwnerTabs=window.UI?UI.tabs($('bsDrvOwner'),function(v){ drv.owner=v; drv.kind=''; drv.limit=DRV_PAGE; drvPaint(); }):null;
+  function drvUrl(id){ return 'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view'; }
+  function drvTerms(){ return drv.q.trim().toLowerCase().split(/\s+/).filter(Boolean); }
+  /* 찾은 낱말에 형광펜 · 글자를 먼저 자르고 조각마다 esc 해서 태그가 섞이지 않게 */
+  function hl(text,terms){
+    text=String(text||'');
+    if(!terms.length) return esc(text);
+    const re=new RegExp('('+terms.map(function(t){ return t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('|')+')','gi');
+    return text.split(re).map(function(part,i){ return i%2?'<mark>'+esc(part)+'</mark>':esc(part); }).join('');
+  }
+  function drvMatch(r,terms){
+    if(!terms.length) return true;
+    const hay=(r.name+' '+r.brand+' '+r.product+' '+r.kind+' '+r.path).toLowerCase();
+    return terms.every(function(t){ return hay.indexOf(t)>=0; });
+  }
+  function drvAttached(){
+    const t=fileTarget, b=t&&find(t.bid), st=b&&b.steps&&b.steps[t.sid];
+    const ids=new Set(); ((st&&st.links)||[]).forEach(function(l){ if(l.drive) ids.add(l.drive); });
+    return ids;
+  }
+  function drvItem(r,terms,has){
+    const on=drv.picked.has(r.id), done=has.has(r.id);
+    const sub=[r.brand,r.product].filter(Boolean).filter(function(v,i,a){ return a.indexOf(v)===i; });
+    return '<button type="button" class="bs-drv-item'+(on?' on':'')+'" data-id="'+esc(r.id)+'" aria-pressed="'+on+'"'+(done?' disabled':'')+' title="'+esc(r.path+' / '+r.name)+'">'
+      +'<span class="bs-drv-thumb"><span>'+esc((r.ext||'파일').slice(0,4).toUpperCase())+'</span>'
+      +(r.thumb?'<img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+esc(r.id)+'&amp;sz=w160">':'')+'</span>'
+      +'<span class="bs-drv-main"><span class="bs-drv-name">'+hl(r.name,terms)+'</span>'
+      +'<span class="bs-drv-meta"><span class="bs-drv-kind">'+esc(r.kind)+'</span>'+sub.map(function(v){ return '<span>'+hl(v,terms)+'</span>'; }).join('')
+      +(r.date?'<span>'+esc(r.date.slice(2,10).replace(/-/g,'.'))+'</span>':'')+'</span>'
+      +'<span class="bs-drv-path">'+hl(r.path,terms)+'</span></span>'
+      +'<span class="bs-drv-check">'+(done?'붙어 있음':IC_CHECK)+'</span></button>';
+  }
+  function drvPaint(){
+    const list=$('bsDrvList');
+    if(drv.loading){ list.innerHTML='<div class="bs-drv-empty"><b>드라이브 목록을 읽고 있어요</b><span>처음 한 번만 조금 걸려요</span></div>'; return; }
+    if(!drv.rows||!drv.rows.length){
+      list.innerHTML='<div class="bs-drv-empty"><b>드라이브 목록이 아직 없어요</b><span>드라이브 화면에서 목록 새로고침을 한 번 하면 여기서 찾을 수 있어요</span></div>';
+      $('bsDrvKinds').innerHTML=''; $('bsDrvN').textContent=''; return;
+    }
+    const terms=drvTerms();
+    const base=drv.rows.filter(function(r){ return r.company===drv.owner&&drvMatch(r,terms); });
+    const cnt={}; base.forEach(function(r){ cnt[r.kind]=(cnt[r.kind]||0)+1; });
+    const kinds=Object.keys(cnt).sort(function(a,b){ return cnt[b]-cnt[a]; });
+    if(drv.kind&&!cnt[drv.kind]) drv.kind='';
+    $('bsDrvKinds').innerHTML='<button type="button" class="ui-chip" data-kind="" aria-pressed="'+!drv.kind+'">전체<b>'+base.length+'</b></button>'
+      +kinds.map(function(k){ return '<button type="button" class="ui-chip" data-kind="'+esc(k)+'" aria-pressed="'+(drv.kind===k)+'">'+esc(k)+'<b>'+cnt[k]+'</b></button>'; }).join('');
+    const shown=base.filter(function(r){ return !drv.kind||r.kind===drv.kind; })
+      .sort(function(a,b){ return b.date.localeCompare(a.date)||a.name.localeCompare(b.name,'ko',{numeric:true}); });
+    $('bsDrvN').textContent=shown.length+'개'+(terms.length?' 찾음':'');
+    if(!shown.length){
+      list.innerHTML='<div class="bs-drv-empty"><b>맞는 파일이 없어요</b><span>검색어를 줄이거나 다른 회사·종류를 골라 보세요</span></div>';
+      return;
+    }
+    const has=drvAttached();
+    list.innerHTML=shown.slice(0,drv.limit).map(function(r){ return drvItem(r,terms,has); }).join('')
+      +(shown.length>drv.limit?'<button type="button" class="ui-btn soft block" data-drv-more>'+(shown.length-drv.limit)+'개 더 보기</button>':'');
+  }
+  function drvPicked(){
+    const n=drv.picked.size;
+    $('bsDrvPicked').textContent=n?n+'개 고름':'';
+    $('bsDrvAdd').disabled=!n;
+    $('bsDrvAdd').textContent=n?n+'개 붙이기':'붙이기';
+  }
+  async function drvOpen(){
+    if(!fileTarget) return;
+    drv.picked.clear(); drv.limit=DRV_PAGE; drvPicked();
+    $('bsDrvDlg').hidden=false;
+    if(drvOwnerTabs) drvOwnerTabs.set(drv.owner);
+    const q=$('bsDrvQ'); q.value=drv.q; setTimeout(function(){ q.focus(); q.select(); },0);
+    if(!drv.rows&&window.baroyamDriveIndex){
+      drv.loading=true; drvPaint();
+      try{ drv.rows=await window.baroyamDriveIndex(); }catch(e){ console.error(e); drv.rows=null; }
+      drv.loading=false;
+    }
+    drvPaint();
+  }
+  function drvClose(){ $('bsDrvDlg').hidden=true; }
+  let drvTimer=null;
+  $('bsDrvQ').addEventListener('input',function(){
+    const v=this.value; clearTimeout(drvTimer);
+    drvTimer=setTimeout(function(){ drv.q=v; drv.limit=DRV_PAGE; drvPaint(); $('bsDrvList').scrollTop=0; },150);
+  });
+  $('bsDrvKinds').addEventListener('click',function(e){
+    const c=e.target.closest('[data-kind]'); if(!c) return;
+    drv.kind=c.dataset.kind; drv.limit=DRV_PAGE; drvPaint(); $('bsDrvList').scrollTop=0;
+  });
+  $('bsDrvList').addEventListener('click',function(e){
+    if(e.target.closest('[data-drv-more]')){ drv.limit+=DRV_PAGE; drvPaint(); return; }
+    const it=e.target.closest('.bs-drv-item'); if(!it||it.disabled) return;
+    const r=drv.rows.find(function(x){ return x.id===it.dataset.id; }); if(!r) return;
+    if(drv.picked.has(r.id)) drv.picked.delete(r.id); else drv.picked.set(r.id,r);
+    const on=drv.picked.has(r.id);
+    it.classList.toggle('on',on); it.setAttribute('aria-pressed',String(on));
+    drvPicked();
+  });
+  $('bsDrvAdd').addEventListener('click',function(){
+    const t=fileTarget, b=t&&find(t.bid); if(!b||!drv.picked.size) return;
+    const add=Array.from(drv.picked.values());
+    stepSet(b,t.sid,function(st){
+      const have=new Set(((st.links)||[]).map(function(l){ return l.drive; }).filter(Boolean));
+      st.links=(st.links||[]).concat(add.filter(function(r){ return !have.has(r.id); }).map(function(r){
+        return {id:newId('l'),url:drvUrl(r.id),title:r.name,drive:r.id};
+      }));
+    });
+    paintAtt(b.id,t.sid);
+    drvClose();
+  });
+  $('bsDrvDlg').addEventListener('click',function(e){
+    if(e.target===$('bsDrvDlg')||e.target.closest('[data-bs-drv-close]')) drvClose();
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    if(!srcPop.hidden){ srcClose(); return; }
+    if(!$('bsDrvDlg').hidden&&(!$('askDlg')||$('askDlg').hidden)) drvClose();
   });
 
   $('bsDeleteBtn').addEventListener('click',async function(){
