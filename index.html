@@ -8341,6 +8341,15 @@ function ringDonut(donutId,listId,parts,size=196){
 
 const CALL_PX=168;   /* 도넛 이름표가 쓰는 좌우 여백(px) · CSS .donut-wrap 의 좌우 여백과 맞춘다 */
 
+/* 매출데이터 머리글 문구 · 주간/월간이 서로 다르다 */
+const HERO_TEXT={week:null,month:null};
+function applyHeroText(){
+  const v=document.getElementById('view-month')?.style.display!=='none'?'month':'week', t=HERO_TEXT[v];
+  if(!t) return;
+  document.getElementById('heroMeta').innerHTML=t.meta;
+  document.getElementById('heroSub').textContent=t.sub;
+}
+
 /* ===== 전체 리포트 렌더링 (기본 데이터 / 구글시트 데이터 공용) ===== */
 let lastReportData=null;
 function renderReport(data){
@@ -8352,13 +8361,11 @@ function renderReport(data){
   const proj=totCurr/data.currDay*data.daysInCurrMonth;
   const paceOk=p=>p>=paceFrac;
 
-  /* hero */
-  document.getElementById('heroMeta').innerHTML=
-    `기준 · ${data.prevLabel} vs ${data.currLabel}(${data.currMonthNum}/1-${data.currMonthNum}/${data.currDay} 누적)<br>`+
-    `작성일 · ${new Date().getFullYear()}.${String(new Date().getMonth()+1).padStart(2,'0')}.${String(new Date().getDate()).padStart(2,'0')}<br>`+
-    `구분 · 월간 매출·광고 성과`;
-  document.getElementById('heroSub').textContent=
-    `${data.prevLabel} 전체매출 대비 ${data.currMonthNum}월 1일부터 ${data.currDay}일까지의 누적 매출 달성률을 확인하고, 채널별 매출·광고 효율(ROAS)과 공식몰 방문 추이를 정리했습니다.`;
+  /* hero · 주간/월간 문구를 따로 만들어 두고 보고 있는 화면에 맞춰 끼운다(applyHeroText · activateView 도 부름) */
+  const today=`${new Date().getFullYear()}.${String(new Date().getMonth()+1).padStart(2,'0')}.${String(new Date().getDate()).padStart(2,'0')}`;
+  HERO_TEXT.week={
+    meta:`기준 · ${data.prevLabel} vs ${data.currLabel}(${data.currMonthNum}/1-${data.currMonthNum}/${data.currDay} 누적)<br>작성일 · ${today}<br>구분 · 주간 매출·광고 현황`,
+    sub:`${data.prevLabel} 전체매출 대비 ${data.currMonthNum}월 1일부터 ${data.currDay}일까지의 누적 매출 달성률을 확인하고, 채널별 매출·광고 효율(ROAS)과 공식몰 방문 추이를 정리했습니다.`};
   document.getElementById('heroPills').innerHTML=
     `<span class="pill win">매출보고 &amp; 광고보고</span><span class="pill">방문자수</span><span class="pill win">회원수</span>`;
 
@@ -8467,7 +8474,13 @@ function renderReport(data){
     `<b>주석</b> · ${data.currLabel} 수치는 모두 <b>${data.currMonthNum}월 1일~${data.currDay}일 누적</b> 기준이며 진행 중 잠정치입니다. ROAS는 표시된 광고비·광고매출 기준으로 계산했습니다. 방문자·회원수는 ${data.visMonths[data.visMonths.length-1]}까지 반영했습니다. 금액 단위: 원. 출처: 바로얌 매출 보고서 구글시트.`;
 
   /* ===== 월간데이터 탭 ===== */
-  const MONTHS=data.months, M=data.monthlySales;
+  /* 월간 성과보고서는 끝난 달만 다룬다 · 이번달이 진행 중이면(10월 중이면) 10월은 빼고 8월 vs 9월을 비교한다 ·
+     진행 중인 이번달 숫자는 주간데이터 탭에서 본다 */
+  const nAll=(data.months||[]).length;
+  const dropOpen=nAll>1&&data.months[nAll-1]===data.currLabel&&
+    (data.currDay<data.daysInCurrMonth||data.currMonthNum===new Date().getMonth()+1);
+  const MONTHS=dropOpen?data.months.slice(0,-1):data.months;
+  const M=Object.fromEntries(CH.map(c=>[c,(data.monthlySales[c]||[]).slice(0,MONTHS.length)]));
   const monthTotal=MONTHS.map((_,i)=>CH.reduce((s,c)=>s+M[c][i],0));
   const PREV=Math.max(0,MONTHS.length-2), CURR=MONTHS.length-1;
   const AD={}; CH.forEach(c=>{AD[c]={prev:data.monthlyAd[c][PREV]||{cost:0,rev:0},curr:data.monthlyAd[c][CURR]||{cost:0,rev:0}};});
@@ -8617,7 +8630,13 @@ function renderReport(data){
   /* M footnote */
   document.getElementById('mFoot').innerHTML=
     `<b>산식</b> · ROAS = 광고매출 ÷ 광고비 × 100 (정수 %) · 전체매출 = 플랫폼(쿠팡·네이버·자사몰) 합산 · 증감률 = (${MONTHS[CURR]}−${MONTHS[PREV]}) ÷ ${MONTHS[PREV]} × 100<br>`+
-    `<b>주석</b> · 금액 단위: 원. 억 표기는 소수 첫째 자리 반올림. ${data.currLabel}은 진행 중(1~${data.currDay}일 잠정치)으로 월간 추이·비교·누적에 반영했으며, 최신 ${data.currLabel} 스냅샷은 좌측 주간데이터 탭에서도 확인할 수 있습니다. 출처: 바로얌 매출 보고서 구글시트.`;
+    `<b>주석</b> · 금액 단위: 원. 월간 성과보고서는 마감된 달(${MONTHS[CURR]}까지)만 다룹니다.`+
+    (dropOpen?` 진행 중인 ${data.currLabel}(1~${data.currDay}일)은 ${data.currLabel}이 끝난 뒤 ${MONTHS[CURR]}과 비교되며, 지금 숫자는 주간데이터 탭에서 볼 수 있습니다.`:'')+
+    ` 출처: 바로얌 매출 보고서 구글시트.`;
+  HERO_TEXT.month={
+    meta:`기준 · ${MONTHS[PREV]} vs ${MONTHS[CURR]} (마감 기준)<br>작성일 · ${today}<br>구분 · 월간 매출·광고 성과`,
+    sub:`${MONTHS[CURR]} 한 달의 결과를 ${MONTHS[PREV]}과 비교해 채널별 매출·광고 효율(ROAS)과 ${MONTHS[0]}부터의 누적 매출을 정리했습니다.`};
+  applyHeroText();
   countUpVisibleReport();
 }
 
@@ -9014,7 +9033,7 @@ function buildDataFromSheets(salesJson,memberData,cafe24Rows){
   const platAd=b=>{const o={};CH.forEach(c=>o[c]={cost:(b.platforms[c]&&b.platforms[c].cost)||0,rev:(b.platforms[c]&&b.platforms[c].rev)||0});return o;};
   const daysInMonth=monthNum=>new Date(new Date().getFullYear(),monthNum,0).getDate();
   const selfRow=currBlock.platforms['자사몰'];
-  /* 월간 탭(01 추이·02/03 전월비교·04 누적)은 진행 중인 이번달도 잠정치로 포함한다.
+  /* 진행 중인 이번달도 months 끝에 담아 보낸다 · 월간 탭은 그리기 직전에 이 달을 빼고 마감된 달끼리 비교한다(renderReport dropOpen).
      주간 스냅샷(prevBlock/currBlock 기반 달성률 등)은 그대로 전월 vs 이번달 잠정치 비교로 둔다 */
   const monthlyBlocks=partial?[...complete,partial]:complete;
   const labelFor=b=>b.isPartial?`${b.monthNum}월`:b.label;
@@ -10420,6 +10439,7 @@ window.CsGuide=(function(){
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
     document.getElementById('heroTag').textContent=v==='month'?'MONTHLY REPORT':'WEEKLY REPORT';
+    if(v==='week'||v==='month') applyHeroText();
 
 
     /* 매출데이터로 들어오면 그 보고서의 숫자를 0에서부터 올린다 */
