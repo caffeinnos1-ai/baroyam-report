@@ -4030,6 +4030,12 @@ window.BAROYAM_ACCESS=(function(){
   .mg-move button:disabled{opacity:.3;cursor:default;background:none;color:var(--mute)}
   .mg-lock{flex:none;display:grid;place-items:center;width:26px;height:26px;color:var(--mute);cursor:default}
   .mg-lock svg{width:13px;height:13px}
+  /* 사이드탭설정 · 한 줄에 메뉴 하나 · 잠긴 줄(마이홈·프로젝트)은 흐린 번호 + 자물쇠 */
+  .so-list{gap:6px}
+  .so-list .mg-group{padding:4px 8px}
+  .so-name{flex:1;min-width:0;padding:7px 9px;color:var(--ink);font:800 13.5px 'Pretendard',sans-serif;letter-spacing:-.2px}
+  .so-list .is-locked .mg-no{background:var(--mute)}
+  .so-list .is-locked .so-name{color:var(--mute)}
   .mg-add-item{display:flex;gap:6px;margin-top:4px}
   .mg-add-item input{flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:1px dashed var(--line);
     background:transparent;color:var(--ink);font:600 12.5px 'Pretendard',sans-serif;letter-spacing:-.2px}
@@ -5785,9 +5791,9 @@ window.BAROYAM_ACCESS=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 19.5c1.4-3.2 4-4.9 7-4.9s5.6 1.7 7 4.9"/></svg>
               <span>회원설정</span>
             </button>
-            <button class="mini-sb-item" type="button" data-settings-view="categories">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7.2l8.3 8.3a1.6 1.6 0 0 1 0 2.3l-4.9 4.9a1.6 1.6 0 0 1-2.3 0L4 11.2V4Z"/><circle cx="8.5" cy="8.5" r="1.3"/></svg>
-              <span>카테고리설정</span>
+            <button class="mini-sb-item" type="button" data-settings-view="sidebar" id="soSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M9 4v16M12.5 9h4.5M12.5 12.5h4.5M12.5 16h4.5"/></svg>
+              <span>사이드탭설정</span>
             </button>
             <button class="mini-sb-item" type="button" data-settings-view="access" id="accSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 14.6v2.2"/></svg>
@@ -5822,13 +5828,12 @@ window.BAROYAM_ACCESS=(function(){
                 <div class="member-roledrop" id="memberRoleDrop" role="menu" aria-label="역할 고르기" hidden></div>
               </div>
             </section>
-            <section class="settings-view" data-settings-panel="categories" hidden>
-              <div class="member-manager">
-                <form class="member-add-form" id="categoryAddForm">
-                  <input type="text" id="categoryNameInput" placeholder="카테고리 이름 입력" maxlength="12" autocomplete="off">
-                  <button type="submit">추가</button>
-                </form>
-                <div class="member-list" id="categoryList"></div>
+            <!-- 사이드탭설정 · 사이드바 메뉴의 위아래 순서를 바꾼다 · 마이홈·프로젝트는 맨 위에 고정 -->
+            <section class="settings-view" data-settings-panel="sidebar" hidden>
+              <div class="mg-manager">
+                <p class="mg-hint">▲▼로 사이드바 메뉴의 위아래 순서를 바꿔요. 바꾼 순서는 서버에 저장돼 모든 회원·다른 PC의 사이드바에 똑같이 적용됩니다.<br>마이홈과 프로젝트는 맨 위에 고정이라 옮길 수 없어요.</p>
+                <div class="mg-list so-list" id="soList"></div>
+                <div><button type="button" class="ui-btn sm ghost" id="soReset">기본 순서로</button></div>
               </div>
             </section>
             <section class="settings-view" data-settings-panel="access" hidden>
@@ -10454,79 +10459,111 @@ window.CsGuide=(function(){
   render();
 })();
 
-/* 카테고리설정 · 회의안건 대시보드의 카테고리 선택지와 연동 (이 브라우저에 자동 저장) */
+/* 회의안건 카테고리 · 주간회의·월간회의 두 가지만 쓴다(2026-10-05 사용자 결정으로 추가·삭제 설정을 없앴다) ·
+   회의안건 화면이 이 브라우저의 baroyam_categories_v1 을 선택지로 읽으므로 늘 이 두 개로 맞춰 둔다 */
 (function(){
-  const LS_KEY='baroyam_categories_v1';
-  const COLORS=['#2f77cc','#e07234','#00734d','#a97b12','#cc5f8c','#6b4fc9','#008e9b','#c8433f','#8a5a2b','#4a6f80'];
-  const DEFAULTS=[
+  const FIXED=[
     {id:'default-weekly',name:'주간회의',color:'#00734d'},
     {id:'default-monthly',name:'월간회의',color:'#c1954f'},
   ];
-  /* 사용에서 제외하기로 한 예전 기본 카테고리 — 이미 저장된 목록에서도 지워준다 */
-  const REMOVED=[
-    {id:'default-project',name:'프로젝트'},
-    {id:'default-director',name:'이사님미팅'},
-  ];
-  const form=document.getElementById('categoryAddForm');
-  const input=document.getElementById('categoryNameInput');
-  const list=document.getElementById('categoryList');
+  try{ localStorage.setItem('baroyam_categories_v1',JSON.stringify(FIXED)); }catch(e){}
+})();
 
-  /* 기본 카테고리(주간회의/월간회의)는 이 브라우저에 목록이 이미 있어도
-     빠져있으면 자동으로 다시 채워 넣는다 — 새 기기마다 매번 손으로 추가하지 않아도 되도록 */
-  function load(){
-    let list=null;
-    try{ const raw=localStorage.getItem(LS_KEY); if(raw) list=JSON.parse(raw); }catch(e){}
-    if(!list){ save(DEFAULTS); return DEFAULTS.slice(); }
-    let changed=false;
-    const before=list.length;
-    list=list.filter(c=>!REMOVED.some(r=>c.id===r.id||c.name===r.name));
-    if(list.length!==before) changed=true;
-    DEFAULTS.forEach(d=>{
-      if(!list.some(c=>c.id===d.id||c.name===d.name)){ list.push(d); changed=true; }
+/* 사이드탭설정 · 사이드바 메뉴(마이홈·프로젝트 아래 칸)의 위아래 순서 ·
+   app_settings 의 sidebarOrder = {order:[메뉴 key…], updatedAt} 한 칸 · saveMerged 로 저장(팀장만 고치는 곳) ·
+   이 브라우저에도 사본을 두어 열자마자 그 순서로 늘어놓는다 · 순서에 없는 새 메뉴는 기본 순서의 바로 앞 메뉴 뒤에 끼운다 */
+window.BAROYAM_SIDEBAR_ORDER=(function(){
+  const KEY='sidebarOrder', LS='baroyam_sidebar_order_v1';
+  const LOCKED=[{k:'home',name:'마이홈'},{k:'project',name:'프로젝트'}];
+  const MOVABLE=window.BAROYAM_ACCESS.MENUS.filter(m=>m.k!=='project');
+  const DEFAULT=MOVABLE.map(m=>m.k);
+  let saved=null;
+  try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&Array.isArray(o.order)) saved=o.order; }catch(e){}
+  function order(){
+    const out=(saved||[]).filter((k,i,a)=>DEFAULT.indexOf(k)>=0&&a.indexOf(k)===i);
+    DEFAULT.forEach((k,i)=>{
+      if(out.indexOf(k)>=0) return;
+      let at=0;
+      for(let j=i-1;j>=0;j--){ const p=out.indexOf(DEFAULT[j]); if(p>=0){ at=p+1; break; } }
+      out.splice(at,0,k);
     });
-    if(changed) save(list);
-    return list;
+    return out;
   }
-  function save(categories){
-    try{ localStorage.setItem(LS_KEY,JSON.stringify(categories)); }catch(e){}
+  /* .sb-scroll 의 바로 아래 칸을 순서대로 다시 붙인다 · 메뉴 앞 주석은 제자리에 남는다(화면엔 안 보임) */
+  function apply(){
+    const box=document.querySelector('.sidebar .sb-scroll');
+    if(!box) return;
+    order().forEach(k=>{
+      const m=MOVABLE.find(x=>x.k===k), el=m&&document.querySelector(m.sel);
+      if(el&&el.parentElement===box) box.appendChild(el);
+    });
   }
-  function escapeHtml(s){
-    return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function keep(list,at){
+    saved=list;
+    try{ localStorage.setItem(LS,JSON.stringify({order:list,updatedAt:at})); }catch(e){}
   }
+  let retry=null;
+  async function push(){
+    clearTimeout(retry);
+    const DB=window.BAROYAM_DB;
+    if(!DB||!DB.saveMerged) return;
+    const mine={order:saved.slice(),updatedAt:Date.now()};
+    DB.saveNotice(KEY,'pending');
+    const r=await DB.saveMerged(KEY,function(){ return mine; });
+    if(r){ DB.saveNotice(KEY,'ok'); return; }
+    DB.saveNotice(KEY,'failing');
+    retry=setTimeout(push,15000);
+  }
+  function set(list){ keep(list.slice(),Date.now()); apply(); push(); }
+  function reset(){ set(DEFAULT); }
+  function applyRemote(settings){
+    let v=settings&&settings[KEY];
+    if(!v) return;
+    if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ return; } }
+    if(!v||!Array.isArray(v.order)||JSON.stringify(v.order)===JSON.stringify(saved)) return;
+    keep(v.order,+v.updatedAt||0); apply();
+    document.dispatchEvent(new CustomEvent('baroyam:sidebar-order'));
+  }
+  apply();
+  return {LOCKED,MOVABLE,order,set,reset,applyRemote};
+})();
+
+/* 사이드탭설정 화면 · ▲▼ 로 한 칸씩 옮기면 바로 사이드바에 반영하고 저장한다 */
+(function(){
+  const SO=window.BAROYAM_SIDEBAR_ORDER;
+  const list=document.getElementById('soList');
+  const resetBtn=document.getElementById('soReset');
+  if(!SO||!list) return;
+  const LOCK='<span class="mg-lock" title="고정 · 옮길 수 없습니다" aria-label="고정">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+
+    '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>';
   function render(){
-    const categories=load();
-    if(!categories.length){
-      list.innerHTML='<div class="member-list-empty">등록된 카테고리가 없어요.<br>위 입력란에 이름을 넣고 추가해보세요.</div>';
-      return;
-    }
-    list.innerHTML=categories.map(c=>
-      `<span class="member-badge" style="background:${c.color}" data-id="${c.id}">${escapeHtml(c.name)}<button type="button" class="m-del" data-id="${c.id}" aria-label="${escapeHtml(c.name)} 삭제">✕</button></span>`
-    ).join('');
+    const ord=SO.order(), n=SO.LOCKED.length;
+    list.innerHTML=SO.LOCKED.map((m,i)=>
+      '<div class="mg-group is-locked"><div class="mg-row"><span class="mg-no">'+(i+1)+'</span>'+
+      '<span class="so-name">'+m.name+'</span>'+LOCK+'</div></div>').join('')+
+    ord.map((k,i)=>{
+      const m=SO.MOVABLE.find(x=>x.k===k);
+      return '<div class="mg-group"><div class="mg-row"><span class="mg-no">'+(i+1+n)+'</span>'+
+        '<span class="so-name">'+m.name+'</span>'+
+        '<span class="mg-move">'+
+          '<button type="button" data-so="'+k+'" data-dir="-1"'+(i===0?' disabled':'')+' title="위로" aria-label="'+m.name+' 위로 옮기기">▲</button>'+
+          '<button type="button" data-so="'+k+'" data-dir="1"'+(i===ord.length-1?' disabled':'')+' title="아래로" aria-label="'+m.name+' 아래로 옮기기">▼</button>'+
+        '</span></div></div>';
+    }).join('');
   }
-  function addCategory(name){
-    const trimmed=name.trim();
-    if(!trimmed) return;
-    const categories=load();
-    categories.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),name:trimmed,color:COLORS[categories.length%COLORS.length]});
-    save(categories);
-    render();
-  }
-  function removeCategory(id){
-    save(load().filter(c=>c.id!==id));
-    render();
-  }
-
-  form.addEventListener('submit',(e)=>{
-    e.preventDefault();
-    addCategory(input.value);
-    input.value='';
-    input.focus();
+  list.addEventListener('click',e=>{
+    const b=e.target.closest('[data-so]');
+    if(!b||b.disabled) return;
+    const ord=SO.order(), i=ord.indexOf(b.dataset.so), j=i+(+b.dataset.dir);
+    if(i<0||j<0||j>=ord.length) return;
+    [ord[i],ord[j]]=[ord[j],ord[i]];
+    SO.set(ord); render();
+    const again=list.querySelector('[data-so="'+b.dataset.so+'"][data-dir="'+b.dataset.dir+'"]');
+    if(again&&!again.disabled) again.focus();
   });
-  list.addEventListener('click',(e)=>{
-    const btn=e.target.closest('.m-del');
-    if(btn) removeCategory(btn.dataset.id);
-  });
-
+  if(resetBtn) resetBtn.addEventListener('click',()=>{ SO.reset(); render(); });
+  document.addEventListener('baroyam:sidebar-order',render);
   render();
 })();
 
@@ -13995,6 +14032,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(window.__myhomeSync) window.__myhomeSync.apply(settings);
       if(window.BAROYAM_PROFILES) window.BAROYAM_PROFILES.applyRemote(settings);
       if(window.BAROYAM_ACCESS) window.BAROYAM_ACCESS.applyRemote(settings);
+      if(window.BAROYAM_SIDEBAR_ORDER) window.BAROYAM_SIDEBAR_ORDER.applyRemote(settings);
       /* 덩어리를 관계형 테이블에 펼쳐 둔다 · Table Editor에서 행으로 보기 위한 거울이다.
          화면 동작과는 무관하므로 실패해도 대시보드는 그대로 쓴다 */
       if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorAll(settings);
