@@ -4803,21 +4803,30 @@ window.BAROYAM_ACCESS=(function(){
   /* 영상분석 AI (퍼포먼스마케팅 > 레퍼런스) */
   .va-wrap{padding:26px 48px 48px}
   #vaSub[hidden],.va-wrap[hidden],.va-player[hidden],.va-msg[hidden],#vaResult[hidden],.va-empty[hidden]{display:none}
-  .va-grid{display:grid;grid-template-columns:minmax(240px,320px) auto minmax(0,1fr);gap:28px;align-items:start}
-  /* 가운데 버튼은 영상 가운데쯤에서 시작해, 결과가 길어 스크롤해도 화면 가운데에 따라온다 */
-  .va-mid{align-self:start;position:sticky;top:calc(50vh - 80px);margin-top:230px;
-    display:flex;flex-direction:column;align-items:center;gap:12px}
-  .va-arrow{width:22px;height:22px;color:var(--mute)}
-  .va-left{display:flex;flex-direction:column;gap:10px}
-  .va-label{font-size:12.5px;font-weight:800;color:var(--mute);margin-top:4px}
-  .va-player{position:relative;width:100%;aspect-ratio:9/16;max-height:520px;border-radius:var(--ui-r);overflow:hidden;
-    background:var(--chip-flat);border:1px solid var(--line)}
+  /* [영상 상자] (AI분석) [결과 상자] · 두 상자는 같은 높이(결과 상자가 영상 상자 높이를 따름), 버튼은 그 사이 한가운데 */
+  .va-grid{display:grid;grid-template-columns:minmax(260px,330px) auto minmax(0,1fr);gap:24px;align-items:stretch}
+  .va-card{display:flex;flex-direction:column;gap:14px;min-width:0;padding:20px;border:1px solid var(--line);
+    border-radius:18px;background:var(--paper);box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 26px -18px rgba(0,0,0,.18)}
+  .va-card-head{display:flex;align-items:center;gap:10px;min-height:30px}
+  .va-card-title{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.2px}
+  .va-mid{align-self:center;position:relative;display:flex;flex-direction:column;align-items:center}
+  .va-arrow{position:absolute;top:calc(100% + 12px);width:22px;height:22px;color:var(--mute)}   /* 버튼 자체가 정확히 가운데 오도록 화살표는 아래에 띄움 */
+  .va-right{position:relative;min-width:0}
+  .va-right-in{position:absolute;inset:0}
+  .va-scroll{flex:1;min-height:0;overflow:auto;margin:0 -8px -8px 0;padding:0 8px 8px 0}
+  .va-player{position:relative;width:100%;aspect-ratio:9/16;max-height:540px;border-radius:14px;overflow:hidden;
+    background:var(--chip-flat)}
   .va-player.wide{aspect-ratio:16/9}
   .va-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  .va-msg{font-size:12.5px;color:var(--mute);line-height:1.5}
-  .va-empty{padding:60px 20px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--mute);font-size:14px}
-  .va-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-  .va-stat{font-size:13px;color:var(--mute);font-weight:600}
+  .va-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    color:var(--mute);font-size:13px;font-weight:600;text-align:center;padding:20px}
+  .va-ph svg{width:40px;height:40px;opacity:.55}
+  .va-msg{font-size:12.5px;color:var(--mute);line-height:1.5;margin-top:-4px}
+  .va-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;
+    color:var(--mute);font-size:13.5px;line-height:1.6;border:1px dashed var(--line);border-radius:14px;padding:24px}
+  .va-empty svg{width:34px;height:34px;opacity:.55;margin-bottom:2px}
+  .va-empty b{font-size:15px;color:var(--ink)}
+  .va-stat{font-size:12.5px;color:var(--mute);font-weight:600;margin-right:auto}
   .va-stat b{color:var(--ink)}
   .va-part{border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:16px 18px 18px;
     border-left:4px solid var(--line)}
@@ -4834,7 +4843,7 @@ window.BAROYAM_ACCESS=(function(){
   .va-cut{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:var(--mute);font-weight:700}
   .va-cut::before,.va-cut::after{content:"";flex:1;height:1px;background:var(--line)}
   @media (max-width:860px){ .va-wrap{padding:20px 16px 32px} .va-grid{grid-template-columns:1fr} .va-player{max-height:420px}
-    .va-mid{position:static;margin-top:0} .va-arrow{transform:rotate(90deg)} }
+    .va-right-in{position:static} .va-scroll{overflow:visible} .va-empty{min-height:200px} .va-mid{gap:12px} .va-arrow{position:static;transform:rotate(90deg)} }
   .bs-wrap{padding:26px 48px 48px}
   @media (max-width:760px){ .bs-wrap{padding:20px 16px 32px} }
   /* 왼쪽 목록 + 오른쪽 상세 */
@@ -7738,10 +7747,10 @@ window.BAROYAM_ACCESS=(function(){
                브라우저는 유튜브 자막을 직접 못 받으므로(CORS) Supabase 함수 yt-captions 가 대신 받는다 -->
           <div class="va-wrap" id="vaPanel" hidden>
             <div class="va-grid">
-              <div class="va-left">
-                <label class="va-label" for="vaUrl">유튜브 링크</label>
-                <input class="ui-field block" id="vaUrl" type="url" placeholder="https://youtube.com/shorts/…" autocomplete="off">
-                <div class="va-player" id="vaPlayer" hidden></div>
+              <div class="va-card va-left">
+                <div class="va-card-head"><span class="va-card-title">레퍼런스 영상</span></div>
+                <input class="ui-field block" id="vaUrl" type="url" placeholder="유튜브 링크 붙여넣기 · youtube.com/shorts/…" autocomplete="off" aria-label="유튜브 링크">
+                <div class="va-player" id="vaPlayer"></div>
                 <div class="va-msg" id="vaMsg" hidden></div>
               </div>
               <!-- 가운데 · 왼쪽(링크·영상) → 오른쪽(결과)으로 넘기는 둥근 버튼 -->
@@ -7752,14 +7761,22 @@ window.BAROYAM_ACCESS=(function(){
                 </button>
                 <svg class="va-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </div>
+              <!-- 결과 상자 높이는 왼쪽 영상 상자에 맞추고, 결과가 길면 상자 안에서 스크롤한다 -->
               <div class="va-right">
-                <div class="va-empty" id="vaEmpty">유튜브 링크를 넣고 <b>AI분석</b>을 누르면 여기에 나옵니다.</div>
-                <div id="vaResult" hidden>
-                  <div class="va-head">
-                    <div class="va-stat" id="vaStat"></div>
-                    <button class="ui-btn sm soft" id="vaCopyAll" type="button">전체 복사</button>
+                <div class="va-card va-right-in">
+                  <div class="va-card-head">
+                    <span class="va-card-title">분석 결과</span>
+                    <span class="va-stat" id="vaStat"></span>
+                    <button class="ui-btn sm soft" id="vaCopyAll" type="button" hidden>전체 복사</button>
                   </div>
-                  <div id="vaParts"></div>
+                  <div class="va-empty" id="vaEmpty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg>
+                    <b>후킹 · 내용 · 마무리</b>
+                    <span>왼쪽에 링크를 넣고 가운데 AI분석을 누르면<br>세로 화면처럼 한 줄씩 나눠 보여 드립니다.</span>
+                  </div>
+                  <div class="va-scroll" id="vaResult" hidden>
+                    <div id="vaParts"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -13046,7 +13063,7 @@ window.CsGuide=(function(){
   if(!url||!text) return;
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const LS='baroyam_videoai_v1';
-  let lines=[], hookEnd=0, endStart=0, curId='';
+  let lines=[], hookEnd=0, endStart=0, curId=null;
 
   function videoId(u){
     const m=String(u||'').match(/(?:youtu\.be\/|\/shorts\/|\/embed\/|\/live\/|[?&]v=)([\w-]{11})/);
@@ -13056,8 +13073,9 @@ window.CsGuide=(function(){
     const id=videoId(url.value.trim());
     if(id===curId) return;
     curId=id;
-    player.hidden=!id;
-    if(!id){ player.innerHTML=''; return; }
+    if(!id){ player.classList.remove('wide');
+      player.innerHTML='<div class="va-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>링크를 넣으면 영상이 여기 나옵니다</div>';
+      return; }
     player.classList.toggle('wide',!/\/shorts\//.test(url.value));
     player.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'" title="유튜브 영상" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>';  }
   function note(s){ msg.textContent=s||''; msg.hidden=!s; }
@@ -13187,7 +13205,7 @@ window.CsGuide=(function(){
     const segs=parse(text.value);
     if(!segs.length){ note('자막이 비어 있습니다.'); return; }
     lines=split(segs); classify(); render();
-    $('vaEmpty').hidden=true; $('vaResult').hidden=false; note('');
+    $('vaEmpty').hidden=true; $('vaResult').hidden=false; $('vaCopyAll').hidden=false; note('');
     save();
   }
   /* AI분석 · 링크의 CC 자막을 불러와 나눈다(같은 영상을 이미 불러왔으면 다시 받지 않음) */
@@ -13226,6 +13244,7 @@ window.CsGuide=(function(){
   $('vaRun').addEventListener('click',run);
   url.addEventListener('input',()=>{ showVideo(); save(); });
   try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){ url.value=s.u||''; text.value=s.x||''; loadedFor=s.f||''; showVideo(); if(text.value.trim()) analyze(); } }catch(e){}
+  showVideo();   // 링크가 없으면 영상 자리에 안내를 띄운다
 })();
 
 /* 콘텐츠마케팅 사이드탭 · 퍼포먼스마케팅과 같은 방식 · 콘텐츠 제작 / 피드 등록(인스타·블로그)(화면 내용은 아직 제목만 있다) */
