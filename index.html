@@ -4804,9 +4804,10 @@ window.BAROYAM_ACCESS=(function(){
   .va-wrap{padding:26px 48px 48px}
   #vaSub[hidden],.va-wrap[hidden],.va-player[hidden],.va-msg[hidden],#vaResult[hidden],.va-empty[hidden]{display:none}
   .va-grid{display:grid;grid-template-columns:minmax(240px,320px) auto minmax(0,1fr);gap:28px;align-items:start}
-  .va-mid{align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:180px}
-  .va-mid>*{position:sticky;top:180px}
-  .va-arrow{width:22px;height:22px;color:var(--mute);top:290px}
+  /* 가운데 버튼은 영상 가운데쯤에서 시작해, 결과가 길어 스크롤해도 화면 가운데에 따라온다 */
+  .va-mid{align-self:start;position:sticky;top:calc(50vh - 80px);margin-top:230px;
+    display:flex;flex-direction:column;align-items:center;gap:12px}
+  .va-arrow{width:22px;height:22px;color:var(--mute)}
   .va-left{display:flex;flex-direction:column;gap:10px}
   .va-label{font-size:12.5px;font-weight:800;color:var(--mute);margin-top:4px}
   .va-player{position:relative;width:100%;aspect-ratio:9/16;max-height:520px;border-radius:var(--ui-r);overflow:hidden;
@@ -4833,7 +4834,7 @@ window.BAROYAM_ACCESS=(function(){
   .va-cut{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:var(--mute);font-weight:700}
   .va-cut::before,.va-cut::after{content:"";flex:1;height:1px;background:var(--line)}
   @media (max-width:860px){ .va-wrap{padding:20px 16px 32px} .va-grid{grid-template-columns:1fr} .va-player{max-height:420px}
-    .va-mid{padding-top:0} .va-mid>*{position:static} .va-arrow{transform:rotate(90deg)} }
+    .va-mid{position:static;margin-top:0} .va-arrow{transform:rotate(90deg)} }
   .bs-wrap{padding:26px 48px 48px}
   @media (max-width:760px){ .bs-wrap{padding:20px 16px 32px} }
   /* 왼쪽 목록 + 오른쪽 상세 */
