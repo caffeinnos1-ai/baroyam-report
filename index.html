@@ -1376,49 +1376,80 @@ window.BAROYAM_ACCESS=(function(){
      회원설정 목록을 사진 + 이름 + 역할 아이콘 타일로 늘어놓는다 */
   html.member-locked body>*:not(#memberGate){display:none!important}
   #memberGate{display:none}
+  /* 2026-10-05 개편 · 카드 상자 없이 화면 전체를 쓰고, 위에는 브랜드 문장(사명), 아래에 프로필을 둔다.
+     뒤에는 흐린 빛 두 덩이가 천천히 떠다니고, 문장은 7초마다 흐림→선명으로 바뀐다 */
   html.member-locked #memberGate{display:flex;position:fixed;inset:0;z-index:99998;align-items:center;justify-content:center;
-    padding:28px 16px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;background:var(--bg,#f4f1eb)}
-  html.member-locked #memberGate::before{content:'';position:fixed;width:620px;height:620px;top:-240px;left:50%;
-    margin-left:-310px;border-radius:50%;pointer-events:none;filter:blur(100px);opacity:.45;
-    background:radial-gradient(circle,rgba(var(--indigo-rgb,205,100,40),.5),transparent 70%)}
+    padding:40px 20px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;background:var(--bg,#f4f1eb)}
+  html.member-locked #memberGate::before,html.member-locked #memberGate::after{content:'';position:fixed;border-radius:50%;
+    pointer-events:none;filter:blur(110px);opacity:.42;animation:mpDrift 18s ease-in-out infinite alternate}
+  html.member-locked #memberGate::before{width:640px;height:640px;top:-260px;left:50%;margin-left:-520px;
+    background:radial-gradient(circle,var(--btn,#e2672a),transparent 68%)}
+  html.member-locked #memberGate::after{width:520px;height:520px;bottom:-240px;left:50%;margin-left:80px;opacity:.26;
+    background:radial-gradient(circle,var(--btn-hover,#d65a20),transparent 68%);animation-duration:23s;animation-direction:alternate-reverse}
+  @keyframes mpDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(120px,60px) scale(1.12)}}
   html.auth-checking #memberGate .mp-card{visibility:hidden}
-  #memberGate .mp-card{position:relative;z-index:1;margin:auto;width:100%;max-width:560px;background:var(--paper,#fff);
-    border:1px solid var(--line,#ece5dc);border-radius:26px;padding:40px 30px 22px;
-    box-shadow:0 40px 90px -40px rgba(80,40,20,.42),0 2px 8px rgba(80,40,20,.05);animation:authIn .45s ease-out both}
-  @media (prefers-reduced-motion:reduce){ #memberGate .mp-card{animation:none} }
-  #memberGate .mp-eyebrow{margin:0 0 8px;font-size:10.5px;font-weight:800;letter-spacing:.22em;color:var(--indigo,#cd6428);text-align:center}
-  #memberGate .mp-title{margin:0;font-size:23px;font-weight:800;letter-spacing:-.5px;color:var(--ink,#241a14);text-align:center}
-  #memberGate .mp-sub{margin:9px 0 24px;font-size:13.5px;line-height:1.6;color:var(--mute,#786c64);text-align:center}
-  #memberGate .mp-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
-    max-height:52vh;overflow-y:auto;margin:0 -4px;padding:4px}
-  #memberGate .mp-item{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:10px;
-    width:100%;padding:18px 10px 15px;border-radius:19px;border:1px solid var(--line,#ece5dc);background:var(--paper,#fff);
-    cursor:pointer;text-align:center;
-    transition:border-color .16s,background-color .16s,transform .16s,box-shadow .16s}
-  #memberGate .mp-item:hover,#memberGate .mp-item:focus-visible{border-color:var(--indigo,#cd6428);
-    background:var(--indigo-soft,#fdefe4);transform:translateY(-3px);
-    box-shadow:0 16px 30px -18px rgba(var(--indigo-rgb,205,100,40),.75)}
-  #memberGate .mp-ava{flex:none;width:64px;height:64px;border-radius:50%;overflow:hidden;display:grid;place-items:center;
-    color:#fff;font-size:24px;font-weight:800;letter-spacing:-.4px;transition:box-shadow .16s}
-  #memberGate .mp-item:hover .mp-ava,#memberGate .mp-item:focus-visible .mp-ava{
-    box-shadow:0 0 0 4px rgba(var(--indigo-rgb,205,100,40),.26)}
+  #memberGate .mp-card{position:relative;z-index:1;margin:auto;width:100%;max-width:880px;text-align:center}
+  /* 브랜드 문장 */
+  #memberGate .mp-hero{margin:0 auto 54px;max-width:760px}
+  #memberGate .mp-eyebrow{margin:0 0 22px;font-size:11px;font-weight:800;letter-spacing:.32em;color:var(--btn-soft-ink,#c8561c);
+    animation:mpRise .8s cubic-bezier(.2,.7,.2,1) both}
+  #memberGate .mp-quote{position:relative;min-height:2.5em;margin:0;font-size:clamp(28px,4.4vw,46px);font-weight:800;
+    line-height:1.24;letter-spacing:-.045em;word-break:keep-all;color:var(--ink,#241a14)}
+  #memberGate .mp-quote span{display:inline-block;background:linear-gradient(100deg,var(--ink,#241a14) 30%,var(--btn,#e2672a) 130%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    transition:opacity .7s ease,filter .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  #memberGate .mp-quote.is-out span{opacity:0;filter:blur(10px);transform:translateY(10px) scale(.985)}
+  #memberGate .mp-by{margin:16px 0 0;font-size:14px;font-weight:600;color:var(--mute,#786c64);letter-spacing:-.1px;
+    transition:opacity .7s ease}
+  #memberGate .mp-quote.is-out+.mp-by{opacity:0}
+  #memberGate .mp-dots{display:flex;justify-content:center;gap:6px;margin-top:22px}
+  #memberGate .mp-dots i{width:6px;height:6px;border-radius:99px;background:color-mix(in srgb,var(--mute,#786c64) 32%,transparent);transition:width .5s,background-color .5s}
+  #memberGate .mp-dots i.on{width:22px;background:var(--btn,#e2672a)}
+  /* 프로필 고르기 · 반투명 유리판 */
+  #memberGate .mp-pick{max-width:760px;margin:0 auto;padding:30px 28px 22px;border-radius:30px;
+    background:color-mix(in srgb,var(--paper,#fff) 62%,transparent);border:1px solid color-mix(in srgb,var(--line,#ece5dc) 70%,transparent);
+    -webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);
+    box-shadow:0 40px 90px -50px rgba(80,40,20,.35);animation:mpRise .9s .15s cubic-bezier(.2,.7,.2,1) both}
+  #memberGate .mp-title{margin:0;font-size:19px;font-weight:800;letter-spacing:-.4px;color:var(--ink,#241a14)}
+  #memberGate .mp-sub{margin:6px 0 26px;font-size:13px;line-height:1.6;color:var(--mute,#786c64)}
+  #memberGate .mp-list{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 6px}
+  /* 한 사람씩 차례로 튀어 오르며 나타난다(--i = 순서) */
+  #memberGate .mp-item{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:11px;
+    width:118px;padding:12px 6px 14px;border-radius:22px;cursor:pointer;text-align:center;
+    transition:opacity .35s,transform .45s cubic-bezier(.2,.8,.2,1),filter .35s;
+    animation:mpPop .7s calc(.35s + var(--i,0) * 70ms) cubic-bezier(.2,.9,.25,1.2) both}
+  /* 한 사람에 올리면 나머지는 살짝 물러난다 */
+  #memberGate .mp-list:hover .mp-item:not(:hover){opacity:.45;filter:saturate(.6)}
+  #memberGate .mp-item:hover,#memberGate .mp-item:focus-visible{transform:translateY(-6px)}
+  #memberGate .mp-item:active{transform:translateY(-2px) scale(.96)}
+  #memberGate .mp-ava{position:relative;flex:none;width:84px;height:84px;border-radius:50%;overflow:hidden;display:grid;place-items:center;
+    color:#fff;font-size:30px;font-weight:800;letter-spacing:-.4px;
+    box-shadow:0 14px 30px -16px rgba(60,30,10,.55);transition:box-shadow .35s,transform .45s cubic-bezier(.2,.8,.2,1)}
+  #memberGate .mp-item:hover .mp-ava,#memberGate .mp-item:focus-visible .mp-ava{transform:scale(1.08);
+    box-shadow:0 0 0 4px var(--paper,#fff),0 0 0 6.5px var(--btn,#e2672a),0 22px 40px -18px rgba(60,30,10,.6)}
   #memberGate .mp-ava img{width:100%;height:100%;object-fit:cover;display:block}
-  #memberGate .mp-ava svg{width:30px;height:30px}
+  #memberGate .mp-ava svg{width:36px;height:36px}
   #memberGate .mp-id{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;min-width:0}
   #memberGate .mp-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    font-size:14.5px;font-weight:800;letter-spacing:-.3px;color:var(--ink,#241a14)}
+    font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink,#241a14)}
   #memberGate .mp-role{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:2px 9px 2px 7px;
-    border-radius:999px;background:var(--indigo-soft,#fdefe4);color:var(--indigo,#cd6428);font-size:11px;font-weight:700}
+    border-radius:999px;background:var(--btn-soft,#fdefe4);color:var(--btn-soft-ink,#c8561c);font-size:11px;font-weight:700}
   #memberGate .mp-role.is-none{background:var(--chip-flat,#f0ece5);color:var(--mute,#786c64)}
   #memberGate .mp-role svg{width:12px;height:12px;flex:none}
-  #memberGate .mp-go{display:none}      /* 타일에서는 화살표를 쓰지 않는다 */
-  #memberGate .mp-empty{grid-column:1/-1;margin:0;padding:26px 8px;text-align:center;
+  #memberGate .mp-go{display:none}
+  /* 처음 한 번만 튀어 오르게 · 프로필이 늦게 도착해 다시 그릴 때는 그대로 둔다 */
+  #memberGate .mp-list.is-ready .mp-item{animation:none}
+  /* 고르면 그 사람만 남아 커지고 나머지는 흐려지며 사라진 뒤 들어간다 */
+  #memberGate .mp-list.is-picking .mp-item{pointer-events:none;opacity:0;transform:scale(.9);filter:blur(4px)}
+  #memberGate .mp-list.is-picking .mp-item.is-picked{opacity:1;transform:scale(1.14);filter:none}
+  #memberGate .mp-empty{width:100%;margin:0;padding:26px 8px;text-align:center;
     font-size:13px;font-weight:600;line-height:1.6;color:var(--mute,#786c64)}
-  /* 팀장을 고르면 목록 대신 비밀번호 칸이 나온다 ·
-     .mp-list/.mp-sub는 display를 따로 갖고 있어서 [hidden]만으로는 안 숨는다 */
+  @keyframes mpRise{from{opacity:0;transform:translateY(18px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+  @keyframes mpPop{from{opacity:0;transform:translateY(22px) scale(.86)}to{opacity:1;transform:none}}
+  /* 팀장을 고르면 목록 대신 비밀번호 칸이 나온다 */
   #memberGate .mp-card.is-pw .mp-list,#memberGate .mp-card.is-pw .mp-sub{display:none}
-  /* 목록은 560px 폭을 다 쓰지만 비밀번호 칸까지 그만큼 넓으면 허전하다 · 가운데로 모아 둔다 */
-  #memberGate .mp-pw{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin:4px auto 0}
+  #memberGate .mp-pw{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin:14px auto 0;
+    animation:mpRise .5s cubic-bezier(.2,.7,.2,1) both}
   #memberGate .mp-pw[hidden]{display:none}
   #memberGate .mp-pw-who{margin:0 0 4px;font-size:13.5px;font-weight:600;line-height:1.6;color:var(--mute,#786c64);text-align:center}
   #memberGate .mp-pw-who b{color:var(--ink,#241a14)}
@@ -1436,8 +1467,8 @@ window.BAROYAM_ACCESS=(function(){
   /* 바로 위 `.mp-pw-actions button` 규칙이 선택자가 더 강해 flex:1 을 이긴다 ·
      취소를 좁게 두려면 같은 무게로 적어야 한다 */
   #memberGate .mp-pw-actions .mp-pw-cancel{flex:0 0 92px;border:1px solid var(--line,#ece5dc);background:transparent;color:var(--mute,#786c64)}
-  #memberGate .mp-foot{display:flex;flex-direction:column;align-items:center;gap:8px;margin:22px -30px 0;padding:16px 30px 0;
-    border-top:1px solid var(--line,#ece5dc)}
+  #memberGate .mp-foot{display:flex;flex-direction:column;align-items:center;gap:6px;margin:22px -28px 0;padding:16px 28px 0;
+    border-top:1px solid color-mix(in srgb,var(--line,#ece5dc) 70%,transparent)}
   #memberGate .mp-note{margin:0;font-size:12.5px;font-weight:600;line-height:1.5;color:var(--mute,#786c64);text-align:center}
   /* 뒤로가기 · 로그인 화면으로 돌아간다 · 회원을 고르는 게 먼저라 눈에 띄지 않게 연한 글자로 둔다 */
   #memberGate .mp-back{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:5px;
@@ -1447,10 +1478,18 @@ window.BAROYAM_ACCESS=(function(){
   #memberGate .mp-back svg{width:14px;height:14px;flex:none}
   /* 좁은 화면 · 두 칸으로 줄이고 목록 안쪽 스크롤을 없앤다 ·
      안쪽에서 자르면 타일이 반만 보여 "깨진 것"처럼 읽힌다 · 카드째로 스크롤시킨다 */
-  @media (max-width:460px){
-    #memberGate .mp-list{grid-template-columns:repeat(2,1fr);max-height:none;overflow:visible}
+  @media (max-width:520px){
+    #memberGate .mp-hero{margin-bottom:34px}
+    #memberGate .mp-pick{padding:24px 12px 16px;border-radius:24px}
+    #memberGate .mp-item{width:100px}
+    #memberGate .mp-ava{width:70px;height:70px;font-size:26px}
+    #memberGate .mp-foot{margin:18px -12px 0;padding:14px 12px 0}
   }
-  @media (max-width:420px){ #memberGate .mp-card{padding:32px 18px 16px} #memberGate .mp-foot{margin:18px -18px 0;padding:14px 18px 0} }
+  @media (prefers-reduced-motion:reduce){
+    html.member-locked #memberGate::before,html.member-locked #memberGate::after,
+    #memberGate .mp-eyebrow,#memberGate .mp-pick,#memberGate .mp-item,#memberGate .mp-pw{animation:none}
+    #memberGate .mp-quote span{transition:opacity .3s}
+  }
   /* 비밀번호 칸은 type=text + 글자 가림 · type=password 면 크롬이 autocomplete=off 를 무시하고 저장·업데이트 창을 띄운다 */
   /* .ui-field 는 all:unset 으로 시작해서 뒤에 오면 가림까지 지운다 · .ui-field.pw-mask 로 한 단계 세게 걸어 둔다 */
   .pw-mask,.ui-field.pw-mask{-webkit-text-security:disc;text-security:disc}
@@ -5285,9 +5324,15 @@ window.BAROYAM_ACCESS=(function(){
 <!-- 회원 선택 · 구글 로그인 뒤 "누구신가요?" 한 번만 물어보고 이 브라우저에 기억한다 -->
 <div id="memberGate" role="dialog" aria-modal="true" aria-labelledby="mpTitle">
   <div class="mp-card">
-    <p class="mp-eyebrow">SELECT PROFILE</p>
-    <h1 class="mp-title" id="mpTitle">누구신가요?</h1>
-    <p class="mp-sub">내 프로필을 골라 주세요.<br>고른 회원으로 대시보드가 맞춰집니다.</p>
+    <section class="mp-hero" aria-label="바로얌의 약속">
+      <p class="mp-eyebrow">BAROYAM · OUR MISSION</p>
+      <p class="mp-quote" id="mpQuote" aria-live="polite"><span>맛있는 한 끼가<br>누군가의 하루를 바꿉니다.</span></p>
+      <p class="mp-by" id="mpBy">바로얌의 약속</p>
+      <div class="mp-dots" id="mpDots" aria-hidden="true"></div>
+    </section>
+    <div class="mp-pick">
+    <h1 class="mp-title" id="mpTitle">오늘도 함께해요. 누구신가요?</h1>
+    <p class="mp-sub">내 프로필을 고르면 대시보드가 나에게 맞춰집니다.</p>
     <div class="mp-list" id="mpList"></div>
     <form class="mp-pw" id="mpPwForm" hidden autocomplete="off">
       <p class="mp-pw-who"><b id="mpPwName"></b>님은 팀장이에요.<br>팀장 비밀번호를 입력해 주세요.</p>
@@ -5301,6 +5346,7 @@ window.BAROYAM_ACCESS=(function(){
     <div class="mp-foot">
       <p class="mp-note">내 이름이 없으면 관리자에게 회원 추가를 요청해 주세요.</p>
       <button type="button" class="mp-back" id="mpBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>로그인 화면으로</button>
+    </div>
     </div>
   </div>
 </div>
@@ -5325,18 +5371,19 @@ window.BAROYAM_ACCESS=(function(){
       list.innerHTML='<p class="mp-empty">등록된 회원이 없어요.<br>관리자가 관리자 설정 &gt; 회원설정에서 이름을 추가하면<br>여기에서 고를 수 있어요.</p>';
       return;
     }
-    list.innerHTML=members.map(m=>{
+    list.innerHTML=members.map((m,i)=>{
       const p=P.get(m.id), r=P.role(p.role), initial=String(m.name||'').trim().charAt(0);
       const face=p.avatar?`<img src="${esc(p.avatar)}" alt="" referrerpolicy="no-referrer">`:(initial?esc(initial):PERSON);
       const roleChip=r?`<span class="mp-role">${r.ic}${esc(r.k)}</span>`
                       :'<span class="mp-role is-none">역할 미설정</span>';
-      return `<button type="button" class="mp-item" data-id="${esc(m.id)}" aria-label="${esc(m.name)}(으)로 시작">`+
+      return `<button type="button" class="mp-item" style="--i:${i}" data-id="${esc(m.id)}" aria-label="${esc(m.name)}(으)로 시작">`+
         `<span class="mp-ava" style="background:${esc(m.color||'#8a5a2b')}">${face}</span>`+
         `<span class="mp-id"><b class="mp-name">${esc(m.name)}</b>${roleChip}</span>`+
         `<span class="mp-go" aria-hidden="true">${GO}</span></button>`;
     }).join('');
   }
   render();
+  setTimeout(()=>list.classList.add('is-ready'),1600);
   document.addEventListener('baroyam:profiles',render);
   document.addEventListener('baroyam:members',render);   /* 시트에서 목록이 늦게 내려와도 따라 그린다 */
   /* 팀장은 관리자 권한을 함께 가지므로 비밀번호를 한 번 묻는다 ·
@@ -5355,11 +5402,45 @@ window.BAROYAM_ACCESS=(function(){
     pending=''; pwForm.hidden=true; card.classList.remove('is-pw'); pwInput.value=''; pwError.textContent='';
   }
   function enter(id){ P.setMe(id); location.reload(); }
+  /* 고른 사람만 남기고 커지게 한 뒤 들어간다 · 움직임 줄이기 설정이면 바로 */
+  const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function enterWithMotion(item,id){
+    if(calm){ enter(id); return; }
+    item.classList.add('is-picked'); list.classList.add('is-picking');
+    setTimeout(()=>enter(id),420);
+  }
+  /* 브랜드 문장 · 7초마다 흐려졌다 선명하게 바뀐다 · 문장은 여기서 고친다 */
+  const QUOTES=[
+    ['맛있는 한 끼가<br>누군가의 하루를 바꿉니다.','바로얌의 약속'],
+    ['우리가 파는 것은 음식이 아니라<br>기분 좋은 순간입니다.','바로얌의 약속'],
+    ['브랜드는 우리가 없는 자리에서<br>고객이 하는 말입니다.','제프 베이조스'],
+    ['디자인은 보이는 모습이 아니라<br>작동하는 방식입니다.','스티브 잡스'],
+    ['작은 디테일이<br>큰 신뢰를 만듭니다.','바로얌의 약속'],
+    ['고객의 리뷰 한 줄이<br>우리의 다음 제품입니다.','바로얌의 약속'],
+    ['Stay hungry,<br>stay foolish.','스티브 잡스'],
+    ['어제보다 조금 더 맛있게,<br>조금 더 정직하게.','바로얌의 약속']
+  ];
+  (function(){
+    const qEl=document.getElementById('mpQuote'), byEl=document.getElementById('mpBy'), dots=document.getElementById('mpDots');
+    if(!qEl) return;
+    let n=Math.floor(Math.random()*QUOTES.length);
+    dots.innerHTML=QUOTES.map(()=>'<i></i>').join('');
+    const show=k=>{
+      qEl.firstElementChild.innerHTML=QUOTES[k][0]; byEl.textContent=QUOTES[k][1];
+      [...dots.children].forEach((d,x)=>d.classList.toggle('on',x===k));
+    };
+    show(n);
+    setInterval(()=>{
+      if(!document.documentElement.classList.contains('member-locked')||document.hidden) return;
+      qEl.classList.add('is-out');
+      setTimeout(()=>{ n=(n+1)%QUOTES.length; show(n); qEl.classList.remove('is-out'); },calm?300:750);
+    },7000);
+  })();
   list.addEventListener('click',e=>{
     const item=e.target.closest('.mp-item');
     if(!item) return;
     const id=item.dataset.id;
-    if(!LEAD.isLeadRole(id)){ LEAD.clear(); enter(id); return; }
+    if(!LEAD.isLeadRole(id)){ LEAD.clear(); enterWithMotion(item,id); return; }
     const m=MEM.load().find(x=>x.id===id);
     if(m) askPw(m);
   });
@@ -9946,7 +10027,7 @@ window.CsGuide=(function(){
       list.innerHTML='<div class="member-list-empty">아직 등록된 회원이 없어요.<br>위 입력란에 이름을 넣고 추가해보세요.</div>';
       return;
     }
-    list.innerHTML=members.map(m=>{
+    list.innerHTML=members.map((m,i)=>{
       const p=P.get(m.id), r=P.role(p.role), initial=String(m.name||'').trim().charAt(0);
       const face=p.avatar?`<img src="${escapeHtml(p.avatar)}" alt="" referrerpolicy="no-referrer">`:escapeHtml(initial);
       const label=r?(r.ic+escapeHtml(r.k)):'역할 없음';
