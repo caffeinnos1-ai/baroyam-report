@@ -10849,7 +10849,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
 
   /* 탭마다 주소 · 보고 있는 화면을 주소 끝(#drive 등)에 적어 두어 새로고침·북마크·공유해도 그 탭이 열린다 ·
-     replaceState 라 뒤로가기 기록은 쌓지 않는다 · 마이홈은 주소를 비우고, 판매채널처럼 다시 열 길이 없는 화면도 비운다 */
+     탭을 누를 때마다 pushState 로 기록을 쌓아 뒤로가기·앞으로가기가 탭 사이를 오간다 ·
+     뒤로가기·첫 화면처럼 주소를 따라 여는 동안(navFromHash)은 replaceState 로 기록을 더 쌓지 않는다 ·
+     마이홈은 주소를 비우고, 판매채널처럼 다시 열 길이 없는 화면도 비운다 */
+  let navFromHash=false;
+  function openFromHashQuiet(v){
+    navFromHash=true;
+    try{ return openFromHash(v); } finally{ navFromHash=false; }
+  }
   function openFromHash(v){
     if(v==='week'||v==='month'){ activateView(v); return true; }
     if(v==='collector'){
@@ -10867,12 +10874,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function syncHash(v){
     const want=routable(v)?'#'+v:'';
     if(location.hash===want) return;
-    try{ history.replaceState(history.state,'',location.pathname+location.search+want); }catch(e){}
+    const url=location.pathname+location.search+want;
+    try{
+      if(navFromHash) history.replaceState(history.state,'',url);
+      else history.pushState(null,'',url);
+    }catch(e){}
   }
-  /* 주소창에 직접 #탭 을 쳐서 바꾼 경우 */
+  /* 뒤로가기·앞으로가기, 또는 주소창에 직접 #탭 을 쳐서 바꾼 경우 */
   window.addEventListener('hashchange',()=>{
     const v=location.hash.slice(1);
-    if(v!==window.baroyamCurrentView&&!openFromHash(v)) activateView('home');
+    if(v===window.baroyamCurrentView) return;
+    if(!openFromHashQuiet(v)){ navFromHash=true; try{ activateView('home'); } finally{ navFromHash=false; } }
   });
 
   document.querySelectorAll('.sb-item[data-view],.hero-view-tab[data-view]').forEach(btn=>{
@@ -10885,10 +10897,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 처음 들어오면 홈 · 마크업의 초기 표시와 한 번 맞춰 둔다 ·
      주소에 탭이 적혀 있으면 모든 화면 코드가 준비된 뒤 그 탭 버튼을 눌러 연다(리뷰수집·메뉴얼가이드 하위 메뉴까지 펼치도록) */
   const startView=location.hash.slice(1);
-  activateView('home');
+  navFromHash=true; try{ activateView('home'); } finally{ navFromHash=false; }
   if(startView){
     document.addEventListener('DOMContentLoaded',()=>{
-      if(window.baroyamCurrentView==='home') openFromHash(startView);
+      if(window.baroyamCurrentView==='home') openFromHashQuiet(startView);
     });
   }
   window.activateLastSales=()=>activateView(lastSalesView);
