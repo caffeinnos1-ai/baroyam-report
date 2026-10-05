@@ -5532,7 +5532,7 @@ window.BAROYAM_ACCESS=(function(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11v2.5c0 .8.7 1.5 1.5 1.5H7l4.5 4V5L7 9H5.5C4.7 9 4 9.7 4 10.5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
           <span>퍼포먼스마케팅</span>
         </button>
-        <button class="sb-item" type="button" data-view="content" id="sbContentBtn">
+        <button class="sb-item" type="button" data-view="content" id="sbContentBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M10 9.2v5.6l4.8-2.8Z"/></svg>
           <span>콘텐츠마케팅</span>
         </button>
@@ -5642,6 +5642,16 @@ window.BAROYAM_ACCESS=(function(){
       <div class="sb-subnav-caption">레퍼런스</div>
       <div class="sb-subnav-flat">
         <button type="button" class="sb-subnav-item" data-perf="videoai">영상분석 AI</button>
+      </div>
+    </nav>
+
+    <nav class="sb-subnav" id="sbContentSubnav" hidden aria-label="콘텐츠마케팅 하위 메뉴">
+      <div class="sb-subnav-head">
+        <div class="sb-subnav-title">콘텐츠마케팅</div>
+      </div>
+      <div class="sb-subnav-flat">
+        <button type="button" class="sb-subnav-item active" data-content="make">콘텐츠 제작</button>
+        <button type="button" class="sb-subnav-item" data-content="feed">피드 등록</button>
       </div>
     </nav>
 
@@ -7667,7 +7677,7 @@ window.BAROYAM_ACCESS=(function(){
         <section>
           <div class="plan-hero">
             <div class="ptag">CONTENT</div>
-            <div class="ptitle">콘텐츠마케팅</div>
+            <div class="ptitle" id="contentViewTitle">콘텐츠 제작</div>
           </div>
         </section>
       </div><!-- /view-content -->
@@ -12888,6 +12898,27 @@ window.CsGuide=(function(){
   }
   btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
   items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('perf'); pick(el); }));
+  function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
+  document.querySelectorAll('.sb-item[data-view],.sb-subitem').forEach(other=>{
+    if(other!==btn) other.addEventListener('click',close);
+  });
+  const salesToggleBtn=document.getElementById('sbSalesToggle');
+  if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+})();
+
+/* 콘텐츠마케팅 사이드탭 · 퍼포먼스마케팅과 같은 방식 · 콘텐츠 제작 / 피드 등록(화면 내용은 아직 제목만 있다) */
+(function(){
+  const btn=document.getElementById('sbContentBtn');
+  const subnav=document.getElementById('sbContentSubnav');
+  const title=document.getElementById('contentViewTitle');
+  if(!btn||!subnav) return;
+  const items=[...subnav.querySelectorAll('[data-content]')];
+  function pick(el){
+    items.forEach(b=>b.classList.toggle('active',b===el));
+    if(title) title.textContent=el.textContent.trim();
+  }
+  btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
+  items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('content'); pick(el); }));
   function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
   document.querySelectorAll('.sb-item[data-view],.sb-subitem').forEach(other=>{
     if(other!==btn) other.addEventListener('click',close);
