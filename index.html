@@ -4043,7 +4043,7 @@ window.BAROYAM_ACCESS=(function(){
   /* 메뉴얼가이드 · 사이드바 아이콘을 누르면 사이드바 옆에 붙는 중분류 사이드탭(실제 레이아웃 컬럼) ·
      .paper 바깥이라 sticky가 먹고, 문서가 늘어나도 컬럼 안에서만 스크롤된다 */
   /* 하얀 바탕(--paper · 다크는 본문 카드색) + 얇은 경계선으로 구분 */
-  .sb-subnav{flex:none;width:228px;background:var(--paper);border-right:1px solid var(--sn-line);
+  .sb-subnav{flex:none;width:184px;background:var(--paper);border-right:1px solid var(--sn-line);
     padding:18px 10px 24px;display:flex;flex-direction:column;position:sticky;top:0;
     align-self:flex-start;height:100vh;overflow-y:auto}
   .sb-subnav[hidden]{display:none}
@@ -4322,6 +4322,16 @@ window.BAROYAM_ACCESS=(function(){
   /* 판매처 점 · 메뉴얼가이드 선택 점과 같은 작은 점, 선택되면 글자색(주황)으로 바뀐다 */
   .sb-subnav-dot{flex:none;width:5px;height:5px;margin:0 1.5px;border-radius:50%;background:var(--mute)}
   .sb-subnav-flat .sb-subnav-item.active .sb-subnav-dot{background:currentColor}
+  /* 중간사이드탭 · 제목·소제목·항목 글자는 가운데, 점은 모든 항목에서 같은 왼쪽 자리(14px)에 ·
+     아이콘이 있던 홈 단추(통합리뷰수집·통계·전체 목차 등)도 아이콘 대신 같은 점 · 판매처 점은 판매처 색 그대로 */
+  .sb-subnav-head,.sb-subnav-caption{text-align:center}
+  .sb-subnav-home,.sb-subnav-flat .sb-subnav-item{position:relative;justify-content:center;text-align:center;padding-left:26px;padding-right:26px}
+  .sb-subnav-home>svg:not(.sb-subnav-external){display:none}
+  .sb-subnav-home .sb-subnav-external{position:absolute;right:10px;top:50%;margin:-6px 0 0}
+  .sb-subnav-flat .sb-subnav-item .sb-subnav-dot{position:absolute;left:14px;top:50%;margin:-2.5px 0 0}
+  .sb-subnav-home::before,.sb-subnav-flat .sb-subnav-item:not(:has(.sb-subnav-dot))::before{content:"";position:absolute;
+    left:14px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:var(--mute)}
+  .sb-subnav-home.active::before,.sb-subnav-flat .sb-subnav-item.active::before{background:currentColor}
   .sb-subnav-dot.is-naver{background:var(--naver)}
   .sb-subnav-dot.is-cafe24{background:var(--self)}
   .sb-subnav-dot.is-coupang{background:var(--coupang)}
