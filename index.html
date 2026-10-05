@@ -4960,8 +4960,8 @@ window.BAROYAM_ACCESS=(function(){
   .bs-tpl-fields .mg-name.bs-tpl-desc::placeholder{color:var(--mute)}
   #bsLabelEditor .mg-items>.mg-row{align-items:flex-start;padding:2px 0}
   /* 항목에 더 단 입력란 · 설명 칸 한 줄 + 지우기 */
-  /* SWOT 사분면 · 정사각형 2×2 · 칸마다 연한 색(강점 초록 · 약점 노랑 · 기회 강조색 · 위협 빨강) */
-  .bs-swot{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;width:100%;max-width:620px;aspect-ratio:1/1}
+  /* SWOT 사분면 · 2×2 를 항목 폭에 꽉 채운다(예전 정사각형 620px 은 오른쪽이 비었음) · 칸마다 연한 색(강점 초록 · 약점 노랑 · 기회 강조색 · 위협 빨강) */
+  .bs-swot{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:clamp(190px,22vw,260px);gap:10px;width:100%}
   .bs-sw{--q:var(--pos);display:flex;flex-direction:column;min-height:0;padding:12px 14px 10px;border-radius:14px;cursor:text;
     background:color-mix(in srgb,var(--q) 8%,var(--paper));border:1px solid color-mix(in srgb,var(--q) 24%,var(--paper));transition:var(--ui-ease)}
   .bs-sw.is-w{--q:var(--warn)} .bs-sw.is-o{--q:var(--btn)} .bs-sw.is-t{--q:var(--neg)}
