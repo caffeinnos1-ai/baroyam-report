@@ -12020,7 +12020,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const cd=e.clipboardData||window.clipboardData;
       /* 복사한 이미지(캡처 등)는 줄여서 보관함에 올리고 그 자리에 넣는다 */
       const img=cd&&[...(cd.files||[])].find(f=>/^image\//.test(f.type));
-      if(img){ if(editMode) pasteImage(ed,id,img); return; }
+      if(img){
+        if(editMode) pasteImage(ed,'manual/'+id,img,setSaveState,()=>{
+          if(activeDoc!==id) return;
+          docs[id]=readEditorHtml(ed);
+          persistLocal();
+          scheduleSave(id);
+        });
+        return;
+      }
       const raw=cd.getData('text/plain')||'';
       if(pasteLink(raw)) return;
       document.execCommand('insertText',false,raw);
@@ -12070,10 +12078,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     return blob;
   }
-  async function pasteImage(ed,docId,file){
+  /* folder: 보관함 안 폴더(manual/<문서id>, agenda/<년-월>) · state(글,경고): 안내줄 · done(): 다 올린 뒤 저장 */
+  async function pasteImage(ed,folder,file,state,done){
     const db=DB();
-    if(!db||!db.fileUpload){ setSaveState('이미지를 넣으려면 로그인이 필요합니다',true); return; }
-    if(file.size>20*1024*1024){ setSaveState('20MB 가 넘는 이미지는 넣을 수 없습니다',true); return; }
+    if(!db||!db.fileUpload){ state('이미지를 넣으려면 로그인이 필요합니다',true); return; }
+    if(file.size>20*1024*1024){ state('20MB 가 넘는 이미지는 넣을 수 없습니다',true); return; }
     /* 커서 자리에 흐린 미리보기를 먼저 넣는다 · 올리는 동안 저장되는 글에는 빠진다(readEditorHtml) */
     const im=document.createElement('img');
     im.className='man-img is-uploading';
@@ -12087,27 +12096,24 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       r.setStartAfter(im); r.collapse(true);
       sel.removeAllRanges(); sel.addRange(r);
     }else ed.appendChild(im);
-    setSaveState('이미지 올리는 중...');
+    state('이미지 올리는 중...');
     try{
       const blob=await shrinkImage(file);
       const ext=blob.type==='image/webp'?'webp':'jpg';
-      const path='manual/'+docId+'/'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+      const path=folder+'/'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
       await db.fileUpload(IMG_BUCKET,path,new File([blob],'image.'+ext,{type:blob.type}));
       URL.revokeObjectURL(im.src);
-      if(!im.isConnected){ setSaveState('다른 문서로 옮겨서 이미지를 넣지 못했습니다',true); return; }
+      if(!im.isConnected){ state('다른 문서로 옮겨서 이미지를 넣지 못했습니다',true); return; }
       im.dataset.file=path;
       im.classList.remove('is-uploading');
       showImages(ed);
-      if(activeDoc===docId){
-        docs[docId]=readEditorHtml(ed);
-        persistLocal();
-        scheduleSave(docId);
-      }
+      state('');
+      done();
     }catch(err){
       console.error(err);
       im.remove();
       const m=String(err&&err.message||err);
-      setSaveState(/bucket|policy|security|row-level|not found/i.test(m)
+      state(/bucket|policy|security|row-level|not found/i.test(m)
         ?'이미지 보관함에 올릴 권한이 없습니다 · 관리자에게 알려 주세요':'이미지를 올리지 못했습니다 · 다시 붙여넣어 주세요',true);
     }
   }
@@ -12133,7 +12139,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function hideImgFrame(){ imgSel=null; imgFrame.hidden=true; imgFrame.querySelector('b').textContent=''; }
   document.addEventListener('mousedown',e=>{
     if(e.target.closest('.man-imgframe')) return;
-    const im=e.target.closest&&e.target.closest('img.man-img');
+    /* 빌려 쓰는 칸(회의안건 메모)은 예전에 통째로 붙인 그림(class 없음)도 같이 조절한다 */
+    const im=e.target.closest&&(e.target.closest('img.man-img')||(onAlt()&&e.target.closest('img')));
     const ed=editorEl();
     if(im&&ed&&ed.contains(im)&&editing()){ imgSel=im; placeImgFrame(); return; }
     hideImgFrame();
@@ -12279,25 +12286,33 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function onAlt(){ return !!(altEd&&altEd.isConnected&&window.baroyamCurrentView===altView); }
   function editorEl(){ return onAlt()?altEd:document.getElementById('manEditor'); }
   function editing(){ return onAlt()||editMode; }
-  window.__manAttachEditor=function(ed,view,onChange){
+  /* opts.imgFolder(): 붙여넣은 그림을 올릴 보관함 폴더 · opts.state(글,경고): 올리는 중·실패 안내 */
+  window.__manAttachEditor=function(ed,view,onChange,opts){
     altEd=ed; altView=view; altChange=onChange;
+    opts=opts||{};
     ed.classList.add('man-editor','is-editing');
     bindEditing(ed);
     ed.addEventListener('input',()=>{
       if(!onAlt()) return;
       if(autoFormatRule(ed)){ tidyEditor(ed); if(altChange) altChange(); }
     });
-    /* 붙여넣기 · 그림은 그대로 붙고, 글은 서식을 걷어내고 글자만 넣는다 */
+    /* 붙여넣기 · 그림은 메뉴얼 문서와 같이 줄여서 보관함에 올리고(본문에는 경로만), 글은 서식을 걷어내고 글자만 넣는다 */
     ed.addEventListener('paste',e=>{
       const cd=e.clipboardData||window.clipboardData;
       if(!cd) return;
-      if(cd.files&&cd.files.length) return;
       e.preventDefault();
+      const img=[...(cd.files||[])].find(f=>/^image\//.test(f.type));
+      if(img){
+        if(opts.imgFolder) pasteImage(ed,opts.imgFolder(),img,opts.state||(()=>{}),()=>{ if(altChange) altChange(); });
+        return;
+      }
       const raw=cd.getData('text/plain')||'';
       if(pasteLink(raw)) return;
       document.execCommand('insertText',false,raw);
     });
   };
+  /* 빌려 쓰는 칸이 저장할 때·불러온 뒤 쓴다 · read: 서명 주소를 뺀 HTML, show: 그림 주소 받아 보이기 */
+  window.__manEditorImages={read:ed=>readEditorHtml(ed),show:ed=>showImages(ed)};
   function selectionInEditor(){
     const ed=editorEl();
     if(!ed||!editing()) return null;
@@ -16890,23 +16905,23 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
   /* 회의 메모 편집 · 메뉴얼가이드와 같은 편집기를 쓴다 (드래그하면 글씨설정 창, 줄 왼쪽 손잡이로 전환·2·3분할·복제·삭제·끌어 옮기기) */
   (function(){
-    if(window.__manAttachEditor) window.__manAttachEditor(agNoteBig,'agenda',save);
-    /* 메모에 넣은 이미지를 클릭할 때마다 크기를 단계적으로 줄이고, 가장 작은 단계에서 다시 누르면 원본 크기로 돌아온다 */
-    const IMG_STEPS=[1,0.75,0.5,0.33];
-    agNoteBig.addEventListener('click',e=>{
-      const img=e.target.closest('img');
-      if(!img) return;
-      if(!img.dataset.naturalWidth){
-        img.dataset.naturalWidth=String(img.naturalWidth||img.clientWidth||300);
-      }
-      const naturalW=parseInt(img.dataset.naturalWidth,10);
-      const idx=(parseInt(img.dataset.sizeStep||'0',10)+1)%IMG_STEPS.length;
-      img.dataset.sizeStep=String(idx);
-      img.style.width=Math.round(naturalW*IMG_STEPS[idx])+'px';
-      img.title=Math.round(IMG_STEPS[idx]*100)+'% · 클릭하면 다음 크기로';
-      save();
+    /* 붙여넣은 그림은 메뉴얼과 같이 긴 변 1600px·400KB 이하로 줄여 보관함 agenda/<년-월>/ 에 올리고 본문에는 경로만 적는다 ·
+       누르면 크기 조절 틀(모서리·좌우 손잡이, 줄 폭의 %) · 예전에 통째로 붙인 그림도 같은 틀로 줄인다 */
+    if(window.__manAttachEditor) window.__manAttachEditor(agNoteBig,'agenda',save,{
+      imgFolder:()=>'agenda/'+(agMeetingDate.value||todayIso()).slice(0,7),
+      state:(t,warn)=>setAutoState(t,warn),
     });
   })();
+  /* 저장된 메모에는 그림 주소가 없으니(곧 만료되는 서명 주소라 빼 둔다) 불러올 때마다 새로 받는다 ·
+     올리다 만 미리보기(경로 없는 man-img)는 걷어낸다 */
+  function agShowImages(){
+    agNoteBig.querySelectorAll('img.man-img:not([data-file])').forEach(im=>im.remove());
+    if(window.__manEditorImages) window.__manEditorImages.show(agNoteBig);
+  }
+  function agNoteHtml(){ return window.__manEditorImages?window.__manEditorImages.read(agNoteBig):agNoteBig.innerHTML; }
+  agShowImages();
+  document.addEventListener('baroyam-agenda-refresh',agShowImages);
+  document.addEventListener('baroyam:auth',agShowImages);
 
   aw.addEventListener('input',save);
 
@@ -17053,7 +17068,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       date: agMeetingDate.value,
       topic: agTopic.textContent.trim(),
       category: agCategory.textContent.trim(),
-      noteHtml: agNoteBig.innerHTML,
+      noteHtml: agNoteHtml(),
       notesHtml: agNotes.innerHTML,
     };
   }
@@ -17387,6 +17402,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     agCategoryPicker.set(rec.category||'');
     agNoteBig.innerHTML=rec.noteHtml||'여기에 자유롭게 적으세요';
     agNotes.innerHTML=rec.notesHtml||'내용을 입력하세요';
+    agShowImages();
     saveDraft();
     setAutoState('');
     renderHistory();
