@@ -4781,6 +4781,37 @@ window.BAROYAM_ACCESS=(function(){
     .settings-overlay{display:none}
   }
   /* ===== 브랜드전략실 · 버튼·칩·입력칸은 ui-* 만 쓰고, 여기는 배치(카드·진행 막대·체크리스트)만 둔다 ===== */
+  /* 영상분석 AI (퍼포먼스마케팅 > 레퍼런스) */
+  .va-wrap{padding:26px 48px 48px}
+  #vaSub[hidden],.va-wrap[hidden],.va-player[hidden],.va-msg[hidden],#vaResult[hidden],.va-empty[hidden]{display:none}
+  .va-grid{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:28px;align-items:start}
+  .va-left{display:flex;flex-direction:column;gap:10px}
+  .va-label{font-size:12.5px;font-weight:800;color:var(--mute);margin-top:4px}
+  .va-text{min-height:220px;resize:vertical;font-weight:500}
+  .va-player{position:relative;width:100%;aspect-ratio:9/16;max-height:520px;border-radius:var(--ui-r);overflow:hidden;
+    background:var(--chip-flat);border:1px solid var(--line)}
+  .va-player.wide{aspect-ratio:16/9}
+  .va-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .va-msg{font-size:12.5px;color:var(--mute);line-height:1.5}
+  .va-empty{padding:60px 20px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--mute);font-size:14px}
+  .va-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .va-stat{font-size:13px;color:var(--mute);font-weight:600}
+  .va-stat b{color:var(--ink)}
+  .va-part{border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:16px 18px 18px;
+    border-left:4px solid var(--line)}
+  .va-part.hook{border-left-color:var(--btn)}
+  .va-part.end{border-left-color:var(--ink)}
+  .va-part-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .va-part-name{font-size:15px;font-weight:800;color:var(--ink)}
+  .va-part.hook .va-part-name{color:var(--btn-soft-ink)}
+  .va-part-n{font-size:12px;color:var(--mute);font-weight:600;margin-right:auto}
+  .va-lines{display:flex;flex-direction:column;gap:14px}
+  .va-line{display:flex;gap:12px;align-items:baseline;font-size:17px;font-weight:600;color:var(--ink);line-height:1.45;letter-spacing:-.2px}
+  .va-line time{flex:none;width:34px;font-size:11.5px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+  .va-none{font-size:13px;color:var(--mute)}
+  .va-cut{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:var(--mute);font-weight:700}
+  .va-cut::before,.va-cut::after{content:"";flex:1;height:1px;background:var(--line)}
+  @media (max-width:860px){ .va-wrap{padding:20px 16px 32px} .va-grid{grid-template-columns:1fr} .va-player{max-height:420px} }
   .bs-wrap{padding:26px 48px 48px}
   @media (max-width:760px){ .bs-wrap{padding:20px 16px 32px} }
   /* 왼쪽 목록 + 오른쪽 상세 */
@@ -7675,6 +7706,36 @@ window.BAROYAM_ACCESS=(function(){
           <div class="plan-hero">
             <div class="ptag">PERFORMANCE</div>
             <div class="ptitle" id="perfViewTitle">퍼포먼스 매출</div>
+            <div class="psub" id="vaSub" hidden>쇼츠 링크와 자막을 넣으면 후킹 · 내용 · 마무리로 나누고, 세로 화면에 맞게 한 줄씩 끊어 줍니다.</div>
+          </div>
+          <!-- 영상분석 AI · 레퍼런스 쇼츠의 자막을 후킹/내용/마무리로 나눈다 ·
+               브라우저는 유튜브 자막을 직접 못 받으므로(CORS) 지금은 자막을 붙여넣는다 · 서버가 생기면 VA_CAPTION_API 에 주소를 넣는다 -->
+          <div class="va-wrap" id="vaPanel" hidden>
+            <div class="va-grid">
+              <div class="va-left">
+                <label class="va-label" for="vaUrl">유튜브 링크</label>
+                <input class="ui-field block" id="vaUrl" type="url" placeholder="https://youtube.com/shorts/…" autocomplete="off">
+                <div class="va-player" id="vaPlayer" hidden></div>
+                <label class="va-label" for="vaText">자막(스크립트)</label>
+                <textarea class="ui-field block va-text" id="vaText" placeholder="유튜브 영상 아래 '…더보기 → 스크립트 표시'에서 전체를 복사해 붙여넣으세요.&#10;시간(0:00)이 같이 붙어 있어도 됩니다."></textarea>
+                <div class="ui-btn-row">
+                  <button class="ui-btn primary" id="vaRun" type="button">분석하기</button>
+                  <button class="ui-btn ghost" id="vaClear" type="button">지우기</button>
+                  <a class="ui-btn ghost" id="vaOpen" target="_blank" rel="noopener" hidden>유튜브에서 열기</a>
+                </div>
+                <div class="va-msg" id="vaMsg" hidden></div>
+              </div>
+              <div class="va-right">
+                <div class="va-empty" id="vaEmpty">자막을 붙여넣고 <b>분석하기</b>를 누르면 여기에 나옵니다.</div>
+                <div id="vaResult" hidden>
+                  <div class="va-head">
+                    <div class="va-stat" id="vaStat"></div>
+                    <button class="ui-btn sm soft" id="vaCopyAll" type="button">전체 복사</button>
+                  </div>
+                  <div id="vaParts"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div><!-- /view-perf -->
@@ -12900,6 +12961,8 @@ window.CsGuide=(function(){
   function pick(el){
     items.forEach(b=>b.classList.toggle('active',b===el));
     if(title) title.textContent=el.textContent.trim();
+    const va=el.dataset.perf==='videoai';
+    ['vaPanel','vaSub'].forEach(id=>{ const n=document.getElementById(id); if(n) n.hidden=!va; });
   }
   btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
   items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('perf'); pick(el); }));
@@ -12909,6 +12972,164 @@ window.CsGuide=(function(){
   });
   const salesToggleBtn=document.getElementById('sbSalesToggle');
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+})();
+
+/* 영상분석 AI · 쇼츠 자막을 후킹 / 내용 / 마무리로 나누고 세로 화면에 맞게 한 줄씩 끊는다 ·
+   나누기는 AI 없이 규칙(처음 3초 = 후킹, 끝의 구독·링크 같은 말 또는 마지막 두 줄 = 마무리) · 경계는 ▲▼ 로 고친다 */
+(function(){
+  const VA_CAPTION_API='';   // 자막을 대신 받아 줄 서버 주소(예: VPS) · 비어 있으면 붙여넣기만 쓴다 · 응답은 {segments:[{t,text}]}
+  const MAX=16;              // 세로 화면 한 줄 글자 수(공백 포함)
+  const CTA=/구독|좋아요 (?:눌|부탁)|댓글|링크|프로필|구매|주문|팔로우|알림|저장|공유|지금 바로|확인해|눌러|클릭|더보기|할인|이벤트/;
+  const $=id=>document.getElementById(id);
+  const url=$('vaUrl'), text=$('vaText'), player=$('vaPlayer'), msg=$('vaMsg'), openA=$('vaOpen');
+  if(!url||!text) return;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const LS='baroyam_videoai_v1';
+  let lines=[], hookEnd=0, endStart=0, curId='';
+
+  function videoId(u){
+    const m=String(u||'').match(/(?:youtu\.be\/|\/shorts\/|\/embed\/|\/live\/|[?&]v=)([\w-]{11})/);
+    return m?m[1]:'';
+  }
+  function showVideo(){
+    const id=videoId(url.value.trim());
+    if(id===curId) return;
+    curId=id;
+    player.hidden=!id; openA.hidden=!id;
+    if(!id){ player.innerHTML=''; return; }
+    player.classList.toggle('wide',!/\/shorts\//.test(url.value));
+    player.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'" title="유튜브 영상" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+    openA.href=/\/shorts\//.test(url.value)?'https://www.youtube.com/shorts/'+id:'https://www.youtube.com/watch?v='+id;
+  }
+  function note(s){ msg.textContent=s||''; msg.hidden=!s; }
+
+  /* 붙여넣은 글 → [{t(초 또는 null), text}] · 유튜브 스크립트(시간 줄 + 글 줄, 또는 "0:00 글"), SRT/VTT, 시간 없는 글 모두 받는다 */
+  const toSec=s=>{ const p=s.split(':').map(Number); return p.reduce((a,b)=>a*60+b,0); };
+  function parse(raw){
+    const out=[]; let t=null;
+    String(raw).replace(/\r/g,'').split('\n').forEach(l=>{
+      l=l.trim();
+      if(!l||/^WEBVTT|^\d+$/.test(l)) return;
+      let m=l.match(/^(\d{1,2}(?::\d{2}){1,2})(?:[.,]\d+)?\s*-->/);              // SRT/VTT 시간 줄
+      if(m){ t=toSec(m[1]); return; }
+      m=l.match(/^(\d{1,2}(?::\d{2}){1,2})(?:\s+(.*))?$/);                       // 유튜브 스크립트 "0:00" / "0:00 글"
+      if(m){ t=toSec(m[1]); if(!m[2]) return; l=m[2]; }
+      l=l.replace(/\[[^\]]*\]|\([^)]*음악[^)]*\)|<[^>]+>/g,'').replace(/\s+/g,' ').trim();   // [음악]·태그 지우기
+      if(!l) return;
+      out.push({t,text:l}); t=null;
+    });
+    // 시간이 하나도 없으면 문장부호나 '…요 / …까 / …죠' 뒤에서 나눈다('다'는 '마다'처럼 문장 끝이 아닐 때가 많아 뺐다)
+    if(out.every(o=>o.t===null)){
+      const joined=[];
+      out.forEach(o=>o.text.split(/(?<=[.?!…~요까죠])\s+/).forEach(s=>{ s=s.trim(); if(s) joined.push({t:null,text:s}); }));
+      return joined;
+    }
+    return out;
+  }
+  /* 긴 줄은 띄어쓰기에서 나눈다 · 가운데에 가깝고 '…는데 / …고 / …서 / …요'처럼 말이 끊기는 자리를 고르며,
+     3자 이하 조각은 피한다 · MAX 이하가 될 때까지 되풀이 */
+  const JOINT=/(?:는데|지만|니까|고|서|면|요|죠|까|게|며|[,.?!…])$/;
+  function wrap(s){
+    if(s.length<=MAX||!/\s/.test(s)) return [s];
+    const mid=s.length/2; let best=-1, bestScore=Infinity;
+    for(let i=0;i<s.length;i++){
+      if(s[i]!==' ') continue;
+      const L=s.slice(0,i).trim(), R=s.slice(i+1).trim();
+      let sc=Math.abs(i-mid);
+      if(JOINT.test(L)) sc-=4;
+      if(L.length<=3||R.length<=3) sc+=8;
+      if(sc<bestScore){ bestScore=sc; best=i; }
+    }
+    return wrap(s.slice(0,best).trim()).concat(wrap(s.slice(best+1).trim()));
+  }
+  function split(segs){
+    const out=[];
+    segs.forEach(sg=>wrap(sg.text).forEach((s,i)=>out.push({t:i===0?sg.t:null,text:s,seg:sg})));
+    return out;
+  }
+  /* 나누기는 자막 조각 단위로 해서, 한 조각을 두 줄로 끊은 것이 두 부분으로 갈라지지 않게 한다 */
+  function classify(){
+    const n=lines.length, hasT=lines.some(l=>l.t!==null);
+    const starts=lines.map((l,i)=>i).filter(i=>i===0||lines[i].seg!==lines[i-1].seg);   // 조각이 시작하는 줄
+    const ns=starts.length, segAt=k=>k<ns?starts[k]:n;
+    // 후킹 · 첫 조각 + 3초 전에 시작한 다음 조각(최대 2조각) · 시간이 없으면 첫 조각
+    let k=1;
+    if(hasT) while(k<Math.min(2,ns)&&(lines[starts[k]].seg.t??99)<3) k++;
+    hookEnd=segAt(k);
+    // 마무리 · 끝 30% 조각 안에서 구독·링크 같은 말이 처음 나온 조각부터 · 없으면 마지막 조각(조각이 6개 넘으면 두 개)
+    const from=Math.max(k,Math.floor(ns*0.7));
+    let e=-1;
+    for(let j=from;j<ns&&e<0;j++) if(CTA.test(lines[starts[j]].seg.text)) e=j;
+    if(e<0) e=ns-(ns>6?2:ns>=3?1:0);
+    endStart=Math.max(hookEnd,segAt(Math.max(k,e)));
+  }
+
+  const fmtT=t=>t===null||t===undefined?'':Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+  const PARTS=[['hook','후킹'],['body','내용'],['end','마무리']];
+  function ranges(){ return [[0,hookEnd],[hookEnd,endStart],[endStart,lines.length]]; }
+  function render(){
+    const box=$('vaParts'), rs=ranges();
+    let h='';
+    PARTS.forEach(([k,name],pi)=>{
+      const [a,b]=rs[pi], ls=lines.slice(a,b);
+      h+='<div class="va-part '+k+'"><div class="va-part-head"><span class="va-part-name">'+name+'</span>'
+        +'<span class="va-part-n">'+ls.length+'줄</span>'
+        +(ls.length?'<button class="ui-btn sm ghost" type="button" data-copy="'+pi+'">복사</button>':'')+'</div>'
+        +(ls.length?'<div class="va-lines">'+ls.map(l=>'<div class="va-line"><time>'+fmtT(l.t)+'</time><span>'+esc(l.text)+'</span></div>').join('')+'</div>'
+                   :'<div class="va-none">없음 · 아래 ▲▼ 로 경계를 옮기세요</div>')
+        +'</div>';
+      if(pi<2) h+='<div class="va-cut">'+name+' / '+PARTS[pi+1][1]+' 경계'
+        +'<button class="ui-btn sm icon ghost" type="button" data-mv="'+pi+'" data-d="-1" aria-label="경계를 한 줄 위로">▲</button>'
+        +'<button class="ui-btn sm icon ghost" type="button" data-mv="'+pi+'" data-d="1" aria-label="경계를 한 줄 아래로">▼</button></div>';
+    });
+    box.innerHTML=h;
+    const last=[...lines].reverse().find(l=>l.t!==null);
+    $('vaStat').innerHTML='<b>'+lines.length+'</b>줄'+(last?' · 약 <b>'+fmtT(last.t)+'</b>까지':'')+' · 한 줄 '+MAX+'자 기준';
+  }
+  const partText=pi=>{ const [a,b]=ranges()[pi]; return lines.slice(a,b).map(l=>l.text).join('\n\n'); };
+  function copy(s,btn){
+    const done=()=>{ const o=btn.textContent; btn.textContent='복사됨'; setTimeout(()=>btn.textContent=o,1200); };
+    if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(s).then(done,()=>note('복사하지 못했습니다. 글을 직접 골라 복사하세요.'));
+    else { const ta=document.createElement('textarea'); ta.value=s; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} ta.remove(); }
+  }
+
+  function analyze(){
+    const segs=parse(text.value);
+    if(!segs.length){ note('자막을 먼저 붙여넣으세요.'); return; }
+    lines=split(segs); classify(); render();
+    $('vaEmpty').hidden=true; $('vaResult').hidden=false; note('');
+    save();
+  }
+  async function tryFetch(){
+    const id=videoId(url.value.trim());
+    if(!VA_CAPTION_API||!id||text.value.trim()) return;
+    note('자막을 불러오는 중…');
+    try{
+      const r=await fetch(VA_CAPTION_API+'?v='+encodeURIComponent(id));
+      const j=await r.json();
+      if(!r.ok||!j.segments||!j.segments.length) throw 0;
+      text.value=j.segments.map(s=>(s.t!=null?fmtT(s.t)+' ':'')+s.text).join('\n');
+      analyze();
+    }catch(e){ note('자막을 불러오지 못했습니다(자막이 없는 영상일 수 있음). 스크립트를 직접 붙여넣어 주세요.'); }
+  }
+  function save(){ try{ localStorage.setItem(LS,JSON.stringify({u:url.value,x:text.value})); }catch(e){} }
+
+  $('vaParts').addEventListener('click',e=>{
+    const c=e.target.closest('[data-copy]'); if(c){ copy(partText(+c.dataset.copy),c); return; }
+    const m=e.target.closest('[data-mv]'); if(!m) return;
+    const d=+m.dataset.d;
+    if(m.dataset.mv==='0') hookEnd=Math.max(0,Math.min(endStart,hookEnd+d));
+    else endStart=Math.max(hookEnd,Math.min(lines.length,endStart+d));
+    render();
+  });
+  $('vaCopyAll').addEventListener('click',e=>copy(PARTS.map(([,n],i)=>'['+n+']\n\n'+(partText(i)||'(없음)')).join('\n\n\n'),e.currentTarget));
+  $('vaRun').addEventListener('click',analyze);
+  $('vaClear').addEventListener('click',()=>{ url.value=''; text.value=''; lines=[]; showVideo(); note('');
+    $('vaResult').hidden=true; $('vaEmpty').hidden=false; save(); });
+  url.addEventListener('input',()=>{ showVideo(); save(); });
+  url.addEventListener('change',tryFetch);
+  text.addEventListener('input',save);
+  try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){ url.value=s.u||''; text.value=s.x||''; showVideo(); if(text.value.trim()) analyze(); } }catch(e){}
 })();
 
 /* 콘텐츠마케팅 사이드탭 · 퍼포먼스마케팅과 같은 방식 · 콘텐츠 제작 / 피드 등록(인스타·블로그)(화면 내용은 아직 제목만 있다) */
