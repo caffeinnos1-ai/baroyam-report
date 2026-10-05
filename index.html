@@ -2069,6 +2069,9 @@ window.BAROYAM_ACCESS=(function(){
     .section > .plan-hero{margin:0 -32px;padding-left:32px;padding-right:32px}
   }
   .section > .plan-hero:first-child{border-radius:20px 20px 0 0;border-width:0 0 1px}
+  /* 손익·마진 관리 · 내용이 들어오기 전 빈 자리 */
+  .profit-empty{margin-top:34px;min-height:360px;display:grid;place-items:center;border:1px dashed var(--line);
+    border-radius:16px;color:var(--mute);font-size:15px;font-weight:600}
   /* 리뷰수집 배너 · 판매처를 고르면 그 브랜드 색이 제목 글자에 실린다(카페24는 기본 주황) */
   #revHero.is-naver{--hero-accent:#00734d}
   #revHero.is-coupang{--hero-accent:#2f77cc}
@@ -7811,12 +7814,14 @@ window.BAROYAM_ACCESS=(function(){
       </div><!-- /view-content -->
       <!-- 손익·마진 관리 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-profit" style="display:none">
-        <section>
+        <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
+        <section class="section" style="padding-top:0">
           <div class="plan-hero">
             <div class="ptag">PROFIT &amp; MARGIN</div>
             <div class="ptitle" id="profitViewTitle">순수익 요약</div>
             <div class="psub" id="profitViewSub">채널별·기간별 최종 순이익을 모니터링합니다.</div>
           </div>
+          <div class="profit-empty">아직 준비 중인 화면입니다.</div>
         </section>
       </div><!-- /view-profit -->
       <!-- 브랜드전략실 · 브랜드(제품)마다 시장조사→제조→패키지→판매준비→출시→판매후관리 체크리스트로 진행도를 본다 ·
