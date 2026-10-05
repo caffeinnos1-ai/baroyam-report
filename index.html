@@ -5596,11 +5596,10 @@ window.BAROYAM_ACCESS=(function(){
       <div class="sb-subnav-head">
         <div class="sb-subnav-title">리뷰수집</div>
       </div>
-      <div class="sb-subnav-caption">리뷰 운영</div>
       <!-- 리뷰 수집기(127.0.0.1:4317)를 새 창 대신 대시보드 본문(#view-collector) 안에 띄운다 -->
       <button type="button" class="sb-subnav-home" id="sbReviewCollector" title="이 PC에서 리뷰 수집기를 실행한 뒤 열어주세요">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12.5h5"/></svg>
-        <span>통합리뷰수집</span>
+        <span>리뷰수집하기</span>
       </button>
       <div class="sb-subnav-sep"></div>
       <div class="sb-subnav-caption">판매처별 리뷰</div>
@@ -6488,7 +6487,7 @@ window.BAROYAM_ACCESS=(function(){
           <div class="plan-hero">
             <div class="ptag">REVIEWS</div>
             <div class="plan-hero-head">
-              <div class="ptitle">통합리뷰수집</div>
+              <div class="ptitle">리뷰수집하기</div>
               <div style="text-align:right">
                 <button type="button" class="rev-csv-btn" id="collectorReloadBtn" title="리뷰 수집기 화면을 다시 불러와요">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h5"/><path d="M4.6 9a7.5 7.5 0 1 1 .9 6.5"/></svg>
@@ -6909,7 +6908,7 @@ window.BAROYAM_ACCESS=(function(){
             var channelHas=revBaseRows().some(function(r){return revChannelMatches(r.channel)});
             if(!channelHas&&revState.source==='collector')
               return {head:'아직 수집된 리뷰가 없어요',
-                      sub:'통합리뷰수집에서 '+name+' 리뷰를 수집하면 여기에 들어와요'};
+                      sub:'리뷰수집하기에서 '+name+' 리뷰를 수집하면 여기에 들어와요'};
             if(channelHas) return {head:'선택한 기간에 리뷰가 없어요', sub:'이번 달이나 범위 선택으로 기간을 넓혀보세요'};
             return {head:'업로드된 데이터 없음', sub:'CSV를 불러와 주세요'};
           }
@@ -12707,7 +12706,7 @@ window.CsGuide=(function(){
     {key:'drive',name:'드라이브',          kind:'메뉴',       go:()=>window.activateView('drive')},
     {key:'account',name:'계정관리',          kind:'메뉴',       go:()=>window.activateView('account')},
     {key:'automation',name:'자동화',            kind:'메뉴 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()},
-    {key:'review',name:'통합리뷰수집',      kind:'리뷰수집',   go:()=>{ document.getElementById('sbReviewBtn').click(); document.getElementById('sbReviewCollector').click(); }},
+    {key:'review',name:'리뷰수집하기',      kind:'리뷰수집',   go:()=>{ document.getElementById('sbReviewBtn').click(); document.getElementById('sbReviewCollector').click(); }},
     {key:'automation',name:'자동화 관리',       kind:'자동화 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()}
   ];
   const ESC={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'};
