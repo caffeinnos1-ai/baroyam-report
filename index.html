@@ -4790,7 +4790,6 @@ window.BAROYAM_ACCESS=(function(){
   .va-grid{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:28px;align-items:start}
   .va-left{display:flex;flex-direction:column;gap:10px}
   .va-label{font-size:12.5px;font-weight:800;color:var(--mute);margin-top:4px}
-  .va-text{min-height:220px;resize:vertical;font-weight:500}
   .va-player{position:relative;width:100%;aspect-ratio:9/16;max-height:520px;border-radius:var(--ui-r);overflow:hidden;
     background:var(--chip-flat);border:1px solid var(--line)}
   .va-player.wide{aspect-ratio:16/9}
@@ -7713,24 +7712,20 @@ window.BAROYAM_ACCESS=(function(){
             <div class="psub" id="vaSub" hidden>쇼츠 링크와 자막을 넣으면 후킹 · 내용 · 마무리로 나누고, 세로 화면에 맞게 한 줄씩 끊어 줍니다.</div>
           </div>
           <!-- 영상분석 AI · 레퍼런스 쇼츠의 자막을 후킹/내용/마무리로 나눈다 ·
-               브라우저는 유튜브 자막을 직접 못 받으므로(CORS) Supabase 함수 yt-captions 가 대신 받는다 · 자막이 없는 영상은 붙여넣기 -->
+               브라우저는 유튜브 자막을 직접 못 받으므로(CORS) Supabase 함수 yt-captions 가 대신 받는다 -->
           <div class="va-wrap" id="vaPanel" hidden>
             <div class="va-grid">
               <div class="va-left">
                 <label class="va-label" for="vaUrl">유튜브 링크</label>
                 <input class="ui-field block" id="vaUrl" type="url" placeholder="https://youtube.com/shorts/…" autocomplete="off">
                 <div class="va-player" id="vaPlayer" hidden></div>
-                <label class="va-label" for="vaText">자막(스크립트)</label>
-                <textarea class="ui-field block va-text" id="vaText" placeholder="링크를 넣고 분석하기를 누르면 유튜브 자막(CC)을 여기에 불러옵니다.&#10;자막이 없는 영상은 스크립트를 직접 붙여넣어도 됩니다."></textarea>
                 <div class="ui-btn-row">
-                  <button class="ui-btn primary" id="vaRun" type="button">분석하기</button>
-                  <button class="ui-btn ghost" id="vaClear" type="button">지우기</button>
-                  <a class="ui-btn ghost" id="vaOpen" target="_blank" rel="noopener" hidden>유튜브에서 열기</a>
+                  <button class="ui-btn primary" id="vaRun" type="button">AI분석</button>
                 </div>
                 <div class="va-msg" id="vaMsg" hidden></div>
               </div>
               <div class="va-right">
-                <div class="va-empty" id="vaEmpty">유튜브 링크를 넣고 <b>분석하기</b>를 누르면 여기에 나옵니다.</div>
+                <div class="va-empty" id="vaEmpty">유튜브 링크를 넣고 <b>AI분석</b>을 누르면 여기에 나옵니다.</div>
                 <div id="vaResult" hidden>
                   <div class="va-head">
                     <div class="va-stat" id="vaStat"></div>
@@ -13018,7 +13013,8 @@ window.CsGuide=(function(){
   const MAX=16;              // 세로 화면 한 줄 글자 수(공백 포함)
   const CTA=/구독|좋아요 (?:눌|부탁)|댓글|링크|프로필|구매|주문|팔로우|알림|저장|공유|지금 바로|확인해|눌러|클릭|더보기|할인|이벤트/;
   const $=id=>document.getElementById(id);
-  const url=$('vaUrl'), text=$('vaText'), player=$('vaPlayer'), msg=$('vaMsg'), openA=$('vaOpen');
+  const url=$('vaUrl'), player=$('vaPlayer'), msg=$('vaMsg');
+  const text={value:''};   // 불러온 자막 글 · 화면에 입력칸은 두지 않는다(사용자 요청)
   if(!url||!text) return;
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const LS='baroyam_videoai_v1';
@@ -13032,12 +13028,10 @@ window.CsGuide=(function(){
     const id=videoId(url.value.trim());
     if(id===curId) return;
     curId=id;
-    player.hidden=!id; openA.hidden=!id;
+    player.hidden=!id;
     if(!id){ player.innerHTML=''; return; }
     player.classList.toggle('wide',!/\/shorts\//.test(url.value));
-    player.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'" title="유튜브 영상" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>';
-    openA.href=/\/shorts\//.test(url.value)?'https://www.youtube.com/shorts/'+id:'https://www.youtube.com/watch?v='+id;
-  }
+    player.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'" title="유튜브 영상" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>';  }
   function note(s){ msg.textContent=s||''; msg.hidden=!s; }
 
   /* 붙여넣은 글 → [{t(초 또는 null), text}] · 유튜브 스크립트(시간 줄 + 글 줄, 또는 "0:00 글"), SRT/VTT, 시간 없는 글 모두 받는다 */
@@ -13163,17 +13157,17 @@ window.CsGuide=(function(){
 
   function analyze(){
     const segs=parse(text.value);
-    if(!segs.length){ note('자막을 먼저 붙여넣으세요.'); return; }
+    if(!segs.length){ note('자막이 비어 있습니다.'); return; }
     lines=split(segs); classify(); render();
     $('vaEmpty').hidden=true; $('vaResult').hidden=false; note('');
     save();
   }
-  /* 분석하기 · 링크가 있으면 그 영상의 CC 자막을 먼저 불러와 자막 칸을 채운다(같은 영상을 이미 불러왔으면 칸의 글을 그대로 씀) ·
-     못 불러오면 자막 칸에 붙여넣은 글로 나눈다 */
+  /* AI분석 · 링크의 CC 자막을 불러와 나눈다(같은 영상을 이미 불러왔으면 다시 받지 않음) */
   let loadedFor='';
   async function run(){
     const id=videoId(url.value.trim()), btn=$('vaRun');
-    if(!id||id===loadedFor){ analyze(); return; }
+    if(!id){ note('유튜브 링크를 넣어 주세요.'); return; }
+    if(id===loadedFor){ analyze(); return; }
     btn.disabled=true; note('자막(CC)을 불러오는 중…');
     try{
       const ses=window.BAROYAM_DB&&await window.BAROYAM_DB.session();
@@ -13187,9 +13181,7 @@ window.CsGuide=(function(){
       analyze();
       note((j.auto?'유튜브 자동 생성 자막':'직접 올린 자막')+'을 불러왔습니다'+(j.lang&&!/^ko/.test(j.lang)?' ('+j.lang+')':'')+'.');
     }catch(e){
-      const m='자막을 불러오지 못했습니다 · '+(e&&e.message||e);
-      if(text.value.trim()){ analyze(); note(m+' · 자막 칸의 글로 나눴습니다.'); }
-      else note(m+' · 스크립트를 직접 붙여넣고 다시 누르세요.');
+      note('자막을 불러오지 못했습니다 · '+(e&&e.message||e));
     }finally{ btn.disabled=false; }
   }
   function save(){ try{ localStorage.setItem(LS,JSON.stringify({u:url.value,x:text.value,f:loadedFor})); }catch(e){} }
@@ -13204,10 +13196,7 @@ window.CsGuide=(function(){
   });
   $('vaCopyAll').addEventListener('click',e=>copy(PARTS.map(([,n],i)=>'['+n+']\n\n'+(partText(i)||'(없음)')).join('\n\n\n'),e.currentTarget));
   $('vaRun').addEventListener('click',run);
-  $('vaClear').addEventListener('click',()=>{ url.value=''; text.value=''; lines=[]; loadedFor=''; showVideo(); note('');
-    $('vaResult').hidden=true; $('vaEmpty').hidden=false; save(); });
   url.addEventListener('input',()=>{ showVideo(); save(); });
-  text.addEventListener('input',save);
   try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){ url.value=s.u||''; text.value=s.x||''; loadedFor=s.f||''; showVideo(); if(text.value.trim()) analyze(); } }catch(e){}
 })();
 
