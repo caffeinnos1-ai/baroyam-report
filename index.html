@@ -5030,6 +5030,52 @@ window.BAROYAM_ACCESS=(function(){
     font-size:13px;font-weight:500;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
   .bs-sw textarea::placeholder{color:var(--mute)}
   @media (max-width:560px){ .bs-sw{padding:10px 10px 8px} .bs-sw-h i{display:none} }
+  /* 브랜드 컬러 · 60-30-10 규칙 세 칸(주 색상·보조 색상·강조 색상)을 가로로 · 적지 않고 고른다(견본·색 공간·HEX) · 값은 st.co={p,s,a} */
+  .bs-color{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-right:32px}
+  @media (max-width:560px){ .bs-color{grid-template-columns:1fr;margin-right:0} }
+  .bs-cl{display:flex;flex-direction:column;gap:9px;min-width:0;padding:12px 14px 12px;border-radius:14px;
+    background:color-mix(in srgb,var(--line) 22%,var(--paper));border:1px solid var(--line);transition:var(--ui-ease)}
+  .bs-cl:focus-within{border-color:var(--btn);box-shadow:0 0 0 3px color-mix(in srgb,var(--btn) 16%,transparent)}
+  .bs-cl-h{display:flex;align-items:center;gap:9px}
+  .bs-cl-h b{flex:none;display:grid;place-items:center;min-width:46px;height:30px;padding:0 8px;border-radius:9px;font-size:15px;font-weight:900;
+    color:var(--btn-soft-ink);background:var(--btn-soft)}
+  .bs-cl-h span{display:flex;flex-direction:column;font-size:13px;font-weight:800;color:var(--ink);line-height:1.2}
+  .bs-cl-h i{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--mute)}
+  .bs-cl-sw{all:unset;box-sizing:border-box;display:grid;place-items:center;width:100%;height:clamp(110px,12vw,150px);border-radius:11px;cursor:pointer;
+    background:var(--c,transparent);border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);transition:var(--ui-ease)}
+  .bs-cl-sw:hover{transform:translateY(-1px);box-shadow:0 6px 16px color-mix(in srgb,var(--ink) 12%,transparent)}
+  .bs-cl-sw:focus-visible{box-shadow:var(--ui-ring)}
+  .bs-cl-sw.empty{border:1.5px dashed var(--line);color:var(--mute);font-size:12.5px;font-weight:700;
+    background:repeating-linear-gradient(135deg,transparent 0 8px,color-mix(in srgb,var(--line) 40%,transparent) 8px 9px)}
+  .bs-cl-hex{display:flex;align-items:center;gap:6px}
+  .bs-cl-hex .ui-field{flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+  .bs-cl-hex .ui-field.bad{border-color:var(--neg)}
+  .bs-cl-d{margin:0;font-size:11.5px;line-height:1.5;color:var(--body)}
+  /* 60 : 30 : 10 비율 미리보기 */
+  .bs-cl-ratio{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;margin-top:2px}
+  .bs-cl-ratio>div{display:flex;height:34px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .bs-cl-ratio>div>span{display:grid;place-items:center;background:var(--c,transparent);font-size:11px;font-weight:800}
+  .bs-cl-ratio>div>span.empty{background:repeating-linear-gradient(135deg,transparent 0 8px,color-mix(in srgb,var(--line) 50%,transparent) 8px 9px);color:var(--mute)}
+  .bs-cl-ratio small{font-size:11px;font-weight:600;color:var(--mute)}
+  /* 색 고르기 창 · 색 공간(채도·밝기) + 색상 띠 + HEX + 추천 색 견본 */
+  .bs-cpick{width:296px;max-width:calc(100vw - 16px);display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+  .bs-cp-sv{position:relative;height:150px;border-radius:9px;cursor:crosshair;touch-action:none;
+    background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(var(--h,0),100%,50%))}
+  .bs-cp-hue{position:relative;height:14px;border-radius:7px;cursor:pointer;touch-action:none;
+    background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+  .bs-cp-dot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.3);pointer-events:none;background:var(--c)}
+  .bs-cp-hue .bs-cp-dot{top:50%}
+  .bs-cp-row{display:flex;align-items:center;gap:8px}
+  .bs-cp-now{flex:none;width:36px;height:var(--ui-h-sm);border-radius:8px;background:var(--c,transparent);border:1px solid var(--line)}
+  .bs-cp-row .ui-field{flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;font-weight:700;text-transform:uppercase}
+  .bs-cp-t{font-size:11px;font-weight:800;color:var(--mute);letter-spacing:.04em}
+  .bs-cp-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+  .bs-cp-grid button{all:unset;aspect-ratio:1;border-radius:4px;cursor:pointer;background:var(--c);
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 10%,transparent);transition:transform .1s}
+  .bs-cp-grid button:hover{transform:scale(1.25);position:relative;z-index:1}
+  .bs-cp-grid button:focus-visible{box-shadow:var(--ui-ring)}
+  .bs-cp-grid button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ink)}
   /* 연동한 드라이브 파일 · 정사각형 썸네일 카드 */
   .bs-drv-cards{display:flex;flex-wrap:wrap;gap:10px;width:100%}
   .bs-drv-card{position:relative;width:120px}
@@ -18927,6 +18973,12 @@ window.baroyamAsk=function(title,body,okText){
   function isSwot(x){ return /^\s*swot/i.test((x&&x.t)||''); }
   const SWOT=[['s','S','강점','Strength','경쟁 제품보다 나은 점'],['w','W','약점','Weakness','부족하거나 보완할 점'],
     ['o','O','기회','Opportunity','시장·트렌드에서 오는 기회'],['t','T','위협','Threat','경쟁·규제·원가 같은 위험']];
+  /* 브랜드 컬러 항목 · SWOT 처럼 이름으로 알아보고(관리자 설정에서 이름 잠금·삭제 불가), 대시보드에서는 60-30-10 세 칸 색 고르기로 보인다 */
+  function isColor(x){ return /^\s*(브랜드\s*(컬러|칼라|색상)|brand\s*colou?r)/i.test((x&&x.t)||''); }
+  function isFixed(x){ return isSwot(x)||isColor(x); }
+  const BCOLOR=[['p','60%','주 색상','Primary','브랜드를 대표하는 메인 컬러 · 전체 디자인의 가장 큰 비중으로 핵심 정체성을 전합니다'],
+    ['s','30%','보조 색상','Secondary','메인 컬러를 받쳐 주고 시각적 다양성을 주는 컬러 · 메인과 어우러지거나 대비되는 색'],
+    ['a','10%','강조 색상','Accent','패키지·구매 버튼처럼 시선을 끌어야 하는 곳에 아주 조금만 쓰는 포인트 컬러']];
   function newId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   /* 서버에서 받은 틀 · 보낼 고침이 남았으면 보낼 때 합치므로 지금 것은 그대로 둔다 */
   function adoptT(server,oldLabels){
@@ -19375,7 +19427,7 @@ window.baroyamAsk=function(title,body,okText){
             +'<div class="bs-step-body">'
             +'<label for="bsS_'+esc(s.id)+'"><div class="bs-step-t">'+esc(sTitle(s))+'<span class="bs-step-at">'+(st.done&&st.at?dot(st.at)+' 완료':'')+'</span></div>'
             +(sDesc(s)?'<div class="bs-step-d">'+esc(sDesc(s))+'</div>':'')+'</label>'
-            +(isSwot(s)?swotHtml(st):'<div class="bs-fls">'+flsHtml(st)+'</div>')
+            +(isSwot(s)?swotHtml(st):isColor(s)?colorHtml(st):'<div class="bs-fls">'+flsHtml(st)+'</div>')
             +'<div class="bs-att">'+attHtml(b.id,s.id,st)+'</div>'
             +'</div></div>';
         }).join('')+'</div>';
@@ -19409,6 +19461,145 @@ window.baroyamAsk=function(title,body,okText){
         +'<textarea data-sw="'+q[0]+'" maxlength="2000" placeholder="'+q[4]+'" aria-label="'+q[2]+'">'+esc(sw[q[0]])+'</textarea></label>';
     }).join('')+'</div>';
   }
+  /* 브랜드 컬러 세 칸 · 값은 st.co={p,s,a}('#RRGGBB') · 견본을 누르면 색 고르기 창, HEX 칸에 직접 적어도 된다 */
+  function colorHtml(st){
+    const co=(st&&st.co)||{};
+    return '<div class="bs-color">'+BCOLOR.map(function(q){
+      const c=co[q[0]]||'';
+      return '<div class="bs-cl" data-co-box="'+q[0]+'"><div class="bs-cl-h"><b>'+q[1]+'</b><span>'+q[2]+'<i>'+q[3]+'</i></span></div>'
+        +'<button type="button" class="bs-cl-sw'+(c?'':' empty')+'" data-co-pick="'+q[0]+'" aria-label="'+q[2]+' 고르기"'+(c?' style="--c:'+c+'"':'')+'>'+(c?'':'+ 색 고르기')+'</button>'
+        +'<div class="bs-cl-hex"><input class="ui-field sm" data-co="'+q[0]+'" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#000000" aria-label="'+q[2]+' 색 코드" value="'+esc(c)+'">'
+        +(c?'<button type="button" class="ui-btn ghost icon sm" data-co-clear="'+q[0]+'" aria-label="'+q[2]+' 지우기">✕</button>':'')+'</div>'
+        +'<p class="bs-cl-d">'+q[4]+'</p></div>';
+    }).join('')+'<div class="bs-cl-ratio">'+ratioHtml(co)+'</div></div>';
+  }
+  function ratioHtml(co){
+    return '<div aria-label="60:30:10 비율 미리보기">'+BCOLOR.map(function(q){
+      const c=co[q[0]];
+      return '<span class="'+(c?'':'empty')+'" style="flex:'+parseInt(q[1],10)+';'+(c?'--c:'+c+';color:'+inkOn(c):'')+'">'+q[1]+'</span>';
+    }).join('')+'</div><small>60 : 30 : 10 비율로 놓았을 때 · 주 색상이 바탕, 보조 색상이 받침, 강조 색상이 포인트</small>';
+  }
+  /* 고른 색 위에 얹을 글자색(밝은 색이면 검정 · 어두우면 흰색) */
+  function inkOn(hex){
+    const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
+    return (r*299+g*587+b*114)/1000>150?'rgba(0,0,0,.72)':'rgba(255,255,255,.92)';
+  }
+  function normHex(v){
+    let h=String(v||'').trim().replace(/^#/,'');
+    if(/^[0-9a-f]{3}$/i.test(h)) h=h.replace(/./g,function(c){ return c+c; });
+    return /^[0-9a-f]{6}$/i.test(h)?'#'+h.toUpperCase():null;
+  }
+  /* 한 칸만 다시 칠한다(HEX 칸에 적는 중이어도 끊기지 않게) */
+  function paintColor(row,k,c,keepInput){
+    const box=row.querySelector('[data-co-box="'+k+'"]'); if(!box) return;
+    const sw=box.querySelector('.bs-cl-sw');
+    sw.classList.toggle('empty',!c); sw.textContent=c?'':'+ 색 고르기';
+    if(c) sw.style.setProperty('--c',c); else sw.style.removeProperty('--c');
+    const inp=box.querySelector('[data-co]');
+    if(!keepInput) inp.value=c||'';
+    inp.classList.remove('bad');
+    const clr=box.querySelector('[data-co-clear]');
+    if(c&&!clr) box.querySelector('.bs-cl-hex').insertAdjacentHTML('beforeend','<button type="button" class="ui-btn ghost icon sm" data-co-clear="'+k+'" aria-label="지우기">✕</button>');
+    if(!c&&clr) clr.remove();
+    const b=find(openId), st=b&&b.steps&&b.steps[row.dataset.s];
+    row.querySelector('.bs-cl-ratio').innerHTML=ratioHtml((st&&st.co)||{});
+  }
+  function setColor(row,k,c,keepInput){
+    const b=find(openId); if(!b) return;
+    stepSet(b,row.dataset.s,function(st){ st.co=Object.assign({},st.co); if(c) st.co[k]=c; else delete st.co[k]; });
+    paintColor(row,k,c,keepInput);
+  }
+  /* ---------- 색 고르기 창 · 하나를 만들어 두고 누른 견본 아래에 띄운다 ---------- */
+  const cpick=(function(){
+    function hsl2hex(h,s,l){
+      s/=100; l/=100;
+      const f=function(n){ const k=(n+h/30)%12, a=s*Math.min(l,1-l), v=l-a*Math.max(-1,Math.min(k-3,9-k,1)); return Math.round(v*255).toString(16).padStart(2,'0'); };
+      return ('#'+f(0)+f(8)+f(4)).toUpperCase();
+    }
+    function hsv2hex(h,s,v){
+      const f=function(n){ const k=(n+h/60)%6; return Math.round((v-v*s*Math.max(0,Math.min(k,4-k,1)))*255).toString(16).padStart(2,'0'); };
+      return ('#'+f(5)+f(3)+f(1)).toUpperCase();
+    }
+    function hex2hsv(hex){
+      const n=parseInt(hex.slice(1),16), r=(n>>16&255)/255, g=(n>>8&255)/255, b=(n&255)/255;
+      const mx=Math.max(r,g,b), d=mx-Math.min(r,g,b);
+      let h=0;
+      if(d){ h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4; h=(h*60+360)%360; }
+      return {h:h,s:mx?d/mx:0,v:mx};
+    }
+    /* 추천 견본 · 색상 12가지 × 밝기 6단계 + 무채색 12단계 = 84색 · 그 밖의 색은 위 색 공간이나 HEX 로 */
+    const HUES=[0,22,38,50,75,120,160,185,205,225,260,320], LIGHTS=[[70,90],[75,78],[78,64],[72,50],[70,38],[60,26]];
+    const SWATCH=[];
+    LIGHTS.forEach(function(sl){ HUES.forEach(function(h){ SWATCH.push(hsl2hex(h,sl[0],sl[1])); }); });
+    for(let i=0;i<12;i++) SWATCH.push(hsl2hex(0,0,100-i*100/11));
+    const pop=document.createElement('div');
+    pop.className='ui-pop bs-cpick'; pop.hidden=true; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','색 고르기');
+    pop.innerHTML='<div class="bs-cp-sv"><i class="bs-cp-dot"></i></div><div class="bs-cp-hue"><i class="bs-cp-dot"></i></div>'
+      +'<div class="bs-cp-row"><span class="bs-cp-now"></span><input class="ui-field sm" maxlength="7" spellcheck="false" autocomplete="off" aria-label="색 코드" placeholder="#000000">'
+      +'<button type="button" class="ui-btn primary sm" data-cp-ok>확인</button></div>'
+      +'<div class="bs-cp-t">추천 색</div><div class="bs-cp-grid">'+SWATCH.map(function(c){
+        return '<button type="button" data-c="'+c+'" style="--c:'+c+'" title="'+c+'" aria-label="'+c+'"></button>'; }).join('')+'</div>';
+    document.body.appendChild(pop);
+    const sv=pop.querySelector('.bs-cp-sv'), hue=pop.querySelector('.bs-cp-hue'), inp=pop.querySelector('input'), now=pop.querySelector('.bs-cp-now');
+    let hsv={h:0,s:0,v:0}, onPick=null, anchor=null;
+    function show(hex,from){
+      if(!from) hsv=hex2hsv(hex);
+      sv.style.setProperty('--h',Math.round(hsv.h));
+      const d1=sv.firstChild, d2=hue.firstChild;
+      d1.style.left=(hsv.s*100)+'%'; d1.style.top=((1-hsv.v)*100)+'%'; d1.style.setProperty('--c',hex);
+      d2.style.left=(hsv.h/360*100)+'%'; d2.style.setProperty('--c',hsl2hex(hsv.h,100,50));
+      now.style.setProperty('--c',hex);
+      if(from!=='input'){ inp.value=hex; inp.classList.remove('bad'); }
+      pop.querySelectorAll('.bs-cp-grid button').forEach(function(x){ x.setAttribute('aria-pressed',String(x.dataset.c===hex)); });
+    }
+    function emit(hex){ if(onPick) onPick(hex); }
+    function drag(el,fn){
+      el.addEventListener('pointerdown',function(e){
+        e.preventDefault(); el.setPointerCapture(e.pointerId); fn(e);
+        const mv=function(ev){ fn(ev); }, up=function(){ el.removeEventListener('pointermove',mv); el.removeEventListener('pointerup',up); };
+        el.addEventListener('pointermove',mv); el.addEventListener('pointerup',up);
+      });
+    }
+    const clamp=function(x){ return Math.max(0,Math.min(1,x)); };
+    drag(sv,function(e){
+      const r=sv.getBoundingClientRect();
+      hsv.s=clamp((e.clientX-r.left)/r.width); hsv.v=1-clamp((e.clientY-r.top)/r.height);
+      const hex=hsv2hex(hsv.h,hsv.s,hsv.v); show(hex,'sv'); emit(hex);
+    });
+    drag(hue,function(e){
+      const r=hue.getBoundingClientRect();
+      hsv.h=clamp((e.clientX-r.left)/r.width)*359.9;
+      if(!hsv.s&&!hsv.v){ hsv.s=1; hsv.v=1; }
+      const hex=hsv2hex(hsv.h,hsv.s,hsv.v); show(hex,'hue'); emit(hex);
+    });
+    inp.addEventListener('input',function(){
+      const hex=normHex(inp.value); inp.classList.toggle('bad',!!inp.value&&!hex);
+      if(hex){ show(hex,'input'); emit(hex); }
+    });
+    pop.addEventListener('click',function(e){
+      const s=e.target.closest('[data-c]');
+      if(s){ show(s.dataset.c); emit(s.dataset.c); return; }
+      if(e.target.closest('[data-cp-ok]')) close();
+    });
+    function close(){ if(pop.hidden) return; pop.hidden=true; onPick=null; if(anchor){ anchor.setAttribute('aria-expanded','false'); anchor=null; } }
+    document.addEventListener('pointerdown',function(e){ if(!pop.hidden&&!pop.contains(e.target)&&e.target!==anchor) close(); },true);
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!pop.hidden){ const a=anchor; close(); if(a) a.focus(); } });
+    window.addEventListener('scroll',function(e){ if(!pop.hidden&&!pop.contains(e.target)) close(); },true);
+    return {
+      open:function(btn,hex,fn){
+        if(anchor===btn&&!pop.hidden){ close(); return; }
+        close();
+        anchor=btn; onPick=fn; btn.setAttribute('aria-expanded','true');
+        pop.hidden=false; show(hex||'#5B8DEF');
+        const r=btn.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight;
+        const x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);
+        let y=r.bottom+8;
+        if(y+h>innerHeight-8) y=Math.max(8,r.top-h-8);
+        pop.style.left=x+'px'; pop.style.top=y+'px';
+      },
+      close:close
+    };
+  })();
   function paintFls(bid,sid){
     const row=[].find.call($('bsDetailBody').querySelectorAll('.bs-step'),function(n){ return n.dataset.s===sid; });
     const b=find(bid); if(!row||!b) return;
@@ -19557,6 +19748,11 @@ window.baroyamAsk=function(title,body,okText){
       if(t.tagName==='TEXTAREA') grow(t);
       b[t.dataset.f]=t.value; mark(b.id,'info',t.dataset.f);
       renderGrid();
+    }else if(t.dataset.co){
+      const hex=normHex(t.value), row=t.closest('.bs-step');
+      t.classList.toggle('bad',!!t.value.trim()&&!hex);
+      if(hex) setColor(row,t.dataset.co,hex,true);
+      else if(!t.value.trim()) setColor(row,t.dataset.co,'',true);
     }else if(t.dataset.sw){
       const k=t.dataset.sw;
       stepSet(b,t.closest('.bs-step').dataset.s,function(st){
@@ -19577,6 +19773,8 @@ window.baroyamAsk=function(title,body,okText){
   });
   $('bsDetailBody').addEventListener('change',function(e){
     const t=e.target, b=find(openId);
+    /* 색 코드 칸을 떠날 때 #e63 → #EE6633 처럼 정리해 보인다 */
+    if(t.dataset.co){ const hex=normHex(t.value); if(hex) t.value=hex; return; }
     if(!b||t.type!=='checkbox') return;
     const row=t.closest('.bs-step');
     checkStep(b,row,t.checked);
@@ -19592,7 +19790,8 @@ window.baroyamAsk=function(title,body,okText){
     if(st.fv&&!Object.keys(st.fv).length) delete st.fv;
     if(st.fl&&!st.fl.length) delete st.fl;
     if(st.sw&&!Object.keys(st.sw).length) delete st.sw;
-    if(!st.done&&!st.memo&&!st.links&&!st.files&&!st.fv&&!st.fl&&!st.ml&&!st.sw) delete b.steps[sid]; else b.steps[sid]=st;
+    if(st.co&&!Object.keys(st.co).length) delete st.co;
+    if(!st.done&&!st.memo&&!st.links&&!st.files&&!st.fv&&!st.fl&&!st.ml&&!st.sw&&!st.co) delete b.steps[sid]; else b.steps[sid]=st;
     mark(b.id,'steps',sid);
     return st;
   }
@@ -19626,6 +19825,15 @@ window.baroyamAsk=function(title,body,okText){
       return;
     }
     if(e.target.closest('[data-check-all]')) checkRows(b,[].slice.call($('bsDetailBody').querySelectorAll('.bs-step')),'이 브랜드의');
+    /* 브랜드 컬러 · 견본을 누르면 색 고르기 창 · 고르는 대로 바로 저장한다 */
+    const pk=e.target.closest('[data-co-pick]');
+    if(pk){
+      const row=pk.closest('.bs-step'), k=pk.dataset.coPick, st=b.steps&&b.steps[row.dataset.s];
+      cpick.open(pk,st&&st.co&&st.co[k],function(hex){ setColor(row,k,hex); });
+      return;
+    }
+    const cc=e.target.closest('[data-co-clear]');
+    if(cc){ cpick.close(); setColor(cc.closest('.bs-step'),cc.dataset.coClear,''); }
   });
   /* 메모칸 · 적는 만큼 늘어난다(최소 두 줄) */
   function grow(el){ el.style.height='auto'; el.style.height=Math.max(el.classList.contains('bs-memo')?58:96,el.scrollHeight+2)+'px'; }
@@ -19679,7 +19887,7 @@ window.baroyamAsk=function(title,body,okText){
     }else{
       /* 관리자 설정에서 끈 기능은 단추만 숨긴다(이미 붙인 링크·파일·입력란은 그대로 보인다) */
       const x=stepById(sid);
-      h+=(isSwot(x)||!isOn(x,'fl')?'':'<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>')
+      h+=(isFixed(x)||!isOn(x,'fl')?'':'<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>')
         +(isOn(x,'link')?'<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>':'')
         +(isOn(x,'file')?'<button type="button" class="ui-btn soft sm" data-att-add="file">'+IC_DRIVE+'바로얌 드라이브 연동하기</button>':'')
         +(drives.length?'<button type="button" class="ui-btn sm" data-drv-save>'+IC_SAVE+'<span>'+saveLabel(bid,sid)+'</span></button>':'');
@@ -20031,23 +20239,23 @@ window.baroyamAsk=function(title,body,okText){
         +'<div class="mg-row"><span class="mg-no">'+(gi+1)+'</span>'
         +'<input class="mg-name" type="text" maxlength="30" value="'+esc(g.name)+'" data-bs-g="'+esc(g.id)+'" placeholder="단계 이름" aria-label="단계 이름">'
         +MOVE('g',g.id,'',gl,gi===0,gi===list.length-1)
-        +(g.steps.some(isSwot)?'<span class="mg-del bs-tpl-nodel" title="SWOT 분석 항목이 들어 있어 지울 수 없어요"></span>'
+        +(g.steps.some(isFixed)?'<span class="mg-del bs-tpl-nodel" title="SWOT 분석·브랜드 컬러 항목이 들어 있어 지울 수 없어요"></span>'
           :'<button type="button" class="mg-del" data-bs-del="g" data-id="'+esc(g.id)+'" title="이 단계 삭제" aria-label="'+gl+' 단계 삭제">✕</button>')+'</div>'
         +'<div class="mg-items">'
         +g.steps.map(function(x,si){
           const xl=esc(sTitle(x));
           return '<div class="mg-row"><div class="bs-tpl-fields">'
-            +(isSwot(x)
-              ?'<span class="mg-name bs-tpl-lock" title="대시보드에서 SWOT 사분면으로 보이는 항목이라 이름을 고칠 수 없어요">'+IC_LOCK+esc(x.t)+'</span>'
+            +(isFixed(x)
+              ?'<span class="mg-name bs-tpl-lock" title="대시보드에서 '+(isSwot(x)?'SWOT 사분면':'브랜드 컬러 고르기')+'로 보이는 항목이라 이름을 고칠 수 없어요">'+IC_LOCK+esc(x.t)+'</span>'
               :'<input class="mg-name" type="text" maxlength="40" value="'+esc(x.t)+'" data-bs-t="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="항목 이름" aria-label="항목 이름">')
             +'<input class="mg-name bs-tpl-desc" type="text" maxlength="120" value="'+esc(x.d)+'" data-bs-d="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="설명 (선택)" aria-label="항목 설명">'
             +'<div class="ui-chips bs-tpl-opts" role="group" aria-label="'+xl+' 항목에서 쓸 기능">'
-            +[['fl','입력란+'],['link','링크'],['file','드라이브']].filter(function(o){ return !(o[0]==='fl'&&isSwot(x)); }).map(function(o){
+            +[['fl','입력란+'],['link','링크'],['file','드라이브']].filter(function(o){ return !(o[0]==='fl'&&isFixed(x)); }).map(function(o){
               return '<button type="button" class="ui-chip" data-bs-opt="'+o[0]+'" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" aria-pressed="'+isOn(x,o[0])+'">'+o[1]+'</button>';
             }).join('')+'</div>'
             +'</div>'
             +MOVE('s',x.id,g.id,xl,gi===0&&si===0,gi===list.length-1&&si===g.steps.length-1)
-            +(isSwot(x)?'<span class="mg-del bs-tpl-nodel" aria-hidden="true"></span>'
+            +(isFixed(x)?'<span class="mg-del bs-tpl-nodel" aria-hidden="true"></span>'
               :'<button type="button" class="mg-del" data-bs-del="s" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" title="이 항목 삭제" aria-label="'+xl+' 항목 삭제">✕</button>')+'</div>';
         }).join('')
         +'<form class="mg-add-item" data-bs-add="'+esc(g.id)+'"><input type="text" maxlength="40" placeholder="새 항목 이름" autocomplete="off" aria-label="'+gl+'에 새 항목 추가"><button type="submit">추가</button></form>'
@@ -20144,13 +20352,13 @@ window.baroyamAsk=function(title,body,okText){
     if(!del) return;
     if(del.dataset.bsDel==='g'){
       const g=stageOf(del.dataset.id); if(!g) return;
-      if(g.steps.some(isSwot)) return;          /* SWOT 항목이 든 단계는 지울 수 없다(단추도 숨긴다) */
+      if(g.steps.some(isFixed)) return;         /* SWOT·브랜드 컬러 항목이 든 단계는 지울 수 없다(단추도 숨긴다) */
       const ok=window.baroyamAsk?await window.baroyamAsk('"'+gName(g)+'" 단계를 지울까요?','이 단계의 항목 '+g.steps.length+'개도 함께 빠집니다. 브랜드에 체크해 둔 기록은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
       if(!ok) return;
       const list=stages(), i=list.indexOf(g); if(i>=0) list.splice(i,1);
     }else{
       const g=stageOf(del.dataset.g); if(!g) return;
-      const x=g.steps.find(function(y){ return y.id===del.dataset.id; }); if(!x||isSwot(x)) return;
+      const x=g.steps.find(function(y){ return y.id===del.dataset.id; }); if(!x||isFixed(x)) return;
       const ok=window.baroyamAsk?await window.baroyamAsk('"'+sTitle(x)+'" 항목을 지울까요?','브랜드에 체크해 둔 기록은 남지만 보이지 않게 돼요.'):confirm('지울까요?');
       if(!ok) return;
       g.steps.splice(g.steps.indexOf(x),1);
