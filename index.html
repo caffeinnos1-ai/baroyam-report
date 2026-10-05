@@ -4322,10 +4322,9 @@ window.BAROYAM_ACCESS=(function(){
   /* 판매처 점 · 메뉴얼가이드 선택 점과 같은 작은 점, 선택되면 글자색(주황)으로 바뀐다 */
   .sb-subnav-dot{flex:none;width:5px;height:5px;margin:0 1.5px;border-radius:50%;background:var(--mute)}
   .sb-subnav-flat .sb-subnav-item.active .sb-subnav-dot{background:currentColor}
-  /* 중간사이드탭 · 제목·소제목·항목 글자는 가운데, 점은 모든 항목에서 같은 왼쪽 자리(14px)에 ·
+  /* 중간사이드탭 · 글자는 왼쪽 정렬, 점은 모든 항목에서 같은 왼쪽 자리(14px)에 ·
      아이콘이 있던 홈 단추(통합리뷰수집·통계·전체 목차 등)도 아이콘 대신 같은 점 · 판매처 점은 판매처 색 그대로 */
-  .sb-subnav-head,.sb-subnav-caption{text-align:center}
-  .sb-subnav-home,.sb-subnav-flat .sb-subnav-item{position:relative;justify-content:center;text-align:center;padding-left:26px;padding-right:26px}
+  .sb-subnav-home,.sb-subnav-flat .sb-subnav-item{position:relative;justify-content:flex-start;text-align:left;padding-left:27px;padding-right:22px}
   .sb-subnav-home>svg:not(.sb-subnav-external){display:none}
   .sb-subnav-home .sb-subnav-external{position:absolute;right:10px;top:50%;margin:-6px 0 0}
   .sb-subnav-flat .sb-subnav-item .sb-subnav-dot{position:absolute;left:14px;top:50%;margin:-2.5px 0 0}
