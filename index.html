@@ -4676,6 +4676,22 @@ window.BAROYAM_ACCESS=(function(){
   .ui-btn.icon{width:var(--ui-h);padding:0}
   .ui-btn.icon.sm{width:var(--ui-h-sm)}
   .ui-btn.block{display:flex;width:100%}
+  /* orb · 화면 한가운데 주 행동 하나를 크게 띄우는 둥근 그라데이션 버튼(영상분석 AI) · 누르는 중(disabled)이면 테두리가 돈다 */
+  .ui-btn.orb{position:relative;flex-direction:column;gap:4px;width:104px;height:104px;padding:0;border-radius:50%;border:0;
+    background:linear-gradient(140deg,color-mix(in srgb,var(--btn) 70%,#fff) 0%,var(--btn) 45%,var(--btn-hover) 100%);
+    color:#fff;font-size:14px;font-weight:800;letter-spacing:-.2px;
+    box-shadow:0 12px 28px -10px color-mix(in srgb,var(--btn) 70%,transparent),inset 0 1px 0 rgba(255,255,255,.35);
+    transition:transform .18s,box-shadow .18s}
+  .ui-btn.orb svg{width:26px;height:26px}
+  .ui-btn.orb:hover{color:#fff;transform:translateY(-2px) scale(1.04);
+    box-shadow:0 18px 34px -10px color-mix(in srgb,var(--btn) 80%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+  .ui-btn.orb:active{transform:scale(.97)}
+  .ui-btn.orb:disabled{opacity:1;cursor:progress}
+  .ui-btn.orb:disabled::after{content:"";position:absolute;inset:-6px;border-radius:50%;
+    border:3px solid transparent;border-top-color:var(--btn);border-right-color:color-mix(in srgb,var(--btn) 45%,transparent);
+    animation:ui-orb-spin .9s linear infinite}
+  @keyframes ui-orb-spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){ .ui-btn.orb:disabled::after{animation-duration:3s} }
   .ui-btn:disabled,.ui-btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
   .ui-btn[hidden]{display:none}
   .ui-btn-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
@@ -4787,7 +4803,10 @@ window.BAROYAM_ACCESS=(function(){
   /* 영상분석 AI (퍼포먼스마케팅 > 레퍼런스) */
   .va-wrap{padding:26px 48px 48px}
   #vaSub[hidden],.va-wrap[hidden],.va-player[hidden],.va-msg[hidden],#vaResult[hidden],.va-empty[hidden]{display:none}
-  .va-grid{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:28px;align-items:start}
+  .va-grid{display:grid;grid-template-columns:minmax(240px,320px) auto minmax(0,1fr);gap:28px;align-items:start}
+  .va-mid{align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:180px}
+  .va-mid>*{position:sticky;top:180px}
+  .va-arrow{width:22px;height:22px;color:var(--mute);top:290px}
   .va-left{display:flex;flex-direction:column;gap:10px}
   .va-label{font-size:12.5px;font-weight:800;color:var(--mute);margin-top:4px}
   .va-player{position:relative;width:100%;aspect-ratio:9/16;max-height:520px;border-radius:var(--ui-r);overflow:hidden;
@@ -4813,7 +4832,8 @@ window.BAROYAM_ACCESS=(function(){
   .va-none{font-size:13px;color:var(--mute)}
   .va-cut{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:var(--mute);font-weight:700}
   .va-cut::before,.va-cut::after{content:"";flex:1;height:1px;background:var(--line)}
-  @media (max-width:860px){ .va-wrap{padding:20px 16px 32px} .va-grid{grid-template-columns:1fr} .va-player{max-height:420px} }
+  @media (max-width:860px){ .va-wrap{padding:20px 16px 32px} .va-grid{grid-template-columns:1fr} .va-player{max-height:420px}
+    .va-mid{padding-top:0} .va-mid>*{position:static} .va-arrow{transform:rotate(90deg)} }
   .bs-wrap{padding:26px 48px 48px}
   @media (max-width:760px){ .bs-wrap{padding:20px 16px 32px} }
   /* 왼쪽 목록 + 오른쪽 상세 */
@@ -4961,7 +4981,9 @@ window.BAROYAM_ACCESS=(function(){
   #bsLabelEditor .mg-items>.mg-row{align-items:flex-start;padding:2px 0}
   /* 항목에 더 단 입력란 · 설명 칸 한 줄 + 지우기 */
   /* SWOT 사분면 · 2×2 를 항목 폭에 꽉 채운다(예전 정사각형 620px 은 오른쪽이 비었음) · 칸마다 연한 색(강점 초록 · 약점 노랑 · 기회 강조색 · 위협 빨강) */
-  .bs-swot{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:clamp(190px,22vw,260px);gap:10px;width:100%}
+  /* 왼쪽은 체크칸(22px)+간격(10px)만큼 들어가 있으니 오른쪽도 그만큼 비워 좌우 여백을 맞춘다 */
+  .bs-swot{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:clamp(190px,22vw,260px);gap:10px;margin-right:32px}
+  @media (max-width:560px){ .bs-swot{margin-right:0} }
   .bs-sw{--q:var(--pos);display:flex;flex-direction:column;min-height:0;padding:12px 14px 10px;border-radius:14px;cursor:text;
     background:color-mix(in srgb,var(--q) 8%,var(--paper));border:1px solid color-mix(in srgb,var(--q) 24%,var(--paper));transition:var(--ui-ease)}
   .bs-sw.is-w{--q:var(--warn)} .bs-sw.is-o{--q:var(--btn)} .bs-sw.is-t{--q:var(--neg)}
@@ -7719,10 +7741,15 @@ window.BAROYAM_ACCESS=(function(){
                 <label class="va-label" for="vaUrl">유튜브 링크</label>
                 <input class="ui-field block" id="vaUrl" type="url" placeholder="https://youtube.com/shorts/…" autocomplete="off">
                 <div class="va-player" id="vaPlayer" hidden></div>
-                <div class="ui-btn-row">
-                  <button class="ui-btn primary" id="vaRun" type="button">AI분석</button>
-                </div>
                 <div class="va-msg" id="vaMsg" hidden></div>
+              </div>
+              <!-- 가운데 · 왼쪽(링크·영상) → 오른쪽(결과)으로 넘기는 둥근 버튼 -->
+              <div class="va-mid">
+                <button class="ui-btn orb" id="vaRun" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+                  <span>AI분석</span>
+                </button>
+                <svg class="va-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </div>
               <div class="va-right">
                 <div class="va-empty" id="vaEmpty">유튜브 링크를 넣고 <b>AI분석</b>을 누르면 여기에 나옵니다.</div>
