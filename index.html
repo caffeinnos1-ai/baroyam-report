@@ -4331,6 +4331,10 @@ window.BAROYAM_ACCESS=(function(){
   .sb-subnav-home::before,.sb-subnav-flat .sb-subnav-item:not(:has(.sb-subnav-dot))::before{content:"";position:absolute;
     left:14px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:var(--mute)}
   .sb-subnav-home.active::before,.sb-subnav-flat .sb-subnav-item.active::before{background:currentColor}
+  /* 글자 · 소제목은 굵고 진하게(본문 크기), 항목은 보통 굵기의 회색, 고른 항목만 굵게 */
+  .sb-subnav-caption{padding:4px 10px 8px;font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+  .sb-subnav-home,.sb-subnav-flat .sb-subnav-item{font-size:13.5px;font-weight:500;color:var(--body);letter-spacing:-.2px}
+  .sb-subnav-home.active,.sb-subnav-flat .sb-subnav-item.active{font-weight:800}
   .sb-subnav-dot.is-naver{background:var(--naver)}
   .sb-subnav-dot.is-cafe24{background:var(--self)}
   .sb-subnav-dot.is-coupang{background:var(--coupang)}
