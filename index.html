@@ -974,6 +974,59 @@ window.BAROYAM_AUTH={
      같은 소금·횟수로 만든 해시라 baroyamLeadHash 로 확인한다 */
   settingsHash:'87e4ebdd8f864937981a8ecfd063c2fcc8e8fce24b9303b5290a1631ece8ede3'
 };
+/* ===== 구글 드라이브·매출 시트 권한(access token) 하나로 =====
+   로그인은 모두 같은 회사 구글 계정 하나로 하므로, 드라이브 화면·업로드·매출 시트·브랜드전략실 받기가
+   권한 하나(drive)를 같이 쓴다 · 받은 권한은 localStorage 에 두어 새로고침·다른 창에서도 다시 묻지 않는다(최대 1시간) ·
+   계정은 로그인한 이메일로 정해 두고(hint), 한 번 허락한 뒤에는 prompt:'' 라 허락 창이 고르기 없이 스스로 닫힌다 ·
+   권한 창은 클릭 순간에만 띄울 수 있어서 프로필을 고르는 클릭에서 미리 받아 둔다(warm) ·
+   예전에는 기능마다·창마다 따로 받고 계정 힌트도 없어서, 새로고침·업로드 때마다 계정 고르기 창이 떴다(10-06 불만) */
+window.baroyamGoogleToken=(function(){
+  const KEY='baroyam_gtoken_v1';
+  const SCOPE='https://www.googleapis.com/auth/drive';
+  let wait=null;
+  function saved(){
+    try{ const t=JSON.parse(localStorage.getItem(KEY)||'null'); if(t&&t.v&&Date.now()<t.exp) return t.v; }catch(e){}
+    return '';
+  }
+  function hint(){
+    try{ return (JSON.parse(localStorage.getItem(window.BAROYAM_AUTH.lsKey)||'null')||{}).email||''; }catch(e){ return ''; }
+  }
+  /* 구글 도구는 미리 불러 둔다 · 클릭한 뒤에 불러오면 그사이 클릭 순간이 지나 허락 창이 막힌다 */
+  function loadGsi(){
+    if(window.google&&google.accounts&&google.accounts.oauth2) return;
+    if(document.querySelector('script[src^="https://accounts.google.com/gsi/client"]')) return;
+    const s=document.createElement('script');
+    s.src='https://accounts.google.com/gsi/client'; s.async=true;
+    document.head.appendChild(s);
+  }
+  if(document.head) loadGsi(); else document.addEventListener('DOMContentLoaded',loadGsi);
+  /* 클릭 처리 안에서 곧바로(첫 await 전에) 불러야 한다 */
+  function get(){
+    const s=saved(); if(s) return Promise.resolve(s);
+    if(wait) return wait;
+    const g=window.google&&google.accounts&&google.accounts.oauth2;
+    if(!g){ loadGsi(); return Promise.reject(new Error('구글 로그인 도구를 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요')); }
+    wait=new Promise(function(ok, no){
+      g.initTokenClient({
+        client_id:window.BAROYAM_AUTH.clientId,
+        scope:SCOPE,
+        hint:hint(),
+        callback:function(res){
+          if(!res||res.error||!res.access_token) return no(new Error((res&&res.error)||'구글 권한을 받지 못했어요'));
+          try{ localStorage.setItem(KEY,JSON.stringify({v:res.access_token,exp:Date.now()+(Number(res.expires_in||3600)-120)*1000})); }catch(e){}
+          ok(res.access_token);
+        },
+        error_callback:function(err){ no(new Error((err&&err.type)==='popup_closed'?'허락 창이 닫혔어요':'구글 권한을 받지 못했어요')); }
+      }).requestAccessToken({prompt:''});
+    }).finally(function(){ wait=null; });
+    return wait;
+  }
+  get.saved=saved;
+  get.clear=function(){ try{ localStorage.removeItem(KEY); }catch(e){} };
+  /* 프로필 고르기처럼 "어차피 누르는" 클릭에서 미리 받아 둔다 · 실패해도 조용히 넘긴다(쓸 때 다시 받음) */
+  get.warm=function(){ if(!saved()) get().catch(function(e){ console.warn('[바로얌] 구글 권한 미리 받기 실패',e&&e.message); }); };
+  return get;
+})();
 document.documentElement.classList.add('auth-locked','auth-checking');
 window.baroyamAuthHash=async function(email){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(email).toLowerCase().trim()));
@@ -5489,6 +5542,7 @@ window.BAROYAM_ACCESS=(function(){
        그냥 새로고침할 때는 선택이 그대로 남아 다시 묻지 않는다.
        로그인 판정이 Supabase 세션이므로 그 세션을 반드시 끊어야 한다 */
     try{ localStorage.removeItem(A.lsKey); localStorage.removeItem('baroyam_me_v1'); }catch(e){}
+    if(window.baroyamGoogleToken) window.baroyamGoogleToken.clear();
     window.BAROYAM_LEAD.clear();
     try{ if(window.BAROYAM_DB) await window.BAROYAM_DB.signOut(); }catch(e){ console.error(e); }
     if(window.google&&google.accounts&&google.accounts.id) google.accounts.id.disableAutoSelect();
@@ -5718,6 +5772,8 @@ window.BAROYAM_ACCESS=(function(){
   list.addEventListener('click',e=>{
     const item=e.target.closest('.mp-item');
     if(!item) return;
+    /* 드라이브·매출 시트 권한을 이 클릭에서 미리 받아 둔다 · 들어간 뒤 새로고침·업로드 때 다시 묻지 않도록 */
+    if(window.baroyamGoogleToken) window.baroyamGoogleToken.warm();
     const id=item.dataset.id;
     if(!LEAD.isLeadRole(id)){ LEAD.clear(); enterWithMotion(item,id); return; }
     const m=MEM.load().find(x=>x.id===id);
@@ -9322,12 +9378,9 @@ const GID_SALES=0, GID_MEMBERS=179809001;
 const SHEET_CACHE_KEY='baroyam_sheet_data_v1';
 const SHEET_TOKEN_KEY='baroyam_sheet_token_v1';
 
+/* 권한은 드라이브와 같이 쓰는 baroyamGoogleToken 하나에서 받는다(맨 위 BAROYAM_AUTH 아래) */
 function savedSheetToken(){
-  try{
-    const t=JSON.parse(sessionStorage.getItem(SHEET_TOKEN_KEY)||'null');
-    if(t&&t.v&&Date.now()<t.exp) return t.v;
-  }catch(e){}
-  return '';
+  return window.baroyamGoogleToken?window.baroyamGoogleToken.saved():'';
 }
 function loadGsi(){
   if(window.google&&google.accounts&&google.accounts.oauth2) return Promise.resolve();
@@ -9344,30 +9397,14 @@ async function sheetToken(interactive){
   const saved=savedSheetToken();
   if(saved) return saved;
   if(!interactive){ const e=new Error('새로고침 버튼을 눌러 매출을 불러와 주세요'); e.needClick=true; throw e; }
-  await loadGsi();
-  let hint='';
-  try{ hint=(JSON.parse(localStorage.getItem(window.BAROYAM_AUTH.lsKey)||'null')||{}).email||''; }catch(e){}
-  return new Promise((resolve,reject)=>{
-    const client=google.accounts.oauth2.initTokenClient({
-      client_id:window.BAROYAM_AUTH.clientId,
-      scope:'https://www.googleapis.com/auth/drive.readonly',
-      hint:hint,
-      callback:res=>{
-        if(!res||res.error||!res.access_token) return reject(new Error((res&&res.error)||'구글 권한을 받지 못했어요'));
-        try{ sessionStorage.setItem(SHEET_TOKEN_KEY,JSON.stringify({v:res.access_token,
-          exp:Date.now()+(Number(res.expires_in||3600)-60)*1000})); }catch(e){}
-        resolve(res.access_token);
-      },
-      error_callback:err=>reject(new Error((err&&err.type)==='popup_closed'?'허락 창이 닫혔어요':'구글 권한을 받지 못했어요'))
-    });
-    client.requestAccessToken({prompt:''});
-  });
+  if(!(window.google&&google.accounts&&google.accounts.oauth2)) await loadGsi();
+  return window.baroyamGoogleToken();
 }
 async function sheetsGet(token,path){
   const res=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+SHEET_ID+path,
     {headers:{Authorization:'Bearer '+token}});
   if(res.status===401){
-    try{ sessionStorage.removeItem(SHEET_TOKEN_KEY); }catch(e){}
+    if(window.baroyamGoogleToken) window.baroyamGoogleToken.clear();
     const e=new Error('구글 권한이 만료됐어요 · 새로고침 버튼을 다시 눌러 주세요'); e.needClick=true; throw e;
   }
   if(res.status===403||res.status===404){
@@ -18024,31 +18061,19 @@ window.baroyamAsk=function(title,body,okText){
   /* ---------- 저장 ----------
      드라이브 파일은 로그인한 사람의 구글 권한으로 직접 받는다(drive.readonly · 처음 한 번 허락 창이 뜬다).
      여러 개면 개별 파일로 받을지, ZIP 한 파일로 묶을지 묻는다 */
-  let 저장중=false, 토큰값='', 토큰끝=0, 쓰기토큰값='', 쓰기토큰끝=0, 지퍼=null;
-  /* 쓰기=true 는 업로드용(drive · 처음 한 번 허락 창이 다시 뜬다) · 쓰기 권한으로 받은 토큰은 읽기에도 쓴다 */
-  function 드라이브토큰(쓰기){
-    return new Promise(function(풀, 막){
-      if(쓰기토큰값&&Date.now()<쓰기토큰끝) return 풀(쓰기토큰값);
-      if(!쓰기&&토큰값&&Date.now()<토큰끝) return 풀(토큰값);
-      const g=window.google&&google.accounts&&google.accounts.oauth2;
-      if(!g) return 막(new Error('구글 로그인 도구를 아직 불러오지 못했어요'));
-      const 손=g.initTokenClient({
-        client_id:window.BAROYAM_AUTH.clientId,
-        scope:쓰기?'https://www.googleapis.com/auth/drive':'https://www.googleapis.com/auth/drive.readonly',
-        callback:function(답){
-          if(!답||답.error||!답.access_token) return 막(new Error((답&&답.error)||'권한을 받지 못했어요'));
-          const 끝=Date.now()+(Number(답.expires_in||3600)-60)*1000;
-          if(쓰기){ 쓰기토큰값=답.access_token; 쓰기토큰끝=끝; }
-          토큰값=답.access_token; 토큰끝=끝; 풀(토큰값);
-        },
-        error_callback:function(err){ 막(new Error((err&&err.type)==='popup_closed'?'허락 창이 닫혔어요':'권한을 받지 못했어요')); }
-      });
-      손.requestAccessToken({prompt:''});
-    });
+  let 저장중=false, 지퍼=null;
+  /* 권한은 매출 시트와 같이 쓰는 baroyamGoogleToken 하나(drive · 읽기·올리기 모두) · 프로필을 고를 때 미리 받아 두므로
+     보통은 허락 창 없이 바로 쓴다 */
+  function 드라이브토큰(){ return window.baroyamGoogleToken(); }
+  /* 401 · 받아 둔 권한이 끝났다 · 비워 두면 다음 클릭에서 새로 받는다(계정 고르기 없이 스스로 닫힘) */
+  function 권한만료(){
+    window.baroyamGoogleToken.clear();
+    throw new Error('구글 권한 시간이 끝났어요 · 한 번 더 눌러 주세요');
   }
   async function 파일받기(r, 토큰){
     const 답=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.아이디)+'?alt=media&supportsAllDrives=true',
       {headers:{Authorization:'Bearer '+토큰}});
+    if(답.status===401) 권한만료();
     if(!답.ok) throw new Error(r.이름+' ('+답.status+')');
     return 답.blob();
   }
@@ -18159,6 +18184,7 @@ window.baroyamAsk=function(title,body,okText){
         if(답.ok) return 답.json();
         if(답.status===429||답.status>=500){ await 쉬기(1000*Math.pow(2,시도)); continue; }
         if(답.status===403||답.status===404) return null;     /* 볼 권한이 없는 폴더 · 건너뛴다 */
+        if(답.status===401) 권한만료();
         throw new Error('드라이브 오류 '+답.status);
       }
       throw new Error('드라이브가 응답하지 않아요');
@@ -18388,6 +18414,7 @@ window.baroyamAsk=function(title,body,okText){
     설정=Object.assign({},설정||{});
     설정.headers=Object.assign({Authorization:'Bearer '+토큰},설정.headers||{});
     const 답=await fetch(주소,설정);
+    if(답.status===401) 권한만료();
     if(!답.ok) throw new Error(답.status===403?'이 폴더에 쓸 권한이 없어요':'드라이브 오류 '+답.status);
     return 답.json();
   }
@@ -18690,6 +18717,7 @@ window.baroyamAsk=function(title,body,okText){
       headers:{Authorization:'Bearer '+토큰,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':파일.type||'application/octet-stream'},
       body:JSON.stringify({name:파일.name,parents:[폴더id]})
     }).then(function(답){
+      if(답.status===401) 권한만료();
       if(!답.ok) throw new Error(답.status===403?'이 폴더에 올릴 권한이 없어요':'올리기 준비 실패 ('+답.status+')');
       const 주소=답.headers.get('Location');
       if(!주소) throw new Error('올릴 주소를 받지 못했어요');
