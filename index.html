@@ -2745,6 +2745,28 @@ window.BAROYAM_ACCESS=(function(){
     font-size:11.5px;font-weight:700;color:var(--pj-link)}
   .pjf-memo-hint[hidden]{display:none}
   .pjf-memo-hint svg{width:13px;height:13px;flex:none}
+  /* 메모칸에 파일을 끌어다 놓으면 아래 목록에 붙는다 · 끄는 동안 메모칸 위에 놓을 자리를 띄운다 */
+  .pjf-memo-wrap{position:relative}
+  .pjf-drop{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    border:2px dashed var(--btn);border-radius:12px;background:color-mix(in srgb,var(--btn-soft) 88%,transparent);
+    color:var(--btn-soft-ink);font-size:13.5px;font-weight:800;pointer-events:none}
+  .pjf-drop[hidden]{display:none}
+  .pjf-drop svg{width:26px;height:26px}
+  .pjf-files{flex:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .pjf-files:empty{display:none}
+  .pjf-file{display:inline-flex;align-items:center;gap:2px;max-width:100%;border:1px solid var(--line);border-radius:99px;background:var(--paper)}
+  .pjf-file-open{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;min-width:0;cursor:pointer;
+    padding:5px 4px 5px 10px;font-size:12.5px;font-weight:700;color:var(--body)}
+  .pjf-file-open:hover{color:var(--btn)}
+  .pjf-file-open:focus-visible{outline:2px solid var(--btn);outline-offset:2px;border-radius:99px}
+  .pjf-file-open svg{width:13px;height:13px;flex:none;color:var(--mute)}
+  .pjf-file-open span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+  .pjf-file-open small{flex:none;font-size:11px;font-weight:600;color:var(--mute)}
+  .pjf-file .ui-btn{margin-right:3px;width:22px;height:22px;min-height:0;padding:0;font-size:11px}
+  .pjf-file.is-busy{opacity:.55}
+  .pjf-file.is-busy .pjf-file-open{cursor:default}
+  .pjf-file-msg{flex:none;margin:6px 3px 0;font-size:12px;font-weight:600;color:var(--neg)}
+  .pjf-file-msg:empty,.pjf-file-msg[hidden]{display:none}
   /* 아래 한 줄 · 진행도를 창 폭만큼 길게 깐다 */
   .pjf-prog{display:flex;align-items:center;gap:16px;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
   .pjf-prog-l{flex:none;font-size:12.5px;font-weight:700;color:var(--mute)}
@@ -14353,7 +14375,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(editingProject){
       const id=String(editingProject.id);
       const now=state.projects.find(p=>String(p.id)===id);
-      if(now) editingProject=now;
+      if(now){ editingProject=now; pjPaintFiles(id); }   /* 다른 PC가 붙인 파일도 열린 창에 보이게 */
     }
     /* 기록노트를 고치던 중이면 다시 그려도 치던 글이 날아가지 않게 옮겨 둔다 */
     const ta=document.querySelector('#mhNotes [data-edit]');
@@ -15490,6 +15512,105 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     setTimeout(()=>{ if(document.contains(t)&&document.activeElement!==t) pjMemoShowView(t); },0);
   });
 
+  /* ---------- 첨부 파일 · 메모칸에 끌어다 놓는다 ----------
+     p.files=[{id,name,path,size,type,at,by}] · projects 표의 data 칸에 함께 담긴다(PROJ_KEYS 밖의 칸) ·
+     파일 본체는 브랜드전략실·메뉴얼과 같은 Storage brand-files 버킷의 project/<프로젝트id>/ 아래 ·
+     ✕는 목록에서만 뺀다(보관함 파일은 남는다 · 화면에서는 보관함 파일을 지울 수 없다) */
+  const PJ_FILE_BUCKET='brand-files', PJ_FILE_MAX=50*1024*1024;
+  const ICON_CLIP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5 12.4 19a5 5 0 0 1-7-7l7.8-7.8a3.3 3.3 0 0 1 4.7 4.7l-7.6 7.6a1.7 1.7 0 0 1-2.4-2.4l7-7"/></svg>';
+  const pjUploading=new Map();   /* 프로젝트id → [{key,name}] · 올리는 동안 흐린 칩으로 보인다 */
+  function pjFileSize(n){ n=+n||0; return n>=1048576?(n/1048576).toFixed(1)+'MB':Math.max(1,Math.round(n/1024))+'KB'; }
+  function pjFilesHtml(p){
+    const files=(p&&Array.isArray(p.files))?p.files:[], busy=pjUploading.get(String(p&&p.id))||[];
+    return files.map(f=>`<span class="pjf-file">
+        <button type="button" class="pjf-file-open" data-pj-file="${esc(f.id)}" title="${esc(f.name||'')} · 누르면 새 탭에서 열립니다">
+          ${ICON_CLIP}<span>${esc(f.name||'파일')}</span><small>${pjFileSize(f.size)}</small></button>
+        <button type="button" class="ui-btn ghost icon sm" data-pj-file-del="${esc(f.id)}" aria-label="${esc(f.name||'파일')} 빼기">✕</button>
+      </span>`).join('')
+      +busy.map(b=>`<span class="pjf-file is-busy"><span class="pjf-file-open">${ICON_CLIP}<span>${esc(b.name)}</span><small>올리는 중…</small></span></span>`).join('');
+  }
+  /* 수정창이 그 프로젝트를 보고 있을 때만 다시 그린다 */
+  function pjPaintFiles(id){
+    if(!editingProject||String(editingProject.id)!==String(id)) return;
+    const box=form.querySelector('.pjf-files');
+    if(box) box.innerHTML=pjFilesHtml(editingProject);
+  }
+  function pjFileMsg(t){ const m=form.querySelector('.pjf-file-msg'); if(m) m.textContent=t||''; }
+  /* 창이 닫히거나 서버본으로 객체가 바뀌어도 맞는 프로젝트에 붙도록, 끝날 때 id 로 다시 찾는다 */
+  async function pjAttachFiles(p,files){
+    const db=window.BAROYAM_DB;
+    if(!db||!db.fileUpload){ pjFileMsg('파일을 올리려면 로그인이 필요해요.'); return; }
+    const id=String(p.id);
+    pjFileMsg('');
+    for(const file of files){
+      if(!file.size&&!file.type){ pjFileMsg('폴더는 붙일 수 없어요 · 파일만 끌어다 놓아 주세요.'); continue; }
+      if(file.size>PJ_FILE_MAX){ pjFileMsg('"'+file.name+'"은(는) 50MB가 넘어서 올리지 않았어요 · 큰 파일은 드라이브 링크를 메모에 붙여 주세요.'); continue; }
+      const ext=(file.name.split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8);
+      const path='project/'+id+'/'+uid()+(ext&&file.name.indexOf('.')>=0?'.'+ext:'');
+      const tok={key:uid(),name:file.name};
+      pjUploading.set(id,(pjUploading.get(id)||[]).concat([tok])); pjPaintFiles(id);
+      try{
+        await db.fileUpload(PJ_FILE_BUCKET,path,file);
+        const t=state.projects.find(x=>String(x.id)===id);
+        if(t){
+          t.files=(Array.isArray(t.files)?t.files:[]).concat([{id:uid(),name:file.name,path:path,size:file.size,
+            type:file.type||'',at:kstToday(),by:myName()}]);
+          save();
+        }else pjFileMsg('그사이 프로젝트가 지워져서 "'+file.name+'"을(를) 붙이지 못했어요.');
+      }catch(err){
+        console.error(err);
+        const m=String(err&&err.message||err);
+        pjFileMsg(/bucket/i.test(m)?'파일 보관함이 아직 준비되지 않았어요 · 관리자에게 알려 주세요.'
+          :'"'+file.name+'"을(를) 올리지 못했어요 · '+m);
+      }
+      const left=(pjUploading.get(id)||[]).filter(x=>x!==tok);
+      if(left.length) pjUploading.set(id,left); else pjUploading.delete(id);
+      pjPaintFiles(id);
+    }
+  }
+  /* 끄는 동안 메모칸 위에 놓을 자리를 띄운다 · 창 안 어디에 놓아도 붙는다(조금 빗나가 브라우저가 파일을 열어 버리지 않게) ·
+     안쪽 칸을 지날 때마다 enter/leave 가 번갈아 오므로 수를 세어 마지막으로 나갈 때만 끈다 */
+  let pjDragDepth=0;
+  const pjHasFiles=e=>!!(e.dataTransfer&&Array.from(e.dataTransfer.types||[]).indexOf('Files')>=0);
+  function pjDropShow(on){ const d=form.querySelector('.pjf-drop'); if(d) d.hidden=!on; }
+  form.addEventListener('dragenter',e=>{
+    if(!editingProject||!pjHasFiles(e)||!form.querySelector('.pjf-drop')) return;
+    e.preventDefault(); pjDragDepth++; pjDropShow(true);
+  });
+  form.addEventListener('dragover',e=>{
+    if(!editingProject||!pjHasFiles(e)||!form.querySelector('.pjf-drop')) return;
+    e.preventDefault(); e.dataTransfer.dropEffect='copy';
+  });
+  form.addEventListener('dragleave',e=>{
+    if(!editingProject||!pjHasFiles(e)) return;
+    pjDragDepth=Math.max(0,pjDragDepth-1);
+    if(!pjDragDepth) pjDropShow(false);
+  });
+  form.addEventListener('drop',e=>{
+    if(!editingProject||!pjHasFiles(e)||!form.querySelector('.pjf-drop')) return;
+    e.preventDefault(); pjDragDepth=0; pjDropShow(false);
+    const files=Array.from(e.dataTransfer.files||[]);
+    if(files.length) pjAttachFiles(editingProject,files);
+  });
+  form.addEventListener('click',async e=>{
+    if(!editingProject) return;
+    const del=e.target.closest('[data-pj-file-del]');
+    if(del){
+      const p=editingProject, fid=del.dataset.pjFileDel;
+      p.files=(Array.isArray(p.files)?p.files:[]).filter(f=>f.id!==fid);
+      save(); pjPaintFiles(p.id);
+      return;
+    }
+    const open=e.target.closest('[data-pj-file]');
+    if(!open) return;
+    const f=(editingProject.files||[]).find(x=>x.id===open.dataset.pjFile);
+    const db=window.BAROYAM_DB; if(!f||!db||!db.fileUrl) return;
+    /* 팝업 차단을 피하려고 누른 순간 빈 창을 먼저 연다 */
+    const win=window.open('','_blank');
+    try{ const url=await db.fileUrl(PJ_FILE_BUCKET,f.path); if(win) win.location.href=url; else location.href=url; }
+    catch(err){ if(win) win.close(); console.error(err); pjFileMsg('파일을 열지 못했어요 · '+(err&&err.message||err)); }
+  });
+
   /* 프로젝트 지우기 · 묻고 나서 지운다 · 지웠으면 true 로 풀린다 ·
      삭제 단추로 지웠다는 기록(state.deleted)을 꼭 남긴다 · 이것이 없으면 서버가 "사고로 빠진 것"으로 보고 되살린다 */
   function pjDeleteProject(t){
@@ -15540,9 +15661,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
          <div class="pjf-side">
            <div class="pjf-memo-wrap">
              <textarea class="pjf-memo" name="memo" maxlength="600" aria-label="메모"
-               placeholder="메모 · 이 프로젝트에 남길 짧은 기록&#10;(예: 업로드 · 캔바작업)&#10;&#10;주소를 붙여넣으면 링크가 되고,&#10;글을 끌어 고른 뒤 붙여넣으면 그 글에 링크가 걸립니다">${esc(cur.memo||'')}</textarea>
+               placeholder="메모 · 이 프로젝트에 남길 짧은 기록&#10;(예: 업로드 · 캔바작업)&#10;&#10;주소를 붙여넣으면 링크가 되고,&#10;글을 끌어 고른 뒤 붙여넣으면 그 글에 링크가 걸립니다&#10;파일은 여기로 끌어다 놓으면 붙습니다">${esc(cur.memo||'')}</textarea>
              <div class="pjf-memo-view" role="group" aria-label="메모 · 링크는 새 탭에서 열립니다" hidden></div>
              <p class="pjf-memo-hint" hidden></p>
+             <div class="pjf-drop" hidden>${ICON_CLIP}<span>여기에 놓으면 파일이 붙습니다</span></div>
+             <div class="pjf-files" aria-label="첨부 파일">${pjFilesHtml(cur)}</div>
+             <p class="pjf-file-msg" role="status"></p>
            </div>
          </div>
          <div class="pjf-fields">
@@ -18947,9 +19071,9 @@ window.baroyamAsk=function(title,body,okText){
           /* 항목에 더 단 입력란 · [{id,d}] · d 는 입력란 위에 보이는 설명 */
           const f=(Array.isArray(x.f)?x.f:[]).filter(function(y){ return y&&y.id; }).map(function(y){ return {id:String(y.id),d:String(y.d||'')}; });
           if(f.length) o.f=f;
-          /* 항목마다 끈 기능 · off={fl,link,file} (값이 true 면 대시보드에 그 단추가 안 보임) */
+          /* 항목마다 끈 기능 · off={fl,link,file,up} (값이 true 면 대시보드에 그 단추가 안 보임 · file=드라이브 연동, up=내 컴퓨터 파일) */
           if(x.off&&typeof x.off==='object'){
-            const off={}; ['fl','link','file'].forEach(function(k){ if(x.off[k]) off[k]=true; });
+            const off={}; ['fl','link','file','up'].forEach(function(k){ if(x.off[k]) off[k]=true; });
             if(Object.keys(off).length) o.off=off;
           }
           return o;
@@ -19890,6 +20014,7 @@ window.baroyamAsk=function(title,body,okText){
       h+=(isFixed(x)||!isOn(x,'fl')?'':'<button type="button" class="ui-btn ghost sm" data-fl-add>+ 입력란</button>')
         +(isOn(x,'link')?'<button type="button" class="ui-btn ghost sm" data-att-add="link">'+IC_LINK+'링크</button>':'')
         +(isOn(x,'file')?'<button type="button" class="ui-btn soft sm" data-att-add="file">'+IC_DRIVE+'바로얌 드라이브 연동하기</button>':'')
+        +(isOn(x,'up')?'<button type="button" class="ui-btn ghost sm" data-att-add="up" title="내 컴퓨터의 파일을 올려 붙입니다(50MB까지)">'+IC_FILE+'파일</button>':'')
         +(drives.length?'<button type="button" class="ui-btn sm" data-drv-save>'+IC_SAVE+'<span>'+saveLabel(bid,sid)+'</span></button>':'');
     }
     return h;
@@ -19918,6 +20043,10 @@ window.baroyamAsk=function(title,body,okText){
         if(prev&&prev!==key) paintAtt(prev.split('|')[0],prev.split('|')[1]);
         paintAtt(b.id,sid);
         const f=row.querySelector('[data-link-form] input'); if(f) f.focus();
+      }else if(add.dataset.attAdd==='up'){
+        /* 내 컴퓨터에서 올리기 · 보관함(brand-files)에 올리고 st.files 에 이름·경로를 단다 */
+        fileTarget={bid:b.id,sid:sid};
+        $('bsFileInput').value=''; $('bsFileInput').click();
       }else{
         fileTarget={bid:b.id,sid:sid};
         drvOpen();
@@ -20078,7 +20207,7 @@ window.baroyamAsk=function(title,body,okText){
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!savePop.hidden) savePop.hidden=true; });
   window.addEventListener('scroll',function(){ if(!savePop.hidden) savePop.hidden=true; },true);
 
-  /* ---------- 파일 · 바로얌 드라이브 연동하기 (내 컴퓨터에서 올리기는 뺐다 · 예전에 올린 파일은 그대로 보인다) ---------- */
+  /* ---------- 파일 · 바로얌 드라이브 연동하기 (내 컴퓨터에서 올리기는 '파일' 단추 · 10-06 다시 달았다) ---------- */
   /* 드라이브 찾기 · 드라이브 화면의 색인을 빌려 검색한다 · 고른 파일은 그 항목의 링크(드라이브 표시)로 붙는다 */
   const DRV_PAGE=60;
   const drv={rows:null,q:'',owner:'바로얌',kind:'',picked:new Map(),limit:DRV_PAGE,loading:false};
@@ -20250,7 +20379,7 @@ window.baroyamAsk=function(title,body,okText){
               :'<input class="mg-name" type="text" maxlength="40" value="'+esc(x.t)+'" data-bs-t="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="항목 이름" aria-label="항목 이름">')
             +'<input class="mg-name bs-tpl-desc" type="text" maxlength="120" value="'+esc(x.d)+'" data-bs-d="'+esc(x.id)+'" data-g="'+esc(g.id)+'" placeholder="설명 (선택)" aria-label="항목 설명">'
             +'<div class="ui-chips bs-tpl-opts" role="group" aria-label="'+xl+' 항목에서 쓸 기능">'
-            +[['fl','입력란+'],['link','링크'],['file','드라이브']].filter(function(o){ return !(o[0]==='fl'&&isFixed(x)); }).map(function(o){
+            +[['fl','입력란+'],['link','링크'],['file','드라이브'],['up','파일']].filter(function(o){ return !(o[0]==='fl'&&isFixed(x)); }).map(function(o){
               return '<button type="button" class="ui-chip" data-bs-opt="'+o[0]+'" data-id="'+esc(x.id)+'" data-g="'+esc(g.id)+'" aria-pressed="'+isOn(x,o[0])+'">'+o[1]+'</button>';
             }).join('')+'</div>'
             +'</div>'
