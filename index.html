@@ -4323,6 +4323,62 @@ window.BAROYAM_ACCESS=(function(){
   .drv-save-pop{width:260px;display:flex;flex-direction:column;gap:8px}
   .drv-save-pop p{margin:0 0 2px;font-size:13px;font-weight:800;color:var(--ink)}
   .drv-save-pop small{font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.45}
+  /* 업로드 · 어느 회사 드라이브에 올릴지 고르는 작은 창 → 파일·폴더를 고르는 큰 창 */
+  .drv-up-pop{width:280px;display:flex;flex-direction:column;gap:8px}
+  .drv-up-pop p{margin:0 0 2px;font-size:13px;font-weight:800;color:var(--ink)}
+  .drv-up-panel{max-width:920px;height:min(720px,90vh)}
+  .drv-up-grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
+  .drv-up-col{min-height:0;display:flex;flex-direction:column;gap:10px;padding:16px 22px;overflow:auto}
+  .drv-up-col+.drv-up-col{border-left:1px solid var(--line)}
+  .drv-up-cap{font-size:12px;font-weight:800;color:var(--mute);letter-spacing:.2px}
+  .drv-up-drop{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:118px;
+    padding:16px;border:1.5px dashed var(--line);border-radius:var(--ui-r);color:var(--mute);text-align:center;cursor:pointer;
+    font-size:13px;font-weight:700;transition:border-color .15s,background .15s}
+  .drv-up-drop svg{width:26px;height:26px}
+  .drv-up-drop b{color:var(--ink);font-size:14px}
+  .drv-up-drop:hover,.drv-up-drop.over{border-color:var(--btn);background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .drv-up-files{display:flex;flex-direction:column;gap:6px}
+  .drv-up-file{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:8px 10px;
+    border:1px solid var(--line);border-radius:10px;font-size:13px}
+  .drv-up-file .nm{font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .drv-up-file .sz{font-size:11.5px;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
+  .drv-up-file .tag{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;font-size:11px;font-weight:700;color:var(--mute)}
+  .drv-up-file .tag span{padding:1px 7px;border-radius:999px;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .drv-up-file .tag .warn{background:transparent;border:1px solid var(--line);color:var(--body)}
+  .drv-up-file .bar{grid-column:1/-1;height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+  .drv-up-file .bar i{display:block;height:100%;width:0;background:var(--btn);transition:width .2s}
+  .drv-up-file.done .bar i{width:100%}
+  .drv-up-file.fail{border-color:var(--btn)}
+  .drv-up-file .msg{grid-column:1/-1;font-size:11.5px;font-weight:700;color:var(--btn-soft-ink)}
+  .drv-up-sugg{display:flex;flex-direction:column;gap:6px}
+  .drv-up-sugg[hidden]{display:none}
+  .drv-up-sugg .ui-chips{flex-wrap:wrap}
+  .drv-up-sugg .ui-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .drv-up-crumb{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:13px;font-weight:800}
+  .drv-up-crumb button{all:unset;cursor:pointer;padding:3px 6px;border-radius:8px;color:var(--mute)}
+  .drv-up-crumb button:hover{background:var(--bg);color:var(--ink)}
+  .drv-up-crumb button:last-child{color:var(--ink)}
+  .drv-up-crumb i{font-style:normal;color:var(--line)}
+  .drv-up-folders{flex:1;min-height:120px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--ui-r);overflow:auto}
+  .drv-up-folder{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;
+    font-size:13.5px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--line)}
+  .drv-up-folder:last-child{border-bottom:0}
+  .drv-up-folder:hover,.drv-up-folder:focus-visible{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .drv-up-folder svg{flex:none;width:18px;height:18px;color:var(--mute)}
+  .drv-up-folder .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .drv-up-folder .n{flex:none;font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+  .drv-up-note{padding:18px 12px;text-align:center;font-size:12.5px;font-weight:700;color:var(--mute)}
+  .drv-up-new{display:flex;gap:6px}
+  .drv-up-new[hidden]{display:none}
+  .drv-up-new .ui-field{flex:1;min-width:0}
+  .drv-up-dest{margin-right:auto;min-width:0;font-size:12.5px;font-weight:700;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .drv-up-dest b{color:var(--ink)}
+  .drv-up-panel .bs-foot{align-items:center}
+  @media (max-width:720px){
+    .drv-up-grid{grid-template-columns:1fr;overflow:auto}
+    .drv-up-col{overflow:visible}
+    .drv-up-col+.drv-up-col{border-left:0;border-top:1px solid var(--line)}
+  }
   /* 거르개 줄 · 왼쪽은 판매처·종류 칩, 오른쪽은 정렬과 카드 크기 */
   .drv-row{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px}
   .drv-row[hidden]{display:none}
@@ -7858,6 +7914,11 @@ window.BAROYAM_ACCESS=(function(){
             <button type="button" class="ui-btn" id="drvRefresh" title="드라이브를 다시 훑어 새 파일·바뀐 이름·옮긴 폴더를 반영합니다">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.7-4.4L4 8M4 4v4h4M4 13a8 8 0 0 0 14.7 4.4L20 16M20 20v-4h-4"/></svg>
               <span id="drvRefreshLabel">새로고침</span>
+            </button>
+            <!-- 업로드 · 바로얌/카페이노스 중 어느 드라이브에 올릴지 고른 뒤 폴더를 정한다 -->
+            <button type="button" class="ui-btn soft" id="drvUpload" title="내 컴퓨터의 파일을 회사 드라이브에 올립니다">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V9M7 13.5l5-5 5 5M5 4.5h14"/></svg>
+              <span>업로드</span>
             </button>
             <!-- 고른 파일 · 한 번 클릭으로 고르고 Shift(구간)·Ctrl(하나씩)로 여러 개 고른다 -->
             <span class="drv-pick" id="drvPick" hidden>
@@ -17963,18 +18024,22 @@ window.baroyamAsk=function(title,body,okText){
   /* ---------- 저장 ----------
      드라이브 파일은 로그인한 사람의 구글 권한으로 직접 받는다(drive.readonly · 처음 한 번 허락 창이 뜬다).
      여러 개면 개별 파일로 받을지, ZIP 한 파일로 묶을지 묻는다 */
-  let 저장중=false, 토큰값='', 토큰끝=0, 지퍼=null;
-  function 드라이브토큰(){
+  let 저장중=false, 토큰값='', 토큰끝=0, 쓰기토큰값='', 쓰기토큰끝=0, 지퍼=null;
+  /* 쓰기=true 는 업로드용(drive · 처음 한 번 허락 창이 다시 뜬다) · 쓰기 권한으로 받은 토큰은 읽기에도 쓴다 */
+  function 드라이브토큰(쓰기){
     return new Promise(function(풀, 막){
-      if(토큰값&&Date.now()<토큰끝) return 풀(토큰값);
+      if(쓰기토큰값&&Date.now()<쓰기토큰끝) return 풀(쓰기토큰값);
+      if(!쓰기&&토큰값&&Date.now()<토큰끝) return 풀(토큰값);
       const g=window.google&&google.accounts&&google.accounts.oauth2;
       if(!g) return 막(new Error('구글 로그인 도구를 아직 불러오지 못했어요'));
       const 손=g.initTokenClient({
         client_id:window.BAROYAM_AUTH.clientId,
-        scope:'https://www.googleapis.com/auth/drive.readonly',
+        scope:쓰기?'https://www.googleapis.com/auth/drive':'https://www.googleapis.com/auth/drive.readonly',
         callback:function(답){
           if(!답||답.error||!답.access_token) return 막(new Error((답&&답.error)||'권한을 받지 못했어요'));
-          토큰값=답.access_token; 토큰끝=Date.now()+(Number(답.expires_in||3600)-60)*1000; 풀(토큰값);
+          const 끝=Date.now()+(Number(답.expires_in||3600)-60)*1000;
+          if(쓰기){ 쓰기토큰값=답.access_token; 쓰기토큰끝=끝; }
+          토큰값=답.access_token; 토큰끝=끝; 풀(토큰값);
         },
         error_callback:function(err){ 막(new Error((err&&err.type)==='popup_closed'?'허락 창이 닫혔어요':'권한을 받지 못했어요')); }
       });
@@ -18292,6 +18357,426 @@ window.baroyamAsk=function(title,body,okText){
     창.style.left=Math.max(12,Math.min(칸.right-창.offsetWidth,window.innerWidth-창.offsetWidth-12))+'px';
   }
 
+  /* ---------- 업로드 ----------
+     업로드 단추 → 바로얌/카페이노스 고르기 → 큰 창에서 파일과 올릴 폴더를 정한다(창 밖 드라이브 화면에 끌어 놓아도 열린다).
+     폴더는 드라이브를 그 자리에서 열어 보며 고른다(목록 색인에는 폴더 아이디가 없다) ·
+     파일 이름에서 브랜드·제품·종류를 뽑아(새로고침과 같은 사전) 비슷한 파일이 모여 있는 폴더를 추천하고,
+     최근에 올린 폴더는 이 브라우저에 기억한다 · 올린 파일은 drive_assets_v1 에 그 줄만 얹어(saveMerged) 바로 화면에 보인다 ·
+     올리려면 드라이브 쓰기 권한(drive)이 필요해 처음 한 번 허락 창이 다시 뜬다 */
+  const 최근열쇠='baroyam_drive_up_recent';
+  const 업={회사:'바로얌', 파일:[], 길:[], 하위:{}, 사전:null, 중:false, 열림:false, 차례:0};
+  let 회사탭손=null, 폴더차례=0;
+  const 폴더그림='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/></svg>';
+  const 올림그림='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5M4.5 15v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/></svg>';
+  const 엑스그림='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg>';
+  function 크기표시(n){ n=Number(n||0); return n>=1048576?(n/1048576).toFixed(n>=104857600?0:1)+'MB':Math.max(1,Math.round(n/1024))+'KB'; }
+  function 경로글(길){ return 길.map(function(f){ return f.name; }).join(' / '); }
+  function 짧은경로(p){ const 칸=p.split(' / '); return (칸.length>2?칸.slice(-2):칸).join(' › '); }
+  /* 드라이브 화면 목록에 나오는 곳인지 · 새로고침이 올리는 범위와 같다(★제품별_자산 + 사전의 대시보드폴더) */
+  function 색인범위(경로){
+    return (경로+' /').indexOf('/ ★제품별_자산 /')>=0
+      || ((업.사전&&업.사전['대시보드폴더'])||[]).indexOf(경로.split(' / ')[0])>=0;
+  }
+  function 뿌리들(회사값){
+    const 뿌리=(업.사전&&업.사전['뿌리폴더'])||{};
+    if(회사값==='바로얌') return 뿌리['★바로얌']?[{id:뿌리['★바로얌'],name:'★바로얌'}]:[];
+    return ((업.사전&&업.사전['대시보드폴더'])||[]).filter(function(n){ return 뿌리[n]&&n!=='★바로얌'; })
+      .map(function(n){ return {id:뿌리[n],name:n}; });
+  }
+  async function 드라이브요청(주소, 설정){
+    const 토큰=await 드라이브토큰(true);
+    설정=Object.assign({},설정||{});
+    설정.headers=Object.assign({Authorization:'Bearer '+토큰},설정.headers||{});
+    const 답=await fetch(주소,설정);
+    if(!답.ok) throw new Error(답.status===403?'이 폴더에 쓸 권한이 없어요':'드라이브 오류 '+답.status);
+    return 답.json();
+  }
+  async function 하위폴더(id){
+    if(업.하위[id]) return 업.하위[id];
+    const 모음=[]; let 쪽표='';
+    do{
+      const q=new URLSearchParams({q:"'"+id+"' in parents and mimeType = '"+폴더종류+"' and trashed = false",pageSize:'1000',
+        supportsAllDrives:'true',includeItemsFromAllDrives:'true',fields:'nextPageToken, files(id,name)',orderBy:'name'});
+      if(쪽표) q.set('pageToken',쪽표);
+      const 묶음=await 드라이브요청(드라이브API+'?'+q.toString());
+      (묶음.files||[]).forEach(function(f){ 모음.push({id:f.id,name:f.name}); });
+      쪽표=묶음.nextPageToken||'';
+    }while(쪽표);
+    모음.sort(function(a,b){ return a.name.localeCompare(b.name,'ko',{numeric:true}); });
+    return (업.하위[id]=모음);
+  }
+  /* '★바로얌 / ★제품별_자산 / 오꾸밥' → 폴더 길 · 이름이 바뀌어 못 찾으면 null */
+  async function 경로찾기(경로){
+    const 칸=경로.split(' / ');
+    const 뿌리=뿌리들(업.회사).find(function(r){ return r.name===칸[0]; }); if(!뿌리) return null;
+    const 길=[뿌리];
+    for(let i=1;i<칸.length;i++){
+      const 다음=(await 하위폴더(길[길.length-1].id)).find(function(f){ return f.name===칸[i]; });
+      if(!다음) return null;
+      길.push(다음);
+    }
+    return 길;
+  }
+  function 파일분류(f){
+    if(!f.분류&&업.사전) f.분류=분류하기([{이름:f.file.name,경로:'',종류코드:f.file.type||'',수정일:''}],업.사전)[0];
+    return f.분류||{};
+  }
+  /* 고른 파일과 브랜드·제품·판매처가 같은 자산이 많이 모인 폴더 · 종류까지 같으면 더 앞에 */
+  function 추천경로(){
+    const 바탕=(줄들||[]).filter(function(r){ return 회사(r)===업.회사; });
+    const 점수={};
+    업.파일.forEach(function(f){
+      if(f.끝) return;
+      const c=파일분류(f);
+      if(!c.브랜드&&!c.제품&&!c.판매처) return;
+      바탕.forEach(function(r){
+        let s=0;
+        if(c.제품&&r.제품===c.제품) s+=3;
+        if(c.브랜드&&r.브랜드===c.브랜드) s+=2;
+        if(c.판매처&&r.판매처===c.판매처) s+=1;
+        if(!s) return;
+        if(c.자산종류&&r.자산종류===c.자산종류) s+=2;
+        점수[r.경로]=(점수[r.경로]||0)+s;
+      });
+    });
+    return Object.keys(점수).sort(function(a,b){ return 점수[b]-점수[a]; }).slice(0,4);
+  }
+  function 최근목록(){ try{ return (JSON.parse(localStorage.getItem(최근열쇠)||'{}')[업.회사])||[]; }catch(e){ return []; } }
+  function 최근기억(경로){
+    try{
+      const 모두=JSON.parse(localStorage.getItem(최근열쇠)||'{}');
+      모두[업.회사]=[경로].concat((모두[업.회사]||[]).filter(function(p){ return p!==경로; })).slice(0,5);
+      localStorage.setItem(최근열쇠,JSON.stringify(모두));
+    }catch(e){}
+  }
+  function 색인셈(경로){
+    const 앞=경로+' / ';
+    return (줄들||[]).reduce(function(n,r){ return n+((r.경로===경로||String(r.경로).indexOf(앞)===0)?1:0); },0);
+  }
+
+  function 업고르기창(열기){
+    let 창=$('drvUpPop');
+    if(!열기){ if(창) 창.hidden=true; return; }
+    if(!창){
+      창=document.createElement('div'); 창.id='drvUpPop'; 창.className='ui-pop drv-up-pop'; 창.hidden=true;
+      창.addEventListener('click',function(e){
+        const b=e.target.closest('[data-up-co]'); if(!b) return;
+        업고르기창(false); 업열기(b.dataset.upCo);
+      });
+      document.body.appendChild(창);
+    }
+    /* 지금 보고 있는 회사를 앞(primary)에 둔다 */
+    const 차례=상태.회사==='카페이노스'?['카페이노스','바로얌']:['바로얌','카페이노스'];
+    창.innerHTML='<p>어느 드라이브에 올릴까요?</p>'+차례.map(function(c,i){
+      return '<button type="button" class="ui-btn block '+(i?'soft':'primary')+'" data-up-co="'+c+'">'+c+' 드라이브에 올리기</button>';
+    }).join('');
+    창.hidden=false;
+    const 칸=$('drvUpload').getBoundingClientRect();
+    창.style.top=(칸.bottom+8)+'px';
+    창.style.left=Math.max(12,Math.min(칸.right-창.offsetWidth,window.innerWidth-창.offsetWidth-12))+'px';
+  }
+
+  function 업창(){
+    let 창=$('drvUpDlg'); if(창) return 창;
+    창=document.createElement('div'); 창.id='drvUpDlg'; 창.className='settings-overlay'; 창.hidden=true;
+    창.innerHTML='<div class="bs-panel drv-up-panel" role="dialog" aria-modal="true" aria-labelledby="drvUpTitle">'
+      + '<div class="settings-head"><h2 id="drvUpTitle"></h2><button type="button" class="settings-close" data-up="close" aria-label="닫기">✕</button></div>'
+      + '<div class="drv-up-grid">'
+      + '<div class="drv-up-col"><div class="drv-up-cap">1. 올릴 파일</div>'
+      + '<div class="drv-up-drop" id="drvUpDrop" role="button" tabindex="0">'+올림그림
+      + '<b>파일을 끌어 놓거나 눌러서 고르세요</b><span>여러 개를 한 번에 올릴 수 있어요</span></div>'
+      + '<input type="file" id="drvUpInput" multiple hidden>'
+      + '<div class="drv-up-files" id="drvUpFiles"></div></div>'
+      + '<div class="drv-up-col"><div class="drv-up-cap">2. 올릴 폴더</div>'
+      + '<div class="drv-up-sugg" id="drvUpSugg" hidden></div>'
+      + '<div class="drv-up-crumb" id="drvUpCrumb"></div>'
+      + '<div class="drv-up-folders" id="drvUpFolders"></div>'
+      + '<div class="drv-up-new" id="drvUpNew" hidden><input class="ui-field" id="drvUpNewName" placeholder="새 폴더 이름" maxlength="80" autocomplete="off">'
+      + '<button type="button" class="ui-btn soft" data-up="mkdir">만들기</button><button type="button" class="ui-btn ghost" data-up="newoff">취소</button></div>'
+      + '<div><button type="button" class="ui-btn sm ghost" data-up="newon">+ 이 안에 새 폴더</button></div></div>'
+      + '</div>'
+      + '<div class="bs-foot"><span class="drv-up-dest" id="drvUpDest"></span>'
+      + '<button type="button" class="ui-btn ghost" data-up="close">취소</button>'
+      + '<button type="button" class="ui-btn primary" id="drvUpGo" data-up="go" disabled>올리기</button></div>'
+      + '</div>';
+    document.body.appendChild(창);          /* 붙인 뒤라야 아래 $() 로 안쪽 칸을 찾는다 */
+    창.addEventListener('click',function(e){
+      const 일=e.target.closest('[data-up]');
+      if(일){
+        const 할=일.dataset.up;
+        if(할==='close') 업닫기();
+        else if(할==='go') 올리기시작();
+        else if(할==='retry') 업열기(업.회사, null, true);
+        else if(할==='newon'){ $('drvUpNew').hidden=false; $('drvUpNewName').focus(); }
+        else if(할==='newoff') $('drvUpNew').hidden=true;
+        else if(할==='mkdir') 새폴더();
+        return;
+      }
+      if(e.target.closest('#drvUpDrop')){ if(!업.중) $('drvUpInput').click(); return; }
+      const 빼기=e.target.closest('[data-rm]');
+      if(빼기){ 업.파일.splice(Number(빼기.dataset.rm),1); 파일그리기(); 추천그리기(); return; }
+      const 마디=e.target.closest('[data-crumb]');
+      if(마디){ 업.길=업.길.slice(0,Number(마디.dataset.crumb)+1); 폴더그리기(); return; }
+      const 폴=e.target.closest('[data-folder]');
+      if(폴){
+        const 지금=업.길[업.길.length-1];
+        const f=(업.하위[지금.id]||[]).find(function(x){ return x.id===폴.dataset.folder; });
+        if(f){ 업.길=업.길.concat([f]); 폴더그리기(); }
+        return;
+      }
+      const 칩=e.target.closest('[data-path]');
+      if(칩) 추천으로가기(칩.dataset.path);
+    });
+    $('drvUpDrop').addEventListener('keydown',function(e){
+      if((e.key==='Enter'||e.key===' ')&&!업.중){ e.preventDefault(); $('drvUpInput').click(); }
+    });
+    $('drvUpInput').addEventListener('change',function(){ 파일더하기(this.files); this.value=''; });
+    $('drvUpNewName').addEventListener('keydown',function(e){
+      if(e.key==='Enter'){ e.preventDefault(); 새폴더(); }
+    });
+    창.addEventListener('dragover',function(e){
+      if(!파일끌기(e)) return;
+      e.preventDefault(); e.dataTransfer.dropEffect=업.중?'none':'copy'; $('drvUpDrop').classList.add('over');
+    });
+    창.addEventListener('dragleave',function(e){ if(!창.contains(e.relatedTarget)) $('drvUpDrop').classList.remove('over'); });
+    창.addEventListener('drop',function(e){
+      if(!파일끌기(e)) return;
+      e.preventDefault(); $('drvUpDrop').classList.remove('over');
+      if(!업.중) 파일더하기(e.dataTransfer.files);
+    });
+    return 창;
+  }
+  function 파일끌기(e){ return !!(e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types||[],'Files')>=0); }
+
+  /* 클릭(또는 끌어 놓기) 처리 안에서 곧바로 불러야 허락 창이 막히지 않는다 · 다시=true 는 권한 다시 받기(고른 파일 유지) */
+  async function 업열기(회사값, 파일들, 다시){
+    const 토큰P=드라이브토큰(true); 토큰P.catch(function(){});
+    const 차례=++업.차례;
+    업.회사=회사값; 업.길=[];
+    if(!다시) 업.파일=[];
+    const 창=업창(); 창.hidden=false; 업.열림=true;
+    $('drvUpTitle').textContent=회사값+' 드라이브에 올리기';
+    $('drvUpNew').hidden=true; $('drvUpCrumb').innerHTML=''; $('drvUpSugg').hidden=true;
+    $('drvUpFolders').innerHTML='<div class="drv-up-note">드라이브 권한을 확인하는 중…</div>';
+    if(파일들) 파일더하기(파일들); else 파일그리기();
+    try{
+      await 토큰P;
+      if(!업.사전) 업.사전=await window.BAROYAM_DB.loadSetting(사전열쇠,true);
+      if(!업.사전||!업.사전['뿌리폴더']) throw new Error('분류 사전이 아직 없어요 · 파이썬 색인을 한 번 올려 주세요');
+      if(!줄들) await 열기();
+      if(차례!==업.차례) return;
+      const 뿌리=뿌리들(회사값)[0];
+      if(!뿌리) throw new Error(회사값+' 드라이브 폴더가 분류 사전에 없어요');
+      /* 처음 위치 · 최근에 올린 곳 → 바로얌은 ★제품별_자산 */
+      업.길=[뿌리];
+      const 처음=최근목록()[0]||(회사값==='바로얌'?뿌리.name+' / ★제품별_자산':'');
+      if(처음){
+        const 길=await 경로찾기(처음).catch(function(){ return null; });
+        if(차례!==업.차례) return;
+        if(길) 업.길=길;
+      }
+      폴더그리기();
+    }catch(err){
+      console.error(err);
+      if(차례!==업.차례) return;
+      $('drvUpFolders').innerHTML='<div class="drv-up-note">'+안전(err.message)
+        + '<br><br><button type="button" class="ui-btn sm soft" data-up="retry">권한 다시 받기</button></div>';
+      단추();
+    }
+  }
+  function 업닫기(){
+    if(업.중) return;          /* 올리는 동안은 닫지 않는다 · 끝나면 저절로 닫힌다 */
+    const 창=$('drvUpDlg'); if(창) 창.hidden=true;
+    업.열림=false;
+  }
+  function 파일더하기(목록){
+    Array.prototype.forEach.call(목록||[],function(file){
+      if(업.파일.some(function(f){ return !f.끝&&f.file.name===file.name&&f.file.size===file.size; })) return;
+      업.파일.push({file:file, 진행:0, 끝:false, 오류:''});
+    });
+    파일그리기(); 추천그리기();
+  }
+  function 파일그리기(){
+    const 상자=$('drvUpFiles'); if(!상자) return;
+    const 이미=new Set((줄들||[]).filter(function(r){ return r.경로===경로글(업.길); }).map(function(r){ return r.이름; }));
+    상자.innerHTML=업.파일.map(function(f,i){
+      const c=파일분류(f);
+      const 태그=[c.브랜드,c.제품,c.자산종류].filter(function(v,j,a){ return v&&a.indexOf(v)===j; });
+      const 겹침=!f.끝&&업.길.length&&이미.has(f.file.name);
+      return '<div class="drv-up-file'+(f.끝?' done':'')+(f.오류?' fail':'')+'" data-i="'+i+'">'
+        + '<span class="nm" title="'+안전(f.file.name)+'">'+안전(f.file.name)+'</span>'
+        + '<span class="sz">'+(f.끝?'올림':크기표시(f.file.size))+'</span>'
+        + (업.중||f.끝?'<span></span>':'<button type="button" class="ui-btn sm icon ghost" data-rm="'+i+'" aria-label="빼기" title="빼기">'+엑스그림+'</button>')
+        + ((태그.length||겹침)?'<span class="tag">'+태그.map(function(t){ return '<span>'+안전(t)+'</span>'; }).join('')
+            + (겹침?'<span class="warn">같은 이름이 이 폴더에 있어요</span>':'')+'</span>':'')
+        + ((업.중||f.끝||f.진행)?'<span class="bar"><i style="width:'+Math.round((f.진행||0)*100)+'%"></i></span>':'')
+        + (f.오류?'<span class="msg">'+안전(f.오류)+'</span>':'')
+        + '</div>';
+    }).join('');
+    단추();
+  }
+  function 진행표시(f){
+    const 막대=document.querySelector('#drvUpFiles [data-i="'+업.파일.indexOf(f)+'"] .bar i');
+    if(막대) 막대.style.width=Math.round(f.진행*100)+'%';
+  }
+  function 단추(){
+    const 가=$('drvUpGo'); if(!가) return;
+    const 남은=업.파일.filter(function(f){ return !f.끝; }).length;
+    가.disabled=업.중||!남은||!업.길.length;
+    가.textContent=업.중?'올리는 중…':(남은?남은+'개 올리기':'올리기');
+    const 끝칸=업.길[업.길.length-1], 칸=$('drvUpDest');
+    칸.innerHTML=끝칸?('올릴 곳 <b>'+안전(끝칸.name)+'</b>'+(색인범위(경로글(업.길))?'':' · 드라이브 화면 목록에는 안 나오는 폴더예요')):'';
+    칸.title=경로글(업.길);
+  }
+  function 추천그리기(){
+    const 상자=$('drvUpSugg'); if(!상자) return;
+    if(!업.길.length){ 상자.hidden=true; return; }
+    const 지금=경로글(업.길), 추천=추천경로();
+    const 최근=최근목록().filter(function(p){ return 추천.indexOf(p)<0; }).slice(0,4);
+    const 칩=function(p){
+      return '<button type="button" class="ui-chip" data-path="'+안전(p)+'" aria-pressed="'+(p===지금)+'" title="'+안전(p)+'">'+안전(짧은경로(p))+'</button>';
+    };
+    let h='';
+    if(추천.length) h+='<div class="drv-up-cap">비슷한 파일이 있는 폴더</div><div class="ui-chips">'+추천.map(칩).join('')+'</div>';
+    if(최근.length) h+='<div class="drv-up-cap">최근에 올린 폴더</div><div class="ui-chips">'+최근.map(칩).join('')+'</div>';
+    상자.innerHTML=h; 상자.hidden=!h;
+  }
+  async function 추천으로가기(경로){
+    const 차례=업.차례;
+    const 길=await 경로찾기(경로).catch(function(){ return null; });
+    if(차례!==업.차례) return;
+    if(!길){ alert('그 폴더를 찾지 못했어요 · 이름이 바뀌었거나 옮겨졌을 수 있어요'); return; }
+    업.길=길; 폴더그리기();
+  }
+  async function 폴더그리기(){
+    const 차례=++폴더차례, 길=업.길;
+    $('drvUpCrumb').innerHTML=길.map(function(f,i){ return '<button type="button" data-crumb="'+i+'">'+안전(f.name)+'</button>'; }).join('<i>›</i>');
+    $('drvUpNew').hidden=true;
+    파일그리기(); 추천그리기();
+    if(!길.length) return;
+    const 상자=$('drvUpFolders'), 지금=길[길.length-1];
+    if(!업.하위[지금.id]) 상자.innerHTML='<div class="drv-up-note">폴더를 읽는 중…</div>';
+    try{
+      const 목록=await 하위폴더(지금.id);
+      if(차례!==폴더차례) return;
+      const 앞=경로글(길);
+      상자.innerHTML=목록.length?목록.map(function(f){
+        const n=색인셈(앞+' / '+f.name);
+        return '<button type="button" class="drv-up-folder" data-folder="'+안전(f.id)+'">'+폴더그림
+          + '<span class="nm">'+안전(f.name)+'</span>'+(n?'<span class="n">'+n+'개</span>':'')+'</button>';
+      }).join(''):'<div class="drv-up-note">하위 폴더가 없어요 · 여기에 올리거나 새 폴더를 만드세요</div>';
+      상자.scrollTop=0;
+    }catch(err){
+      if(차례===폴더차례) 상자.innerHTML='<div class="drv-up-note">폴더를 읽지 못했어요 · '+안전(err.message)+'</div>';
+    }
+  }
+  async function 새폴더(){
+    const 칸=$('drvUpNewName'), 이름=칸.value.trim();
+    if(!이름){ 칸.focus(); return; }
+    const 지금=업.길[업.길.length-1]; if(!지금) return;
+    if((업.하위[지금.id]||[]).some(function(f){ return f.name===이름; })){ alert('같은 이름의 폴더가 이미 있어요'); return; }
+    try{
+      const 답=await 드라이브요청(드라이브API+'?supportsAllDrives=true&fields=id,name',{
+        method:'POST', headers:{'Content-Type':'application/json; charset=UTF-8'},
+        body:JSON.stringify({name:이름,mimeType:폴더종류,parents:[지금.id]})});
+      delete 업.하위[지금.id]; 업.하위[답.id]=[];
+      칸.value=''; 업.길=업.길.concat([{id:답.id,name:답.name||이름}]); 폴더그리기();
+    }catch(err){ alert('폴더를 만들지 못했어요 · '+err.message); }
+  }
+  /* 큰 영상도 올라가도록 이어 올리기(resumable) 주소를 받아 한 번에 보낸다 · XHR 이라야 진행률이 보인다 */
+  function 한파일올리기(파일, 폴더id, 토큰, 진행){
+    return fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true&fields=id,name,mimeType,modifiedTime,size',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+토큰,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':파일.type||'application/octet-stream'},
+      body:JSON.stringify({name:파일.name,parents:[폴더id]})
+    }).then(function(답){
+      if(!답.ok) throw new Error(답.status===403?'이 폴더에 올릴 권한이 없어요':'올리기 준비 실패 ('+답.status+')');
+      const 주소=답.headers.get('Location');
+      if(!주소) throw new Error('올릴 주소를 받지 못했어요');
+      return new Promise(function(풀, 막){
+        const x=new XMLHttpRequest();
+        x.open('PUT',주소);
+        x.upload.onprogress=function(e){ if(e.lengthComputable) 진행(e.loaded/e.total); };
+        x.onload=function(){
+          if(x.status>=200&&x.status<300){ try{ 풀(JSON.parse(x.responseText)); }catch(e){ 풀({}); } }
+          else 막(new Error('올리기 실패 ('+x.status+')'));
+        };
+        x.onerror=function(){ 막(new Error('연결이 끊겼어요')); };
+        x.send(파일);
+      });
+    });
+  }
+  async function 올리기시작(){
+    const 남은=업.파일.filter(function(f){ return !f.끝; });
+    if(업.중||!남은.length||!업.길.length) return;
+    const 토큰P=드라이브토큰(true);          /* 클릭 순간에 불러야 허락 창이 막히지 않는다 */
+    const 폴더=업.길[업.길.length-1], 경로=경로글(업.길);
+    업.중=true; 파일그리기();
+    const 새줄=[];
+    try{
+      const 토큰=await 토큰P;
+      for(const f of 남은){
+        f.오류=''; f.진행=0;
+        try{
+          const 답=await 한파일올리기(f.file, 폴더.id, 토큰, function(p){ f.진행=p; 진행표시(f); });
+          f.끝=true; f.진행=1;
+          if(답.id) 새줄.push({아이디:답.id,이름:답.name||f.file.name,경로:경로,종류코드:답.mimeType||f.file.type||'',
+            수정일:String(답.modifiedTime||지금시각()).slice(0,10),크기:Number(답.size||f.file.size||0)});
+        }catch(err){ f.오류=err.message; }
+        파일그리기();
+      }
+    }catch(err){
+      console.error(err);
+      alert('올리지 못했어요 · '+err.message);
+    }
+    if(새줄.length){
+      최근기억(경로);
+      업.하위={};                                   /* 다른 사람이 만든 폴더도 다음에 보이게 */
+      await 목록에얹기(새줄);
+    }
+    업.중=false; 파일그리기();
+    if(새줄.length&&!업.파일.some(function(f){ return f.오류; })){ 업닫기(); 새파일보여주기(새줄, 경로); }
+  }
+  /* 올린 파일을 drive_assets_v1 에 얹는다 · 통째로 덮지 않고 서버 최신본을 다시 읽어 없는 줄만 더한다 */
+  async function 목록에얹기(새줄){
+    const 올릴=분류하기(새줄.filter(function(r){ return 색인범위(r.경로); }),업.사전||{});
+    if(!올릴.length||!window.BAROYAM_DB) return;
+    const 칸기본=['아이디','이름','브랜드','제품','자산종류','판매처','날짜','경로','크기'];
+    let 결과=null;
+    const 답=await window.BAROYAM_DB.saveMerged(열쇠,function(v){
+      const 글=typeof v==='string';
+      let d=v;
+      if(글){ try{ d=JSON.parse(v); }catch(e){ d=null; } }
+      if(!d||!Array.isArray(d['줄'])) d={'갱신':지금시각(),'칸':칸기본,'줄':[]};
+      const 칸=d['칸']||칸기본, 아이디칸=칸.indexOf('아이디');
+      const 있음=new Set(d['줄'].map(function(x){ return x[아이디칸]; }));
+      d=Object.assign({},d,{'칸':칸,'줄':d['줄'].concat(올릴.filter(function(r){ return !있음.has(r.아이디); })
+        .map(function(r){ return 칸.map(function(k){ return r[k]==null?'':r[k]; }); }))});
+      결과=d;
+      return 글||v==null?JSON.stringify(d):d;
+    });
+    if(답==null){ alert('드라이브에는 올렸지만 화면 목록에 넣지 못했어요 · 새로고침 단추를 누르면 나타나요'); return; }
+    줄들적용(결과);
+  }
+  function 새파일보여주기(새줄, 경로){
+    if(!색인범위(경로)){
+      alert(새줄.length+'개를 올렸어요 · 이 폴더는 드라이브 화면 목록에 나오지 않는 곳이라 구글드라이브에서 확인해 주세요');
+      return;
+    }
+    상태.회사=업.회사; if(회사탭손) 회사탭손.set(업.회사);
+    상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear(); 상태.검색='';
+    const 찾기=$('drvSearch'); if(찾기) 찾기.value='';
+    상태.선택.clear(); 상태.기준='';
+    새줄.forEach(function(r){ if(줄표[r.아이디]){ 상태.선택.add(r.아이디); 상태.기준=r.아이디; } });
+    if(줄들){ $('drvEmpty').hidden=true; $('drvBody').hidden=false; 그리기(); }
+    선택표시();
+    const 메타=$('drvMeta'), 원래=메타.textContent;
+    메타.textContent=새줄.length+'개를 올렸어요';
+    setTimeout(function(){ if(메타.textContent===새줄.length+'개를 올렸어요') 메타.textContent=원래; },4000);
+    const 첫=document.querySelector('#drvLanes .drv-card.on');
+    if(첫) 첫.scrollIntoView({block:'center',behavior:'smooth'});
+  }
+
   function 안내(굵게, 잔글){
     const 빈=$('drvEmpty'); if(!빈) return;
     빈.hidden=false;
@@ -18351,19 +18836,37 @@ window.baroyamAsk=function(title,body,okText){
       if(상태.선택.size>1){ const 창=$('drvSavePop'); 저장창(!(창&&!창.hidden)); }
       else 저장하기('each');
     });
+    $('drvUpload').addEventListener('click',function(e){
+      e.stopPropagation();
+      const 창=$('drvUpPop'); 업고르기창(!(창&&!창.hidden));
+    });
+    /* 드라이브 화면에 파일을 끌어 놓으면 지금 보고 있는 회사의 업로드 창이 열린다 */
+    뿌리.addEventListener('dragover',function(e){
+      if(!파일끌기(e)) return;
+      e.preventDefault(); e.dataTransfer.dropEffect='copy';
+    });
+    뿌리.addEventListener('drop',function(e){
+      if(!파일끌기(e)) return;
+      e.preventDefault(); 업열기(상태.회사, e.dataTransfer.files);
+    });
     document.addEventListener('click',function(e){
       const 창=$('drvSavePop');
       if(창&&!창.hidden&&!창.contains(e.target)) 저장창(false);
+      const 업창=$('drvUpPop');
+      if(업창&&!업창.hidden&&!업창.contains(e.target)) 업고르기창(false);
     });
     document.addEventListener('keydown',function(e){
       if(e.key!=='Escape'||뿌리.style.display==='none') return;
+      if(업.열림){ 업닫기(); return; }
+      const 업팝=$('drvUpPop');
+      if(업팝&&!업팝.hidden){ 업고르기창(false); return; }
       const 창=$('drvSavePop');
       if(창&&!창.hidden) 저장창(false); else if(상태.선택.size) 선택해제();
     });
     const 회사탭=$('drvOwner');
-    if(회사탭&&window.UI&&window.UI.tabs) window.UI.tabs(회사탭,function(값){
+    if(회사탭&&window.UI&&window.UI.tabs) 회사탭손=window.UI.tabs(회사탭,function(값){
       상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear();
-      상태.선택.clear(); 상태.기준=''; 저장창(false);
+      상태.선택.clear(); 상태.기준=''; 저장창(false); 업고르기창(false);
       if(줄들) 그리기();
       선택표시();
     });
