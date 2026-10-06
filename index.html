@@ -3874,6 +3874,7 @@ window.BAROYAM_ACCESS=(function(){
   .settings-overlay{position:fixed;inset:0;background:rgba(20,14,10,.5);display:flex;align-items:center;justify-content:center;
     padding:20px;z-index:80;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
   .settings-overlay[hidden]{display:none}
+  #drvUpDlg{z-index:85}   /* 드라이브 업로드 창 · 브랜드전략실 연동 창 위에서도 뜬다 */
   /* 삭제 확인창 · 다른 창(z-index 80) 위에 떠야 해서 90을 준다 ·
      브라우저 기본 confirm()은 앱과 따로 놀고 창 위에 뜨면 특히 어색해서 대신 쓴다 */
   .ask{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;
@@ -5227,6 +5228,7 @@ window.BAROYAM_ACCESS=(function(){
   .bs-drv-tools{flex:none;display:flex;flex-direction:column;gap:10px;padding:14px 22px 12px;border-bottom:1px solid var(--line)}
   .bs-drv-tools .bs-search{height:42px;font-size:14px}
   .bs-drv-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .bs-drv-row #bsDrvUp{margin-left:auto}
   .bs-drv-n{font-size:12.5px;font-weight:800;color:var(--mute);font-variant-numeric:tabular-nums}
   .bs-drv-kinds{max-height:68px;overflow-y:auto}
   .bs-drv-kinds .ui-chip{height:26px;padding:0 10px;font-size:12px}
@@ -8173,6 +8175,11 @@ window.BAROYAM_ACCESS=(function(){
                   <button class="ui-tab" data-value="카페이노스">카페이노스</button>
                 </div>
                 <span class="bs-drv-n" id="bsDrvN"></span>
+                <!-- 업로드 · 드라이브 화면과 같은 창(폴더 고르기·추천)으로 회사 드라이브에 올리고, 올린 파일은 이 항목에 바로 붙는다 -->
+                <button type="button" class="ui-btn soft sm" id="bsDrvUp" title="내 컴퓨터의 파일을 회사 드라이브에 올리고 이 항목에 붙입니다 · 이 창에 끌어 놓아도 됩니다">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V9M7 13.5l5-5 5 5M5 4.5h14"/></svg>
+                  <span>업로드</span>
+                </button>
               </div>
               <div class="ui-chips bs-drv-kinds" id="bsDrvKinds"></div>
             </div>
@@ -18365,7 +18372,7 @@ window.baroyamAsk=function(title,body,okText){
      최근에 올린 폴더는 이 브라우저에 기억한다 · 올린 파일은 drive_assets_v1 에 그 줄만 얹어(saveMerged) 바로 화면에 보인다 ·
      올리려면 드라이브 쓰기 권한(drive)이 필요해 처음 한 번 허락 창이 다시 뜬다 */
   const 최근열쇠='baroyam_drive_up_recent';
-  const 업={회사:'바로얌', 파일:[], 길:[], 하위:{}, 사전:null, 중:false, 열림:false, 차례:0};
+  const 업={회사:'바로얌', 파일:[], 길:[], 하위:{}, 사전:null, 중:false, 열림:false, 차례:0, 끝:null};   /* 끝 · 다른 화면이 부른 업로드면 올린 파일을 받을 함수 */
   let 회사탭손=null, 폴더차례=0;
   const 폴더그림='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/></svg>';
   const 올림그림='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7.5 9.5 12 5l4.5 4.5M4.5 15v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/></svg>';
@@ -18551,8 +18558,9 @@ window.baroyamAsk=function(title,body,okText){
   function 파일끌기(e){ return !!(e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types||[],'Files')>=0); }
 
   /* 클릭(또는 끌어 놓기) 처리 안에서 곧바로 불러야 허락 창이 막히지 않는다 · 다시=true 는 권한 다시 받기(고른 파일 유지) */
-  async function 업열기(회사값, 파일들, 다시){
+  async function 업열기(회사값, 파일들, 다시, 끝){
     const 토큰P=드라이브토큰(true); 토큰P.catch(function(){});
+    if(!다시) 업.끝=끝||null;
     const 차례=++업.차례;
     업.회사=회사값; 업.길=[];
     if(!다시) 업.파일=[];
@@ -18736,9 +18744,11 @@ window.baroyamAsk=function(title,body,okText){
       최근기억(경로);
       업.하위={};                                   /* 다른 사람이 만든 폴더도 다음에 보이게 */
       await 목록에얹기(새줄);
+      /* 다른 화면(브랜드전략실)이 부른 업로드 · 올라간 파일은 일부가 실패해도 바로 넘긴다 */
+      if(업.끝){ try{ 업.끝(새줄.map(function(r){ return {id:r.아이디,name:r.이름,path:r.경로}; }),경로); }catch(e){ console.error(e); } }
     }
     업.중=false; 파일그리기();
-    if(새줄.length&&!업.파일.some(function(f){ return f.오류; })){ 업닫기(); 새파일보여주기(새줄, 경로); }
+    if(새줄.length&&!업.파일.some(function(f){ return f.오류; })){ 업닫기(); if(!업.끝) 새파일보여주기(새줄, 경로); }
   }
   /* 올린 파일을 drive_assets_v1 에 얹는다 · 통째로 덮지 않고 서버 최신본을 다시 읽어 없는 줄만 더한다 */
   async function 목록에얹기(새줄){
@@ -18858,9 +18868,13 @@ window.baroyamAsk=function(title,body,okText){
       const 업창=$('drvUpPop');
       if(업창&&!업창.hidden&&!업창.contains(e.target)) 업고르기창(false);
     });
+    /* 업로드 창은 다른 화면 위에서도 뜨므로 Esc 를 먼저(capture) 받아 그 창만 닫는다 */
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Escape'||!업.열림) return;
+      e.stopImmediatePropagation(); 업닫기();
+    },true);
     document.addEventListener('keydown',function(e){
       if(e.key!=='Escape'||뿌리.style.display==='none') return;
-      if(업.열림){ 업닫기(); return; }
       const 업팝=$('drvUpPop');
       if(업팝&&!업팝.hidden){ 업고르기창(false); return; }
       const 창=$('drvSavePop');
@@ -18881,6 +18895,9 @@ window.baroyamAsk=function(title,body,okText){
     });
   });
   window.baroyamDriveOpen=열기;
+  /* 다른 화면(브랜드전략실 드라이브 연동하기)이 이 화면의 업로드 창을 그대로 쓴다 · 클릭 처리 안에서 곧바로 불러야 허락 창이 막히지 않는다 ·
+     끝(줄들, 경로) 은 올라간 파일 [{id,name,path}] 을 받는다 */
+  window.baroyamDriveUpload=function(회사값, 끝, 파일들){ 업열기(회사값||'바로얌', 파일들||null, false, 끝); };
   /* 다른 화면이 드라이브 파일을 받을 때 · 이 화면의 저장과 같은 방식(개별/ZIP) */
   window.baroyamDriveSave=function(것들, 방식, 알림, 묶음앞){ return 내려받기(것들, 방식, 알림, 묶음앞); };
   /* 다른 화면(브랜드전략실 파일 넣기)이 드라이브 색인을 빌려 쓴다 · 아직 안 읽었으면 이 화면과 같은 방법으로 한 번 읽는다 */
@@ -20845,6 +20862,26 @@ window.baroyamAsk=function(title,body,okText){
   $('bsDrvDlg').addEventListener('click',function(e){
     if(e.target===$('bsDrvDlg')||e.target.closest('[data-bs-drv-close]')) drvClose();
   });
+  /* 업로드 · 드라이브 화면의 업로드 창을 빌려 쓴다(지금 고른 회사 드라이브) · 올라간 파일은 이 항목에 연동 카드로 붙는다 */
+  function drvUpload(files){
+    const t=fileTarget; if(!t||!window.baroyamDriveUpload) return;
+    window.baroyamDriveUpload(drv.owner,function(rows){
+      const b=find(t.bid); if(!b||!rows.length) return;
+      stepSet(b,t.sid,function(st){
+        const have=new Set(((st.links)||[]).map(function(l){ return l.drive; }).filter(Boolean));
+        st.links=(st.links||[]).concat(rows.filter(function(r){ return !have.has(r.id); }).map(function(r){
+          return {id:newId('l'),url:drvUrl(r.id),title:r.name,drive:r.id};
+        }));
+      });
+      paintAtt(b.id,t.sid);
+      drv.rows=null;                     /* 다음에 열 때 올린 파일까지 든 색인을 다시 빌린다 */
+      drvClose();
+    },files);
+  }
+  $('bsDrvUp').addEventListener('click',function(){ drvUpload(null); });
+  function hasFiles(e){ return !!(e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types||[],'Files')>=0); }
+  $('bsDrvDlg').addEventListener('dragover',function(e){ if(!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect='copy'; });
+  $('bsDrvDlg').addEventListener('drop',function(e){ if(!hasFiles(e)) return; e.preventDefault(); drvUpload(e.dataTransfer.files); });
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape') return;
     if(!$('bsDrvDlg').hidden&&(!$('askDlg')||$('askDlg').hidden)) drvClose();
