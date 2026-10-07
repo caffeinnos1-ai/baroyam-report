@@ -38,6 +38,7 @@
 | 입력칸·선택칸 | `<input class="ui-field">`, 목록을 여는 버튼도 `class="ui-field"` |
 | 날짜·기간 선택 | 빈 `<button>` 에 `UI.datePicker(버튼, {mode:'single'｜'range', value, presets, max, onChange})` · 기간은 프로젝트 마감일 고르기와 같은 모양(빠른 선택 → 시작일~종료일 → 달력 → 초기화/적용), 대시보드 머리 위 버튼은 `class="raised"` |
 | 떠 있는 메뉴 | `class="ui-pop"` |
+| 목록에서 하나 고르기 | `<select>` 대신 `class="ui-field"` 버튼 + 누를 때 `UI.menu(버튼, [{value,label,sub}], 지금 값, 함수)` |
 
 - 새 `xx-btn`·`xx-tab`·`xx-chip`·`xx-cal` 클래스를 만들지 않습니다. 필요한 변형은 `ui-*` 에 수식 클래스로 추가하고
   `ui-sample.html` 에도 한 줄 넣습니다.

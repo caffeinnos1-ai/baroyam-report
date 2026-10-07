@@ -2132,6 +2132,79 @@ window.BAROYAM_ACCESS=(function(){
   /* 손익·마진 관리 · 순수익 요약·마진 계산기·원가표 모두 가로로 길게(대시보드 흰 판은 그대로 두고 폭만 넓힘) */
   body.view-is-profit .wrap{max-width:1720px;padding-left:24px;padding-right:24px}
   @media (max-width:760px){ body.view-is-profit .wrap{padding-left:16px;padding-right:16px} }
+  /* 손익·마진 관리 · 마진 계산기·품목별 원가표 (pf-*) · 버튼·탭·칩·입력칸은 표준 ui-* 그대로 쓰고 자리만 잡는다 */
+  .pf-pane{margin-top:28px;display:flex;flex-direction:column;gap:14px}
+  .pf-pane[hidden]{display:none}
+  .pf-grow{flex:1}
+  .pf-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .pf-bar #pfSheetName{width:220px}
+  .pf-card{border:1px solid var(--line);border-radius:16px;background:var(--paper);padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+  .pf-card-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .pf-card-head h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink);margin-right:6px}
+  .pf-scroll{overflow-x:auto;margin:0 -4px;padding:0 4px}
+  .pf-empty,.pf-msg{padding:22px;border:1px dashed var(--line);border-radius:14px;color:var(--mute);font-size:13.5px;font-weight:600;text-align:center}
+  .pf-empty[hidden],.pf-msg[hidden]{display:none}
+  .pf-foot{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .pf-note{font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.5}
+  /* 계산 표 · 넣는 칸(입력)과 나오는 칸(계산)을 바탕색으로 가른다 */
+  table.pf-calc{width:100%;min-width:1500px;border-collapse:separate;border-spacing:0}
+  .pf-calc thead th{position:sticky;top:0;padding:8px 6px;font-size:11.5px;font-weight:800;color:var(--mute);text-align:right;
+    border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:-.2px;background:var(--paper)}
+  .pf-calc thead th.l{text-align:left}
+  .pf-calc thead th.out{color:var(--btn-soft-ink)}
+  .pf-calc tbody td{padding:7px 6px;font-size:13.5px;font-weight:600;color:var(--body);text-align:right;border-bottom:1px solid var(--line);
+    white-space:nowrap;vertical-align:middle}
+  .pf-calc tbody td:first-child{font-size:13.5px}
+  .pf-calc tbody tr:last-child td{border-bottom:0}
+  .pf-calc td.out{background:color-mix(in srgb,var(--btn-soft) 45%,transparent);font-variant-numeric:tabular-nums}
+  .pf-calc td.out.hi{color:var(--ink);font-weight:800;font-size:14.5px}
+  .pf-calc td.out.neg{color:var(--neg)}
+  .pf-calc td.out.pos{color:var(--pos)}
+  .pf-calc .ui-field{width:100%;min-width:0}
+  .pf-calc .w-label{width:150px}.pf-calc .w-chan{width:120px}.pf-calc .w-cost{width:118px}.pf-calc .w-num{width:92px}
+  .pf-calc .w-rate{width:70px}.pf-calc .w-prime{width:118px}.pf-calc .w-act{width:64px}
+  .pf-calc input.pf-num{text-align:right;font-variant-numeric:tabular-nums}
+  .pf-calc .ui-field .t{text-align:left}
+  .pf-calc .pf-cost .t{text-align:right}
+  .pf-calc .pf-cost small{font-size:11px;font-weight:700;color:var(--mute)}
+  .pf-calc .pf-acts{display:inline-flex;gap:2px}
+  /* 원가표 · 왼쪽 상품 원가(넓게), 오른쪽 발송비 구간·판매처 수수료 */
+  .pf-bom{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:14px;align-items:start}
+  .pf-side{display:flex;flex-direction:column;gap:14px}
+  @media (max-width:1100px){ .pf-bom{grid-template-columns:1fr} }
+  table.pf-list{width:100%;border-collapse:collapse}
+  .pf-list thead th{padding:6px;font-size:11.5px;font-weight:800;color:var(--mute);text-align:left;border-bottom:1px solid var(--line);letter-spacing:-.2px}
+  .pf-list thead th.r{text-align:right}
+  .pf-list tbody td{padding:5px 6px;font-size:13.5px;font-weight:600;color:var(--body);text-align:left;border-bottom:1px solid var(--line)}
+  .pf-list tbody td:first-child{font-size:13.5px;font-weight:600}
+  .pf-list tbody tr:last-child td{border-bottom:0}
+  .pf-list .ui-field{width:100%}
+  .pf-list input.pf-num,.pf-add input.pf-num{text-align:right;font-variant-numeric:tabular-nums}
+  .pf-list td.act{width:36px;text-align:right}
+  .pf-list .pf-none td{padding:18px 6px;text-align:center;color:var(--mute);font-size:13px}
+  #pfItemTable .c-brand{width:150px}#pfItemTable .c-num{width:130px}
+  #pfShipTable .c-num,#pfChanTable .c-num{width:120px}
+  .pf-add{display:flex;flex-wrap:wrap;gap:6px;padding-top:12px;border-top:1px dashed var(--line)}
+  .pf-add .ui-field{flex:1 1 120px;min-width:0}
+  .pf-add .pf-num{flex:0 1 120px}
+  #pfItemQ{width:180px}
+  /* 원가 계산 창 */
+  .settings-panel.pf-mix{max-width:720px;height:min(720px,88vh)}
+  .pf-mix-top{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px 22px 10px}
+  .pf-mix-top #pfMixQ{margin-left:auto;width:180px}
+  .pf-mix-list{flex:1;min-height:0;overflow-y:auto;padding:0 22px 8px;display:flex;flex-direction:column;gap:6px}
+  .pf-mix-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
+  .pf-mix-row.on{border-color:var(--btn);background:color-mix(in srgb,var(--btn-soft) 50%,transparent)}
+  .pf-mix-row b{display:block;font-size:14px;font-weight:800;color:var(--ink)}
+  .pf-mix-row small{display:block;margin-top:2px;font-size:12px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+  .pf-step{display:inline-flex;align-items:center;gap:4px}
+  .pf-step>span{font-size:11.5px;font-weight:700;color:var(--mute);margin-right:2px}
+  .pf-step .ui-field{width:56px;text-align:center;padding:0 6px;font-variant-numeric:tabular-nums}
+  .pf-mix-sum{flex:none;margin:0 22px;padding:12px 14px;border-radius:12px;background:var(--chip-flat);display:flex;flex-wrap:wrap;gap:6px 22px;
+    font-size:13px;font-weight:600;color:var(--body)}
+  .pf-mix-sum b{font-size:16px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;margin-left:4px}
+  .pf-mix-foot{flex:none;display:flex;align-items:center;gap:8px;padding:14px 22px 18px}
+  @media (max-width:640px){ .pf-mix-row{grid-template-columns:1fr} .pf-bar #pfSheetName{width:100%} }
   /* 리뷰수집 배너 · 판매처를 고르면 그 브랜드 색이 제목 글자에 실린다(카페24는 기본 주황) */
   #revHero.is-naver{--hero-accent:#00734d}
   #revHero.is-coupang{--hero-accent:#2f77cc}
@@ -4908,6 +4981,15 @@ window.BAROYAM_ACCESS=(function(){
   .ui-pop{position:fixed;z-index:1000;padding:12px;background:var(--paper);border:1px solid var(--line);
     border-radius:var(--ui-r-pop);box-shadow:var(--ui-pop-shadow)}
   .ui-pop[hidden]{display:none}
+  /* 목록 고르기(UI.menu) · 떠 있는 창 안에 한 줄씩 · 고른 줄은 연한 강조 · 오른쪽 작은 글은 금액·비율 같은 덧붙임 */
+  .ui-pop.ui-menu{padding:6px;max-height:min(320px,60vh);overflow-y:auto;display:flex;flex-direction:column;gap:1px}
+  .ui-pop.ui-menu[hidden]{display:none}
+  .ui-opt{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:14px;
+    min-height:34px;padding:0 10px;border-radius:var(--ui-r-sm);font-size:var(--ui-fs);font-weight:600;color:var(--ink);cursor:pointer}
+  .ui-opt:hover,.ui-opt:focus-visible{background:var(--chip-flat)}
+  .ui-opt[aria-selected="true"]{background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:800}
+  .ui-opt small{font-size:12px;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums}
+  .ui-opt-empty{padding:10px;font-size:12.5px;color:var(--mute)}
   /* 날짜선택 달력 · UI.datePicker() 가 만든다 · 모양은 프로젝트 대시보드 마감일 고르기(.pj-dpick)를 표준으로 삼았다 ·
      기간(range)은 빠른 선택 칩 → 시작일~종료일 칸 → 달력 → 초기화/적용, 한 날짜(single)는 누르면 바로 정해진다 */
   .ui-cal{width:280px;display:flex;flex-direction:column;gap:10px}
@@ -5502,7 +5584,38 @@ window.BAROYAM_ACCESS=(function(){
     };
   }
 
-  window.UI={datePicker,tabs};
+  /* 목록에서 하나 고르기 · <select> 대신 쓴다(브라우저마다 모양이 달라서) · 누를 때마다 부르면 버튼 아래에 목록이 뜬다 ·
+     UI.menu(버튼, [{value,label,sub}], 지금 값, 고르면 부를 함수) · 떠 있는 창은 하나를 같이 쓴다(표 칸마다 만들지 않게) */
+  let menuPop=null;
+  function menu(btn,options,cur,onPick){
+    if(openPicker&&openPicker.anchor===btn){ openPicker.close(); return; }
+    if(openPicker) openPicker.close();
+    if(!menuPop){
+      menuPop=document.createElement('div'); menuPop.className='ui-pop ui-menu'; menuPop.hidden=true;
+      menuPop.setAttribute('role','listbox');
+      menuPop.addEventListener('click',e=>e.stopPropagation());
+      document.body.appendChild(menuPop);
+    }
+    const pop=menuPop;
+    pop.innerHTML=(options||[]).map((o,i)=>'<button type="button" class="ui-opt" role="option" data-i="'+i+'" aria-selected="'+(String(o.value)===String(cur)?'true':'false')+'">'
+      +'<span>'+esc(o.label)+'</span>'+(o.sub!=null&&o.sub!==''?'<small>'+esc(o.sub)+'</small>':'')+'</button>').join('')
+      ||'<div class="ui-opt-empty">고를 것이 없습니다</div>';
+    pop.style.minWidth=Math.max(160,btn.getBoundingClientRect().width)+'px';
+    pop.onclick=e=>{
+      e.stopPropagation();
+      const b=e.target.closest('.ui-opt'); if(!b) return;
+      const o=options[+b.dataset.i]; api.close(); if(onPick) onPick(o.value,o);
+    };
+    pop.hidden=false; place(pop,btn);
+    btn.setAttribute('aria-expanded','true');
+    const api={anchor:btn,
+      close(){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); if(openPicker===api) openPicker=null; },
+      reposition(){ if(!pop.hidden){ if(!btn.isConnected) api.close(); else place(pop,btn); } }};
+    openPicker=api;
+    const on=pop.querySelector('[aria-selected="true"]'); if(on&&on.scrollIntoView) on.scrollIntoView({block:'nearest'});
+  }
+
+  window.UI={datePicker,tabs,menu};
 })();
 </script>
 </head>
@@ -5975,8 +6088,8 @@ window.BAROYAM_ACCESS=(function(){
       </div>
       <div class="sb-subnav-flat">
         <button type="button" class="sb-subnav-item active" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
-        <button type="button" class="sb-subnav-item" data-profit="calc" data-sub="쿠팡·네이버·자사몰 등 채널 수수료를 적용해 마진율을 계산합니다.">마진 계산기</button>
-        <button type="button" class="sb-subnav-item" data-profit="bom" data-sub="품목마다 들어가는 원가(BOM)를 정리합니다.">품목별 원가표</button>
+        <button type="button" class="sb-subnav-item" data-profit="calc" data-sub="판매처·원가·발송비를 고르고 판매가를 넣으면 구성별 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
+        <button type="button" class="sb-subnav-item" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
       </div>
     </nav>
 
@@ -8059,8 +8172,93 @@ window.BAROYAM_ACCESS=(function(){
             <div class="ptitle" id="profitViewTitle">순수익 요약</div>
             <div class="psub" id="profitViewSub">채널별·기간별 최종 순이익을 모니터링합니다.</div>
           </div>
-          <div class="profit-empty">아직 준비 중인 화면입니다.</div>
+          <div class="profit-empty" data-pf-pane="summary">아직 준비 중인 화면입니다.</div>
+          <!-- 마진 계산기 · 계산표(예: 홀떡피자 메타광고)마다 구성 줄을 두고, 원가는 원가표의 상품을 골라 개수만 넣는다 -->
+          <div class="pf-pane" data-pf-pane="calc" hidden>
+            <div class="pf-bar">
+              <div class="ui-tabs" id="pfSheetTabs" aria-label="계산표"></div>
+              <button type="button" class="ui-btn sm soft" id="pfSheetAdd">+ 새 계산표</button>
+              <span class="pf-grow"></span>
+              <input class="ui-field sm" id="pfSheetName" maxlength="40" placeholder="계산표 이름" aria-label="계산표 이름">
+              <button type="button" class="ui-btn sm ghost" id="pfSheetDel">계산표 삭제</button>
+            </div>
+            <div class="pf-card">
+              <div class="pf-scroll">
+                <table class="pf-calc" id="pfCalcTable"></table>
+              </div>
+              <div class="pf-foot">
+                <button type="button" class="ui-btn sm primary" id="pfRowAdd">+ 구성 추가</button>
+                <span class="pf-note">부가세 = (판매가+배송비 − 원가 − 프라임 − 리뷰 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
+              </div>
+            </div>
+            <div class="pf-empty" id="pfCalcEmpty" hidden>원가표에 상품·판매처가 없습니다. <b>품목별 원가표</b>에서 먼저 넣어 주세요.</div>
+          </div>
+          <!-- 품목별 원가표 · 상품 원가(브랜드별) · 프라임 발송비 구간 · 판매처 수수료 -->
+          <div class="pf-pane" data-pf-pane="bom" hidden>
+            <div class="pf-bom">
+              <div class="pf-card">
+                <div class="pf-card-head">
+                  <h3>상품 원가</h3>
+                  <div class="ui-chips" id="pfBrandChips"></div>
+                  <span class="pf-grow"></span>
+                  <input class="ui-field sm" id="pfItemQ" placeholder="상품 검색" aria-label="상품 검색">
+                </div>
+                <div class="pf-scroll">
+                  <table class="pf-list" id="pfItemTable"></table>
+                </div>
+                <form class="pf-add" id="pfItemAdd" autocomplete="off">
+                  <input class="ui-field sm" name="brand" list="pfBrandList" maxlength="30" placeholder="브랜드" required>
+                  <datalist id="pfBrandList"></datalist>
+                  <input class="ui-field sm" name="name" maxlength="60" placeholder="상품명 (예: 홀떡피자 1팩)" required>
+                  <input class="ui-field sm pf-num" name="cost" inputmode="numeric" placeholder="개당 원가" required>
+                  <input class="ui-field sm pf-num" name="price" inputmode="numeric" placeholder="개당 소비자가">
+                  <button type="submit" class="ui-btn sm soft">+ 상품 추가</button>
+                </form>
+              </div>
+              <div class="pf-side">
+                <div class="pf-card">
+                  <div class="pf-card-head"><h3>프라임 발송비 구간</h3></div>
+                  <table class="pf-list" id="pfShipTable"></table>
+                  <form class="pf-add" id="pfShipAdd" autocomplete="off">
+                    <input class="ui-field sm" name="name" maxlength="30" placeholder="구간 이름 (예: 소형)" required>
+                    <input class="ui-field sm pf-num" name="fee" inputmode="numeric" placeholder="발송비" required>
+                    <button type="submit" class="ui-btn sm soft">+ 추가</button>
+                  </form>
+                </div>
+                <div class="pf-card">
+                  <div class="pf-card-head"><h3>판매처 수수료</h3></div>
+                  <table class="pf-list" id="pfChanTable"></table>
+                  <form class="pf-add" id="pfChanAdd" autocomplete="off">
+                    <input class="ui-field sm" name="name" maxlength="30" placeholder="판매처 (예: 쿠팡)" required>
+                    <input class="ui-field sm pf-num" name="rate" inputmode="decimal" placeholder="수수료 %" required>
+                    <button type="submit" class="ui-btn sm soft">+ 추가</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
+        <!-- 원가 고르기 · 원가표의 상품을 브랜드별로 보고 개수(증정 따로)만 넣으면 원가·소비자가가 바로 나온다 -->
+        <div class="settings-overlay" id="pfMixDlg" hidden>
+          <div class="settings-panel pf-mix" role="dialog" aria-modal="true" aria-labelledby="pfMixTitle">
+            <div class="settings-head">
+              <h2 id="pfMixTitle">원가 계산</h2>
+              <button type="button" class="settings-close" data-pf-close aria-label="닫기">✕</button>
+            </div>
+            <div class="pf-mix-top">
+              <div class="ui-tabs" id="pfMixBrands" aria-label="브랜드"></div>
+              <input class="ui-field sm" id="pfMixQ" placeholder="상품 검색" aria-label="상품 검색">
+            </div>
+            <div class="pf-mix-list" id="pfMixList"></div>
+            <div class="pf-mix-sum" id="pfMixSum"></div>
+            <div class="pf-mix-foot">
+              <button type="button" class="ui-btn ghost" id="pfMixClear">모두 비우기</button>
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn ghost" data-pf-close>취소</button>
+              <button type="button" class="ui-btn primary" id="pfMixOk">적용</button>
+            </div>
+          </div>
+        </div>
       </div><!-- /view-profit -->
       <!-- 견적서 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-quote" style="display:none">
@@ -13606,10 +13804,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const sub=document.getElementById('profitViewSub');
   if(!btn||!subnav) return;
   const items=[...subnav.querySelectorAll('[data-profit]')];
+  const panes=[...document.querySelectorAll('#view-profit [data-pf-pane]')];
   function pick(el){
     items.forEach(b=>b.classList.toggle('active',b===el));
     if(title) title.textContent=el.textContent.trim();
     if(sub) sub.textContent=el.dataset.sub||'';
+    panes.forEach(p=>{ p.hidden=p.dataset.pfPane!==el.dataset.profit; });
+    if(window.baroyamProfit) window.baroyamProfit.show(el.dataset.profit);
   }
   btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
   items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('profit'); pick(el); }));
@@ -13619,6 +13820,429 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   const salesToggleBtn=document.getElementById('sbSalesToggle');
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+})();
+
+/* ===== 손익·마진 관리 · 품목별 원가표 + 마진 계산기 =====
+   app_settings 두 칸 · profit_cost_v1 = {items:{id:{brand,name,cost,price}}, ship:{id:{name,fee}}, chans:{id:{name,rate}}}
+                         profit_calc_v1 = {sheets:{id:{name,rows:{id:{label,chan,sale,ship,review,prime,rate,price,mix:{상품id:{q,f}}}}}}}
+   목록을 배열이 아닌 id 객체로 두어 merge3 가 항목·칸 단위로 합친다 · 지우기는 del(시각)만 단다(실제로 빼지 않음) ·
+   저장은 통째로 덮지 않고 saveMerged + merge3(마지막으로 맞춘 서버본 = 이 창 메모리) · 못 보낸 고침은 localStorage 에 base 와 짝으로 */
+(function(){
+  const view=document.getElementById('view-profit');
+  if(!view) return;
+  const DB=()=>window.BAROYAM_DB;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
+  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const TAB=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const PF_REV=1;
+  const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+  /* 숫자 칸 · "₩ 12,900"·"3.85%" 처럼 적어도 숫자만 읽는다 · 비었으면 null */
+  function num(v){
+    if(v==null||v==='') return null;
+    const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+    return isFinite(n)?n:null;
+  }
+  const won=n=>n==null||!isFinite(n)?'–':'₩'+Math.round(n).toLocaleString('ko-KR');
+  const comma=n=>n==null||n===''?'':Number(n).toLocaleString('ko-KR',{maximumFractionDigits:2});
+  const pct=(n,d)=>n==null||!isFinite(n)?'–':(n*100).toFixed(d==null?1:d)+'%';
+  const live=o=>Object.values(obj(o)).filter(x=>x&&!x.del).sort((a,b)=>(a.ord||0)-(b.ord||0));
+
+  /* ---------- 한 칸 저장 도우미 ---------- */
+  function store(KEY,norm,make){
+    const DRAFT='baroyam_profit_draft_v1:'+KEY;
+    const st={data:null,base:null,loaded:false,error:false,dirty:false,busy:false,timer:null,onChange:null};
+    function persist(){
+      try{
+        if(st.dirty||st.busy) localStorage.setItem(DRAFT,JSON.stringify({at:Date.now(),tab:TAB,local:st.data,base:st.base}));
+        else localStorage.removeItem(DRAFT);
+      }catch(e){}
+    }
+    /* 다른 창이 남기고 꺼진 고침(30초 넘게 소식 없음)만 이어받는다 */
+    function restore(){
+      try{
+        const d=JSON.parse(localStorage.getItem(DRAFT)||'null');
+        if(!d||d.tab===TAB||Date.now()-(d.at||0)<30000||!d.local) return false;
+        st.data=norm(d.local); st.base=d.base?norm(d.base):null; st.dirty=true; return true;
+      }catch(e){ return false; }
+    }
+    st.load=async function(){
+      const db=DB(); if(!db||!db.loadSetting){ st.error=true; return; }
+      if(st.dirty||st.busy||st.timer) return;
+      let v;
+      try{ v=await db.loadSetting(KEY,true); }catch(e){ console.error(e); st.error=!st.loaded; return; }
+      if(st.dirty||st.busy||st.timer) return;
+      if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      st.error=false;
+      if(!st.loaded&&restore()){ st.loaded=true; st.timer=setTimeout(st.flush,300); return; }
+      const next=v?norm(v):(st.loaded?st.data:make());
+      const changed=!st.loaded||!same(next,st.data);
+      st.data=next; st.base=v?clone(next):null; st.loaded=true;
+      if(changed&&st.onChange) st.onChange();
+    };
+    st.mark=function(){
+      st.dirty=true; persist();
+      const db=DB(); if(db&&db.saveNotice) db.saveNotice(KEY,'pending');
+      clearTimeout(st.timer); st.timer=setTimeout(st.flush,700);
+    };
+    st.flush=async function(){
+      st.timer=null;
+      if(st.busy){ st.timer=setTimeout(st.flush,400); return; }
+      if(!st.dirty) return;
+      const db=DB(); if(!db||!db.saveMerged) return;
+      st.busy=true; st.dirty=false;
+      const sent=clone(st.data), base=st.base;
+      let r=null;
+      try{
+        r=await db.saveMerged(KEY,function(server){
+          if(typeof server==='string'){ try{ server=JSON.parse(server); }catch(e){ server=null; } }
+          const sv=server?norm(server):null;
+          const next=!sv?sent:(base?db.merge3(base,sent,sv):db.union(sent,sv));
+          return Object.assign({},next,{_rev:PF_REV,updatedAt:Date.now()});
+        });
+      }catch(e){ console.error(e); r=null; }
+      st.busy=false;
+      if(!r){
+        st.dirty=true; persist();
+        if(db.saveNotice) db.saveNotice(KEY,'failing');
+        clearTimeout(st.timer); st.timer=setTimeout(st.flush,15000);
+        return;
+      }
+      const res=norm(r);
+      st.base=clone(res);
+      const now=st.data;
+      st.data=same(now,sent)?res:norm(db.merge3(sent,now,res));
+      persist();
+      if(!st.dirty&&db.saveNotice) db.saveNotice(KEY,'ok');
+      if(!same(st.data,now)&&st.onChange) st.onChange();
+    };
+    return st;
+  }
+  const normCost=v=>{ v=obj(v); return Object.assign({},v,{items:obj(v.items),ship:obj(v.ship),chans:obj(v.chans)}); };
+  const normCalc=v=>{ v=obj(v); return Object.assign({},v,{sheets:obj(v.sheets)}); };
+  /* 처음 한 번 · 붙여 준 계산표(홀떡피자 메타광고)에 있던 판매처 수수료·프라임 발송비로 시작한다 · id 를 고정해 두 PC가 동시에 만들어도 겹치지 않는다 */
+  const COST=store('profit_cost_v1',normCost,()=>normCost({
+    ship:{'ship-a':{id:'ship-a',name:'구간 1',fee:3600,ord:1},'ship-b':{id:'ship-b',name:'구간 2',fee:4070,ord:2}},
+    chans:{'ch-cafe':{id:'ch-cafe',name:'카페이노스',rate:3.85,ord:1}}}));
+  const CALC=store('profit_calc_v1',normCalc,()=>normCalc({}));
+
+  let pane='summary', sheetId=null, brandF='', itemQ='';
+  try{ sheetId=localStorage.getItem('baroyam_profit_sheet')||null; }catch(e){}
+  const $=id=>document.getElementById(id);
+
+  /* ---------- 계산 ----------
+     소비자가 = 고른 상품의 (유료 개수 × 개당 소비자가) 합 · 원가 = (유료+증정) × 개당 원가 ·
+     수수료 = 최종판매가 × 수수료율 · 부가세 = (판매가+배송비 − 원가 − 프라임 − 리뷰 − 수수료) ÷ 11 ·
+     마진 = 그 금액 − 부가세 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료 */
+  function calc(r){
+    const c=COST.data, items=c?c.items:{};
+    let units=0, paid=0, cost=0, auto=0;
+    Object.keys(obj(r.mix)).forEach(k=>{
+      const m=r.mix[k]||{}, it=items[k]; if(!it) return;
+      const q=Math.max(0,num(m.q)||0), f=Math.max(0,num(m.f)||0);
+      units+=q+f; paid+=q; cost+=(q+f)*(num(it.cost)||0); auto+=q*(num(it.price)||0);
+    });
+    const ch=c&&r.chan?c.chans[r.chan]:null, pr=c&&r.prime?c.ship[r.prime]:null;
+    const price=num(r.price)!=null?num(r.price):(auto||null);
+    const sale=num(r.sale), ship=num(r.ship)||0, review=num(r.review)||0;
+    const rate=num(r.rate)!=null?num(r.rate):(ch?num(ch.rate):null);
+    const prime=pr?(num(pr.fee)||0):0;
+    const o={units,paid,cost,auto,price,rate,prime,chRate:ch?num(ch.rate):null};
+    if(sale==null) return o;
+    const rev=sale+ship, fee=sale*(rate||0)/100;
+    const pre=rev-cost-prime-review-fee, vat=pre/11, margin=pre-vat;
+    return Object.assign(o,{sale,rev,fee,vat,margin,
+      disc:price?1-sale/price:null, unit:units?sale/units:null,
+      mrate:rev?margin/rev:null, roas:margin>0?rev/margin:null, settle:rev-fee});
+  }
+  /* 구성 이름 · 상품 하나면 "4팩"·"12+1", 여럿이면 "상품명 개수" 를 이어 붙인다 */
+  function mixLabel(mix){
+    const items=COST.data.items, on=Object.keys(obj(mix)).filter(k=>items[k]&&((num(mix[k].q)||0)+(num(mix[k].f)||0))>0);
+    const one=k=>{ const q=num(mix[k].q)||0, f=num(mix[k].f)||0; return f?q+'+'+f:q+'팩'; };
+    if(on.length===1) return one(on[0]);
+    return on.map(k=>items[k].name+' '+one(k)).join(' · ');
+  }
+
+  /* ---------- 마진 계산기 ---------- */
+  function sheets(){ return live(CALC.data.sheets); }
+  function curSheet(){
+    const list=sheets();
+    return list.find(s=>s.id===sheetId)||list[0]||null;
+  }
+  function paintTabs(){
+    const list=sheets(), cur=curSheet();
+    $('pfSheetTabs').innerHTML=list.map(s=>'<button type="button" class="ui-tab" role="tab" data-value="'+esc(s.id)+'" aria-selected="'+(cur&&cur.id===s.id?'true':'false')+'">'+esc(s.name||'이름 없음')+'</button>').join('');
+    $('pfSheetTabs').hidden=!list.length;
+    const nm=$('pfSheetName');
+    if(document.activeElement!==nm) nm.value=cur?cur.name||'':'';
+    nm.disabled=!cur; $('pfSheetDel').disabled=!cur;
+  }
+  const COLS=[
+    ['label','구성','l'],['chan','판매처','l'],['cost','원가',''],['price','소비자가',''],['sale','최종판매가',''],
+    ['disc','할인률','out'],['unit','개당단가','out'],['ship','배송비',''],['prime','프라임','l'],['review','리뷰',''],
+    ['rate','수수료율',''],['fee','수수료','out'],['vat','부가세','out'],['margin','마진','out'],['mrate','마진률','out'],
+    ['roas','최소 ROAS','out'],['settle','정산예정금','out'],['act','','']];
+  function outCells(tr,r){
+    const v=calc(r);
+    const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.className='out'+(cls||''); } };
+    put('disc',pct(v.disc,0)); put('unit',won(v.unit)); put('fee',won(v.fee)); put('vat',won(v.vat));
+    put('margin',won(v.margin),' hi'+(v.margin<0?' neg':''));
+    put('mrate',pct(v.mrate),' hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
+    put('roas',v.margin==null?'–':(v.roas==null?'적자':pct(v.roas,0)),v.margin!=null&&v.roas==null?' neg':'');
+    put('settle',won(v.settle));
+    const cb=tr.querySelector('.pf-cost');
+    if(cb) cb.innerHTML='<span class="t">'+(v.units?won(v.cost)+' <small>'+v.units+'개</small>':'<span class="ph">상품 고르기</span>')+'</span>';
+    const pi=tr.querySelector('[data-k="price"]'); if(pi) pi.placeholder=v.auto?comma(v.auto):'자동';
+    const ri=tr.querySelector('[data-k="rate"]'); if(ri) ri.placeholder=v.chRate!=null?comma(v.chRate):'%';
+  }
+  function msgRow(t,n){ return '<tbody><tr><td colspan="'+(n||1)+'" class="pf-msg" style="text-align:center">'+t+'</td></tr></tbody>'; }
+  function paintCalc(){
+    if(!CALC.loaded||!COST.loaded){ $('pfCalcTable').innerHTML=msgRow(CALC.error||COST.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
+    paintTabs();
+    const sh=curSheet(), c=COST.data;
+    $('pfCalcEmpty').hidden=!!(live(c.items).length&&live(c.chans).length);
+    $('pfRowAdd').disabled=!sh;
+    if(!sh){ $('pfCalcTable').innerHTML=msgRow('"+ 새 계산표" 로 계산표를 만드세요 (예: 홀떡피자 메타광고)'); return; }
+    const rows=live(sh.rows);
+    let h='<thead><tr>'+COLS.map(cl=>'<th class="'+cl[2]+'">'+cl[1]+'</th>').join('')+'</tr></thead><tbody>';
+    rows.forEach(r=>{
+      const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime];
+      h+='<tr data-row="'+esc(r.id)+'">'
+        +'<td class="w-label"><input class="ui-field sm" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="예: 4팩"></td>'
+        +'<td class="w-chan"><button type="button" class="ui-field sm" data-menu="chan"><span class="t">'+(ch?esc(ch.name):'<span class="ph">판매처</span>')+'</span></button></td>'
+        +'<td class="w-cost"><button type="button" class="ui-field sm pf-cost" data-mix></button></td>'
+        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="price" inputmode="numeric" value="'+esc(comma(r.price))+'" title="비우면 고른 상품의 소비자가 합계"></td>'
+        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="sale" inputmode="numeric" value="'+esc(comma(r.sale))+'" placeholder="판매가"></td>'
+        +'<td data-o="disc" class="out"></td><td data-o="unit" class="out"></td>'
+        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="ship" inputmode="numeric" value="'+esc(comma(r.ship))+'" placeholder="0" title="고객이 내는 배송비"></td>'
+        +'<td class="w-prime"><button type="button" class="ui-field sm" data-menu="prime"><span class="t">'+(pr?esc(pr.name)+' · '+comma(pr.fee):'<span class="ph">없음</span>')+'</span></button></td>'
+        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="review" inputmode="numeric" value="'+esc(comma(r.review))+'" placeholder="0"></td>'
+        +'<td class="w-rate"><input class="ui-field sm pf-num" data-k="rate" inputmode="decimal" value="'+esc(r.rate==null?'':r.rate)+'" title="비우면 판매처 수수료"></td>'
+        +'<td data-o="fee" class="out"></td><td data-o="vat" class="out"></td><td data-o="margin" class="out"></td>'
+        +'<td data-o="mrate" class="out"></td><td data-o="roas" class="out"></td><td data-o="settle" class="out"></td>'
+        +'<td class="w-act"><span class="pf-acts"><button type="button" class="ui-btn sm ghost icon" data-act="dup" title="복제" aria-label="복제">⧉</button>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-act="del" title="삭제" aria-label="삭제">✕</button></span></td></tr>';
+    });
+    if(!rows.length) h+='<tr><td colspan="'+COLS.length+'" class="pf-msg" style="text-align:center">"+ 구성 추가" 로 구성 줄을 넣으세요 (4팩·8팩·12+1 …)</td></tr>';
+    $('pfCalcTable').innerHTML=h+'</tbody>';
+    $('pfCalcTable').querySelectorAll('tr[data-row]').forEach(tr=>outCells(tr,sh.rows[tr.dataset.row]));
+  }
+  function rowOf(el){
+    const tr=el.closest('tr[data-row]'), sh=curSheet();
+    return tr&&sh?{tr,sh,r:sh.rows[tr.dataset.row]}:null;
+  }
+  $('pfCalcTable').addEventListener('input',e=>{
+    const k=e.target.dataset.k, x=rowOf(e.target); if(!k||!x||!x.r) return;
+    x.r[k]=k==='label'?e.target.value:num(e.target.value);
+    outCells(x.tr,x.r); CALC.mark();
+  });
+  $('pfCalcTable').addEventListener('focusout',e=>{
+    const k=e.target.dataset.k; if(!k||k==='label'||k==='rate') return;
+    const x=rowOf(e.target); if(x&&x.r) e.target.value=comma(x.r[k]);
+  });
+  $('pfCalcTable').addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    const x=rowOf(b); if(!x||!x.r) return;
+    if(b.dataset.menu){
+      e.stopPropagation();
+      const c=COST.data, isCh=b.dataset.menu==='chan';
+      const opts=isCh?live(c.chans).map(o=>({value:o.id,label:o.name,sub:comma(o.rate)+'%'}))
+        :[{value:'',label:'없음',sub:''}].concat(live(c.ship).map(o=>({value:o.id,label:o.name,sub:won(o.fee)})));
+      window.UI.menu(b,opts,isCh?x.r.chan||'':x.r.prime||'',v=>{ x.r[isCh?'chan':'prime']=v||null; CALC.mark(); paintCalc(); });
+      return;
+    }
+    if(b.hasAttribute('data-mix')){ openMix(x.sh,x.r); return; }
+    if(b.dataset.act==='dup'){
+      const n=clone(x.r); n.id=uid(); n.ord=(x.r.ord||0)+0.001; n.label=(x.r.label||'')+' 복사';
+      x.sh.rows[n.id]=n; CALC.mark(); paintCalc(); return;
+    }
+    if(b.dataset.act==='del'){
+      window.baroyamAsk('"'+(x.r.label||'이 구성')+'" 줄을 지울까요?','').then(ok=>{ if(!ok) return; x.r.del=Date.now(); CALC.mark(); paintCalc(); });
+    }
+  });
+  $('pfRowAdd').addEventListener('click',()=>{
+    const sh=curSheet(); if(!sh) return;
+    const rows=live(sh.rows), last=rows[rows.length-1], id=uid();
+    /* 판매처·프라임은 바로 위 줄을 따라간다(같은 계산표는 대개 같은 판매처) */
+    sh.rows[id]={id,ord:Date.now(),label:'',chan:last?last.chan:((live(COST.data.chans)[0]||{}).id||null),prime:last?last.prime:null,mix:{}};
+    CALC.mark(); paintCalc();
+  });
+  $('pfSheetTabs').addEventListener('click',e=>{
+    const t=e.target.closest('.ui-tab'); if(!t) return;
+    sheetId=t.dataset.value; try{ localStorage.setItem('baroyam_profit_sheet',sheetId); }catch(err){}
+    paintCalc();
+  });
+  $('pfSheetAdd').addEventListener('click',()=>{
+    if(!CALC.loaded) return;
+    const id=uid();
+    CALC.data.sheets[id]={id,ord:Date.now(),name:'새 계산표',rows:{}};
+    sheetId=id; try{ localStorage.setItem('baroyam_profit_sheet',id); }catch(err){}
+    CALC.mark(); paintCalc();
+    $('pfSheetName').focus(); $('pfSheetName').select();
+  });
+  $('pfSheetName').addEventListener('input',e=>{
+    const sh=curSheet(); if(!sh) return;
+    sh.name=e.target.value; CALC.mark(); paintTabs();
+  });
+  $('pfSheetDel').addEventListener('click',()=>{
+    const sh=curSheet(); if(!sh) return;
+    window.baroyamAsk('"'+(sh.name||'이 계산표')+'" 계산표를 지울까요?','안에 있는 구성 줄도 함께 사라집니다.').then(ok=>{
+      if(!ok) return; sh.del=Date.now(); sheetId=null; CALC.mark(); paintCalc();
+    });
+  });
+
+  /* ---------- 원가 고르기 창 ---------- */
+  let mixFor=null, mixDraft={}, mixBrand='', mixQ='';
+  const dlg=$('pfMixDlg');
+  const brandOf=i=>(i.brand||'').trim()||'기타';
+  function brandsOf(list){ return [...new Set(list.map(brandOf))].sort((a,b)=>a.localeCompare(b,'ko')); }
+  function openMix(sh,r){
+    mixFor={sh:sh.id,r:r.id}; mixDraft=clone(obj(r.mix)); mixQ=''; $('pfMixQ').value='';
+    const items=COST.data.items, used=Object.keys(mixDraft).find(k=>items[k]&&(num(mixDraft[k].q)||num(mixDraft[k].f)));
+    mixBrand=used?brandOf(items[used]):'';
+    paintMix(); dlg.hidden=false;
+  }
+  function closeMix(){ dlg.hidden=true; mixFor=null; }
+  function paintMix(){
+    const all=live(COST.data.items), brands=brandsOf(all);
+    if(mixBrand&&brands.indexOf(mixBrand)<0) mixBrand='';
+    $('pfMixBrands').innerHTML=[''].concat(brands).map(b=>'<button type="button" class="ui-tab" data-value="'+esc(b)+'" aria-selected="'+(b===mixBrand?'true':'false')+'">'+esc(b||'전체')+'</button>').join('');
+    const q=mixQ.trim().toLowerCase();
+    const list=all.filter(i=>(!mixBrand||brandOf(i)===mixBrand)&&(!q||(i.name+' '+i.brand).toLowerCase().indexOf(q)>=0));
+    /* 이미 고른 상품은 원가표에서 지워졌어도 보이게 한다(개수를 0으로 내릴 수 있게) */
+    Object.keys(mixDraft).forEach(k=>{ const it=COST.data.items[k]; if(it&&it.del&&(num(mixDraft[k].q)||num(mixDraft[k].f))) list.push(it); });
+    $('pfMixList').innerHTML=list.map(i=>{
+      const m=mixDraft[i.id]||{}, q=num(m.q)||0, f=num(m.f)||0;
+      return '<div class="pf-mix-row'+(q+f?' on':'')+'" data-id="'+esc(i.id)+'"><div><b>'+esc(i.name)+(i.del?' (원가표에서 지움)':'')+'</b>'
+        +'<small>'+esc(brandOf(i))+' · 원가 '+won(num(i.cost))+' · 소비자가 '+(num(i.price)?won(num(i.price)):'–')+'</small></div>'
+        +'<span class="pf-step"><span>수량</span><button type="button" class="ui-btn sm icon" data-d="-1" data-f="q" aria-label="수량 빼기">−</button>'
+        +'<input class="ui-field sm" data-f="q" inputmode="numeric" value="'+(q||'')+'" placeholder="0" aria-label="수량"><button type="button" class="ui-btn sm icon" data-d="1" data-f="q" aria-label="수량 더하기">+</button></span>'
+        +'<span class="pf-step"><span>증정</span><button type="button" class="ui-btn sm icon" data-d="-1" data-f="f" aria-label="증정 빼기">−</button>'
+        +'<input class="ui-field sm" data-f="f" inputmode="numeric" value="'+(f||'')+'" placeholder="0" aria-label="증정 수량"><button type="button" class="ui-btn sm icon" data-d="1" data-f="f" aria-label="증정 더하기">+</button></span></div>';
+    }).join('')||'<div class="pf-msg">'+(all.length?'찾는 상품이 없습니다':'품목별 원가표에 상품을 먼저 넣어 주세요')+'</div>';
+    paintMixSum();
+  }
+  function paintMixSum(){
+    const v=calc({mix:mixDraft});
+    $('pfMixSum').innerHTML='<span>총 개수<b>'+v.units+'개</b></span><span>유료 '+v.paid+' · 증정 '+(v.units-v.paid)+'</span>'
+      +'<span>원가<b>'+won(v.cost)+'</b></span><span>소비자가 합계<b>'+(v.auto?won(v.auto):'–')+'</b></span>';
+  }
+  function setMix(id,f,val){
+    const m=mixDraft[id]=Object.assign({q:0,f:0},mixDraft[id]); m[f]=Math.max(0,Math.round(val||0));
+    const row=[...$('pfMixList').querySelectorAll('[data-id]')].find(x=>x.dataset.id===id);
+    if(row){ row.classList.toggle('on',((num(m.q)||0)+(num(m.f)||0))>0); const inp=row.querySelector('input[data-f="'+f+'"]'); if(inp&&document.activeElement!==inp) inp.value=m[f]||''; }
+    paintMixSum();
+  }
+  $('pfMixList').addEventListener('click',e=>{
+    const b=e.target.closest('button[data-d]'); if(!b) return;
+    const id=b.closest('[data-id]').dataset.id, m=mixDraft[id]||{};
+    setMix(id,b.dataset.f,(num(m[b.dataset.f])||0)+(+b.dataset.d));
+  });
+  $('pfMixList').addEventListener('input',e=>{
+    const f=e.target.dataset.f; if(!f) return;
+    setMix(e.target.closest('[data-id]').dataset.id,f,num(e.target.value));
+  });
+  $('pfMixBrands').addEventListener('click',e=>{ const t=e.target.closest('.ui-tab'); if(!t) return; mixBrand=t.dataset.value; paintMix(); });
+  $('pfMixQ').addEventListener('input',e=>{ mixQ=e.target.value; paintMix(); });
+  $('pfMixClear').addEventListener('click',()=>{ Object.keys(mixDraft).forEach(k=>{ mixDraft[k]={q:0,f:0}; }); paintMix(); });
+  $('pfMixOk').addEventListener('click',()=>{
+    const sh=mixFor&&CALC.data.sheets[mixFor.sh], r=sh&&sh.rows[mixFor.r];
+    if(r){
+      const clean={};
+      Object.keys(mixDraft).forEach(k=>{ const m=mixDraft[k]; clean[k]={q:num(m.q)||0,f:num(m.f)||0}; });
+      /* 0 개인 상품도 칸은 남긴다 · 빼 버리면 다른 PC가 같은 상품 개수를 고친 것과 합칠 때 되살아난다 */
+      r.mix=clean;
+      if(!(r.label||'').trim()) r.label=mixLabel(clean);
+      CALC.mark(); paintCalc();
+    }
+    closeMix();
+  });
+  dlg.addEventListener('click',e=>{ if(e.target===dlg||e.target.closest('[data-pf-close]')) closeMix(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!dlg.hidden) closeMix(); });
+
+  /* ---------- 품목별 원가표 ---------- */
+  function paintBom(){
+    const msg=!COST.loaded?(COST.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'):'';
+    if(msg){ ['pfItemTable','pfShipTable','pfChanTable'].forEach(id=>{ $(id).innerHTML='<tbody><tr class="pf-none"><td>'+msg+'</td></tr></tbody>'; }); return; }
+    const c=COST.data, all=live(c.items), brands=brandsOf(all);
+    if(brandF&&brands.indexOf(brandF)<0) brandF='';
+    const cnt=b=>all.filter(i=>brandOf(i)===b).length;
+    $('pfBrandChips').innerHTML='<button type="button" class="ui-chip" data-b="" aria-pressed="'+(!brandF)+'">전체 <b>'+all.length+'</b></button>'
+      +brands.map(b=>'<button type="button" class="ui-chip" data-b="'+esc(b)+'" aria-pressed="'+(b===brandF)+'">'+esc(b)+' <b>'+cnt(b)+'</b></button>').join('');
+    $('pfBrandList').innerHTML=brands.map(b=>'<option value="'+esc(b)+'">').join('');
+    const q=itemQ.trim().toLowerCase();
+    const list=all.filter(i=>(!brandF||brandOf(i)===brandF)&&(!q||(i.name+' '+i.brand).toLowerCase().indexOf(q)>=0))
+      .sort((a,b)=>(brandOf(a).localeCompare(brandOf(b),'ko'))||((a.ord||0)-(b.ord||0)));
+    $('pfItemTable').innerHTML='<thead><tr><th class="c-brand">브랜드</th><th>상품명</th><th class="c-num r">개당 원가</th><th class="c-num r">개당 소비자가</th><th></th></tr></thead><tbody>'
+      +(list.map(i=>'<tr data-id="'+esc(i.id)+'"><td class="c-brand"><input class="ui-field sm" data-k="brand" list="pfBrandList" maxlength="30" value="'+esc(i.brand||'')+'"></td>'
+        +'<td><input class="ui-field sm" data-k="name" maxlength="60" value="'+esc(i.name||'')+'"></td>'
+        +'<td class="c-num"><input class="ui-field sm pf-num" data-k="cost" data-n inputmode="numeric" value="'+esc(comma(i.cost))+'"></td>'
+        +'<td class="c-num"><input class="ui-field sm pf-num" data-k="price" data-n inputmode="numeric" value="'+esc(comma(i.price))+'"></td>'
+        +'<td class="act"><button type="button" class="ui-btn sm ghost icon" data-del aria-label="삭제">✕</button></td></tr>').join('')
+        ||'<tr class="pf-none"><td colspan="5">'+(all.length?'찾는 상품이 없습니다':'아래에서 상품을 넣어 주세요 (예: 홀떡 · 홀떡피자 1팩 · 1,300 · 4,300)')+'</td></tr>')+'</tbody>';
+    const small=(id,arr,k,lbl,unit)=>{
+      $(id).innerHTML='<thead><tr><th>'+lbl+'</th><th class="c-num r">'+unit+'</th><th></th></tr></thead><tbody>'
+        +(arr.map(o=>'<tr data-id="'+esc(o.id)+'"><td><input class="ui-field sm" data-k="name" maxlength="30" value="'+esc(o.name||'')+'"></td>'
+          +'<td class="c-num"><input class="ui-field sm pf-num" data-k="'+k+'" data-n inputmode="decimal" value="'+esc(comma(o[k]))+'"></td>'
+          +'<td class="act"><button type="button" class="ui-btn sm ghost icon" data-del aria-label="삭제">✕</button></td></tr>').join('')
+          ||'<tr class="pf-none"><td colspan="3">아직 없습니다</td></tr>')+'</tbody>';
+    };
+    small('pfShipTable',live(c.ship),'fee','구간','발송비(원)');
+    small('pfChanTable',live(c.chans),'rate','판매처','수수료(%)');
+  }
+  function wireList(tableId,field){
+    const t=$(tableId);
+    t.addEventListener('input',e=>{
+      const k=e.target.dataset.k, tr=e.target.closest('tr[data-id]'); if(!k||!tr) return;
+      const o=COST.data[field][tr.dataset.id]; if(!o) return;
+      o[k]=e.target.hasAttribute('data-n')?num(e.target.value):e.target.value;
+      COST.mark();
+    });
+    t.addEventListener('focusout',e=>{
+      const tr=e.target.closest('tr[data-id]'); if(!tr||!e.target.dataset.k) return;
+      const o=COST.data[field][tr.dataset.id]; if(!o) return;
+      if(e.target.hasAttribute('data-n')) e.target.value=comma(o[e.target.dataset.k]);
+      if(e.target.dataset.k==='brand') setTimeout(()=>{ if(!t.contains(document.activeElement)) paintBom(); },0);
+    });
+    t.addEventListener('click',e=>{
+      const b=e.target.closest('[data-del]'), tr=b&&b.closest('tr[data-id]'); if(!tr) return;
+      const o=COST.data[field][tr.dataset.id]; if(!o) return;
+      window.baroyamAsk('"'+(o.name||'이 줄')+'" 을(를) 지울까요?','이미 계산표에서 쓰고 있으면 그 값은 그대로 계산됩니다.').then(ok=>{
+        if(!ok) return; o.del=Date.now(); COST.mark(); paintBom();
+      });
+    });
+  }
+  wireList('pfItemTable','items'); wireList('pfShipTable','ship'); wireList('pfChanTable','chans');
+  function wireAdd(formId,field,make){
+    $(formId).addEventListener('submit',e=>{
+      e.preventDefault(); if(!COST.loaded) return;
+      const f=e.target, o=make(f); if(!o) return;
+      o.id=uid(); o.ord=Date.now(); COST.data[field][o.id]=o; COST.mark();
+      [...f.querySelectorAll('input')].forEach(i=>{ if(i.name!=='brand') i.value=''; });
+      paintBom();
+      const first=f.querySelector('input[name="name"]'); if(first) first.focus();
+    });
+  }
+  wireAdd('pfItemAdd','items',f=>{ const cost=num(f.elements.cost.value); if(cost==null) return null; return {brand:f.elements.brand.value.trim(),name:f.elements.name.value.trim(),cost,price:num(f.elements.price.value)}; });
+  wireAdd('pfShipAdd','ship',f=>{ const fee=num(f.elements.fee.value); if(fee==null) return null; return {name:f.elements.name.value.trim(),fee}; });
+  wireAdd('pfChanAdd','chans',f=>{ const rate=num(f.elements.rate.value); if(rate==null) return null; return {name:f.elements.name.value.trim(),rate}; });
+  $('pfBrandChips').addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(!b) return; brandF=b.dataset.b; paintBom(); });
+  $('pfItemQ').addEventListener('input',e=>{ itemQ=e.target.value; paintBom(); });
+
+  /* ---------- 열기·다시 받기 ---------- */
+  function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); }
+  /* 다른 PC 고침이 들어와도, 지금 이 화면에서 칸을 고치는 중이면 다시 그리지 않는다(입력 중인 글자가 날아가지 않게) */
+  function soft(){ const a=document.activeElement; if(a&&view.contains(a)&&a.matches('input')) return; if(!dlg.hidden) return; paint(); }
+  COST.onChange=soft; CALC.onChange=soft;
+  async function refresh(){ await Promise.all([COST.load(),CALC.load()]); paint(); }
+  function visible(){ return view.style.display!=='none'&&pane!=='summary'; }
+  setInterval(()=>{ if(visible()&&!document.hidden) Promise.all([COST.load(),CALC.load()]); },60000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load()]); });
+  window.baroyamProfit={
+    show(p){ pane=p||'summary'; if(pane==='summary') return; paint(); refresh(); },
+    _calc:calc,
+  };
 })();
 
 /* 사이드탭 활성 표시만 맡고, 배너 색·제목과 패널 내용은 renderRevAll()이 판매처에 맞춰 다시 그린다 */
