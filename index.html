@@ -2203,7 +2203,23 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .pf-pane{margin-top:28px;display:flex;flex-direction:column;gap:14px}
   .pf-pane[hidden]{display:none}
   /* 재고현황 (iv-*) · 브랜드 | 상품명 | 정상재고 | 유통기한 표 하나 · 브랜드가 바뀌는 줄 위에만 조금 진한 칼선 */
-  .iv-card{padding:0;overflow:hidden}
+  .iv-card{padding:0;gap:0;overflow:hidden}
+  .iv-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);
+    background:color-mix(in srgb,var(--btn-soft) 60%,var(--paper))}
+  .iv-head-tt{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-right:auto}
+  .iv-head-tt b{font-size:15px;font-weight:800;letter-spacing:-.3px;color:var(--ink)}
+  .iv-head-tt span{font-size:12px;font-weight:600;color:var(--mute)}
+  .iv-head-tt .iv-demo{align-self:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--warn-soft);color:var(--warn)}
+  .iv-head-tt .iv-demo[hidden]{display:none}
+  #ivFetch svg{flex:none}
+  #ivFetch.busy svg{animation:ivSpin .9s linear infinite}
+  @keyframes ivSpin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){ #ivFetch.busy svg{animation:none} }
+  .iv-note{margin:0;padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft);border-bottom:1px solid var(--line)}
+  .iv-note[hidden]{display:none}
+  .iv-exp{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:800;margin-left:6px}
+  .iv-exp.soon{background:var(--warn-soft);color:var(--warn)}
+  .iv-exp.past{background:var(--neg-soft);color:var(--neg)}
   .iv-table thead th{padding:10px 12px;text-align:left;background:color-mix(in srgb,var(--chip-flat) 45%,var(--paper))}
   .iv-table tbody td{padding:10px 12px;text-align:left;font-variant-numeric:tabular-nums}
   .iv-table th.r,.iv-table td.r{text-align:right}
@@ -8525,6 +8541,13 @@ window.BAROYAM_EDIT_ACCESS=(function(){
           <!-- 재고현황 · 이지어드민 재고(app_settings inventory_v1 · 서버가 채움)를 읽기만 한다 · 브랜드 | 상품명 | 정상재고 | 유통기한 표 하나 -->
           <div class="pf-pane" data-ops-pane="stock" hidden>
             <div class="pf-card iv-card">
+              <div class="iv-head">
+                <div class="iv-head-tt"><b>이지어드민 재고</b><span id="ivAt"></span><span class="iv-demo" id="ivDemo" hidden>예시 화면</span></div>
+                <button type="button" class="ui-btn sm primary" id="ivFetch">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+                  <span>이지어드민에서 가져오기</span></button>
+              </div>
+              <p class="iv-note" id="ivNote" role="status" aria-live="polite" hidden></p>
               <div class="pf-scroll"><table class="pf-list iv-table" id="ivTable"></table></div>
             </div>
           </div>
@@ -14892,25 +14915,56 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }catch(e){ console.error(e); INV.error=!INV.loaded; }
     INV.busy=false;
   };
+  /* 예시 데이터 · 서버·수집기가 아직 채우지 않았을 때 화면 모양을 보여 주려고만 쓴다(저장하지 않음 · "예시 화면" 표시) */
+  function demoInv(){
+    const d=n=>{ const t=new Date(); t.setDate(t.getDate()+n); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); };
+    return {updatedAt:Date.now()-38*60000,demo:true,items:[
+      {brand:'홀떡',name:'홀떡피자 페퍼로니',stock:1240,exp:d(212)},{brand:'홀떡',name:'홀떡피자 불고기',stock:860,exp:d(198)},
+      {brand:'홀떡',name:'홀떡피자 콤비네이션',stock:0,exp:d(185)},{brand:'홀떡',name:'홀떡 핫도그',stock:2310,exp:d(24)},
+      {brand:'바비쿡',name:'불삼겹 덮밥',stock:540,exp:d(160)},{brand:'바비쿡',name:'오돌 덮밥',stock:312,exp:d(152)},
+      {brand:'바비쿡',name:'치킨 덮밥',stock:96,exp:d(11)},{brand:'바비쿡',name:'짜장밥',stock:1080,exp:d(240)},
+      {brand:'마법의소스',name:'돈카츠소스',stock:3400,exp:d(365)},{brand:'마법의소스',name:'카레소스',stock:2750,exp:d(-3)},
+      {brand:'밥심',name:'배미주먹밥 참치마요',stock:620,exp:d(90)},{brand:'밥심',name:'배미주먹밥 불고기',stock:48,exp:d(88)}]};
+  }
+  /* 유통기한 · 날짜로 읽히면 지남(빨강)·30일 안(주황) 표시를 붙인다 */
+  function expTag(t){
+    const m=String(t).match(/(\d{4})[.\-\/년\s]*(\d{1,2})[.\-\/월\s]*(\d{1,2})/); if(!m) return '';
+    const day=Math.floor((new Date(+m[1],+m[2]-1,+m[3])-new Date(new Date().toDateString()))/864e5);
+    return day<0?'<span class="iv-exp past">지남</span>':day<=30?'<span class="iv-exp soon">D-'+day+'</span>':'';
+  }
   function paintStock(){
+    const inv=INV.data||(INV.loaded?demoInv():null);
+    $('ivDemo').hidden=!(inv&&inv.demo);
+    const at=inv&&inv.updatedAt?new Date(inv.updatedAt):null, p2=n=>String(n).padStart(2,'0');
+    $('ivAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준':'';
     const head='<thead><tr><th>브랜드</th><th>상품명</th><th class="r">정상재고</th><th>유통기한</th></tr></thead>';
     const none=t=>'<tr class="pf-none"><td colspan="4">'+t+'</td></tr>';
     let body;
-    if(!INV.loaded) body=none(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…');
-    else if(!INV.data) body=none('이지어드민 재고가 아직 연동되지 않았습니다');
+    if(!inv) body=none(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…');
     else{
-      const list=INV.data.items.map(x=>({brand:String(x.brand||'').trim()||'기타',name:String(x.name||'').trim(),stock:num(x.stock),exp:String(x.exp==null?'':x.exp).trim()}))
+      const list=inv.items.map(x=>({brand:String(x.brand||'').trim()||'기타',name:String(x.name||'').trim(),stock:num(x.stock),exp:String(x.exp==null?'':x.exp).trim()}))
         .filter(r=>r.name)
         .sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.name.localeCompare(b.name,'ko'));
       body=list.map((r,i)=>{
         const first=!i||list[i-1].brand!==r.brand;
         return '<tr'+(first?' class="brand-first"':'')+'><td class="br">'+(first?esc(r.brand):'')+'</td><td>'+esc(r.name)+'</td>'
           +'<td class="r stk'+(r.stock!=null&&r.stock<=0?' zero':'')+'">'+(r.stock==null?'–':comma(r.stock))+'</td>'
-          +'<td class="ex">'+(r.exp?esc(r.exp):'–')+'</td></tr>';
+          +'<td class="ex">'+(r.exp?esc(r.exp)+expTag(r.exp):'–')+'</td></tr>';
       }).join('')||none('받아 온 재고가 비어 있습니다');
     }
     $('ivTable').innerHTML=head+'<tbody>'+body+'</tbody>';
   }
+  /* 이지어드민에서 가져오기 · 지금은 디자인만(수집기 연동 전) · 누르면 도는 아이콘 → 안내 한 줄
+     회사 PC 리뷰수집기가 이지어드민(최초 로그인은 수동)에서 재고를 읽어 inventory_v1 에 채우게 되면 여기서 그 요청을 보낸다 */
+  const ivNote=t=>{ const n=$('ivNote'); n.textContent=t||''; n.hidden=!t; };
+  $('ivFetch').addEventListener('click',()=>{
+    const b=$('ivFetch'); if(b.classList.contains('busy')) return;
+    b.classList.add('busy'); b.querySelector('span').textContent='가져오는 중…'; ivNote('');
+    setTimeout(()=>{
+      b.classList.remove('busy'); b.querySelector('span').textContent='이지어드민에서 가져오기';
+      ivNote('아직 수집기와 연결되지 않았습니다 · 회사 PC 리뷰수집기에 이지어드민 재고 수집을 붙이면 이 단추로 가져옵니다');
+    },1200);
+  });
 
   /* ---------- 열기·다시 받기 ---------- */
   function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); }
