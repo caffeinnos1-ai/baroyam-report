@@ -2350,6 +2350,9 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .pf-list .ui-field{width:100%}
   .pf-list input.pf-num,.pf-add input.pf-num{text-align:right;font-variant-numeric:tabular-nums}
   .pf-list td.act{width:36px;text-align:right}
+  .pf-list td.act.pf-move{width:96px;white-space:nowrap}
+  .pf-list td.pf-move [data-mv]{font-size:10px}
+  .pf-list td.pf-move [data-mv]:disabled{opacity:.25}
   .pf-list .pf-none td{padding:18px 6px;text-align:center;color:var(--mute);font-size:13px}
   #pfItemTable .c-brand{width:150px}#pfItemTable .c-num{width:130px}
   #pfShipTable .c-num,#pfChanTable .c-num{width:120px}
@@ -14669,15 +14672,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<td class="c-num"><input class="ui-field sm pf-num" data-k="price" data-n inputmode="numeric" value="'+esc(comma(i.price))+'"></td>'
         +'<td class="act"><button type="button" class="ui-btn sm ghost icon" data-del aria-label="삭제">✕</button></td></tr>').join('')
         ||'<tr class="pf-none"><td colspan="5">'+(all.length?'찾는 상품이 없습니다':'아래에서 상품을 넣어 주세요 (예: 홀떡 · 홀떡피자 1팩 · 1,300 · 4,300)')+'</td></tr>')+'</tbody>';
-    const small=(id,arr,k,lbl,unit)=>{
+    /* move · 판매처 수수료는 ▲▼ 로 순서를 바꾼다(마진 계산기 아래 판매처 탭 순서가 된다) */
+    const small=(id,arr,k,lbl,unit,move)=>{
       $(id).innerHTML='<thead><tr><th>'+lbl+'</th><th class="c-num r">'+unit+'</th><th></th></tr></thead><tbody>'
-        +(arr.map(o=>'<tr data-id="'+esc(o.id)+'"><td><input class="ui-field sm" data-k="name" maxlength="30" value="'+esc(o.name||'')+'"></td>'
+        +(arr.map((o,i)=>'<tr data-id="'+esc(o.id)+'"><td><input class="ui-field sm" data-k="name" maxlength="30" value="'+esc(o.name||'')+'"></td>'
           +'<td class="c-num"><input class="ui-field sm pf-num" data-k="'+k+'" data-n inputmode="decimal" value="'+esc(comma(o[k]))+'"></td>'
-          +'<td class="act"><button type="button" class="ui-btn sm ghost icon" data-del aria-label="삭제">✕</button></td></tr>').join('')
+          +'<td class="act'+(move?' pf-move':'')+'">'
+          +(move?'<button type="button" class="ui-btn sm ghost icon" data-mv="-1" aria-label="위로"'+(i?'':' disabled')+'>▲</button>'
+            +'<button type="button" class="ui-btn sm ghost icon" data-mv="1" aria-label="아래로"'+(i<arr.length-1?'':' disabled')+'>▼</button>':'')
+          +'<button type="button" class="ui-btn sm ghost icon" data-del aria-label="삭제">✕</button></td></tr>').join('')
           ||'<tr class="pf-none"><td colspan="3">아직 없습니다</td></tr>')+'</tbody>';
     };
     small('pfShipTable',live(c.ship),'fee','구간','발송비(원)');
-    small('pfChanTable',live(c.chans),'rate','판매처','수수료(%)');
+    small('pfChanTable',live(c.chans),'rate','판매처','수수료(%)',true);
   }
   function wireList(tableId,field){
     const t=$(tableId);
@@ -14694,6 +14701,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(e.target.dataset.k==='brand') setTimeout(()=>{ if(!t.contains(document.activeElement)) paintBom(); },0);
     });
     t.addEventListener('click',e=>{
+      const mv=e.target.closest('[data-mv]');
+      if(mv){
+        /* 한 칸 옮기고 순서(ord)를 1,2,3… 으로 다시 매긴다 · 바뀐 ord 칸만 저장된다 */
+        const arr=live(COST.data[field]), i=arr.findIndex(o=>o.id===mv.closest('tr[data-id]').dataset.id), j=i+(+mv.dataset.mv);
+        if(i<0||j<0||j>=arr.length) return;
+        [arr[i],arr[j]]=[arr[j],arr[i]];
+        arr.forEach((o,n)=>{ if(o.ord!==n+1) o.ord=n+1; });
+        COST.mark(); paintBom();
+        const btn=$(tableId).querySelector('tr[data-id="'+CSS.escape(arr[j].id)+'"] [data-mv="'+mv.dataset.mv+'"]');
+        if(btn&&!btn.disabled) btn.focus();
+        return;
+      }
       const b=e.target.closest('[data-del]'), tr=b&&b.closest('tr[data-id]'); if(!tr) return;
       const o=COST.data[field][tr.dataset.id]; if(!o) return;
       window.baroyamAsk('"'+(o.name||'이 줄')+'" 을(를) 지울까요?','이미 계산표에서 쓰고 있으면 그 값은 그대로 계산됩니다.').then(ok=>{
