@@ -2246,12 +2246,24 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-blank{grid-column:1/-1;padding:56px 20px;border:1px dashed var(--line);border-radius:18px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
   @media (max-width:560px){ .iv-row{grid-template-columns:minmax(0,1fr) 72px 118px;gap:8px;padding:0 14px} .iv-bh{padding:14px} }
   #opsTabs{align-items:center}
-  #ivFetch{margin-left:auto}
+  /* 어드민 수집 · 옆 탭과 같은 높이의 알약 · 왼쪽 동그란 아이콘(강조색) + 이름 + 마지막 수집 시각 */
+  #ivFetch{margin-left:auto;height:38px;padding:0 15px 0 5px;gap:9px;border-radius:999px;background:var(--paper);color:var(--ink);
+    border:1.5px solid var(--line);font-size:13px;font-weight:800;letter-spacing:-.2px;
+    box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 6%,transparent);transition:border-color .15s,box-shadow .2s,transform .15s}
+  #ivFetch:hover{border-color:var(--btn);box-shadow:0 6px 18px -10px color-mix(in srgb,var(--btn) 70%,transparent)}
+  #ivFetch:active{transform:translateY(1px)}
   #ivFetch[hidden]{display:none}
-  #ivFetch svg{flex:none}
-  #ivFetch.busy svg{animation:ivSpin .9s linear infinite}
+  #ivFetch .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--btn);color:var(--paper);transition:background .15s}
+  #ivFetch:hover .ic{background:var(--btn-hover)}
+  #ivFetch:hover .ic svg{transform:rotate(-40deg)}
+  #ivFetch .ic svg{flex:none;transition:transform .3s}
+  #ivFetch .at{padding-left:9px;border-left:1px solid var(--line);font-size:12px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+  #ivFetch .at:empty{display:none}
+  #ivFetch.busy{border-color:var(--btn)}
+  #ivFetch.busy .at{display:none}
+  #ivFetch.busy .ic svg{animation:ivSpin .9s linear infinite}
   @keyframes ivSpin{to{transform:rotate(360deg)}}
-  @media (prefers-reduced-motion:reduce){ #ivFetch.busy svg{animation:none} }
+  @media (prefers-reduced-motion:reduce){ #ivFetch.busy .ic svg{animation:none} #ivFetch .ic svg{transition:none} }
   .pf-grow{flex:1}
   .pf-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
   #pfBrandF{width:200px}
@@ -8551,9 +8563,9 @@ window.BAROYAM_EDIT_ACCESS=(function(){
           <button type="button" class="hero-view-tab active" role="tab" data-ops="sales" data-sub="오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.">당일판매현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 브랜드별 정상재고와 유통기한을 한눈에 봅니다.">재고현황</button>
           <!-- 어드민 수집 · 재고현황 탭일 때만 맨 위 단추 줄 오른쪽 끝에 보인다 -->
-          <button type="button" class="ui-btn sm primary" id="ivFetch" hidden>
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
-            <span>어드민 수집</span></button>
+          <button type="button" class="ui-btn" id="ivFetch" hidden title="이지어드민에서 지금 재고를 받아 옵니다">
+            <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
+            <span class="lb">어드민 수집</span><span class="at" id="ivFetchAt"></span></button>
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
@@ -14969,6 +14981,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('ivDemo').hidden=!(inv&&inv.demo);
     const at=inv&&inv.updatedAt?new Date(inv.updatedAt):null, p2=n=>String(n).padStart(2,'0');
     $('ivAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준':'';
+    /* 수집 단추 옆 · 오늘이면 시각만, 아니면 날짜 */
+    $('ivFetchAt').textContent=at&&!isNaN(at)?(at.toDateString()===new Date().toDateString()?p2(at.getHours())+':'+p2(at.getMinutes()):(at.getMonth()+1)+'/'+at.getDate()):'';
     const blank=t=>'<div class="iv-blank">'+t+'</div>';
     if(!inv){ $('ivSum').innerHTML=''; $('ivGrid').innerHTML=blank(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
     const list=inv.items.map(x=>{
@@ -15004,9 +15018,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const ivNote=t=>{ const n=$('ivNote'); n.textContent=t||''; n.hidden=!t; };
   $('ivFetch').addEventListener('click',()=>{
     const b=$('ivFetch'); if(b.classList.contains('busy')) return;
-    b.classList.add('busy'); b.querySelector('span').textContent='수집 중…'; ivNote('');
+    b.classList.add('busy'); b.querySelector('.lb').textContent='수집 중…'; ivNote('');
     setTimeout(()=>{
-      b.classList.remove('busy'); b.querySelector('span').textContent='어드민 수집';
+      b.classList.remove('busy'); b.querySelector('.lb').textContent='어드민 수집';
       ivNote('아직 수집기와 연결되지 않았습니다 · 회사 PC 리뷰수집기에 이지어드민 재고 수집을 붙이면 이 단추로 가져옵니다');
     },1200);
   });
