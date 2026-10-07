@@ -2158,9 +2158,8 @@ window.BAROYAM_ACCESS=(function(){
   .pf-calc th,.pf-calc td{border-left:1px solid var(--pf-cut)}
   .pf-calc th:first-child,.pf-calc td:first-child{border-left:0}
   .pf-calc .gs{border-left:1px solid var(--pf-cut2)}
-  .pf-calc thead th{padding:8px 6px;font-size:11.5px;font-weight:700;color:var(--mute);text-align:center;background:var(--paper);
+  .pf-calc tr.pf-head th{padding:7px 6px;font-size:11.5px;font-weight:700;color:var(--mute);text-align:center;background:color-mix(in srgb,var(--chip-flat) 45%,var(--paper));
     border-bottom:1px solid var(--pf-cut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px}
-  .pf-calc thead tr.grp th{padding:7px 6px 2px;font-size:11px;font-weight:800;color:var(--ink);border-bottom:0}
   .pf-calc tbody td{padding:5px 4px;font-size:13px;font-weight:600;color:var(--body);text-align:right;border-bottom:1px solid var(--pf-cut);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;transition:background .12s}
   .pf-calc tbody td:first-child{font-size:13px}
@@ -2198,7 +2197,7 @@ window.BAROYAM_ACCESS=(function(){
   @container (max-width:1300px){
     table.pf-calc,.pf-calc tbody,.pf-calc tr,.pf-calc td{display:block}
     table.pf-calc{border:0;border-radius:0;overflow:visible}
-    .pf-calc thead,.pf-calc colgroup{display:none}
+    .pf-calc tr.pf-head,.pf-calc colgroup{display:none}
     .pf-calc tbody tr.pf-prod{margin:16px 0 8px;border-radius:12px;overflow:hidden}
     .pf-calc tbody tr.pf-prod td{display:block;border:0}
     .pf-calc tbody tr[data-row] td:first-child{padding-left:7px}
@@ -14086,7 +14085,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     ['ship','배송비',5,1],['prime','프라임',8],['rate','수수료율',4.5],
     ['fee','수수료',5,1,1],['vat','부가세',5,0,1],['margin','마진',6,0,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6,0,1],
     ['act','',3,1]];
-  const GROUPS=[['판매처·옵션·원가',3],['가격',4],['비용',3],['계산 결과',6,1],['',1]];
   function outCells(tr,r){
     const v=calc(r);
     const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.title=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); } };
@@ -14114,8 +14112,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     const rows=live(sh.rows), prods=prodsOf(sh);
     const cg='<colgroup>'+COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
-    let h=cg+'<thead><tr class="grp">'+GROUPS.map((g,i)=>'<th colspan="'+g[1]+'" class="'+(i?'gs':'')+(g[2]?' out':'')+'">'+g[0]+'</th>').join('')+'</tr>'
-      +'<tr>'+COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(cl[4]?' out':'')+'">'+cl[1]+'</th>').join('')+'</tr></thead><tbody>';
+    /* 칸 이름 줄은 표 맨 위가 아니라 상품마다 그 옵션 줄 바로 위에 둔다(상품 줄이 사이에 끼지 않게) · 묶음 이름 줄은 없앴다 */
+    const headRow='<tr class="pf-head">'+COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
+    let h=cg+'<tbody>';
     const H={}; COLS.forEach(cl=>{ H[cl[0]]=cl; });
     /* 칸 하나 · 묶음 첫 칸이면 진한 칼선(gs) · data-h 는 좁은 화면 카드에서 이름표로 쓴다 */
     const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!==COLS[0][0];
@@ -14146,6 +14145,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<button type="button" class="ui-btn sm" data-act="opt">+ 옵션 추가</button>'
         +'<button type="button" class="ui-btn sm ghost icon" data-act="prod" title="상품 삭제" aria-label="상품 삭제" aria-haspopup="true">⋯</button>'
         +'</div></td></tr>';
+      if(opts.length) h+=headRow;
       opts.forEach(r=>{ h+=optRow(r); });
       if(!opts.length) h+='<tr><td colspan="'+COLS.length+'" class="pf-opt-empty">"+ 옵션 추가" 로 옵션을 넣으세요 (4팩·8팩·12+1 …)</td></tr>';
     });
