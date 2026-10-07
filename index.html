@@ -8208,7 +8208,7 @@ window.BAROYAM_ACCESS=(function(){
                 <table class="pf-calc" id="pfCalcTable"></table>
               </div>
               <div class="pf-foot">
-                <span class="pf-note">부가세 = (판매가+배송비 − 원가 − 프라임 − 리뷰 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
+                <span class="pf-note">부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
               </div>
             </div>
             <div class="pf-empty" id="pfCalcEmpty" hidden>원가표에 상품·판매처가 없습니다. <b>품목별 원가표</b>에서 먼저 넣어 주세요.</div>
@@ -13953,7 +13953,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   /* ---------- 계산 ----------
      소비자가 = 고른 상품의 (유료 개수 × 개당 소비자가) 합 · 원가 = (유료+증정) × 개당 원가 ·
-     수수료 = 최종판매가 × 수수료율 · 부가세 = (판매가+배송비 − 원가 − 프라임 − 리뷰 − 수수료) ÷ 11 ·
+     수수료 = 최종판매가 × 수수료율 · 부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 ·
      마진 = 그 금액 − 부가세 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료 */
   function calc(r){
     const c=COST.data, items=c?c.items:{};
@@ -13965,13 +13965,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     });
     const ch=c&&r.chan?c.chans[r.chan]:null, pr=c&&r.prime?c.ship[r.prime]:null;
     const price=num(r.price)!=null?num(r.price):(auto||null);
-    const sale=num(r.sale), ship=num(r.ship)||0, review=num(r.review)||0;
+    const sale=num(r.sale), ship=num(r.ship)||0;
     const rate=num(r.rate)!=null?num(r.rate):(ch?num(ch.rate):null);
     const prime=pr?(num(pr.fee)||0):0;
     const o={units,paid,cost,auto,price,rate,prime,chRate:ch?num(ch.rate):null};
     if(sale==null) return o;
     const rev=sale+ship, fee=sale*(rate||0)/100;
-    const pre=rev-cost-prime-review-fee, vat=pre/11, margin=pre-vat;
+    const pre=rev-cost-prime-fee, vat=pre/11, margin=pre-vat;
     return Object.assign(o,{sale,rev,fee,vat,margin,
       disc:price?1-sale/price:null, unit:units?sale/units:null,
       mrate:rev?margin/rev:null, roas:margin>0?rev/margin:null, settle:rev-fee});
@@ -14000,12 +14000,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 구성·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['label','구성',9,1],['chan','판매처',6.5],['cost','원가',7.5],
+    ['label','구성',10.5,1],['chan','판매처',8],['cost','원가',8.5],
     ['price','소비자가',6,1],['sale','최종판매가',6.5],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
-    ['ship','배송비',5,1],['prime','프라임',7],['review','리뷰',5],['rate','수수료율',4.5],
+    ['ship','배송비',5,1],['prime','프라임',8],['rate','수수료율',4.5],
     ['fee','수수료',5,1,1],['vat','부가세',5,0,1],['margin','마진',6,0,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6,0,1],
     ['act','',3,1]];
-  const GROUPS=[['구성·원가',3],['가격',4],['비용',4],['계산 결과',6,1],['',1]];
+  const GROUPS=[['구성·원가',3],['가격',4],['비용',3],['계산 결과',6,1],['',1]];
   function outCells(tr,r){
     const v=calc(r);
     const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.title=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); } };
@@ -14046,7 +14046,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +td('disc','','out')+td('unit','','out')
         +td('ship','<input class="ui-field sm pf-num" data-k="ship" inputmode="numeric" value="'+esc(comma(r.ship))+'" placeholder="0" title="고객이 내는 배송비">')
         +td('prime','<button type="button" class="ui-field sm" data-menu="prime" title="'+prT+'"><span class="t">'+(pr?prT:'<span class="ph">없음</span>')+'</span></button>')
-        +td('review','<input class="ui-field sm pf-num" data-k="review" inputmode="numeric" value="'+esc(comma(r.review))+'" placeholder="0">')
         +td('rate','<input class="ui-field sm pf-num" data-k="rate" inputmode="decimal" value="'+esc(r.rate==null?'':r.rate)+'" title="비우면 판매처 수수료">')
         +td('fee','','out')+td('vat','','out')+td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('settle','','out')
         +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="복제·삭제" aria-haspopup="true">⋯</button>','act')
