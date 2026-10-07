@@ -5974,7 +5974,7 @@ window.BAROYAM_ACCESS=(function(){
           <span>목표설정</span>
         </button>
         <!-- 손익·마진 관리 · 순수익 요약 / 마진 계산기 / 품목별 원가표(자리만 만들어 두었다) -->
-        <button class="sb-item" type="button" data-view="profit" id="sbProfitBtn" aria-haspopup="true" aria-expanded="false">
+        <button class="sb-item" type="button" data-view="profit" id="sbProfitBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"/><path d="M14.6 9.2c-.5-.8-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 1.9 0 2.6 5.3 1.4 5.3 4.2 0 1.1-1.2 2-2.7 2-1.2 0-2.2-.5-2.7-1.4M12 6.4v1.5M12 16v1.6"/></svg>
           <span>손익·마진 관리</span>
         </button>
@@ -6099,17 +6099,6 @@ window.BAROYAM_ACCESS=(function(){
       </div>
     </nav>
 
-    <!-- 손익·마진 관리 사이드탭 · 콘텐츠마케팅과 같은 방식(화면 내용은 아직 제목만 있다) -->
-    <nav class="sb-subnav" id="sbProfitSubnav" hidden aria-label="손익·마진 관리 하위 메뉴">
-      <div class="sb-subnav-head">
-        <div class="sb-subnav-title">손익·마진 관리</div>
-      </div>
-      <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item active" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
-        <button type="button" class="sb-subnav-item" data-profit="calc" data-sub="판매처·원가·발송비를 고르고 판매가를 넣으면 구성별 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
-        <button type="button" class="sb-subnav-item" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
-      </div>
-    </nav>
 
     <nav class="sb-subnav" id="sbManualSubnav" hidden aria-label="메뉴얼가이드 중분류">
       <div class="sb-subnav-head">
@@ -8183,6 +8172,12 @@ window.BAROYAM_ACCESS=(function(){
       </div><!-- /view-content -->
       <!-- 손익·마진 관리 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-profit" style="display:none">
+        <!-- 순수익 요약 / 마진 계산기 / 품목별 원가표 · 트렌드분석처럼 배너 위 알약 단추로 고른다(예전 사이드바 중간 탭은 화면을 가려 뺐다) -->
+        <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="손익·마진 관리 화면">
+          <button type="button" class="hero-view-tab active" role="tab" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="calc" data-sub="판매처·원가·발송비를 고르고 판매가를 넣으면 구성별 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
+        </div>
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
@@ -11215,6 +11210,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
     document.body.classList.toggle('view-is-profit',v==='profit');
+    if(v==='profit'&&window.baroyamProfitOpen) window.baroyamProfitOpen();
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
@@ -13816,30 +13812,31 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
 })();
 
-/* 손익·마진 관리 사이드탭 · 콘텐츠마케팅과 같은 방식 · 순수익 요약 / 마진 계산기 / 품목별 원가표(화면 내용은 아직 제목만 있다) */
+/* 손익·마진 관리 · 배너 위 단추 세 개(순수익 요약 / 마진 계산기 / 품목별 원가표) · 고른 것은 이 브라우저에 기억한다 */
 (function(){
-  const btn=document.getElementById('sbProfitBtn');
-  const subnav=document.getElementById('sbProfitSubnav');
+  const box=document.getElementById('profitTabs');
   const title=document.getElementById('profitViewTitle');
   const sub=document.getElementById('profitViewSub');
-  if(!btn||!subnav) return;
-  const items=[...subnav.querySelectorAll('[data-profit]')];
+  if(!box) return;
+  const items=[...box.querySelectorAll('[data-profit]')];
   const panes=[...document.querySelectorAll('#view-profit [data-pf-pane]')];
-  function pick(el){
-    items.forEach(b=>b.classList.toggle('active',b===el));
+  let cur=items[0];
+  try{ const k=localStorage.getItem('baroyam_profit_tab'); cur=items.find(b=>b.dataset.profit===k)||cur; }catch(e){}
+  function pick(el,load){
+    cur=el;
+    items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     if(title) title.textContent=el.textContent.trim();
     if(sub) sub.textContent=el.dataset.sub||'';
     panes.forEach(p=>{ p.hidden=p.dataset.pfPane!==el.dataset.profit; });
-    if(window.baroyamProfit) window.baroyamProfit.show(el.dataset.profit);
+    if(load&&window.baroyamProfit) window.baroyamProfit.show(el.dataset.profit);
   }
-  btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
-  items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('profit'); pick(el); }));
-  function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
-  document.querySelectorAll('.sb-item[data-view],.sb-subitem').forEach(other=>{
-    if(other!==btn) other.addEventListener('click',close);
-  });
-  const salesToggleBtn=document.getElementById('sbSalesToggle');
-  if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+  pick(cur,false);
+  items.forEach(el=>el.addEventListener('click',()=>{
+    try{ localStorage.setItem('baroyam_profit_tab',el.dataset.profit); }catch(e){}
+    pick(el,true);
+  }));
+  /* 사이드바·주소(#profit)로 들어올 때 activateView 가 부른다 · 그때 그 화면 데이터를 받는다 */
+  window.baroyamProfitOpen=function(){ pick(cur,true); };
 })();
 
 /* ===== 손익·마진 관리 · 품목별 원가표 + 마진 계산기 =====
@@ -14269,7 +14266,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 다른 PC 고침이 들어와도, 지금 이 화면에서 칸을 고치는 중이면 다시 그리지 않는다(입력 중인 글자가 날아가지 않게) */
   function soft(){ const a=document.activeElement; if(a&&view.contains(a)&&a.matches('input')) return; if(!dlg.hidden) return; paint(); }
   COST.onChange=soft; CALC.onChange=soft;
-  async function refresh(){ await Promise.all([COST.load(),CALC.load()]); paint(); }
+  /* 새로고침 직후(#profit)에는 로그인 확인이 끝나기 전에 불릴 수 있다 · 못 읽었으면 3초 뒤 다시 받는다 */
+  let retry=null;
+  async function refresh(){
+    await Promise.all([COST.load(),CALC.load()]); paint();
+    if((COST.error||CALC.error)&&!retry) retry=setTimeout(()=>{ retry=null; if(visible()) refresh(); },3000);
+  }
   function visible(){ return view.style.display!=='none'&&pane!=='summary'; }
   setInterval(()=>{ if(visible()&&!document.hidden) Promise.all([COST.load(),CALC.load()]); },60000);
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load()]); });
