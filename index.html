@@ -2129,6 +2129,7 @@ window.BAROYAM_ACCESS=(function(){
   /* 손익·마진 관리 · 내용이 들어오기 전 빈 자리 */
   .profit-empty{margin-top:34px;min-height:360px;display:grid;place-items:center;border:1px dashed var(--line);
     border-radius:16px;color:var(--mute);font-size:15px;font-weight:600}
+  .profit-empty[hidden]{display:none}
   /* 손익·마진 관리 · 순수익 요약·마진 계산기·원가표 모두 가로로 길게(대시보드 흰 판은 그대로 두고 폭만 넓힘) */
   body.view-is-profit .wrap{max-width:1720px;padding-left:24px;padding-right:24px}
   @media (max-width:760px){ body.view-is-profit .wrap{padding-left:16px;padding-right:16px} }
@@ -8172,7 +8173,6 @@ window.BAROYAM_ACCESS=(function(){
             <div class="ptitle" id="profitViewTitle">순수익 요약</div>
             <div class="psub" id="profitViewSub">채널별·기간별 최종 순이익을 모니터링합니다.</div>
           </div>
-          <div class="profit-empty" data-pf-pane="summary">아직 준비 중인 화면입니다.</div>
           <!-- 마진 계산기 · 계산표(예: 홀떡피자 메타광고)마다 구성 줄을 두고, 원가는 원가표의 상품을 골라 개수만 넣는다 -->
           <div class="pf-pane" data-pf-pane="calc" hidden>
             <div class="pf-bar">
