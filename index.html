@@ -2186,8 +2186,8 @@ window.BAROYAM_ACCESS=(function(){
     .pf-calc td.act{display:flex;align-items:flex-end;justify-content:center}
   }
   @container (max-width:640px){ .pf-calc tbody tr[data-row]{grid-template-columns:repeat(3,minmax(0,1fr))} }
-  /* 원가표 · 한 줄에 판매처 수수료 / 프라임 발송비 구간 / 상품 원가(두 배 넓게) */
-  .pf-bom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr);gap:14px;align-items:start}
+  /* 원가표 · 한 줄에 상품 원가(두 배 넓게) / 프라임 발송비 구간 / 판매처 수수료 */
+  .pf-bom{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
   @media (max-width:1100px){ .pf-bom{grid-template-columns:1fr} }
   table.pf-list{width:100%;border-collapse:collapse}
   .pf-list thead th{padding:6px;font-size:11.5px;font-weight:800;color:var(--mute);text-align:left;border-bottom:1px solid var(--line);letter-spacing:-.2px}
@@ -2205,6 +2205,7 @@ window.BAROYAM_ACCESS=(function(){
   .pf-add .ui-field{flex:1 1 120px;min-width:0}
   .pf-add .pf-num{flex:0 1 120px}
   #pfItemQ{width:180px}
+  #pfBrandPick,#pfMixBrandPick{width:200px}
   /* 원가 계산 창 */
   .settings-panel.pf-mix{max-width:720px;height:min(720px,88vh)}
   .pf-mix-top{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px 22px 10px}
@@ -8175,7 +8176,7 @@ window.BAROYAM_ACCESS=(function(){
         <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="손익·마진 관리 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="calc" data-sub="판매처·원가·발송비를 고르고 판매가를 넣으면 구성별 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
-          <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="판매처 수수료·프라임 발송비 구간·상품 원가를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
         </div>
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
         <section class="section" style="padding-top:0">
@@ -8210,29 +8211,11 @@ window.BAROYAM_ACCESS=(function(){
           <!-- 품목별 원가표 · 상품 원가(브랜드별) · 프라임 발송비 구간 · 판매처 수수료 -->
           <div class="pf-pane" data-pf-pane="bom" hidden>
             <div class="pf-bom">
-              <!-- 한 줄에 세 상자 · 판매처 수수료 → 프라임 발송비 구간 → 상품 원가(가장 넓게) -->
-              <div class="pf-card">
-                <div class="pf-card-head"><h3>판매처 수수료</h3></div>
-                <table class="pf-list" id="pfChanTable"></table>
-                <form class="pf-add" id="pfChanAdd" autocomplete="off">
-                  <input class="ui-field sm" name="name" maxlength="30" placeholder="판매처 (예: 쿠팡)" required>
-                  <input class="ui-field sm pf-num" name="rate" inputmode="decimal" placeholder="수수료 %" required>
-                  <button type="submit" class="ui-btn sm soft">+ 추가</button>
-                </form>
-              </div>
-              <div class="pf-card">
-                <div class="pf-card-head"><h3>프라임 발송비 구간</h3></div>
-                <table class="pf-list" id="pfShipTable"></table>
-                <form class="pf-add" id="pfShipAdd" autocomplete="off">
-                  <input class="ui-field sm" name="name" maxlength="30" placeholder="구간 이름 (예: 소형)" required>
-                  <input class="ui-field sm pf-num" name="fee" inputmode="numeric" placeholder="발송비" required>
-                  <button type="submit" class="ui-btn sm soft">+ 추가</button>
-                </form>
-              </div>
+              <!-- 한 줄에 세 상자 · 상품 원가(가장 넓게) → 프라임 발송비 구간 → 판매처 수수료 -->
               <div class="pf-card">
                 <div class="pf-card-head">
                   <h3>상품 원가</h3>
-                  <div class="ui-chips" id="pfBrandChips"></div>
+                  <button type="button" class="ui-field sm" id="pfBrandPick" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <span class="pf-grow"></span>
                   <input class="ui-field sm" id="pfItemQ" placeholder="상품 검색" aria-label="상품 검색">
                 </div>
@@ -8248,6 +8231,24 @@ window.BAROYAM_ACCESS=(function(){
                   <button type="submit" class="ui-btn sm soft">+ 상품 추가</button>
                 </form>
               </div>
+              <div class="pf-card">
+                <div class="pf-card-head"><h3>프라임 발송비 구간</h3></div>
+                <table class="pf-list" id="pfShipTable"></table>
+                <form class="pf-add" id="pfShipAdd" autocomplete="off">
+                  <input class="ui-field sm" name="name" maxlength="30" placeholder="구간 이름 (예: 소형)" required>
+                  <input class="ui-field sm pf-num" name="fee" inputmode="numeric" placeholder="발송비" required>
+                  <button type="submit" class="ui-btn sm soft">+ 추가</button>
+                </form>
+              </div>
+              <div class="pf-card">
+                <div class="pf-card-head"><h3>판매처 수수료</h3></div>
+                <table class="pf-list" id="pfChanTable"></table>
+                <form class="pf-add" id="pfChanAdd" autocomplete="off">
+                  <input class="ui-field sm" name="name" maxlength="30" placeholder="판매처 (예: 쿠팡)" required>
+                  <input class="ui-field sm pf-num" name="rate" inputmode="decimal" placeholder="수수료 %" required>
+                  <button type="submit" class="ui-btn sm soft">+ 추가</button>
+                </form>
+              </div>
             </div>
           </div>
         </section>
@@ -8259,7 +8260,7 @@ window.BAROYAM_ACCESS=(function(){
               <button type="button" class="settings-close" data-pf-close aria-label="닫기">✕</button>
             </div>
             <div class="pf-mix-top">
-              <div class="ui-tabs" id="pfMixBrands" aria-label="브랜드"></div>
+              <button type="button" class="ui-field sm" id="pfMixBrandPick" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
               <input class="ui-field sm" id="pfMixQ" placeholder="상품 검색" aria-label="상품 검색">
             </div>
             <div class="pf-mix-list" id="pfMixList"></div>
@@ -14136,7 +14137,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function paintMix(){
     const all=live(COST.data.items), brands=brandsOf(all);
     if(mixBrand&&brands.indexOf(mixBrand)<0) mixBrand='';
-    $('pfMixBrands').innerHTML=[''].concat(brands).map(b=>'<button type="button" class="ui-tab" data-value="'+esc(b)+'" aria-selected="'+(b===mixBrand?'true':'false')+'">'+esc(b||'전체')+'</button>').join('');
+    $('pfMixBrandPick').querySelector('.t').textContent=mixBrand||'전체 브랜드';
     const q=mixQ.trim().toLowerCase();
     const list=all.filter(i=>(!mixBrand||brandOf(i)===mixBrand)&&(!q||(i.name+' '+i.brand).toLowerCase().indexOf(q)>=0));
     /* 이미 고른 상품은 원가표에서 지워졌어도 보이게 한다(개수를 0으로 내릴 수 있게) */
@@ -14172,7 +14173,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const f=e.target.dataset.f; if(!f) return;
     setMix(e.target.closest('[data-id]').dataset.id,f,num(e.target.value));
   });
-  $('pfMixBrands').addEventListener('click',e=>{ const t=e.target.closest('.ui-tab'); if(!t) return; mixBrand=t.dataset.value; paintMix(); });
+  $('pfMixBrandPick').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('pfMixBrandPick'),brandOpts(),mixBrand,v=>{ mixBrand=v; paintMix(); }); });
   $('pfMixQ').addEventListener('input',e=>{ mixQ=e.target.value; paintMix(); });
   $('pfMixClear').addEventListener('click',()=>{ Object.keys(mixDraft).forEach(k=>{ mixDraft[k]={q:0,f:0}; }); paintMix(); });
   $('pfMixOk').addEventListener('click',()=>{
@@ -14197,8 +14198,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const c=COST.data, all=live(c.items), brands=brandsOf(all);
     if(brandF&&brands.indexOf(brandF)<0) brandF='';
     const cnt=b=>all.filter(i=>brandOf(i)===b).length;
-    $('pfBrandChips').innerHTML='<button type="button" class="ui-chip" data-b="" aria-pressed="'+(!brandF)+'">전체 <b>'+all.length+'</b></button>'
-      +brands.map(b=>'<button type="button" class="ui-chip" data-b="'+esc(b)+'" aria-pressed="'+(b===brandF)+'">'+esc(b)+' <b>'+cnt(b)+'</b></button>').join('');
+    $('pfBrandPick').querySelector('.t').textContent=brandF?brandF+' ('+cnt(brandF)+')':'전체 브랜드 ('+all.length+')';
     $('pfBrandList').innerHTML=brands.map(b=>'<option value="'+esc(b)+'">').join('');
     const q=itemQ.trim().toLowerCase();
     const list=all.filter(i=>(!brandF||brandOf(i)===brandF)&&(!q||(i.name+' '+i.brand).toLowerCase().indexOf(q)>=0))
@@ -14256,7 +14256,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   wireAdd('pfItemAdd','items',f=>{ const cost=num(f.elements.cost.value); if(cost==null) return null; return {brand:f.elements.brand.value.trim(),name:f.elements.name.value.trim(),cost,price:num(f.elements.price.value)}; });
   wireAdd('pfShipAdd','ship',f=>{ const fee=num(f.elements.fee.value); if(fee==null) return null; return {name:f.elements.name.value.trim(),fee}; });
   wireAdd('pfChanAdd','chans',f=>{ const rate=num(f.elements.rate.value); if(rate==null) return null; return {name:f.elements.name.value.trim(),rate}; });
-  $('pfBrandChips').addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(!b) return; brandF=b.dataset.b; paintBom(); });
+  /* 브랜드 고르기 · 브랜드가 많아 칩 대신 목록을 연다(상품 수를 오른쪽에) */
+  function brandOpts(){
+    const all=live(COST.data.items);
+    return [{value:'',label:'전체 브랜드',sub:String(all.length)}].concat(brandsOf(all).map(b=>({value:b,label:b,sub:String(all.filter(i=>brandOf(i)===b).length)})));
+  }
+  $('pfBrandPick').addEventListener('click',e=>{ e.stopPropagation(); if(!COST.loaded) return; window.UI.menu($('pfBrandPick'),brandOpts(),brandF,v=>{ brandF=v; paintBom(); }); });
   $('pfItemQ').addEventListener('input',e=>{ itemQ=e.target.value; paintBom(); });
 
   /* ---------- 열기·다시 받기 ---------- */
