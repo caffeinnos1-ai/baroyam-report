@@ -2178,11 +2178,6 @@ window.BAROYAM_ACCESS=(function(){
   .pf-calc .ui-field .t{text-align:left}
   .pf-calc .ui-field svg{display:none}
   .pf-calc .pf-cost .t{text-align:right}
-  .pf-qty{display:flex;align-items:center;gap:3px}
-  .pf-qty i{font-style:normal;font-size:11px;font-weight:700;color:var(--mute)}
-  .pf-calc .pf-qty .ui-field{padding:0 6px}
-  .pf-calc .pf-qty .ui-field[data-q="q"]{flex:3}
-  .pf-calc .pf-qty .ui-field[data-q="f"]{flex:2}
   .pf-qty-x{display:block;text-align:center;font-size:12px;color:var(--mute)}
   .pf-calc .pf-cost small{font-size:10.5px;font-weight:700;color:var(--mute)}
   .pf-calc td.act{text-align:center;padding:5px 2px}
@@ -2202,7 +2197,13 @@ window.BAROYAM_ACCESS=(function(){
   .pf-ad:hover{border-color:var(--btn);color:var(--btn-soft-ink)}
   .pf-ad:focus-visible{box-shadow:var(--ui-ring)}
   .pf-ad[aria-pressed="true"]{border:1px solid var(--btn);background:var(--btn);color:#fff;font-weight:800}
-  .pf-calc .pf-prod-in .pf-pbrand{width:150px;max-width:18%;font-size:12.5px;font-weight:600;color:var(--body)}
+  /* 상품명 아래 브랜드 · 작은 흐린 글자 · 둘 다 누르면 고칠 수 있다 */
+  .pf-pnames{display:flex;flex-direction:column;gap:1px;width:260px;max-width:40%}
+  .pf-calc .pf-prod-in .pf-pnames .pf-pname{width:100%;max-width:none}
+  .pf-calc .pf-prod-in .pf-pbrand{width:100%;height:22px;padding:0 8px;font-size:12px;font-weight:600;color:var(--mute);
+    border-color:transparent;background:transparent}
+  .pf-calc .pf-prod-in .pf-pbrand:hover{border-color:var(--line)}
+  .pf-calc .pf-prod-in .pf-pbrand:focus{background:var(--paper);border-color:var(--btn);color:var(--ink)}
   /* 브랜드 이름 줄 · 브랜드가 바뀌는 곳마다 · 옆 숫자는 그 브랜드 상품 수 */
   .pf-calc tbody tr.pf-brand td{padding:14px 12px 6px;text-align:left;font-size:12px;font-weight:800;color:var(--ink);letter-spacing:-.2px;
     background:color-mix(in srgb,var(--chip-flat) 55%,var(--paper));border-left:0}
@@ -14025,12 +14026,23 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       disc:price?1-sale/price:null, unit:units?sale/units:null,
       mrate:rev?margin/rev:null, roas:margin>0?rev/margin:null, settle:rev-fee});
   }
-  /* 구성 이름 · 상품 하나면 "4팩"·"12+1", 여럿이면 "상품명 개수" 를 이어 붙인다 */
-  function mixLabel(mix){
-    const items=COST.data.items, on=Object.keys(obj(mix)).filter(k=>items[k]&&((num(mix[k].q)||0)+(num(mix[k].f)||0))>0);
-    const one=k=>{ const q=num(mix[k].q)||0, f=num(mix[k].f)||0; return f?q+'+'+f:q+'팩'; };
-    if(on.length===1) return one(on[0]);
-    return on.map(k=>items[k].name+' '+one(k)).join(' · ');
+  /* 옵션 이름 저절로 짓기 · 원가표 상품 하나면 "4팩", 여러 상품이면 "상품명 4종"(모두 같은 개수로 2개 이상이면 "… 2팩씩") ·
+     상품명은 옵션이 속한 상품 이름 → 고른 원가표 상품 이름들의 앞부분이 같으면 그 부분 */
+  function mixLabel(mix,g){
+    const items=COST.data.items, units=k=>(num(mix[k].q)||0)+(num(mix[k].f)||0);
+    const on=Object.keys(obj(mix)).filter(k=>items[k]&&units(k)>0);
+    if(!on.length) return '';
+    if(on.length===1) return units(on[0])+'팩';
+    let name=g&&(g.name||'').trim();
+    if(!name){
+      const ns=on.map(k=>String(items[k].name||'')); let pre=ns[0];
+      ns.forEach(n=>{ while(pre&&n.indexOf(pre)!==0) pre=pre.slice(0,-1); });
+      name=pre.trim().replace(/[\s·\-_/(]+$/,'');
+    }
+    /* "홀떡피자 1팩" 처럼 끝의 단위는 빼고 "홀떡피자 4종" 으로 */
+    name=(name||'').replace(/\s*\d+\s*(팩|개|입|봉|병|박스|ea|EA)$/,'').trim();
+    const each=on.map(units), k=each.every(x=>x===each[0])?each[0]:0;
+    return (name?name+' ':'')+on.length+'종'+(k>1?' '+k+'팩씩':'');
   }
 
   /* ---------- 마진 계산기 ----------
@@ -14129,7 +14141,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfAdOnly').addEventListener('click',()=>{ adOnly=!adOnly; paintCalc(); });
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 판매처·옵션·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['chan','판매처',7.5,1],['label','옵션',8.5],['qty','수량 + 증정',7],['cost','원가',7.5],
+    ['chan','판매처',7.5,1],['label','옵션',10],['qty','수량',5.5],['cost','원가',7.5],
     ['price','소비자가',5.5,1],['sale','최종판매가',6],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
     ['ship','배송비',5,1],['prime','프라임',7],['rate','수수료율',4],
     ['fee','수수료',5,1,1],['vat','부가세',5,0,1],['margin','마진',5.5,0,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',5.5,0,1],
@@ -14189,8 +14201,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       }
       h+='<tr class="pf-prod" data-prod="'+esc(g.id)+'"><td colspan="'+COLS.length+'"><div class="pf-prod-in">'
         +'<button type="button" class="pf-ad" data-act="ad" aria-pressed="'+(g.ad?'true':'false')+'" title="이 상품을 지금 광고하고 있으면 켭니다">'+(g.ad?'광고 중':'광고 안 함')+'</button>'
-        +'<input class="ui-field sm pf-pname" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품명" aria-label="상품명">'
-        +'<input class="ui-field sm pf-pbrand" data-gk="brand" list="pfCalcBrandList" maxlength="30" value="'+esc(g.brand||'')+'" placeholder="'+esc(prodBrand(g)||'브랜드')+'" aria-label="브랜드">'
+        +'<span class="pf-pnames"><input class="ui-field sm pf-pname" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품명" aria-label="상품명">'
+        +'<input class="ui-field sm pf-pbrand" data-gk="brand" list="pfCalcBrandList" maxlength="30" value="'+esc(g.brand||'')+'" placeholder="'+esc(prodBrand(g)||'브랜드')+'" aria-label="브랜드"></span>'
         +'<span class="pf-prod-n">옵션 '+opts.length+'개</span>'
         +'<span class="pf-grow"></span>'
         +'<button type="button" class="ui-btn sm" data-act="opt">+ 옵션 추가</button>'
@@ -14206,8 +14218,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('pfCalcTable').innerHTML=h+'</tbody>';
     $('pfCalcTable').querySelectorAll('tr[data-row]').forEach(tr=>outCells(tr,B().rows[tr.dataset.row]));
   }
-  /* 수량 칸 · 상품이 원가표 상품이고 이 옵션이 그 상품만 쓰면 수량·증정을 바로 적는다 ·
-     다른 상품을 섞은 구성이면 "n종" 만 보이고 원가 칸에서 고친다 */
+  /* 수량 칸 · 상품이 원가표 상품이고 이 옵션이 그 상품만 쓰면 수량을 바로 적는다 ·
+     원가 칸에서 여러 상품을 고른 구성이면 개수 합만 보인다(고치는 곳은 원가 칸) */
   function soloItem(r){
     const g=B().prods[r.g], it=g&&g.item&&COST.data.items[g.item]; if(!it) return null;
     const used=Object.keys(obj(r.mix)).filter(k=>((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0);
@@ -14216,12 +14228,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function qtyCell(r){
     const id=soloItem(r);
     if(!id){
-      const n=Object.keys(obj(r.mix)).filter(k=>((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0).length;
-      return '<span class="pf-qty-x">'+(n?n+'종 구성':'–')+'</span>';
+      const v=calc(r);
+      return '<span class="pf-qty-x" title="원가 칸에서 고른 상품들의 개수 합">'+(v.units?v.units+'개':'–')+'</span>';
     }
     const m=obj(r.mix)[id]||{};
-    return '<span class="pf-qty"><input class="ui-field sm pf-num" data-q="q" inputmode="numeric" value="'+(num(m.q)||'')+'" placeholder="수량" aria-label="수량">'
-      +'<i>+</i><input class="ui-field sm pf-num" data-q="f" inputmode="numeric" value="'+(num(m.f)||'')+'" placeholder="0" aria-label="증정 수량" title="증정(원가에만 들어감)"></span>';
+    return '<input class="ui-field sm pf-num" data-q="q" inputmode="numeric" value="'+(num(m.q)||'')+'" placeholder="수량" aria-label="수량">';
   }
   function addOption(g){
     const mine=allRows().filter(r=>r.g===g.id), last=mine[mine.length-1], id=uid();
@@ -14244,15 +14255,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfCalcTable').addEventListener('input',e=>{
     const gk=e.target.dataset.gk;
     if(gk){ const p=prodOf(e.target); if(p&&p.g){ p.g[gk]=e.target.value; CALC.mark(); } return; }
-    /* 수량·증정 · 옵션 이름이 비었거나 저절로 붙은 이름("4팩"·"12+1")이면 따라 바꾼다(직접 적은 이름은 그대로) */
+    /* 수량 · 옵션 이름이 비었거나 저절로 붙은 이름("4팩"·"홀떡피자 4종")이면 따라 바꾼다(직접 적은 이름은 그대로) */
     const qk=e.target.dataset.q;
     if(qk){
       const x=rowOf(e.target), id=x&&x.r&&soloItem(x.r); if(!id) return;
-      const before=mixLabel(x.r.mix);
+      const gp=B().prods[x.r.g], before=mixLabel(x.r.mix,gp);
       x.r.mix=Object.assign({},obj(x.r.mix));
       x.r.mix[id]=Object.assign({q:0,f:0},x.r.mix[id]); x.r.mix[id][qk]=Math.max(0,Math.round(num(e.target.value)||0));
       if(!(x.r.label||'').trim()||x.r.label===before){
-        x.r.label=mixLabel(x.r.mix); const li=x.tr.querySelector('[data-k="label"]'); if(li) li.value=x.r.label;
+        x.r.label=mixLabel(x.r.mix,gp); const li=x.tr.querySelector('[data-k="label"]'); if(li) li.value=x.r.label;
       }
       outCells(x.tr,x.r); CALC.mark(); return;
     }
@@ -14353,14 +14364,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<small>'+esc(brandOf(i))+' · 원가 '+won(num(i.cost))+' · 소비자가 '+(num(i.price)?won(num(i.price)):'–')+'</small></div>'
         +'<span class="pf-step"><span>수량</span><button type="button" class="ui-btn sm icon" data-d="-1" data-f="q" aria-label="수량 빼기">−</button>'
         +'<input class="ui-field sm" data-f="q" inputmode="numeric" value="'+(q||'')+'" placeholder="0" aria-label="수량"><button type="button" class="ui-btn sm icon" data-d="1" data-f="q" aria-label="수량 더하기">+</button></span>'
-        +'<span class="pf-step"><span>증정</span><button type="button" class="ui-btn sm icon" data-d="-1" data-f="f" aria-label="증정 빼기">−</button>'
-        +'<input class="ui-field sm" data-f="f" inputmode="numeric" value="'+(f||'')+'" placeholder="0" aria-label="증정 수량"><button type="button" class="ui-btn sm icon" data-d="1" data-f="f" aria-label="증정 더하기">+</button></span></div>';
+        +'</div>';
     }).join('')||'<div class="pf-msg">'+(all.length?'찾는 상품이 없습니다':'품목별 원가표에 상품을 먼저 넣어 주세요')+'</div>';
     paintMixSum();
   }
   function paintMixSum(){
     const v=calc({mix:mixDraft});
-    $('pfMixSum').innerHTML='<span>총 개수<b>'+v.units+'개</b></span><span>유료 '+v.paid+' · 증정 '+(v.units-v.paid)+'</span>'
+    $('pfMixSum').innerHTML='<span>총 개수<b>'+v.units+'개</b></span>'
       +'<span>원가<b>'+won(v.cost)+'</b></span><span>소비자가 합계<b>'+(v.auto?won(v.auto):'–')+'</b></span>';
   }
   function setMix(id,f,val){
@@ -14387,8 +14397,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const clean={};
       Object.keys(mixDraft).forEach(k=>{ const m=mixDraft[k]; clean[k]={q:num(m.q)||0,f:num(m.f)||0}; });
       /* 0 개인 상품도 칸은 남긴다 · 빼 버리면 다른 PC가 같은 상품 개수를 고친 것과 합칠 때 되살아난다 */
+      const gp=CALC.data.prods[r.g], before=mixLabel(obj(r.mix),gp);
       r.mix=clean;
-      if(!(r.label||'').trim()) r.label=mixLabel(clean);
+      /* 옵션 이름이 비었거나 저절로 붙은 이름이면 새 구성에 맞춰 바꾼다(예: 홀떡피자 4종) */
+      if(!(r.label||'').trim()||r.label===before) r.label=mixLabel(clean,gp);
       CALC.mark(); paintCalc();
     }
     closeMix();
