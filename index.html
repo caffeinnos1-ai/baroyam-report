@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -1319,6 +1319,71 @@ window.BAROYAM_ACCESS=(function(){
     }catch(err){ console.error(err); }
   }
   return {MENUS,isSet,hiddenFor,setHidden,reset,allows,allowsView,keyOfView,applyRemote};
+})();
+
+/* 수정 권한 · 팀장이 아니어도 관리자 설정>권한설정에서 지정한 회원은 그 화면을 고칠 수 있다 (지금은 메뉴얼가이드) ·
+   app_settings 의 editAccess = {map:{회원id:[영역 key…]},updatedAt} 한 칸 · 다른 팀장이 동시에 다른 회원을 고쳐도
+   지우지 않도록 saveMerged 로 서버 최신본 위에 이 창이 바꾼 회원만 얹는다 · 팀장 비밀번호를 통과한 세션은 늘 허용 ·
+   화면을 가리는 수준의 잠금이다(서버는 로그인 여부만 본다) */
+window.BAROYAM_EDIT_ACCESS=(function(){
+  const KEY='editAccess', LS='baroyam_edit_access_v1';
+  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'}];
+  let map={};
+  try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&o.map&&typeof o.map==='object') map=o.map; }catch(e){}
+  const pending={};   /* 서버에 아직 못 올린 회원별 값 · 서버본을 받아도 이 값이 이긴다 */
+  function keep(){ try{ localStorage.setItem(LS,JSON.stringify({map,updatedAt:Date.now()})); }catch(e){} }
+  function changed(){ document.dispatchEvent(new CustomEvent('baroyam:editaccess')); }
+  function listOf(id){ return Array.isArray(map[id])?map[id]:[]; }
+  /* 그 회원이 지정을 받았는지 (팀장 역할은 따로 본다) */
+  function granted(id,k){ return !!id&&listOf(id).indexOf(k)>=0; }
+  /* 지금 이 브라우저의 회원이 그 영역을 고칠 수 있는지 */
+  function can(k){
+    try{ if(window.BAROYAM_LEAD.isOn()) return true; }catch(e){}
+    let id=''; try{ id=window.BAROYAM_PROFILES.meId(); }catch(e){}
+    return granted(id,k);
+  }
+  let retry=null;
+  async function push(){
+    clearTimeout(retry);
+    const DB=window.BAROYAM_DB;
+    if(!DB||!DB.saveMerged||!Object.keys(pending).length) return;
+    const mine=Object.assign({},pending);
+    DB.saveNotice(KEY,'pending');
+    const r=await DB.saveMerged(KEY,function(server){
+      let v=server;
+      if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      const m=Object.assign({},(v&&v.map&&typeof v.map==='object')?v.map:{});
+      Object.keys(mine).forEach(id=>{ if(mine[id].length) m[id]=mine[id]; else delete m[id]; });
+      return {map:m,updatedAt:Date.now()};
+    });
+    if(r){
+      Object.keys(mine).forEach(id=>{ if(pending[id]===mine[id]) delete pending[id]; });
+      DB.saveNotice(KEY,'ok');
+      if(Object.keys(pending).length) push();
+      return;
+    }
+    DB.saveNotice(KEY,'failing');
+    retry=setTimeout(push,15000);
+  }
+  function set(id,k,on){
+    if(!id||!AREAS.some(a=>a.k===k)) return;
+    const list=listOf(id).filter(x=>x!==k);
+    if(on) list.push(k);
+    if(list.length) map[id]=list; else delete map[id];
+    pending[id]=list;
+    keep(); changed(); push();
+  }
+  function applyRemote(settings){
+    let v=settings&&settings[KEY];
+    if(!v) return;
+    if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ return; } }
+    if(!v||!v.map||typeof v.map!=='object') return;
+    const next=Object.assign({},v.map);
+    Object.keys(pending).forEach(id=>{ if(pending[id].length) next[id]=pending[id]; else delete next[id]; });
+    if(JSON.stringify(next)===JSON.stringify(map)) return;
+    map=next; keep(); changed();
+  }
+  return {AREAS,granted,can,set,applyRemote};
 })();
 
 (async function(){
@@ -4295,6 +4360,8 @@ window.BAROYAM_ACCESS=(function(){
   .ax-title small{margin-left:6px;font-size:11.5px;font-weight:700;color:var(--mute)}
   .ax-actions{display:flex;flex-wrap:wrap;gap:6px}
   .ax-note{font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.5}
+  .ax-sub{font-size:12px;font-weight:800;color:var(--body);margin-bottom:-4px}
+  .ax-sub.is-line{padding-top:12px;border-top:1px solid var(--line)}
   /* 권한에서 끈 사이드바 메뉴 · sb-item 은 all:unset 이라 hidden 만으로는 숨지 않는다 */
   .sidebar .is-access-off{display:none!important}
 
@@ -6322,8 +6389,12 @@ window.BAROYAM_ACCESS=(function(){
                       <button type="button" class="ui-btn sm ghost" id="axReset">기본값으로</button>
                     </div>
                   </div>
+                  <div class="ax-sub">사이드바 메뉴</div>
                   <div class="ui-chips" id="axMenus" role="group" aria-label="보일 메뉴"></div>
                   <p class="ax-note" id="axNote"></p>
+                  <div class="ax-sub is-line">수정 권한</div>
+                  <div class="ui-chips" id="axEdits" role="group" aria-label="수정 권한"></div>
+                  <p class="ax-note" id="axEditNote"></p>
                 </div>
               </div>
             </section>
@@ -11173,7 +11244,30 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       ? '켜진 메뉴만 이 회원의 사이드바에 보여요. 꺼진 메뉴의 화면은 검색으로도 열리지 않아요.'
       : '아직 정하지 않은 회원이에요. 기본값은 판매채널만 관리자에게 보이고 나머지는 모두 보여요. 메뉴를 누르면 이 회원 권한으로 저장돼요.';
     document.getElementById('axReset').disabled=!custom;
+    renderEdits();
   }
+  /* 수정 권한 칩 · 팀장 역할은 늘 켜짐(끌 수 없음) · 사이드바에서 그 메뉴를 숨긴 회원은 고를 수 없다 */
+  const EA=window.BAROYAM_EDIT_ACCESS;
+  const editsEl=document.getElementById('axEdits');
+  const editNoteEl=document.getElementById('axEditNote');
+  function renderEdits(){
+    if(!EA||!editsEl) return;
+    const lead=window.BAROYAM_LEAD.isLeadRole(sel), hidden=ACC.hiddenFor(sel);
+    editsEl.innerHTML=EA.AREAS.map(a=>{
+      const off=!lead&&hidden.indexOf(a.menu)>=0;
+      return `<button type="button" class="ui-chip" data-ek="${a.k}" aria-pressed="${lead||(!off&&EA.granted(sel,a.k))}"`+
+        `${lead||off?' disabled':''}>${esc(a.name)}</button>`;
+    }).join('');
+    editNoteEl.textContent=lead
+      ? '팀장은 비밀번호를 통과하면 모든 화면을 고칠 수 있어요.'
+      : '켜 두면 팀장이 아니어도 그 화면을 고칠 수 있어요. 메뉴얼가이드는 문서·상담가이드·조직도 수정이 포함되고, 목차 편집은 팀장만 해요.';
+  }
+  if(editsEl) editsEl.addEventListener('click',e=>{
+    const b=e.target.closest('.ui-chip[data-ek]');
+    if(!b||b.disabled||!sel) return;
+    EA.set(sel,b.dataset.ek,b.getAttribute('aria-pressed')!=='true');   /* baroyam:editaccess 로 다시 그려진다 */
+  });
+  document.addEventListener('baroyam:editaccess',render);
 
   membersEl.addEventListener('click',e=>{
     const b=e.target.closest('.ui-chip[data-id]');
@@ -11564,10 +11658,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const CS_GUIDE_DOC_ID='1-1';
   /* 회사 개요 & 문화 > 바로얌 조직도 · 일반 문서가 아니라 자리(대표님~부서)마다 회원·담당 업무를 두는 트리 화면이다 */
   const ORG_DOC_ID='0-1';
-  /* 메뉴얼가이드는 누구나 보고, 고치는 것(문서 수정·상담가이드 설정·조직도 설정)은 팀장만 한다 ·
-     팀장 비밀번호를 통과한 세션(BAROYAM_LEAD.isOn)이 기준이다 · 목차 편집은 이미 팀장 전용인 관리자 설정 안에 있다 */
+  /* 메뉴얼가이드는 누구나 보고, 고치는 것(문서 수정·상담가이드 설정·조직도 설정)은 팀장과
+     관리자 설정>권한설정에서 '메뉴얼가이드 수정'을 받은 회원만 한다(BAROYAM_EDIT_ACCESS) ·
+     목차 편집은 팀장 전용인 관리자 설정 안에 있다 */
   function manCanEdit(){
-    try{ return !!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; }
+    try{ return !!(window.BAROYAM_EDIT_ACCESS&&window.BAROYAM_EDIT_ACCESS.can('manual')); }catch(e){ return false; }
   }
   let activeDoc=null;          /* null이면 전체 목차 화면 */
   let openGroups=new Set();    /* 펼쳐둔 중분류(group.id) · 기본은 모두 접힘 */
@@ -11646,7 +11741,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(editBtnLabel) editBtnLabel.textContent='설정';
     }
     descEl.textContent='고객 문의에 맞춰 상담 콘솔(오른쪽 아래 로고 버튼)에 바로 뜨는 답변 모음입니다. '+
-      (manCanEdit()?'추가·수정은 오른쪽 위 설정 버튼에서 합니다.':'추가·수정은 팀장만 할 수 있습니다.');
+      (manCanEdit()?'추가·수정은 오른쪽 위 설정 버튼에서 합니다.':'추가·수정은 팀장과 수정 권한을 받은 회원만 할 수 있습니다.');
     bodyEl.innerHTML='<div class="gv">'+
       '<div class="gv-tools">'+
         '<input type="search" class="gv-search" id="gvSearch" placeholder="제목·키워드·답변 검색" aria-label="상담가이드 검색" value="'+esc(gmQuery)+'">'+
@@ -11904,7 +11999,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(editBtnLabel) editBtnLabel.textContent='설정';
     }
     descEl.textContent='자리를 누르면 그 자리의 담당 업무가 아래에 펼쳐집니다. '+
-      (can?'담당자·업무는 오른쪽 위 설정 버튼에서 바꿉니다.':'조직도 수정은 팀장만 할 수 있습니다.');
+      (can?'담당자·업무는 오른쪽 위 설정 버튼에서 바꿉니다.':'조직도 수정은 팀장과 수정 권한을 받은 회원만 할 수 있습니다.');
     bodyEl.innerHTML='<div class="oc"><div class="oc-scroll"><div class="oc-tree" id="ocTree"></div></div>'+
       '<div id="ocDetail"></div></div>';
     document.getElementById('ocTree').addEventListener('click',e=>{
@@ -12041,7 +12136,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       }
     });
     ocEl('ocSave').addEventListener('click',()=>{
-      if(!manCanEdit()){ ocSetMsg('조직도 수정은 팀장만 할 수 있어요',true); return; }
+      if(!manCanEdit()){ ocSetMsg('조직도 수정 권한이 없어요',true); return; }
       ocCollect();
       const blank=ocDraft.find(n=>!n.title);
       if(blank){
@@ -12059,6 +12154,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       }).catch(err=>console.error(err));
     });
   }
+
+  /* 권한설정에서 수정 권한을 주거나 거두면, 열려 있는 문서의 수정 단추도 바로 따라간다 */
+  ['baroyam:editaccess','baroyam:profiles','baroyam:adminmode'].forEach(ev=>document.addEventListener(ev,()=>{
+    if(!activeDoc||!editBtn) return;
+    if(editMode&&!manCanEdit()) setEditMode(false);
+    editBtn.hidden=!manCanEdit();
+  }));
 
   function showDoc(id){
     const doc=findDoc(id);
@@ -15312,6 +15414,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(window.BAROYAM_PROFILES) window.BAROYAM_PROFILES.applyRemote(settings);
       if(window.BAROYAM_ACCESS) window.BAROYAM_ACCESS.applyRemote(settings);
       if(window.BAROYAM_SIDEBAR_ORDER) window.BAROYAM_SIDEBAR_ORDER.applyRemote(settings);
+      if(window.BAROYAM_EDIT_ACCESS) window.BAROYAM_EDIT_ACCESS.applyRemote(settings);
       /* 덩어리를 관계형 테이블에 펼쳐 둔다 · Table Editor에서 행으로 보기 위한 거울이다.
          화면 동작과는 무관하므로 실패해도 대시보드는 그대로 쓴다 */
       if(window.BAROYAM_DB) window.BAROYAM_DB.mirrorAll(settings);
