@@ -2170,6 +2170,12 @@ window.BAROYAM_ACCESS=(function(){
   .pf-calc tr.pf-head th.key{color:var(--ink);font-weight:800}
   .pf-calc td.out.hi{color:var(--ink);font-weight:800;font-size:12.5px}
   .pf-calc td.out.neg{color:var(--neg)}
+  /* 직접 고친 자동 값 · 점선 밑줄로만 표시(색은 늘리지 않음) · 자동 값 칸은 두 번 눌러 고친다 */
+  .pf-calc td.out{cursor:default}
+  .pf-calc td.out.man,.pf-calc .pf-cost .t.man{text-decoration:underline dotted var(--mute);text-underline-offset:3px}
+  .pf-calc td.out .pf-ov{width:100%;height:26px;padding:0 4px;background:var(--paper);border-color:var(--btn)}
+  .pf-mix-ov{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--mute)}
+  .pf-mix-ov .ui-field{width:110px}
   /* 적는 칸 · 매번 적는 수량·최종판매가만 옅은 회색 칸(pf-key), 가끔 고치는 칸은 글자처럼 보이다가 줄에 올리면 테두리 ·
      누르면 흰 바탕 + 표준 초점 테두리 */
   .pf-calc tbody .ui-field{width:100%;min-width:0;padding:0 5px;gap:3px;font-size:12px;letter-spacing:-.2px;border-color:transparent;background:transparent}
@@ -8260,7 +8266,7 @@ window.BAROYAM_ACCESS=(function(){
                 <div class="pf-books" id="pfCalcTable"></div>
               </div>
               <div class="pf-foot">
-                <span class="pf-note">부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
+                <span class="pf-note">자동 값 칸은 두 번 눌러 직접 고칠 수 있습니다(비우면 다시 자동 · 고친 칸은 점선 밑줄) · 부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
               </div>
             </div>
             <!-- 판매처 · 맨 위 단추 줄(순수익 요약/마진 계산기/품목별 원가표)과 같은 모양의 맨 아래 단추 줄 ·
@@ -8329,6 +8335,7 @@ window.BAROYAM_ACCESS=(function(){
             <div class="pf-mix-sum" id="pfMixSum"></div>
             <div class="pf-mix-foot">
               <button type="button" class="ui-btn ghost" id="pfMixClear">모두 비우기</button>
+              <label class="pf-mix-ov">원가 직접 입력<input class="ui-field sm pf-num" id="pfMixCost" inputmode="numeric" placeholder="자동" aria-label="원가 직접 입력"></label>
               <span class="pf-grow"></span>
               <button type="button" class="ui-btn ghost" data-pf-close>취소</button>
               <button type="button" class="ui-btn primary" id="pfMixOk">적용</button>
@@ -14026,13 +14033,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const sale=num(r.sale), ship=num(r.ship)||0;
     const rate=num(r.rate)!=null?num(r.rate):(ch?num(ch.rate):null);
     const prime=pr?(num(pr.fee)||0):0;
+    /* 직접 고친 값 · 자동 값 칸을 두 번 눌러 고치면 r.ov 에 남는다(비우면 다시 자동) · % 칸은 % 숫자로 담는다 */
+    const ov=obj(r.ov), O=k=>num(ov[k]);
+    if(O('cost')!=null) cost=O('cost');
     const o={units,paid,cost,auto,price,rate,prime,chRate:ch?num(ch.rate):null};
     if(sale==null) return o;
-    const rev=sale+ship, fee=sale*(rate||0)/100;
-    const pre=rev-cost-prime-fee, vat=pre/11, margin=pre-vat;
+    const rev=sale+ship, fee=O('fee')!=null?O('fee'):sale*(rate||0)/100;
+    const pre=rev-cost-prime-fee, vat=O('vat')!=null?O('vat'):pre/11, margin=O('margin')!=null?O('margin'):pre-vat;
     return Object.assign(o,{sale,rev,fee,vat,margin,
-      disc:price?1-sale/price:null, unit:units?sale/units:null,
-      mrate:rev?margin/rev:null, roas:margin>0?rev/margin:null, settle:rev-fee});
+      disc:O('disc')!=null?O('disc')/100:(price?1-sale/price:null), unit:O('unit')!=null?O('unit'):(units?sale/units:null),
+      mrate:O('mrate')!=null?O('mrate')/100:(rev?margin/rev:null), roas:O('roas')!=null?O('roas')/100:(margin>0?rev/margin:null),
+      settle:O('settle')!=null?O('settle'):rev-fee});
   }
 
   /* ---------- 마진 계산기 ----------
@@ -14163,14 +14174,21 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     ['act','',2.5,1]];
   function outCells(tr,r){
     const v=calc(r);
-    const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.title=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); } };
+    const man=obj(r.ov);
+    const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(!td||td.querySelector('input')) return;
+      const m=num(man[k])!=null;
+      td.textContent=t; td.title=m?'직접 고친 값 · 두 번 눌러 고치기(비우면 자동)':'두 번 눌러 직접 고치기';
+      td.className='out'+(td.dataset.g?' gs':'')+(cls||'')+(m?' man':''); };
     put('disc',pct(v.disc,0)); put('unit',won(v.unit)); put('fee',won(v.fee)); put('vat',won(v.vat));
     put('margin',won(v.margin),' hi'+(v.margin<0?' neg':''));
     put('mrate',pct(v.mrate),' hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
     put('roas',v.margin==null?'–':(v.roas==null?'적자':pct(v.roas,0)),(v.margin!=null&&v.roas==null?' neg':'')+(isAd(r)?' hi':''));
     put('settle',won(v.settle));
     const cb=tr.querySelector('.pf-cost');
-    if(cb){ cb.innerHTML='<span class="t">'+(v.units?won(v.cost):'<span class="ph">상품 고르기</span>')+'</span>'; cb.title=v.units?won(v.cost)+' · '+v.units+'개 (누르면 상품 고르기)':'원가표 상품 고르기'; }
+    if(cb){
+      const mc=num(man.cost)!=null;
+      cb.innerHTML='<span class="t'+(mc?' man':'')+'">'+(v.units||mc?won(v.cost):'<span class="ph">상품 고르기</span>')+'</span>';
+      cb.title=(mc?'직접 고친 원가 · ':'')+(v.units?won(v.cost)+' · '+v.units+'개 ':'')+'(누르면 상품 고르기 · 원가 직접 입력)'; }
     const pi=tr.querySelector('[data-k="price"]'); if(pi) pi.placeholder=v.auto?comma(v.auto):'자동';
     const ri=tr.querySelector('[data-k="rate"]'); if(ri) ri.placeholder=v.chRate!=null?comma(v.chRate):'%';
     const li=tr.querySelector('[data-k="label"]'); if(li) li.placeholder=autoName(r)||'옵션';
@@ -14281,6 +14299,29 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     x.r[k]=k==='label'?e.target.value:num(e.target.value);
     outCells(x.tr,x.r); CALC.mark();
   });
+  /* 자동 값 칸(할인률·개당단가·마진·마진률·최소 ROAS·정산예정금·수수료·부가세)을 두 번 누르면 그 자리에서 고친다 ·
+     Enter·칸 밖 누르기 = 저장, Esc = 취소, 비우고 저장 = 다시 자동 */
+  const PCT={disc:1,mrate:1,roas:1};
+  $('pfCalcTable').addEventListener('dblclick',e=>{
+    const td=e.target.closest('td[data-o]'); if(!td||td.querySelector('input')) return;
+    const x=rowOf(td); if(!x||!x.r) return;
+    const k=td.dataset.o, v=calc(x.r)[k];
+    const cur=num(obj(x.r.ov)[k])!=null?num(x.r.ov[k]):(v==null||!isFinite(v)?'':(PCT[k]?+(v*100).toFixed(1):Math.round(v)));
+    td.innerHTML='<input class="ui-field sm pf-num pf-ov" inputmode="decimal" value="'+esc(cur)+'" placeholder="자동" aria-label="직접 고치기">';
+    const inp=td.querySelector('input'); inp.focus(); inp.select();
+    let done=false;
+    const finish=save=>{
+      if(done) return; done=true;
+      if(save){
+        const n=num(inp.value); x.r.ov=Object.assign({},obj(x.r.ov));
+        if(n==null) delete x.r.ov[k]; else x.r.ov[k]=n;
+        CALC.mark();
+      }
+      td.innerHTML=''; outCells(x.tr,x.r);
+    };
+    inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); finish(true); } else if(ev.key==='Escape'){ ev.preventDefault(); ev.stopPropagation(); finish(false); } });
+    inp.addEventListener('blur',()=>finish(true));
+  });
   $('pfCalcTable').addEventListener('focusout',e=>{
     const k=e.target.dataset.k; if(!k||k==='label'||k==='rate') return;
     const x=rowOf(e.target); if(x&&x.r) e.target.value=comma(x.r[k]);
@@ -14352,6 +14393,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const gp=r.g&&CALC.data.prods[r.g], gi=(r.item&&items[r.item]?r.item:null)||(gp&&gp.item), git=gi&&items[gi];
     mixFirst=git?gi:null;
     mixBrand=used?brandOf(items[used]):(git?brandOf(git):'');
+    const oc=num(obj(r.ov).cost); $('pfMixCost').value=oc!=null?comma(oc):'';
     paintMix(); dlg.hidden=false;
   }
   function closeMix(){ dlg.hidden=true; mixFor=null; }
@@ -14405,6 +14447,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       Object.keys(mixDraft).forEach(k=>{ const m=mixDraft[k]; clean[k]={q:num(m.q)||0,f:num(m.f)||0}; });
       /* 0 개인 상품도 칸은 남긴다 · 빼 버리면 다른 PC가 같은 상품 개수를 고친 것과 합칠 때 되살아난다 */
       r.mix=clean;
+      /* 원가 직접 입력 · 비우면 고른 상품으로 자동 계산 */
+      const oc=num($('pfMixCost').value); r.ov=Object.assign({},obj(r.ov)); if(oc==null) delete r.ov.cost; else r.ov.cost=oc;
       /* 한 가지 상품만 골랐으면 수량 칸이 그 상품을 가리키게 한다 */
       const on=Object.keys(clean).filter(k=>clean[k].q+clean[k].f>0);
       if(on.length===1) r.item=on[0];
