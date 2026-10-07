@@ -2267,6 +2267,12 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .pf-calc tbody .pf-cost.ui-field,.pf-calc tbody tr[data-row]:hover .pf-cost.ui-field{border:1px solid var(--line);background:var(--paper);color:var(--ink);font-weight:700}
   .pf-calc tbody .pf-cost.ui-field::after{content:"";flex:none;width:0;height:0;margin-left:2px;border:3.5px solid transparent;border-top:4.5px solid var(--mute);border-bottom:0}
   .pf-calc tbody .pf-cost.ui-field:hover{border-color:var(--btn)}
+  /* 옵션 추가 직후 · 원가 칸을 은은하게 3번 깜빡여 "상품 고르기"를 누르라고 알린다 */
+  .pf-calc tbody .pf-cost.ui-field.pf-nudge{border-color:var(--btn);color:var(--btn-soft-ink);animation:pfNudge 1.1s ease-in-out 3}
+  .pf-calc tbody .pf-cost.pf-nudge .ph{color:var(--btn-soft-ink)}
+  @keyframes pfNudge{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--btn) 0%,transparent);background:var(--paper)}
+    50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--btn) 22%,transparent);background:var(--btn-soft)}}
+  @media (prefers-reduced-motion:reduce){ .pf-calc tbody .pf-cost.ui-field.pf-nudge{animation:none;background:var(--btn-soft)} }
   .pf-calc tbody td.pf-key[data-h="최종판매가"] .ui-field{height:28px;font-size:13px;font-weight:800;color:var(--ink);
     background:color-mix(in srgb,var(--chip-flat) 90%,var(--paper));border:1px solid color-mix(in srgb,var(--mute) 25%,var(--line))}
   .pf-calc tbody td.pf-key[data-h="최종판매가"] .ui-field:focus{background:var(--paper);border-color:var(--btn)}
@@ -14447,6 +14453,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const inp=tr&&(tr.querySelector('[data-q="q"]')||tr.querySelector('[data-k="label"]'));
     if(inp){ if(inp.scrollIntoView) inp.scrollIntoView({block:'nearest'}); inp.focus({preventScroll:true}); }
     if(!itemId&&tr&&!noMix) openMix(B().rows[id]);
+    /* 빈 옵션 줄 · 원가 칸("상품 고르기")이 몇 번 은은하게 깜빡여 다음에 누를 곳을 알려 준다 */
+    const cb=noMix&&tr&&tr.querySelector('.pf-cost');
+    if(cb){ cb.classList.remove('pf-nudge'); void cb.offsetWidth; cb.classList.add('pf-nudge');
+      cb.addEventListener('animationend',()=>cb.classList.remove('pf-nudge'),{once:true}); }
   }
   function rowOf(el){
     const tr=el.closest('tr[data-row]');
