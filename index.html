@@ -2202,33 +2202,17 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   /* 손익·마진 관리 · 마진 계산기·품목별 원가표 (pf-*) · 버튼·탭·칩·입력칸은 표준 ui-* 그대로 쓰고 자리만 잡는다 */
   .pf-pane{margin-top:28px;display:flex;flex-direction:column;gap:14px}
   .pf-pane[hidden]{display:none}
-  /* 재고현황 (iv-*) · 연동 상태 줄 · KPI 네 칸 · 표(상태 알약, 재고 막대 = 안전재고 대비) */
-  .iv-src{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--mute)}
-  .iv-dot{width:8px;height:8px;border-radius:50%;background:var(--mute);flex:none}
-  .iv-src.ok .iv-dot{background:var(--pos)}.iv-src.old .iv-dot{background:var(--warn)}.iv-src.err .iv-dot{background:var(--neg)}
-  .iv-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-  @media (max-width:900px){ .iv-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
-  .iv-kpi{border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
-  .iv-kpi span{font-size:12px;font-weight:700;color:var(--mute)}
-  .iv-kpi b{font-size:24px;font-weight:800;letter-spacing:-.5px;color:var(--ink);font-variant-numeric:tabular-nums}
-  .iv-kpi small{font-size:11.5px;font-weight:600;color:var(--mute)}
-  .iv-kpi.alert b{color:var(--neg)}
-  #ivBrand{width:200px} #ivQ{width:220px}
+  /* 재고현황 (iv-*) · 브랜드 | 상품명 | 정상재고 | 유통기한 표 하나 · 브랜드가 바뀌는 줄 위에만 조금 진한 칼선 */
   .iv-card{padding:0;overflow:hidden}
-  .iv-table thead th{padding:9px 8px;text-align:center;background:color-mix(in srgb,var(--chip-flat) 45%,var(--paper))}
-  .iv-table tbody td{padding:8px;text-align:center;font-variant-numeric:tabular-nums}
-  .iv-table td.l,.iv-table th.l{text-align:left}
-  .iv-table td.r,.iv-table th.r{text-align:right}
-  .iv-table td.nm b{display:block;color:var(--ink);font-weight:700}
-  .iv-table td.nm small{font-size:11.5px;font-weight:600;color:var(--mute)}
-  .iv-table td.stk b{font-size:15px;font-weight:800;color:var(--ink)}
-  .iv-table tr.out td.stk b{color:var(--neg)}
-  .iv-pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap}
-  .iv-pill.out{background:var(--neg-soft);color:var(--neg)}.iv-pill.low{background:var(--warn-soft);color:var(--warn)}.iv-pill.ok{background:var(--pos-soft);color:var(--pos)}
-  .iv-bar{position:relative;height:6px;border-radius:3px;background:color-mix(in srgb,var(--line) 70%,transparent);margin-top:5px;overflow:hidden;min-width:70px}
-  .iv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--pos)}
-  .iv-bar.low i{background:var(--warn)}.iv-bar.out i{background:var(--neg)}
-  .iv-empty{padding:40px 20px !important;color:var(--mute);font-size:13.5px;font-weight:600;line-height:1.7}
+  .iv-table thead th{padding:10px 12px;text-align:left;background:color-mix(in srgb,var(--chip-flat) 45%,var(--paper))}
+  .iv-table tbody td{padding:10px 12px;text-align:left;font-variant-numeric:tabular-nums}
+  .iv-table th.r,.iv-table td.r{text-align:right}
+  .iv-table td.br{font-weight:700;color:var(--ink);width:180px}
+  .iv-table td.stk{font-size:14.5px;font-weight:800;color:var(--ink);width:140px}
+  .iv-table td.stk.zero{color:var(--neg)}
+  .iv-table td.ex{width:160px}
+  .iv-table tr.brand-first td{border-top:1px solid color-mix(in srgb,var(--ink) 18%,var(--line))}
+  .iv-table tbody tr:first-child td{border-top:0}
   .pf-grow{flex:1}
   .pf-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
   #pfBrandF{width:200px}
@@ -8538,17 +8522,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
           <div class="pf-pane" data-ops-pane="sales">
             <div class="profit-empty">당일판매현황은 아직 연동되지 않았습니다.<br>김비서가 매일 슬랙으로 보내는 당일판매 요약을 여기서도 보게 됩니다 · 회사 PC에서 연동합니다.</div>
           </div>
-          <!-- 재고현황 · 이지어드민 재고(app_settings inventory_v1 · 서버가 채움)를 읽기만 한다 · 원가는 품목별 원가표에서 상품명으로 찾는다 -->
+          <!-- 재고현황 · 이지어드민 재고(app_settings inventory_v1 · 서버가 채움)를 읽기만 한다 · 브랜드 | 상품명 | 정상재고 | 유통기한 표 하나 -->
           <div class="pf-pane" data-ops-pane="stock" hidden>
-            <div class="iv-src" id="ivSrc"><span class="iv-dot"></span><span id="ivSrcT">불러오는 중…</span><span class="pf-grow"></span>
-              <button type="button" class="ui-btn sm ghost" id="ivReload">새로고침</button></div>
-            <div class="iv-kpis" id="ivKpis"></div>
-            <div class="pf-bar">
-              <button type="button" class="ui-field sm" id="ivBrand" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-              <div class="ui-chips" id="ivChips"></div>
-              <span class="pf-grow"></span>
-              <input class="ui-field sm" id="ivQ" placeholder="상품·옵션·코드 검색" aria-label="재고 검색">
-            </div>
             <div class="pf-card iv-card">
               <div class="pf-scroll"><table class="pf-list iv-table" id="ivTable"></table></div>
             </div>
@@ -14902,13 +14877,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     setTimeout(()=>impMsg(''),6000);
   });
 
-  /* ---------- 재고현황 (판매·재고 화면 · 코드는 원가표를 같이 쓰려고 여기에 둔다) ----------
-     app_settings 의 inventory_v1 = {updatedAt, source:'ezadmin', items:[{code,brand,name,option,stock,safe,sold7,cost}]}
-     서버(김비서 VPS)가 이지어드민에서 받아 써 넣고, 화면은 읽기만 한다(code·name·stock 만 꼭 필요)
-     상태 · 재고 0 이하 = 품절 · 안전재고(safe) 이하 또는 7일 판매(sold7)로 7일 안에 바닥 = 부족 · 그 밖 = 정상
-     원가(cost)가 없으면 품목별 원가표에서 상품명(브랜드+상품명 → 상품명)으로 찾아 재고 금액을 낸다 */
+  /* ---------- 재고현황 (판매·재고 화면) ----------
+     app_settings 의 inventory_v1 = {updatedAt, source:'ezadmin', items:[{brand,name,stock,exp}]}
+     서버(김비서 VPS)가 이지어드민에서 받아 써 넣고, 화면은 읽기만 한다 · stock = 정상재고, exp = 유통기한(적힌 그대로 보임)
+     표는 브랜드 | 상품명 | 정상재고 | 유통기한 넷만(사용자 요청 · KPI·거르기·검색은 뺐다) · 브랜드 → 상품명 순 */
   const INV={data:null,loaded:false,error:false,busy:false};
-  let ivBrand='', ivSt='', ivQ='';
   INV.load=async function(){
     const db=DB(); if(!db||!db.loadSetting){ INV.error=true; return; }
     if(INV.busy) return; INV.busy=true;
@@ -14919,80 +14892,25 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }catch(e){ console.error(e); INV.error=!INV.loaded; }
     INV.busy=false;
   };
-  function ivRows(){
-    const items=COST.loaded?live(COST.data.items):[], byBN={}, byN={};
-    items.forEach(i=>{ const n=(i.name||'').trim(); byBN[(i.brand||'').trim()+'|'+n]=i; if(n&&!byN[n]) byN[n]=i; });
-    return ((INV.data&&INV.data.items)||[]).map(x=>{
-      const name=String(x.name||'').trim(), brand=String(x.brand||'').trim(), stock=num(x.stock), safe=num(x.safe), sold7=num(x.sold7);
-      const m=byBN[brand+'|'+name]||byN[name]||(x.option?byN[(name+' '+x.option).trim()]:null);
-      const cost=num(x.cost)!=null?num(x.cost):(m?num(m.cost):null);
-      const perDay=sold7!=null&&sold7>0?sold7/7:null, days=perDay&&stock!=null?Math.max(0,stock)/perDay:null;
-      const st=stock==null?'':stock<=0?'out':((safe!=null&&stock<=safe)||(days!=null&&days<=7))?'low':'ok';
-      return {code:String(x.code||''),name,option:String(x.option||''),brand:brand||(m?brandOf(m):'기타'),stock,safe,sold7,days,cost,
-        value:cost!=null&&stock!=null?Math.max(0,stock)*cost:null,st};
-    });
-  }
-  const IV_ST={out:'품절',low:'부족',ok:'정상'};
-  const ivBrands=all=>[...new Set(all.map(r=>r.brand))].sort((a,b)=>a.localeCompare(b,'ko'));
   function paintStock(){
-    const src=$('ivSrc'), srcT=$('ivSrcT');
-    src.className='iv-src';
-    if(!INV.loaded){ srcT.textContent=INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 새로고침을 눌러 주세요':'불러오는 중…'; if(INV.error) src.classList.add('err'); }
-    else if(!INV.data) srcT.textContent='이지어드민 재고가 아직 연동되지 않았습니다';
-    else{
-      const at=INV.data.updatedAt?new Date(INV.data.updatedAt):null, ok=at&&!isNaN(at);
-      const ago=ok?Math.round((Date.now()-at)/60000):null, p2=n=>String(n).padStart(2,'0');
-      const agoT=ago==null?'':ago<1?'방금':ago<60?ago+'분 전':ago<1440?Math.floor(ago/60)+'시간 전':Math.floor(ago/1440)+'일 전';
-      srcT.textContent='이지어드민 재고'+(ok?' · '+(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준 ('+agoT+')':'');
-      src.classList.add(ago!=null&&ago>1440?'old':'ok');
-    }
-    const all=ivRows(), brands=ivBrands(all);
-    if(ivBrand&&brands.indexOf(ivBrand)<0) ivBrand='';
-    const inB=all.filter(r=>!ivBrand||r.brand===ivBrand);
-    const cnt=k=>inB.filter(r=>!k||r.st===k).length;
-    $('ivBrand').querySelector('.t').textContent=ivBrand||'전체 브랜드';
-    $('ivChips').innerHTML=[['','전체'],['out','품절'],['low','부족'],['ok','정상']]
-      .map(([k,l])=>'<button type="button" class="ui-chip" data-st="'+k+'" aria-pressed="'+(ivSt===k)+'">'+l+' <b>'+cnt(k)+'</b></button>').join('');
-    /* KPI · 고른 브랜드 기준 */
-    const sum=f=>inB.reduce((t,r)=>t+(f(r)||0),0), units=sum(r=>r.stock>0?r.stock:0), val=sum(r=>r.value);
-    const noCost=inB.filter(r=>r.cost==null).length, bad=cnt('out')+cnt('low');
-    const kpi=(l,v,sm,c)=>'<div class="iv-kpi'+(c?' '+c:'')+'"><span>'+l+'</span><b>'+v+'</b><small>'+sm+'</small></div>';
-    $('ivKpis').innerHTML=kpi('상품(SKU)',comma(inB.length)||'0',ivBrand?esc(ivBrand):'전체 브랜드')
-      +kpi('총 재고 수량',comma(units)||'0','개')
-      +kpi('재고 금액',won(val),noCost?'원가 없는 상품 '+noCost+'개 제외':'재고 × 개당 원가')
-      +kpi('품절 · 부족',cnt('out')+' · '+cnt('low'),bad?'지금 확인이 필요한 상품':'모두 정상',bad?'alert':'');
-    const q=ivQ.trim().toLowerCase(), order={out:0,low:1,ok:2,'':3};
-    const list=inB.filter(r=>(!ivSt||r.st===ivSt)&&(!q||(r.name+' '+r.option+' '+r.code+' '+r.brand).toLowerCase().indexOf(q)>=0))
-      .sort((a,b)=>(order[a.st]-order[b.st])||((a.days==null?1e9:a.days)-(b.days==null?1e9:b.days))||a.brand.localeCompare(b.brand,'ko')||a.name.localeCompare(b.name,'ko'));
-    const head='<thead><tr><th>상태</th><th class="l">브랜드</th><th class="l">상품</th><th class="r">현재 재고</th><th class="r">안전재고</th><th class="r">7일 판매</th><th class="r">소진 예상</th><th class="r">재고 금액</th></tr></thead>';
+    const head='<thead><tr><th>브랜드</th><th>상품명</th><th class="r">정상재고</th><th>유통기한</th></tr></thead>';
+    const none=t=>'<tr class="pf-none"><td colspan="4">'+t+'</td></tr>';
     let body;
-    if(!INV.loaded||!INV.data) body='<tr><td colspan="8" class="iv-empty">'+(INV.loaded
-      ?'이지어드민 재고를 받아 오는 서버 작업이 아직 없습니다.<br>회사 PC에서 "재고현황을 이지어드민과 연동해줘"라고 요청하면, 김비서 서버가 재고를 받아 여기에 채웁니다.'
-      :esc(srcT.textContent))+'</td></tr>';
-    else if(!list.length) body='<tr><td colspan="8" class="iv-empty">'+(all.length?'조건에 맞는 상품이 없습니다':'받아 온 재고가 비어 있습니다')+'</td></tr>';
-    else body=list.map(r=>{
-      /* 막대 · 안전재고의 2배(없으면 7일 판매의 2배)를 꽉 찬 것으로 본다 */
-      const ref=r.safe!=null&&r.safe>0?r.safe*2:(r.sold7?r.sold7*2:null);
-      const w=r.stock==null?0:ref?Math.min(100,Math.max(0,r.stock)/ref*100):(r.stock>0?100:0);
-      return '<tr class="'+r.st+'"><td>'+(r.st?'<span class="iv-pill '+r.st+'">'+IV_ST[r.st]+'</span>':'–')+'</td>'
-        +'<td class="l">'+esc(r.brand)+'</td>'
-        +'<td class="l nm"><b>'+esc(r.name)+'</b><small>'+esc([r.option,r.code].filter(Boolean).join(' · '))+'</small></td>'
-        +'<td class="r stk"><b>'+(r.stock==null?'–':comma(r.stock))+'</b><div class="iv-bar '+r.st+'"><i style="width:'+w.toFixed(1)+'%"></i></div></td>'
-        +'<td class="r">'+(r.safe==null?'–':comma(r.safe))+'</td>'
-        +'<td class="r">'+(r.sold7==null?'–':comma(r.sold7))+'</td>'
-        +'<td class="r">'+(r.days==null?'–':r.stock<=0?'바닥':r.days<1?'오늘':Math.floor(r.days)+'일')+'</td>'
-        +'<td class="r">'+won(r.value)+'</td></tr>';
-    }).join('');
+    if(!INV.loaded) body=none(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…');
+    else if(!INV.data) body=none('이지어드민 재고가 아직 연동되지 않았습니다');
+    else{
+      const list=INV.data.items.map(x=>({brand:String(x.brand||'').trim()||'기타',name:String(x.name||'').trim(),stock:num(x.stock),exp:String(x.exp==null?'':x.exp).trim()}))
+        .filter(r=>r.name)
+        .sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.name.localeCompare(b.name,'ko'));
+      body=list.map((r,i)=>{
+        const first=!i||list[i-1].brand!==r.brand;
+        return '<tr'+(first?' class="brand-first"':'')+'><td class="br">'+(first?esc(r.brand):'')+'</td><td>'+esc(r.name)+'</td>'
+          +'<td class="r stk'+(r.stock!=null&&r.stock<=0?' zero':'')+'">'+(r.stock==null?'–':comma(r.stock))+'</td>'
+          +'<td class="ex">'+(r.exp?esc(r.exp):'–')+'</td></tr>';
+      }).join('')||none('받아 온 재고가 비어 있습니다');
+    }
     $('ivTable').innerHTML=head+'<tbody>'+body+'</tbody>';
   }
-  $('ivChips').addEventListener('click',e=>{ const b=e.target.closest('[data-st]'); if(!b) return; ivSt=b.dataset.st; paintStock(); });
-  $('ivBrand').addEventListener('click',e=>{
-    e.stopPropagation(); const all=ivRows();
-    window.UI.menu($('ivBrand'),[{value:'',label:'전체 브랜드',sub:String(all.length)}]
-      .concat(ivBrands(all).map(b=>({value:b,label:b,sub:String(all.filter(r=>r.brand===b).length)}))),ivBrand,v=>{ ivBrand=v; paintStock(); });
-  });
-  $('ivQ').addEventListener('input',e=>{ ivQ=e.target.value; paintStock(); });
-  $('ivReload').addEventListener('click',async()=>{ const b=$('ivReload'); b.disabled=true; await Promise.all([INV.load(),COST.load()]); b.disabled=false; paintStock(); });
 
   /* ---------- 열기·다시 받기 ---------- */
   function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); }
@@ -15010,11 +14928,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 재고현황 · 판매·재고 화면의 재고 탭을 보고 있을 때만 받는다 · 5분마다 다시(서버가 하루 몇 번 채움) */
   const stockPane=document.querySelector('[data-ops-pane="stock"]');
   const stockVisible=()=>window.baroyamCurrentView==='ops'&&stockPane&&!stockPane.hidden;
-  const stockSoft=()=>{ const a=document.activeElement; if(a&&stockPane.contains(a)&&a.matches('input')) return; paintStock(); };
+  const stockSoft=()=>paintStock();
   let stockRetry=null;
   async function stockShow(){
     paintStock();
-    await Promise.all([INV.load(),COST.load()]); paintStock();
+    await INV.load(); paintStock();
     if(INV.error&&!stockRetry) stockRetry=setTimeout(()=>{ stockRetry=null; if(stockVisible()) stockShow(); },3000);
   }
   setInterval(()=>{ if(stockVisible()&&!document.hidden) INV.load().then(stockSoft); },300000);
