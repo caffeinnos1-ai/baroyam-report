@@ -2174,11 +2174,23 @@ window.BAROYAM_ACCESS=(function(){
   .pf-calc .pf-cost small{font-size:10.5px;font-weight:700;color:var(--mute)}
   .pf-calc td.act{text-align:center;padding:5px 2px}
   .pf-calc tbody td.pf-msg{border:0;border-radius:0;text-align:center;white-space:normal}
+  /* 상품 줄 · 그 아래 옵션 줄들을 묶는 머리 · 상품 이름과 옵션 추가 단추 */
+  .pf-calc tbody tr.pf-prod td{background:var(--chip-flat);padding:7px 10px;text-align:left;border-left:0}
+  .pf-calc tbody tr.pf-prod+tr.pf-prod td,.pf-calc tbody tr[data-row]+tr.pf-prod td{border-top:1.5px solid var(--pf-cut2)}
+  .pf-prod-in{display:flex;align-items:center;gap:8px}
+  .pf-prod-in .ui-field{width:260px;max-width:40%;font-weight:800;color:var(--ink)}
+  .pf-prod-in .pf-prod-n{font-size:12px;font-weight:700;color:var(--mute)}
+  .pf-prod-in .pf-prod-src{font-size:11.5px;font-weight:700;color:var(--btn-soft-ink)}
+  .pf-calc tbody tr[data-row] td:first-child{padding-left:18px}
+  .pf-calc tbody td.pf-opt-empty{padding:10px 18px;text-align:left;color:var(--mute);font-size:12.5px;font-weight:600;border-left:0}
   /* 표 폭이 좁으면(노트북·배율 큼 · 표 자리가 1300px 아래) 한 구성 = 한 장의 카드, 칸마다 이름표를 위에 단다 · 그래도 가로 스크롤은 없다 */
   @container (max-width:1300px){
     table.pf-calc,.pf-calc tbody,.pf-calc tr,.pf-calc td{display:block}
     table.pf-calc{border:0;border-radius:0;overflow:visible}
     .pf-calc thead,.pf-calc colgroup{display:none}
+    .pf-calc tbody tr.pf-prod{margin:16px 0 8px;border-radius:12px;overflow:hidden}
+    .pf-calc tbody tr.pf-prod td{display:block;border:0}
+    .pf-calc tbody tr[data-row] td:first-child{padding-left:7px}
     .pf-calc tbody tr[data-row]{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;
       overflow:hidden;margin-bottom:10px}
     .pf-calc tbody td,.pf-calc tbody td:first-child{border-left:0;border-bottom:1px solid var(--pf-cut);border-right:1px solid var(--pf-cut);padding:6px 7px}
@@ -8185,7 +8197,7 @@ window.BAROYAM_ACCESS=(function(){
         <!-- 순수익 요약 / 마진 계산기 / 품목별 원가표 · 트렌드분석처럼 배너 위 알약 단추로 고른다(예전 사이드바 중간 탭은 화면을 가려 뺐다) -->
         <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="손익·마진 관리 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
-          <button type="button" class="hero-view-tab" role="tab" data-profit="calc" data-sub="판매처·원가·발송비를 고르고 판매가를 넣으면 구성별 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="calc" data-sub="판매처·원가·발송비를 고르고 판매가를 넣으면 상품의 옵션별 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
         </div>
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
@@ -8206,9 +8218,9 @@ window.BAROYAM_ACCESS=(function(){
               <button type="button" class="ui-btn sm ghost" id="pfSheetDel">계산표 삭제</button>
             </div>
             <div class="pf-card">
-              <!-- 구성 추가는 표 위에 두고, 누르면 새 줄은 표 맨 아래에 붙는다 -->
+              <!-- 상품 추가는 표 위에 두고, 누르면 새 상품은 표 맨 아래에 붙는다 · 옵션(4팩·8팩·12+1 …)은 상품 줄의 "+ 옵션 추가" 로 -->
               <div class="pf-card-head">
-                <button type="button" class="ui-btn sm primary" id="pfRowAdd">+ 구성 추가</button>
+                <button type="button" class="ui-btn sm primary" id="pfRowAdd" aria-haspopup="listbox">+ 상품 추가</button>
               </div>
               <div class="pf-calc-wrap">
                 <table class="pf-calc" id="pfCalcTable"></table>
@@ -13856,7 +13868,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
 /* ===== 손익·마진 관리 · 품목별 원가표 + 마진 계산기 =====
    app_settings 두 칸 · profit_cost_v1 = {items:{id:{brand,name,cost,price}}, ship:{id:{name,fee}}, chans:{id:{name,rate}}}
-                         profit_calc_v1 = {sheets:{id:{name,chan,rows:{id:{label,chan,sale,ship,review,prime,rate,price,mix:{상품id:{q,f}}}}}}}
+                         profit_calc_v1 = {sheets:{id:{name,chan,groups:{id:{name,item}},rows:{id:{g(상품 id),label,chan,sale,ship,prime,rate,price,mix:{상품id:{q,f}}}}}}}
    목록을 배열이 아닌 id 객체로 두어 merge3 가 항목·칸 단위로 합친다 · 지우기는 del(시각)만 단다(실제로 빼지 않음) ·
    저장은 통째로 덮지 않고 saveMerged + merge3(마지막으로 맞춘 서버본 = 이 창 메모리) · 못 보낸 고침은 localStorage 에 base 와 짝으로 */
 (function(){
@@ -14058,12 +14070,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 구성·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['label','구성',10.5,1],['chan','판매처',8],['cost','원가',8.5],
+    ['label','옵션',10.5,1],['chan','판매처',8],['cost','원가',8.5],
     ['price','소비자가',6,1],['sale','최종판매가',6.5],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
     ['ship','배송비',5,1],['prime','프라임',8],['rate','수수료율',4.5],
     ['fee','수수료',5,1,1],['vat','부가세',5,0,1],['margin','마진',6,0,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6,0,1],
     ['act','',3,1]];
-  const GROUPS=[['구성·원가',3],['가격',4],['비용',3],['계산 결과',6,1],['',1]];
+  const GROUPS=[['옵션·원가',3],['가격',4],['비용',3],['계산 결과',6,1],['',1]];
   function outCells(tr,r){
     const v=calc(r);
     const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.title=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); } };
@@ -14089,7 +14101,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       $('pfCalcTable').innerHTML=msgRow(cn?esc(cn.name)+' 계산표가 아직 없습니다 · "+ 새 계산표" 로 만드세요':'"+ 새 계산표" 로 계산표를 만드세요 (예: 홀떡피자 메타광고)');
       return;
     }
-    const rows=live(sh.rows);
+    const rows=live(sh.rows), prods=prodsOf(sh);
     const cg='<colgroup>'+COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
     let h=cg+'<thead><tr class="grp">'+GROUPS.map((g,i)=>'<th colspan="'+g[1]+'" class="'+(i?'gs':'')+(g[2]?' out':'')+'">'+g[0]+'</th>').join('')+'</tr>'
       +'<tr>'+COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(cl[4]?' out':'')+'">'+cl[1]+'</th>').join('')+'</tr></thead><tbody>';
@@ -14097,9 +14109,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     /* 칸 하나 · 묶음 첫 칸이면 진한 칼선(gs) · data-h 는 좁은 화면 카드에서 이름표로 쓴다 */
     const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!=='label';
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
-    rows.forEach(r=>{
+    const optRow=r=>{
       const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
-      h+='<tr data-row="'+esc(r.id)+'">'
+      return '<tr data-row="'+esc(r.id)+'">'
         +td('label','<input class="ui-field sm" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="예: 4팩">')
         +td('chan','<button type="button" class="ui-field sm" data-menu="chan"><span class="t">'+(ch?esc(ch.name):'<span class="ph">판매처</span>')+'</span></button>')
         +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix></button>')
@@ -14110,18 +14122,58 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +td('prime','<button type="button" class="ui-field sm" data-menu="prime" title="'+prT+'"><span class="t">'+(pr?prT:'<span class="ph">없음</span>')+'</span></button>')
         +td('rate','<input class="ui-field sm pf-num" data-k="rate" inputmode="decimal" value="'+esc(r.rate==null?'':r.rate)+'" title="비우면 판매처 수수료">')
         +td('fee','','out')+td('vat','','out')+td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('settle','','out')
-        +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="복제·삭제" aria-haspopup="true">⋯</button>','act')
+        +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
         +'</tr>';
+    };
+    prods.forEach(g=>{
+      const opts=rows.filter(r=>r.g===g.id), it=g.item&&c.items[g.item];
+      h+='<tr class="pf-prod" data-prod="'+esc(g.id)+'"><td colspan="'+COLS.length+'"><div class="pf-prod-in">'
+        +'<input class="ui-field sm" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품명" aria-label="상품명">'
+        +'<span class="pf-prod-n">옵션 '+opts.length+'개</span>'
+        +(it?'<span class="pf-prod-src" title="원가표 상품">원가표 · '+esc(brandOf(it))+'</span>':'')
+        +'<span class="pf-grow"></span>'
+        +'<button type="button" class="ui-btn sm soft" data-act="opt">+ 옵션 추가</button>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-act="prod" title="상품 삭제" aria-label="상품 삭제" aria-haspopup="true">⋯</button>'
+        +'</div></td></tr>';
+      opts.forEach(r=>{ h+=optRow(r); });
+      if(!opts.length) h+='<tr><td colspan="'+COLS.length+'" class="pf-opt-empty">"+ 옵션 추가" 로 옵션을 넣으세요 (4팩·8팩·12+1 …)</td></tr>';
     });
-    if(!rows.length) h+='<tr><td colspan="'+COLS.length+'" class="pf-msg" style="text-align:center">"+ 구성 추가" 로 구성 줄을 넣으세요 (4팩·8팩·12+1 …)</td></tr>';
+    if(!prods.length) h+='<tr><td colspan="'+COLS.length+'" class="pf-msg" style="text-align:center">"+ 상품 추가" 로 상품을 넣고, 상품마다 옵션(4팩·8팩·12+1 …)을 추가하면 옵션별 마진이 나옵니다</td></tr>';
     $('pfCalcTable').innerHTML=h+'</tbody>';
     $('pfCalcTable').querySelectorAll('tr[data-row]').forEach(tr=>outCells(tr,sh.rows[tr.dataset.row]));
+  }
+  /* 상품(묶음) · sheet.groups = {id:{name,item(원가표 상품 id),ord,del}} · 옵션 줄은 r.g 로 상품을 가리킨다 ·
+     상품이 생기기 전에 만든 줄(g 없음)은 계산표마다 정해진 id 의 상품 하나로 모은다(두 PC가 동시에 옮겨도 겹치지 않게) */
+  function prodsOf(sh){
+    sh.groups=obj(sh.groups);
+    const loose=live(sh.rows).filter(r=>!r.g||!sh.groups[r.g]||sh.groups[r.g].del);
+    if(loose.length){
+      const gid='g-'+sh.id;
+      if(!sh.groups[gid]||sh.groups[gid].del) sh.groups[gid]={id:gid,ord:1,name:(sh.name||'상품').replace(/ ?새 계산표$/,'')||'상품'};
+      loose.forEach(r=>{ r.g=gid; });
+      CALC.mark();
+    }
+    return live(sh.groups);
+  }
+  function addOption(sh,g){
+    const opts=live(sh.rows).filter(r=>r.g===g.id), last=opts[opts.length-1]||live(sh.rows).slice(-1)[0], id=uid();
+    /* 판매처는 계산표 판매처, 프라임은 같은 상품의 바로 위 옵션을 따른다 */
+    sh.rows[id]={id,g:g.id,ord:Date.now(),label:'',chan:sh.chan||(last&&last.chan)||((live(COST.data.chans)[0]||{}).id||null),prime:last?last.prime:null,mix:{}};
+    CALC.mark(); paintCalc();
+    const tr=[...$('pfCalcTable').querySelectorAll('tr[data-row]')].find(x=>x.dataset.row===id);
+    const inp=tr&&tr.querySelector('[data-k="label"]');
+    if(inp){ if(inp.scrollIntoView) inp.scrollIntoView({block:'nearest'}); inp.focus({preventScroll:true}); }
   }
   function rowOf(el){
     const tr=el.closest('tr[data-row]'), sh=curSheet();
     return tr&&sh?{tr,sh,r:sh.rows[tr.dataset.row]}:null;
   }
+  function prodOf(el){
+    const tr=el.closest('tr[data-prod]'), sh=curSheet();
+    return tr&&sh&&sh.groups?{tr,sh,g:sh.groups[tr.dataset.prod]}:null;
+  }
   $('pfCalcTable').addEventListener('input',e=>{
+    if(e.target.dataset.gk){ const p=prodOf(e.target); if(p&&p.g){ p.g.name=e.target.value; CALC.mark(); } return; }
     const k=e.target.dataset.k, x=rowOf(e.target); if(!k||!x||!x.r) return;
     x.r[k]=k==='label'?e.target.value:num(e.target.value);
     outCells(x.tr,x.r); CALC.mark();
@@ -14132,6 +14184,20 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   $('pfCalcTable').addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
+    const pg=prodOf(b);
+    if(pg&&pg.g){
+      if(b.dataset.act==='opt'){ addOption(pg.sh,pg.g); return; }
+      if(b.dataset.act==='prod'){
+        e.stopPropagation();
+        window.UI.menu(b,[{value:'del',label:'상품 삭제'}],'',()=>{
+          const n=live(pg.sh.rows).filter(r=>r.g===pg.g.id).length;
+          window.baroyamAsk('"'+(pg.g.name||'이 상품')+'" 상품을 지울까요?',n?'안에 있는 옵션 '+n+'개도 함께 사라집니다.':'').then(ok=>{
+            if(!ok) return; const t=Date.now(); pg.g.del=t; live(pg.sh.rows).forEach(r=>{ if(r.g===pg.g.id) r.del=t; }); CALC.mark(); paintCalc();
+          });
+        });
+      }
+      return;
+    }
     const x=rowOf(b); if(!x||!x.r) return;
     if(b.dataset.menu){
       e.stopPropagation();
@@ -14149,20 +14215,24 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           const n=clone(x.r); n.id=uid(); n.ord=(x.r.ord||0)+0.001; n.label=(x.r.label||'')+' 복사';
           x.sh.rows[n.id]=n; CALC.mark(); paintCalc(); return;
         }
-        window.baroyamAsk('"'+(x.r.label||'이 구성')+'" 줄을 지울까요?','').then(ok=>{ if(!ok) return; x.r.del=Date.now(); CALC.mark(); paintCalc(); });
+        window.baroyamAsk('"'+(x.r.label||'이 옵션')+'" 옵션을 지울까요?','').then(ok=>{ if(!ok) return; x.r.del=Date.now(); CALC.mark(); paintCalc(); });
       });
     }
   });
-  $('pfRowAdd').addEventListener('click',()=>{
+  /* 상품 추가 · 원가표 상품을 고르면 그 이름으로, "직접 입력" 이면 빈 이름으로 상품 줄을 만들고 옵션 한 줄을 붙여 둔다 */
+  $('pfRowAdd').addEventListener('click',e=>{
+    e.stopPropagation();
     const sh=curSheet(); if(!sh) return;
-    const rows=live(sh.rows), last=rows[rows.length-1], id=uid();
-    /* 판매처·프라임은 바로 위 줄을 따라간다(같은 계산표는 대개 같은 판매처) */
-    sh.rows[id]={id,ord:Date.now(),label:'',chan:sh.chan||(last&&last.chan)||((live(COST.data.chans)[0]||{}).id||null),prime:last?last.prime:null,mix:{}};
-    CALC.mark(); paintCalc();
-    /* 새 줄은 맨 아래 · 그 줄의 구성 칸으로 데려간다 */
-    const tr=[...$('pfCalcTable').querySelectorAll('tr[data-row]')].find(x=>x.dataset.row===id);
-    const inp=tr&&tr.querySelector('[data-k="label"]');
-    if(inp){ if(inp.scrollIntoView) inp.scrollIntoView({block:'nearest'}); inp.focus({preventScroll:true}); }
+    const opts=[{value:'',label:'직접 입력',sub:'원가표에 없는 상품'}]
+      .concat(live(COST.data.items).sort((a,b)=>(brandOf(a).localeCompare(brandOf(b),'ko'))||String(a.name).localeCompare(String(b.name),'ko'))
+        .map(i=>({value:i.id,label:i.name,sub:brandOf(i)})));
+    window.UI.menu($('pfRowAdd'),opts,null,v=>{
+      prodsOf(sh);
+      const it=v&&COST.data.items[v], id=uid();
+      sh.groups[id]={id,ord:Date.now(),name:it?it.name:'',item:it?v:null};
+      addOption(sh,sh.groups[id]);
+      if(!it){ const inp=$('pfCalcTable').querySelector('tr[data-prod="'+id+'"] [data-gk="name"]'); if(inp) inp.focus(); }
+    });
   });
   $('pfSheetTabs').addEventListener('click',e=>{
     const t=e.target.closest('.ui-tab'); if(!t) return;
@@ -14185,20 +14255,22 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   $('pfSheetDel').addEventListener('click',()=>{
     const sh=curSheet(); if(!sh) return;
-    window.baroyamAsk('"'+(sh.name||'이 계산표')+'" 계산표를 지울까요?','안에 있는 구성 줄도 함께 사라집니다.').then(ok=>{
+    window.baroyamAsk('"'+(sh.name||'이 계산표')+'" 계산표를 지울까요?','안에 있는 상품·옵션도 함께 사라집니다.').then(ok=>{
       if(!ok) return; sh.del=Date.now(); sheetId=null; CALC.mark(); paintCalc();
     });
   });
 
   /* ---------- 원가 고르기 창 ---------- */
-  let mixFor=null, mixDraft={}, mixBrand='', mixQ='';
+  let mixFor=null, mixDraft={}, mixBrand='', mixQ='', mixFirst=null;
   const dlg=$('pfMixDlg');
   const brandOf=i=>(i.brand||'').trim()||'기타';
   function brandsOf(list){ return [...new Set(list.map(brandOf))].sort((a,b)=>a.localeCompare(b,'ko')); }
   function openMix(sh,r){
     mixFor={sh:sh.id,r:r.id}; mixDraft=clone(obj(r.mix)); mixQ=''; $('pfMixQ').value='';
     const items=COST.data.items, used=Object.keys(mixDraft).find(k=>items[k]&&(num(mixDraft[k].q)||num(mixDraft[k].f)));
-    mixBrand=used?brandOf(items[used]):'';
+    const gi=r.g&&sh.groups&&sh.groups[r.g]&&sh.groups[r.g].item, git=gi&&items[gi];
+    mixFirst=git?gi:null;
+    mixBrand=used?brandOf(items[used]):(git?brandOf(git):'');
     paintMix(); dlg.hidden=false;
   }
   function closeMix(){ dlg.hidden=true; mixFor=null; }
@@ -14208,6 +14280,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('pfMixBrandPick').querySelector('.t').textContent=mixBrand||'전체 브랜드';
     const q=mixQ.trim().toLowerCase();
     const list=all.filter(i=>(!mixBrand||brandOf(i)===mixBrand)&&(!q||(i.name+' '+i.brand).toLowerCase().indexOf(q)>=0));
+    /* 이 옵션이 속한 상품(원가표에서 고른 것)을 맨 위에 */
+    if(mixFirst){ const k=list.findIndex(i=>i.id===mixFirst); if(k>0) list.unshift(list.splice(k,1)[0]); }
     /* 이미 고른 상품은 원가표에서 지워졌어도 보이게 한다(개수를 0으로 내릴 수 있게) */
     Object.keys(mixDraft).forEach(k=>{ const it=COST.data.items[k]; if(it&&it.del&&(num(mixDraft[k].q)||num(mixDraft[k].f))) list.push(it); });
     $('pfMixList').innerHTML=list.map(i=>{
