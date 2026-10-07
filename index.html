@@ -2259,11 +2259,23 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   #ivFetch .ic svg{flex:none;transition:transform .3s}
   #ivFetch .at{padding-left:9px;border-left:1px solid var(--line);font-size:12px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
   #ivFetch .at:empty{display:none}
+  /* 수집 중 · 크기는 그대로(글자·시각을 바꾸지 않음) · 아이콘이 돌고, 동그라미 둘레로 물결이 퍼지고, 알약 안으로 빛이 지나간다 ·
+     끝나면 동그라미만 한 번 통 튄다(scale 이라 자리는 안 바뀜) */
+  #ivFetch{position:relative;overflow:hidden;isolation:isolate}
+  #ivFetch::before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;pointer-events:none;
+    background:linear-gradient(100deg,transparent 20%,color-mix(in srgb,var(--btn-soft) 90%,transparent) 50%,transparent 80%);transform:translateX(-100%)}
   #ivFetch.busy{border-color:var(--btn)}
-  #ivFetch.busy .at{display:none}
-  #ivFetch.busy .ic svg{animation:ivSpin .9s linear infinite}
+  #ivFetch.busy::before{opacity:1;animation:ivSweep 1.1s ease-in-out infinite}
+  #ivFetch.busy .ic{animation:ivRing 1.1s ease-out infinite}
+  #ivFetch.busy .ic svg{animation:ivSpin .8s linear infinite}
+  #ivFetch.busy .lb{animation:ivBreath 1.1s ease-in-out infinite}
+  #ivFetch.done .ic{animation:ivPop .5s cubic-bezier(.3,1.6,.5,1)}
   @keyframes ivSpin{to{transform:rotate(360deg)}}
-  @media (prefers-reduced-motion:reduce){ #ivFetch.busy .ic svg{animation:none} #ivFetch .ic svg{transition:none} }
+  @keyframes ivSweep{to{transform:translateX(100%)}}
+  @keyframes ivRing{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--btn) 45%,transparent)}100%{box-shadow:0 0 0 5px color-mix(in srgb,var(--btn) 0%,transparent)}}
+  @keyframes ivBreath{50%{color:var(--btn)}}
+  @keyframes ivPop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+  @media (prefers-reduced-motion:reduce){ #ivFetch.busy::before,#ivFetch.busy .ic,#ivFetch.busy .ic svg,#ivFetch.busy .lb,#ivFetch.done .ic{animation:none} #ivFetch .ic svg{transition:none} }
   .pf-grow{flex:1}
   .pf-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
   #pfBrandF{width:200px}
@@ -15018,11 +15030,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const ivNote=t=>{ const n=$('ivNote'); n.textContent=t||''; n.hidden=!t; };
   $('ivFetch').addEventListener('click',()=>{
     const b=$('ivFetch'); if(b.classList.contains('busy')) return;
-    b.classList.add('busy'); b.querySelector('.lb').textContent='수집 중…'; ivNote('');
+    b.classList.remove('done'); b.classList.add('busy'); b.setAttribute('aria-busy','true'); ivNote('');
     setTimeout(()=>{
-      b.classList.remove('busy'); b.querySelector('.lb').textContent='어드민 수집';
+      b.classList.remove('busy'); b.removeAttribute('aria-busy');
+      b.classList.add('done'); setTimeout(()=>b.classList.remove('done'),600);
       ivNote('아직 수집기와 연결되지 않았습니다 · 회사 PC 리뷰수집기에 이지어드민 재고 수집을 붙이면 이 단추로 가져옵니다');
-    },1200);
+    },1800);
   });
 
   /* ---------- 열기·다시 받기 ---------- */
