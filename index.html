@@ -2360,6 +2360,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .pf-add .ui-field{flex:1 1 120px;min-width:0}
   .pf-add .pf-num{flex:0 1 120px}
   #pfItemQ{width:180px}
+  .pf-imp-msg{margin:0;padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft);border-bottom:1px solid var(--line)}
+  .pf-imp-msg[hidden]{display:none}
   /* 품목별 원가표 · 마진 계산기와 같은 모양 · 상자 머리는 연한 강조색 띠, 표는 칼선·가운데 정렬, 적는 칸은 평소 글자처럼 보이다가 올리면 테두리 ·
      핵심 숫자(개당 원가·발송비·수수료)는 진하게, 추가 줄은 옅은 회색 바닥 */
   [data-pf-pane="bom"] .pf-card{padding:0;gap:0;overflow:hidden;border-color:color-mix(in srgb,var(--btn) 18%,var(--line));border-radius:14px}
@@ -8420,7 +8422,10 @@ window.BAROYAM_EDIT_ACCESS=(function(){
                   <button type="button" class="ui-field sm" id="pfBrandPick" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <span class="pf-grow"></span>
                   <input class="ui-field sm" id="pfItemQ" placeholder="상품 검색" aria-label="상품 검색">
+                  <button type="button" class="ui-btn sm ghost" id="pfItemImport" title="A 브랜드 · B 상품명 · C 개당 원가 · D 개당 소비자가">엑셀로 넣기</button>
+                  <input type="file" id="pfItemFile" accept=".xlsx,.xls,.csv" hidden>
                 </div>
+                <p class="pf-imp-msg" id="pfImpMsg" role="status" aria-live="polite" hidden></p>
                 <div class="pf-scroll">
                   <table class="pf-list" id="pfItemTable"></table>
                 </div>
@@ -14741,6 +14746,50 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   $('pfBrandPick').addEventListener('click',e=>{ e.stopPropagation(); if(!COST.loaded) return; window.UI.menu($('pfBrandPick'),brandOpts(),brandF,v=>{ brandF=v; paintBom(); }); });
   $('pfItemQ').addEventListener('input',e=>{ itemQ=e.target.value; paintBom(); });
+  /* 엑셀로 넣기 · A 브랜드 · B 상품명 · C 개당 원가 · D 개당 소비자가 · 첫 줄이 제목이면(원가가 숫자가 아니면) 건너뜀
+     브랜드+상품명이 이미 있으면 원가·소비자가만 바꾸고, 없으면 새로 넣는다(지우는 것은 없음) */
+  let xlsxP=null;
+  const loadXlsx=()=>xlsxP||(xlsxP=new Promise((ok,no)=>{
+    if(window.XLSX) return ok(window.XLSX);
+    const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload=()=>ok(window.XLSX); sc.onerror=()=>{ xlsxP=null; no(new Error('load')); }; document.head.appendChild(sc);
+  }));
+  const impMsg=t=>{ const m=$('pfImpMsg'); m.textContent=t||''; m.hidden=!t; };
+  $('pfItemImport').addEventListener('click',()=>{ if(!COST.loaded) return; $('pfItemFile').value=''; $('pfItemFile').click(); });
+  $('pfItemFile').addEventListener('change',async e=>{
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    impMsg('"'+f.name+'" 읽는 중…');
+    let rows;
+    try{
+      const X=await loadXlsx(), wb=X.read(await f.arrayBuffer(),{type:'array'});
+      rows=X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,blankrows:false,defval:''});
+    }catch(err){ impMsg('파일을 읽지 못했습니다 · 엑셀(.xlsx·.xls)이나 .csv 인지 확인해 주세요'); return; }
+    const key=(b,n)=>(b||'').trim()+''+(n||'').trim();
+    const have={}; live(COST.data.items).forEach(i=>{ have[key(i.brand,i.name)]=i; });
+    const got=[], seen={}; let skip=0;
+    rows.forEach(r=>{
+      const brand=String(r[0]==null?'':r[0]).trim(), name=String(r[1]==null?'':r[1]).trim(), cost=num(r[2]), price=num(r[3]);
+      if(!brand&&!name) return;
+      if(!name||cost==null){ skip++; return; }
+      seen[key(brand,name)]={brand,name,cost,price};
+    });
+    Object.keys(seen).forEach(k=>got.push(seen[k]));
+    if(!got.length){ impMsg('넣을 줄이 없습니다 · A 브랜드 · B 상품명 · C 개당 원가 · D 개당 소비자가 순서인지 확인해 주세요'); return; }
+    const upd=got.filter(g=>have[key(g.brand,g.name)]), add=got.length-upd.length;
+    impMsg('');
+    const ok=await window.baroyamAsk('상품 '+got.length+'개를 넣을까요?',
+      '새 상품 '+add+'개 · 이미 있는 상품 '+upd.length+'개는 원가·소비자가를 바꿉니다'+(skip?' · 상품명이나 원가가 없는 '+skip+'줄(제목 줄 포함)은 건너뜁니다':'')+'.','넣기');
+    if(!ok) return;
+    let ord=Date.now();
+    got.forEach(g=>{
+      const o=have[key(g.brand,g.name)];
+      if(o){ if(o.cost!==g.cost) o.cost=g.cost; if(g.price!=null&&o.price!==g.price) o.price=g.price; return; }
+      const id=uid(); COST.data.items[id]={id,brand:g.brand,name:g.name,cost:g.cost,price:g.price,ord:ord++};
+    });
+    COST.mark(); paintBom();
+    impMsg('엑셀에서 '+got.length+'개를 넣었습니다 (새 상품 '+add+' · 바뀐 상품 '+upd.length+')');
+    setTimeout(()=>impMsg(''),6000);
+  });
 
   /* ---------- 열기·다시 받기 ---------- */
   function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); }
