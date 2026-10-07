@@ -2148,39 +2148,50 @@ window.BAROYAM_ACCESS=(function(){
   .pf-foot{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
   .pf-note{font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.5}
   /* 계산 표 · 가로 스크롤 없이 화면 폭에 맞춘다(table-layout:fixed + 칸 비율) ·
-     칸 사이는 가는 칼선, 묶음(구성·원가 / 가격 / 비용 / 계산 결과) 사이는 진한 칼선 · 계산 칸은 연한 바탕 */
+     색은 거의 쓰지 않는다: 적는 칸 = 옅은 회색 바탕, 계산 칸 = 흰 바탕 글자, 강조는 마진·마진률 굵은 글자뿐(적자만 빨강) ·
+     칸 사이는 가는 칼선, 묶음(옵션·원가 / 가격 / 비용 / 계산 결과) 사이는 조금 진한 칼선 */
+  .pf-pane[data-pf-pane="calc"]>.pf-card{border:0;padding:0;background:none}
   .pf-calc-wrap{min-width:0;container-type:inline-size}
   table.pf-calc{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;
-    border:1px solid var(--line);border-radius:12px;overflow:hidden;--pf-cut:var(--line);--pf-cut2:color-mix(in srgb,var(--mute) 45%,var(--line))}
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;--pf-cut:var(--line);--pf-cut2:color-mix(in srgb,var(--mute) 35%,var(--line));
+    --pf-in:color-mix(in srgb,var(--chip-flat) 75%,transparent)}
   .pf-calc th,.pf-calc td{border-left:1px solid var(--pf-cut)}
   .pf-calc th:first-child,.pf-calc td:first-child{border-left:0}
-  .pf-calc .gs{border-left:1.5px solid var(--pf-cut2)}
-  .pf-calc thead th{padding:7px 5px;font-size:11.5px;font-weight:800;color:var(--mute);text-align:center;
-    border-bottom:1px solid var(--pf-cut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px;background:var(--chip-flat)}
-  .pf-calc thead tr.grp th{padding:6px 5px;font-size:11px;color:var(--body);background:var(--paper)}
-  .pf-calc thead th.out{color:var(--btn-soft-ink)}
+  .pf-calc .gs{border-left:1px solid var(--pf-cut2)}
+  .pf-calc thead th{padding:8px 6px;font-size:11.5px;font-weight:700;color:var(--mute);text-align:center;background:var(--paper);
+    border-bottom:1px solid var(--pf-cut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px}
+  .pf-calc thead tr.grp th{padding:7px 6px 2px;font-size:11px;font-weight:800;color:var(--ink);border-bottom:0}
   .pf-calc tbody td{padding:5px 4px;font-size:13px;font-weight:600;color:var(--body);text-align:right;border-bottom:1px solid var(--pf-cut);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;transition:background .12s}
   .pf-calc tbody td:first-child{font-size:13px}
   .pf-calc tbody tr:last-child td{border-bottom:0}
-  .pf-calc td.out{background:color-mix(in srgb,var(--btn-soft) 45%,transparent);font-variant-numeric:tabular-nums;padding-right:7px}
+  .pf-calc tbody tr[data-row]:hover td{background:color-mix(in srgb,var(--chip-flat) 35%,transparent)}
+  .pf-calc td.out{font-variant-numeric:tabular-nums;padding-right:9px}
   .pf-calc td.out.hi{color:var(--ink);font-weight:800;font-size:13.5px}
   .pf-calc td.out.neg{color:var(--neg)}
-  .pf-calc .ui-field{width:100%;min-width:0;padding:0 7px;gap:4px}
+  /* 적는 칸 · 테두리 없이 옅은 회색 바탕 · 누르면 흰 바탕 + 표준 초점 테두리 */
+  .pf-calc tbody .ui-field{width:100%;min-width:0;padding:0 8px;gap:4px;border-color:transparent;background:var(--pf-in)}
+  .pf-calc tbody .ui-field:hover{border-color:var(--line)}
+  .pf-calc tbody .ui-field:focus,.pf-calc tbody .ui-field[aria-expanded="true"]{background:var(--paper);border-color:var(--btn)}
   .pf-calc input.ui-field{text-align:left}
   .pf-calc input.pf-num{text-align:right;font-variant-numeric:tabular-nums}
   .pf-calc .ui-field .t{text-align:left}
+  .pf-calc .ui-field svg{display:none}
   .pf-calc .pf-cost .t{text-align:right}
   .pf-calc .pf-cost small{font-size:10.5px;font-weight:700;color:var(--mute)}
   .pf-calc td.act{text-align:center;padding:5px 2px}
+  .pf-calc td.act .ui-btn{color:var(--mute)}
   .pf-calc tbody td.pf-msg{border:0;border-radius:0;text-align:center;white-space:normal}
-  /* 상품 줄 · 그 아래 옵션 줄들을 묶는 머리 · 상품 이름과 옵션 추가 단추 */
-  .pf-calc tbody tr.pf-prod td{background:var(--chip-flat);padding:7px 10px;text-align:left;border-left:0}
-  .pf-calc tbody tr.pf-prod+tr.pf-prod td,.pf-calc tbody tr[data-row]+tr.pf-prod td{border-top:1.5px solid var(--pf-cut2)}
-  .pf-prod-in{display:flex;align-items:center;gap:8px}
-  .pf-prod-in .ui-field{width:260px;max-width:40%;font-weight:800;color:var(--ink)}
-  .pf-prod-in .pf-prod-n{font-size:12px;font-weight:700;color:var(--mute)}
-  .pf-prod-in .pf-prod-src{font-size:11.5px;font-weight:700;color:var(--btn-soft-ink)}
+  /* 상품 줄 · 그 아래 옵션 줄들을 묶는 머리 · 굵은 상품 이름 + 흐린 덧붙임 + 오른쪽 옵션 추가 */
+  .pf-calc tbody tr.pf-prod td{padding:12px 10px 8px;text-align:left;border-left:0;background:var(--paper)}
+  .pf-calc tbody tr[data-row]+tr.pf-prod td,.pf-calc tbody tr+tr.pf-prod td{border-top:1px solid var(--pf-cut2)}
+  .pf-prod-in{display:flex;align-items:center;gap:10px}
+  .pf-calc .pf-prod-in .ui-field{width:300px;max-width:40%;height:32px;padding:0 8px;font-size:14.5px;font-weight:800;color:var(--ink);
+    border-color:transparent;background:transparent}
+  .pf-calc .pf-prod-in .ui-field:hover{border-color:var(--line)}
+  .pf-calc .pf-prod-in .ui-field:focus{background:var(--paper);border-color:var(--btn)}
+  .pf-prod-in .pf-prod-n,.pf-prod-in .pf-prod-src{font-size:12px;font-weight:600;color:var(--mute)}
+  .pf-prod-in .pf-prod-src::before{content:"·";margin-right:10px}
   .pf-calc tbody tr[data-row] td:first-child{padding-left:18px}
   .pf-calc tbody td.pf-opt-empty{padding:10px 18px;text-align:left;color:var(--mute);font-size:12.5px;font-weight:600;border-left:0}
   /* 표 폭이 좁으면(노트북·배율 큼 · 표 자리가 1300px 아래) 한 구성 = 한 장의 카드, 칸마다 이름표를 위에 단다 · 그래도 가로 스크롤은 없다 */
@@ -8211,7 +8222,7 @@ window.BAROYAM_ACCESS=(function(){
           <div class="pf-pane" data-pf-pane="calc" hidden>
             <div class="pf-bar">
               <div class="ui-tabs" id="pfSheetTabs" aria-label="계산표"></div>
-              <button type="button" class="ui-btn sm soft" id="pfSheetAdd">+ 새 계산표</button>
+              <button type="button" class="ui-btn sm ghost" id="pfSheetAdd">+ 새 계산표</button>
               <span class="pf-grow"></span>
               <button type="button" class="ui-field sm" id="pfSheetChan" aria-haspopup="listbox" title="이 계산표의 판매처"><span class="t">판매처 지정</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
               <input class="ui-field sm" id="pfSheetName" maxlength="40" placeholder="계산표 이름" aria-label="계산표 이름">
@@ -14130,9 +14141,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       h+='<tr class="pf-prod" data-prod="'+esc(g.id)+'"><td colspan="'+COLS.length+'"><div class="pf-prod-in">'
         +'<input class="ui-field sm" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품명" aria-label="상품명">'
         +'<span class="pf-prod-n">옵션 '+opts.length+'개</span>'
-        +(it?'<span class="pf-prod-src" title="원가표 상품">원가표 · '+esc(brandOf(it))+'</span>':'')
+        +(it?'<span class="pf-prod-src" title="원가표에서 고른 상품">'+esc(brandOf(it))+'</span>':'')
         +'<span class="pf-grow"></span>'
-        +'<button type="button" class="ui-btn sm soft" data-act="opt">+ 옵션 추가</button>'
+        +'<button type="button" class="ui-btn sm" data-act="opt">+ 옵션 추가</button>'
         +'<button type="button" class="ui-btn sm ghost icon" data-act="prod" title="상품 삭제" aria-label="상품 삭제" aria-haspopup="true">⋯</button>'
         +'</div></td></tr>';
       opts.forEach(r=>{ h+=optRow(r); });
