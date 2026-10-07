@@ -2208,9 +2208,12 @@ window.BAROYAM_ACCESS=(function(){
   #pfBrandPick,#pfMixBrandPick{width:200px}
   #pfSheetChan{width:160px}
   /* 아래 판매처 탭 줄 · 화면 아래 고정 · 계산 표 마지막 줄이 가리지 않게 칸 아래를 비워 둔다 */
-  .pf-pane[data-pf-pane="calc"]{padding-bottom:64px}
-  .pf-sheetbar{position:fixed;bottom:0;left:0;z-index:40;display:flex;align-items:stretch;min-height:46px;padding:0 20px;
-    background:var(--paper);border-top:1px solid var(--line);box-shadow:0 -10px 24px -18px rgba(0,0,0,.25)}
+  .pf-pane[data-pf-pane="calc"]{padding-bottom:90px}
+  .pf-sheetbar{position:fixed;bottom:0;left:0;z-index:40;background:var(--paper);border-top:1px solid var(--line);
+    box-shadow:0 -10px 24px -18px rgba(0,0,0,.25)}
+  .pf-sheetbar .hero-view-tabs{padding:14px 48px 16px;flex-wrap:wrap}
+  .pf-sheetbar .hero-view-tab .n{margin-left:6px;font-weight:700;opacity:.7}
+  @media (max-width:900px){ .pf-sheetbar .hero-view-tabs{padding:12px 32px 14px} }
   /* 원가 계산 창 */
   .settings-panel.pf-mix{max-width:720px;height:min(720px,88vh)}
   .pf-mix-top{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px 22px 10px}
@@ -4956,13 +4959,6 @@ window.BAROYAM_ACCESS=(function(){
   .ui-tab[aria-selected="true"],.ui-tab.active{background:var(--paper);color:var(--ink);font-weight:800;
     box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
   .ui-tab .n{font-size:11.5px;font-weight:700;color:var(--mute)}
-  /* sheet · 구글시트 아래 시트 탭처럼 화면 아래에 늘어놓는 탭 · 고른 탭은 아래에 굵은 선 */
-  .ui-tabs.sheet{padding:0;gap:0;border-radius:0;background:transparent;align-items:stretch}
-  .ui-tabs.sheet .ui-tab{height:auto;min-height:44px;padding:0 18px;border-radius:0;border-right:1px solid var(--line)}
-  .ui-tabs.sheet .ui-tab:first-child{border-left:1px solid var(--line)}
-  .ui-tabs.sheet .ui-tab:hover{background:var(--chip-flat)}
-  .ui-tabs.sheet .ui-tab[aria-selected="true"],.ui-tabs.sheet .ui-tab.active{background:var(--btn-soft);color:var(--btn-soft-ink);
-    box-shadow:inset 0 -3px 0 var(--btn)}
   .ui-tab[aria-selected="true"] .n,.ui-tab.active .n{color:var(--btn-soft-ink)}
   /* 칩 · 필터처럼 여러 개를 켰다 껐다 하는 알약 버튼 · 켜짐은 aria-pressed="true" 또는 .on */
   .ui-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -8219,9 +8215,10 @@ window.BAROYAM_ACCESS=(function(){
                 <span class="pf-note">부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
               </div>
             </div>
-            <!-- 판매처별 계산표 · 구글시트 아래 시트 탭처럼 화면 아래에 붙어 있다(위치는 대시보드 폭에 맞춰 스크립트가 잡는다) -->
+            <!-- 판매처별 계산표 · 맨 위 단추 줄(순수익 요약/마진 계산기/품목별 원가표)과 같은 모양의 맨 아래 단추 줄 ·
+                 화면 아래에 붙어 있고, 위치는 대시보드 폭에 맞춰 스크립트가 잡는다 -->
             <div class="pf-sheetbar" id="pfChanBar">
-              <div class="ui-tabs sheet" id="pfChanTabs" role="tablist" aria-label="판매처별 계산표"></div>
+              <div class="hero-view-tabs" id="pfChanTabs" role="tablist" aria-label="판매처별 계산표"></div>
             </div>
             <div class="pf-empty" id="pfCalcEmpty" hidden>원가표에 상품·판매처가 없습니다. <b>품목별 원가표</b>에서 먼저 넣어 주세요.</div>
           </div>
@@ -14010,7 +14007,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const all=live(CALC.data.sheets), chans=live(COST.data.chans);
     if(chanF&&!chans.some(c=>c.id===chanF)) chanF='';
     const n=id=>all.filter(s=>!id||sheetChan(s)===id).length;
-    $('pfChanTabs').innerHTML=[{id:'',name:'전체'}].concat(chans).map(c=>'<button type="button" class="ui-tab" role="tab" data-value="'+esc(c.id)+'" aria-selected="'+(c.id===chanF?'true':'false')+'">'
+    $('pfChanTabs').innerHTML=[{id:'',name:'전체'}].concat(chans).map(c=>'<button type="button" class="hero-view-tab'+(c.id===chanF?' active':'')+'" role="tab" data-value="'+esc(c.id)+'" aria-selected="'+(c.id===chanF?'true':'false')+'">'
       +esc(c.name)+' <span class="n">'+n(c.id)+'</span></button>').join('');
     placeBar();
   }
@@ -14024,7 +14021,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   addEventListener('resize',placeBar);
   if(window.ResizeObserver){ const ro=new ResizeObserver(placeBar); ro.observe(view.closest('.paper')||view); }
   $('pfChanTabs').addEventListener('click',e=>{
-    const t=e.target.closest('.ui-tab'); if(!t) return;
+    const t=e.target.closest('.hero-view-tab'); if(!t) return;
     chanF=t.dataset.value; try{ localStorage.setItem('baroyam_profit_chan',chanF); }catch(err){}
     paintCalc();
   });
