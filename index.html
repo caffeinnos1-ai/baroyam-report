@@ -14380,7 +14380,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const chanOf=r=>(r.chan&&COST.data.chans[r.chan]&&!COST.data.chans[r.chan].del)?r.chan:firstChan();
   const rowOk=r=>{
     if(chanOf(r)!==curChan()) return false;
-    if(brandP&&rowBrand(r)!==brandP) return false;
     if(adOnly&&!isAd(r)) return false;
     return true;
   };
@@ -14392,10 +14391,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const ch=curChan(), mine=rows.filter(r=>r.g===g.id&&chanOf(r)===ch);
       /* 이 판매처에서 등록한 상품(g.chan) 이거나, 예전 상품이면 이 판매처 옵션이 있을 때만 */
       if(g.chan?g.chan!==ch:!mine.length) return null;
+      /* 브랜드 거르기는 상품(등록) 단위 · 그 브랜드 옵션이 하나라도 있는 상품은 옵션을 모두 보인다 */
+      if(brandP&&prodBrands(g).indexOf(brandP)<0) return null;
       const nameHit=q&&(g.name||'').toLowerCase().indexOf(q)>=0;
       const opts=mine.filter(r=>rowOk(r)&&(nameHit||hit(g,r)));
       /* 옵션이 아직 없는 상품은 광고·브랜드 거르기가 없을 때만(새로 등록한 상품이 숨지 않게) */
-      const keep=opts.length||(!mine.length&&!adOnly&&!brandP&&(!q||nameHit));
+      const keep=opts.length||(!mine.length&&!adOnly&&(!q||nameHit));
       return keep?{g,opts}:null;
     }).filter(Boolean).sort((a,b)=>(a.g.ord||0)-(b.g.ord||0));
   }
@@ -14426,8 +14427,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     paintCalc();
   });
   /* 위쪽 거르기 줄 · 브랜드(목록) · 검색 · 광고 중만 */
-  const chanRows=()=>allRows().filter(r=>chanOf(r)===curChan());
-  function rowBrands(){ return [...new Set(chanRows().map(rowBrand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')); }
+  /* 브랜드 목록·숫자는 상품(등록) 기준(10-07 사용자 · 옵션 기준 아님) · 상품의 브랜드 = 이 판매처 옵션들의 브랜드(없으면 상품에 정한 브랜드) */
+  const chanProds=()=>{ const ch=curChan(), rows=allRows(); return live(B().prods).filter(g=>g.chan?g.chan===ch:rows.some(r=>r.g===g.id&&chanOf(r)===ch)); };
+  function prodBrands(g){
+    const ch=curChan(), bs=allRows().filter(r=>r.g===g.id&&chanOf(r)===ch).map(rowBrand).filter(Boolean);
+    if(!bs.length&&prodBrand(g)) bs.push(prodBrand(g));
+    return [...new Set(bs)];
+  }
+  function rowBrands(){ return [...new Set([].concat(...chanProds().map(prodBrands)))].sort((a,b)=>a.localeCompare(b,'ko')); }
   function paintFilters(){
     if(brandP&&rowBrands().indexOf(brandP)<0) brandP='';
     $('pfBrandF').querySelector('.t').textContent=brandP||'전체 브랜드';
@@ -14435,8 +14442,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   $('pfBrandF').addEventListener('click',e=>{
     e.stopPropagation(); if(!CALC.loaded) return;
-    const rows=chanRows();
-    const opts=[{value:'',label:'전체 브랜드',sub:String(rows.length)}].concat(rowBrands().map(b=>({value:b,label:b,sub:String(rows.filter(r=>rowBrand(r)===b).length)})));
+    const ps=chanProds().map(g=>prodBrands(g));
+    const opts=[{value:'',label:'전체 브랜드',sub:String(ps.length)}].concat(rowBrands().map(b=>({value:b,label:b,sub:String(ps.filter(bs=>bs.indexOf(b)>=0).length)})));
     window.UI.menu($('pfBrandF'),opts,brandP,v=>{ brandP=v; try{ localStorage.setItem('baroyam_profit_brand',v); }catch(err){} paintCalc(); });
   });
   $('pfCalcQ').addEventListener('input',e=>{ qP=e.target.value; paintCalc(); });
