@@ -2211,6 +2211,9 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-head-tt span{font-size:12px;font-weight:600;color:var(--mute)}
   .iv-head-tt .iv-demo{align-self:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--warn-soft);color:var(--warn)}
   .iv-head-tt .iv-demo[hidden]{display:none}
+  #opsTabs{align-items:center}
+  #ivFetch{margin-left:auto}
+  #ivFetch[hidden]{display:none}
   #ivFetch svg{flex:none}
   #ivFetch.busy svg{animation:ivSpin .9s linear infinite}
   @keyframes ivSpin{to{transform:rotate(360deg)}}
@@ -8526,7 +8529,11 @@ window.BAROYAM_EDIT_ACCESS=(function(){
       <div id="view-ops" style="display:none">
         <div class="hero-view-tabs" id="opsTabs" role="tablist" aria-label="판매·재고 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-ops="sales" data-sub="오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.">당일판매현황</button>
-          <button type="button" class="hero-view-tab" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 품절·부족 상품과 재고 금액을 한눈에 봅니다.">재고현황</button>
+          <button type="button" class="hero-view-tab" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 브랜드별 정상재고와 유통기한을 한눈에 봅니다.">재고현황</button>
+          <!-- 어드민 수집 · 재고현황 탭일 때만 맨 위 단추 줄 오른쪽 끝에 보인다 -->
+          <button type="button" class="ui-btn sm primary" id="ivFetch" hidden>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+            <span>어드민 수집</span></button>
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
@@ -8543,9 +8550,6 @@ window.BAROYAM_EDIT_ACCESS=(function(){
             <div class="pf-card iv-card">
               <div class="iv-head">
                 <div class="iv-head-tt"><b>이지어드민 재고</b><span id="ivAt"></span><span class="iv-demo" id="ivDemo" hidden>예시 화면</span></div>
-                <button type="button" class="ui-btn sm primary" id="ivFetch">
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
-                  <span>이지어드민에서 가져오기</span></button>
               </div>
               <p class="iv-note" id="ivNote" role="status" aria-live="polite" hidden></p>
               <div class="pf-scroll"><table class="pf-list iv-table" id="ivTable"></table></div>
@@ -14138,6 +14142,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     title.textContent=el.textContent.trim(); sub.textContent=el.dataset.sub||'';
     panes.forEach(p=>{ p.hidden=p.dataset.opsPane!==el.dataset.ops; });
+    const fetchBtn=document.getElementById('ivFetch'); if(fetchBtn) fetchBtn.hidden=el.dataset.ops!=='stock';
     if(load&&el.dataset.ops==='stock'&&window.baroyamStock) window.baroyamStock.show();
   }
   pick(cur,false);
@@ -14961,14 +14966,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     $('ivTable').innerHTML=head+'<tbody>'+body+'</tbody>';
   }
-  /* 이지어드민에서 가져오기 · 지금은 디자인만(수집기 연동 전) · 누르면 도는 아이콘 → 안내 한 줄
+  /* 어드민 수집(맨 위 단추 줄 오른쪽) · 지금은 디자인만(수집기 연동 전) · 누르면 도는 아이콘 → 안내 한 줄
      회사 PC 리뷰수집기가 이지어드민(최초 로그인은 수동)에서 재고를 읽어 inventory_v1 에 채우게 되면 여기서 그 요청을 보낸다 */
   const ivNote=t=>{ const n=$('ivNote'); n.textContent=t||''; n.hidden=!t; };
   $('ivFetch').addEventListener('click',()=>{
     const b=$('ivFetch'); if(b.classList.contains('busy')) return;
-    b.classList.add('busy'); b.querySelector('span').textContent='가져오는 중…'; ivNote('');
+    b.classList.add('busy'); b.querySelector('span').textContent='수집 중…'; ivNote('');
     setTimeout(()=>{
-      b.classList.remove('busy'); b.querySelector('span').textContent='이지어드민에서 가져오기';
+      b.classList.remove('busy'); b.querySelector('span').textContent='어드민 수집';
       ivNote('아직 수집기와 연결되지 않았습니다 · 회사 PC 리뷰수집기에 이지어드민 재고 수집을 붙이면 이 단추로 가져옵니다');
     },1200);
   });
