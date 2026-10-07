@@ -2300,8 +2300,6 @@ window.BAROYAM_ACCESS=(function(){
   .pf-card-tt{display:flex;flex-direction:column;gap:2px;margin-right:auto}
   .pf-card-tt h3{display:flex;align-items:center;gap:6px}
   .pf-card-tt p{margin:0;font-size:11.5px;font-weight:600;color:var(--mute)}
-  .pf-card-n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 6px;border-radius:999px;
-    background:color-mix(in srgb,var(--btn) 14%,var(--paper));color:var(--btn-soft-ink);font-size:11px;font-weight:800}
   [data-pf-pane="bom"] .pf-card-head .ui-field{background:var(--paper)}
   [data-pf-pane="bom"] .pf-scroll{margin:0;padding:0}
   [data-pf-pane="bom"] table.pf-list{border-collapse:separate;border-spacing:0}
@@ -8344,7 +8342,7 @@ window.BAROYAM_ACCESS=(function(){
               <!-- 한 줄에 세 상자 · 상품 원가(가장 넓게) → 프라임 발송비 구간 → 판매처 수수료 -->
               <div class="pf-card">
                 <div class="pf-card-head">
-                  <div class="pf-card-tt"><h3>상품 원가 <span class="pf-card-n" id="pfItemN"></span></h3><p>마진 계산기 원가 칸에서 고르는 상품</p></div>
+                  <div class="pf-card-tt"><h3>상품 원가</h3><p>마진 계산기 원가 칸에서 고르는 상품</p></div>
                   <button type="button" class="ui-field sm" id="pfBrandPick" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <span class="pf-grow"></span>
                   <input class="ui-field sm" id="pfItemQ" placeholder="상품 검색" aria-label="상품 검색">
@@ -8362,7 +8360,7 @@ window.BAROYAM_ACCESS=(function(){
                 </form>
               </div>
               <div class="pf-card">
-                <div class="pf-card-head"><div class="pf-card-tt"><h3>프라임 발송비 구간 <span class="pf-card-n" id="pfShipN"></span></h3><p>옵션마다 프라임 칸에서 고르는 발송비</p></div></div>
+                <div class="pf-card-head"><div class="pf-card-tt"><h3>프라임 발송비 구간</h3><p>옵션마다 프라임 칸에서 고르는 발송비</p></div></div>
                 <table class="pf-list" id="pfShipTable"></table>
                 <form class="pf-add" id="pfShipAdd" autocomplete="off">
                   <input class="ui-field sm" name="name" maxlength="30" placeholder="구간 이름 (예: 소형)" required>
@@ -8371,7 +8369,7 @@ window.BAROYAM_ACCESS=(function(){
                 </form>
               </div>
               <div class="pf-card">
-                <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처 수수료 <span class="pf-card-n" id="pfChanN"></span></h3><p>마진 계산기 아래 판매처 탭이 됩니다</p></div></div>
+                <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처 수수료</h3><p>마진 계산기 아래 판매처 탭이 됩니다</p></div></div>
                 <table class="pf-list" id="pfChanTable"></table>
                 <form class="pf-add" id="pfChanAdd" autocomplete="off">
                   <input class="ui-field sm" name="name" maxlength="30" placeholder="판매처 (예: 쿠팡)" required>
@@ -14559,7 +14557,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     };
     small('pfShipTable',live(c.ship),'fee','구간','발송비(원)');
     small('pfChanTable',live(c.chans),'rate','판매처','수수료(%)');
-    $('pfItemN').textContent=all.length; $('pfShipN').textContent=live(c.ship).length; $('pfChanN').textContent=live(c.chans).length;
   }
   function wireList(tableId,field){
     const t=$(tableId);
