@@ -2237,7 +2237,7 @@ window.BAROYAM_ACCESS=(function(){
   .pf-calc tbody td.pf-msg{border:0;border-radius:0;text-align:center;white-space:normal}
   /* 광고 표시 · 줄 맨 앞 · 켜면 꽉 찬 색 띠(한눈에 보이게), 끄면 흐린 점선 */
   /* 광고 표시 · 판매처 알약과 다르게 "켜고 끄는 스위치" 모양 · 켜면 강조색 스위치 + 진한 글자, 끄면 회색 스위치 + 흐린 글자 */
-  .pf-ad{all:unset;box-sizing:border-box;position:relative;flex:none;display:inline-flex;align-items:center;gap:8px;width:104px;height:28px;padding:0 6px 0 4px;
+  .pf-ad{all:unset;box-sizing:border-box;position:relative;flex:none;display:inline-flex;align-items:center;gap:8px;width:96px;height:28px;padding:0 6px 0 4px;
     border-radius:999px;color:var(--mute);font-size:12.5px;font-weight:800;cursor:pointer;transition:var(--ui-ease)}
   .pf-ad::before{content:"";flex:none;width:32px;height:18px;border-radius:999px;background:color-mix(in srgb,var(--mute) 35%,var(--line));transition:background .18s}
   .pf-ad::after{content:"";position:absolute;left:6px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:#fff;
@@ -14287,7 +14287,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     let h='';
     list.forEach(({g,opts})=>{
       h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head">'
-        +'<button type="button" class="pf-ad" data-act="pad" aria-pressed="'+(g.ad?'true':'false')+'" title="이 상품을 지금 광고하고 있으면 켭니다">'+(g.ad?'광고 중':'광고 안 함')+'</button>'
+        +'<button type="button" class="pf-ad" data-act="pad" aria-pressed="'+(g.ad?'true':'false')+'" title="'+(g.ad?'광고 중 · 누르면 끄기':'광고 안 함 · 누르면 켜기')+'" aria-label="광고상태">광고상태</button>'
         +'<input class="ui-field pf-book-name" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품 이름 (예: 홀떡피자 메타광고)" aria-label="상품 이름">'
         +'<span class="pf-grow"></span>'
         +'<button type="button" class="ui-btn sm" data-act="opt" aria-haspopup="listbox">+ 옵션 추가</button>'
@@ -14382,7 +14382,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(b.dataset.act==='opt'){ e.stopPropagation(); optMenu(b,p.g); return; }
       /* 광고 중 · 다시 그리지 않고 단추와 그 상품 옵션들의 ROAS 칸만 바꾼다 */
       if(b.dataset.act==='pad'){
-        p.g.ad=!p.g.ad; b.setAttribute('aria-pressed',p.g.ad?'true':'false'); b.textContent=p.g.ad?'광고 중':'광고 안 함';
+        p.g.ad=!p.g.ad; b.setAttribute('aria-pressed',p.g.ad?'true':'false'); b.title=p.g.ad?'광고 중 · 누르면 끄기':'광고 안 함 · 누르면 켜기';
         p.box.querySelectorAll('tr[data-row]').forEach(tr=>{ const r=B().rows[tr.dataset.row]; if(r) outCells(tr,r); });
         CALC.mark(); return;
       }
