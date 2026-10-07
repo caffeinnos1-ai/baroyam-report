@@ -2202,7 +2202,7 @@ window.BAROYAM_ACCESS=(function(){
   .pf-ad:hover{border-color:var(--btn);color:var(--btn-soft-ink)}
   .pf-ad:focus-visible{box-shadow:var(--ui-ring)}
   .pf-calc .pf-ad{min-width:0;width:100%;padding:0 4px}
-  /* 상품 상자(계산표 하나) · 머리에 상품 이름(크게) + 요약 + 옵션 추가 · 그 아래 옵션 표 */
+  /* 상품 상자(계산표 하나) · 머리에 광고 표시 + 상품 이름(크게) + 옵션 추가 · 그 아래 옵션 표 */
   .pf-books{display:flex;flex-direction:column;gap:22px}
   .pf-book{display:flex;flex-direction:column;gap:0}
   /* 상품 머리 · 연한 강조색 띠를 표 바로 위에 붙인다(머리와 표가 한 덩어리로 보이게) */
@@ -2217,9 +2217,6 @@ window.BAROYAM_ACCESS=(function(){
     color:var(--ink);border-color:transparent;background:transparent}
   .pf-book-name.ui-field:hover{border-color:var(--line)}
   .pf-book-name.ui-field:focus{background:var(--paper);border-color:var(--btn)}
-  .pf-book-sum{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;font-size:12.5px;font-weight:600;color:var(--mute)}
-  .pf-book-sum b{margin-left:4px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
-  .pf-book-sum .neg{color:var(--neg);font-weight:800}
   .pf-book-empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--mute);font-size:13px;font-weight:600;text-align:center}
   /* 옵션 칸 · 저절로 뜬 브랜드 이름(빈 칸의 안내 글)도 진짜 글처럼 진하게 */
   .pf-calc .pf-lbl::placeholder{color:var(--ink);font-weight:600;opacity:1}
@@ -14178,24 +14175,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const ri=tr.querySelector('[data-k="rate"]'); if(ri) ri.placeholder=v.chRate!=null?comma(v.chRate):'%';
     const li=tr.querySelector('[data-k="label"]'); if(li) li.placeholder=autoName(r)||'옵션';
   }
-  /* 상품 상자 머리 요약 · 지금 보이는 옵션의 마진률·최소 ROAS 범위 · 적자 옵션 수 */
-  function prodSum(g,opts){
-    const vs=opts.map(calc).filter(v=>v.margin!=null);
-    const span=(a,f)=>{ const lo=Math.min(...a), hi=Math.max(...a); return lo===hi?f(lo):f(lo)+' ~ '+f(hi); };
-    const p1=x=>(x*100).toFixed(1)+'%', p0=x=>(x*100).toFixed(0)+'%';
-    const loss=vs.filter(v=>v.margin<0).length, ro=vs.filter(v=>v.roas!=null).map(v=>v.roas);
-    let h='<span>옵션 '+opts.length+'개</span>';
-    if(vs.length) h+='<span>마진률 <b>'+span(vs.map(v=>v.mrate),p1)+'</b></span>';
-    if(ro.length) h+='<span>최소 ROAS <b>'+span(ro,p0)+'</b></span>';
-    if(loss) h+='<span class="neg">적자 '+loss+'</span>';
-    return h;
-  }
-  function paintProdSum(gid){
-    const box=[...$('pfCalcTable').querySelectorAll('[data-prod]')].find(x=>x.dataset.prod===gid), g=B().prods[gid];
-    const el=box&&box.querySelector('.pf-book-sum'); if(!el||!g) return;
-    const ids=[...box.querySelectorAll('tr[data-row]')].map(tr=>tr.dataset.row);
-    el.innerHTML=prodSum(g,ids.map(id=>B().rows[id]).filter(Boolean));
-  }
   /* 수량 칸 · 원가에서 한 가지 상품만 고른 줄은 수량을 바로 적는다 · 여러 상품을 섞은 줄은 개수 합만 보인다(고치는 곳은 원가 칸) */
   function soloItem(r){
     const u=used(r);
@@ -14244,7 +14223,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head">'
         +'<button type="button" class="pf-ad" data-act="pad" aria-pressed="'+(g.ad?'true':'false')+'" title="이 상품을 지금 광고하고 있으면 켭니다">'+(g.ad?'광고 중':'광고 안 함')+'</button>'
         +'<input class="ui-field pf-book-name" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품 이름 (예: 홀떡피자 메타광고)" aria-label="상품 이름">'
-        +'<span class="pf-book-sum">'+prodSum(g,opts)+'</span>'
         +'<span class="pf-grow"></span>'
         +'<button type="button" class="ui-btn sm" data-act="opt" aria-haspopup="listbox">+ 옵션 추가</button>'
         +'<button type="button" class="ui-btn sm ghost icon" data-act="prod" title="상품 삭제" aria-label="상품 삭제" aria-haspopup="true">⋯</button>'
@@ -14297,11 +14275,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       x.r.mix=Object.assign({},obj(x.r.mix));
       x.r.mix[id]=Object.assign({q:0,f:0},x.r.mix[id]); x.r.mix[id][qk]=Math.max(0,Math.round(num(e.target.value)||0));
       if(!x.r.item) x.r.item=id;
-      outCells(x.tr,x.r); paintProdSum(x.r.g); CALC.mark(); return;
+      outCells(x.tr,x.r); CALC.mark(); return;
     }
     const k=e.target.dataset.k, x=rowOf(e.target); if(!k||!x||!x.r) return;
     x.r[k]=k==='label'?e.target.value:num(e.target.value);
-    outCells(x.tr,x.r); if(k!=='label') paintProdSum(x.r.g); CALC.mark();
+    outCells(x.tr,x.r); CALC.mark();
   });
   $('pfCalcTable').addEventListener('focusout',e=>{
     const k=e.target.dataset.k; if(!k||k==='label'||k==='rate') return;
