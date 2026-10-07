@@ -2292,6 +2292,37 @@ window.BAROYAM_ACCESS=(function(){
   .pf-add .ui-field{flex:1 1 120px;min-width:0}
   .pf-add .pf-num{flex:0 1 120px}
   #pfItemQ{width:180px}
+  /* 품목별 원가표 · 마진 계산기와 같은 모양 · 상자 머리는 연한 강조색 띠, 표는 칼선·가운데 정렬, 적는 칸은 평소 글자처럼 보이다가 올리면 테두리 ·
+     핵심 숫자(개당 원가·발송비·수수료)는 진하게, 추가 줄은 옅은 회색 바닥 */
+  [data-pf-pane="bom"] .pf-card{padding:0;gap:0;overflow:hidden;border-color:color-mix(in srgb,var(--btn) 18%,var(--line));border-radius:14px}
+  [data-pf-pane="bom"] .pf-card-head{padding:12px 14px;gap:8px 10px;background:color-mix(in srgb,var(--btn-soft) 60%,var(--paper));
+    border-bottom:1px solid color-mix(in srgb,var(--btn) 14%,var(--line))}
+  .pf-card-tt{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+  .pf-card-tt h3{display:flex;align-items:center;gap:6px}
+  .pf-card-tt p{margin:0;font-size:11.5px;font-weight:600;color:var(--mute)}
+  .pf-card-n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 6px;border-radius:999px;
+    background:color-mix(in srgb,var(--btn) 14%,var(--paper));color:var(--btn-soft-ink);font-size:11px;font-weight:800}
+  [data-pf-pane="bom"] .pf-card-head .ui-field{background:var(--paper)}
+  [data-pf-pane="bom"] .pf-scroll{margin:0;padding:0}
+  [data-pf-pane="bom"] table.pf-list{border-collapse:separate;border-spacing:0}
+  [data-pf-pane="bom"] .pf-list thead th{padding:8px 6px;font-size:11px;font-weight:700;text-align:center;color:var(--mute);
+    background:color-mix(in srgb,var(--chip-flat) 45%,var(--paper));border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
+  [data-pf-pane="bom"] .pf-list thead th:first-child{border-left:0}
+  [data-pf-pane="bom"] .pf-list tbody td{height:40px;padding:4px 6px;text-align:center;border-left:1px solid var(--line);font-size:12.5px}
+  [data-pf-pane="bom"] .pf-list tbody td:first-child{border-left:0}
+  [data-pf-pane="bom"] .pf-list tbody tr:hover td{background:color-mix(in srgb,var(--chip-flat) 35%,transparent)}
+  [data-pf-pane="bom"] .pf-list .ui-field{height:28px;padding:0 6px;font-size:12.5px;text-align:center;border-color:transparent;background:transparent}
+  [data-pf-pane="bom"] .pf-list tbody tr:hover .ui-field{border-color:var(--line);background:var(--paper)}
+  [data-pf-pane="bom"] .pf-list .ui-field:focus{border-color:var(--btn);background:var(--paper)}
+  [data-pf-pane="bom"] .pf-list input.pf-num{text-align:center}
+  [data-pf-pane="bom"] .pf-list [data-k="cost"],[data-pf-pane="bom"] .pf-list [data-k="fee"],[data-pf-pane="bom"] .pf-list [data-k="rate"]{font-weight:800;color:var(--ink);font-size:13px}
+  [data-pf-pane="bom"] .pf-list [data-k="name"]{font-weight:700;color:var(--ink)}
+  [data-pf-pane="bom"] .pf-list td.act{width:40px;text-align:center}
+  [data-pf-pane="bom"] .pf-list td.act .ui-btn{color:var(--mute)}
+  [data-pf-pane="bom"] .pf-list .pf-none td{height:auto;padding:22px 6px;border-left:0}
+  [data-pf-pane="bom"] .pf-add{padding:10px 12px;border-top:1px solid var(--line);background:color-mix(in srgb,var(--chip-flat) 35%,var(--paper))}
+  [data-pf-pane="bom"] .pf-add .ui-field{background:var(--paper)}
+  [data-pf-pane="bom"] .pf-add input.pf-num{text-align:center}
   #pfBrandPick,#pfMixBrandPick{width:200px}
   /* 아래 판매처 탭 줄 · 화면 아래 고정 · 계산 표 마지막 줄이 가리지 않게 칸 아래를 비워 둔다 */
   .pf-pane[data-pf-pane="calc"]{padding-bottom:90px}
@@ -8313,7 +8344,7 @@ window.BAROYAM_ACCESS=(function(){
               <!-- 한 줄에 세 상자 · 상품 원가(가장 넓게) → 프라임 발송비 구간 → 판매처 수수료 -->
               <div class="pf-card">
                 <div class="pf-card-head">
-                  <h3>상품 원가</h3>
+                  <div class="pf-card-tt"><h3>상품 원가 <span class="pf-card-n" id="pfItemN"></span></h3><p>마진 계산기 원가 칸에서 고르는 상품</p></div>
                   <button type="button" class="ui-field sm" id="pfBrandPick" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <span class="pf-grow"></span>
                   <input class="ui-field sm" id="pfItemQ" placeholder="상품 검색" aria-label="상품 검색">
@@ -8331,7 +8362,7 @@ window.BAROYAM_ACCESS=(function(){
                 </form>
               </div>
               <div class="pf-card">
-                <div class="pf-card-head"><h3>프라임 발송비 구간</h3></div>
+                <div class="pf-card-head"><div class="pf-card-tt"><h3>프라임 발송비 구간 <span class="pf-card-n" id="pfShipN"></span></h3><p>옵션마다 프라임 칸에서 고르는 발송비</p></div></div>
                 <table class="pf-list" id="pfShipTable"></table>
                 <form class="pf-add" id="pfShipAdd" autocomplete="off">
                   <input class="ui-field sm" name="name" maxlength="30" placeholder="구간 이름 (예: 소형)" required>
@@ -8340,7 +8371,7 @@ window.BAROYAM_ACCESS=(function(){
                 </form>
               </div>
               <div class="pf-card">
-                <div class="pf-card-head"><h3>판매처 수수료</h3></div>
+                <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처 수수료 <span class="pf-card-n" id="pfChanN"></span></h3><p>마진 계산기 아래 판매처 탭이 됩니다</p></div></div>
                 <table class="pf-list" id="pfChanTable"></table>
                 <form class="pf-add" id="pfChanAdd" autocomplete="off">
                   <input class="ui-field sm" name="name" maxlength="30" placeholder="판매처 (예: 쿠팡)" required>
@@ -14528,6 +14559,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     };
     small('pfShipTable',live(c.ship),'fee','구간','발송비(원)');
     small('pfChanTable',live(c.chans),'rate','판매처','수수료(%)');
+    $('pfItemN').textContent=all.length; $('pfShipN').textContent=live(c.ship).length; $('pfChanN').textContent=live(c.chans).length;
   }
   function wireList(tableId,field){
     const t=$(tableId);
