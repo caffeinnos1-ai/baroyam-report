@@ -14081,12 +14081,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 구성·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['label','옵션',10.5,1],['chan','판매처',8],['cost','원가',8.5],
+    ['chan','판매처',8,1],['label','옵션',10.5],['cost','원가',8.5],
     ['price','소비자가',6,1],['sale','최종판매가',6.5],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
     ['ship','배송비',5,1],['prime','프라임',8],['rate','수수료율',4.5],
     ['fee','수수료',5,1,1],['vat','부가세',5,0,1],['margin','마진',6,0,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6,0,1],
     ['act','',3,1]];
-  const GROUPS=[['옵션·원가',3],['가격',4],['비용',3],['계산 결과',6,1],['',1]];
+  const GROUPS=[['판매처·옵션·원가',3],['가격',4],['비용',3],['계산 결과',6,1],['',1]];
   function outCells(tr,r){
     const v=calc(r);
     const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.title=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); } };
@@ -14118,13 +14118,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +'<tr>'+COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(cl[4]?' out':'')+'">'+cl[1]+'</th>').join('')+'</tr></thead><tbody>';
     const H={}; COLS.forEach(cl=>{ H[cl[0]]=cl; });
     /* 칸 하나 · 묶음 첫 칸이면 진한 칼선(gs) · data-h 는 좁은 화면 카드에서 이름표로 쓴다 */
-    const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!=='label';
+    const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!==COLS[0][0];
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
     const optRow=r=>{
       const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
       return '<tr data-row="'+esc(r.id)+'">'
-        +td('label','<input class="ui-field sm" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="예: 4팩">')
         +td('chan','<button type="button" class="ui-field sm" data-menu="chan"><span class="t">'+(ch?esc(ch.name):'<span class="ph">판매처</span>')+'</span></button>')
+        +td('label','<input class="ui-field sm" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="예: 4팩">')
         +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix></button>')
         +td('price','<input class="ui-field sm pf-num" data-k="price" inputmode="numeric" value="'+esc(comma(r.price))+'" title="비우면 고른 상품의 소비자가 합계">')
         +td('sale','<input class="ui-field sm pf-num" data-k="sale" inputmode="numeric" value="'+esc(comma(r.sale))+'" placeholder="판매가">')
