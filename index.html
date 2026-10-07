@@ -2202,8 +2202,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   /* 손익·마진 관리 · 마진 계산기·품목별 원가표 (pf-*) · 버튼·탭·칩·입력칸은 표준 ui-* 그대로 쓰고 자리만 잡는다 */
   .pf-pane{margin-top:28px;display:flex;flex-direction:column;gap:14px}
   .pf-pane[hidden]{display:none}
-  /* 재고현황 (iv-*) · 위 한 줄(기준 시각·확인할 것) + 브랜드 카드 격자 · 카드 = 머리(브랜드 첫 글자·이름·상품 수·총 재고) + 상품 줄
-     상품 줄 = 상품명 | 정상재고(굵은 숫자, 0 이면 품절 알약) | 유통기한(날짜 + 지남·D-n 알약) */
+  /* 재고현황 (iv-*) · 위 한 줄(기준 시각·확인할 것) + 목록 하나 · 상품 한 줄 =
+     브랜드 | 상품명 | 정상재고(굵은 숫자, 0 이면 품절 알약) | 유통기한(날짜 + 지남·D-n 알약) */
   .iv-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12.5px;font-weight:600;color:var(--mute)}
   .iv-meta b{font-size:13.5px;font-weight:800;color:var(--ink)}
   .iv-live{width:8px;height:8px;border-radius:50%;background:var(--pos);box-shadow:0 0 0 3px color-mix(in srgb,var(--pos) 18%,transparent)}
@@ -2216,25 +2216,21 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-sum i.warn{background:var(--warn-soft);color:var(--warn)} .iv-sum i.warn b{color:var(--warn)}
   .iv-note{margin:0;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft)}
   .iv-note[hidden]{display:none}
-  .iv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr));gap:16px;align-items:start}
-  .iv-brand{border:1px solid var(--line);border-radius:18px;background:var(--paper);overflow:hidden;
-    box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 5%,transparent);transition:box-shadow .2s,border-color .2s}
-  .iv-brand:hover{border-color:color-mix(in srgb,var(--btn) 28%,var(--line));box-shadow:0 8px 24px -14px color-mix(in srgb,var(--ink) 30%,transparent)}
-  .iv-bh{display:flex;align-items:center;gap:12px;padding:16px 18px 14px}
-  .iv-av{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none;font-size:15px;font-weight:800;
-    background:var(--btn-soft);color:var(--btn-soft-ink)}
-  .iv-bt{display:flex;flex-direction:column;gap:2px;min-width:0;margin-right:auto}
-  .iv-bt b{font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .iv-bt small{font-size:12px;font-weight:600;color:var(--mute)}
-  .iv-btot{text-align:right;flex:none}
-  .iv-btot b{display:block;font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
-  .iv-btot small{font-size:11px;font-weight:700;color:var(--mute)}
-  .iv-row{display:grid;grid-template-columns:minmax(0,1fr) 92px 148px;align-items:center;gap:12px;padding:0 18px}
-  .iv-cols{padding-bottom:7px;border-bottom:1px solid var(--line);font-size:11px;font-weight:700;color:var(--mute)}
-  .iv-cols span:nth-child(2),.iv-cols span:nth-child(3){text-align:right}
-  .iv-item{min-height:46px;border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent);transition:background .15s}
+  /* 목록 한 개 · 상품 한 줄 = 브랜드 | 상품명 | 정상재고 | 유통기한 (사용자 요청 · 카드 격자보다 한 줄로 훑기 편하게) ·
+     브랜드는 묶음 첫 줄에만 쓰고, 브랜드가 바뀌는 줄 위에 조금 진한 선을 긋는다 */
+  .iv-list{border:1px solid var(--line);border-radius:16px;background:var(--paper);overflow:clip;
+    box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 5%,transparent)}
+  .iv-row{display:grid;grid-template-columns:150px minmax(0,1fr) 110px 190px;align-items:center;gap:16px;padding:0 20px}
+  .iv-cols{position:sticky;top:0;z-index:1;min-height:40px;background:color-mix(in srgb,var(--chip-flat) 55%,var(--paper));
+    border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:var(--mute)}
+  .iv-cols span:nth-child(3),.iv-cols span:nth-child(4){text-align:right}
+  .iv-item{min-height:44px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);transition:background .15s}
   .iv-cols+.iv-item{border-top:0}
+  .iv-item.first{border-top:1px solid color-mix(in srgb,var(--mute) 35%,var(--line))}
   .iv-item:hover{background:color-mix(in srgb,var(--chip-flat) 40%,transparent)}
+  .iv-br{display:flex;align-items:center;gap:8px;min-width:0;font-size:13.5px;font-weight:800;color:var(--ink)}
+  .iv-br span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .iv-br small{flex:none;font-size:11px;font-weight:700;color:var(--mute)}
   .iv-nm{font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .iv-stk{text-align:right;font-size:15px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
   .iv-stk small{margin-left:2px;font-size:11px;font-weight:700;color:var(--mute)}
@@ -2243,8 +2239,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
   .iv-pill.past,.iv-pill.out{background:var(--neg-soft);color:var(--neg)}
   .iv-pill.soon{background:var(--warn-soft);color:var(--warn)}
-  .iv-blank{grid-column:1/-1;padding:56px 20px;border:1px dashed var(--line);border-radius:18px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
-  @media (max-width:560px){ .iv-row{grid-template-columns:minmax(0,1fr) 72px 118px;gap:8px;padding:0 14px} .iv-bh{padding:14px} }
+  .iv-blank{padding:56px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
+  @media (max-width:760px){ .iv-row{grid-template-columns:84px minmax(0,1fr) 70px 112px;gap:8px;padding:0 12px} .iv-br small{display:none} .iv-nm{font-size:13px} }
   #opsTabs{align-items:center}
   /* 어드민 수집 · 옆 탭과 같은 높이의 알약 · 왼쪽 동그란 아이콘(강조색) + 이름 + 마지막 수집 시각 */
   #ivFetch{margin-left:auto;height:38px;padding:0 15px 0 5px;gap:9px;border-radius:999px;background:var(--paper);color:var(--ink);
@@ -8590,14 +8586,14 @@ window.BAROYAM_EDIT_ACCESS=(function(){
             <div class="profit-empty">당일판매현황은 아직 연동되지 않았습니다.<br>김비서가 매일 슬랙으로 보내는 당일판매 요약을 여기서도 보게 됩니다 · 회사 PC에서 연동합니다.</div>
           </div>
           <!-- 재고현황 · 이지어드민 재고(app_settings inventory_v1 · 서버가 채움)를 읽기만 한다 ·
-               위 한 줄(기준 시각 · 확인할 것) + 브랜드마다 카드(상품명 | 정상재고 | 유통기한) -->
+               위 한 줄(기준 시각 · 확인할 것) + 목록 하나(브랜드 | 상품명 | 정상재고 | 유통기한) -->
           <div class="pf-pane" data-ops-pane="stock" hidden>
             <div class="iv-meta">
               <span class="iv-live"></span><b>이지어드민 재고</b><span id="ivAt"></span><span class="iv-demo" id="ivDemo" hidden>예시 화면</span>
               <span class="pf-grow"></span><span class="iv-sum" id="ivSum"></span>
             </div>
             <p class="iv-note" id="ivNote" role="status" aria-live="polite" hidden></p>
-            <div class="iv-grid" id="ivGrid"></div>
+            <div id="ivGrid"></div>
           </div>
         </section>
       </div><!-- /view-ops -->
@@ -15010,20 +15006,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +(out?'<i class="neg">품절<b>'+out+'</b></i>':'')+(past?'<i class="neg">유통기한 지남<b>'+past+'</b></i>':'')
       +(soon?'<i class="warn">'+SOON+'일 안 만료<b>'+soon+'</b></i>':'');
     if(!groups.length){ $('ivGrid').innerHTML=blank('받아 온 재고가 비어 있습니다'); return; }
-    $('ivGrid').innerHTML=groups.map(g=>{
-      const tot=g.rows.reduce((t,r)=>t+(r.stock>0?r.stock:0),0);
-      return '<section class="iv-brand"><div class="iv-bh"><span class="iv-av" aria-hidden="true">'+esc(g.brand.charAt(0))+'</span>'
-        +'<div class="iv-bt"><b>'+esc(g.brand)+'</b><small>상품 '+g.rows.length+'개</small></div>'
-        +'<div class="iv-btot"><b>'+comma(tot)+'</b><small>총 정상재고</small></div></div>'
-        +'<div class="iv-row iv-cols"><span>상품명</span><span>정상재고</span><span>유통기한</span></div>'
-        +g.rows.map(r=>{
-          const isOut=r.stock!=null&&r.stock<=0;
-          const tag=r.days==null?'':r.days<0?'<span class="iv-pill past">지남</span>':r.days<=SOON?'<span class="iv-pill soon">D-'+r.days+'</span>':'';
-          return '<div class="iv-row iv-item'+(isOut?' out':'')+'"><span class="iv-nm" title="'+esc(r.name)+'">'+esc(r.name)+'</span>'
-            +'<span class="iv-stk">'+(r.stock==null?'–':isOut?'<span class="iv-pill out">품절</span>':comma(r.stock)+'<small>개</small>')+'</span>'
-            +'<span class="iv-ex">'+(r.exp?tag+'<span>'+esc(r.exp)+'</span>':'–')+'</span></div>';
-        }).join('')+'</section>';
-    }).join('');
+    $('ivGrid').innerHTML='<div class="iv-list" role="table" aria-label="재고현황">'
+      +'<div class="iv-row iv-cols" role="row"><span>브랜드</span><span>상품명</span><span>정상재고</span><span>유통기한</span></div>'
+      +groups.map(g=>g.rows.map((r,i)=>{
+        const isOut=r.stock!=null&&r.stock<=0;
+        const tag=r.days==null?'':r.days<0?'<span class="iv-pill past">지남</span>':r.days<=SOON?'<span class="iv-pill soon">D-'+r.days+'</span>':'';
+        return '<div class="iv-row iv-item'+(i?'':' first')+(isOut?' out':'')+'" role="row">'
+          +'<span class="iv-br">'+(i?'':'<span title="'+esc(g.brand)+'">'+esc(g.brand)+'</span><small>'+g.rows.length+'</small>')+'</span>'
+          +'<span class="iv-nm" title="'+esc(r.name)+'">'+esc(r.name)+'</span>'
+          +'<span class="iv-stk">'+(r.stock==null?'–':isOut?'<span class="iv-pill out">품절</span>':comma(r.stock)+'<small>개</small>')+'</span>'
+          +'<span class="iv-ex">'+(r.exp?tag+'<span>'+esc(r.exp)+'</span>':'–')+'</span></div>';
+      }).join('')).join('')+'</div>';
   }
   /* 어드민 수집(맨 위 단추 줄 오른쪽) · 지금은 디자인만(수집기 연동 전) · 누르면 도는 아이콘 → 안내 한 줄
      회사 PC 리뷰수집기가 이지어드민(최초 로그인은 수동)에서 재고를 읽어 inventory_v1 에 채우게 되면 여기서 그 요청을 보낸다 */
