@@ -2129,6 +2129,9 @@ window.BAROYAM_ACCESS=(function(){
   /* 손익·마진 관리 · 내용이 들어오기 전 빈 자리 */
   .profit-empty{margin-top:34px;min-height:360px;display:grid;place-items:center;border:1px dashed var(--line);
     border-radius:16px;color:var(--mute);font-size:15px;font-weight:600}
+  /* 손익·마진 관리 · 순수익 요약·마진 계산기·원가표 모두 가로로 길게(대시보드 흰 판은 그대로 두고 폭만 넓힘) */
+  body.view-is-profit .wrap{max-width:1720px;padding-left:24px;padding-right:24px}
+  @media (max-width:760px){ body.view-is-profit .wrap{padding-left:16px;padding-right:16px} }
   /* 리뷰수집 배너 · 판매처를 고르면 그 브랜드 색이 제목 글자에 실린다(카페24는 기본 주황) */
   #revHero.is-naver{--hero-accent:#00734d}
   #revHero.is-coupang{--hero-accent:#2f77cc}
@@ -10993,6 +10996,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
+    document.body.classList.toggle('view-is-profit',v==='profit');
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
