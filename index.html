@@ -2197,7 +2197,8 @@ window.BAROYAM_ACCESS=(function(){
   .pf-books{display:flex;flex-direction:column;gap:22px}
   .pf-book{display:flex;flex-direction:column;gap:8px}
   .pf-book-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:0 2px}
-  .pf-book-name.ui-field{width:340px;max-width:100%;height:38px;padding:0 10px;margin-left:-10px;font-size:17px;font-weight:800;letter-spacing:-.3px;
+  .pf-book-head .pf-ad{min-width:84px;height:28px}
+  .pf-book-name.ui-field{width:340px;max-width:100%;height:38px;padding:0 10px;margin-left:-6px;font-size:17px;font-weight:800;letter-spacing:-.3px;
     color:var(--ink);border-color:transparent;background:transparent}
   .pf-book-name.ui-field:hover{border-color:var(--line)}
   .pf-book-name.ui-field:focus{background:var(--paper);border-color:var(--btn)}
@@ -13889,7 +13890,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
 /* ===== 손익·마진 관리 · 품목별 원가표 + 마진 계산기 =====
    app_settings 두 칸 · profit_cost_v1 = {items:{id:{brand,name,cost,price}}, ship:{id:{name,fee}}, chans:{id:{name,rate}}}
-                         profit_calc_v1 = {prods:{id:{name}}, rows:{id:{g(상품 id),item,label,chan,ad,sale,ship,prime,rate,price,mix:{상품id:{q,f}}}}}
+                         profit_calc_v1 = {prods:{id:{name,ad(광고 중)}}, rows:{id:{g(상품 id),item,label,chan,sale,ship,prime,rate,price,mix:{상품id:{q,f}}}}}
                          (예전 sheets 는 남겨 두고 열 때 prods·rows 로 옮긴다)
    목록을 배열이 아닌 id 객체로 두어 merge3 가 항목·칸 단위로 합친다 · 지우기는 del(시각)만 단다(실제로 빼지 않음) ·
    저장은 통째로 덮지 않고 saveMerged + merge3(마지막으로 맞춘 서버본 = 이 창 메모리) · 못 보낸 고침은 localStorage 에 base 와 짝으로 */
@@ -14050,6 +14051,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       });
       live(groups).forEach(g=>{ if(!d.prods[g.id]){ const it=g.item&&COST.data.items[g.item]; d.prods[g.id]=Object.assign(clone(g),{brand:it?brandOf(it):base}); moved=true; } });
     });
+    /* 잠깐 옵션마다 켜던 광고 중(r.ad) · 한 옵션이라도 켜져 있었으면 그 상품을 광고 중으로 */
+    live(d.prods).forEach(g=>{ if(g.ad==null&&live(d.rows).some(r=>r.g===g.id&&r.ad)){ g.ad=true; moved=true; } });
     /* 상품 없이 만든 옵션 줄(바로 앞 판) · 브랜드마다 정해진 id 의 상품 하나로 모은다(두 PC가 동시에 해도 겹치지 않게) */
     live(d.rows).forEach(r=>{
       if(r.g&&d.prods[r.g]) return;
@@ -14077,7 +14080,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 예전에 저절로 붙던 이름("4팩"·"12+1"·"홀떡피자 3종")은 직접 적은 글로 치지 않는다 */
   const isAutoLabel=l=>/^\s*(\d+팩|\d+\+\d+|.*\d+종( \d+팩씩)?)\s*$/.test(l||'');
   const labelOf=r=>(r.label&&!isAutoLabel(r.label))?r.label:autoName(r);
-  const isAd=r=>r.ad!=null?!!r.ad:!!((gOf(r)||{}).ad);
+  /* 광고 중은 상품마다(g.ad) · 상품명 왼쪽에서 켜고 끈다 */
+  const isAd=r=>!!((gOf(r)||{}).ad);
   const rowOk=r=>{
     if(chanF&&r.chan!==chanF) return false;
     if(brandP&&rowBrand(r)!==brandP) return false;
@@ -14140,7 +14144,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfAdOnly').addEventListener('click',()=>{ adOnly=!adOnly; paintCalc(); });
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 광고·판매처·옵션·수량·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['ad','광고',4.5,1],['chan','판매처',7],['label','옵션',9],['qty','수량',5],['cost','원가',7],
+    ['chan','판매처',8.5,1],['label','옵션',12],['qty','수량',5],['cost','원가',7],
     ['price','소비자가',5.5,1],['sale','최종판매가',6],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
     ['ship','배송비',5,1],['prime','프라임',6.5],['rate','수수료율',4],
     ['margin','마진',5.5,1,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',5,0,1],['fee','수수료',4.5,0,1],['vat','부가세',4.5,0,1],
@@ -14204,9 +14208,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
     const row=r=>{
       const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
-      const custom=r.label&&!isAutoLabel(r.label)?r.label:'', ad=isAd(r);
+      const custom=r.label&&!isAutoLabel(r.label)?r.label:'';
       return '<tr data-row="'+esc(r.id)+'">'
-        +td('ad','<button type="button" class="pf-ad" data-act="ad" aria-pressed="'+(ad?'true':'false')+'" title="이 옵션을 지금 광고하고 있으면 켭니다">'+(ad?'광고 중':'광고')+'</button>','act')
         +td('chan','<button type="button" class="ui-field sm" data-menu="chan"><span class="t">'+(ch?esc(ch.name):'<span class="ph">판매처</span>')+'</span></button>')
         +td('label','<input class="ui-field sm pf-lbl" data-k="label" maxlength="40" value="'+esc(custom)+'" placeholder="'+esc(autoName(r)||'옵션')+'" title="원가에서 고른 상품의 브랜드가 뜹니다 · 고쳐 적으면 그 글이 남습니다">')
         +td('qty',qtyCell(r),'pf-key')
@@ -14224,6 +14227,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     let h='';
     list.forEach(({g,opts})=>{
       h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head">'
+        +'<button type="button" class="pf-ad" data-act="pad" aria-pressed="'+(g.ad?'true':'false')+'" title="이 상품을 지금 광고하고 있으면 켭니다">'+(g.ad?'광고 중':'광고 안 함')+'</button>'
         +'<input class="ui-field pf-book-name" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품 이름 (예: 홀떡피자 메타광고)" aria-label="상품 이름">'
         +'<span class="pf-book-sum">'+prodSum(g,opts)+'</span>'
         +'<span class="pf-grow"></span>'
@@ -14294,6 +14298,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(!x){
       const p=prodOf(b); if(!p||!p.g) return;
       if(b.dataset.act==='opt'){ e.stopPropagation(); optMenu(b,p.g); return; }
+      /* 광고 중 · 다시 그리지 않고 단추와 그 상품 옵션들의 ROAS 칸만 바꾼다 */
+      if(b.dataset.act==='pad'){
+        p.g.ad=!p.g.ad; b.setAttribute('aria-pressed',p.g.ad?'true':'false'); b.textContent=p.g.ad?'광고 중':'광고 안 함';
+        p.box.querySelectorAll('tr[data-row]').forEach(tr=>{ const r=B().rows[tr.dataset.row]; if(r) outCells(tr,r); });
+        CALC.mark(); return;
+      }
       if(b.dataset.act==='prod'){
         e.stopPropagation();
         window.UI.menu(b,[{value:'del',label:'상품 삭제'}],'',()=>{
@@ -14306,11 +14316,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return;
     }
     if(!x.r) return;
-    /* 광고 중 · 옵션마다 켜고 끈다(r.ad) · 다시 그리지 않고 단추와 ROAS 칸만 바꾼다 */
-    if(b.dataset.act==='ad'){
-      x.r.ad=!isAd(x.r); b.setAttribute('aria-pressed',x.r.ad?'true':'false'); b.textContent=x.r.ad?'광고 중':'광고';
-      outCells(x.tr,x.r); CALC.mark(); return;
-    }
     if(b.dataset.menu){
       e.stopPropagation();
       const c=COST.data, isCh=b.dataset.menu==='chan';
