@@ -2218,7 +2218,7 @@ window.BAROYAM_ACCESS=(function(){
   /* 10-07 UI 다듬기 · 판매처 알약은 글자 폭만큼(칸 가운데) · 원가·판매가 칸은 칸 안에서 여백을 두고 같은 높이 ·
      줄 높이 고르게 · 부가 결과(정산예정금·수수료·부가세)는 흐리게 · 펼친 뒤 남는 초점 테두리는 알약에선 빼기 */
   .pf-calc tbody td{height:40px;padding:5px 4px}
-  .pf-calc tbody .ui-field.pf-ch,.pf-calc tbody tr[data-row]:hover .ui-field.pf-ch{display:inline-flex;width:88px;max-width:100%;height:26px;padding:0 8px;font-size:12px}
+  .pf-calc tbody .ui-field.pf-ch,.pf-calc tbody tr[data-row]:hover .ui-field.pf-ch{display:flex;margin:0 auto;width:88px;max-width:100%;height:26px;padding:0 8px;font-size:12px}
   .pf-calc tbody .ui-field.pf-ch[aria-expanded="true"],.pf-calc tbody .ui-field.pf-ch:focus{box-shadow:none;border-color:color-mix(in srgb,var(--c) 60%,var(--paper))}
   .pf-calc tbody .pf-cost.ui-field,.pf-calc tbody td.pf-key[data-h="최종판매가"] .ui-field{width:calc(100% - 8px);height:28px;margin:0 auto}
   .pf-calc td.out[data-o="settle"],.pf-calc td.out[data-o="fee"],.pf-calc td.out[data-o="vat"],.pf-calc td.out[data-o="disc"],.pf-calc td.out[data-o="unit"]{color:var(--mute);font-weight:600}
@@ -2236,12 +2236,18 @@ window.BAROYAM_ACCESS=(function(){
   .pf-calc td.act .ui-btn{color:var(--mute)}
   .pf-calc tbody td.pf-msg{border:0;border-radius:0;text-align:center;white-space:normal}
   /* 광고 표시 · 줄 맨 앞 · 켜면 꽉 찬 색 띠(한눈에 보이게), 끄면 흐린 점선 */
-  /* 광고 표시 · 판매처 알약과 같은 모양(높이·둥글기·글자) · 켜면 연한 강조색 + 꽉 찬 점, 끄면 흐린 점선 + 빈 점 */
-  .pf-ad{all:unset;box-sizing:border-box;flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;width:88px;height:26px;padding:0 10px;
-    border-radius:999px;border:1px dashed var(--line);color:var(--mute);font-size:12px;font-weight:800;cursor:pointer;transition:var(--ui-ease)}
-  .pf-ad::before{content:"";width:7px;height:7px;border-radius:50%;box-sizing:border-box;border:1.5px solid currentColor;flex:none}
-  .pf-ad:hover{border-color:color-mix(in srgb,var(--btn) 50%,var(--paper));color:var(--btn-soft-ink)}
+  /* 광고 표시 · 판매처 알약과 다르게 "켜고 끄는 스위치" 모양 · 켜면 강조색 스위치 + 진한 글자, 끄면 회색 스위치 + 흐린 글자 */
+  .pf-ad{all:unset;box-sizing:border-box;position:relative;flex:none;display:inline-flex;align-items:center;gap:8px;width:104px;height:28px;padding:0 6px 0 4px;
+    border-radius:999px;color:var(--mute);font-size:12.5px;font-weight:800;cursor:pointer;transition:var(--ui-ease)}
+  .pf-ad::before{content:"";flex:none;width:32px;height:18px;border-radius:999px;background:color-mix(in srgb,var(--mute) 35%,var(--line));transition:background .18s}
+  .pf-ad::after{content:"";position:absolute;left:6px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .18s}
+  .pf-ad:hover{color:var(--ink)}
   .pf-ad:focus-visible{box-shadow:var(--ui-ring)}
+  .pf-ad[aria-pressed="true"]{color:var(--btn-soft-ink)}
+  .pf-ad[aria-pressed="true"]::before{background:var(--btn)}
+  .pf-ad[aria-pressed="true"]::after{transform:translateX(14px)}
+  @media (prefers-reduced-motion:reduce){ .pf-ad::before,.pf-ad::after{transition:none} }
   .pf-calc .pf-ad{min-width:0;width:100%;padding:0 4px}
   /* 상품 상자(계산표 하나) · 머리에 광고 표시 + 상품 이름(크게) + 옵션 추가 · 그 아래 옵션 표 */
   .pf-books{display:flex;flex-direction:column;gap:22px}
@@ -2260,9 +2266,7 @@ window.BAROYAM_ACCESS=(function(){
   .pf-book-empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--mute);font-size:13px;font-weight:600;text-align:center}
   /* 옵션 칸 · 저절로 뜬 브랜드 이름(빈 칸의 안내 글)도 진짜 글처럼 진하게 */
   .pf-calc .pf-lbl::placeholder{color:var(--ink);font-weight:600;opacity:1}
-  .pf-ad[aria-pressed="true"]{border:1px solid color-mix(in srgb,var(--btn) 35%,var(--paper));background:color-mix(in srgb,var(--btn) 13%,var(--paper));color:var(--btn-soft-ink)}
-  .pf-ad[aria-pressed="true"]::before{background:var(--btn);border-color:var(--btn)}
-  .pf-calc tbody tr[data-row] td:first-child{padding-left:18px}
+  .pf-calc tbody tr[data-row] td:first-child{padding-left:4px}
   .pf-calc tbody td.pf-opt-empty{padding:10px 18px;text-align:left;color:var(--mute);font-size:12.5px;font-weight:600;border-left:0}
   /* 표 폭이 좁으면(노트북·배율 큼 · 표 자리가 1300px 아래) 한 구성 = 한 장의 카드, 칸마다 이름표를 위에 단다 · 그래도 가로 스크롤은 없다 */
   @container (max-width:1300px){
