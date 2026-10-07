@@ -63,6 +63,11 @@
       <button class="ui-tab" data-value="month">월간데이터</button>
       <button class="ui-tab" data-value="year">연간 <span class="n">12</span></button>
     </div><span class="out" id="tabsOut">선택: week</span></div>
+    <div class="row"><div class="ui-tabs sheet" id="tabs2" style="border-top:1px solid var(--line)">
+      <button class="ui-tab" data-value="all">전체 <span class="n">5</span></button>
+      <button class="ui-tab" data-value="cp" aria-selected="true">쿠팡 <span class="n">2</span></button>
+      <button class="ui-tab" data-value="ss">스마트스토어 <span class="n">3</span></button>
+    </div><span class="out"><code>.ui-tabs.sheet</code> · 구글시트처럼 화면 아래에 붙이는 탭 (마진 계산기 판매처)</span></div>
   </section>
 
   <section>
@@ -113,6 +118,7 @@
   const root=document.documentElement, themeBtn=document.getElementById('themeBtn');
   themeBtn.onclick=()=>{ const dark=root.dataset.theme!=='dark'; root.dataset.theme=dark?'dark':'light'; themeBtn.textContent=dark?'라이트 모드':'다크 모드'; };
 
+  UI.tabs(document.getElementById('tabs2'));
   UI.tabs(document.getElementById('tabs1'),v=>{ document.getElementById('tabsOut').textContent='선택: '+v; });
   document.getElementById('chips').addEventListener('click',e=>{
     const c=e.target.closest('.ui-chip'); if(c) c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');

@@ -2206,6 +2206,11 @@ window.BAROYAM_ACCESS=(function(){
   .pf-add .pf-num{flex:0 1 120px}
   #pfItemQ{width:180px}
   #pfBrandPick,#pfMixBrandPick{width:200px}
+  #pfSheetChan{width:160px}
+  /* 아래 판매처 탭 줄 · 화면 아래 고정 · 계산 표 마지막 줄이 가리지 않게 칸 아래를 비워 둔다 */
+  .pf-pane[data-pf-pane="calc"]{padding-bottom:64px}
+  .pf-sheetbar{position:fixed;bottom:0;left:0;z-index:40;display:flex;align-items:stretch;min-height:46px;padding:0 20px;
+    background:var(--paper);border-top:1px solid var(--line);box-shadow:0 -10px 24px -18px rgba(0,0,0,.25)}
   /* 원가 계산 창 */
   .settings-panel.pf-mix{max-width:720px;height:min(720px,88vh)}
   .pf-mix-top{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px 22px 10px}
@@ -4951,6 +4956,13 @@ window.BAROYAM_ACCESS=(function(){
   .ui-tab[aria-selected="true"],.ui-tab.active{background:var(--paper);color:var(--ink);font-weight:800;
     box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
   .ui-tab .n{font-size:11.5px;font-weight:700;color:var(--mute)}
+  /* sheet · 구글시트 아래 시트 탭처럼 화면 아래에 늘어놓는 탭 · 고른 탭은 아래에 굵은 선 */
+  .ui-tabs.sheet{padding:0;gap:0;border-radius:0;background:transparent;align-items:stretch}
+  .ui-tabs.sheet .ui-tab{height:auto;min-height:44px;padding:0 18px;border-radius:0;border-right:1px solid var(--line)}
+  .ui-tabs.sheet .ui-tab:first-child{border-left:1px solid var(--line)}
+  .ui-tabs.sheet .ui-tab:hover{background:var(--chip-flat)}
+  .ui-tabs.sheet .ui-tab[aria-selected="true"],.ui-tabs.sheet .ui-tab.active{background:var(--btn-soft);color:var(--btn-soft-ink);
+    box-shadow:inset 0 -3px 0 var(--btn)}
   .ui-tab[aria-selected="true"] .n,.ui-tab.active .n{color:var(--btn-soft-ink)}
   /* 칩 · 필터처럼 여러 개를 켰다 껐다 하는 알약 버튼 · 켜짐은 aria-pressed="true" 또는 .on */
   .ui-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -8191,6 +8203,7 @@ window.BAROYAM_ACCESS=(function(){
               <div class="ui-tabs" id="pfSheetTabs" aria-label="계산표"></div>
               <button type="button" class="ui-btn sm soft" id="pfSheetAdd">+ 새 계산표</button>
               <span class="pf-grow"></span>
+              <button type="button" class="ui-field sm" id="pfSheetChan" aria-haspopup="listbox" title="이 계산표의 판매처"><span class="t">판매처 지정</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
               <input class="ui-field sm" id="pfSheetName" maxlength="40" placeholder="계산표 이름" aria-label="계산표 이름">
               <button type="button" class="ui-btn sm ghost" id="pfSheetDel">계산표 삭제</button>
             </div>
@@ -8205,6 +8218,10 @@ window.BAROYAM_ACCESS=(function(){
               <div class="pf-foot">
                 <span class="pf-note">부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
               </div>
+            </div>
+            <!-- 판매처별 계산표 · 구글시트 아래 시트 탭처럼 화면 아래에 붙어 있다(위치는 대시보드 폭에 맞춰 스크립트가 잡는다) -->
+            <div class="pf-sheetbar" id="pfChanBar">
+              <div class="ui-tabs sheet" id="pfChanTabs" role="tablist" aria-label="판매처별 계산표"></div>
             </div>
             <div class="pf-empty" id="pfCalcEmpty" hidden>원가표에 상품·판매처가 없습니다. <b>품목별 원가표</b>에서 먼저 넣어 주세요.</div>
           </div>
@@ -13840,7 +13857,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
 /* ===== 손익·마진 관리 · 품목별 원가표 + 마진 계산기 =====
    app_settings 두 칸 · profit_cost_v1 = {items:{id:{brand,name,cost,price}}, ship:{id:{name,fee}}, chans:{id:{name,rate}}}
-                         profit_calc_v1 = {sheets:{id:{name,rows:{id:{label,chan,sale,ship,review,prime,rate,price,mix:{상품id:{q,f}}}}}}}
+                         profit_calc_v1 = {sheets:{id:{name,chan,rows:{id:{label,chan,sale,ship,review,prime,rate,price,mix:{상품id:{q,f}}}}}}}
    목록을 배열이 아닌 id 객체로 두어 merge3 가 항목·칸 단위로 합친다 · 지우기는 del(시각)만 단다(실제로 빼지 않음) ·
    저장은 통째로 덮지 않고 saveMerged + merge3(마지막으로 맞춘 서버본 = 이 창 메모리) · 못 보낸 고침은 localStorage 에 base 와 짝으로 */
 (function(){
@@ -13981,7 +13998,47 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
 
   /* ---------- 마진 계산기 ---------- */
-  function sheets(){ return live(CALC.data.sheets); }
+  /* 판매처별 계산표 · 계산표의 판매처(chan)로 아래 탭에서 거른다 · 판매처를 안 정한 옛 계산표는 첫 줄의 판매처를 따른다 */
+  let chanF='';
+  try{ chanF=localStorage.getItem('baroyam_profit_chan')||''; }catch(e){}
+  function sheetChan(sh){
+    if(sh.chan) return sh.chan;
+    const r=live(sh.rows).find(x=>x.chan); return r?r.chan:'';
+  }
+  function sheets(){ return live(CALC.data.sheets).filter(s=>!chanF||sheetChan(s)===chanF); }
+  function paintChanTabs(){
+    const all=live(CALC.data.sheets), chans=live(COST.data.chans);
+    if(chanF&&!chans.some(c=>c.id===chanF)) chanF='';
+    const n=id=>all.filter(s=>!id||sheetChan(s)===id).length;
+    $('pfChanTabs').innerHTML=[{id:'',name:'전체'}].concat(chans).map(c=>'<button type="button" class="ui-tab" role="tab" data-value="'+esc(c.id)+'" aria-selected="'+(c.id===chanF?'true':'false')+'">'
+      +esc(c.name)+' <span class="n">'+n(c.id)+'</span></button>').join('');
+    placeBar();
+  }
+  /* 아래 탭 줄은 fixed 라 대시보드(.paper) 폭에 맞춰 왼쪽·폭을 잡는다(.paper 가 overflow:hidden 이라 sticky 가 안 먹음) */
+  function placeBar(){
+    const bar=$('pfChanBar'), box=view.closest('.paper')||view;
+    if(view.style.display==='none'||bar.closest('[hidden]')) return;
+    const r=box.getBoundingClientRect(); if(!r.width) return;
+    bar.style.left=r.left+'px'; bar.style.width=r.width+'px';
+  }
+  addEventListener('resize',placeBar);
+  if(window.ResizeObserver){ const ro=new ResizeObserver(placeBar); ro.observe(view.closest('.paper')||view); }
+  $('pfChanTabs').addEventListener('click',e=>{
+    const t=e.target.closest('.ui-tab'); if(!t) return;
+    chanF=t.dataset.value; try{ localStorage.setItem('baroyam_profit_chan',chanF); }catch(err){}
+    paintCalc();
+  });
+  $('pfSheetChan').addEventListener('click',e=>{
+    e.stopPropagation();
+    const sh=curSheet(); if(!sh) return;
+    const opts=live(COST.data.chans).map(o=>({value:o.id,label:o.name,sub:comma(o.rate)+'%'}));
+    window.UI.menu($('pfSheetChan'),opts,sheetChan(sh),v=>{
+      /* 계산표의 판매처를 바꾸면 안의 구성 줄도 그 판매처로 맞춘다(한 계산표 = 한 판매처) */
+      sh.chan=v; live(sh.rows).forEach(r=>{ r.chan=v; });
+      if(chanF&&chanF!==v){ chanF=v; try{ localStorage.setItem('baroyam_profit_chan',v); }catch(err){} }
+      CALC.mark(); paintCalc();
+    });
+  });
   function curSheet(){
     const list=sheets();
     return list.find(s=>s.id===sheetId)||list[0]||null;
@@ -13992,7 +14049,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('pfSheetTabs').hidden=!list.length;
     const nm=$('pfSheetName');
     if(document.activeElement!==nm) nm.value=cur?cur.name||'':'';
-    nm.disabled=!cur; $('pfSheetDel').disabled=!cur;
+    nm.disabled=!cur; $('pfSheetDel').disabled=!cur; $('pfSheetChan').disabled=!cur;
+    const ch=cur&&COST.data.chans[sheetChan(cur)];
+    $('pfSheetChan').querySelector('.t').innerHTML=ch?esc(ch.name):'<span class="ph">판매처 지정</span>';
   }
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 구성·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
@@ -14018,11 +14077,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function msgRow(t,n){ return '<tbody><tr><td colspan="'+(n||1)+'" class="pf-msg" style="text-align:center">'+t+'</td></tr></tbody>'; }
   function paintCalc(){
     if(!CALC.loaded||!COST.loaded){ $('pfCalcTable').innerHTML=msgRow(CALC.error||COST.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
-    paintTabs();
+    paintTabs(); paintChanTabs();
     const sh=curSheet(), c=COST.data;
     $('pfCalcEmpty').hidden=!!(live(c.items).length&&live(c.chans).length);
     $('pfRowAdd').disabled=!sh;
-    if(!sh){ $('pfCalcTable').innerHTML=msgRow('"+ 새 계산표" 로 계산표를 만드세요 (예: 홀떡피자 메타광고)'); return; }
+    if(!sh){
+      const cn=chanF&&c.chans[chanF];
+      $('pfCalcTable').innerHTML=msgRow(cn?esc(cn.name)+' 계산표가 아직 없습니다 · "+ 새 계산표" 로 만드세요':'"+ 새 계산표" 로 계산표를 만드세요 (예: 홀떡피자 메타광고)');
+      return;
+    }
     const rows=live(sh.rows);
     const cg='<colgroup>'+COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
     let h=cg+'<thead><tr class="grp">'+GROUPS.map((g,i)=>'<th colspan="'+g[1]+'" class="'+(i?'gs':'')+(g[2]?' out':'')+'">'+g[0]+'</th>').join('')+'</tr>'
@@ -14091,7 +14154,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const sh=curSheet(); if(!sh) return;
     const rows=live(sh.rows), last=rows[rows.length-1], id=uid();
     /* 판매처·프라임은 바로 위 줄을 따라간다(같은 계산표는 대개 같은 판매처) */
-    sh.rows[id]={id,ord:Date.now(),label:'',chan:last?last.chan:((live(COST.data.chans)[0]||{}).id||null),prime:last?last.prime:null,mix:{}};
+    sh.rows[id]={id,ord:Date.now(),label:'',chan:sh.chan||(last&&last.chan)||((live(COST.data.chans)[0]||{}).id||null),prime:last?last.prime:null,mix:{}};
     CALC.mark(); paintCalc();
     /* 새 줄은 맨 아래 · 그 줄의 구성 칸으로 데려간다 */
     const tr=[...$('pfCalcTable').querySelectorAll('tr[data-row]')].find(x=>x.dataset.row===id);
@@ -14106,7 +14169,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfSheetAdd').addEventListener('click',()=>{
     if(!CALC.loaded) return;
     const id=uid();
-    CALC.data.sheets[id]={id,ord:Date.now(),name:'새 계산표',rows:{}};
+    /* 아래 탭에서 판매처를 골라 둔 채 만들면 그 판매처 계산표가 된다 */
+    const cn=chanF&&COST.data.chans[chanF];
+    CALC.data.sheets[id]={id,ord:Date.now(),name:cn?cn.name+' 새 계산표':'새 계산표',chan:cn?chanF:null,rows:{}};
     sheetId=id; try{ localStorage.setItem('baroyam_profit_sheet',id); }catch(err){}
     CALC.mark(); paintCalc();
     $('pfSheetName').focus(); $('pfSheetName').select();
