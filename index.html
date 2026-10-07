@@ -2147,28 +2147,45 @@ window.BAROYAM_ACCESS=(function(){
   .pf-empty[hidden],.pf-msg[hidden]{display:none}
   .pf-foot{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
   .pf-note{font-size:11.5px;font-weight:600;color:var(--mute);line-height:1.5}
-  /* 계산 표 · 넣는 칸(입력)과 나오는 칸(계산)을 바탕색으로 가른다 */
-  table.pf-calc{width:100%;min-width:1500px;border-collapse:separate;border-spacing:0}
-  .pf-calc thead th{position:sticky;top:0;padding:8px 6px;font-size:11.5px;font-weight:800;color:var(--mute);text-align:right;
-    border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:-.2px;background:var(--paper)}
-  .pf-calc thead th.l{text-align:left}
+  /* 계산 표 · 가로 스크롤 없이 화면 폭에 맞춘다(table-layout:fixed + 칸 비율) ·
+     칸 사이는 가는 칼선, 묶음(구성·원가 / 가격 / 비용 / 계산 결과) 사이는 진한 칼선 · 계산 칸은 연한 바탕 */
+  .pf-calc-wrap{min-width:0;container-type:inline-size}
+  table.pf-calc{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;--pf-cut:var(--line);--pf-cut2:color-mix(in srgb,var(--mute) 45%,var(--line))}
+  .pf-calc th,.pf-calc td{border-left:1px solid var(--pf-cut)}
+  .pf-calc th:first-child,.pf-calc td:first-child{border-left:0}
+  .pf-calc .gs{border-left:1.5px solid var(--pf-cut2)}
+  .pf-calc thead th{padding:7px 5px;font-size:11.5px;font-weight:800;color:var(--mute);text-align:center;
+    border-bottom:1px solid var(--pf-cut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px;background:var(--chip-flat)}
+  .pf-calc thead tr.grp th{padding:6px 5px;font-size:11px;color:var(--body);background:var(--paper)}
   .pf-calc thead th.out{color:var(--btn-soft-ink)}
-  .pf-calc tbody td{padding:7px 6px;font-size:13.5px;font-weight:600;color:var(--body);text-align:right;border-bottom:1px solid var(--line);
-    white-space:nowrap;vertical-align:middle}
-  .pf-calc tbody td:first-child{font-size:13.5px}
+  .pf-calc tbody td{padding:5px 4px;font-size:13px;font-weight:600;color:var(--body);text-align:right;border-bottom:1px solid var(--pf-cut);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+  .pf-calc tbody td:first-child{font-size:13px}
   .pf-calc tbody tr:last-child td{border-bottom:0}
-  .pf-calc td.out{background:color-mix(in srgb,var(--btn-soft) 45%,transparent);font-variant-numeric:tabular-nums}
-  .pf-calc td.out.hi{color:var(--ink);font-weight:800;font-size:14.5px}
+  .pf-calc td.out{background:color-mix(in srgb,var(--btn-soft) 45%,transparent);font-variant-numeric:tabular-nums;padding-right:7px}
+  .pf-calc td.out.hi{color:var(--ink);font-weight:800;font-size:13.5px}
   .pf-calc td.out.neg{color:var(--neg)}
-  .pf-calc td.out.pos{color:var(--pos)}
-  .pf-calc .ui-field{width:100%;min-width:0}
-  .pf-calc .w-label{width:150px}.pf-calc .w-chan{width:120px}.pf-calc .w-cost{width:118px}.pf-calc .w-num{width:92px}
-  .pf-calc .w-rate{width:70px}.pf-calc .w-prime{width:118px}.pf-calc .w-act{width:64px}
+  .pf-calc .ui-field{width:100%;min-width:0;padding:0 7px;gap:4px}
+  .pf-calc input.ui-field{text-align:left}
   .pf-calc input.pf-num{text-align:right;font-variant-numeric:tabular-nums}
   .pf-calc .ui-field .t{text-align:left}
   .pf-calc .pf-cost .t{text-align:right}
-  .pf-calc .pf-cost small{font-size:11px;font-weight:700;color:var(--mute)}
-  .pf-calc .pf-acts{display:inline-flex;gap:2px}
+  .pf-calc .pf-cost small{font-size:10.5px;font-weight:700;color:var(--mute)}
+  .pf-calc td.act{text-align:center;padding:5px 2px}
+  .pf-calc tbody td.pf-msg{border:0;border-radius:0;text-align:center;white-space:normal}
+  /* 표 폭이 좁으면(노트북·배율 큼 · 표 자리가 1300px 아래) 한 구성 = 한 장의 카드, 칸마다 이름표를 위에 단다 · 그래도 가로 스크롤은 없다 */
+  @container (max-width:1300px){
+    table.pf-calc,.pf-calc tbody,.pf-calc tr,.pf-calc td{display:block}
+    table.pf-calc{border:0;border-radius:0;overflow:visible}
+    .pf-calc thead,.pf-calc colgroup{display:none}
+    .pf-calc tbody tr[data-row]{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;
+      overflow:hidden;margin-bottom:10px}
+    .pf-calc tbody td,.pf-calc tbody td:first-child{border-left:0;border-bottom:1px solid var(--pf-cut);border-right:1px solid var(--pf-cut);padding:6px 7px}
+    .pf-calc tbody td[data-h]::before{content:attr(data-h);display:block;margin-bottom:3px;font-size:10.5px;font-weight:800;color:var(--mute);text-align:left}
+    .pf-calc td.act{display:flex;align-items:flex-end;justify-content:center}
+  }
+  @container (max-width:640px){ .pf-calc tbody tr[data-row]{grid-template-columns:repeat(3,minmax(0,1fr))} }
   /* 원가표 · 왼쪽 상품 원가(넓게), 오른쪽 발송비 구간·판매처 수수료 */
   .pf-bom{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:14px;align-items:start}
   .pf-side{display:flex;flex-direction:column;gap:14px}
@@ -8187,7 +8204,7 @@ window.BAROYAM_ACCESS=(function(){
               <div class="pf-card-head">
                 <button type="button" class="ui-btn sm primary" id="pfRowAdd">+ 구성 추가</button>
               </div>
-              <div class="pf-scroll">
+              <div class="pf-calc-wrap">
                 <table class="pf-calc" id="pfCalcTable"></table>
               </div>
               <div class="pf-foot">
@@ -13981,14 +13998,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(document.activeElement!==nm) nm.value=cur?cur.name||'':'';
     nm.disabled=!cur; $('pfSheetDel').disabled=!cur;
   }
+  /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 구성·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['label','구성','l'],['chan','판매처','l'],['cost','원가',''],['price','소비자가',''],['sale','최종판매가',''],
-    ['disc','할인률','out'],['unit','개당단가','out'],['ship','배송비',''],['prime','프라임','l'],['review','리뷰',''],
-    ['rate','수수료율',''],['fee','수수료','out'],['vat','부가세','out'],['margin','마진','out'],['mrate','마진률','out'],
-    ['roas','최소 ROAS','out'],['settle','정산예정금','out'],['act','','']];
+    ['label','구성',9,1],['chan','판매처',6.5],['cost','원가',7.5],
+    ['price','소비자가',6,1],['sale','최종판매가',6.5],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
+    ['ship','배송비',5,1],['prime','프라임',7],['review','리뷰',5],['rate','수수료율',4.5],
+    ['fee','수수료',5,1,1],['vat','부가세',5,0,1],['margin','마진',6,0,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6,0,1],
+    ['act','',3,1]];
+  const GROUPS=[['구성·원가',3],['가격',4],['비용',4],['계산 결과',6,1],['',1]];
   function outCells(tr,r){
     const v=calc(r);
-    const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.className='out'+(cls||''); } };
+    const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(td){ td.textContent=t; td.title=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); } };
     put('disc',pct(v.disc,0)); put('unit',won(v.unit)); put('fee',won(v.fee)); put('vat',won(v.vat));
     put('margin',won(v.margin),' hi'+(v.margin<0?' neg':''));
     put('mrate',pct(v.mrate),' hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
@@ -14008,24 +14028,29 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('pfRowAdd').disabled=!sh;
     if(!sh){ $('pfCalcTable').innerHTML=msgRow('"+ 새 계산표" 로 계산표를 만드세요 (예: 홀떡피자 메타광고)'); return; }
     const rows=live(sh.rows);
-    let h='<thead><tr>'+COLS.map(cl=>'<th class="'+cl[2]+'">'+cl[1]+'</th>').join('')+'</tr></thead><tbody>';
+    const cg='<colgroup>'+COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
+    let h=cg+'<thead><tr class="grp">'+GROUPS.map((g,i)=>'<th colspan="'+g[1]+'" class="'+(i?'gs':'')+(g[2]?' out':'')+'">'+g[0]+'</th>').join('')+'</tr>'
+      +'<tr>'+COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(cl[4]?' out':'')+'">'+cl[1]+'</th>').join('')+'</tr></thead><tbody>';
+    const H={}; COLS.forEach(cl=>{ H[cl[0]]=cl; });
+    /* 칸 하나 · 묶음 첫 칸이면 진한 칼선(gs) · data-h 는 좁은 화면 카드에서 이름표로 쓴다 */
+    const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!=='label';
+      return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
     rows.forEach(r=>{
-      const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime];
+      const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
       h+='<tr data-row="'+esc(r.id)+'">'
-        +'<td class="w-label"><input class="ui-field sm" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="예: 4팩"></td>'
-        +'<td class="w-chan"><button type="button" class="ui-field sm" data-menu="chan"><span class="t">'+(ch?esc(ch.name):'<span class="ph">판매처</span>')+'</span></button></td>'
-        +'<td class="w-cost"><button type="button" class="ui-field sm pf-cost" data-mix></button></td>'
-        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="price" inputmode="numeric" value="'+esc(comma(r.price))+'" title="비우면 고른 상품의 소비자가 합계"></td>'
-        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="sale" inputmode="numeric" value="'+esc(comma(r.sale))+'" placeholder="판매가"></td>'
-        +'<td data-o="disc" class="out"></td><td data-o="unit" class="out"></td>'
-        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="ship" inputmode="numeric" value="'+esc(comma(r.ship))+'" placeholder="0" title="고객이 내는 배송비"></td>'
-        +'<td class="w-prime"><button type="button" class="ui-field sm" data-menu="prime"><span class="t">'+(pr?esc(pr.name)+' · '+comma(pr.fee):'<span class="ph">없음</span>')+'</span></button></td>'
-        +'<td class="w-num"><input class="ui-field sm pf-num" data-k="review" inputmode="numeric" value="'+esc(comma(r.review))+'" placeholder="0"></td>'
-        +'<td class="w-rate"><input class="ui-field sm pf-num" data-k="rate" inputmode="decimal" value="'+esc(r.rate==null?'':r.rate)+'" title="비우면 판매처 수수료"></td>'
-        +'<td data-o="fee" class="out"></td><td data-o="vat" class="out"></td><td data-o="margin" class="out"></td>'
-        +'<td data-o="mrate" class="out"></td><td data-o="roas" class="out"></td><td data-o="settle" class="out"></td>'
-        +'<td class="w-act"><span class="pf-acts"><button type="button" class="ui-btn sm ghost icon" data-act="dup" title="복제" aria-label="복제">⧉</button>'
-        +'<button type="button" class="ui-btn sm ghost icon" data-act="del" title="삭제" aria-label="삭제">✕</button></span></td></tr>';
+        +td('label','<input class="ui-field sm" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="예: 4팩">')
+        +td('chan','<button type="button" class="ui-field sm" data-menu="chan"><span class="t">'+(ch?esc(ch.name):'<span class="ph">판매처</span>')+'</span></button>')
+        +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix></button>')
+        +td('price','<input class="ui-field sm pf-num" data-k="price" inputmode="numeric" value="'+esc(comma(r.price))+'" title="비우면 고른 상품의 소비자가 합계">')
+        +td('sale','<input class="ui-field sm pf-num" data-k="sale" inputmode="numeric" value="'+esc(comma(r.sale))+'" placeholder="판매가">')
+        +td('disc','','out')+td('unit','','out')
+        +td('ship','<input class="ui-field sm pf-num" data-k="ship" inputmode="numeric" value="'+esc(comma(r.ship))+'" placeholder="0" title="고객이 내는 배송비">')
+        +td('prime','<button type="button" class="ui-field sm" data-menu="prime" title="'+prT+'"><span class="t">'+(pr?prT:'<span class="ph">없음</span>')+'</span></button>')
+        +td('review','<input class="ui-field sm pf-num" data-k="review" inputmode="numeric" value="'+esc(comma(r.review))+'" placeholder="0">')
+        +td('rate','<input class="ui-field sm pf-num" data-k="rate" inputmode="decimal" value="'+esc(r.rate==null?'':r.rate)+'" title="비우면 판매처 수수료">')
+        +td('fee','','out')+td('vat','','out')+td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('settle','','out')
+        +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="복제·삭제" aria-haspopup="true">⋯</button>','act')
+        +'</tr>';
     });
     if(!rows.length) h+='<tr><td colspan="'+COLS.length+'" class="pf-msg" style="text-align:center">"+ 구성 추가" 로 구성 줄을 넣으세요 (4팩·8팩·12+1 …)</td></tr>';
     $('pfCalcTable').innerHTML=h+'</tbody>';
@@ -14056,12 +14081,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return;
     }
     if(b.hasAttribute('data-mix')){ openMix(x.sh,x.r); return; }
-    if(b.dataset.act==='dup'){
-      const n=clone(x.r); n.id=uid(); n.ord=(x.r.ord||0)+0.001; n.label=(x.r.label||'')+' 복사';
-      x.sh.rows[n.id]=n; CALC.mark(); paintCalc(); return;
-    }
-    if(b.dataset.act==='del'){
-      window.baroyamAsk('"'+(x.r.label||'이 구성')+'" 줄을 지울까요?','').then(ok=>{ if(!ok) return; x.r.del=Date.now(); CALC.mark(); paintCalc(); });
+    if(b.dataset.act==='more'){
+      e.stopPropagation();
+      window.UI.menu(b,[{value:'dup',label:'복제'},{value:'del',label:'삭제'}],'',v=>{
+        if(v==='dup'){
+          const n=clone(x.r); n.id=uid(); n.ord=(x.r.ord||0)+0.001; n.label=(x.r.label||'')+' 복사';
+          x.sh.rows[n.id]=n; CALC.mark(); paintCalc(); return;
+        }
+        window.baroyamAsk('"'+(x.r.label||'이 구성')+'" 줄을 지울까요?','').then(ok=>{ if(!ok) return; x.r.del=Date.now(); CALC.mark(); paintCalc(); });
+      });
     }
   });
   $('pfRowAdd').addEventListener('click',()=>{
