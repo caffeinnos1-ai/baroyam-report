@@ -2209,17 +2209,9 @@ window.BAROYAM_ACCESS=(function(){
   .pf-calc td.out.key.neg{color:var(--neg)}
   .pf-calc tbody tr[data-row]:hover td.out.key{background:color-mix(in srgb,var(--btn) 15%,var(--paper))}
   .pf-calc tr.pf-head th.key{background:color-mix(in srgb,var(--btn) 12%,var(--paper));color:var(--btn-soft-ink)}
-  .pf-calc tbody .ui-field.pf-ch,.pf-calc tbody tr[data-row]:hover .ui-field.pf-ch{height:24px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:800;
-    background:color-mix(in srgb,var(--c) 13%,var(--paper));border:1px solid color-mix(in srgb,var(--c) 28%,var(--paper));color:color-mix(in srgb,var(--c) 75%,var(--ink))}
-  .pf-calc tbody .ui-field.pf-ch:hover{border-color:color-mix(in srgb,var(--c) 60%,var(--paper))}
-  .pf-ch{--c:var(--mute)}
-  .pf-calc tbody .ui-field.pf-ch.tone-coupang{--c:var(--coupang)} .pf-calc tbody .ui-field.pf-ch.tone-naver{--c:var(--naver)}
-  .pf-calc tbody .ui-field.pf-ch.tone-self{--c:var(--self)} .pf-calc tbody .ui-field.pf-ch.tone-talk{--c:var(--talk)}
   /* 10-07 UI 다듬기 · 판매처 알약은 글자 폭만큼(칸 가운데) · 원가·판매가 칸은 칸 안에서 여백을 두고 같은 높이 ·
      줄 높이 고르게 · 부가 결과(정산예정금·수수료·부가세)는 흐리게 · 펼친 뒤 남는 초점 테두리는 알약에선 빼기 */
   .pf-calc tbody td{height:40px;padding:5px 4px}
-  .pf-calc tbody .ui-field.pf-ch,.pf-calc tbody tr[data-row]:hover .ui-field.pf-ch{display:flex;margin:0 auto;width:88px;max-width:100%;height:26px;padding:0 8px;font-size:12px}
-  .pf-calc tbody .ui-field.pf-ch[aria-expanded="true"],.pf-calc tbody .ui-field.pf-ch:focus{box-shadow:none;border-color:color-mix(in srgb,var(--c) 60%,var(--paper))}
   .pf-calc tbody .pf-cost.ui-field,.pf-calc tbody td.pf-key[data-h="최종판매가"] .ui-field{width:calc(100% - 8px);height:28px;margin:0 auto}
   .pf-calc td.out[data-o="settle"],.pf-calc td.out[data-o="fee"],.pf-calc td.out[data-o="vat"],.pf-calc td.out[data-o="disc"],.pf-calc td.out[data-o="unit"]{color:var(--mute);font-weight:600}
   .pf-calc .pf-qty-x{font-weight:700;color:var(--body)}
@@ -8279,7 +8271,7 @@ window.BAROYAM_ACCESS=(function(){
         <!-- 순수익 요약 / 마진 계산기 / 품목별 원가표 · 트렌드분석처럼 배너 위 알약 단추로 고른다(예전 사이드바 중간 탭은 화면을 가려 뺐다) -->
         <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="손익·마진 관리 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
-          <button type="button" class="hero-view-tab" role="tab" data-profit="calc" data-sub="판매처·원가·발송비를 고르고 판매가를 넣으면 상품의 옵션별 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="calc" data-sub="아래에서 판매처(자사몰·쿠팡·스마트스토어 …)를 고르고, 상품마다 옵션의 원가·판매가를 넣으면 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
         </div>
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
@@ -13948,7 +13940,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
 /* ===== 손익·마진 관리 · 품목별 원가표 + 마진 계산기 =====
    app_settings 두 칸 · profit_cost_v1 = {items:{id:{brand,name,cost,price}}, ship:{id:{name,fee}}, chans:{id:{name,rate}}}
-                         profit_calc_v1 = {prods:{id:{name,ad(광고 중)}}, rows:{id:{g(상품 id),item,label,chan,sale,ship,prime,rate,price,mix:{상품id:{q,f}}}}}
+                         profit_calc_v1 = {prods:{id:{name,chan(판매처),ad(광고 중)}}, rows:{id:{g(상품 id),item,label,chan,sale,ship,prime,rate,price,mix:{상품id:{q,f}}}}}
                          (예전 sheets 는 남겨 두고 열 때 prods·rows 로 옮긴다)
    목록을 배열이 아닌 id 객체로 두어 merge3 가 항목·칸 단위로 합친다 · 지우기는 del(시각)만 단다(실제로 빼지 않음) ·
    저장은 통째로 덮지 않고 saveMerged + merge3(마지막으로 맞춘 서버본 = 이 창 메모리) · 못 보낸 고침은 localStorage 에 base 와 짝으로 */
@@ -14144,8 +14136,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const labelOf=r=>(r.label&&!isAutoLabel(r.label))?r.label:autoName(r);
   /* 광고 중은 상품마다(g.ad) · 상품명 왼쪽에서 켜고 끈다 */
   const isAd=r=>!!((gOf(r)||{}).ad);
+  /* 판매처는 거르기가 아니라 따로 나뉜 공간(10-07 사용자: "자사몰·쿠팡·스마트스토어 따로 · 판매처 필터 NO") ·
+     아래 탭에서 늘 한 판매처가 골라져 있고, 그 판매처의 상품·옵션만 보인다 · 판매처가 비어 있던 옛 줄은 첫 판매처로 본다 */
+  const firstChan=()=>(live(COST.data.chans)[0]||{}).id||'';
+  const curChan=()=>{ if(!chanF||!COST.data.chans[chanF]||COST.data.chans[chanF].del) chanF=firstChan(); return chanF; };
+  const chanOf=r=>(r.chan&&COST.data.chans[r.chan]&&!COST.data.chans[r.chan].del)?r.chan:firstChan();
   const rowOk=r=>{
-    if(chanF&&r.chan!==chanF) return false;
+    if(chanOf(r)!==curChan()) return false;
     if(brandP&&rowBrand(r)!==brandP) return false;
     if(adOnly&&!isAd(r)) return false;
     return true;
@@ -14155,19 +14152,21 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const d=B(), rows=allRows(), q=qP.trim().toLowerCase();
     const hit=(g,r)=>!q||((g.name||'')+' '+labelOf(r)+' '+rowBrand(r)+' '+used(r).map(k=>COST.data.items[k].name).join(' ')).toLowerCase().indexOf(q)>=0;
     return live(d.prods).map(g=>{
-      const mine=rows.filter(r=>r.g===g.id);
+      const ch=curChan(), mine=rows.filter(r=>r.g===g.id&&chanOf(r)===ch);
+      /* 이 판매처에서 등록한 상품(g.chan) 이거나, 예전 상품이면 이 판매처 옵션이 있을 때만 */
+      if(g.chan?g.chan!==ch:!mine.length) return null;
       const nameHit=q&&(g.name||'').toLowerCase().indexOf(q)>=0;
       const opts=mine.filter(r=>rowOk(r)&&(nameHit||hit(g,r)));
-      /* 옵션이 아직 없는 상품은 판매처·광고 거르기가 없을 때만(새로 등록한 상품이 숨지 않게) */
-      const keep=opts.length||(!mine.length&&!chanF&&!adOnly&&!brandP&&(!q||nameHit));
+      /* 옵션이 아직 없는 상품은 광고·브랜드 거르기가 없을 때만(새로 등록한 상품이 숨지 않게) */
+      const keep=opts.length||(!mine.length&&!adOnly&&!brandP&&(!q||nameHit));
       return keep?{g,opts}:null;
     }).filter(Boolean).sort((a,b)=>(a.g.ord||0)-(b.g.ord||0));
   }
   function paintChanTabs(){
-    const chans=live(COST.data.chans), rows=allRows();
-    if(chanF&&!chans.some(c=>c.id===chanF)) chanF='';
-    const n=id=>id?rows.filter(r=>r.chan===id).length:rows.length;
-    $('pfChanTabs').innerHTML=[{id:'',name:'전체'}].concat(chans).map(c=>'<button type="button" class="hero-view-tab'+(c.id===chanF?' active':'')+'" role="tab" data-value="'+esc(c.id)+'" aria-selected="'+(c.id===chanF?'true':'false')+'">'
+    const chans=live(COST.data.chans), rows=allRows(), prods=live(B().prods); curChan();
+    /* 탭 숫자 = 그 판매처의 상품 수 */
+    const n=id=>prods.filter(g=>g.chan?g.chan===id:rows.some(r=>r.g===g.id&&chanOf(r)===id)).length;
+    $('pfChanTabs').innerHTML=chans.map(c=>'<button type="button" class="hero-view-tab'+(c.id===chanF?' active':'')+'" role="tab" data-value="'+esc(c.id)+'" aria-selected="'+(c.id===chanF?'true':'false')+'">'
       +esc(c.name)+' <span class="n">'+n(c.id)+'</span></button>').join('');
     placeBar();
   }
@@ -14190,7 +14189,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     paintCalc();
   });
   /* 위쪽 거르기 줄 · 브랜드(목록) · 검색 · 광고 중만 */
-  function rowBrands(){ return [...new Set(allRows().map(rowBrand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')); }
+  const chanRows=()=>allRows().filter(r=>chanOf(r)===curChan());
+  function rowBrands(){ return [...new Set(chanRows().map(rowBrand).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko')); }
   function paintFilters(){
     if(brandP&&rowBrands().indexOf(brandP)<0) brandP='';
     $('pfBrandF').querySelector('.t').textContent=brandP||'전체 브랜드';
@@ -14198,7 +14198,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   $('pfBrandF').addEventListener('click',e=>{
     e.stopPropagation(); if(!CALC.loaded) return;
-    const rows=allRows();
+    const rows=chanRows();
     const opts=[{value:'',label:'전체 브랜드',sub:String(rows.length)}].concat(rowBrands().map(b=>({value:b,label:b,sub:String(rows.filter(r=>rowBrand(r)===b).length)})));
     window.UI.menu($('pfBrandF'),opts,brandP,v=>{ brandP=v; try{ localStorage.setItem('baroyam_profit_brand',v); }catch(err){} paintCalc(); });
   });
@@ -14206,10 +14206,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfAdOnly').addEventListener('click',()=>{ adOnly=!adOnly; paintCalc(); });
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 광고·판매처·옵션·수량·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['chan','판매처',8.5,1],['label','옵션',11.5],['qty','수량',5],['cost','원가',7],
-    ['price','소비자가',5.5,1],['sale','최종판매가',6],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
+    ['label','옵션',15.5,1],['qty','수량',5.5],['cost','원가',8.5],
+    ['price','소비자가',6,1],['sale','최종판매가',7.5],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
     ['ship','배송비',5,1],['prime','프라임',6.5],['rate','수수료율',4],
-    ['margin','마진',5.5,1,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',5.5,0,1],['fee','수수료',4.5,0,1],['vat','부가세',4.5,0,1],
+    ['margin','마진',5.5,1,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6.5,0,1],['fee','수수료',4.5,0,1],['vat','부가세',4.5,0,1],
     ['act','',2.5,1]];
   function outCells(tr,r){
     const v=calc(r);
@@ -14245,15 +14245,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return '<input class="ui-field sm pf-num" data-q="q" inputmode="numeric" value="'+(num(m.q)||'')+'" placeholder="수량" aria-label="수량">';
   }
   const msg=t=>'<div class="pf-msg">'+t+'</div>';
-  /* 판매처 색 · 매출 화면과 같은 판매처 색(--coupang·--naver·--self·--talk)을 이름으로 고른다 · 그 밖의 판매처는 회색 */
-  function chTone(ch){
-    const n=ch&&ch.name||'';
-    if(/쿠팡/.test(n)) return 'tone-coupang';
-    if(/네이버|스마트스토어|스스/.test(n)) return 'tone-naver';
-    if(/톡딜|카카오/.test(n)) return 'tone-talk';
-    if(/자사몰|카페이노스|카페24|cafe24/i.test(n)) return 'tone-self';
-    return ch?'tone-etc':'';
-  }
   function paintCalc(){
     if(!CALC.loaded||!COST.loaded){ $('pfCalcTable').innerHTML=msg(CALC.error||COST.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
     migrate();
@@ -14270,7 +14261,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
       const custom=r.label&&!isAutoLabel(r.label)?r.label:'';
       return '<tr data-row="'+esc(r.id)+'">'
-        +td('chan','<button type="button" class="ui-field sm pf-ch '+chTone(ch)+'" data-menu="chan"><span class="t">'+(ch?esc(ch.name):'<span class="ph">판매처</span>')+'</span></button>')
         +td('label','<input class="ui-field sm pf-lbl" data-k="label" maxlength="40" value="'+esc(custom)+'" placeholder="'+esc(autoName(r)||'옵션')+'" title="원가에서 고른 상품의 브랜드가 뜹니다 · 고쳐 적으면 그 글이 남습니다">')
         +td('qty',qtyCell(r),'pf-key')
         +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix title="원가표 상품 고르기(여러 상품을 섞어도 됨)"></button>')
@@ -14297,17 +14287,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           :'<div class="pf-book-empty">"+ 옵션 추가" 로 원가표 상품을 고르고 수량·판매가를 넣으면 옵션별 마진이 나옵니다</div>')
         +'</section>';
     });
-    const filtered=chanF||brandP||qP.trim()||adOnly;
-    if(!list.length) h=msg(filtered&&live(B().prods).length?'조건에 맞는 상품이 없습니다':'"+ 상품 등록" 으로 상품 이름을 정하고, 그 안에 옵션을 추가하면 옵션별 마진이 나옵니다');
+    const filtered=brandP||qP.trim()||adOnly, cn=(COST.data.chans[curChan()]||{}).name||'';
+    if(!curChan()) h=msg('품목별 원가표 › 판매처 수수료에 판매처(자사몰·쿠팡·스마트스토어 …)를 먼저 넣어 주세요');
+    else if(!list.length) h=msg(filtered?'조건에 맞는 상품이 없습니다':esc(cn)+'에 등록한 상품이 없습니다 · "+ 상품 등록" 으로 상품 이름을 정하고, 그 안에 옵션을 추가하세요');
     $('pfCalcTable').innerHTML=h;
     $('pfCalcTable').querySelectorAll('tr[data-row]').forEach(tr=>outCells(tr,B().rows[tr.dataset.row]));
   }
   function addRow(g,itemId){
     const rows=allRows(), mine=rows.filter(r=>r.g===g.id), last=mine.slice(-1)[0]||rows.slice(-1)[0], id=uid();
-    /* 판매처는 아래에서 고른 판매처 → 같은 상품의 바로 위 옵션 → 첫 판매처, 프라임·광고는 같은 상품의 바로 위 옵션을 따른다 */
+    /* 판매처는 지금 보고 있는 판매처, 프라임은 같은 상품의 바로 위 옵션을 따른다 */
     const prev=mine.slice(-1)[0];
     B().rows[id]={id,g:g.id,ord:Date.now(),item:itemId||null,label:'',ad:prev?isAd(prev):false,
-      chan:chanF||(last&&last.chan)||((live(COST.data.chans)[0]||{}).id||null),prime:prev?prev.prime||null:null,mix:itemId?{[itemId]:{q:0,f:0}}:{}};
+      chan:curChan()||null,prime:prev?prev.prime||null:null,mix:itemId?{[itemId]:{q:0,f:0}}:{}};
     /* 검색·광고 중만·브랜드 거르기에 걸려 새 줄이 안 보이는 일이 없게 푼다 */
     qP=''; $('pfCalcQ').value=''; adOnly=false;
     if(brandP&&itemId&&brandOf(COST.data.items[itemId])!==brandP) brandP='';
@@ -14422,8 +14413,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfRowAdd').addEventListener('click',()=>{
     if(!CALC.loaded||!COST.loaded) return;
     const id=uid();
-    B().prods[id]={id,ord:Date.now(),name:''};
-    qP=''; $('pfCalcQ').value=''; adOnly=false; brandP=''; chanF=''; try{ localStorage.setItem('baroyam_profit_chan',''); localStorage.setItem('baroyam_profit_brand',''); }catch(err){}
+    if(!curChan()) return;
+    /* 지금 보고 있는 판매처의 상품으로 등록한다 */
+    B().prods[id]={id,ord:Date.now(),name:'',chan:curChan()};
+    qP=''; $('pfCalcQ').value=''; adOnly=false; brandP=''; try{ localStorage.setItem('baroyam_profit_brand',''); }catch(err){}
     CALC.mark(); paintCalc();
     const box=[...$('pfCalcTable').querySelectorAll('[data-prod]')].find(x=>x.dataset.prod===id);
     const inp=box&&box.querySelector('[data-gk="name"]');
