@@ -8183,11 +8183,14 @@ window.BAROYAM_ACCESS=(function(){
               <button type="button" class="ui-btn sm ghost" id="pfSheetDel">계산표 삭제</button>
             </div>
             <div class="pf-card">
+              <!-- 구성 추가는 표 위에 두고, 누르면 새 줄은 표 맨 아래에 붙는다 -->
+              <div class="pf-card-head">
+                <button type="button" class="ui-btn sm primary" id="pfRowAdd">+ 구성 추가</button>
+              </div>
               <div class="pf-scroll">
                 <table class="pf-calc" id="pfCalcTable"></table>
               </div>
               <div class="pf-foot">
-                <button type="button" class="ui-btn sm primary" id="pfRowAdd">+ 구성 추가</button>
                 <span class="pf-note">부가세 = (판매가+배송비 − 원가 − 프라임 − 리뷰 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
               </div>
             </div>
@@ -14067,6 +14070,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     /* 판매처·프라임은 바로 위 줄을 따라간다(같은 계산표는 대개 같은 판매처) */
     sh.rows[id]={id,ord:Date.now(),label:'',chan:last?last.chan:((live(COST.data.chans)[0]||{}).id||null),prime:last?last.prime:null,mix:{}};
     CALC.mark(); paintCalc();
+    /* 새 줄은 맨 아래 · 그 줄의 구성 칸으로 데려간다 */
+    const tr=[...$('pfCalcTable').querySelectorAll('tr[data-row]')].find(x=>x.dataset.row===id);
+    const inp=tr&&tr.querySelector('[data-k="label"]');
+    if(inp){ if(inp.scrollIntoView) inp.scrollIntoView({block:'nearest'}); inp.focus({preventScroll:true}); }
   });
   $('pfSheetTabs').addEventListener('click',e=>{
     const t=e.target.closest('.ui-tab'); if(!t) return;
