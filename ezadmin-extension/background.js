@@ -34,6 +34,28 @@ async function pageClick(patterns, visible, f2) {
     return [...document.querySelectorAll('a,li,span,div,button,input[type=button]')]
       .find((e) => re.test(norm(e.innerText || e.value || e.textContent)) && !e.querySelector('a,li,button') && (!visible || e.offsetParent !== null));
   };
+  // "함수이름(인자, 인자)" 한 번 부르기 · 인자는 글자('…'·"…")·숫자·true/false/null 만 · 되면 true
+  const callCode = (code) => {
+    const m = String(code).match(/^\s*([\w$.]+)\s*\(([\s\S]*)\)\s*$/);
+    if (!m) return false;
+    let fn = window, self = window;
+    for (const k of m[1].split('.')) { self = fn; fn = fn && fn[k]; }
+    if (typeof fn !== 'function') return false;
+    const args = [], re = /\s*('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?|true|false|null)\s*(,|$)/y;
+    const body = m[2].trim();
+    let pos = 0;
+    while (body && pos < body.length) {
+      re.lastIndex = pos;
+      const t = re.exec(body);
+      if (!t) return false;
+      const v = t[1];
+      args.push(/^['"]/.test(v) ? v.slice(1, -1).replace(/\\(.)/g, '$1') : v === 'true' ? true : v === 'false' ? false : v === 'null' ? null : Number(v));
+      pos = re.lastIndex;
+      if (!t[2]) break;
+    }
+    fn.apply(self, args);
+    return true;
+  };
   const clicked = [];
   // 마지막 것(가려는 메뉴)이 이미 문서에 있으면 그것만 누른다 · 위 메뉴(정산통계)를 먼저 누르면 그쪽으로 넘어가 버릴 수 있다
   const last = patterns[patterns.length - 1];
@@ -41,7 +63,16 @@ async function pageClick(patterns, visible, f2) {
   for (const src of direct ? [last] : patterns) {
     const el = src === last && direct ? direct : find(src);
     if (!el) continue;
-    (el.closest('a') || el).click();
+    // javascript: 링크는 누르지 않는다 · 확장이 일으킨 javascript: 이동은 MAIN world 에서도 크롬이 막는다(2026-10-08 두 번째 오류) ·
+    // 대신 링크에 적힌 함수 부르기(예: move_page35('X'))를 페이지의 함수로 직접 부른다 · 주소 이동이 아니라 막히지 않는다
+    const a = el.closest('a') || el;
+    const href = (a.getAttribute && a.getAttribute('href')) || '';
+    if (/^javascript:/i.test(href)) {
+      const code = href.replace(/^javascript:\s*/i, '').replace(/;\s*$/, '');
+      if (!callCode(code)) { clicked.push('?' + code); continue; }
+    } else {
+      a.click();
+    }
     clicked.push(src);
     if (src !== last) await sleep(1200);   // 마지막 클릭 뒤에는 기다리지 않는다(페이지가 넘어가면 이 스크립트가 끊긴다)
   }

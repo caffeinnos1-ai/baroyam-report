@@ -119,7 +119,9 @@ async function goSalesPage() {
   if (r && r.ok && r.clicked.includes('^당일판매분요약표$')) return;
   // 누르자마자 페이지가 넘어가면 응답이 실패로 올 수 있다 · 넘어갔으면 이 스크립트는 여기서 끊기고 새 페이지에서 이어 간다
   if (await waitFor(isSalesPage, 15000)) return;
-  throw new Error('메뉴 "당일판매분요약표"를 누르지 못했습니다' + (r && r.message ? ' · ' + r.message : ''));
+  // 링크 모양을 알아보지 못했으면('?' 로 시작) 그 링크 글을 그대로 보여 준다 · 그걸 보고 고친다
+  const odd = r && r.clicked ? r.clicked.filter((c) => c.startsWith('?')).map((c) => c.slice(1)) : [];
+  throw new Error('메뉴 "당일판매분요약표"를 누르지 못했습니다' + (odd.length ? ' · 링크: ' + odd.join(' / ') : '') + (r && r.message ? ' · ' + r.message : ''));
 }
 
 async function collectSales() {
