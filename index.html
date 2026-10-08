@@ -4850,9 +4850,13 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   /* 거르개 줄 · 왼쪽은 판매처·종류 칩, 오른쪽은 정렬과 카드 크기 */
   .drv-row{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px}
   .drv-row[hidden]{display:none}
-  .drv-fmts{margin:0 0 10px}
-  .drv-fmts[hidden]{display:none}
-  .drv-fmts .drv-fmt-cap{align-self:center;margin-right:2px;font-size:12px;font-weight:800;color:var(--mute)}
+  /* 파일 형식 고르기 · 정렬 탭 왼쪽의 목록 단추(UI.menu) */
+  .drv-fmt-btn{width:auto;gap:6px;white-space:nowrap}
+  .drv-fmt-btn .cap{color:var(--mute);font-weight:700}
+  .drv-fmt-btn b{color:var(--ink);font-weight:800}
+  .drv-fmt-btn.on{border-color:var(--btn);background:var(--btn-soft)}
+  .drv-fmt-btn.on b{color:var(--btn-soft-ink)}
+  .drv-fmt-btn svg{width:14px;height:14px;color:var(--mute)}
   .drv-row .drv-types{flex:1;min-width:0;margin-bottom:0}
   .drv-tools{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
   /* 카드 크기 · 작게/보통/크게 (펼친 격자는 칸 너비로 맞춘다) */
@@ -8433,11 +8437,14 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <span id="drvDeleteLabel">삭제</span>
             </button>
           </div>
-          <!-- 파일 형식 · 확장자로 이미지·GIF·영상·PSD·일러스트·PDF·문서·기타를 가른다 -->
-          <div class="ui-chips drv-fmts" id="drvFmts" aria-label="파일 형식"></div>
           <div class="drv-row" id="drvRow">
             <div class="ui-chips drv-types" id="drvTypes"></div>
             <div class="drv-tools">
+              <!-- 파일 형식 · 확장자로 이미지·GIF·영상·PSD·일러스트·PDF·문서·압축·기타를 가른다 -->
+              <button type="button" class="ui-field drv-fmt-btn" id="drvFmt" aria-haspopup="listbox" aria-expanded="false" title="파일 형식으로 거르기">
+                <span class="cap">형식</span><b id="drvFmtLabel">전체</b>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
               <div class="ui-tabs" id="drvSort" aria-label="정렬">
                 <button type="button" class="ui-tab" data-value="new" aria-selected="true">최신순</button>
                 <button type="button" class="ui-tab" data-value="name" aria-selected="false">이름순</button>
@@ -19794,19 +19801,27 @@ window.baroyamAsk=function(title,body,okText){
     });
     $('drvTypes').innerHTML=h;
   }
-  /* 파일 형식 칩 · 지금 조건에 하나라도 있는 형식만(고른 것은 0개여도 남김) · 여러 개 고를 수 있다 */
-  function 형식줄(){
+  /* 파일 형식 거르기 · 정렬 탭 왼쪽 단추를 누르면 목록(UI.menu)에서 하나 고른다 ·
+     목록에는 지금 조건에 하나라도 있는 형식만 개수와 함께 보인다(고른 것은 0개여도 남김) */
+  function 지금형식(){ return 상태.형식.size?Array.from(상태.형식)[0]:''; }
+  function 형식단추(){
+    const k=지금형식(), b=$('drvFmt'); if(!b) return;
+    $('drvFmtLabel').textContent=k||'전체';
+    b.classList.toggle('on',!!k);
+  }
+  function 형식목록열기(){
     const 바탕=거른줄('형식');
     const 셈={}; 바탕.forEach(function(r){ const k=형식(r); 셈[k]=(셈[k]||0)+1; });
-    const 이름들=형식표.map(function(t){ return t[0]; }).concat(['기타'])
-      .filter(function(k){ return 셈[k]||상태.형식.has(k); });
-    let h='<span class="drv-fmt-cap">형식</span>'
-      + '<button type="button" class="ui-chip" data-fmt="" aria-pressed="'+(상태.형식.size?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
-    이름들.forEach(function(k){
-      h+='<button type="button" class="ui-chip" data-fmt="'+안전(k)+'" aria-pressed="'+(상태.형식.has(k)?'true':'false')+'">'
-        + 안전(k)+'<b>'+(셈[k]||0)+'</b></button>';
+    const 고른=지금형식();
+    const 목록=[{value:'',label:'전체',sub:바탕.length+'개'}].concat(
+      형식표.map(function(t){ return t[0]; }).concat(['기타'])
+        .filter(function(k){ return 셈[k]||k===고른; })
+        .map(function(k){ return {value:k,label:k,sub:(셈[k]||0)+'개'}; }));
+    window.UI.menu($('drvFmt'),목록,고른,function(값){
+      상태.형식.clear(); if(값) 상태.형식.add(값);
+      if(상태.회사==='카페이노스'&&상태.브랜드&&카페분류목록().indexOf(상태.브랜드)<0) 상태.브랜드='';
+      상태.펼침.clear(); 그리기();
     });
-    $('drvFmts').innerHTML=h;
   }
 
   function 레일(){
@@ -19862,25 +19877,17 @@ window.baroyamAsk=function(title,body,okText){
     /* 자료가 아예 없는 회사를 고르면 '전체 0' 칩만 남아 모양이 달라진다 ·
        거르개를 통째로 감추고 안내문 하나만 같은 자리에 둔다(상자 높이는 min-height 로 잡아 둔다) */
     const 없음=!전체;
-    $('drvRow').hidden=없음; $('drvFmts').hidden=없음;
+    $('drvRow').hidden=없음;
     if(없음){
       안내(상태.회사+' 자산은 아직 목록에 없어요', '해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다');
       return;
     }
     $('drvEmpty').hidden=true; $('drvBody').hidden=false;
-    형식줄(); 칩줄(); 레일(); 레인들();
+    형식단추(); 칩줄(); 레일(); 레인들();
   }
 
   function 눌림(e){
-    const 형=e.target.closest('#drvFmts .ui-chip');
-    if(형){
-      const k=형.dataset.fmt;
-      if(!k) 상태.형식.clear();
-      else if(상태.형식.has(k)) 상태.형식.delete(k);
-      else 상태.형식.add(k);
-      if(상태.회사==='카페이노스'&&상태.브랜드&&카페분류목록().indexOf(상태.브랜드)<0) 상태.브랜드='';
-      상태.펼침.clear(); 그리기(); return;
-    }
+    if(e.target.closest('#drvFmt')){ e.stopPropagation(); 형식목록열기(); return; }
     const 칩=e.target.closest('#drvTypes .ui-chip');
     if(칩){
       const k=칩.dataset.kind;
