@@ -1,0 +1,38 @@
+// 바로얌 재고 수집 · 대시보드 쪽 다리
+// 대시보드 페이지와 확장(background.js) 사이에서 말을 옮긴다 · 페이지는 window.postMessage 로,
+// 확장은 chrome.runtime 으로 말한다. 페이지가 확장이 깔렸는지 알 수 있게 html 에 표시를 남긴다.
+
+const FROM_PAGE = 'baroyam-dashboard';
+const FROM_EXT = 'baroyam-inv-ext';
+const toPage = (msg) => window.postMessage({ source: FROM_EXT, ...msg }, location.origin);
+
+document.documentElement.dataset.baroyamInvExt = chrome.runtime.getManifest().version;
+toPage({ type: 'ready' });
+
+// 페이지 → 확장 · 어드민 수집 단추
+window.addEventListener('message', (e) => {
+  if (e.source !== window || !e.data || e.data.source !== FROM_PAGE) return;
+  if (e.data.type === 'inventory-start') {
+    chrome.runtime.sendMessage({ type: 'start' }).catch(() => toPage({ type: 'status', message: '확장 프로그램이 응답하지 않습니다 · 크롬을 다시 열어 주세요', done: true }));
+  }
+});
+
+// 확장 → 페이지 · 진행 상황과 읽은 표 · 표는 페이지가 저장하고 결과(inventory-ack)를 돌려줄 때까지 기다린다
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'status') { toPage(msg); return; }
+  if (msg.type !== 'rows' && msg.type !== 'error') return;
+  const id = Math.random().toString(36).slice(2);
+  const onAck = (e) => {
+    if (e.source !== window || !e.data || e.data.source !== FROM_PAGE || e.data.type !== 'inventory-ack' || e.data.id !== id) return;
+    window.removeEventListener('message', onAck);
+    clearTimeout(timer);
+    sendResponse({ ok: !!e.data.ok, message: e.data.message });
+  };
+  const timer = setTimeout(() => {
+    window.removeEventListener('message', onAck);
+    sendResponse({ ok: false, message: '대시보드가 답하지 않습니다 · 대시보드 창을 새로고침한 뒤 다시 눌러 주세요.' });
+  }, 30000);
+  window.addEventListener('message', onAck);
+  toPage({ type: msg.type === 'rows' ? 'inventory' : 'inventory-error', id, rows: msg.rows, message: msg.message });
+  return true;
+});
