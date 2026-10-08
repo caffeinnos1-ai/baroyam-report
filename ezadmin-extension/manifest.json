@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
   "name": "바로얌 재고 수집",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "바로얌 대시보드 재고현황의 '어드민 수집' · 이지어드민에 사람이 로그인하면 현 재고조회를 자동으로 읽어 대시보드에 저장합니다.",
   "permissions": ["storage"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
-      "matches": ["https://caffeinnos1-ai.github.io/*", "http://127.0.0.1:4317/*", "http://localhost:4317/*"],
+      "matches": ["https://erp.baroyam.com/*", "https://caffeinnos1-ai.github.io/*", "http://127.0.0.1:4317/*", "http://localhost:4317/*"],
       "js": ["dashboard.js"],
       "run_at": "document_start"
     },
