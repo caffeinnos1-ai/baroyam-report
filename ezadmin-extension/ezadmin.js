@@ -116,7 +116,10 @@ async function goSalesPage() {
   if (href && !/^javascript:/i.test(href) && href !== '#') { location.href = new URL(href, location.href).href; return; }
   // 메뉴는 javascript: 링크라 확장(이 스크립트)이 누르면 크롬 보안 규칙(CSP)이 막는다 → 페이지 쪽에서 눌러 달라고 한다(background mainClick)
   const r = await send({ type: 'mainClick', patterns: ['^정산통계$', '^당일판매분요약표$'] });
-  if (!r || !r.ok || !r.clicked.includes('^당일판매분요약표$')) throw new Error('메뉴 "당일판매분요약표"를 누르지 못했습니다' + (r && r.message ? ' · ' + r.message : ''));
+  if (r && r.ok && r.clicked.includes('^당일판매분요약표$')) return;
+  // 누르자마자 페이지가 넘어가면 응답이 실패로 올 수 있다 · 넘어갔으면 이 스크립트는 여기서 끊기고 새 페이지에서 이어 간다
+  if (await waitFor(isSalesPage, 15000)) return;
+  throw new Error('메뉴 "당일판매분요약표"를 누르지 못했습니다' + (r && r.message ? ' · ' + r.message : ''));
 }
 
 async function collectSales() {

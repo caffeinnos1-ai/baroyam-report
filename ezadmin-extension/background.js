@@ -43,7 +43,7 @@ async function pageClick(patterns, visible, f2) {
     if (!el) continue;
     (el.closest('a') || el).click();
     clicked.push(src);
-    await sleep(1200);
+    if (src !== last) await sleep(1200);   // 마지막 클릭 뒤에는 기다리지 않는다(페이지가 넘어가면 이 스크립트가 끊긴다)
   }
   if (!clicked.length && f2) {
     const $ = window.jQuery;
