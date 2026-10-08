@@ -2248,7 +2248,11 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-item{min-height:44px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);transition:background .15s}
   .iv-cols+.iv-item{border-top:0}
   .iv-item.first{border-top:1px solid color-mix(in srgb,var(--mute) 35%,var(--line))}
-  .iv-item:hover{background:color-mix(in srgb,var(--chip-flat) 40%,transparent)}
+  /* 브랜드마다 색 · 줄 바탕은 아주 옅게(바탕과 섞어 다크 모드에서도 어둡게 유지), 브랜드 칸 왼쪽 막대와 점은 조금 진하게 ·
+     색은 브랜드 순서대로 --iv-h(색상각)만 바꾼다 */
+  .iv-item{--iv-c:hsl(var(--iv-h,210) 65% 52%);background:color-mix(in srgb,var(--iv-c) 7%,var(--paper));box-shadow:inset 4px 0 0 color-mix(in srgb,var(--iv-c) 70%,var(--paper))}
+  .iv-item:hover{background:color-mix(in srgb,var(--iv-c) 13%,var(--paper))}
+  .iv-br i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--iv-c)}
   .iv-br{display:flex;align-items:center;gap:8px;min-width:0;font-size:13.5px;font-weight:800;color:var(--ink)}
   .iv-br span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .iv-br small{flex:none;font-size:11px;font-weight:700;color:var(--mute)}
@@ -15061,6 +15065,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return Math.floor((new Date(+m[1],+m[2]-1,+m[3])-new Date(new Date().toDateString()))/864e5);
   }
   const SOON=30;
+  /* 브랜드 색상각 · 옆 브랜드끼리 확실히 다르게 보이도록 멀리 떨어진 색을 번갈아 둔다(파랑·주황·초록·보라·청록·분홍·노랑·남색) */
+  const IV_HUES=[212,28,142,268,184,330,46,238];
   /* 오늘 재고가 들어왔는지 · 자동 수집(VPS 07:00·16:30)이 돌았으면 누를 필요가 없고, 오늘 것이 없을 때만
      띠를 보이고 어드민 수집 단추에 점을 찍는다 · 07:10 전에는 아직 자동 수집 전이라 부드럽게 알린다 */
   function paintStale(inv,at){
@@ -15102,11 +15108,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(!groups.length){ $('ivGrid').innerHTML=blank('받아 온 재고가 비어 있습니다'); return; }
     $('ivGrid').innerHTML='<div class="iv-list" role="table" aria-label="재고현황">'
       +'<div class="iv-row iv-cols" role="row"><span>브랜드</span><span>상품명</span><span>정상재고</span><span>유통기한</span></div>'
-      +groups.map(g=>g.rows.map((r,i)=>{
+      +groups.map((g,gi)=>g.rows.map((r,i)=>{
         const isOut=r.stock!=null&&r.stock<=0;
         const tag=r.days==null?'':r.days<0?'<span class="iv-pill past">지남</span>':r.days<=SOON?'<span class="iv-pill soon">D-'+r.days+'</span>':'';
-        return '<div class="iv-row iv-item'+(i?'':' first')+(isOut?' out':'')+'" role="row">'
-          +'<span class="iv-br">'+(i?'':'<span title="'+esc(g.brand)+'">'+esc(g.brand)+'</span><small>'+g.rows.length+'</small>')+'</span>'
+        return '<div class="iv-row iv-item'+(i?'':' first')+(isOut?' out':'')+'" role="row" style="--iv-h:'+IV_HUES[gi%IV_HUES.length]+'">'
+          +'<span class="iv-br">'+(i?'':'<i></i><span title="'+esc(g.brand)+'">'+esc(g.brand)+'</span><small>'+g.rows.length+'</small>')+'</span>'
           +'<span class="iv-nm" title="'+esc(r.name)+'">'+esc(r.name)+'</span>'
           +'<span class="iv-stk">'+(r.stock==null?'–':isOut?'<span class="iv-pill out">품절</span>':comma(r.stock)+'<small>개</small>')+'</span>'
           +'<span class="iv-ex">'+(r.exp?tag+'<span>'+esc(r.exp)+'</span>':'–')+'</span></div>';
