@@ -1,19 +1,50 @@
 {
   "manifest_version": 3,
-  "name": "바로얌 재고 수집",
-  "version": "1.3.0",
+  "name": "김비서AI 확장프로그램",
+  "version": "1.3.1",
   "description": "바로얌 대시보드 판매·재고의 '어드민 수집' · 이지어드민에 사람이 로그인하면 현 재고조회·당일판매분요약표를 자동으로 읽어 대시보드에 저장합니다.",
-  "permissions": ["storage", "tabGroups"],
-  "background": { "service_worker": "background.js" },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "김비서AI 확장프로그램 · 대시보드 판매·재고의 어드민 수집에서 씁니다"
+  },
+  "permissions": [
+    "storage",
+    "tabGroups"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["https://erp.baroyam.com/*", "https://caffeinnos1-ai.github.io/*", "http://127.0.0.1:4317/*", "http://localhost:4317/*"],
-      "js": ["dashboard.js"],
+      "matches": [
+        "https://erp.baroyam.com/*",
+        "https://caffeinnos1-ai.github.io/*",
+        "http://127.0.0.1:4317/*",
+        "http://localhost:4317/*"
+      ],
+      "js": [
+        "dashboard.js"
+      ],
       "run_at": "document_start"
     },
     {
-      "matches": ["https://*.ezadmin.co.kr/*"],
-      "js": ["ezadmin.js"],
+      "matches": [
+        "https://*.ezadmin.co.kr/*"
+      ],
+      "js": [
+        "ezadmin.js"
+      ],
       "run_at": "document_idle"
     }
   ]

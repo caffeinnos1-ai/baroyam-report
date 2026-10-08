@@ -8691,7 +8691,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <div class="iv-load-bar"><i></i></div>
             </div>
             <p class="iv-note" id="ivNote" role="status" aria-live="polite" hidden></p>
-            <!-- 어드민 수집 안내 · 크롬 확장 "바로얌 재고 수집"(ezadmin-extension)이 없는 PC에서 설치 방법을 보여 준다 -->
+            <!-- 어드민 수집 안내 · 크롬 확장 "김비서AI 확장프로그램"(ezadmin-extension)이 없는 PC에서 설치 방법을 보여 준다 -->
             <div class="iv-guide" id="ivGuide" hidden></div>
             <div id="ivGrid"></div>
             <!-- 표시 설정 · 판매 중단·세트 매칭용 임시 재고처럼 목록에 보이지 않게 할 상품을 고른다(app_settings inventory_hidden_v1) -->
@@ -15269,7 +15269,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   /* 어드민 수집(맨 위 단추 줄 오른쪽) · 평소에는 VPS(caffeinnos-automation/inventory_report.js)가 매일 07:00·16:30
      자동 로그인으로 채운다 · 이 단추는 자동 로그인이 로봇 검사로 막힌 날을 위한 길이다(리뷰수집기와는 관계없다):
-     크롬 확장 "바로얌 재고 수집"(이 저장소 ezadmin-extension/)이 이지어드민 창을 새로 열고 → 사람은 로그인만 →
+     크롬 확장 "김비서AI 확장프로그램"(이 저장소 ezadmin-extension/)이 이지어드민 창을 새로 열고 → 사람은 로그인만 →
      확장이 현 재고조회(I100)를 열어 검색·표 읽기 → 이 페이지로 넘기면 → 여기서 로그인한 계정으로 inventory_v1 에 저장 →
      확장이 이지어드민 창을 닫는다 · 확장과는 window.postMessage(source 'baroyam-inv-ext' ↔ 'baroyam-dashboard')로 말한다 */
   const ivNote=t=>{ const n=$('ivNote'); n.textContent=t||''; n.hidden=!t; };
@@ -15287,7 +15287,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const g=$(id||'ivGuide');
     if(!show){ g.hidden=true; g.innerHTML=''; return; }
     g.innerHTML='<button type="button" class="ui-btn sm ghost iv-guide-x" data-iv-guide-x>닫기</button>'
-      +'<b>이 PC의 크롬에 "바로얌 재고 수집" 확장 프로그램이 없습니다</b> · PC마다 처음 한 번만 설치합니다.'
+      +'<b>이 PC의 크롬에 "김비서AI 확장프로그램"이 없습니다</b> · PC마다 처음 한 번만 설치합니다.'
       +'<ol><li>크롬 주소창에 <code>chrome://extensions</code> 를 열고 오른쪽 위 <b>개발자 모드</b>를 켭니다.</li>'
       +'<li><b>압축해제된 확장 프로그램 로드</b>를 눌러 <code>baroyam\\report-webapp\\ezadmin-extension</code> 폴더를 고릅니다.</li>'
       +'<li>이 화면을 새로고침한 뒤 <b>어드민 수집</b>을 다시 누릅니다.</li></ol>'
@@ -15312,7 +15312,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     /* 당일판매는 확장 1.2.0 부터 · 그 전 확장은 재고만 안다 */
     const ver=(document.documentElement.dataset.baroyamInvExt||'0').split('.').map(Number);
     if(sales&&(ver[0]||0)*1000+(ver[1]||0)<1002){
-      note('크롬 확장 "바로얌 재고 수집"을 새 버전으로 바꿔야 당일판매를 가져올 수 있습니다 · chrome://extensions 에서 이 확장의 새로고침(↻)을 누른 뒤 이 화면도 새로고침해 주세요');
+      note('크롬 확장 "김비서AI 확장프로그램"을 새 버전으로 바꿔야 당일판매를 가져올 수 있습니다 · chrome://extensions 에서 이 확장의 새로고침(↻)을 누른 뒤 이 화면도 새로고침해 주세요');
       return;
     }
     opsJob=sales?'sales':'inventory';
