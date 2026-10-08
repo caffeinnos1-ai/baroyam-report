@@ -2214,6 +2214,19 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-sum i b{font-size:12px;margin-left:3px}
   .iv-sum i.neg{background:var(--neg-soft);color:var(--neg)} .iv-sum i.neg b{color:var(--neg)}
   .iv-sum i.warn{background:var(--warn-soft);color:var(--warn)} .iv-sum i.warn b{color:var(--warn)}
+  /* 오늘 재고 없음 · 주황 띠(아이콘 · 두 줄 글 · 어드민 수집 단추) + 위 어드민 수집 단추 테두리·날짜와 기준 시각 앞 불을 주황으로 */
+  .iv-stale{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;background:var(--warn-soft);
+    border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+  .iv-stale[hidden]{display:none}
+  .iv-stale-ic{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--warn);color:var(--paper);font-size:16px;font-weight:900}
+  .iv-stale-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .iv-stale-tx b{font-size:14.5px;font-weight:800;color:var(--warn)}
+  .iv-stale-tx span{font-size:12.5px;font-weight:600;color:var(--body)}
+  .iv-stale .ui-btn{flex:none}
+  #ivFetch.need{border-color:var(--warn)}
+  #ivFetch.need .at{color:var(--warn);font-weight:800}
+  .iv-meta.stale .iv-live{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 18%,transparent)}
+  @media (max-width:640px){ .iv-stale{flex-wrap:wrap} .iv-stale .ui-btn{width:100%} }
   .iv-note{margin:0;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft)}
   .iv-note[hidden]{display:none}
   /* 어드민 수집 안내 · 확장 프로그램 설치 순서 */
@@ -8610,6 +8623,12 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <span class="iv-live"></span><b>이지어드민 재고</b><span id="ivAt"></span><span class="iv-demo" id="ivDemo" hidden>예시 화면</span>
               <span class="pf-grow"></span><span class="iv-sum" id="ivSum"></span>
               <button type="button" class="ui-btn sm ghost" id="ivHideOpen" title="목록에 보이지 않게 할 상품을 고릅니다">표시 설정</button>
+            </div>
+            <!-- 오늘 재고가 아직 안 들어왔을 때만 · 자동 수집(07:00·16:30)이 실패한 날 어드민 수집을 누르게 한다 -->
+            <div class="iv-stale" id="ivStale" role="alert" hidden>
+              <span class="iv-stale-ic" aria-hidden="true">!</span>
+              <div class="iv-stale-tx"><b id="ivStaleT"></b><span id="ivStaleS"></span></div>
+              <button type="button" class="ui-btn primary sm" id="ivStaleGo">어드민 수집</button>
             </div>
             <p class="iv-note" id="ivNote" role="status" aria-live="polite" hidden></p>
             <!-- 어드민 수집 안내 · 크롬 확장 "바로얌 재고 수집"(ezadmin-extension)이 없는 PC에서 설치 방법을 보여 준다 -->
@@ -15042,6 +15061,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return Math.floor((new Date(+m[1],+m[2]-1,+m[3])-new Date(new Date().toDateString()))/864e5);
   }
   const SOON=30;
+  /* 오늘 재고가 들어왔는지 · 자동 수집(VPS 07:00·16:30)이 돌았으면 누를 필요가 없고, 오늘 것이 없을 때만
+     띠를 보이고 어드민 수집 단추에 점을 찍는다 · 07:10 전에는 아직 자동 수집 전이라 부드럽게 알린다 */
+  function paintStale(inv,at){
+    const box=$('ivStale'), btn=$('ivFetch');
+    const now=new Date(), today=at&&!isNaN(at)&&!(inv&&inv.demo)&&at.toDateString()===now.toDateString();
+    const need=INV.loaded&&!today&&!(INV.error&&!INV.data);
+    box.hidden=!need; btn.classList.toggle('need',need); $('ivAt').parentNode.classList.toggle('stale',need);
+    if(!need) return;
+    const early=now.getHours()<7||(now.getHours()===7&&now.getMinutes()<10);
+    const last=at&&!isNaN(at)&&!(inv&&inv.demo)?' · 마지막 수집 '+(at.getMonth()+1)+'월 '+at.getDate()+'일 '+String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'):'';
+    $('ivStaleT').textContent=early?'오늘 재고는 07:00에 자동으로 들어옵니다':'오늘 재고가 아직 수집되지 않았습니다';
+    $('ivStaleS').textContent=(early?'급하면 어드민 수집으로 지금 가져올 수 있습니다':'자동 수집이 실패했을 수 있습니다 · 어드민 수집을 눌러 이지어드민에 로그인하면 가져옵니다')+last;
+  }
   function paintStock(){
     const inv=INV.data||(INV.loaded?demoInv():null);
     $('ivDemo').hidden=!(inv&&inv.demo);
@@ -15049,6 +15081,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('ivAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준':'';
     /* 수집 단추 옆 · 오늘이면 시각만, 아니면 날짜 */
     $('ivFetchAt').textContent=at&&!isNaN(at)?(at.toDateString()===new Date().toDateString()?p2(at.getHours())+':'+p2(at.getMinutes()):(at.getMonth()+1)+'/'+at.getDate()):'';
+    paintStale(inv,at);
     const blank=t=>'<div class="iv-blank">'+t+'</div>';
     if(!inv){ $('ivSum').innerHTML=''; $('ivGrid').innerHTML=blank(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
     const hiddenN=inv.items.filter(x=>INV.hidden[ivKey(x)]!=null).length;
@@ -15186,6 +15219,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     g.hidden=false;
   }
   $('ivGuide').addEventListener('click',e=>{ if(e.target.closest('[data-iv-guide-x]')) ivGuide(false); });
+  $('ivStaleGo').addEventListener('click',()=>$('ivFetch').click());
   $('ivFetch').addEventListener('click',()=>{
     if($('ivFetch').classList.contains('busy')){ ivNote('수집 중입니다 · 이지어드민 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
     if(!ivHasExt()){ ivNote(''); ivGuide(true); return; }
