@@ -14,7 +14,9 @@ window.addEventListener('message', (e) => {
   if (e.source !== window || !e.data || e.data.source !== FROM_PAGE) return;
   // 재고(inventory-start) · 당일판매(sales-start, 1.2.0~)
   if (e.data.type === 'inventory-start' || e.data.type === 'sales-start') {
-    chrome.runtime.sendMessage({ type: 'start', kind: e.data.type === 'sales-start' ? 'sales' : 'inventory' }).catch(() => toPage({ type: 'status', message: '확장 프로그램이 응답하지 않습니다 · 크롬을 다시 열어 주세요', done: true }));
+    chrome.runtime.sendMessage({ type: 'start', kind: e.data.type === 'sales-start' ? 'sales' : 'inventory' })
+      .then((r) => { if (!r || !r.ok) toPage({ type: 'status', message: (r && r.message) || '이지어드민을 열지 못했습니다', done: true }); })
+      .catch(() => toPage({ type: 'status', message: '확장 프로그램이 응답하지 않습니다 · chrome://extensions 에서 새로고침(↻)한 뒤 이 화면도 새로고침해 주세요', done: true }));
   }
 });
 

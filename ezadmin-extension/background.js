@@ -118,14 +118,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     // 대시보드 · 어드민 수집 단추
     if (msg.type === 'start') {
-      const old = await getJob();
-      if (old) { await endJob(); await chrome.tabs.remove(old.tabId).catch(() => {}); }
-      // 대시보드 탭 바로 뒤가 아니라 맨 끝에, 뒤쪽(active:false)으로 열고 곧바로 접힌 묶음에 넣는다
-      const windowId = sender.tab.windowId;
-      const tab = await chrome.tabs.create({ windowId, url: I100_URL, active: false, index: -1 });
-      await setJob({ tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
-      await tuck(tab.id, windowId).catch(() => {});
-      sendResponse({ ok: true });
+      try {
+        const old = await getJob();
+        if (old) { await endJob(); await chrome.tabs.remove(old.tabId).catch(() => {}); }
+        // 뒤쪽(active:false)으로 열고 곧바로 접힌 묶음에 넣는다 · index 를 주지 않으면 창 맨 끝에 열린다(tabs.create 는 -1 을 받지 않음)
+        const windowId = sender.tab.windowId;
+        const tab = await chrome.tabs.create({ windowId, url: I100_URL, active: false });
+        await setJob({ tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
+        await tuck(tab.id, windowId).catch(() => {});
+        sendResponse({ ok: true });
+      } catch (e) {
+        // 시작부터 실패하면 대시보드 게이지가 계속 돌지 않게 이유를 돌려준다
+        sendResponse({ ok: false, message: '이지어드민을 열지 못했습니다 · ' + e.message });
+      }
       return;
     }
 
