@@ -2241,10 +2241,12 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-pill.soon{background:var(--warn-soft);color:var(--warn)}
   /* 표시 설정 창 · 원가 고르기 창(pf-mix)과 같은 틀 · 숨긴 줄은 흐리게(취소선) + 빨간 숨김 알약 */
   .iv-hide-tip{flex:none;margin:0 22px 10px;font-size:12px;font-weight:600;color:var(--mute)}
-  #ivHideList .pf-mix-row{grid-template-columns:minmax(0,1fr) auto;cursor:pointer;user-select:none}
+  #ivHideList .pf-mix-row{grid-template-columns:minmax(0,1fr) auto;padding:8px 10px 8px 12px}
   #ivHideList .pf-mix-row.off{background:var(--chip-flat);border-color:var(--line)}
-  #ivHideList .pf-mix-row.off b{color:var(--mute);text-decoration:line-through}
-  .iv-hide-st{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  #ivHideList .ui-field{width:100%;font-weight:700}
+  #ivHideList .pf-mix-row.off .ui-field{color:var(--mute);text-decoration:line-through}
+  #ivHideList small{margin:4px 2px 0}
+  .iv-hide-st{min-width:52px;font-size:12px;font-weight:800;padding:5px 10px;border:0;border-radius:999px;cursor:pointer;background:var(--btn-soft);color:var(--btn-soft-ink)}
   .pf-mix-row.off .iv-hide-st{background:var(--neg-soft);color:var(--neg)}
   .pf-mix-top #ivHideQ{margin-left:auto;width:180px}
   .iv-blank{padding:56px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
@@ -8617,7 +8619,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
                   </div>
                   <input class="ui-field sm" id="ivHideQ" placeholder="상품 검색" aria-label="상품 검색">
                 </div>
-                <p class="iv-hide-tip">누르면 숨김 ↔ 보임이 바뀝니다 · 숨긴 상품은 재고현황 목록과 위 품절·유통기한 개수에서 빠집니다.</p>
+                <p class="iv-hide-tip">칸에 적은 이름이 재고현황에 보입니다(비우면 이지어드민 이름 그대로) · 오른쪽 보임/숨김을 누르면 바뀌고, 숨긴 상품은 목록과 위 품절·유통기한 개수에서 빠집니다.</p>
                 <div class="pf-mix-list" id="ivHideList"></div>
                 <div class="pf-mix-foot">
                   <button type="button" class="ui-btn ghost" id="ivHideNone">모두 보이기</button>
@@ -14992,19 +14994,23 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      app_settings 의 inventory_v1 = {updatedAt, source:'ezadmin', items:[{brand,name,stock,exp}]}
      서버(김비서 VPS)가 이지어드민에서 받아 써 넣고, 화면은 읽기만 한다 · stock = 정상재고, exp = 유통기한(적힌 그대로 보임)
      표는 브랜드 | 상품명 | 정상재고 | 유통기한 넷만(사용자 요청 · KPI·거르기·검색은 뺐다) · 브랜드 → 상품명 순 */
-  const INV={data:null,loaded:false,error:false,busy:false,hidden:{}};
+  const INV={data:null,loaded:false,error:false,busy:false,hidden:{},names:{}};
   /* 숨길 상품 · app_settings inventory_hidden_v1 = {codes:{상품코드:상품명}} · 상품명은 창에서 알아보기 쉽게 같이 둔다 ·
      코드가 없는 줄은 'n:'+상품명 을 열쇠로 쓴다 */
   const IV_HIDDEN_KEY='inventory_hidden_v1';
+  /* 보일 이름 · app_settings inventory_names_v1 = {names:{상품코드:보일 이름}} · 없으면 이지어드민 이름 그대로 */
+  const IV_NAMES_KEY='inventory_names_v1';
   const ivKey=x=>String(x.code||'').trim()||('n:'+String(x.name||'').trim());
   INV.load=async function(){
     const db=DB(); if(!db||!db.loadSetting){ INV.error=true; return; }
     if(INV.busy) return; INV.busy=true;
     try{
-      let [v,h]=await Promise.all([db.loadSetting('inventory_v1',true),db.loadSetting(IV_HIDDEN_KEY,true)]);
+      let [v,h,nm]=await Promise.all([db.loadSetting('inventory_v1',true),db.loadSetting(IV_HIDDEN_KEY,true),db.loadSetting(IV_NAMES_KEY,true)]);
       if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
       if(typeof h==='string'){ try{ h=JSON.parse(h); }catch(e){ h=null; } }
+      if(typeof nm==='string'){ try{ nm=JSON.parse(nm); }catch(e){ nm=null; } }
       INV.hidden=h&&h.codes&&typeof h.codes==='object'?h.codes:{};
+      INV.names=nm&&nm.names&&typeof nm.names==='object'?nm.names:{};
       INV.data=v&&Array.isArray(v.items)?v:null; INV.error=false; INV.loaded=true;
     }catch(e){ console.error(e); INV.error=!INV.loaded; }
     INV.busy=false;
@@ -15036,10 +15042,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const blank=t=>'<div class="iv-blank">'+t+'</div>';
     if(!inv){ $('ivSum').innerHTML=''; $('ivGrid').innerHTML=blank(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
     const hiddenN=inv.items.filter(x=>INV.hidden[ivKey(x)]!=null).length;
+    /* 보일 이름에서 "01." 같은 번호를 지워도 순서가 흐트러지지 않게, 정렬은 이지어드민 이름(raw)으로 한다 */
     const list=inv.items.filter(x=>INV.hidden[ivKey(x)]==null).map(x=>{
-      const exp=String(x.exp==null?'':x.exp).trim();
-      return {brand:String(x.brand||'').trim()||'기타',name:String(x.name||'').trim(),stock:num(x.stock),exp,days:exp?expDays(exp):null};
-    }).filter(r=>r.name).sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.name.localeCompare(b.name,'ko'));
+      const exp=String(x.exp==null?'':x.exp).trim(), raw=String(x.name||'').trim(), shown=String(INV.names[ivKey(x)]||'').trim();
+      return {brand:String(x.brand||'').trim()||'기타',raw,name:shown||raw,stock:num(x.stock),exp,days:exp?expDays(exp):null};
+    }).filter(r=>r.raw).sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.raw.localeCompare(b.raw,'ko',{numeric:true}));
     const groups=[];
     list.forEach(r=>{ const g=groups[groups.length-1]; if(g&&g.brand===r.brand) g.rows.push(r); else groups.push({brand:r.brand,rows:[r]}); });
     /* 위 한 줄 · 브랜드·상품 수, 확인할 것(품절·유통기한 지남·임박)은 있을 때만 */
@@ -15063,28 +15070,29 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       }).join('')).join('')+'</div>';
   }
   /* ---------- 표시 설정 창 ----------
-     지금 받아 온 재고 목록을 모두 보여 주고, 누를 때마다 숨김/보임을 바꾼다 · 저장은 saveMerged 로
-     서버 최신본 위에 이번에 바꾼 것만 얹는다(다른 PC가 그사이 숨긴 것을 지우지 않게) */
+     지금 받아 온 재고 목록을 모두 보여 주고, 상품마다 보일 이름을 고치고 보임/숨김을 바꾼다 · 저장은 saveMerged 로
+     서버 최신본 위에 이번에 바꾼 것만 얹는다(다른 PC가 그사이 고친 것을 지우지 않게) */
   const ivDlg=$('ivHideDlg');
-  let ivDraft={}, ivF='all', ivQ='';
+  let ivDraft={}, ivNames={}, ivF='all', ivQ='';
   function ivHideItems(){
     const inv=INV.data; if(!inv) return [];
     const seen={}, out=[];
     inv.items.forEach(x=>{ const k=ivKey(x); if(!x.name||seen[k]) return; seen[k]=1; out.push({k,name:String(x.name).trim(),brand:String(x.brand||'').trim()||'기타',stock:num(x.stock)}); });
     /* 지금 재고 목록에는 없지만 숨김으로 남아 있는 것도 보여서 풀 수 있게 */
     Object.keys(ivDraft).forEach(k=>{ if(!seen[k]) out.push({k,name:String(ivDraft[k]||k),brand:'지금 재고 목록에 없음',stock:null}); });
-    return out.sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.name.localeCompare(b.name,'ko'));
+    return out.sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.name.localeCompare(b.name,'ko',{numeric:true}));
   }
   function paintHide(){
     const q=ivQ.trim().toLowerCase(), all=ivHideItems();
     $('ivHideN').textContent=Object.keys(ivDraft).length;
     $('ivHideF').querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.v===ivF)));
-    const list=all.filter(r=>(ivF!=='hidden'||ivDraft[r.k]!=null)&&(!q||(r.name+' '+r.brand).toLowerCase().indexOf(q)>=0));
+    const list=all.filter(r=>(ivF!=='hidden'||ivDraft[r.k]!=null)&&(!q||(r.name+' '+(ivNames[r.k]||'')+' '+r.brand).toLowerCase().indexOf(q)>=0));
     $('ivHideList').innerHTML=list.map(r=>{
       const off=ivDraft[r.k]!=null;
-      return '<div class="pf-mix-row'+(off?' off':'')+'" data-k="'+esc(r.k)+'" role="button" tabindex="0" aria-pressed="'+off+'">'
-        +'<div><b>'+esc(r.name)+'</b><small>'+esc(r.brand)+(r.stock==null?'':' · 정상재고 '+comma(r.stock)+'개')+'</small></div>'
-        +'<span class="iv-hide-st">'+(off?'숨김':'보임')+'</span></div>';
+      return '<div class="pf-mix-row'+(off?' off':'')+'" data-k="'+esc(r.k)+'">'
+        +'<div><input class="ui-field sm" data-name value="'+esc(ivNames[r.k]||'')+'" placeholder="'+esc(r.name)+'" aria-label="'+esc(r.name)+' 보일 이름">'
+        +'<small>'+esc(r.brand)+' · 이지어드민 '+esc(r.name)+(r.stock==null?'':' · 정상재고 '+comma(r.stock)+'개')+'</small></div>'
+        +'<button type="button" class="iv-hide-st" aria-pressed="'+off+'">'+(off?'숨김':'보임')+'</button></div>';
     }).join('')||'<div class="pf-msg">'+(all.length?'찾는 상품이 없습니다':'받아 온 재고가 없습니다')+'</div>';
   }
   function toggleHide(row){
@@ -15094,33 +15102,52 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   $('ivHideOpen').addEventListener('click',()=>{
     if(!INV.data){ ivNote('아직 받아 온 재고가 없어 표시 설정을 할 수 없습니다'); return; }
-    ivDraft=Object.assign({},INV.hidden); ivF='all'; ivQ=''; $('ivHideQ').value='';
+    ivDraft=Object.assign({},INV.hidden); ivNames=Object.assign({},INV.names); ivF='all'; ivQ=''; $('ivHideQ').value='';
     paintHide(); ivDlg.hidden=false;
   });
   const closeHide=()=>{ ivDlg.hidden=true; };
   ivDlg.addEventListener('click',e=>{ if(e.target===ivDlg||e.target.closest('[data-iv-close]')) closeHide(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!ivDlg.hidden) closeHide(); });
-  $('ivHideList').addEventListener('click',e=>{ const row=e.target.closest('[data-k]'); if(row) toggleHide(row); });
-  $('ivHideList').addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-k]')){ e.preventDefault(); toggleHide(e.target); } });
+  $('ivHideList').addEventListener('click',e=>{ const b=e.target.closest('.iv-hide-st'); if(b) toggleHide(b.closest('[data-k]')); });
+  /* 이름 칸은 다시 그리지 않고 고친 값만 담아 둔다(치는 중에 칸이 다시 만들어지지 않게) · 비우면 원래 이름 */
+  $('ivHideList').addEventListener('input',e=>{
+    if(!e.target.matches('[data-name]')) return;
+    const k=e.target.closest('[data-k]').dataset.k, v=e.target.value.trim();
+    if(v) ivNames[k]=v; else delete ivNames[k];
+  });
   $('ivHideF').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(c){ ivF=c.dataset.v; paintHide(); } });
   $('ivHideQ').addEventListener('input',e=>{ ivQ=e.target.value; paintHide(); });
   $('ivHideNone').addEventListener('click',()=>{ ivDraft={}; paintHide(); });
+  /* before → after 로 바뀐 열쇠만 서버 최신본(cur)에 얹는다 */
+  function mergeChanges(cur,field,before,after){
+    let v=cur; if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+    const out=Object.assign({},v&&v[field]);
+    new Set([...Object.keys(before),...Object.keys(after)]).forEach(k=>{
+      if(before[k]===after[k]) return;
+      if(after[k]==null) delete out[k]; else out[k]=after[k];
+    });
+    return {[field]:out,updatedAt:new Date().toISOString()};
+  }
+  const sameMap=(a,b)=>Object.keys(a).length===Object.keys(b).length&&Object.keys(a).every(k=>a[k]===b[k]);
   $('ivHideOk').addEventListener('click',async()=>{
     const b=$('ivHideOk'); if(b.disabled) return;
-    const before=INV.hidden, after=ivDraft, db=DB();
+    const db=DB(); if(!db||!db.saveMerged){ ivNote('표시 설정을 저장하지 못했습니다 · 로그인 상태를 확인하고 다시 눌러 주세요'); closeHide(); return; }
+    const hidB=INV.hidden, hidA=ivDraft, nmB=INV.names, nmA=ivNames;
     b.disabled=true;
-    const next=db&&db.saveMerged?await db.saveMerged(IV_HIDDEN_KEY,cur=>{
-      let v=cur; if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
-      const codes=Object.assign({},v&&v.codes);
-      Object.keys(before).forEach(k=>{ if(after[k]==null) delete codes[k]; });   /* 이번에 푼 것 */
-      Object.keys(after).forEach(k=>{ if(before[k]==null) codes[k]=after[k]; }); /* 이번에 숨긴 것 */
-      return {codes,updatedAt:new Date().toISOString()};
-    }):null;
+    let ok=true;
+    if(!sameMap(hidB,hidA)){
+      const next=await db.saveMerged(IV_HIDDEN_KEY,cur=>mergeChanges(cur,'codes',hidB,hidA));
+      if(next) INV.hidden=next.codes; else ok=false;
+    }
+    if(!sameMap(nmB,nmA)){
+      const next=await db.saveMerged(IV_NAMES_KEY,cur=>mergeChanges(cur,'names',nmB,nmA));
+      if(next) INV.names=next.names; else ok=false;
+    }
     b.disabled=false;
-    if(!next){ ivNote('표시 설정을 저장하지 못했습니다 · 로그인 상태를 확인하고 다시 눌러 주세요'); closeHide(); return; }
-    INV.hidden=next.codes; closeHide(); paintStock();
-    const n=Object.keys(next.codes).length;
-    ivNote(n?'표시 설정을 저장했습니다 · '+n+'개 상품을 숨깁니다':'표시 설정을 저장했습니다 · 모든 상품을 보입니다');
+    closeHide(); paintStock();
+    if(!ok){ ivNote('표시 설정 일부를 저장하지 못했습니다 · 로그인 상태를 확인하고 다시 눌러 주세요'); return; }
+    const n=Object.keys(INV.hidden).length;
+    ivNote('표시 설정을 저장했습니다'+(n?' · '+n+'개 상품을 숨깁니다':''));
   });
 
   /* 어드민 수집(맨 위 단추 줄 오른쪽) · 평소에는 VPS(caffeinnos-automation/inventory_report.js)가 매일 07:00·16:30 채운다 ·
