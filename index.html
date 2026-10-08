@@ -4850,6 +4850,9 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   /* 거르개 줄 · 왼쪽은 판매처·종류 칩, 오른쪽은 정렬과 카드 크기 */
   .drv-row{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px}
   .drv-row[hidden]{display:none}
+  .drv-fmts{margin:0 0 10px}
+  .drv-fmts[hidden]{display:none}
+  .drv-fmts .drv-fmt-cap{align-self:center;margin-right:2px;font-size:12px;font-weight:800;color:var(--mute)}
   .drv-row .drv-types{flex:1;min-width:0;margin-bottom:0}
   .drv-tools{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
   /* 카드 크기 · 작게/보통/크게 (펼친 격자는 칸 너비로 맞춘다) */
@@ -8424,7 +8427,14 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/></svg>
               <span id="drvSaveLabel">저장</span>
             </button>
+            <!-- 삭제 · 고른 파일을 구글드라이브 휴지통으로 옮긴다(30일 안에는 드라이브 휴지통에서 되살릴 수 있다) -->
+            <button type="button" class="ui-btn danger" id="drvDelete" disabled title="고른 파일을 구글드라이브 휴지통으로 옮깁니다">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9.5 7V4.8A.8.8 0 0 1 10.3 4h3.4a.8.8 0 0 1 .8.8V7"/></svg>
+              <span id="drvDeleteLabel">삭제</span>
+            </button>
           </div>
+          <!-- 파일 형식 · 확장자로 이미지·GIF·영상·PSD·일러스트·PDF·문서·기타를 가른다 -->
+          <div class="ui-chips drv-fmts" id="drvFmts" aria-label="파일 형식"></div>
           <div class="drv-row" id="drvRow">
             <div class="ui-chips drv-types" id="drvTypes"></div>
             <div class="drv-tools">
@@ -19652,7 +19662,7 @@ window.baroyamAsk=function(title,body,okText){
   const 사전열쇠='drive_dict_v1';      /* 분류 사전 · 새로고침 버튼이 파이썬 색인과 같은 규칙으로 나누는 데 쓴다 */
   const 보기열쇠='baroyam_drive_view';  /* 정렬·카드 크기 · 이 브라우저에만 기억한다 */
   let 줄들=null, 줄표={}, 레인목록={}, 읽는중=false, 갱신시각='';
-  const 상태={회사:'바로얌', 브랜드:'', 종류:new Set(), 검색:'', 펼침:new Set(), 선택:new Set(), 기준:'',
+  const 상태={회사:'바로얌', 브랜드:'', 종류:new Set(), 형식:new Set(), 검색:'', 펼침:new Set(), 선택:new Set(), 기준:'',
              정렬:'new', 크기:'m'};
   try{ const 기억=JSON.parse(localStorage.getItem(보기열쇠)||'{}');
        if(기억.정렬) 상태.정렬=기억.정렬; if(기억.크기) 상태.크기=기억.크기; }catch(e){}
@@ -19668,6 +19678,19 @@ window.baroyamAsk=function(title,body,okText){
     return 점>0?String(이름).slice(점+1).toLowerCase():'';
   }
   function 날짜표시(d){ d=String(d||''); return d.length>=10?d.slice(2).replace(/-/g,'.'):''; }
+  /* 파일 형식 칩 · 확장자로 가른다 · 순서가 곧 칩 순서이고 맞는 것이 없으면 기타 */
+  const 형식표=[
+    ['이미지',  ['jpg','jpeg','png','webp','heic','heif','bmp','tif','tiff','svg']],
+    ['GIF',     ['gif']],
+    ['영상',    ['mp4','mov','avi','mkv','webm','m4v','wmv','mpg','mpeg']],
+    ['PSD',     ['psd','psb']],
+    ['일러스트', ['ai','eps']],
+    ['PDF',     ['pdf']],
+    ['문서',    ['xlsx','xls','csv','docx','doc','hwp','hwpx','pptx','ppt','txt']],
+    ['압축',    ['zip','rar','7z','alz','egg']]
+  ];
+  const 형식찾기={}; 형식표.forEach(function(t){ t[1].forEach(function(x){ 형식찾기[x]=t[0]; }); });
+  function 형식(r){ return 형식찾기[확장자(r.이름)]||'기타'; }
 
   /* 어느 회사 자산인지 · 지금은 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) */
   function 회사(r){
@@ -19734,6 +19757,7 @@ window.baroyamAsk=function(title,body,okText){
       if(회사(r)!==상태.회사) return false;
       if(건너뛸!=='브랜드'&&상태.브랜드&&갈래(r)!==상태.브랜드) return false;
       if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(종류(r))) return false;
+      if(건너뛸!=='형식'&&상태.형식.size&&!상태.형식.has(형식(r))) return false;
       if(검색){
         const 밭=(r.이름+' '+r.브랜드+' '+r.제품+' '+종류(r)+' '+r.경로).toLowerCase();
         if(밭.indexOf(검색)<0) return false;
@@ -19769,6 +19793,20 @@ window.baroyamAsk=function(title,body,okText){
         + 안전(k)+'<b>'+(셈[k]||0)+'</b></button>';
     });
     $('drvTypes').innerHTML=h;
+  }
+  /* 파일 형식 칩 · 지금 조건에 하나라도 있는 형식만(고른 것은 0개여도 남김) · 여러 개 고를 수 있다 */
+  function 형식줄(){
+    const 바탕=거른줄('형식');
+    const 셈={}; 바탕.forEach(function(r){ const k=형식(r); 셈[k]=(셈[k]||0)+1; });
+    const 이름들=형식표.map(function(t){ return t[0]; }).concat(['기타'])
+      .filter(function(k){ return 셈[k]||상태.형식.has(k); });
+    let h='<span class="drv-fmt-cap">형식</span>'
+      + '<button type="button" class="ui-chip" data-fmt="" aria-pressed="'+(상태.형식.size?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
+    이름들.forEach(function(k){
+      h+='<button type="button" class="ui-chip" data-fmt="'+안전(k)+'" aria-pressed="'+(상태.형식.has(k)?'true':'false')+'">'
+        + 안전(k)+'<b>'+(셈[k]||0)+'</b></button>';
+    });
+    $('drvFmts').innerHTML=h;
   }
 
   function 레일(){
@@ -19824,16 +19862,25 @@ window.baroyamAsk=function(title,body,okText){
     /* 자료가 아예 없는 회사를 고르면 '전체 0' 칩만 남아 모양이 달라진다 ·
        거르개를 통째로 감추고 안내문 하나만 같은 자리에 둔다(상자 높이는 min-height 로 잡아 둔다) */
     const 없음=!전체;
-    $('drvRow').hidden=없음;
+    $('drvRow').hidden=없음; $('drvFmts').hidden=없음;
     if(없음){
       안내(상태.회사+' 자산은 아직 목록에 없어요', '해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다');
       return;
     }
     $('drvEmpty').hidden=true; $('drvBody').hidden=false;
-    칩줄(); 레일(); 레인들();
+    형식줄(); 칩줄(); 레일(); 레인들();
   }
 
   function 눌림(e){
+    const 형=e.target.closest('#drvFmts .ui-chip');
+    if(형){
+      const k=형.dataset.fmt;
+      if(!k) 상태.형식.clear();
+      else if(상태.형식.has(k)) 상태.형식.delete(k);
+      else 상태.형식.add(k);
+      if(상태.회사==='카페이노스'&&상태.브랜드&&카페분류목록().indexOf(상태.브랜드)<0) 상태.브랜드='';
+      상태.펼침.clear(); 그리기(); return;
+    }
     const 칩=e.target.closest('#drvTypes .ui-chip');
     if(칩){
       const k=칩.dataset.kind;
@@ -19908,12 +19955,16 @@ window.baroyamAsk=function(title,body,okText){
       $('drvSave').disabled=!n;
       $('drvSaveLabel').textContent=n>1?('저장 ('+n+')'):'저장';
     }
+    if(!삭제중){
+      $('drvDelete').disabled=!n;
+      $('drvDeleteLabel').textContent=n>1?('삭제 ('+n+')'):'삭제';
+    }
   }
 
   /* ---------- 저장 ----------
      드라이브 파일은 로그인한 사람의 구글 권한으로 직접 받는다(drive.readonly · 처음 한 번 허락 창이 뜬다).
      여러 개면 개별 파일로 받을지, ZIP 한 파일로 묶을지 묻는다 */
-  let 저장중=false, 지퍼=null;
+  let 저장중=false, 삭제중=false, 지퍼=null;
   /* 권한은 매출 시트와 같이 쓰는 baroyamGoogleToken 하나(drive · 읽기·올리기 모두) · 프로필을 고를 때 미리 받아 두므로
      보통은 허락 창 없이 바로 쓴다 */
   function 드라이브토큰(){ return window.baroyamGoogleToken(); }
@@ -20647,7 +20698,7 @@ window.baroyamAsk=function(title,body,okText){
       return;
     }
     상태.회사=업.회사; if(회사탭손) 회사탭손.set(업.회사);
-    상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear(); 상태.검색='';
+    상태.브랜드=''; 상태.종류.clear(); 상태.형식.clear(); 상태.펼침.clear(); 상태.검색='';
     const 찾기=$('drvSearch'); if(찾기) 찾기.value='';
     상태.선택.clear(); 상태.기준='';
     새줄.forEach(function(r){ if(줄표[r.아이디]){ 상태.선택.add(r.아이디); 상태.기준=r.아이디; } });
@@ -20658,6 +20709,75 @@ window.baroyamAsk=function(title,body,okText){
     setTimeout(function(){ if(메타.textContent===새줄.length+'개를 올렸어요') 메타.textContent=원래; },4000);
     const 첫=document.querySelector('#drvLanes .drv-card.on');
     if(첫) 첫.scrollIntoView({block:'center',behavior:'smooth'});
+  }
+
+  /* ---------- 삭제 ----------
+     실제로 없애지 않고 구글드라이브 휴지통으로 옮긴다(trashed:true · 30일 안에는 드라이브 휴지통에서 되살릴 수 있다) ·
+     화면 목록(drive_assets_v1)에서는 지운 줄만 saveMerged 로 뺀다(통째로 덮지 않음 · 교훈 3) */
+  async function 삭제하기(){
+    const 것들=고른줄(); if(!것들.length||삭제중) return;
+    const 토큰P=드라이브토큰(); 토큰P.catch(function(){});      /* 클릭 순간에 불러야 허락 창이 막히지 않는다 */
+    const 이름=것들.length===1?'"'+것들[0].이름+'"':것들.length+'개 파일';
+    const 예=await window.baroyamAsk(이름+'을(를) 지울까요?',
+      '구글드라이브 휴지통으로 옮깁니다. 30일 안에는 드라이브 휴지통에서 되살릴 수 있어요.','휴지통으로');
+    if(!예) return;
+    삭제중=true; $('drvDelete').disabled=true;
+    const 지운=[], 실패=[];
+    try{
+      const 토큰=await 토큰P;
+      for(let i=0;i<것들.length;i++){
+        const r=것들[i];
+        $('drvDeleteLabel').textContent='지우는 중 '+(i+1)+'/'+것들.length;
+        try{
+          const 답=await fetch(드라이브API+'/'+encodeURIComponent(r.아이디)+'?supportsAllDrives=true&fields=id,trashed',{
+            method:'PATCH',
+            headers:{Authorization:'Bearer '+토큰,'Content-Type':'application/json; charset=UTF-8'},
+            body:JSON.stringify({trashed:true})});
+          if(답.status===401) 권한만료();
+          if(답.status===404){ 지운.push(r.아이디); continue; }      /* 이미 드라이브에 없다 · 목록에서만 뺀다 */
+          if(!답.ok) throw new Error(답.status===403?'지울 권한이 없어요(파일 주인만 지울 수 있는 곳일 수 있어요)':'드라이브 오류 '+답.status);
+          지운.push(r.아이디);
+        }catch(err){
+          실패.push(r.이름+' · '+err.message);
+          if(/권한 시간/.test(err.message)) break;
+        }
+      }
+      if(지운.length) await 목록에서빼기(지운);
+    }catch(err){
+      console.error(err); 실패.push(err.message);
+    }finally{
+      삭제중=false; $('drvDeleteLabel').textContent='삭제';
+    }
+    지운.forEach(function(id){ 상태.선택.delete(id); });
+    if(상태.기준&&!상태.선택.has(상태.기준)) 상태.기준='';
+    if(줄들) 그리기();
+    선택표시();
+    if(실패.length) alert((지운.length?지운.length+'개는 휴지통으로 옮겼고, ':'')+'지우지 못한 파일 '+실패.length+'개\n\n'
+      + 실패.slice(0,10).join('\n')+(실패.length>10?'\n…':''));
+    else if(지운.length){
+      const 메타=$('drvMeta'), 원래=메타.textContent, 글=지운.length+'개를 휴지통으로 옮겼어요';
+      메타.textContent=글;
+      setTimeout(function(){ if(메타.textContent===글) 메타.textContent=원래; },4000);
+    }
+  }
+  async function 목록에서빼기(ids){
+    const 뺄=new Set(ids);
+    let 결과=null;
+    const 답=window.BAROYAM_DB?await window.BAROYAM_DB.saveMerged(열쇠,function(v){
+      const 글=typeof v==='string';
+      let d=v;
+      if(글){ try{ d=JSON.parse(v); }catch(e){ d=null; } }
+      if(!d||!Array.isArray(d['줄'])) return v;
+      const 아이디칸=(d['칸']||[]).indexOf('아이디');
+      d=Object.assign({},d,{'줄':d['줄'].filter(function(x){ return !뺄.has(x[아이디칸]); })});
+      결과=d;
+      return 글?JSON.stringify(d):d;
+    }):null;
+    if(답!=null&&결과){ 줄들적용(결과); return; }
+    /* 저장은 못 했어도 이 화면에서는 뺀다 · 드라이브에서는 이미 지워졌다 */
+    줄들=(줄들||[]).filter(function(r){ return !뺄.has(r.아이디); });
+    줄표={}; 줄들.forEach(function(r){ 줄표[r.아이디]=r; });
+    alert('드라이브에서는 지웠지만 화면 목록을 저장하지 못했어요 · 새로고침 단추를 누르면 맞춰져요');
   }
 
   function 안내(굵게, 잔글){
@@ -20714,6 +20834,7 @@ window.baroyamAsk=function(title,body,okText){
       window.UI.tabs(크기탭,function(값){ 상태.크기=값; 보기기억(); if(줄들) 레인들(); }).set(상태.크기);
     }
     $('drvPickClear').addEventListener('click',function(e){ e.stopPropagation(); 선택해제(); });
+    $('drvDelete').addEventListener('click',function(e){ e.stopPropagation(); 삭제하기(); });
     $('drvSave').addEventListener('click',function(e){
       e.stopPropagation();
       if(상태.선택.size>1){ const 창=$('drvSavePop'); 저장창(!(창&&!창.hidden)); }
@@ -20752,7 +20873,7 @@ window.baroyamAsk=function(title,body,okText){
     });
     const 회사탭=$('drvOwner');
     if(회사탭&&window.UI&&window.UI.tabs) 회사탭손=window.UI.tabs(회사탭,function(값){
-      상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.펼침.clear();
+      상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.형식.clear(); 상태.펼침.clear();
       상태.선택.clear(); 상태.기준=''; 저장창(false); 업고르기창(false);
       if(줄들) 그리기();
       선택표시();
