@@ -69,7 +69,13 @@ async function pageClick(patterns, visible, f2) {
     const href = (a.getAttribute && a.getAttribute('href')) || '';
     if (/^javascript:/i.test(href)) {
       const code = href.replace(/^javascript:\s*/i, '').replace(/;\s*$/, '');
-      if (!callCode(code)) { clicked.push('?' + code); continue; }
+      // javascript:void(0) 처럼 아무것도 안 하는 링크는 실제 동작이 누름 처리기(onclick)에 있다(2026-10-08 이지어드민 메뉴) ·
+      // 눌러서 처리기는 돌리되, 막히는 javascript: 이동만 먼저 취소한다(원래 아무것도 안 하는 이동이라 잃는 것이 없다)
+      const noop = !code || /^void\s*\(?\s*0\s*\)?$/i.test(code) || code === 'return false' || code === 'false';
+      if (noop) {
+        a.addEventListener('click', (e) => e.preventDefault(), { capture: true, once: true });
+        a.click();
+      } else if (!callCode(code)) { clicked.push('?' + code); continue; }
     } else {
       a.click();
     }
