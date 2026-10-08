@@ -2277,6 +2277,19 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-blank{padding:56px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
   @media (max-width:760px){ .iv-row{grid-template-columns:84px minmax(0,1fr) 70px 112px;gap:8px;padding:0 12px} .iv-br small{display:none} .iv-nm{font-size:13px} }
   #opsTabs{align-items:center}
+  /* 어드민 수집 중 게이지 · 끝을 모르는 일이라 막대 한 토막이 왼쪽↔오른쪽을 오간다 · 위에 지금 단계 글 */
+  .iv-load{display:flex;flex-direction:column;gap:9px;padding:14px 16px;border:1px solid color-mix(in srgb,var(--btn) 30%,var(--line));
+    border-radius:14px;background:var(--btn-soft)}
+  .iv-load[hidden]{display:none}
+  .iv-load-tx{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--btn-soft-ink)}
+  .iv-load-tx b{font-weight:800}
+  .iv-load-tx span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--body)}
+  .iv-load-bar{position:relative;height:8px;border-radius:999px;overflow:hidden;background:color-mix(in srgb,var(--btn) 14%,var(--paper))}
+  .iv-load-bar i{position:absolute;top:0;bottom:0;left:0;width:32%;border-radius:999px;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--btn) 55%,var(--paper)),var(--btn));
+    box-shadow:0 0 10px color-mix(in srgb,var(--btn) 45%,transparent);animation:ivSway 1.5s ease-in-out infinite alternate}
+  @keyframes ivSway{from{left:0}to{left:68%}}
+  @media (prefers-reduced-motion:reduce){ .iv-load-bar i{animation-duration:4s} }
   /* 당일판매현황 (ds-*) · 목록은 재고현황 iv-* 를 그대로 쓰고, 위에 숫자 카드 셋만 더한다 */
   .ds-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
   .ds-kpis:empty{display:none}
@@ -8650,6 +8663,10 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <div class="iv-stale-tx"><b id="dsStaleT"></b><span id="dsStaleS"></span></div>
               <button type="button" class="ui-btn primary sm" id="dsStaleGo">어드민 수집</button>
             </div>
+            <div class="iv-load" id="dsLoad" role="progressbar" aria-label="당일판매 수집 중" hidden>
+              <div class="iv-load-tx"><b>당일판매 수집 중</b><span id="dsLoadTx"></span></div>
+              <div class="iv-load-bar"><i></i></div>
+            </div>
             <p class="iv-note" id="dsNote" role="status" aria-live="polite" hidden></p>
             <div class="iv-guide" id="dsGuide" hidden></div>
             <div class="ds-kpis" id="dsKpis"></div>
@@ -8668,6 +8685,10 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <span class="iv-stale-ic" aria-hidden="true">!</span>
               <div class="iv-stale-tx"><b id="ivStaleT"></b><span id="ivStaleS"></span></div>
               <button type="button" class="ui-btn primary sm" id="ivStaleGo">어드민 수집</button>
+            </div>
+            <div class="iv-load" id="ivLoad" role="progressbar" aria-label="재고 수집 중" hidden>
+              <div class="iv-load-tx"><b>재고 수집 중</b><span id="ivLoadTx"></span></div>
+              <div class="iv-load-bar"><i></i></div>
             </div>
             <p class="iv-note" id="ivNote" role="status" aria-live="polite" hidden></p>
             <!-- 어드민 수집 안내 · 크롬 확장 "바로얌 재고 수집"(ezadmin-extension)이 없는 PC에서 설치 방법을 보여 준다 -->
@@ -15255,6 +15276,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const ivHasExt=()=>!!document.documentElement.dataset.baroyamInvExt;
   function ivBusy(on){
     const b=$('ivFetch');
+    /* 게이지는 지금 돌고 있는 수집의 화면(opsJob)에만 · 끝나면 둘 다 내린다 */
+    $('ivLoad').hidden=!(on&&opsJob!=='sales'); $('dsLoad').hidden=!(on&&opsJob==='sales');
     if(on){ b.classList.remove('done'); b.classList.add('busy'); b.setAttribute('aria-busy','true'); return; }
     if(!b.classList.contains('busy')) return;
     b.classList.remove('busy'); b.removeAttribute('aria-busy');
@@ -15277,7 +15300,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('dsStaleGo').addEventListener('click',()=>$('ivFetch').click());
   /* 지금 돌고 있는 수집 · 'inventory' | 'sales' · 확장이 보내는 진행 안내를 그 탭의 안내 줄에 띄운다 */
   let opsJob='inventory';
-  const jobNote=t=>(opsJob==='sales'?dsNote:ivNote)(t);
+  /* 수집 중이면 게이지 글을 바꾸고, 아니면 안내 줄에 */
+  const jobNote=t=>{
+    if($('ivFetch').classList.contains('busy')){ $(opsJob==='sales'?'dsLoadTx':'ivLoadTx').textContent=t||''; (opsJob==='sales'?dsNote:ivNote)(''); return; }
+    (opsJob==='sales'?dsNote:ivNote)(t);
+  };
   $('ivFetch').addEventListener('click',()=>{
     const sales=window.baroyamOpsTab==='sales', note=sales?dsNote:ivNote;
     if($('ivFetch').classList.contains('busy')){ jobNote('수집 중입니다 · 이지어드민 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
@@ -15290,14 +15317,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     opsJob=sales?'sales':'inventory';
     ivGuide(false,sales?'dsGuide':'ivGuide'); ivBusy(true);
-    note('이지어드민 창을 여는 중');
+    jobNote('이지어드민을 여는 중');
     window.postMessage({source:'baroyam-dashboard',type:sales?'sales-start':'inventory-start'},location.origin);
   });
   /* 확장 → 이 페이지 · 진행 상황, 읽은 표(저장 후 inventory-ack 로 결과를 돌려준다), 실패 */
   window.addEventListener('message',async e=>{
     const d=e.data;
     if(e.source!==window||!d||d.source!=='baroyam-inv-ext') return;
-    if(d.type==='status'){ if(d.message) jobNote(d.message); if(d.done) ivBusy(false); return; }
+    if(d.type==='status'){ if(d.done) ivBusy(false); if(d.message) jobNote(d.message); return; }
     if(d.type!=='inventory'&&d.type!=='inventory-error') return;
     const ack=(ok,message)=>window.postMessage({source:'baroyam-dashboard',type:'inventory-ack',id:d.id,ok,message},location.origin);
     if(d.type==='inventory-error'){ ivNote('수집하지 못했습니다 · '+(d.message||'')); ivBusy(false); ack(true,'대시보드에 알렸습니다'); return; }

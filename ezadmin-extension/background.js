@@ -1,8 +1,10 @@
 // 바로얌 재고 수집 · 심부름꾼
-// 대시보드(dashboard.js)가 "시작"을 보내면 이지어드민 현 재고조회를 최소화된 창으로 열고(사람 눈에 안 띄게),
-// (kind 'sales' 이면 그 창에서 정산통계 > 당일판매분요약표로 넘어가 읽는다 · 1.2.0~)
-// 로그인이 필요할 때만 그 창을 앞으로 띄운다 · 로그인되면 다시 내리고, 그 창(ezadmin.js)이 읽은 표를
-// 대시보드 탭으로 넘긴다 · 저장이 끝나면 이지어드민 창을 닫는다.
+// 대시보드(dashboard.js)가 "시작"을 보내면 이지어드민 현 재고조회를 대시보드 창 안의 **접힌 탭 묶음**("바로얌 수집")에 열고,
+// (kind 'sales' 이면 그 탭에서 정산통계 > 당일판매분요약표로 넘어가 읽는다 · 1.2.0~)
+// 로그인이 필요할 때만 그 탭을 따로 창으로 꺼내 앞에 띄운다 · 로그인되면 다시 접힌 묶음으로 돌려놓고, 그 탭(ezadmin.js)이 읽은 표를
+// 대시보드 탭으로 넘긴다 · 저장이 끝나면 이지어드민 탭을 닫는다.
+// 1.3.0 · 예전에는 최소화된 새 창을 만들었는데, 윈도우가 그 창을 잠깐 그렸다가 내려 로그인돼 있어도 창이 번쩍였다(사용자 지적) ·
+// 새 창을 만들지 않으면 번쩍일 것이 없다 · 사람이 로그인해야 할 때만 창이 보인다.
 // 지금 하는 일(어느 창·어느 대시보드 탭)은 서비스 워커가 잠들어도 남도록 storage.session 에 둔다.
 
 const I100_URL = 'https://ga83.ezadmin.co.kr/template35.htm?template=I100';
@@ -21,6 +23,34 @@ const endJob = () => chrome.storage.session.remove('job');
 
 const toDashboard = (job, msg) => chrome.tabs.sendMessage(job.dashTabId, msg).catch(() => {});
 
+// 이지어드민 탭을 대시보드 창의 접힌 묶음에 넣는다(묶음이 접혀 있으면 탭 줄에도 이름표만 남는다)
+async function tuck(tabId, windowId) {
+  const groupId = await chrome.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
+  await chrome.tabGroups.update(groupId, { collapsed: true, title: '바로얌 수집', color: 'orange' }).catch(() => {});
+}
+// 사람이 봐야 할 때(로그인·실패) · 탭을 따로 창으로 꺼내 앞에 띄운다 · 이미 꺼냈으면 그 창을 앞으로
+async function popOut(job) {
+  const tab = await chrome.tabs.get(job.tabId).catch(() => null);
+  if (!tab) return;
+  const dash = await chrome.tabs.get(job.dashTabId).catch(() => null);
+  if (dash && tab.windowId !== dash.windowId) {
+    await chrome.windows.update(tab.windowId, { state: 'normal', focused: true }).catch(() => {});
+    return;
+  }
+  await chrome.tabs.ungroup(job.tabId).catch(() => {});
+  await chrome.windows.create({ tabId: job.tabId, type: 'normal', focused: true, width: 1100, height: 820 }).catch(() => {});
+}
+// 로그인이 끝나면 · 꺼낸 창에서 다시 대시보드 창의 접힌 묶음으로(창은 탭이 빠지면 저절로 닫힌다)
+async function tuckBack(job) {
+  const tab = await chrome.tabs.get(job.tabId).catch(() => null);
+  const dash = await chrome.tabs.get(job.dashTabId).catch(() => null);
+  if (!tab || !dash || tab.windowId === dash.windowId) return;
+  await chrome.tabs.move(job.tabId, { windowId: dash.windowId, index: -1 }).catch(() => {});
+  await tuck(job.tabId, dash.windowId).catch(() => {});
+  await chrome.tabs.update(job.dashTabId, { active: true }).catch(() => {});
+  await chrome.windows.update(dash.windowId, { focused: true }).catch(() => {});
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     const tabId = sender.tab && sender.tab.id;
@@ -28,9 +58,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // 대시보드 · 어드민 수집 단추
     if (msg.type === 'start') {
       const old = await getJob();
-      if (old) await chrome.windows.remove(old.winId).catch(() => {});
-      const win = await chrome.windows.create({ url: I100_URL, type: 'normal', state: 'minimized', focused: false });
-      await setJob({ winId: win.id, tabId: win.tabs[0].id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
+      if (old) { await endJob(); await chrome.tabs.remove(old.tabId).catch(() => {}); }
+      // 대시보드 탭 바로 뒤가 아니라 맨 끝에, 뒤쪽(active:false)으로 열고 곧바로 접힌 묶음에 넣는다
+      const windowId = sender.tab.windowId;
+      const tab = await chrome.tabs.create({ windowId, url: I100_URL, active: false, index: -1 });
+      await setJob({ tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
+      await tuck(tab.id, windowId).catch(() => {});
       sendResponse({ ok: true });
       return;
     }
@@ -46,18 +79,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const job = await getJob();
     if (!job || job.tabId !== tabId) { sendResponse({ ok: false }); return; }
 
-    // 이지어드민 창 · 로그인 화면이면 앞으로 띄우고, 로그인이 끝나면 다시 내린 뒤 대시보드를 앞으로
+    // 이지어드민 탭 · 로그인 화면이면 창으로 꺼내 앞에 띄우고, 로그인이 끝나면 다시 접힌 묶음으로 돌려놓은 뒤 대시보드를 앞으로
     if (msg.type === 'show') {
-      await chrome.windows.update(job.winId, { state: 'normal', focused: true, width: 1100, height: 820 }).catch(() => {});
+      await popOut(job);
       sendResponse({ ok: true });
       return;
     }
     if (msg.type === 'hide') {
-      const win = await chrome.windows.get(job.winId).catch(() => null);
-      if (win && win.state !== 'minimized') {
-        await chrome.windows.update(job.winId, { state: 'minimized' }).catch(() => {});
-        chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
-      }
+      await tuckBack(job);
       sendResponse({ ok: true });
       return;
     }
@@ -83,12 +112,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const reply = await chrome.tabs.sendMessage(job.dashTabId, { ...msg, kind: job.kind || 'inventory', shipped: msg.shipped != null ? msg.shipped : job.shipped }).catch(() => null);
       if (reply && reply.ok) {
         await endJob();
-        await chrome.windows.remove(job.winId).catch(() => {});
-        chrome.tabs.update(job.dashTabId, { active: true }).catch(() => {});
-        chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
+        await chrome.tabs.remove(job.tabId).catch(() => {});
       }
-      // 실패하면 사람이 무슨 일인지 볼 수 있게 이지어드민 창을 앞으로 띄워 둔다
-      if (!reply || !reply.ok) chrome.windows.update(job.winId, { state: 'normal', focused: true, width: 1100, height: 820 }).catch(() => {});
+      // 실패하면 사람이 무슨 일인지 볼 수 있게 이지어드민 탭을 창으로 꺼내 앞에 띄워 둔다
+      if (!reply || !reply.ok) await popOut(job);
       sendResponse(reply || { ok: false, message: '대시보드 창을 찾지 못했습니다 · 대시보드에서 어드민 수집을 다시 눌러 주세요.' });
       return;
     }
@@ -97,10 +124,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true; // sendResponse 를 나중에 부른다
 });
 
-// 사람이 이지어드민 창을 닫으면 일을 끝내고 대시보드에 알린다
-chrome.windows.onRemoved.addListener(async (winId) => {
+// 사람이 이지어드민 탭(또는 꺼낸 창)을 닫으면 일을 끝내고 대시보드에 알린다 · 창 사이를 옮기는 것은 닫는 것이 아니다(onRemoved 가 오지 않음)
+chrome.tabs.onRemoved.addListener(async (closedTabId) => {
   const job = await getJob();
-  if (!job || job.winId !== winId) return;
+  if (!job || job.tabId !== closedTabId) return;
   await endJob();
   toDashboard(job, { type: 'status', message: '이지어드민 창을 닫아 수집을 멈췄습니다', done: true });
 });
