@@ -2295,10 +2295,9 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-al-x{all:unset;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--mute);cursor:pointer;font-size:13px;font-weight:700}
   .iv-al-x:hover{background:var(--neg-soft);color:var(--neg)}
   .iv-al-warn{grid-column:1/-1;font-size:11.5px;font-weight:700;color:var(--warn)}
-  /* 구간 색 숫자 · 바탕 없이 글자색만(사용자 요청 · 알약 바탕은 화려해 보기 불편) · 요약 알약은 기본 회색 바탕에 글자만 그 색 */
+  /* 구간 색 숫자 · 바탕 없이 글자색만(사용자 요청 · 알약 바탕은 화려해 보기 불편) */
   .iv-num-c{color:var(--ivc)}
   .iv-num-c small{color:inherit!important;opacity:.75}
-  .iv-sum i.iv-num-c{color:var(--ivc)} .iv-sum i.iv-num-c b{color:var(--ivc)}
   @media (max-width:760px){ #ivAlList .pf-mix-row{grid-template-columns:1fr auto} #ivAlList .iv-al-rng,#ivAlList .iv-al-cols{grid-column:1/-1} }
   .iv-blank{padding:56px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
   @media (max-width:760px){ .iv-row{grid-template-columns:84px minmax(0,1fr) 70px 112px;gap:8px;padding:0 12px} .iv-br small{display:none} .iv-nm{font-size:13px} }
@@ -8703,8 +8702,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
           <div class="pf-pane" data-ops-pane="stock" hidden>
             <div class="iv-meta">
               <span class="iv-live"></span><b>이지어드민 재고</b><span id="ivAt"></span><span class="iv-demo" id="ivDemo" hidden>예시 화면</span>
-              <span class="pf-grow"></span><span class="iv-sum" id="ivSum"></span>
-              <button type="button" class="ui-btn sm ghost" id="ivHideOpen" title="목록에 보이지 않게 할 상품을 고릅니다">표시 설정</button>
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn sm soft" id="ivHideOpen" title="상품 이름·숨김과 위험재고 색을 정합니다"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>표시 설정</button>
             </div>
             <!-- 오늘 재고가 아직 안 들어왔을 때만 · 자동 수집(07:00·16:30)이 실패한 날 어드민 수집을 누르게 한다 -->
             <div class="iv-stale" id="ivStale" role="alert" hidden>
@@ -15216,8 +15215,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(window.baroyamOpsTab==='stock') $('ivFetchAt').textContent=fetchAtText(at);
     paintStale(inv,at);
     const blank=t=>'<div class="iv-blank">'+t+'</div>';
-    if(!inv){ $('ivSum').innerHTML=''; $('ivGrid').innerHTML=blank(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
-    const hiddenN=inv.items.filter(x=>INV.hidden[ivKey(x)]!=null).length;
+    if(!inv){ $('ivGrid').innerHTML=blank(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
     /* 보일 이름에서 "01." 같은 번호를 지워도 순서가 흐트러지지 않게, 정렬은 이지어드민 이름(raw)으로 한다 */
     const list=inv.items.filter(x=>INV.hidden[ivKey(x)]==null).map(x=>{
       const exp=String(x.exp==null?'':x.exp).trim(), raw=String(x.name||'').trim(), shown=String(INV.names[ivKey(x)]||'').trim();
@@ -15225,17 +15223,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }).filter(r=>r.raw).sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.raw.localeCompare(b.raw,'ko',{numeric:true}));
     const groups=[];
     list.forEach(r=>{ const g=groups[groups.length-1]; if(g&&g.brand===r.brand) g.rows.push(r); else groups.push({brand:r.brand,rows:[r]}); });
-    /* 위 한 줄 · 브랜드·상품 수, 확인할 것(품절·유통기한 지남·임박)은 있을 때만 */
-    const out=list.filter(r=>r.stock!=null&&r.stock<=0).length, past=list.filter(r=>r.days!=null&&r.days<0).length,
-      soon=list.filter(r=>r.days!=null&&r.days>=0&&r.days<=SOON).length;
-    /* 위험재고 구간마다 걸린 상품 수 · 0 개인 구간은 요약에 안 보인다 */
-    const rules=ivAlList(INV.alerts), hitN={};
-    list.forEach(r=>{ r.al=ivAlHit(rules,r.stock); if(r.al) hitN[r.al.id]=(hitN[r.al.id]||0)+1; });
-    $('ivSum').innerHTML='<i>브랜드<b>'+groups.length+'</b></i><i>상품<b>'+list.length+'</b></i>'
-      +(out?'<i class="neg">품절<b>'+out+'</b></i>':'')
-      +rules.filter(a=>hitN[a.id]).map(a=>'<i class="iv-num-c" style="--ivc:'+ivAlVar(a.color)+'" title="정상재고 '+ivAlRange(a)+'">'+esc(a.label||'위험재고')+'<b>'+hitN[a.id]+'</b></i>').join('')+(past?'<i class="neg">유통기한 지남<b>'+past+'</b></i>':'')
-      +(soon?'<i class="warn">'+SOON+'일 안 만료<b>'+soon+'</b></i>':'')
-      +(hiddenN?'<i title="표시 설정에서 숨긴 상품">숨김<b>'+hiddenN+'</b></i>':'');
+    /* 위험재고 구간 · 숫자 색만 바꾼다(위 요약 알약은 사용자 요청으로 뺐다) */
+    const rules=ivAlList(INV.alerts);
+    list.forEach(r=>{ r.al=ivAlHit(rules,r.stock); });
     if(!groups.length){ $('ivGrid').innerHTML=blank('받아 온 재고가 비어 있습니다'); return; }
     $('ivGrid').innerHTML='<div class="iv-list" role="table" aria-label="재고현황">'
       +'<div class="iv-row iv-cols" role="row"><span>브랜드</span><span>상품명</span><span>정상재고</span><span>유통기한</span></div>'
