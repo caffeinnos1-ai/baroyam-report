@@ -2216,6 +2216,15 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-sum i.warn{background:var(--warn-soft);color:var(--warn)} .iv-sum i.warn b{color:var(--warn)}
   .iv-note{margin:0;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft)}
   .iv-note[hidden]{display:none}
+  /* 어드민 수집 안내 · 순서 세 줄 + 북마크바로 끌어다 놓는 "재고 보내기" 단추 */
+  .iv-guide{padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--paper);font-size:13px;font-weight:600;color:var(--body);line-height:1.7}
+  .iv-guide[hidden]{display:none}
+  .iv-guide ol{margin:0;padding-left:20px}
+  .iv-guide b{color:var(--ink)}
+  .iv-guide .iv-bm{display:inline-flex;align-items:center;gap:6px;margin:0 4px;padding:3px 12px;border-radius:999px;background:var(--btn);color:var(--paper);
+    font-size:12.5px;font-weight:800;text-decoration:none;cursor:grab}
+  .iv-guide .iv-tip{margin-top:6px;font-size:12px;color:var(--mute)}
+  .iv-guide .iv-guide-x{float:right}
   /* 목록 한 개 · 상품 한 줄 = 브랜드 | 상품명 | 정상재고 | 유통기한 (사용자 요청 · 카드 격자보다 한 줄로 훑기 편하게) ·
      브랜드는 묶음 첫 줄에만 쓰고, 브랜드가 바뀌는 줄 위에 조금 진한 선을 긋는다 */
   .iv-list{border:1px solid var(--line);border-radius:16px;background:var(--paper);overflow:clip;
@@ -8581,7 +8590,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
           <button type="button" class="hero-view-tab active" role="tab" data-ops="sales" data-sub="오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.">당일판매현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 브랜드별 정상재고와 유통기한을 한눈에 봅니다.">재고현황</button>
           <!-- 어드민 수집 · 재고현황 탭일 때만 맨 위 단추 줄 오른쪽 끝에 보인다 -->
-          <button type="button" class="ui-btn" id="ivFetch" hidden title="이지어드민에서 지금 재고를 받아 옵니다">
+          <button type="button" class="ui-btn" id="ivFetch" hidden title="이지어드민에 직접 로그인해 지금 재고를 받아 옵니다">
             <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
             <span class="lb">어드민 수집</span><span class="at" id="ivFetchAt"></span></button>
         </div>
@@ -8604,6 +8613,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <button type="button" class="ui-btn sm ghost" id="ivHideOpen" title="목록에 보이지 않게 할 상품을 고릅니다">표시 설정</button>
             </div>
             <p class="iv-note" id="ivNote" role="status" aria-live="polite" hidden></p>
+            <!-- 어드민 수집 안내 · 새 창에서 이지어드민에 직접 로그인 → 현 재고조회 검색 → 북마크바 "재고 보내기" -->
+            <div class="iv-guide" id="ivGuide" hidden></div>
             <div id="ivGrid"></div>
             <!-- 표시 설정 · 판매 중단·세트 매칭용 임시 재고처럼 목록에 보이지 않게 할 상품을 고른다(app_settings inventory_hidden_v1) -->
             <div class="settings-overlay" id="ivHideDlg" hidden>
@@ -10797,7 +10808,7 @@ window.CsGuide=(function(){
   const AUTOMATIONS=[
     {name:'당일판매분요약표', where:'#재고알림', days:[0,1,2,3,4,5,6], times:['16:15'], record:'당일판매분요약표 (Slack)',
      desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올려요.', task:'cron'},
-    /* caffeinnos-automation/inventory_report.js · 막힌 날은 재고현황의 "어드민 수집" 단추(회사 PC 리뷰수집기 · 수동 로그인) */
+    /* caffeinnos-automation/inventory_report.js · 막힌 날은 재고현황의 "어드민 수집" 단추(이지어드민 창에서 직접 로그인 → 북마크 "재고 보내기") */
     {name:'재고현황 수집', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
     {name:'밥시간 알림', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['10:50'],
@@ -15150,43 +15161,106 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     ivNote('표시 설정을 저장했습니다'+(n?' · '+n+'개 상품을 숨깁니다':''));
   });
 
-  /* 어드민 수집(맨 위 단추 줄 오른쪽) · 평소에는 VPS(caffeinnos-automation/inventory_report.js)가 매일 07:00·16:30 채운다 ·
-     자동 로그인이 로봇 검사로 막힌 날을 대비해, 이 단추는 이 PC의 리뷰수집기(127.0.0.1:4317)에게 전용 크롬으로
-     현 재고조회(I100)를 읽게 한다 · 로그인이 풀려 있으면 그 크롬 창에서 사람이 로그인한다(5분 기다림) ·
-     수집기는 목록만 돌려주고 저장은 여기서 로그인한 계정으로 한다(review-collector/src/inventory.mjs) */
-  const IV_COLLECTOR='http://127.0.0.1:4317/api/inventory/collect';
+  /* 어드민 수집(맨 위 단추 줄 오른쪽) · 평소에는 VPS(caffeinnos-automation/inventory_report.js)가 매일 07:00·16:30
+     자동 로그인으로 채운다 · 이 단추는 자동 로그인이 로봇 검사로 막힌 날을 위한 수동 길이다(리뷰수집기와는 관계없다):
+     ① 단추가 이지어드민 현 재고조회(I100)를 새 창으로 연다 ② 사람이 그 창에서 직접 로그인·검색(F2)한다
+     ③ 북마크바의 "재고 보내기"(IV_BOOKMARK)를 누르면 그 창이 표를 읽어 이 창(window.opener)으로 보내고
+     ④ 이 창이 로그인한 계정으로 inventory_v1 에 저장한 뒤 결과를 그 창에 알려 준다 */
+  const IV_EZ_URL='https://ga83.ezadmin.co.kr/template35.htm?template=I100';
   const ivNote=t=>{ const n=$('ivNote'); n.textContent=t||''; n.hidden=!t; };
-  async function ivCollect(){
-    let job;
-    try{ job=await (await fetch(IV_COLLECTOR,{method:'POST'})).json(); }
-    catch(e){ throw new Error('이 PC에서 리뷰수집기가 꺼져 있습니다 · 회사 PC에서 리뷰수집기를 켠 뒤 다시 눌러 주세요'); }
-    if(job.error&&!job.id) throw new Error(job.error);
-    /* 로그인 기다림(5분)까지 넉넉히 7분 · 2초마다 묻는다 */
-    for(let i=0;i<210;i++){
-      if(job.status==='done') return job.items||[];
-      if(job.status==='failed') throw new Error(job.error||job.message||'수집하지 못했습니다');
-      ivNote(job.message||'');
-      await new Promise(r=>setTimeout(r,2000));
-      job=await (await fetch(IV_COLLECTOR+'/'+encodeURIComponent(job.id))).json();
+  /* 북마크 · 이지어드민 창에서 돈다(이 파일의 다른 것을 쓰지 않는다) · 대시보드가 열 수 있는 주소(GitHub Pages·리뷰수집기 /dashboard)로만 보낸다 */
+  function IV_BOOKMARK(){
+    var DASH=['https://caffeinnos1-ai.github.io','http://127.0.0.1:4317','http://localhost:4317'];
+    var I100='/template35.htm?template=I100';
+    if(!/(^|\.)ezadmin\.co\.kr$/.test(location.hostname)){ alert('이지어드민 현 재고조회 창에서 눌러 주세요.\n(이 단추는 북마크바로 끌어다 놓아 쓰는 것입니다)'); return; }
+    if(!window.opener){ alert('바로얌 대시보드 > 재고현황 > 어드민 수집 단추로 연 창에서 눌러 주세요.'); return; }
+    if(/login/.test(location.pathname)){ alert('로그인한 뒤 다시 눌러 주세요.'); return; }
+    var grid=document.getElementById('grid1');
+    if(!grid){
+      /* 로그인이 풀린 I100 은 "mysqli ..." 한 줄만 보인다 → 평소 쓰는 로그인 화면(login3)으로 보낸다 */
+      if(/mysqli/.test(document.body.innerText)){ alert('로그인이 풀려 있습니다 · 로그인 화면으로 이동합니다. 로그인한 뒤 다시 눌러 주세요.'); location.href='https://login3.ezadmin.co.kr/login.htm'; return; }
+      location.href=I100; alert('현 재고조회로 이동합니다 · 검색(F2)한 뒤 한 번 더 눌러 주세요.'); return;
     }
-    throw new Error('수집이 너무 오래 걸려 멈췄습니다');
+    var trs=grid.querySelectorAll('tbody > tr[id]');
+    if(!trs.length){ alert('검색(F2)을 눌러 재고가 표에 나온 뒤 다시 눌러 주세요.'); return; }
+    var info=document.querySelector('.ui-paging-info'), m=info&&info.innerText.match(/\/\s*([\d,]+)/), total=m?+m[1].replace(/,/g,''):trs.length;
+    if(total>trs.length){
+      var sel=document.querySelector('#gridpager select.ui-pg-selbox');
+      if(sel){ sel.value='500'; sel.dispatchEvent(new Event('change',{bubbles:true})); }
+      alert('한 쪽에 '+trs.length+'개만 보여 500개씩 보기로 바꿨습니다 · 표가 다시 나오면 한 번 더 눌러 주세요.'); return;
+    }
+    var rows=[].map.call(trs,function(tr){
+      function c(f){ var td=tr.querySelector('td[aria-describedby="grid1_'+f+'"]'); return td?td.innerText.trim():''; }
+      return {code:c('product_id'),supply:c('supply_name'),name:c('product_name'),stock:c('stock'),period:c('period_trans')};
+    });
+    var done=false;
+    window.addEventListener('message',function(e){
+      if(done||DASH.indexOf(e.origin)<0||!e.data||e.data.source!=='baroyam-dashboard'||e.data.type!=='inventory-ack') return;
+      done=true; alert(e.data.message);
+    });
+    DASH.forEach(function(o){ try{ window.opener.postMessage({source:'baroyam-ezadmin',type:'inventory',rows:rows},o); }catch(err){} });
+    setTimeout(function(){ if(!done) alert('대시보드 창이 답하지 않습니다 · 대시보드 창이 열려 있는지 확인하고 다시 눌러 주세요.'); },8000);
   }
-  $('ivFetch').addEventListener('click',async()=>{
-    const b=$('ivFetch'); if(b.classList.contains('busy')) return;
-    b.classList.remove('done'); b.classList.add('busy'); b.setAttribute('aria-busy','true'); ivNote('');
-    let msg='';
+  const IV_BOOKMARK_HREF='javascript:'+encodeURIComponent('('+IV_BOOKMARK.toString()+')()');
+  /* 상품 한 줄 만들기 · VPS(inventory_report.js)와 같은 규칙 · 브랜드는 상품명 앞 [ ]·( ) → 이름 속 [ ](숫자 없는 것) → 공급처 [ ] · '#' 시작은 세트 */
+  function ivBrandOf(name,supply){
+    if(name.startsWith('#')) return '세트';
+    const head=name.match(/^\s*[\[(]([^\])]+)[\])]/); if(head) return head[1].trim();
+    const inner=name.match(/\[([^\]\d]+)\]/); if(inner) return inner[1].trim();
+    const sup=String(supply||'').match(/\[([^\]]+)\]\s*$/); return sup?sup[1].trim():'기타';
+  }
+  function ivToItem(r){
+    const p=String(r.period||'').match(/^\s*(-?[\d,]+)\s*\(\s*([^)]+?)\s*\)\s*$/);
+    const n=v=>(v===''||v==null?null:Number(String(v).replace(/,/g,'')));
+    const name=String(r.name||'').trim();
+    return {code:String(r.code||'').trim(),brand:ivBrandOf(name,r.supply),name,stock:n(r.stock),exp:p?p[2]:String(r.period||'').trim(),expQty:p?n(p[1]):null};
+  }
+  let ivWin=null;
+  function ivGuide(show){
+    const g=$('ivGuide');
+    if(!show){ g.hidden=true; g.innerHTML=''; return; }
+    g.innerHTML='<button type="button" class="ui-btn sm ghost iv-guide-x" data-iv-guide-x>닫기</button>'
+      +'<ol><li>새 창에 이지어드민 <b>현 재고조회</b>가 열립니다 · 로그인이 풀려 있으면 그 창에서 직접 로그인해 주세요.</li>'
+      +'<li>현 재고조회에서 <b>검색(F2)</b>을 눌러 재고가 표에 나오게 합니다.</li>'
+      +'<li>그 창의 북마크바에서 <b>재고 보내기</b>를 누르면 이 화면에 저장됩니다.</li></ol>'
+      +'<div class="iv-tip">처음 한 번 · 이 단추를 북마크바로 끌어다 놓으세요 →<a class="iv-bm" href="'+esc(IV_BOOKMARK_HREF)+'" title="북마크바로 끌어다 놓으세요">재고 보내기</a>'
+      +'(북마크바가 안 보이면 Ctrl+Shift+B)</div>';
+    g.hidden=false;
+  }
+  $('ivGuide').addEventListener('click',e=>{
+    if(e.target.closest('.iv-bm')){ e.preventDefault(); ivNote('"재고 보내기"는 여기서 누르지 않고 북마크바로 끌어다 놓아 이지어드민 창에서 누릅니다'); return; }
+    if(e.target.closest('[data-iv-guide-x]')) ivGuide(false);
+  });
+  $('ivFetch').addEventListener('click',()=>{
+    const b=$('ivFetch');
+    b.classList.remove('done'); void b.offsetWidth; b.classList.add('done'); setTimeout(()=>b.classList.remove('done'),600);
+    ivNote(''); ivGuide(true);
+    /* opener 가 남아야 "재고 보내기"가 이 창으로 보낼 수 있으므로 noopener 를 쓰지 않는다 */
+    ivWin=window.open(IV_EZ_URL,'baroyamEzInventory');
+    if(!ivWin) ivNote('새 창이 막혔습니다 · 주소창 오른쪽에서 팝업을 허용한 뒤 다시 눌러 주세요');
+  });
+  /* "재고 보내기"가 보낸 표 · 내가 연 그 이지어드민 창에서 온 것만 받는다 */
+  window.addEventListener('message',async e=>{
+    const d=e.data;
+    if(!d||d.source!=='baroyam-ezadmin'||d.type!=='inventory') return;
+    if(!/^https:\/\/([a-z0-9-]+\.)*ezadmin\.co\.kr$/.test(e.origin)||!ivWin||e.source!==ivWin) return;
+    const reply=(ok,message)=>{ try{ e.source.postMessage({source:'baroyam-dashboard',type:'inventory-ack',ok,message},e.origin); }catch(err){} };
+    const b=$('ivFetch');
+    b.classList.add('busy'); b.setAttribute('aria-busy','true');
+    let ok=false, msg;
     try{
-      const items=await ivCollect();
-      if(!items.length) throw new Error('읽은 상품이 없습니다');
+      const items=(Array.isArray(d.rows)?d.rows:[]).filter(r=>r&&String(r.name||'').trim()).map(ivToItem);
+      if(!items.length) throw new Error('받은 상품이 없습니다');
       const value={updatedAt:new Date().toISOString(),source:'ezadmin',via:'manual',items};
       const db=DB();
-      if(!db||!db.saveSetting||!(await db.saveSetting('inventory_v1',JSON.stringify(value)))) throw new Error('읽었지만 저장하지 못했습니다 · 로그인 상태를 확인해 주세요');
+      if(!db||!db.saveSetting||!(await db.saveSetting('inventory_v1',JSON.stringify(value)))) throw new Error('받았지만 저장하지 못했습니다 · 대시보드 로그인 상태를 확인해 주세요');
       INV.data=value; INV.loaded=true; INV.error=false; paintStock();
-      msg=items.length+'개를 가져왔습니다';
-    }catch(e){ console.error(e); msg=e.message||String(e); }
+      ok=true; msg=items.length+'개를 가져와 재고현황에 저장했습니다';
+    }catch(err){ console.error(err); msg=err.message||String(err); }
     b.classList.remove('busy'); b.removeAttribute('aria-busy');
     b.classList.add('done'); setTimeout(()=>b.classList.remove('done'),600);
-    ivNote(msg);
+    ivNote(msg); if(ok) ivGuide(false);
+    reply(ok,(ok?'바로얌 대시보드 · ':'저장하지 못했습니다 · ')+msg);
   });
 
   /* ---------- 열기·다시 받기 ---------- */
