@@ -2295,10 +2295,10 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-al-x{all:unset;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--mute);cursor:pointer;font-size:13px;font-weight:700}
   .iv-al-x:hover{background:var(--neg-soft);color:var(--neg)}
   .iv-al-warn{grid-column:1/-1;font-size:11.5px;font-weight:700;color:var(--warn)}
-  /* 구간 색 숫자 · 재고현황 목록의 정상재고와 위 요약 알약이 같이 쓴다(--ivc = 고른 색) */
-  .iv-num-c{display:inline-block;padding:2px 9px;border-radius:999px;color:var(--ivc);background:color-mix(in srgb,var(--ivc) 14%,var(--paper))}
+  /* 구간 색 숫자 · 바탕 없이 글자색만(사용자 요청 · 알약 바탕은 화려해 보기 불편) · 요약 알약은 기본 회색 바탕에 글자만 그 색 */
+  .iv-num-c{color:var(--ivc)}
   .iv-num-c small{color:inherit!important;opacity:.75}
-  .iv-sum i.iv-num-c{color:var(--ivc);background:color-mix(in srgb,var(--ivc) 14%,var(--paper))} .iv-sum i.iv-num-c b{color:var(--ivc)}
+  .iv-sum i.iv-num-c{color:var(--ivc)} .iv-sum i.iv-num-c b{color:var(--ivc)}
   @media (max-width:760px){ #ivAlList .pf-mix-row{grid-template-columns:1fr auto} #ivAlList .iv-al-rng,#ivAlList .iv-al-cols{grid-column:1/-1} }
   .iv-blank{padding:56px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
   @media (max-width:760px){ .iv-row{grid-template-columns:84px minmax(0,1fr) 70px 112px;gap:8px;padding:0 12px} .iv-br small{display:none} .iv-nm{font-size:13px} }
@@ -15141,7 +15141,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 위험재고 · app_settings inventory_alert_v1 = {rules:{id:{id,label,min,max,color,ord}}} · 정상재고가 min~max(max 가 null 이면 이상)이면
      숫자를 color 색으로 보인다 · color 는 아래 IV_AL_COLORS 의 열쇠(색 코드가 아니라 화면 색 이름이라 다크 모드에서도 맞음) */
   const IV_ALERT_KEY='inventory_alert_v1';
-  const IV_AL_COLORS=[['neg','빨강'],['self','주황'],['warn','노랑'],['pos','초록'],['coupang','파랑'],['talk','보라'],['mute','회색']];
+  const IV_AL_COLORS=[['neg','빨강'],['self','주황'],['warn','노랑'],['pos','초록']];
   const ivAlVar=c=>'var(--'+(IV_AL_COLORS.some(x=>x[0]===c)?c:'neg')+')';
   /* 구간을 순서대로(ord) 늘어놓는다 · 겹치면 앞의 것이 이긴다 */
   const ivAlList=m=>Object.keys(m||{}).map(k=>m[k]).filter(r=>r&&typeof r==='object').sort((a,b)=>(a.ord||0)-(b.ord||0));
