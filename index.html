@@ -1328,7 +1328,7 @@ window.BAROYAM_ACCESS=(function(){
    화면을 가리는 수준의 잠금이다(서버는 로그인 여부만 본다) */
 window.BAROYAM_EDIT_ACCESS=(function(){
   const KEY='editAccess', LS='baroyam_edit_access_v1';
-  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'}];
+  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'손익·마진 관리 수정',menu:'profit'}];
   let map={};
   try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&o.map&&typeof o.map==='object') map=o.map; }catch(e){}
   const pending={};   /* 서버에 아직 못 올린 회원별 값 · 서버본을 받아도 이 값이 이긴다 */
@@ -2200,6 +2200,13 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   body.view-is-profit .wrap{max-width:1720px;padding-left:24px;padding-right:24px}
   @media (max-width:760px){ body.view-is-profit .wrap{padding-left:16px;padding-right:16px} }
   /* 손익·마진 관리 · 마진 계산기·품목별 원가표 (pf-*) · 버튼·탭·칩·입력칸은 표준 ui-* 그대로 쓰고 자리만 잡는다 */
+  /* 손익·마진 관리 보기 전용(수정 권한 없음) · 고치는 단추·추가 줄을 숨기고 칸을 누를 수 없게 */
+  .pf-ro-note{margin-top:22px;padding:10px 14px;border-radius:12px;background:var(--chip-flat);color:var(--body);font-size:12.5px;font-weight:600}
+  .pf-ro-note[hidden]{display:none}
+  #view-profit.pf-ro #pfRowAdd,#view-profit.pf-ro [data-act="opt"],#view-profit.pf-ro [data-act="prod"],#view-profit.pf-ro [data-act="more"],
+  #view-profit.pf-ro .pf-add,#view-profit.pf-ro [data-del]{display:none}
+  #view-profit.pf-ro .pf-calc tbody .ui-field,#view-profit.pf-ro .pf-list .ui-field,#view-profit.pf-ro .pf-book-name,#view-profit.pf-ro .pf-ad,
+  #view-profit.pf-ro .pf-calc td.out{pointer-events:none}
   .pf-pane{margin-top:28px;display:flex;flex-direction:column;gap:14px}
   .pf-pane[hidden]{display:none}
   /* 재고현황 (iv-*) · 위 한 줄(기준 시각·확인할 것) + 목록 하나 · 상품 한 줄 =
@@ -8577,6 +8584,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
             <div class="ptitle" id="profitViewTitle">순수익 요약</div>
             <div class="psub" id="profitViewSub">채널별·기간별 최종 순이익을 모니터링합니다.</div>
           </div>
+          <!-- 보기 전용 안내 · 수정 권한이 없을 때만 -->
+          <div class="pf-ro-note" id="pfRoNote" hidden>보기 전용이에요 · 손익·마진 관리 수정은 팀장 또는 관리자 설정 › 권한설정에서 '손익·마진 관리 수정'을 받은 회원만 할 수 있어요.</div>
           <!-- 마진 계산기 · 계산표(예: 홀떡피자 메타광고)마다 구성 줄을 두고, 원가는 원가표의 상품을 골라 개수만 넣는다 -->
           <div class="pf-pane" data-pf-pane="calc" hidden>
             <!-- 거르기 줄 · 브랜드 · 검색 · 광고 중만 (판매처는 화면 아래 탭) → 걸러진 상품의 옵션별 마진이 바로 아래에 -->
@@ -11566,7 +11575,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }).join('');
     editNoteEl.textContent=lead
       ? '팀장은 비밀번호를 통과하면 모든 화면을 고칠 수 있어요.'
-      : '켜 두면 팀장이 아니어도 그 화면을 고칠 수 있어요. 메뉴얼가이드는 문서·상담가이드·조직도 수정이 포함되고, 목차 편집은 팀장만 해요.';
+      : '켜 두면 팀장이 아니어도 그 화면을 고칠 수 있어요. 메뉴얼가이드는 문서·상담가이드·조직도 수정이 포함되고, 목차 편집은 팀장만 해요. 손익·마진 관리는 마진 계산기·품목별 원가표 수정이에요(끄면 보기만).';
   }
   if(editsEl) editsEl.addEventListener('click',e=>{
     const b=e.target.closest('.ui-chip[data-ek]');
@@ -14417,6 +14426,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const view=document.getElementById('view-profit');
   if(!view) return;
   const DB=()=>window.BAROYAM_DB;
+  /* 수정 권한 · 팀장(비밀번호 통과) 또는 관리자 설정>권한설정에서 '손익·마진 관리 수정'을 받은 회원만 고친다 · 나머지는 보기만 ·
+     화면에서 막는 잠금이다(서버는 로그인 여부만 봄) */
+  const canEdit=()=>{ try{ return !!(window.BAROYAM_EDIT_ACCESS&&window.BAROYAM_EDIT_ACCESS.can('profit')); }catch(e){ return false; } };
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
   const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
@@ -14468,6 +14480,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(changed&&st.onChange) st.onChange();
     };
     st.mark=function(){
+      if(!canEdit()) return;
       st.dirty=true; persist();
       const db=DB(); if(db&&db.saveNotice) db.saveNotice(KEY,'pending');
       clearTimeout(st.timer); st.timer=setTimeout(st.flush,700);
@@ -14768,6 +14781,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     else if(!list.length) h=msg(filtered?'조건에 맞는 상품이 없습니다':esc(cn)+'에 등록한 상품이 없습니다 · "+ 상품 등록" 으로 상품 이름을 정하고, 그 안에 옵션을 추가하세요');
     $('pfCalcTable').innerHTML=h;
     $('pfCalcTable').querySelectorAll('tr[data-row]').forEach(tr=>outCells(tr,B().rows[tr.dataset.row]));
+    applyRO();
   }
   function addRow(g,itemId,noMix){
     const rows=allRows(), mine=rows.filter(r=>r.g===g.id), last=mine.slice(-1)[0]||rows.slice(-1)[0], id=uid();
@@ -14797,6 +14811,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return box?{box,g:B().prods[box.dataset.prod]}:null;
   }
   $('pfCalcTable').addEventListener('input',e=>{
+    if(!canEdit()) return;
     if(e.target.dataset.gk){ const p=prodOf(e.target); if(p&&p.g){ p.g[e.target.dataset.gk]=e.target.value; CALC.mark(); } return; }
     const qk=e.target.dataset.q;
     if(qk){
@@ -14814,6 +14829,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      Enter·칸 밖 누르기 = 저장, Esc = 취소, 비우고 저장 = 다시 자동 */
   const PCT={disc:1,mrate:1,roas:1};
   $('pfCalcTable').addEventListener('dblclick',e=>{
+    if(!canEdit()) return;
     const td=e.target.closest('td[data-o]'); if(!td||td.querySelector('input')) return;
     const x=rowOf(td); if(!x||!x.r) return;
     const k=td.dataset.o, v=calc(x.r)[k];
@@ -14838,6 +14854,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const x=rowOf(e.target); if(x&&x.r) e.target.value=comma(x.r[k]);
   });
   $('pfCalcTable').addEventListener('click',e=>{
+    if(!canEdit()) return;
     const b=e.target.closest('button'); if(!b) return;
     const x=rowOf(b);
     if(!x){
@@ -14903,6 +14920,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* 상품 등록 · 이름을 정할 상자를 맨 아래에 만들고 이름 칸으로 데려간다 */
   $('pfRowAdd').addEventListener('click',()=>{
+    if(!canEdit()) return;
     if(!CALC.loaded||!COST.loaded) return;
     const id=uid();
     if(!curChan()) return;
@@ -14974,6 +14992,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfMixQ').addEventListener('input',e=>{ mixQ=e.target.value; paintMix(); });
   $('pfMixClear').addEventListener('click',()=>{ Object.keys(mixDraft).forEach(k=>{ mixDraft[k]={q:0,f:0}; }); paintMix(); });
   $('pfMixOk').addEventListener('click',()=>{
+    if(!canEdit()){ closeMix(); return; }
     const r=mixFor&&CALC.data.rows[mixFor.r];
     if(r){
       const clean={};
@@ -15024,10 +15043,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     };
     small('pfShipTable',live(c.ship),'fee','구간','발송비(원)');
     small('pfChanTable',live(c.chans),'rate','판매처','수수료(%)',true);
+    applyRO();
   }
   function wireList(tableId,field){
     const t=$(tableId);
     t.addEventListener('input',e=>{
+      if(!canEdit()) return;
       const k=e.target.dataset.k, tr=e.target.closest('tr[data-id]'); if(!k||!tr) return;
       const o=COST.data[field][tr.dataset.id]; if(!o) return;
       o[k]=e.target.hasAttribute('data-n')?num(e.target.value):e.target.value;
@@ -15040,6 +15061,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(e.target.dataset.k==='brand') setTimeout(()=>{ if(!t.contains(document.activeElement)) paintBom(); },0);
     });
     t.addEventListener('click',e=>{
+      if(!canEdit()) return;
       const mv=e.target.closest('[data-mv]');
       if(mv){
         /* 한 칸 옮기고 순서(ord)를 1,2,3… 으로 다시 매긴다 · 바뀐 ord 칸만 저장된다 */
@@ -15062,7 +15084,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   wireList('pfItemTable','items'); wireList('pfShipTable','ship'); wireList('pfChanTable','chans');
   function wireAdd(formId,field,make){
     $(formId).addEventListener('submit',e=>{
-      e.preventDefault(); if(!COST.loaded) return;
+      e.preventDefault(); if(!canEdit()) return; if(!COST.loaded) return;
       const f=e.target, o=make(f); if(!o) return;
       o.id=uid(); o.ord=Date.now(); COST.data[field][o.id]=o; COST.mark();
       [...f.querySelectorAll('input')].forEach(i=>{ if(i.name!=='brand') i.value=''; });
@@ -15589,7 +15611,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
 
   /* ---------- 열기·다시 받기 ---------- */
-  function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); }
+  /* 보기 전용 · 고치는 단추·추가 줄을 숨기고 칸을 읽기만 되게 · 위에 안내 한 줄 */
+  function applyRO(){
+    const ro=!canEdit();
+    view.classList.toggle('pf-ro',ro);
+    const note=$('pfRoNote'); if(note) note.hidden=!(ro&&pane!=='summary');
+    view.querySelectorAll('.pf-calc input,.pf-list input,.pf-book-name').forEach(i=>{ i.readOnly=ro; });
+  }
+  function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); applyRO(); }
+  ['baroyam:editaccess','baroyam:profiles','baroyam:adminmode'].forEach(ev=>document.addEventListener(ev,()=>{ if(view.style.display!=='none') paint(); }));
   /* 다른 PC 고침이 들어와도, 지금 이 화면에서 칸을 고치는 중이면 다시 그리지 않는다(입력 중인 글자가 날아가지 않게) */
   function soft(){ const a=document.activeElement; if(a&&view.contains(a)&&a.matches('input')) return; if(!dlg.hidden) return; paint(); }
   COST.onChange=soft; CALC.onChange=soft;
@@ -15631,7 +15661,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   if(salesVisible()) salesShow();
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load()]); });
   window.baroyamProfit={
-    show(p){ pane=p||'summary'; if(pane==='summary') return; paint(); refresh(); },
+    show(p){ pane=p||'summary'; if(pane==='summary'){ applyRO(); return; } paint(); refresh(); },
     _calc:calc,
   };
 })();
