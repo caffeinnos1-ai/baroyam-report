@@ -12,8 +12,9 @@ toPage({ type: 'ready' });
 // 페이지 → 확장 · 어드민 수집 단추
 window.addEventListener('message', (e) => {
   if (e.source !== window || !e.data || e.data.source !== FROM_PAGE) return;
-  if (e.data.type === 'inventory-start') {
-    chrome.runtime.sendMessage({ type: 'start' }).catch(() => toPage({ type: 'status', message: '확장 프로그램이 응답하지 않습니다 · 크롬을 다시 열어 주세요', done: true }));
+  // 재고(inventory-start) · 당일판매(sales-start, 1.2.0~)
+  if (e.data.type === 'inventory-start' || e.data.type === 'sales-start') {
+    chrome.runtime.sendMessage({ type: 'start', kind: e.data.type === 'sales-start' ? 'sales' : 'inventory' }).catch(() => toPage({ type: 'status', message: '확장 프로그램이 응답하지 않습니다 · 크롬을 다시 열어 주세요', done: true }));
   }
 });
 
@@ -33,6 +34,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     sendResponse({ ok: false, message: '대시보드가 답하지 않습니다 · 대시보드 창을 새로고침한 뒤 다시 눌러 주세요.' });
   }, 30000);
   window.addEventListener('message', onAck);
-  toPage({ type: msg.type === 'rows' ? 'inventory' : 'inventory-error', id, rows: msg.rows, message: msg.message });
+  const kind = msg.kind === 'sales' ? 'sales' : 'inventory';
+  toPage({ type: msg.type === 'rows' ? kind : kind + '-error', id, rows: msg.rows, shipped: msg.shipped, orders: msg.orders, message: msg.message });
   return true;
 });

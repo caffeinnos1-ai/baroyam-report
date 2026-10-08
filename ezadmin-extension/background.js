@@ -1,5 +1,6 @@
 // 바로얌 재고 수집 · 심부름꾼
 // 대시보드(dashboard.js)가 "시작"을 보내면 이지어드민 현 재고조회를 최소화된 창으로 열고(사람 눈에 안 띄게),
+// (kind 'sales' 이면 그 창에서 정산통계 > 당일판매분요약표로 넘어가 읽는다 · 1.2.0~)
 // 로그인이 필요할 때만 그 창을 앞으로 띄운다 · 로그인되면 다시 내리고, 그 창(ezadmin.js)이 읽은 표를
 // 대시보드 탭으로 넘긴다 · 저장이 끝나면 이지어드민 창을 닫는다.
 // 지금 하는 일(어느 창·어느 대시보드 탭)은 서비스 워커가 잠들어도 남도록 storage.session 에 둔다.
@@ -29,7 +30,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const old = await getJob();
       if (old) await chrome.windows.remove(old.winId).catch(() => {});
       const win = await chrome.windows.create({ url: I100_URL, type: 'normal', state: 'minimized', focused: false });
-      await setJob({ winId: win.id, tabId: win.tabs[0].id, dashTabId: tabId, startedAt: Date.now() });
+      await setJob({ winId: win.id, tabId: win.tabs[0].id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
       sendResponse({ ok: true });
       return;
     }
@@ -37,7 +38,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // 이지어드민 창 · "내가 수집할 창인가?"
     if (msg.type === 'whoami') {
       const job = await getJob();
-      sendResponse({ isJob: !!job && job.tabId === tabId });
+      const isJob = !!job && job.tabId === tabId;
+      sendResponse({ isJob, kind: isJob ? job.kind || 'inventory' : null, shipped: isJob ? job.shipped : null, moves: isJob ? job.moves || 0 : 0 });
       return;
     }
 
@@ -60,6 +62,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return;
     }
 
+    // 이지어드민 창 · 당일판매 · 메인 화면에서 읽은 배송(금일) 숫자 / 메뉴 이동 횟수(같은 곳을 맴돌지 않게)를 기억해 둔다
+    if (msg.type === 'meta') {
+      if (msg.shipped !== undefined) job.shipped = msg.shipped;
+      if (msg.moved) job.moves = (job.moves || 0) + 1;
+      await setJob(job);
+      sendResponse({ ok: true, moves: job.moves || 0 });
+      return;
+    }
+
     // 이지어드민 창 · 지금 단계 알림(로그인 기다림·검색 중 …) → 대시보드 안내 줄
     if (msg.type === 'status') {
       toDashboard(job, { type: 'status', message: msg.message });
@@ -69,7 +80,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     // 이지어드민 창 · 읽은 표 → 대시보드가 저장하고 결과를 돌려준다
     if (msg.type === 'rows' || msg.type === 'error') {
-      const reply = await chrome.tabs.sendMessage(job.dashTabId, msg).catch(() => null);
+      const reply = await chrome.tabs.sendMessage(job.dashTabId, { ...msg, kind: job.kind || 'inventory', shipped: msg.shipped != null ? msg.shipped : job.shipped }).catch(() => null);
       if (reply && reply.ok) {
         await endJob();
         await chrome.windows.remove(job.winId).catch(() => {});

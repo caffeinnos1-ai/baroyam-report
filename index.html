@@ -2277,6 +2277,27 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-blank{padding:56px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center;font-size:13.5px;font-weight:600;color:var(--mute)}
   @media (max-width:760px){ .iv-row{grid-template-columns:84px minmax(0,1fr) 70px 112px;gap:8px;padding:0 12px} .iv-br small{display:none} .iv-nm{font-size:13px} }
   #opsTabs{align-items:center}
+  /* 당일판매현황 (ds-*) · 목록은 재고현황 iv-* 를 그대로 쓰고, 위에 숫자 카드 셋만 더한다 */
+  .ds-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .ds-kpis:empty{display:none}
+  .ds-kpi{display:flex;flex-direction:column;gap:4px;padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:var(--paper);
+    box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 5%,transparent)}
+  .ds-kpi small{font-size:12px;font-weight:700;color:var(--mute)}
+  .ds-kpi b{font-size:26px;font-weight:800;letter-spacing:-.6px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.15}
+  .ds-kpi b em{font-style:normal;margin-left:3px;font-size:13px;font-weight:700;color:var(--mute)}
+  .ds-kpi span{font-size:11.5px;font-weight:600;color:var(--mute)}
+  .ds-kpi.main{background:var(--btn-soft);border-color:color-mix(in srgb,var(--btn) 25%,var(--line))}
+  .ds-kpi.main small,.ds-kpi.main span{color:var(--btn-soft-ink)}
+  .ds-kpi.main b{color:var(--btn-soft-ink)}
+  .ds-qty{text-align:right;font-size:15px;font-weight:800;color:var(--btn-soft-ink);font-variant-numeric:tabular-nums}
+  .ds-qty small{margin-left:2px;font-size:11px;font-weight:700;color:var(--mute)}
+  .ds-stk{text-align:right;font-size:14px;font-weight:700;color:var(--body);font-variant-numeric:tabular-nums}
+  .ds-stk small{margin-left:2px;font-size:11px;font-weight:700;color:var(--mute)}
+  .ds-stk.low{color:var(--warn)} .ds-stk.zero{color:var(--neg)}
+  .ds-cols span:nth-child(3),.ds-cols span:nth-child(4){text-align:right}
+  .iv-row.ds-row{grid-template-columns:150px minmax(0,1fr) 110px 130px}
+  .iv-blank.ds-none{border-style:solid;background:var(--paper)}
+  @media (max-width:760px){ .ds-kpis{grid-template-columns:1fr 1fr} .ds-kpi.main{grid-column:1/-1} .iv-row.ds-row{grid-template-columns:84px minmax(0,1fr) 62px 72px} }
   /* 어드민 수집 · 옆 탭과 같은 높이의 알약 · 왼쪽 동그란 아이콘(강조색) + 이름 + 마지막 수집 시각 */
   #ivFetch{margin-left:auto;height:38px;padding:0 15px 0 5px;gap:9px;border-radius:999px;background:var(--paper);color:var(--ink);
     border:1.5px solid var(--line);font-size:13px;font-weight:800;letter-spacing:-.2px;
@@ -8605,8 +8626,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
         <div class="hero-view-tabs" id="opsTabs" role="tablist" aria-label="판매·재고 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-ops="sales" data-sub="오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.">당일판매현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 브랜드별 정상재고와 유통기한을 한눈에 봅니다.">재고현황</button>
-          <!-- 어드민 수집 · 재고현황 탭일 때만 맨 위 단추 줄 오른쪽 끝에 보인다 -->
-          <button type="button" class="ui-btn" id="ivFetch" hidden title="이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다">
+          <!-- 어드민 수집 · 맨 위 단추 줄 오른쪽 끝 · 누르면 지금 탭(당일판매/재고)의 것을 이지어드민에서 가져온다 -->
+          <button type="button" class="ui-btn" id="ivFetch" title="이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다">
             <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
             <span class="lb">어드민 수집</span><span class="at" id="ivFetchAt"></span></button>
         </div>
@@ -8616,9 +8637,23 @@ window.BAROYAM_EDIT_ACCESS=(function(){
             <div class="ptitle" id="opsViewTitle">당일판매현황</div>
             <div class="psub" id="opsViewSub">오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.</div>
           </div>
-          <!-- 당일판매현황 · 김비서가 매일 16:15 슬랙으로 보내는 당일판매 요약을 화면에서도 보게 될 자리 -->
+          <!-- 당일판매현황 · 이지어드민 당일판매분요약표(app_settings daily_sales_v1 · VPS 11:00·14:00·16:15 가 채움)를 읽기만 한다 ·
+               위 한 줄(기준 시각 · 요약 칩) + 숫자 카드 셋(배송·판매수량·판매 상품) + 목록 하나(브랜드 | 상품명 | 당일수량 | 현재고) -->
           <div class="pf-pane" data-ops-pane="sales">
-            <div class="profit-empty">당일판매현황은 아직 연동되지 않았습니다.<br>김비서가 매일 슬랙으로 보내는 당일판매 요약을 여기서도 보게 됩니다 · 회사 PC에서 연동합니다.</div>
+            <div class="iv-meta">
+              <span class="iv-live"></span><b>이지어드민 당일판매</b><span id="dsAt"></span><span class="iv-demo" id="dsDemo" hidden>예시 화면</span>
+              <span class="pf-grow"></span><span class="iv-sum" id="dsSum"></span>
+            </div>
+            <!-- 오늘 것이 아직 없을 때만 · 자동 수집(11:00·14:00·16:15)이 실패한 날 어드민 수집을 누르게 한다 -->
+            <div class="iv-stale" id="dsStale" role="alert" hidden>
+              <span class="iv-stale-ic" aria-hidden="true">!</span>
+              <div class="iv-stale-tx"><b id="dsStaleT"></b><span id="dsStaleS"></span></div>
+              <button type="button" class="ui-btn primary sm" id="dsStaleGo">어드민 수집</button>
+            </div>
+            <p class="iv-note" id="dsNote" role="status" aria-live="polite" hidden></p>
+            <div class="iv-guide" id="dsGuide" hidden></div>
+            <div class="ds-kpis" id="dsKpis"></div>
+            <div id="dsGrid"></div>
           </div>
           <!-- 재고현황 · 이지어드민 재고(app_settings inventory_v1 · 서버가 채움)를 읽기만 한다 ·
                위 한 줄(기준 시각 · 확인할 것) + 목록 하나(브랜드 | 상품명 | 정상재고 | 유통기한) -->
@@ -10829,7 +10864,10 @@ window.CsGuide=(function(){
   /* days · 도는 요일(0=일) · times 가 없으면 늘 켜져 있는 것 · record 는 automation_runs 의 workflow 이름(crontab.txt 와 같게) */
   const AUTOMATIONS=[
     {name:'당일판매분요약표', where:'#재고알림', days:[0,1,2,3,4,5,6], times:['16:15'], record:'당일판매분요약표 (Slack)',
-     desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올려요.', task:'cron'},
+     desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올리고, 같은 표를 ERP 당일판매현황에도 저장해요.', task:'cron'},
+    /* caffeinnos-automation/daily_report.js --erp-only · 낮에는 슬랙 없이 ERP 당일판매현황(daily_sales_v1)에만 */
+    {name:'당일판매현황 수집', where:'ERP 판매·재고 · 당일판매현황', days:[0,1,2,3,4,5,6], times:['11:00','14:00'], record:'당일판매현황 수집',
+     desc:'낮 중간에 이지어드민 당일판매분요약표를 읽어 당일판매현황 화면만 새로 채워요(슬랙에는 보내지 않음).', task:'cron'},
     /* caffeinnos-automation/inventory_report.js · 막힌 날은 재고현황의 "어드민 수집" 단추(크롬 확장 ezadmin-extension · 사람은 로그인만) */
     {name:'재고현황 수집', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
@@ -14253,8 +14291,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     title.textContent=el.textContent.trim(); sub.textContent=el.dataset.sub||'';
     panes.forEach(p=>{ p.hidden=p.dataset.opsPane!==el.dataset.ops; });
-    const fetchBtn=document.getElementById('ivFetch'); if(fetchBtn) fetchBtn.hidden=el.dataset.ops!=='stock';
-    if(load&&el.dataset.ops==='stock'&&window.baroyamStock) window.baroyamStock.show();
+    /* 어드민 수집 단추는 두 탭 모두에 보이고, 누르면 지금 탭의 것을 가져온다 · 단추 옆 시각도 그 탭 기준으로 다시 그린다 */
+    window.baroyamOpsTab=el.dataset.ops;
+    const fetchBtn=document.getElementById('ivFetch');
+    if(fetchBtn) fetchBtn.title=el.dataset.ops==='stock'?'이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다':'이지어드민 창에서 로그인만 하면 오늘 판매를 자동으로 받아 옵니다';
+    if(el.dataset.ops==='stock'&&window.baroyamStock) (load?window.baroyamStock.show():window.baroyamStock.paint&&window.baroyamStock.paint());
+    if(el.dataset.ops==='sales'&&window.baroyamSales) (load?window.baroyamSales.show():window.baroyamSales.paint());
   }
   pick(cur,false);
   items.forEach(el=>el.addEventListener('click',()=>{
@@ -15073,12 +15115,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const box=$('ivStale'), btn=$('ivFetch');
     const now=new Date(), today=at&&!isNaN(at)&&!(inv&&inv.demo)&&at.toDateString()===now.toDateString();
     const need=INV.loaded&&!today&&!(INV.error&&!INV.data);
-    box.hidden=!need; btn.classList.toggle('need',need); $('ivAt').parentNode.classList.toggle('stale',need);
+    box.hidden=!need; if(window.baroyamOpsTab==='stock') btn.classList.toggle('need',need); $('ivAt').parentNode.classList.toggle('stale',need);
     if(!need) return;
     const early=now.getHours()<7||(now.getHours()===7&&now.getMinutes()<10);
     const last=at&&!isNaN(at)&&!(inv&&inv.demo)?' · 마지막 수집 '+(at.getMonth()+1)+'월 '+at.getDate()+'일 '+String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'):'';
     $('ivStaleT').textContent=early?'오늘 재고는 07:00에 자동으로 들어옵니다':'오늘 재고가 아직 수집되지 않았습니다';
     $('ivStaleS').textContent=(early?'급하면 어드민 수집으로 지금 가져올 수 있습니다':'자동 수집이 실패했을 수 있습니다 · 어드민 수집을 눌러 이지어드민에 로그인하면 가져옵니다')+last;
+  }
+  /* 어드민 수집 단추 옆 시각 · 오늘이면 시각만, 아니면 날짜 */
+  function fetchAtText(at){
+    const p2=n=>String(n).padStart(2,'0');
+    return at&&!isNaN(at)?(at.toDateString()===new Date().toDateString()?p2(at.getHours())+':'+p2(at.getMinutes()):(at.getMonth()+1)+'/'+at.getDate()):'';
   }
   function paintStock(){
     const inv=INV.data||(INV.loaded?demoInv():null);
@@ -15086,7 +15133,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const at=inv&&inv.updatedAt?new Date(inv.updatedAt):null, p2=n=>String(n).padStart(2,'0');
     $('ivAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준':'';
     /* 수집 단추 옆 · 오늘이면 시각만, 아니면 날짜 */
-    $('ivFetchAt').textContent=at&&!isNaN(at)?(at.toDateString()===new Date().toDateString()?p2(at.getHours())+':'+p2(at.getMinutes()):(at.getMonth()+1)+'/'+at.getDate()):'';
+    if(window.baroyamOpsTab==='stock') $('ivFetchAt').textContent=fetchAtText(at);
     paintStale(inv,at);
     const blank=t=>'<div class="iv-blank">'+t+'</div>';
     if(!inv){ $('ivSum').innerHTML=''; $('ivGrid').innerHTML=blank(INV.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
@@ -15213,8 +15260,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     b.classList.remove('busy'); b.removeAttribute('aria-busy');
     b.classList.add('done'); setTimeout(()=>b.classList.remove('done'),600);
   }
-  function ivGuide(show){
-    const g=$('ivGuide');
+  function ivGuide(show,id){
+    const g=$(id||'ivGuide');
     if(!show){ g.hidden=true; g.innerHTML=''; return; }
     g.innerHTML='<button type="button" class="ui-btn sm ghost iv-guide-x" data-iv-guide-x>닫기</button>'
       +'<b>이 PC의 크롬에 "바로얌 재고 수집" 확장 프로그램이 없습니다</b> · PC마다 처음 한 번만 설치합니다.'
@@ -15225,19 +15272,32 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     g.hidden=false;
   }
   $('ivGuide').addEventListener('click',e=>{ if(e.target.closest('[data-iv-guide-x]')) ivGuide(false); });
+  $('dsGuide').addEventListener('click',e=>{ if(e.target.closest('[data-iv-guide-x]')) ivGuide(false,'dsGuide'); });
   $('ivStaleGo').addEventListener('click',()=>$('ivFetch').click());
+  $('dsStaleGo').addEventListener('click',()=>$('ivFetch').click());
+  /* 지금 돌고 있는 수집 · 'inventory' | 'sales' · 확장이 보내는 진행 안내를 그 탭의 안내 줄에 띄운다 */
+  let opsJob='inventory';
+  const jobNote=t=>(opsJob==='sales'?dsNote:ivNote)(t);
   $('ivFetch').addEventListener('click',()=>{
-    if($('ivFetch').classList.contains('busy')){ ivNote('수집 중입니다 · 이지어드민 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
-    if(!ivHasExt()){ ivNote(''); ivGuide(true); return; }
-    ivGuide(false); ivBusy(true);
-    ivNote('이지어드민 창을 여는 중');
-    window.postMessage({source:'baroyam-dashboard',type:'inventory-start'},location.origin);
+    const sales=window.baroyamOpsTab==='sales', note=sales?dsNote:ivNote;
+    if($('ivFetch').classList.contains('busy')){ jobNote('수집 중입니다 · 이지어드민 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
+    if(!ivHasExt()){ note(''); ivGuide(true,sales?'dsGuide':'ivGuide'); return; }
+    /* 당일판매는 확장 1.2.0 부터 · 그 전 확장은 재고만 안다 */
+    const ver=(document.documentElement.dataset.baroyamInvExt||'0').split('.').map(Number);
+    if(sales&&(ver[0]||0)*1000+(ver[1]||0)<1002){
+      note('크롬 확장 "바로얌 재고 수집"을 새 버전으로 바꿔야 당일판매를 가져올 수 있습니다 · chrome://extensions 에서 이 확장의 새로고침(↻)을 누른 뒤 이 화면도 새로고침해 주세요');
+      return;
+    }
+    opsJob=sales?'sales':'inventory';
+    ivGuide(false,sales?'dsGuide':'ivGuide'); ivBusy(true);
+    note('이지어드민 창을 여는 중');
+    window.postMessage({source:'baroyam-dashboard',type:sales?'sales-start':'inventory-start'},location.origin);
   });
   /* 확장 → 이 페이지 · 진행 상황, 읽은 표(저장 후 inventory-ack 로 결과를 돌려준다), 실패 */
   window.addEventListener('message',async e=>{
     const d=e.data;
     if(e.source!==window||!d||d.source!=='baroyam-inv-ext') return;
-    if(d.type==='status'){ if(d.message) ivNote(d.message); if(d.done) ivBusy(false); return; }
+    if(d.type==='status'){ if(d.message) jobNote(d.message); if(d.done) ivBusy(false); return; }
     if(d.type!=='inventory'&&d.type!=='inventory-error') return;
     const ack=(ok,message)=>window.postMessage({source:'baroyam-dashboard',type:'inventory-ack',id:d.id,ok,message},location.origin);
     if(d.type==='inventory-error'){ ivNote('수집하지 못했습니다 · '+(d.message||'')); ivBusy(false); ack(true,'대시보드에 알렸습니다'); return; }
@@ -15268,6 +15328,115 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return {code:String(r.code||'').trim(),brand:ivBrandOf(name,r.supply),name,stock:n(r.stock),exp:p?p[2]:String(r.period||'').trim(),expQty:p?n(p[1]):null};
   }
 
+  /* ---------- 당일판매현황 (판매·재고 화면) ----------
+     app_settings 의 daily_sales_v1 = {updatedAt, date(한국 날짜), source:'ezadmin', via:'vps'|'manual', shipped(배송·금일), orders(주문수량),
+       items:[{code,brand,name,raw,qty(당일수량),stock(현재고)}]}
+     VPS(caffeinnos-automation/daily_report.js)가 11:00·14:00(ERP 만)·16:15(슬랙과 함께) 채운다 · 화면은 읽기만 한다 ·
+     막힌 날은 어드민 수집(크롬 확장)으로 사람이 로그인만 하면 가져와 여기서 저장한다 ·
+     이름은 VPS 와 같게 재고자동화.xlsx 매핑(daily_sales_names_v1 · VPS 가 매번 올려 둠)으로 바꾼다 */
+  const DS={data:null,loaded:false,error:false,busy:false,names:{}};
+  const dsNote=t=>{ const n=$('dsNote'); n.textContent=t||''; n.hidden=!t; };
+  const parseSet=v=>{ if(typeof v==='string'){ try{ return JSON.parse(v); }catch(e){ return null; } } return v; };
+  DS.load=async function(){
+    const db=DB(); if(!db||!db.loadSetting){ DS.error=true; return; }
+    if(DS.busy) return; DS.busy=true;
+    try{
+      const [v,nm]=await Promise.all([db.loadSetting('daily_sales_v1',true),db.loadSetting('daily_sales_names_v1',true)]);
+      const d=parseSet(v), n=parseSet(nm);
+      DS.names=n&&n.names&&typeof n.names==='object'?n.names:{};
+      DS.data=d&&Array.isArray(d.items)?d:null; DS.error=false; DS.loaded=true;
+    }catch(e){ console.error(e); DS.error=!DS.loaded; }
+    DS.busy=false;
+  };
+  const kstDay=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+  /* 예시 데이터 · 서버가 아직 한 번도 채우지 않았을 때 화면 모양을 보여 주려고만 쓴다(저장하지 않음 · "예시 화면" 표시) */
+  function demoSales(){
+    return {updatedAt:Date.now()-22*60000,date:kstDay(),demo:true,shipped:186,orders:203,items:[
+      {brand:'홀떡',name:'[홀떡] 홀떡피자 페퍼로니',qty:42,stock:1198},{brand:'홀떡',name:'[홀떡] 홀떡피자 불고기',qty:31,stock:829},
+      {brand:'홀떡',name:'[홀떡] 홀떡 핫도그',qty:58,stock:2252},{brand:'바비쿡',name:'[바비쿡] 불삼겹 덮밥',qty:24,stock:516},
+      {brand:'바비쿡',name:'[바비쿡] 치킨 덮밥',qty:17,stock:39},{brand:'마법의소스',name:'[마법의소스] 돈카츠소스',qty:12,stock:3388},
+      {brand:'밥심',name:'[밥심] 배미주먹밥 참치마요',qty:19,stock:0}]};
+  }
+  /* 오늘 것이 있는지 · 11:05 전에는 아직 첫 자동 수집 전이라 부드럽게 알린다 */
+  function paintSalesStale(d,at){
+    const box=$('dsStale'), btn=$('ivFetch');
+    const now=new Date(), today=!!(d&&!d.demo&&d.date===kstDay());
+    const need=DS.loaded&&!today&&!(DS.error&&!DS.data);
+    box.hidden=!need; if(window.baroyamOpsTab==='sales') btn.classList.toggle('need',need); $('dsAt').parentNode.classList.toggle('stale',need);
+    if(!need) return;
+    const early=now.getHours()<11||(now.getHours()===11&&now.getMinutes()<5);
+    const last=at&&!isNaN(at)&&!(d&&d.demo)?' · 마지막 수집 '+(at.getMonth()+1)+'월 '+at.getDate()+'일 '+String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'):'';
+    $('dsStaleT').textContent=early?'오늘 판매는 11:00에 처음 자동으로 들어옵니다':'오늘 판매가 아직 수집되지 않았습니다';
+    $('dsStaleS').textContent=(early?'지금 보려면 어드민 수집으로 가져올 수 있습니다':'자동 수집이 실패했을 수 있습니다 · 어드민 수집을 눌러 이지어드민에 로그인하면 가져옵니다')+last;
+  }
+  const DS_LOW=50;   /* 현재고가 이만큼 아래면 주황 · 0 이하는 빨강 */
+  function paintSales(){
+    const real=DS.data, today=!!(real&&real.date===kstDay());
+    /* 서버 것이 하나도 없을 때만 예시 · 지난 날 것이 있으면 그 날 것을 그대로(기준 시각 옆에 "오늘 것 아님") */
+    const d=real||(DS.loaded?demoSales():null);
+    $('dsDemo').hidden=!(d&&d.demo);
+    const at=d&&d.updatedAt?new Date(d.updatedAt):null, p2=n=>String(n).padStart(2,'0');
+    $('dsAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준'+(real&&!today?' · 오늘 것 아님':''):'';
+    if(window.baroyamOpsTab==='sales') $('ivFetchAt').textContent=fetchAtText(at);
+    paintSalesStale(d,at);
+    const blank=(t,c)=>'<div class="iv-blank'+(c?' '+c:'')+'">'+t+'</div>';
+    if(!d){ $('dsSum').innerHTML=''; $('dsKpis').innerHTML=''; $('dsGrid').innerHTML=blank(DS.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
+    const list=d.items.map(x=>{
+      const raw=String(x.raw||x.name||'').trim(), name=String(x.name||'').trim()||raw;
+      return {brand:String(x.brand||'').trim()||'기타',name,raw,qty:num(x.qty),stock:num(x.stock)};
+    }).filter(r=>r.name).sort((a,b)=>a.brand.localeCompare(b.brand,'ko')||a.name.localeCompare(b.name,'ko',{numeric:true}));
+    const groups=[];
+    list.forEach(r=>{ const g=groups[groups.length-1]; if(g&&g.brand===r.brand) g.rows.push(r); else groups.push({brand:r.brand,rows:[r]}); });
+    const qtySum=list.reduce((t,r)=>t+(r.qty>0?r.qty:0),0), low=list.filter(r=>r.stock!=null&&r.stock<DS_LOW).length;
+    $('dsSum').innerHTML='<i>브랜드<b>'+groups.length+'</b></i><i>상품<b>'+list.length+'</b></i>'
+      +(low?'<i class="warn" title="현재고가 '+DS_LOW+'개 아래인 판매 상품">재고 적음<b>'+low+'</b></i>':'');
+    const kpi=(cls,label,val,unit,sub)=>'<div class="ds-kpi'+(cls?' '+cls:'')+'"><small>'+label+'</small><b>'+(val==null?'–':comma(val)+'<em>'+unit+'</em>')+'</b><span>'+sub+'</span></div>';
+    $('dsKpis').innerHTML=list.length||d.shipped!=null?
+      kpi('main','당일 배송수량',d.shipped!=null?d.shipped:null,'건',d.shipped!=null?'이지어드민 처리현황 · 배송(금일)':(d.orders!=null?'배송 숫자를 못 읽음 · 주문수량 '+comma(d.orders)+'건':'배송 숫자를 못 읽었습니다'))
+      +kpi('','판매 수량',qtySum,'개','상품별 당일수량 합계')
+      +kpi('','판매 상품',list.length,'개','브랜드 '+groups.length+'곳'):'';
+    if(!groups.length){ $('dsGrid').innerHTML=blank(today?'오늘은 아직 출고된 이력이 없습니다':'받아 온 판매가 비어 있습니다','ds-none'); return; }
+    $('dsGrid').innerHTML='<div class="iv-list" role="table" aria-label="당일판매현황">'
+      +'<div class="iv-row ds-row iv-cols ds-cols" role="row"><span>브랜드</span><span>상품명</span><span>당일수량</span><span>현재고</span></div>'
+      +groups.map((g,gi)=>g.rows.map((r,i)=>{
+        const sc=r.stock==null?'':r.stock<=0?' zero':r.stock<DS_LOW?' low':'';
+        return '<div class="iv-row ds-row iv-item'+(i?'':' first')+'" role="row" style="--iv-h:'+IV_HUES[gi%IV_HUES.length]+'">'
+          +'<span class="iv-br">'+(i?'':'<i></i><span title="'+esc(g.brand)+'">'+esc(g.brand)+'</span><small>'+g.rows.length+'</small>')+'</span>'
+          +'<span class="iv-nm" title="'+esc(r.raw)+'">'+esc(r.name)+'</span>'
+          +'<span class="ds-qty">'+(r.qty==null?'–':comma(r.qty)+'<small>개</small>')+'</span>'
+          +'<span class="ds-stk'+sc+'">'+(r.stock==null?'–':comma(r.stock)+'<small>개</small>')+'</span></div>';
+      }).join('')).join('')+'</div>';
+  }
+  /* 확장이 읽은 표 → VPS(daily_report.js)와 같은 규칙으로 한 줄씩 · "(코드) 이름" → 매핑표로 이름 바꾸기 → 맨 앞 [브랜드] */
+  const dsNum=v=>{ const x=String(v==null?'':v).replace(/,/g,'').match(/-?\d+(\.\d+)?/); return x?Number(x[0]):null; };
+  function dsToItem(r){
+    const raw=String(r.raw||'').trim(), m=raw.match(/^\((\d+)\)\s*(.+)$/);
+    const code=m?String(parseInt(m[1],10)):'', nm=m?m[2].trim():raw;
+    const changed=DS.names[code+'|'+nm], name=changed===undefined?raw:String(changed);
+    const b=name.match(/^\[([^\]]+)\]/);
+    return {code,brand:b?b[1].trim():'기타',name,raw,qty:dsNum(r.qty),stock:dsNum(r.stock)};
+  }
+  /* 확장 → 이 페이지 · 읽은 당일판매 표(저장 후 inventory-ack 로 결과를 돌려준다) · 진행 안내는 위 재고 쪽 받는 곳이 함께 맡는다 */
+  window.addEventListener('message',async e=>{
+    const d=e.data;
+    if(e.source!==window||!d||d.source!=='baroyam-inv-ext') return;
+    if(d.type!=='sales'&&d.type!=='sales-error') return;
+    const ack=(ok,message)=>window.postMessage({source:'baroyam-dashboard',type:'inventory-ack',id:d.id,ok,message},location.origin);
+    if(d.type==='sales-error'){ dsNote('수집하지 못했습니다 · '+(d.message||'')); ivBusy(false); ack(true,'대시보드에 알렸습니다'); return; }
+    let ok=false, msg;
+    try{
+      if(!DS.loaded) await DS.load();          /* 이름 매핑을 먼저 받아 둔다 */
+      const items=(Array.isArray(d.rows)?d.rows:[]).filter(r=>r&&String(r.raw||'').trim()).map(dsToItem);
+      const value={updatedAt:new Date().toISOString(),date:kstDay(),source:'ezadmin',via:'manual',shipped:dsNum(d.shipped),orders:dsNum(d.orders),items};
+      const db=DB();
+      if(!db||!db.saveSetting||!(await db.saveSetting('daily_sales_v1',JSON.stringify(value)))) throw new Error('받았지만 저장하지 못했습니다 · 대시보드 로그인 상태를 확인해 주세요');
+      DS.data=value; DS.loaded=true; DS.error=false; paintSales();
+      ok=true; msg=items.length?items.length+'개 상품의 오늘 판매를 가져와 저장했습니다':'오늘은 아직 출고된 이력이 없습니다 · 저장했습니다';
+    }catch(err){ console.error(err); msg=err.message||String(err); }
+    ivBusy(false); dsNote(msg);
+    ack(ok,msg);
+  });
+
   /* ---------- 열기·다시 받기 ---------- */
   function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); }
   /* 다른 PC 고침이 들어와도, 지금 이 화면에서 칸을 고치는 중이면 다시 그리지 않는다(입력 중인 글자가 날아가지 않게) */
@@ -15293,9 +15462,22 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   setInterval(()=>{ if(stockVisible()&&!document.hidden) INV.load().then(stockSoft); },300000);
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&stockVisible()) INV.load().then(stockSoft); });
-  window.baroyamStock={show:stockShow};
+  window.baroyamStock={show:stockShow,paint:paintStock};
   /* 새로고침 직후(#ops) 이 코드보다 화면이 먼저 열렸으면 여기서 받는다 */
   if(stockVisible()) stockShow();
+  /* 당일판매현황 · 그 탭을 보고 있을 때만 받는다 · 5분마다 다시(서버가 낮에 몇 번 채움) */
+  const salesPane=document.querySelector('[data-ops-pane="sales"]');
+  const salesVisible=()=>window.baroyamCurrentView==='ops'&&salesPane&&!salesPane.hidden;
+  let salesRetry=null;
+  async function salesShow(){
+    paintSales();
+    await DS.load(); paintSales();
+    if(DS.error&&!salesRetry) salesRetry=setTimeout(()=>{ salesRetry=null; if(salesVisible()) salesShow(); },3000);
+  }
+  setInterval(()=>{ if(salesVisible()&&!document.hidden) DS.load().then(paintSales); },300000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&salesVisible()) DS.load().then(paintSales); });
+  window.baroyamSales={show:salesShow,paint:paintSales};
+  if(salesVisible()) salesShow();
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load()]); });
   window.baroyamProfit={
     show(p){ pane=p||'summary'; if(pane==='summary') return; paint(); refresh(); },
