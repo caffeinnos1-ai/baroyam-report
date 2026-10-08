@@ -2281,8 +2281,10 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-set-pane[hidden]{display:none}
   .iv-al-tip{margin-top:14px}
   .iv-al-add{flex:none;padding:4px 22px 6px}
-  /* 위험재고 구간 줄 · 이름 | 시작~끝 | 색 | 미리보기 | ✕ */
-  #ivAlList .pf-mix-row{grid-template-columns:120px auto minmax(0,1fr) auto auto;gap:12px;padding:10px 12px}
+  /* 위험재고 구간 줄 · 이름 | 시작~끝 | 색 | ✕ */
+  #ivAlList .pf-mix-row{grid-template-columns:140px auto minmax(0,1fr) auto;gap:12px;padding:10px 12px}
+  /* 구간 이름은 고른 색 글자로 · 따로 견본을 두지 않고 이 칸이 미리보기 */
+  #ivAlList [data-al="label"]{color:var(--ivc);font-weight:800}
   .iv-al-rng{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}
   .iv-al-rng .ui-field{width:76px;text-align:right;font-variant-numeric:tabular-nums}
   .iv-al-cols{display:flex;flex-wrap:wrap;gap:6px}
@@ -2290,8 +2292,6 @@ window.BAROYAM_EDIT_ACCESS=(function(){
     box-shadow:0 0 0 2px var(--paper),0 0 0 3px transparent;transition:box-shadow .15s}
   .iv-al-col[aria-pressed="true"]{box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ivc)}
   .iv-al-col:focus-visible{outline:2px solid var(--btn);outline-offset:3px}
-  .iv-al-pv{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:76px}
-  .iv-al-pv small{margin:0!important;font-size:11px}
   .iv-al-x{all:unset;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--mute);cursor:pointer;font-size:13px;font-weight:700}
   .iv-al-x:hover{background:var(--neg-soft);color:var(--neg)}
   .iv-al-warn{grid-column:1/-1;font-size:11.5px;font-weight:700;color:var(--warn)}
@@ -8746,7 +8746,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
                     <div class="pf-mix-list" id="ivHideList"></div>
                   </div>
                   <div class="iv-set-pane" data-iv-pane="alert" hidden>
-                    <p class="iv-hide-tip iv-al-tip">정상재고가 정한 구간 안이면 재고현황의 숫자가 그 색으로 보이고, 위 요약에 구간 이름과 개수가 나옵니다 · 끝을 비우면 "이상"입니다 · 구간이 겹치면 위 줄이 먼저입니다(품절 0개는 늘 빨간 품절).</p>
+                    <p class="iv-hide-tip iv-al-tip">정상재고가 정한 구간 안이면 재고현황의 숫자가 그 색으로 보입니다 · 끝을 비우면 "이상"입니다 · 구간이 겹치면 위 줄이 먼저입니다(품절 0개는 늘 빨간 품절).</p>
                     <div class="pf-mix-list" id="ivAlList"></div>
                     <div class="iv-al-add"><button type="button" class="ui-btn soft sm" id="ivAlAdd">+ 구간 추가</button></div>
                   </div>
@@ -15256,23 +15256,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   ivDlg.querySelector('.iv-set-nav').addEventListener('click',e=>{ const b=e.target.closest('[data-iv-tab]'); if(b) ivSetTab(b.dataset.ivTab); });
   /* ---------- 위험재고 구간 ----------
-     구간마다 이름·시작~끝 개수·숫자 색 · 지금 받아 온 재고(숨긴 상품 빼고)에서 몇 개가 걸리는지 미리 보여 준다 */
-  function ivAlCounts(rules){
-    const inv=INV.data, n={}; if(!inv) return n;
-    inv.items.forEach(x=>{ if(ivDraft[ivKey(x)]!=null) return; const a=ivAlHit(rules,num(x.stock)); if(a) n[a.id]=(n[a.id]||0)+1; });
-    return n;
-  }
+     구간마다 이름·시작~끝 개수·숫자 색 */
   function paintAlert(){
-    const rules=ivAlList(ivAl), cnt=ivAlCounts(rules);
+    const rules=ivAlList(ivAl);
     $('ivAlList').innerHTML=rules.map((a,i)=>{
       const lo=a.min==null?0:a.min, bad=a.max!=null&&a.max<lo;
       const over=!bad&&rules.slice(0,i).some(o=>{ const ol=o.min==null?0:o.min; return (o.max==null||lo<=o.max)&&(a.max==null||ol<=a.max); });
       return '<div class="pf-mix-row" data-id="'+esc(a.id)+'">'
-        +'<input class="ui-field sm" data-al="label" value="'+esc(a.label||'')+'" placeholder="위험재고" aria-label="구간 이름" maxlength="12">'
+        +'<input class="ui-field sm" data-al="label" style="--ivc:'+ivAlVar(a.color)+'" value="'+esc(a.label||'')+'" placeholder="위험재고" aria-label="구간 이름" maxlength="12">'
         +'<span class="iv-al-rng"><input class="ui-field sm" data-al="min" inputmode="numeric" value="'+(a.min==null?'':a.min)+'" placeholder="0" aria-label="시작 개수">개 ~'
         +'<input class="ui-field sm" data-al="max" inputmode="numeric" value="'+(a.max==null?'':a.max)+'" placeholder="이상" aria-label="끝 개수">개</span>'
         +'<span class="iv-al-cols" role="group" aria-label="숫자 색">'+IV_AL_COLORS.map(c=>'<button type="button" class="iv-al-col" data-c="'+c[0]+'" style="--ivc:var(--'+c[0]+')" aria-pressed="'+(a.color===c[0])+'" title="'+c[1]+'" aria-label="'+c[1]+'"></button>').join('')+'</span>'
-        +'<span class="iv-al-pv"><span class="iv-stk"><span class="iv-num-c" style="--ivc:'+ivAlVar(a.color)+'">'+comma(a.max==null?lo:Math.max(lo,a.max))+'<small>개</small></span></span><small>지금 '+(cnt[a.id]||0)+'개 상품</small></span>'
         +'<button type="button" class="iv-al-x" data-al-del title="구간 지우기" aria-label="구간 지우기">✕</button>'
         +(bad?'<span class="iv-al-warn">끝 개수가 시작보다 작아 이 구간에 걸리는 상품이 없습니다</span>'
           :over?'<span class="iv-al-warn">위 구간과 겹칩니다 · 겹치는 개수는 위 구간 색으로 보입니다</span>':'')
