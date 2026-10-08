@@ -14319,7 +14319,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       text.value=j.segments.map(s=>(s.t!=null?fmtT(s.t)+' ':'')+s.text).join('\n');
       loadedFor=id;
       analyze();
-      note((j.auto?'유튜브 자동 생성 자막':'직접 올린 자막')+'을 불러왔습니다'+(j.lang&&!/^ko/.test(j.lang)?' ('+j.lang+')':'')+'.');
+      const LANG={en:'영어',ja:'일본어',zh:'중국어',es:'스페인어',de:'독일어',fr:'프랑스어',pt:'포르투갈어',vi:'베트남어',th:'태국어',id:'인도네시아어',ru:'러시아어'};
+      note(j.from
+        ?(LANG[String(j.from).split('-')[0]]||j.from)+' 자막을 한국어로 번역했습니다(번역기 · 어색한 문장이 있을 수 있음).'
+        :(j.auto?'유튜브 자동 생성 자막':'직접 올린 자막')+'을 불러왔습니다.');
     }catch(e){
       note('자막을 불러오지 못했습니다 · '+(e&&e.message||e));
     }finally{ btn.disabled=false; }
@@ -14335,7 +14338,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return r&&r.ok?r.json().catch(()=>null):null;
     }
     const hit=await read('ytcap/cache/'+id+'.json');
-    if(hit&&hit.ok&&Date.now()-Date.parse(hit.at)<VA_REUSE_DAYS*864e5) return hit;
+    if(hit&&hit.ok&&/^ko/.test(hit.lang||'')&&Date.now()-Date.parse(hit.at)<VA_REUSE_DAYS*864e5) return hit;
     const name=id+'.'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.json';
     await DB.fileUpload('brand-files','ytcap/req/'+name,new Blob([JSON.stringify({v:id,at:new Date().toISOString()})],{type:'application/json'}));
     const t0=Date.now();
@@ -14349,7 +14352,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       note('서버가 자막을 받는 중… ('+sec+'초)');
     }
   }
-  function save(){ try{ localStorage.setItem(LS,JSON.stringify({u:url.value,x:text.value,f:loadedFor})); }catch(e){} }
+  function save(){ try{ localStorage.setItem(LS,JSON.stringify({u:url.value,x:text.value,f:loadedFor,ko:1})); }catch(e){} }
 
   $('vaParts').addEventListener('click',e=>{
     const c=e.target.closest('[data-copy]'); if(c){ copy(partText(+c.dataset.copy),c); return; }
@@ -14362,7 +14365,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('vaCopyAll').addEventListener('click',e=>copy(PARTS.map(([,n],i)=>'['+n+']\n\n'+(partText(i)||'(없음)')).join('\n\n\n'),e.currentTarget));
   $('vaRun').addEventListener('click',run);
   url.addEventListener('input',()=>{ showVideo(); save(); });
-  try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){ url.value=s.u||''; text.value=s.x||''; loadedFor=s.f||''; showVideo(); if(text.value.trim()) analyze(); } }catch(e){}
+  try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){ url.value=s.u||''; text.value=s.x||''; loadedFor=s.ko?(s.f||''):''; showVideo(); if(text.value.trim()) analyze(); } }catch(e){}
   showVideo();   // 링크가 없으면 영상 자리에 안내를 띄운다
 })();
 

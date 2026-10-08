@@ -354,6 +354,7 @@
 
 ### 2026-10-08 · 영상분석 자막을 VPS로
 - 10-05 에 정한 대로 **AI분석이 자막을 김비서 VPS(국내 IP)에서 받습니다.** DB 표를 새로 만들지 않으려고(사용자가 SQL 실행을 원치 않음) 이미 있는 파일 보관함 `brand-files` 버킷의 작은 JSON 으로 주고받습니다: 화면이 `ytcap/req/<영상ID>.<임의>.json` 을 올리면 VPS 상주 서비스 `yt-captions`(`caffeinnos-automation/yt_captions.js`)가 2초마다 보고 `ytcap/res/<같은 이름>` 에 답, `ytcap/cache/<영상ID>.json` 에 다시 쓸 자막을 적습니다(화면은 60초 시한 · 같은 영상은 7일 안이면 cache 를 씀 · res 는 하루, cache 는 30일 뒤 VPS 가 지움).
+- **분석은 늘 한국어로**(사용자 요청): 한국어 자막이 없으면(영어 영상 등) VPS 가 원래 자막을 문장으로 묶어 한국어로 번역해 돌려줍니다(답의 `from` 에 원래 언어). 유튜브 자체 번역(`tlang=ko`)은 서버 IP 에서 429 로 막혀 구글 번역 무료 주소(`translate.googleapis.com` · gtx)를 씁니다. 번역 전에 받아 둔 결과(cache·이 브라우저 기억)는 한국어가 아니면 다시 받습니다.
 - 서비스 켜짐 여부는 `vps/bot_check.sh` 가 10분마다 기록해 김비서 AI 탭 "영상분석 자막"에 보입니다. Supabase 함수 `yt-captions` 는 이제 쓰지 않습니다(대시보드에서 지울 것).
 
 ## 알려진 한계 · 남은 과제
