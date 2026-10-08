@@ -1720,7 +1720,7 @@ window.BAROYAM_FONT=(function(){
     --sn-bg:linear-gradient(186deg,#fdf9f2 0%,#f9f2e7 55%,#f4ebdc 100%);
     --sn-line:#eaddc9; --sn-open:rgba(255,255,255,.62); --sn-rail:rgba(194,106,65,.2);
     /* 배너 · 사이드탭 크림을 옅게 희석해 같은 계열로 묶는다 */
-    --hero-bg:linear-gradient(158deg,#fdfaf4 0%,#faf4e9 100%); --hero-line:#f0e6d6;
+    --hero-bg:#faf8f5; --hero-line:#efe9e1;
     --glass-bg:rgba(255,255,255,.72); --glass-line:rgba(38,38,46,.08);
     --tb-bg:rgba(251,251,252,.88);
   }
@@ -1790,21 +1790,21 @@ window.BAROYAM_FONT=(function(){
   .num{font-variant-numeric:tabular-nums}
 
   /* 배너 · 배경은 무채색으로 두고 색은 글자가 가진다 (--hero-accent) */
-  .hero{--hero-accent:var(--indigo);position:relative;padding:38px 48px 40px;color:var(--body);
+  .hero{--hero-accent:var(--indigo);position:relative;padding:34px 48px 32px;color:var(--body);
     border-radius:20px 20px 0 0;background:var(--hero-bg);border-bottom:1px solid var(--hero-line)}
-  .hero .meta{position:absolute;top:38px;right:48px;text-align:right;font-size:13px;line-height:1.7;color:var(--mute)}
-  .hero h1{margin-top:8px;font-size:clamp(24px,2.4vw,30px);font-weight:600;letter-spacing:-.6px;
-    line-height:1.25;color:var(--hero-accent);max-width:calc(100% - 230px)}
-  .hero .sub{margin-top:10px;font-size:14.5px;font-weight:500;color:var(--body);letter-spacing:-.3px;
-    max-width:min(720px,calc(100% - 230px));line-height:1.6}
-  .hero .pills{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}
+  .hero .meta{position:absolute;top:34px;right:48px;text-align:right;font-size:12.5px;line-height:1.8;color:var(--mute);font-variant-numeric:tabular-nums}
+  .hero h1{margin-top:10px;font-size:clamp(24px,2.4vw,29px);font-weight:700;letter-spacing:-.04em;
+    line-height:1.25;color:var(--ink);max-width:calc(100% - 230px)}
+  .hero .sub{margin-top:8px;font-size:14.5px;font-weight:400;color:var(--body);letter-spacing:-.2px;
+    max-width:min(620px,calc(100% - 230px));line-height:1.65}
+  .hero .pills{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap}
   /* 좁은 화면에선 기준일 블록을 제목 위로 흘려보낸다 */
   @media(max-width:860px){
     .hero .meta{position:static;text-align:left;margin-bottom:16px}
     .hero h1,.hero .sub{max-width:100%}
   }
-  .pill{font-size:13.5px;font-weight:500;padding:8px 15px;border-radius:999px;white-space:nowrap;
-    background:var(--paper);border:1px solid var(--hero-line);color:var(--body);letter-spacing:-.2px}
+  .pill{font-size:12.5px;font-weight:500;padding:6px 12px;border-radius:999px;white-space:nowrap;
+    background:var(--paper);border:1px solid var(--line);color:var(--body);letter-spacing:-.1px}
   .pill.win{background:var(--indigo-soft);border-color:transparent;color:var(--indigo);font-weight:600}
 
   .section{padding:34px 48px}
@@ -2264,7 +2264,7 @@ window.BAROYAM_FONT=(function(){
   #view-week svg.line .ln-x{font-size:12px;font-weight:500;fill:var(--mute)}
 
   /* 05 다음달 계획 슬라이드 */
-  .plan-hero{--hero-accent:var(--indigo);border-radius:20px;padding:38px 48px 40px;color:var(--body);
+  .plan-hero{--hero-accent:var(--indigo);border-radius:20px;padding:34px 48px 32px;color:var(--body);
     position:relative;overflow:hidden;background:var(--hero-bg);border:1px solid var(--hero-line)}
   /* 섹션 안 배너는 좌우 여백을 뚫고 카드 폭을 가득 채운다 (매출 배너와 같은 결) ·
      맨 위에 오면 카드 윗모서리를 물려받고 위쪽 테두리를 지운다 */
@@ -2682,10 +2682,14 @@ window.BAROYAM_FONT=(function(){
   #revHero.is-coupang{--hero-accent:#2f77cc}
   #revHero.is-toss{--hero-accent:#1f6fe0}
   #revHero.is-alwayz{--hero-accent:#6b4fc9}
-  .hero .ptag,.plan-hero .ptag{font-size:14px;font-weight:600;color:var(--mute);letter-spacing:.09em}
-  .plan-hero .ptitle{font-size:clamp(24px,2.4vw,30px);font-weight:600;letter-spacing:-.6px;line-height:1.25;color:var(--hero-accent);margin-top:11px}
-  .plan-hero .psub{margin-top:15px;font-size:17px;font-weight:500;color:var(--body);
-    letter-spacing:-.3px;max-width:720px;line-height:1.6}
+  /* 배너 머리 · 영어 대문자 대신 한글 분류 + 작은 색 점 · 색 점이 배너의 강조색(--hero-accent · 트렌드·리뷰는 플랫폼 색)을 맡는다 */
+  .hero .ptag,.plan-hero .ptag{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--mute);letter-spacing:-.1px}
+  .hero .ptag::before,.plan-hero .ptag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--hero-accent);flex:none}
+  .home-hero .ptag::before{display:none}
+  /* 배너 제목 · 화면에서 유일하게 700 · 강조색 대신 글자색으로 무게를 낸다 */
+  .plan-hero .ptitle{font-size:clamp(24px,2.4vw,29px);font-weight:700;letter-spacing:-.04em;line-height:1.25;color:var(--ink);margin-top:10px}
+  .plan-hero .psub{margin-top:8px;font-size:14.5px;font-weight:400;color:var(--body);
+    letter-spacing:-.2px;max-width:620px;line-height:1.65}
   /* 홈 · 면을 깔지 않고 문장만 남긴다 ·
      .section > .plan-hero 쪽이 명시도가 높아, 같은 무게(0,3,0)로 눌러 배경·테두리·전면폭을 되돌린다 */
   .section > .plan-hero.home-hero{
@@ -6841,7 +6845,7 @@ window.BAROYAM_FONT=(function(){
         <button type="button" class="hero-view-tab active" data-view="week">주간데이터</button>
       </div>
       <header class="hero" id="mainHero" data-screen-label="표지" style="display:none">
-        <div class="ptag" id="heroTag">WEEKLY REPORT</div>
+        <div class="ptag" id="heroTag">매출데이터 · 주간</div>
         <div class="meta" id="heroMeta">기준 · 7월 vs 8월(8/1-8/8 누적)<br>작성일 · 2026.08.17<br>구분 · 월간 매출·광고 성과</div>
         <h1 id="heroTitle">주간 데이터 보고서</h1>
         <p class="sub" id="heroSub">7월 전체매출 대비 8월 1일부터 8일까지의 누적 매출 달성률을 확인하고, 채널별 매출·광고 효율(ROAS)과 공식몰 방문 추이를 정리했습니다.</p>
@@ -7260,7 +7264,7 @@ window.BAROYAM_FONT=(function(){
         <!-- M05 8월 목표달성 계획 (다음달 슬라이드) -->
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero">
-            <div class="ptag">NEXT MONTH PLAN</div>
+            <div class="ptag">목표설정</div>
             <div class="plan-hero-head">
               <div class="ptitle" id="goalPlanTitle">8월 목표달성 계획표</div>
               <button type="button" class="plan-edit-btn" id="goalEditBtn">수정</button>
@@ -7379,7 +7383,7 @@ window.BAROYAM_FONT=(function(){
         </div>
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero trend-hero" id="trendHero">
-            <div class="ptag">ANALYTICS</div>
+            <div class="ptag">시장 분석</div>
             <div class="ptitle" id="trendHeroTitle">구글 트렌드 분석</div>
             <p class="psub" id="trendHeroSub">구글 트렌드 실시간 인기 검색어를 한눈에 확인하세요</p>
           </div>
@@ -7448,7 +7452,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-collector" style="display:none">
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero">
-            <div class="ptag">REVIEWS</div>
+            <div class="ptag">고객 리뷰</div>
             <div class="plan-hero-head">
               <div class="ptitle">리뷰수집하기</div>
               <div style="text-align:right">
@@ -7583,7 +7587,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-review" style="display:none">
         <section class="section" style="padding-top:0;padding-bottom:16px">
           <div class="plan-hero" id="revHero">
-            <div class="ptag">FEEDBACK</div>
+            <div class="ptag">고객 리뷰</div>
             <div class="plan-hero-head">
               <div class="ptitle" id="revHeroTitle">통계 및 인사이트 - VOC</div>
               <div style="text-align:right">
@@ -8483,7 +8487,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-admin" style="display:none">
         <section class="section admin-section" aria-labelledby="adminViewTitle">
           <div class="plan-hero admin-hero">
-            <div class="ptag">AUTOMATION</div>
+            <div class="ptag">업무 도구</div>
             <div class="ptitle" id="adminViewTitle">자동화</div>
             <p class="psub">바로얌 리뷰 수집·분석 자동화의 실행 상태를 확인하세요.</p>
           </div>
@@ -8554,7 +8558,7 @@ window.BAROYAM_FONT=(function(){
             <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">카페이노스</button>
           </div>
           <div class="plan-hero">
-            <div class="ptag">DRIVE</div>
+            <div class="ptag">업무 도구</div>
             <div class="ptitle">드라이브</div>
             <p class="psub">브랜드와 종류로 걸러 보는 회사 자산입니다</p>
           </div>
@@ -8628,7 +8632,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-perf" style="display:none">
         <section>
           <div class="plan-hero">
-            <div class="ptag">PERFORMANCE</div>
+            <div class="ptag">마케팅</div>
             <div class="ptitle" id="perfViewTitle">퍼포먼스 매출</div>
             <div class="psub" id="vaSub" hidden>쇼츠 링크와 자막을 넣으면 후킹 · 내용 · 마무리로 나누고, 세로 화면에 맞게 한 줄씩 끊어 줍니다.</div>
           </div>
@@ -8675,7 +8679,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-content" style="display:none">
         <section>
           <div class="plan-hero">
-            <div class="ptag">CONTENT</div>
+            <div class="ptag">마케팅</div>
             <div class="ptitle" id="contentViewTitle">콘텐츠 제작</div>
           </div>
         </section>
@@ -8691,7 +8695,7 @@ window.BAROYAM_FONT=(function(){
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
-            <div class="ptag">PROFIT &amp; MARGIN</div>
+            <div class="ptag">손익·마진 관리</div>
             <div class="ptitle" id="profitViewTitle">순수익 요약</div>
             <div class="psub" id="profitViewSub">채널별·기간별 최종 순이익을 모니터링합니다.</div>
           </div>
@@ -8806,7 +8810,7 @@ window.BAROYAM_FONT=(function(){
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
-            <div class="ptag">SALES &amp; STOCK</div>
+            <div class="ptag">판매·재고</div>
             <div class="ptitle" id="opsViewTitle">당일판매현황</div>
             <div class="psub" id="opsViewSub">오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.</div>
           </div>
@@ -8898,7 +8902,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-quote" style="display:none">
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
-            <div class="ptag">QUOTATION</div>
+            <div class="ptag">영업 문서</div>
             <div class="ptitle">견적서</div>
             <div class="psub">거래처에 보낼 견적서를 만들고 관리합니다.</div>
           </div>
@@ -8910,7 +8914,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-brand" style="display:none">
         <section>
           <div class="plan-hero">
-            <div class="ptag">BRAND STRATEGY</div>
+            <div class="ptag">상품 기획</div>
             <div class="ptitle">브랜드전략실</div>
             <div class="psub">출시 준비부터 판매 이후까지, 브랜드마다 어디까지 왔는지 한눈에 봅니다.</div>
           </div>
@@ -9057,7 +9061,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-account" style="display:none">
         <section class="acc-view">
           <div class="plan-hero">
-            <div class="ptag">ACCOUNT</div>
+            <div class="ptag">업무 도구</div>
             <div class="ptitle">계정관리</div>
             <p class="psub">회사에서 쓰는 계정을 구역별로 모아 둡니다 · 왼쪽을 누르면 바로 들어가고, 계정정보에서 아이디·비밀번호를 복사합니다</p>
             <!-- 설정 · 계정 추가/수정 칸에 띄울 로고만 고른다 -->
@@ -9203,7 +9207,7 @@ window.BAROYAM_FONT=(function(){
       <div id="view-agenda">
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
-            <div class="ptag">TEAM SYNC</div>
+            <div class="ptag">회의안건</div>
             <div class="ptitle">회의 안건 메모</div>
             <p class="psub">다음 회의에서 다룰 내용을 기록하고, 지난 회의 기록도 한 곳에서 관리하세요</p>
           </div>
@@ -11918,7 +11922,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
-    document.getElementById('heroTag').textContent=v==='month'?'MONTHLY REPORT':'WEEKLY REPORT';
+    document.getElementById('heroTag').textContent=v==='month'?'매출데이터 · 월간':'매출데이터 · 주간';
     if(v==='week'||v==='month') applyHeroText();
 
 
