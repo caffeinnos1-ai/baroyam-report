@@ -132,7 +132,7 @@ async function collectSales() {
   await send({ type: 'mainClick', patterns: ['^검색\\s*\\(F2\\)$'], visible: true, f2: true });
   // 판매가 0건인 날에는 행이 끝내 생기지 않는다 · 20초 기다려 없으면 빈 표로 넘긴다(daily_report.js 와 같음)
   await waitFor(() => document.querySelector('table.ui-jqgrid-btable tbody > tr[id]'), 20000);
-  await sleep(1800);
+  await sleep(700);
   const grid = document.querySelector('table.ui-jqgrid-btable');
   const gid = grid.id;
   const rows = [...grid.querySelectorAll('tbody > tr[id]')].map((tr) => {
@@ -145,8 +145,15 @@ async function collectSales() {
   return { rows, orders };
 }
 
+// 지금 화면이 템플릿 화면(현 재고조회 등)인지 · 첫 화면(메인)이 아니면 배송(금일) 숫자가 없으니 찾지 않는다
+const onTemplate = () => /template=/.test(location.search);
+
 async function runSales(who) {
-  if (isSalesPage() || (await waitFor(isSalesPage, 3000))) {
+  // 요약표 주소로 바로 열었으면 표가 그려질 때까지만 기다린다 · 현 재고조회 같은 다른 화면이면 기다리지 않는다
+  const maybeSales = onTemplate() && !/template=I100(&|$)/.test(location.search);
+  if (isSalesPage() || (maybeSales && (await waitFor(isSalesPage, 8000)))) {
+    // 다음부터 이 화면을 바로 열도록 주소를 기억해 둔다(background)
+    if (onTemplate()) send({ type: 'meta', salesUrl: location.href });
     const { rows, orders } = await collectSales();
     banner(`${rows.length}개 상품을 읽었습니다 · 대시보드에 저장하는 중…`);
     const res = await send({ type: 'rows', rows, orders });
@@ -156,7 +163,7 @@ async function runSales(who) {
   }
   if (who.moves >= 3) throw new Error('당일판매분요약표 화면으로 넘어가지 못했습니다(3번 시도).');
   // 첫 화면에만 있는 배송(금일) 숫자를 먼저 챙긴다(처리현황은 늦게 채워지므로 잠깐 기다린다)
-  if (who.shipped == null) {
+  if (who.shipped == null && !onTemplate()) {
     const v = await waitFor(readShipped, 6000);
     if (v !== null) await send({ type: 'meta', shipped: v });
   }

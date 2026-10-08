@@ -123,7 +123,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         if (old) { await endJob(); await chrome.tabs.remove(old.tabId).catch(() => {}); }
         // 뒤쪽(active:false)으로 열고 곧바로 접힌 묶음에 넣는다 · index 를 주지 않으면 창 맨 끝에 열린다(tabs.create 는 -1 을 받지 않음)
         const windowId = sender.tab.windowId;
-        const tab = await chrome.tabs.create({ windowId, url: I100_URL, active: false });
+        // 당일판매는 한 번 찾아간 요약표 주소를 기억해 두었다가 바로 연다(현 재고조회 → 메뉴 이동을 건너뜀 · 1.3.5~)
+        const { salesUrl } = await chrome.storage.local.get('salesUrl');
+        const url = msg.kind === 'sales' && salesUrl ? salesUrl : I100_URL;
+        const tab = await chrome.tabs.create({ windowId, url, active: false });
         await setJob({ tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
         await tuck(tab.id, windowId).catch(() => {});
         sendResponse({ ok: true });
@@ -161,6 +164,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'meta') {
       if (msg.shipped !== undefined) job.shipped = msg.shipped;
       if (msg.moved) job.moves = (job.moves || 0) + 1;
+      if (msg.salesUrl && /^https:\/\/[\w.-]+\.ezadmin\.co\.kr\/template35\.htm\?template=/.test(msg.salesUrl)) await chrome.storage.local.set({ salesUrl: msg.salesUrl });
       await setJob(job);
       sendResponse({ ok: true, moves: job.moves || 0 });
       return;
