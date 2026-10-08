@@ -14,9 +14,17 @@ window.addEventListener('message', (e) => {
   if (e.source !== window || !e.data || e.data.source !== FROM_PAGE) return;
   // 재고(inventory-start) · 당일판매(sales-start, 1.2.0~)
   if (e.data.type === 'inventory-start' || e.data.type === 'sales-start') {
-    chrome.runtime.sendMessage({ type: 'start', kind: e.data.type === 'sales-start' ? 'sales' : 'inventory' })
-      .then((r) => { if (!r || !r.ok) toPage({ type: 'status', message: (r && r.message) || '이지어드민을 열지 못했습니다', done: true }); })
-      .catch(() => toPage({ type: 'status', message: '확장 프로그램이 응답하지 않습니다 · chrome://extensions 에서 새로고침(↻)한 뒤 이 화면도 새로고침해 주세요', done: true }));
+    // 확장을 새로고침(↻)하면 이미 열려 있던 이 탭의 옛 코드는 확장과 끊긴다 · 그때 sendMessage 는 약속(promise)이 아니라
+    // 그 자리에서 오류("Extension context invalidated")를 던지므로 try 로 받아 대시보드 새로고침을 안내한다
+    const stale = () => toPage({ type: 'status', message: '확장 프로그램이 새로 바뀌었습니다 · 이 화면을 새로고침(F5)한 뒤 어드민 수집을 다시 눌러 주세요', done: true });
+    try {
+      if (!chrome.runtime || !chrome.runtime.id) { stale(); return; }
+      chrome.runtime.sendMessage({ type: 'start', kind: e.data.type === 'sales-start' ? 'sales' : 'inventory' })
+        .then((r) => { if (!r || !r.ok) toPage({ type: 'status', message: (r && r.message) || '이지어드민을 열지 못했습니다', done: true }); })
+        .catch(stale);
+    } catch (err) {
+      stale();
+    }
   }
 });
 
