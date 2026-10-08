@@ -8522,7 +8522,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
             <div class="psub" id="vaSub" hidden>쇼츠 링크와 자막을 넣으면 후킹 · 내용 · 마무리로 나누고, 세로 화면에 맞게 한 줄씩 끊어 줍니다.</div>
           </div>
           <!-- 영상분석 AI · 레퍼런스 쇼츠의 자막을 후킹/내용/마무리로 나눈다 ·
-               브라우저는 유튜브 자막을 직접 못 받으므로(CORS) Supabase 함수 yt-captions 가 대신 받는다 -->
+               브라우저는 유튜브 자막을 직접 못 받으므로(CORS) 김비서 VPS 가 대신 받는다(yt_caption_jobs 표로 요청·결과) -->
           <div class="va-wrap" id="vaPanel" hidden>
             <div class="va-grid">
               <div class="va-card va-left">
@@ -10973,6 +10973,10 @@ window.CsGuide=(function(){
      record:'김비서 대화',
      desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. 서버에서 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd',
      cmds:['안녕 · 도움말 → 짧은 안내','예시 → 자세한 사용법','내 프로젝트','마감 (7일 안)','○○ 보내줘 → 미리보기 5개 → 번호로 원본','고객 문의 → 상담 가이드 추천 답변']},
+    /* caffeinnos-automation/yt_captions.js · systemd yt-captions · 상태는 vps/bot_check.sh 가 10분마다 한 줄(run_id vps-yt-captions) */
+    {name:'영상분석 자막', where:'ERP 퍼포먼스마케팅 · 영상분석 AI', always:true,
+     record:'영상분석 자막',
+     desc:'영상분석 AI에서 AI분석을 누르면 서버가 유튜브 자막(CC)을 대신 받아 와요. 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd'},
     /* 받는 사람은 김태섭(팀장·개발자) 한 명 · caffeinnos-automation/run_watch.js */
     {name:'자동화 실패 알림', where:'김태섭 개인 메시지', always:true,
      record:'자동화 실패 알림',
@@ -14145,8 +14149,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 /* 영상분석 AI · 쇼츠 자막을 후킹 / 내용 / 마무리로 나누고 세로 화면에 맞게 한 줄씩 끊는다 ·
    나누기는 AI 없이 규칙(처음 3초 = 후킹, 끝의 구독·링크 같은 말 또는 마지막 두 줄 = 마무리) · 경계는 ▲▼ 로 고친다 */
 (function(){
-  // 자막(CC)을 대신 받아 주는 Supabase 함수(edge-functions/yt-captions) · 응답은 {segments:[{t,text}],lang,auto}
-  const VA_CAPTION_API=(window.BAROYAM_SUPABASE&&window.BAROYAM_SUPABASE.url||'')+'/functions/v1/yt-captions';
+  /* 자막(CC)은 김비서 VPS(국내 IP)가 대신 받는다 · 브라우저는 CORS, Supabase 함수는 유튜브가 해외 IP 를 막아 못 받음 ·
+     화면이 Supabase yt_caption_jobs 에 대기 요청을 넣으면 VPS(caffeinnos-automation/yt_captions.js)가 2초마다 보고
+     결과({segments:[{t,text}],lang,auto,title})를 그 줄에 적는다 · 표는 supabase/13-yt-caption-jobs.sql */
+  const VA_JOBS=(window.BAROYAM_SUPABASE&&window.BAROYAM_SUPABASE.url||'')+'/rest/v1/yt_caption_jobs';
+  const VA_REUSE_DAYS=7;    // 같은 영상은 이 기간 안에 받은 자막을 다시 쓴다(아무 PC 에서 받았든)
   const MAX=16;              // 세로 화면 한 줄 글자 수(공백 포함)
   const CTA=/구독|좋아요 (?:눌|부탁)|댓글|링크|프로필|구매|주문|팔로우|알림|저장|공유|지금 바로|확인해|눌러|클릭|더보기|할인|이벤트/;
   const $=id=>document.getElementById(id);
@@ -14308,12 +14315,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(id===loadedFor){ analyze(); return; }
     btn.disabled=true; note('자막(CC)을 불러오는 중…');
     try{
-      const ses=window.BAROYAM_DB&&await window.BAROYAM_DB.session();
-      const key=window.BAROYAM_SUPABASE.publishableKey;
-      const r=await fetch(VA_CAPTION_API+'?v='+encodeURIComponent(id),
-        {headers:{apikey:key,Authorization:'Bearer '+(ses&&ses.access_token||key)}});
-      const j=await r.json().catch(()=>({}));
-      if(!r.ok||!j.segments||!j.segments.length) throw new Error(j.message||('응답 '+r.status));
+      const j=await fetchCaptions(id);
       text.value=j.segments.map(s=>(s.t!=null?fmtT(s.t)+' ':'')+s.text).join('\n');
       loadedFor=id;
       analyze();
@@ -14321,6 +14323,40 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }catch(e){
       note('자막을 불러오지 못했습니다 · '+(e&&e.message||e));
     }finally{ btn.disabled=false; }
+  }
+  /* VPS 에 자막을 부탁하고 결과를 기다린다 · 최근에 누가 받아 둔 같은 영상이 있으면 그것을 쓴다 */
+  async function fetchCaptions(id){
+    const DB=window.BAROYAM_DB;
+    if(!DB||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다. 새로고침한 뒤 다시 눌러 주세요.');
+    const ses=await DB.session(), key=window.BAROYAM_SUPABASE.publishableKey;
+    const H={apikey:key,Authorization:'Bearer '+(ses&&ses.access_token||key),'Content-Type':'application/json'};
+    async function call(q,opt){
+      const r=await fetch(VA_JOBS+q,Object.assign({headers:H},opt||{}));
+      const j=await r.json().catch(()=>null);
+      if(!r.ok){
+        if(r.status===404||(j&&j.code==='PGRST205')) throw new Error('자막 요청 표가 아직 없습니다(Supabase 에 supabase/13-yt-caption-jobs.sql 실행 필요).');
+        throw new Error((j&&j.message)||('응답 '+r.status));
+      }
+      return j;
+    }
+    const since=new Date(Date.now()-VA_REUSE_DAYS*864e5).toISOString();
+    const hit=await call('?select=result&video_id=eq.'+id+'&status=eq.done&created_at=gte.'+encodeURIComponent(since)+'&order=created_at.desc&limit=1');
+    if(hit&&hit[0]&&hit[0].result) return hit[0].result;
+    const made=await call('?select=id',{method:'POST',headers:Object.assign({Prefer:'return=representation'},H),body:JSON.stringify({video_id:id})});
+    const jobId=made&&made[0]&&made[0].id;
+    if(!jobId) throw new Error('요청을 넣지 못했습니다.');
+    const t0=Date.now();
+    for(;;){
+      await new Promise(r=>setTimeout(r,1200));
+      const row=(await call('?select=status,result,message&id=eq.'+jobId))[0]||{};
+      if(row.status==='done'&&row.result) return row.result;
+      if(row.status==='error') throw new Error(row.message||'자막을 받지 못했습니다.');
+      const sec=Math.round((Date.now()-t0)/1000);
+      if(sec>=60) throw new Error(row.status==='pending'
+        ?'자막 서버(VPS)가 응답하지 않습니다. 잠시 뒤 다시 눌러 주세요.'
+        :'자막을 받는 데 너무 오래 걸립니다. 잠시 뒤 다시 눌러 주세요.');
+      note(row.status==='working'?'서버가 자막을 받는 중… ('+sec+'초)':'자막 서버에 요청했습니다… ('+sec+'초)');
+    }
   }
   function save(){ try{ localStorage.setItem(LS,JSON.stringify({u:url.value,x:text.value,f:loadedFor})); }catch(e){} }
 
