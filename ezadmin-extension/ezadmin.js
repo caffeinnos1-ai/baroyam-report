@@ -175,6 +175,9 @@ async function runSales(who) {
   if (await waitFor(isSalesPage, 15000)) await runSales({ ...who, moves: 99 });
 }
 
+// 수집 탭에서 막은 이지어드민 안내창 내용(background quietDialogs) · 무슨 말이었는지 대시보드 안내 줄에 남긴다
+document.addEventListener('baroyam-dialog', (e) => status('이지어드민 안내창 · ' + String(e.detail || '').slice(0, 160)));
+
 (async () => {
   const who = await send({ type: 'whoami' });
   if (!who || !who.isJob) return;

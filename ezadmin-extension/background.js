@@ -129,6 +129,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const tab = await chrome.tabs.create({ windowId, url, active: false });
         await setJob({ tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
         await tuck(tab.id, windowId).catch(() => {});
+        quiet(tab.id, 0);   // 첫 화면이 이미 열리기 시작했으면 여기서도 한 번
         sendResponse({ ok: true });
       } catch (e) {
         // 시작부터 실패하면 대시보드 게이지가 계속 돌지 않게 이유를 돌려준다
@@ -206,6 +207,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // 사람이 이지어드민 탭(또는 꺼낸 창)을 닫으면 일을 끝내고 대시보드에 알린다 · 창 사이를 옮기는 것은 닫는 것이 아니다(onRemoved 가 오지 않음)
+// ---------- 수집 탭의 안내창(alert·confirm·prompt) 막기 ----------
+// 크롬은 안 보이는 탭의 안내창을 그 탭을 열 때까지 미뤄 두고, 그동안 페이지 코드는 멈춰 기다린다 ·
+// 이지어드민은 조회 중에 안내창을 띄우는 일이 있어(VPS 수집 코드도 안내창을 닫는다) 사람이 수집 탭을 클릭해야 수집이 이어졌다(2026-10-08) ·
+// 수집 탭에서만 안내창을 띄우지 않고 넘긴다(확인창은 "확인") · 내용은 ezadmin.js 가 받아 대시보드 안내 줄에 보인다 ·
+// 사람이 평소 여는 이지어드민 창은 건드리지 않는다(삭제 확인 같은 창이 저절로 눌리면 안 되므로)
+function quietDialogs() {
+  if (window.__baroyamQuiet) return;
+  window.__baroyamQuiet = true;
+  const tell = (kind, m) => document.dispatchEvent(new CustomEvent('baroyam-dialog', { detail: kind + ' · ' + String(m == null ? '' : m) }));
+  window.alert = (m) => { tell('안내', m); };
+  window.confirm = (m) => { tell('확인', m); return true; };
+  window.prompt = (m) => { tell('입력', m); return null; };
+}
+function quiet(tabId, frameId) {
+  chrome.scripting.executeScript({ target: { tabId, frameIds: [frameId] }, world: 'MAIN', injectImmediately: true, func: quietDialogs }).catch(() => {});
+}
+// 수집 탭의 화면(틀 포함)이 새로 열릴 때마다 페이지 코드보다 먼저 넣는다
+chrome.webNavigation.onCommitted.addListener(async (d) => {
+  const job = await getJob();
+  if (job && job.tabId === d.tabId) quiet(d.tabId, d.frameId);
+});
+
 chrome.tabs.onRemoved.addListener(async (closedTabId) => {
   const job = await getJob();
   if (!job || job.tabId !== closedTabId) return;
