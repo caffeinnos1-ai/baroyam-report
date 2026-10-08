@@ -114,19 +114,17 @@ async function goSalesPage() {
   const a = menu.closest('a') || menu;
   const href = a.getAttribute && a.getAttribute('href');
   if (href && !/^javascript:/i.test(href) && href !== '#') { location.href = new URL(href, location.href).href; return; }
-  const top = find('정산통계');
-  if (top) { (top.closest('a') || top).click(); await sleep(1200); }
-  a.click();
+  // 메뉴는 javascript: 링크라 확장(이 스크립트)이 누르면 크롬 보안 규칙(CSP)이 막는다 → 페이지 쪽에서 눌러 달라고 한다(background mainClick)
+  const r = await send({ type: 'mainClick', patterns: ['^정산통계$', '^당일판매분요약표$'] });
+  if (!r || !r.ok || !r.clicked.includes('^당일판매분요약표$')) throw new Error('메뉴 "당일판매분요약표"를 누르지 못했습니다' + (r && r.message ? ' · ' + r.message : ''));
 }
 
 async function collectSales() {
   banner('당일판매를 검색하는 중…');
   status('당일판매분요약표에서 검색하는 중');
   await sleep(800);
-  const btn = [...document.querySelectorAll('a,button,input[type=button],span,div')]
-    .find((el) => /^검색\s*\(F2\)$/.test((el.innerText || el.value || '').trim()) && el.offsetParent !== null);
-  if (btn) btn.click();
-  else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2', code: 'F2', keyCode: 113, which: 113, bubbles: true }));
+  // 검색 단추도 javascript: 일 수 있어 페이지 쪽에서 누른다 · 단추가 없으면 페이지 쪽에서 F2 를 보낸다
+  await send({ type: 'mainClick', patterns: ['^검색\\s*\\(F2\\)$'], visible: true, f2: true });
   // 판매가 0건인 날에는 행이 끝내 생기지 않는다 · 20초 기다려 없으면 빈 표로 넘긴다(daily_report.js 와 같음)
   await waitFor(() => document.querySelector('table.ui-jqgrid-btable tbody > tr[id]'), 20000);
   await sleep(1800);

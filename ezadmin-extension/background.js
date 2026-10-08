@@ -23,6 +23,36 @@ const endJob = () => chrome.storage.session.remove('job');
 
 const toDashboard = (job, msg) => chrome.tabs.sendMessage(job.dashTabId, msg).catch(() => {});
 
+// 이지어드민 페이지 쪽(MAIN world)에서 글자로 찾은 메뉴·단추를 차례로 누른다 · 이지어드민 메뉴는 javascript: 링크라
+// 확장 스크립트(ezadmin.js)가 누르면 크롬 보안 규칙(CSP)이 막는다(2026-10-08 오류 · 당일판매분요약표로 못 넘어감) ·
+// 페이지 쪽에서 누르면 사람이 누른 것과 같다 · f2: 하나도 못 찾으면 F2 키를 페이지에 보낸다(검색)
+async function pageClick(patterns, visible, f2) {
+  const norm = (t) => String(t || '').replace(/\s+/g, ' ').trim();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const find = (src) => {
+    const re = new RegExp(src);
+    return [...document.querySelectorAll('a,li,span,div,button,input[type=button]')]
+      .find((e) => re.test(norm(e.innerText || e.value || e.textContent)) && !e.querySelector('a,li,button') && (!visible || e.offsetParent !== null));
+  };
+  const clicked = [];
+  // 마지막 것(가려는 메뉴)이 이미 문서에 있으면 그것만 누른다 · 위 메뉴(정산통계)를 먼저 누르면 그쪽으로 넘어가 버릴 수 있다
+  const last = patterns[patterns.length - 1];
+  const direct = last && find(last);
+  for (const src of direct ? [last] : patterns) {
+    const el = src === last && direct ? direct : find(src);
+    if (!el) continue;
+    (el.closest('a') || el).click();
+    clicked.push(src);
+    await sleep(1200);
+  }
+  if (!clicked.length && f2) {
+    const $ = window.jQuery;
+    if ($) $(document).trigger($.Event('keydown', { keyCode: 113, which: 113, key: 'F2' }));
+    else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F2', code: 'F2', bubbles: true }));
+  }
+  return clicked;
+}
+
 // 이지어드민 탭을 대시보드 창의 접힌 묶음에 넣는다(묶음이 접혀 있으면 탭 줄에도 이름표만 남는다)
 async function tuck(tabId, windowId) {
   const groupId = await chrome.tabs.group({ tabIds: [tabId], createProperties: { windowId } });
@@ -97,6 +127,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (msg.moved) job.moves = (job.moves || 0) + 1;
       await setJob(job);
       sendResponse({ ok: true, moves: job.moves || 0 });
+      return;
+    }
+
+    // 이지어드민 탭 · 페이지 쪽에서 눌러 달라는 부탁
+    if (msg.type === 'mainClick') {
+      try {
+        const [res] = await chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func: pageClick, args: [msg.patterns || [], !!msg.visible, !!msg.f2] });
+        sendResponse({ ok: true, clicked: (res && res.result) || [] });
+      } catch (e) {
+        sendResponse({ ok: false, clicked: [], message: e.message });
+      }
       return;
     }
 
