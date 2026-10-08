@@ -6892,7 +6892,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <button type="button" class="ui-tab" data-value="cal">캘린더</button>
             </div>
             <div class="pj-filters" id="pjFilters">
-              <button type="button" class="pj-filter" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>마감일<span class="pj-filter-n"></span></button>
+              <button type="button" class="pj-filter" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>기간<span class="pj-filter-n"></span></button>
               <button type="button" class="pj-filter pj-filter-reset" id="pjFilterReset" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.5 8.5A7 7 0 1 0 19 12"/><path d="M19 4.5V9h-4.5"/></svg>필터 초기화</button>
               <div class="pj-pop" id="pjPop" hidden></div>
             </div>
@@ -17950,8 +17950,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(skip!=='status'&&pf.status.size&&!pf.status.has(p.status||'')) return false;
     if(skip!=='owner'&&pf.owner.size&&!pf.owner.has(p.owner||'')) return false;
     if(skip!=='channel'&&pf.channel.size&&!pf.channel.has(p.channel||'')) return false;
-    if(pf.from&&!(p.due&&p.due>=pf.from)) return false;
-    if(pf.to&&!(p.due&&p.due<=pf.to)) return false;
+    /* 기간 필터 · 마감일·시작일·작성일 중 하나라도 범위 안이면 보인다(이번 달에 입력한 프로젝트도 마감일과 상관없이 보이게) */
+    if(pf.from||pf.to){
+      const inR=d=>!!d&&(!pf.from||d>=pf.from)&&(!pf.to||d<=pf.to);
+      if(!(inR(p.due)||inR(p.start)||inR(p.created))) return false;
+    }
     if(pf.q){
       const hay=[p.name,p.owner,p.channel,p.status].join(' ').toLowerCase();
       if(!hay.includes(pf.q)) return false;
@@ -18437,7 +18440,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       renderBoard();
     });
 
-    /* 필터 팝업 · 마감일 범위를 고른다(회원·상태는 위 칩 줄에서 고른다) */
+    /* 필터 팝업 · 기간(마감일·시작일·작성일)을 고른다(회원·상태는 위 칩 줄에서 고른다) */
     const pop=$('pjPop');
     let popFor='';
     /* 고르는 동안은 draft에만 담아 두고 '적용'을 눌러야 보드에 반영한다 ·
