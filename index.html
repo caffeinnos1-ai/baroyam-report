@@ -2225,6 +2225,17 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .iv-stale .ui-btn{flex:none}
   #ivFetch.need{border-color:var(--warn)}
   #ivFetch.need .at{color:var(--warn);font-weight:800}
+  /* 재고 기준 날짜 · 오늘 재고인지 바로 보이게 날짜를 크게, 앞 알약은 오늘 초록 · 어제 노랑 · 이틀 넘으면 빨강 */
+  .iv-when{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .iv-src{font-size:12.5px;font-weight:700;color:var(--mute)}
+  .iv-fresh{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:999px;font-size:12.5px;font-weight:800;
+    --fc:var(--pos);color:var(--fc);background:color-mix(in srgb,var(--fc) 13%,var(--paper))}
+  .iv-fresh::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fc)}
+  .iv-fresh.old{--fc:var(--warn)} .iv-fresh.stale{--fc:var(--neg)}
+  .iv-fresh[hidden]{display:none}
+  .iv-meta.stale .iv-when{color:var(--neg)}
+  .iv-stale.bad{background:var(--neg-soft);border-color:color-mix(in srgb,var(--neg) 40%,transparent)}
+  .iv-stale.bad .iv-stale-ic{background:var(--neg)} .iv-stale.bad .iv-stale-tx b{color:var(--neg)}
   .iv-meta.stale .iv-live{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 18%,transparent)}
   @media (max-width:640px){ .iv-stale{flex-wrap:wrap} .iv-stale .ui-btn{width:100%} }
   .iv-note{margin:0;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft)}
@@ -8701,7 +8712,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
                위 한 줄(기준 시각 · 확인할 것) + 목록 하나(브랜드 | 상품명 | 정상재고 | 유통기한) -->
           <div class="pf-pane" data-ops-pane="stock" hidden>
             <div class="iv-meta">
-              <span class="iv-live"></span><b>이지어드민 재고</b><span id="ivAt"></span><span class="iv-demo" id="ivDemo" hidden>예시 화면</span>
+              <!-- 언제 재고인지 한눈에 · 오늘 / 어제 / n일 전 알약 + 큰 날짜·시각 -->
+              <span class="iv-fresh" id="ivFresh" hidden></span><span class="iv-when" id="ivAt"></span><span class="iv-src">이지어드민 재고</span><span class="iv-demo" id="ivDemo" hidden>예시 화면</span>
               <span class="pf-grow"></span>
               <button type="button" class="ui-btn sm soft" id="ivHideOpen" title="상품 이름·숨김과 위험재고 색을 정합니다"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>표시 설정</button>
             </div>
@@ -15192,14 +15204,21 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      띠를 보이고 어드민 수집 단추에 점을 찍는다 · 07:10 전에는 아직 자동 수집 전이라 부드럽게 알린다 */
   function paintStale(inv,at){
     const box=$('ivStale'), btn=$('ivFetch');
-    const now=new Date(), today=at&&!isNaN(at)&&!(inv&&inv.demo)&&at.toDateString()===now.toDateString();
+    const now=new Date(), real=at&&!isNaN(at)&&!(inv&&inv.demo);
+    /* 며칠 전 재고인지 · 시각이 아니라 달력 날짜로 센다(어젯밤 16:30 것도 "어제") */
+    const ago=real?Math.round((new Date(now.toDateString())-new Date(at.toDateString()))/864e5):null, today=ago===0;
+    const fr=$('ivFresh'); fr.hidden=ago==null;
+    if(ago!=null){ fr.textContent=ago<=0?'오늘 재고':ago===1?'어제 재고':ago+'일 전 재고'; fr.classList.toggle('old',ago===1); fr.classList.toggle('stale',ago>=2); }
     const need=INV.loaded&&!today&&!(INV.error&&!INV.data);
     box.hidden=!need; if(window.baroyamOpsTab==='stock') btn.classList.toggle('need',need); $('ivAt').parentNode.classList.toggle('stale',need);
     if(!need) return;
-    const early=now.getHours()<7||(now.getHours()===7&&now.getMinutes()<10);
-    const last=at&&!isNaN(at)&&!(inv&&inv.demo)?' · 마지막 수집 '+(at.getMonth()+1)+'월 '+at.getDate()+'일 '+String(at.getHours()).padStart(2,'0')+':'+String(at.getMinutes()).padStart(2,'0'):'';
-    $('ivStaleT').textContent=early?'오늘 재고는 07:00에 자동으로 들어옵니다':'오늘 재고가 아직 수집되지 않았습니다';
-    $('ivStaleS').textContent=(early?'급하면 어드민 수집으로 지금 가져올 수 있습니다':'자동 수집이 실패했을 수 있습니다 · 어드민 수집을 눌러 이지어드민에 로그인하면 가져옵니다')+last;
+    const early=ago===1&&(now.getHours()<7||(now.getHours()===7&&now.getMinutes()<10));
+    box.classList.toggle('bad',!early);
+    $('ivStaleT').textContent=early?'오늘 재고는 07:00에 자동으로 들어옵니다 · 지금 보이는 것은 어제 재고입니다'
+      :ago==null?'아직 받아 온 재고가 없습니다 · 어드민 수집을 눌러 주세요'
+      :(ago===1?'어제':ago+'일 전')+' 재고입니다 · 오늘 재고가 아닙니다';
+    $('ivStaleS').textContent=early?'급하면 어드민 수집으로 지금 가져올 수 있습니다'
+      :'어드민 수집을 눌러 이지어드민에 로그인하면 오늘 재고를 바로 가져옵니다 · 자동 수집(07:00·16:30)이 실패했을 수 있습니다';
   }
   /* 어드민 수집 단추 옆 시각 · 오늘이면 시각만, 아니면 날짜 */
   function fetchAtText(at){
@@ -15210,7 +15229,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const inv=INV.data||(INV.loaded?demoInv():null);
     $('ivDemo').hidden=!(inv&&inv.demo);
     const at=inv&&inv.updatedAt?new Date(inv.updatedAt):null, p2=n=>String(n).padStart(2,'0');
-    $('ivAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준':'';
+    $('ivAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 ('+'일월화수목금토'[at.getDay()]+') '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준':'';
     /* 수집 단추 옆 · 오늘이면 시각만, 아니면 날짜 */
     if(window.baroyamOpsTab==='stock') $('ivFetchAt').textContent=fetchAtText(at);
     paintStale(inv,at);
