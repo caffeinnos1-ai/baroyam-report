@@ -353,7 +353,7 @@
 - 종류 칩 위에 **파일 형식** 칩(이미지·GIF·영상·PSD·일러스트·PDF·문서·압축·기타)을 달았습니다. 확장자로 가르고(`형식표`), 지금 조건에 있는 형식만 보이며 여러 개를 같이 고릅니다.
 
 ### 2026-10-08 · 영상분석 자막을 VPS로
-- 10-05 에 정한 대로 **AI분석이 자막을 김비서 VPS(국내 IP)에서 받습니다.** 화면이 Supabase `yt_caption_jobs` 에 대기 요청을 넣으면(로그인 회원만 · 결과는 못 씀) VPS 상주 서비스 `yt-captions`(`caffeinnos-automation/yt_captions.js`)가 2초마다 보고 받아 그 줄에 결과를 적고, 화면이 읽습니다(60초 시한). 같은 영상은 7일 안에 받은 결과를 다시 씁니다 · 30일 지난 줄은 VPS 가 지웁니다. 표는 `supabase/13-yt-caption-jobs.sql`.
+- 10-05 에 정한 대로 **AI분석이 자막을 김비서 VPS(국내 IP)에서 받습니다.** DB 표를 새로 만들지 않으려고(사용자가 SQL 실행을 원치 않음) 이미 있는 파일 보관함 `brand-files` 버킷의 작은 JSON 으로 주고받습니다: 화면이 `ytcap/req/<영상ID>.<임의>.json` 을 올리면 VPS 상주 서비스 `yt-captions`(`caffeinnos-automation/yt_captions.js`)가 2초마다 보고 `ytcap/res/<같은 이름>` 에 답, `ytcap/cache/<영상ID>.json` 에 다시 쓸 자막을 적습니다(화면은 60초 시한 · 같은 영상은 7일 안이면 cache 를 씀 · res 는 하루, cache 는 30일 뒤 VPS 가 지움).
 - 서비스 켜짐 여부는 `vps/bot_check.sh` 가 10분마다 기록해 김비서 AI 탭 "영상분석 자막"에 보입니다. Supabase 함수 `yt-captions` 는 이제 쓰지 않습니다(대시보드에서 지울 것).
 
 ## 알려진 한계 · 남은 과제
