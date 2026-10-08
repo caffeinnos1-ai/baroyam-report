@@ -73,12 +73,15 @@ async function collect() {
   const who = await send({ type: 'whoami' });
   if (!who || !who.isJob) return;
 
-  // 로그인 화면 · 사람이 로그인할 때까지 아무것도 하지 않는다
+  // 로그인 화면 · 이때만 창을 앞으로 띄우고, 사람이 로그인할 때까지 아무것도 하지 않는다
   if (/login/i.test(location.pathname)) {
-    banner('로그인하면 재고를 자동으로 가져옵니다');
-    status('새 창에서 이지어드민에 로그인해 주세요 · 로그인하면 자동으로 가져옵니다');
+    banner('로그인하면 창이 내려가고 재고를 자동으로 가져옵니다');
+    status('이지어드민 창에서 로그인해 주세요 · 로그인하면 창이 내려가고 자동으로 가져옵니다');
+    send({ type: 'show' });
     return;
   }
+  // 로그인된 화면 · 창을 다시 내리고 뒤에서 이어 간다
+  send({ type: 'hide' });
   // 로그인이 풀린 I100 은 "mysqli ..." 한 줄만 보인다 → 로그인 화면으로
   if (/mysqli/.test(document.body ? document.body.innerText : '')) {
     location.href = LOGIN_URL;

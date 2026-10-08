@@ -1,5 +1,6 @@
 // 바로얌 재고 수집 · 심부름꾼
-// 대시보드(dashboard.js)가 "시작"을 보내면 이지어드민 현 재고조회를 새 창으로 열고, 그 창(ezadmin.js)이 읽은 표를
+// 대시보드(dashboard.js)가 "시작"을 보내면 이지어드민 현 재고조회를 최소화된 창으로 열고(사람 눈에 안 띄게),
+// 로그인이 필요할 때만 그 창을 앞으로 띄운다 · 로그인되면 다시 내리고, 그 창(ezadmin.js)이 읽은 표를
 // 대시보드 탭으로 넘긴다 · 저장이 끝나면 이지어드민 창을 닫는다.
 // 지금 하는 일(어느 창·어느 대시보드 탭)은 서비스 워커가 잠들어도 남도록 storage.session 에 둔다.
 
@@ -27,7 +28,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'start') {
       const old = await getJob();
       if (old) await chrome.windows.remove(old.winId).catch(() => {});
-      const win = await chrome.windows.create({ url: I100_URL, type: 'normal', width: 1300, height: 900, focused: true });
+      const win = await chrome.windows.create({ url: I100_URL, type: 'normal', state: 'minimized', focused: false });
       await setJob({ winId: win.id, tabId: win.tabs[0].id, dashTabId: tabId, startedAt: Date.now() });
       sendResponse({ ok: true });
       return;
@@ -42,6 +43,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     const job = await getJob();
     if (!job || job.tabId !== tabId) { sendResponse({ ok: false }); return; }
+
+    // 이지어드민 창 · 로그인 화면이면 앞으로 띄우고, 로그인이 끝나면 다시 내린 뒤 대시보드를 앞으로
+    if (msg.type === 'show') {
+      await chrome.windows.update(job.winId, { state: 'normal', focused: true, width: 1100, height: 820 }).catch(() => {});
+      sendResponse({ ok: true });
+      return;
+    }
+    if (msg.type === 'hide') {
+      const win = await chrome.windows.get(job.winId).catch(() => null);
+      if (win && win.state !== 'minimized') {
+        await chrome.windows.update(job.winId, { state: 'minimized' }).catch(() => {});
+        chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
+      }
+      sendResponse({ ok: true });
+      return;
+    }
 
     // 이지어드민 창 · 지금 단계 알림(로그인 기다림·검색 중 …) → 대시보드 안내 줄
     if (msg.type === 'status') {
@@ -59,6 +76,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         chrome.tabs.update(job.dashTabId, { active: true }).catch(() => {});
         chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
       }
+      // 실패하면 사람이 무슨 일인지 볼 수 있게 이지어드민 창을 앞으로 띄워 둔다
+      if (!reply || !reply.ok) chrome.windows.update(job.winId, { state: 'normal', focused: true, width: 1100, height: 820 }).catch(() => {});
       sendResponse(reply || { ok: false, message: '대시보드 창을 찾지 못했습니다 · 대시보드에서 어드민 수집을 다시 눌러 주세요.' });
       return;
     }
