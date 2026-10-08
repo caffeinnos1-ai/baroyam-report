@@ -1629,7 +1629,14 @@ window.BAROYAM_FONT=(function(){
   const KEY='appFont', LS='baroyam_font_v1';
   const G=f=>'https://fonts.googleapis.com/css2?family='+f+'&display=swap';
   const FONTS=[
-    {id:'pretendard',name:'프리텐다드',kind:'고딕',note:'기본 · 또렷하고 단정함',family:"'Pretendard'"},
+    {id:'pretendard',name:'프리텐다드',kind:'고딕',note:'기본 · 애플 산돌고딕 Neo를 닮은 고딕',family:"'Pretendard'"},
+    /* 애플 감성 · 애플 글꼴(SF Pro·산돌고딕 Neo)은 웹에 올려 쓸 수 없어, 맥·아이폰은 기기 글꼴을 그대로 쓰고
+       윈도우는 닮은 무료 글꼴(영문·숫자 Inter·Nunito 등 + 한글 프리텐다드·수트)로 비슷하게 맞춘다 */
+    {id:'apple',name:'애플 시스템',kind:'애플감성',note:'맥·아이폰은 진짜 애플 글꼴 · 윈도우는 프리텐다드',family:"-apple-system,BlinkMacSystemFont,'SF Pro Text','Apple SD Gothic Neo'"},
+    {id:'interpre',name:'SF 느낌 · 인터',kind:'애플감성',note:'영문·숫자가 SF Pro를 닮음 + 한글 프리텐다드',family:"'Inter','Pretendard'",css:G('Inter:wght@400;500;600')},
+    {id:'intertight',name:'애플 광고 느낌 · 인터 타이트',kind:'애플감성',note:'좁고 단단한 영문·숫자 + 한글 프리텐다드',family:"'Inter Tight','Pretendard'",css:G('Inter+Tight:wght@400;500;600')},
+    {id:'rounded',name:'SF 라운드 느낌',kind:'애플감성',note:'둥근 영문·숫자(Nunito) + 둥근 한글(수트)',family:"'Nunito','SUIT'",css:[G('Nunito:wght@400;500;600'),'https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2.0.5/fonts/static/woff2/SUIT.css']},
+    {id:'newyork',name:'뉴욕 느낌 명조',kind:'애플감성',note:'애플 뉴욕체를 닮은 영문 명조 + 한글 노토 세리프',family:"'Source Serif 4','Noto Serif KR'",css:[G('Source+Serif+4:wght@400;500;600'),G('Noto+Serif+KR:wght@400;500;600;700')]},
     {id:'suit',name:'수트',kind:'고딕',note:'둥글고 부드러운 고딕',family:"'SUIT'",css:'https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2.0.5/fonts/static/woff2/SUIT.css'},
     {id:'wanted',name:'원티드 산스',kind:'고딕',note:'넓고 시원한 고딕',family:"'Wanted Sans'",css:'https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/static/split/WantedSans.min.css'},
     {id:'spoqa',name:'스포카 한 산스 Neo',kind:'고딕',note:'숫자가 읽기 쉬운 고딕',family:"'Spoqa Han Sans Neo'",css:'https://cdn.jsdelivr.net/npm/spoqa-han-sans@3.3.0/css/SpoqaHanSansNeo.css'},
@@ -1652,9 +1659,11 @@ window.BAROYAM_FONT=(function(){
   /* 글꼴 css 는 한 번만 붙인다 · 글꼴 탭 미리보기에서도 쓴다 */
   function load(f){
     if(!f.css||document.querySelector('link[data-font="'+f.id+'"]')) return;
-    const l=document.createElement('link');
-    l.rel='stylesheet'; l.href=f.css; l.dataset.font=f.id;
-    document.head.appendChild(l);
+    [].concat(f.css).forEach(href=>{
+      const l=document.createElement('link');
+      l.rel='stylesheet'; l.href=href; l.dataset.font=f.id;
+      document.head.appendChild(l);
+    });
   }
   const stack=f=>f.family+(f.id==='pretendard'?",system-ui,sans-serif":TAIL);
   function apply(){
@@ -11637,7 +11646,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const grid=document.getElementById('ftGrid');
   const kindsEl=document.getElementById('ftKinds');
   if(!FT||!tab||!grid) return;
-  const KINDS=['전체','고딕','명조','손글씨풍'];
+  const KINDS=['전체','애플감성','고딕','명조','손글씨풍'];
   const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   let kind='전체', loaded=false;
   function render(){
@@ -11650,7 +11659,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       '<button type="button" class="ft-card" role="radio" data-font="'+f.id+'" aria-checked="'+(f.id===cur)+'" style="font-family:'+FT.stack(f).replace(/"/g,'&quot;')+'">'+
         '<span class="ft-top"><b>'+f.name+'</b><span class="ft-kind">'+f.kind+'</span><span class="ft-check">'+CHECK+'</span></span>'+
         '<span class="ft-sample">바로얌 매출 보고서</span>'+
-        '<span class="ft-body">이번 달 매출 1,234,567원 · 달성률 87%</span>'+
+        '<span class="ft-body">Monthly Sales 1,234,567원 · 달성률 87%</span>'+
         '<span class="ft-note">'+f.note+'</span>'+
       '</button>').join('');
   }
