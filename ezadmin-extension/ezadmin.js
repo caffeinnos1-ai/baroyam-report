@@ -8,7 +8,16 @@ const I100_PATH = '/template35.htm';
 const I100_URL = 'https://ga83.ezadmin.co.kr/template35.htm?template=I100';
 const LOGIN_URL = 'https://login3.ezadmin.co.kr/login.htm';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const send = (msg) => chrome.runtime.sendMessage(msg).catch(() => null);
+// 확장을 새로고침(↻)하면 그 전부터 열려 있던 이지어드민 창의 이 코드는 확장과 끊긴다 · 그때 sendMessage 는 그 자리에서
+// 오류("Extension context invalidated")를 던지므로 받아서 조용히 null 로 돌려준다(그 창은 수집 창이 아니다)
+const send = (msg) => {
+  try {
+    if (!chrome.runtime || !chrome.runtime.id) return Promise.resolve(null);
+    return chrome.runtime.sendMessage(msg).catch(() => null);
+  } catch (e) {
+    return Promise.resolve(null);
+  }
+};
 const status = (message) => send({ type: 'status', message });
 
 // 창 위쪽에 띄우는 작은 안내 띠 · 지금 무엇을 하는지 사람이 알 수 있게
