@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "김비서AI 확장프로그램",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "바로얌 대시보드 판매·재고의 '어드민 수집' · 이지어드민에 사람이 로그인하면 현 재고조회·당일판매분요약표를 자동으로 읽어 대시보드에 저장합니다.",
   "icons": {
     "16": "icons/icon16.png",
@@ -41,6 +41,17 @@
         "dashboard.js"
       ],
       "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://*.ezadmin.co.kr/*"
+      ],
+      "js": [
+        "ezadmin-main.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
     },
     {
       "matches": [
