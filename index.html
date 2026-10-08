@@ -1458,7 +1458,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   html.auth-locked body>*:not(#authGate){display:none!important}
   #authGate{display:none}
   html.auth-locked #authGate{display:flex;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;
-    padding:24px 16px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;
+    padding:24px 16px;overflow:auto;font-family:var(--app-font);
     background:radial-gradient(900px 520px at 50% -10%,rgba(232,98,30,.16),transparent 70%),var(--bg,#f4f1eb)}
   html.auth-checking #authGate .auth-card{visibility:hidden}
   /* 판정이 끝나기 전에는 카드 대신 기다림 표시를 둔다 · 예전에는 둘 다 감춰서
@@ -1500,7 +1500,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   /* 2026-10-05 개편 · 카드 상자 없이 화면 전체를 쓰고, 위에는 브랜드 문장(사명), 아래에 프로필을 둔다.
      뒤에는 흐린 빛 두 덩이가 천천히 떠다니고, 문장은 7초마다 흐림→선명으로 바뀐다 */
   html.member-locked #memberGate{display:flex;position:fixed;inset:0;z-index:99998;align-items:center;justify-content:center;
-    padding:40px 20px;overflow:auto;font-family:'Pretendard',system-ui,sans-serif;background:var(--bg,#f4f1eb)}
+    padding:40px 20px;overflow:auto;font-family:var(--app-font);background:var(--bg,#f4f1eb)}
   html.member-locked #memberGate::before,html.member-locked #memberGate::after{content:'';position:fixed;border-radius:50%;
     pointer-events:none;filter:blur(110px);opacity:.42;animation:mpDrift 18s ease-in-out infinite alternate}
   html.member-locked #memberGate::before{width:640px;height:640px;top:-260px;left:50%;margin-left:-520px;
@@ -1621,8 +1621,79 @@ window.BAROYAM_EDIT_ACCESS=(function(){
 </style>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+<script>
+/* 글꼴 · 관리자 설정 > 글꼴 탭에서 고른 글꼴을 화면 전체(--app-font)에 쓴다 ·
+   app_settings 의 appFont = {id, updatedAt} 한 칸 · saveMerged 로 저장해 모든 회원·다른 PC에 같이 적용 ·
+   이 브라우저에도 사본을 두어 열자마자(로그인 전 화면 포함) 그 글꼴로 그린다 · 글꼴 파일은 고른 것만 받는다 */
+window.BAROYAM_FONT=(function(){
+  const KEY='appFont', LS='baroyam_font_v1';
+  const G=f=>'https://fonts.googleapis.com/css2?family='+f+'&display=swap';
+  const FONTS=[
+    {id:'pretendard',name:'프리텐다드',kind:'고딕',note:'기본 · 또렷하고 단정함',family:"'Pretendard'"},
+    {id:'suit',name:'수트',kind:'고딕',note:'둥글고 부드러운 고딕',family:"'SUIT'",css:'https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2.0.5/fonts/static/woff2/SUIT.css'},
+    {id:'wanted',name:'원티드 산스',kind:'고딕',note:'넓고 시원한 고딕',family:"'Wanted Sans'",css:'https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/static/split/WantedSans.min.css'},
+    {id:'spoqa',name:'스포카 한 산스 Neo',kind:'고딕',note:'숫자가 읽기 쉬운 고딕',family:"'Spoqa Han Sans Neo'",css:'https://cdn.jsdelivr.net/npm/spoqa-han-sans@3.3.0/css/SpoqaHanSansNeo.css'},
+    {id:'noto',name:'노토 산스',kind:'고딕',note:'구글 기본 한글 고딕',family:"'Noto Sans KR'",css:G('Noto+Sans+KR:wght@400;500;600;700')},
+    {id:'plex',name:'IBM 플렉스 산스',kind:'고딕',note:'단단하고 기계적인 느낌',family:"'IBM Plex Sans KR'",css:G('IBM+Plex+Sans+KR:wght@400;500;600;700')},
+    {id:'gothica1',name:'고딕 A1',kind:'고딕',note:'반듯한 정통 고딕',family:"'Gothic A1'",css:G('Gothic+A1:wght@400;500;600;700')},
+    {id:'nanum',name:'나눔고딕',kind:'고딕',note:'익숙한 네이버 고딕',family:"'Nanum Gothic'",css:G('Nanum+Gothic:wght@400;700')},
+    {id:'gowun',name:'고운돋움',kind:'손글씨풍',note:'따뜻하고 손맛 있는 돋움',family:"'Gowun Dodum'",css:G('Gowun+Dodum')},
+    {id:'orbit',name:'오르빗',kind:'손글씨풍',note:'가볍고 개성 있는 글자',family:"'Orbit'",css:G('Orbit')},
+    {id:'notoserif',name:'노토 세리프',kind:'명조',note:'차분한 바탕체',family:"'Noto Serif KR'",css:G('Noto+Serif+KR:wght@400;500;600;700')},
+    {id:'hahmlet',name:'함렛',kind:'명조',note:'현대적인 명조',family:"'Hahmlet'",css:G('Hahmlet:wght@400;500;600;700')},
+    {id:'gowunbatang',name:'고운바탕',kind:'명조',note:'부드러운 바탕체',family:"'Gowun Batang'",css:G('Gowun+Batang:wght@400;700')},
+    {id:'nanummyeongjo',name:'나눔명조',kind:'명조',note:'익숙한 네이버 명조',family:"'Nanum Myeongjo'",css:G('Nanum+Myeongjo:wght@400;700')},
+    {id:'system',name:'맑은 고딕',kind:'고딕',note:'윈도우 기본 · 받을 파일 없음',family:"'Malgun Gothic','Apple SD Gothic Neo'"}
+  ];
+  const TAIL=",'Pretendard',system-ui,sans-serif";
+  const byId=id=>FONTS.find(f=>f.id===id)||FONTS[0];
+  let cur='pretendard';
+  try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&o.id) cur=byId(o.id).id; }catch(e){}
+  /* 글꼴 css 는 한 번만 붙인다 · 글꼴 탭 미리보기에서도 쓴다 */
+  function load(f){
+    if(!f.css||document.querySelector('link[data-font="'+f.id+'"]')) return;
+    const l=document.createElement('link');
+    l.rel='stylesheet'; l.href=f.css; l.dataset.font=f.id;
+    document.head.appendChild(l);
+  }
+  const stack=f=>f.family+(f.id==='pretendard'?",system-ui,sans-serif":TAIL);
+  function apply(){
+    const f=byId(cur);
+    load(f);
+    document.documentElement.style.setProperty('--app-font',stack(f));
+  }
+  function keep(id,at){
+    cur=byId(id).id;
+    try{ localStorage.setItem(LS,JSON.stringify({id:cur,updatedAt:at})); }catch(e){}
+  }
+  let retry=null;
+  async function push(){
+    clearTimeout(retry);
+    const DB=window.BAROYAM_DB;
+    if(!DB||!DB.saveMerged) return;
+    const mine={id:cur,updatedAt:Date.now()};
+    DB.saveNotice(KEY,'pending');
+    const r=await DB.saveMerged(KEY,function(){ return mine; });
+    if(r){ DB.saveNotice(KEY,'ok'); return; }
+    DB.saveNotice(KEY,'failing');
+    retry=setTimeout(push,15000);
+  }
+  function set(id){ keep(id,Date.now()); apply(); push(); }
+  function applyRemote(settings){
+    let v=settings&&settings[KEY];
+    if(!v) return;
+    if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ return; } }
+    if(!v||!v.id||byId(v.id).id===cur) return;
+    keep(v.id,+v.updatedAt||0); apply();
+    document.dispatchEvent(new CustomEvent('baroyam:font'));
+  }
+  apply();
+  return {FONTS,current:()=>cur,byId,load,stack,set,applyRemote};
+})();
+</script>
 <style>
   :root{
+    --app-font:'Pretendard',system-ui,sans-serif;
     --bg:#f4f1eb; --paper:#fff; --ink:#3d3d42; --body:#55555b; --mute:#737379;
     --line:#ece5dc; --indigo:#cd6428; --indigo-soft:#fdefe4;
     --prev:#e0d6cb; --prev-ink:#a99a8d; --curr:#e07234;
@@ -1700,9 +1771,10 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   @supports not selector(::-webkit-scrollbar){ *{scrollbar-width:thin;scrollbar-color:var(--sc-thumb) transparent} }
   html{background:var(--bg)}
   body{background:var(--app-bg);background-attachment:fixed;min-height:100vh}
-  html,body{font-family:'Pretendard',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;transition:background-color .2s,color .2s}
+  html,body{font-family:var(--app-font);color:var(--ink);-webkit-font-smoothing:antialiased;transition:background-color .2s,color .2s}
   /* 글자 굵기 단계 · 본문 400 · 라벨 500 · 제목·숫자 600 · 브라우저 기본 bold(700)도 600 으로 */
   b,strong,th{font-weight:600}
+  svg text[font-family="Pretendard"]{font-family:var(--app-font)}
   .wrap{max-width:1120px;margin:0 auto;padding:28px 28px 60px}
   .paper{background:var(--paper);border-radius:24px;overflow:hidden;
     box-shadow:0 24px 60px -28px rgba(38,38,46,.24),0 2px 8px rgba(38,38,46,.05)}
@@ -3594,7 +3666,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
     border:1px solid var(--line);background:var(--bg)}
   .ag-hist-search svg{width:16px;height:16px;flex:none;color:var(--mute)}
   .ag-hist-search input{flex:1;min-width:0;border:none;background:transparent;outline:none;color:var(--ink);
-    font:500 13.5px 'Pretendard',sans-serif}
+    font:500 13.5px var(--app-font)}
   .ag-hist-search input::placeholder{color:var(--mute);font-weight:500}
   .ag-hist-filter-wrap{position:relative;flex:none}
   .ag-hist-filter-btn{all:unset;box-sizing:border-box;position:relative;width:38px;height:38px;border-radius:11px;
@@ -3607,7 +3679,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .ag-hist-datedrop{width:290px}
   .ag-hist-date-panel[hidden]{display:none}
   .ag-hist-date-input{width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);
-    color:var(--ink);font:500 13px 'Pretendard',sans-serif;color-scheme:light}
+    color:var(--ink);font:500 13px var(--app-font);color-scheme:light}
   html[data-theme="dark"] .ag-hist-date-input{color-scheme:dark}
   .ag-range-pills{display:flex;gap:8px;margin-bottom:12px}
   .ag-range-pill{all:unset;box-sizing:border-box;flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;
@@ -4425,7 +4497,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .member-manager{display:flex;flex-direction:column;gap:16px;height:100%}
   .member-add-form{flex:none;display:flex;gap:8px}
   .member-add-form input{flex:1;min-width:0;padding:10px 13px;border-radius:11px;border:1px solid var(--line);
-    background:var(--bg);color:var(--ink);font:500 13.5px 'Pretendard',sans-serif}
+    background:var(--bg);color:var(--ink);font:500 13.5px var(--app-font)}
   .member-add-form input::placeholder{color:var(--mute);font-weight:500}
   .member-add-form input:focus{outline:none;box-shadow:0 0 0 2px var(--indigo)}
   .member-add-form button{all:unset;box-sizing:border-box;padding:10px 18px;border-radius:11px;background:var(--indigo);
@@ -4559,7 +4631,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   .mg-no{flex:none;width:22px;height:22px;border-radius:7px;background:var(--indigo);color:#fff;
     font-size:11px;font-weight:600;display:grid;place-items:center}
   .mg-name{flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:1px solid transparent;background:transparent;
-    color:var(--ink);font:600 13.5px 'Pretendard',sans-serif;letter-spacing:-.2px;transition:background .15s,border-color .15s}
+    color:var(--ink);font:600 13.5px var(--app-font);letter-spacing:-.2px;transition:background .15s,border-color .15s}
   .mg-name:hover{background:var(--paper);border-color:var(--line)}
   .mg-name:focus{outline:none;background:var(--paper);border-color:var(--indigo)}
   .mg-items{margin:4px 0 2px 11px;padding-left:9px;border-left:1.5px solid var(--sn-rail);
@@ -4582,12 +4654,28 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   /* 사이드탭설정 · 한 줄에 메뉴 하나 · 잠긴 줄(마이홈·프로젝트)은 흐린 번호 + 자물쇠 */
   .so-list{gap:6px}
   .so-list .mg-group{padding:4px 8px}
-  .so-name{flex:1;min-width:0;padding:7px 9px;color:var(--ink);font:600 13.5px 'Pretendard',sans-serif;letter-spacing:-.2px}
+  .so-name{flex:1;min-width:0;padding:7px 9px;color:var(--ink);font:600 13.5px var(--app-font);letter-spacing:-.2px}
   .so-list .is-locked .mg-no{background:var(--mute)}
   .so-list .is-locked .so-name{color:var(--mute)}
+  /* 글꼴 탭 · 글꼴마다 카드 하나 · 카드 글자는 그 글꼴로 그린다 · 고른 카드는 강조색 테두리 + 체크 */
+  .ft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+  .ft-card{all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:column;gap:8px;padding:14px 16px;
+    border:1px solid var(--line);border-radius:var(--ui-r-pop);background:var(--paper);cursor:pointer;transition:border-color .15s,background .15s}
+  .ft-card:hover{border-color:color-mix(in srgb,var(--btn) 40%,var(--line))}
+  .ft-card:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+  .ft-card[aria-checked="true"]{border-color:var(--btn);background:var(--btn-soft)}
+  .ft-top{display:flex;align-items:center;gap:6px;font:500 12px var(--app-font);color:var(--mute)}
+  .ft-top b{font-weight:600;color:var(--ink);font-size:13px}
+  .ft-kind{padding:1px 7px;border-radius:999px;background:var(--chip-flat);font-size:11px}
+  .ft-check{margin-left:auto;width:18px;height:18px;border-radius:50%;display:none;place-items:center;background:var(--btn);color:#fff}
+  .ft-check svg{width:11px;height:11px}
+  .ft-card[aria-checked="true"] .ft-check{display:grid}
+  .ft-sample{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.3px;line-height:1.3}
+  .ft-body{font-size:13px;font-weight:400;color:var(--body);line-height:1.5}
+  .ft-note{font:400 11.5px var(--app-font);color:var(--mute)}
   .mg-add-item{display:flex;gap:6px;margin-top:4px}
   .mg-add-item input{flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:1px dashed var(--line);
-    background:transparent;color:var(--ink);font:500 12.5px 'Pretendard',sans-serif;letter-spacing:-.2px}
+    background:transparent;color:var(--ink);font:500 12.5px var(--app-font);letter-spacing:-.2px}
   .mg-add-item input::placeholder{color:var(--mute)}
   .mg-add-item input:focus{outline:none;border-style:solid;border-color:var(--indigo);background:var(--paper)}
   .mg-add-item button{all:unset;box-sizing:border-box;flex:none;padding:7px 13px;border-radius:9px;
@@ -6297,8 +6385,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
   <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
     <rect width="1200" height="800" fill="#e07234"/>
     <rect x="430" y="250" width="120" height="120" rx="34" fill="#fff"/>
-    <text x="490" y="338" font-family="Arial, sans-serif" font-size="74" font-weight="800" fill="#e07234" text-anchor="middle">바</text>
-    <text x="600" y="490" font-family="Arial, sans-serif" font-size="56" font-weight="800" fill="#fff" text-anchor="middle">바로얌 매출 보고서</text>
+    <text x="490" y="338" font-family="Arial, sans-serif" font-size="74" font-weight="600" fill="#e07234" text-anchor="middle">바</text>
+    <text x="600" y="490" font-family="Arial, sans-serif" font-size="56" font-weight="600" fill="#fff" text-anchor="middle">바로얌 매출 보고서</text>
     <rect x="450" y="540" width="300" height="16" rx="8" fill="rgba(255,255,255,.5)"/>
   </svg>
 </template>
@@ -6530,6 +6618,10 @@ window.BAROYAM_EDIT_ACCESS=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M9 4v16M12.5 9h4.5M12.5 12.5h4.5M12.5 16h4.5"/></svg>
               <span>사이드탭설정</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="font" id="ftSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 19 8.5 5h1l5 14M5.4 14h7.2"/><path d="M20.5 19v-5.2a2.6 2.6 0 0 0-5 0M20.5 15.6c-3.4-.2-5.4.6-5.4 2 0 .9.7 1.6 1.9 1.6 1.6 0 3.5-1.2 3.5-3.6"/></svg>
+              <span>글꼴</span>
+            </button>
             <button class="mini-sb-item" type="button" data-settings-view="access" id="accSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 14.6v2.2"/></svg>
               <span>권한설정</span>
@@ -6569,6 +6661,14 @@ window.BAROYAM_EDIT_ACCESS=(function(){
                 <p class="mg-hint">▲▼로 사이드바 메뉴의 위아래 순서를 바꿔요. 바꾼 순서는 서버에 저장돼 모든 회원·다른 PC의 사이드바에 똑같이 적용됩니다.<br>마이홈과 프로젝트는 맨 위에 고정이라 옮길 수 없어요.</p>
                 <div class="mg-list so-list" id="soList"></div>
                 <div><button type="button" class="ui-btn sm ghost" id="soReset">기본 순서로</button></div>
+              </div>
+            </section>
+            <!-- 글꼴 · 화면 전체 글꼴을 고른다 · 서버에 저장돼 모든 회원에게 같이 적용 -->
+            <section class="settings-view" data-settings-panel="font" hidden>
+              <div class="mg-manager">
+                <p class="mg-hint">카드를 누르면 대시보드 전체 글꼴이 바로 바뀌어요. 고른 글꼴은 서버에 저장돼 모든 회원·다른 PC에 똑같이 적용됩니다.</p>
+                <div class="ui-chips" id="ftKinds" role="group" aria-label="글꼴 종류"></div>
+                <div class="ft-grid" id="ftGrid" role="radiogroup" aria-label="글꼴 고르기"></div>
               </div>
             </section>
             <section class="settings-view" data-settings-panel="access" hidden>
@@ -7927,7 +8027,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
             }
             var note=revEmptyNote(), cx=pL+iW/2, cy=pT+iH/2;
             s+='<rect x="'+(cx-175)+'" y="'+(cy-31)+'" width="350" height="62" rx="15" fill="var(--paper)" stroke="var(--line)"/>';
-            s+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-size="14" font-weight="800" fill="var(--ink)" font-family="Pretendard">'+revEscapeHtml(note.head)+'</text>';
+            s+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-size="14" font-weight="600" fill="var(--ink)" font-family="Pretendard">'+revEscapeHtml(note.head)+'</text>';
             s+='<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--mute)" font-family="Pretendard">'+revEscapeHtml(note.sub)+'</text>';
             return s;
           }
@@ -7988,7 +8088,7 @@ window.BAROYAM_EDIT_ACCESS=(function(){
             var peakIdx=ratios.map(function(r,i){return i}).sort(function(a,b){return ratios[b]-ratios[a]}).slice(0,Math.min(5,N));
             peakIdx.forEach(function(i){
               if(ratios[i]<=0) return;
-              s+='<text x="'+xC(i)+'" y="'+(yR(ratios[i])-14)+'" text-anchor="middle" font-size="12" font-weight="800" fill="var(--ink)" font-family="Pretendard">'+revFmtMD(points[i].date)+'</text>';
+              s+='<text x="'+xC(i)+'" y="'+(yR(ratios[i])-14)+'" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)" font-family="Pretendard">'+revFmtMD(points[i].date)+'</text>';
             });
             var labelStep=N<=15?1:(N<=40?2:Math.ceil(N/25));
             points.forEach(function(p,i){
@@ -11527,6 +11627,50 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   if(resetBtn) resetBtn.addEventListener('click',()=>{ SO.reset(); render(); });
   document.addEventListener('baroyam:sidebar-order',render);
+  render();
+})();
+
+/* 글꼴 탭 · 카드를 누르면 바로 BAROYAM_FONT.set · 미리보기용 글꼴 파일은 탭을 처음 열 때 받는다 */
+(function(){
+  const FT=window.BAROYAM_FONT;
+  const tab=document.getElementById('ftSettingsTab');
+  const grid=document.getElementById('ftGrid');
+  const kindsEl=document.getElementById('ftKinds');
+  if(!FT||!tab||!grid) return;
+  const KINDS=['전체','고딕','명조','손글씨풍'];
+  const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  let kind='전체', loaded=false;
+  function render(){
+    const cur=FT.current();
+    kindsEl.innerHTML=KINDS.map(k=>{
+      const n=k==='전체'?FT.FONTS.length:FT.FONTS.filter(f=>f.kind===k).length;
+      return '<button type="button" class="ui-chip" data-kind="'+k+'" aria-pressed="'+(k===kind)+'">'+k+' <b>'+n+'</b></button>';
+    }).join('');
+    grid.innerHTML=FT.FONTS.filter(f=>kind==='전체'||f.kind===kind).map(f=>
+      '<button type="button" class="ft-card" role="radio" data-font="'+f.id+'" aria-checked="'+(f.id===cur)+'" style="font-family:'+FT.stack(f).replace(/"/g,'&quot;')+'">'+
+        '<span class="ft-top"><b>'+f.name+'</b><span class="ft-kind">'+f.kind+'</span><span class="ft-check">'+CHECK+'</span></span>'+
+        '<span class="ft-sample">바로얌 매출 보고서</span>'+
+        '<span class="ft-body">이번 달 매출 1,234,567원 · 달성률 87%</span>'+
+        '<span class="ft-note">'+f.note+'</span>'+
+      '</button>').join('');
+  }
+  kindsEl.addEventListener('click',e=>{
+    const b=e.target.closest('[data-kind]');
+    if(!b) return;
+    kind=b.dataset.kind; render();
+  });
+  grid.addEventListener('click',e=>{
+    const b=e.target.closest('[data-font]');
+    if(!b||b.dataset.font===FT.current()) return;
+    FT.set(b.dataset.font); render();
+    const again=grid.querySelector('[data-font="'+b.dataset.font+'"]');
+    if(again) again.focus();
+  });
+  tab.addEventListener('click',()=>{
+    if(!loaded){ loaded=true; FT.FONTS.forEach(FT.load); }
+    render();
+  });
+  document.addEventListener('baroyam:font',render);
   render();
 })();
 
@@ -15867,7 +16011,7 @@ function revSetActivePlatform(platform){
     return 14+(26-14)*t;
   }
   function measureWordBox(text,font){
-    measureCtx.font=`600 ${font}px 'Pretendard', system-ui, sans-serif`;
+    measureCtx.font=`600 ${font}px ${getComputedStyle(document.body).fontFamily}`;
     return { w:measureCtx.measureText(text).width+10, h:font*1.2 };
   }
   function boxesOverlap(cx,cy,w,h,placed){
@@ -16369,6 +16513,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(window.BAROYAM_PROFILES) window.BAROYAM_PROFILES.applyRemote(settings);
       if(window.BAROYAM_ACCESS) window.BAROYAM_ACCESS.applyRemote(settings);
       if(window.BAROYAM_SIDEBAR_ORDER) window.BAROYAM_SIDEBAR_ORDER.applyRemote(settings);
+      if(window.BAROYAM_FONT) window.BAROYAM_FONT.applyRemote(settings);
       if(window.BAROYAM_EDIT_ACCESS) window.BAROYAM_EDIT_ACCESS.applyRemote(settings);
       /* 덩어리를 관계형 테이블에 펼쳐 둔다 · Table Editor에서 행으로 보기 위한 거울이다.
          화면 동작과는 무관하므로 실패해도 대시보드는 그대로 쓴다 */
