@@ -11550,9 +11550,8 @@ window.CsGuide=(function(){
     devBox.innerHTML=list.map(d=>{
       const bits=[];
       if(d.id===mine) bits.push('<span class="al-me">이 기기</span>');
-      if(d.last) bits.push(when(d.last.at),esc(ua(d.last.user_agent)));
-      else bits.push('아직 기록 없음');
-      if(d.members.size) bits.push(esc([...d.members].join(', ')));
+      /* 브라우저·회원은 아래 최근 접속 표에 있으니 여기서는 빼고 시각·IP·횟수만 */
+      bits.push(d.last?when(d.last.at):'아직 기록 없음');
       if(d.ips.size) bits.push(esc([...d.ips].slice(0,2).join(', '))+(d.ips.size>2?' 외':''));
       if(d.n) bits.push(d.n+'회');
       if(d.ext) bits.push(`<span class="al-ext">외부 ${d.ext}회</span>`);
