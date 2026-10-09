@@ -4757,6 +4757,8 @@ window.BAROYAM_FONT=(function(){
     cursor:grab;touch-action:none;user-select:none;
     background-image:radial-gradient(circle,var(--line) 1px,transparent 1.3px);background-size:18px 18px}
   .em-view.grabbing{cursor:grabbing}
+  /* 노드는 all:unset 이라 user-select 가 되살아난다 · 캔버스 안 글자는 끌어도 선택되지 않게 */
+  .em-view,.em-view *{-webkit-user-select:none;user-select:none}
   .em-map{position:absolute;left:0;top:0;transform-origin:0 0}
   .em-zoom{position:absolute;right:10px;bottom:10px;z-index:3;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
   .em-zoom output{min-width:44px;text-align:center;font-size:11.5px;color:var(--mute)}
@@ -11628,6 +11630,7 @@ window.CsGuide=(function(){
     view.addEventListener('pointerdown',e=>{
       if(e.button!==0||e.target.closest('.em-zoom')) return;
       drag={x:e.clientX,y:e.clientY,tx,ty,id:e.pointerId}; moved=false;
+      const sel=window.getSelection&&window.getSelection(); if(sel&&!sel.isCollapsed&&view.contains(sel.anchorNode)) sel.removeAllRanges();
     });
     view.addEventListener('pointermove',e=>{
       if(!drag) return;
