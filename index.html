@@ -2215,6 +2215,14 @@ window.BAROYAM_FONT=(function(){
   :is(#view-month,#view-week) section.sr-wait{opacity:0;transform:translateY(22px)}
   :is(#view-month,#view-week) section.sr-wait *{animation-play-state:paused!important}
   :is(#view-month,#view-week) section.sr-in{transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+  /* 스크롤에 맞춰 움직이기(SR_SCRUB) · 섹션은 들어오는 동안 떠오르고, 막대·도넛은 저마다 화면에 들어오는 만큼 자란다 */
+  @keyframes srRise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+  @supports (animation-timeline:view()){
+    :is(#view-month,#view-week).sr-scrub section.section{animation:srRise linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
+    :is(#view-month,#view-week).sr-scrub :is(.tbar,.gbar,.vbar,.rfill,.tshare i,.track .fill,.wk-bar i,.donut.is-ring svg g,.donut.is-ring svg.rcall g,.ttot,.gv){
+      animation-timeline:view()!important;animation-range:entry 10% cover 42%!important;animation-delay:0s!important;
+      animation-duration:auto!important;animation-timing-function:cubic-bezier(.3,.7,.3,1)!important}
+  }
   :is(#view-month,#view-week) .mr-line{display:grid;grid-template-columns:34px 1fr 58px;align-items:center;gap:10px}
   :is(#view-month,#view-week) .mr-line .rm{font-size:11.5px;font-weight:600;color:var(--mute)}
   :is(#view-month,#view-week) .mr-line .rtrack{height:12px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
@@ -9823,7 +9831,7 @@ function countUpText(part,v){
 function countUpIn(root){
   if(!root) return;
   const els=[...root.querySelectorAll('.num:not([data-nocount])')]
-    .filter(el=>!(el.parentElement&&el.parentElement.closest('.num'))&&!el.closest('.sr-wait'));
+    .filter(el=>!(el.parentElement&&el.parentElement.closest('.num'))&&!el.closest('.sr-wait,.sr-scrub'));
   els.forEach(el=>{
     if(el.__countRaf){ cancelAnimationFrame(el.__countRaf); el.__countRaf=0; }
     const parts=countUpParts(el);
@@ -9847,8 +9855,42 @@ function countUpIn(root){
    아래 섹션은 숨겨 둔 채 그래프 움직임을 멈춰 두었다가(sr-wait) 스크롤로 화면에 들어올 때 떠오르며 움직이고 숫자를 센다 ·
    화면을 열 때마다(activateView) 다시 건다 · 움직임 줄이기 설정이면 아무것도 하지 않는다 */
 let srObserver=null;
+/* 스크롤에 맞춰 움직이기(10-09 사용자: "스크롤을 내리면서 애니메이션이 반응하도록") · 브라우저가 스크롤 연동 애니메이션
+   (animation-timeline:view())을 알면 막대·도넛·섹션이 화면 속 위치에 따라 자라고(올리면 다시 줄어듦), 숫자도 스크롤 위치만큼 센다 ·
+   모르는 브라우저는 아래 '들어오면 한 번 재생'(sr-wait) 방식 */
+const SR_SCRUB=!!(window.CSS&&CSS.supports&&CSS.supports('animation-timeline','view()'));
+let srNums=[], srRaf=0;
+function srPaint(){
+  srRaf=0;
+  const H=innerHeight;
+  srNums.forEach(n=>{
+    if(!n.el.isConnected||!n.el.offsetParent) return;
+    const top=n.el.getBoundingClientRect().top;
+    const q=Math.max(0,Math.min(1,(H*0.98-top)/(H*0.38))), e=1-Math.pow(1-q,3);
+    n.parts.forEach((pt,i)=>{ const t=countUpText(pt,pt.to*e); if(pt.node.nodeValue!==t) pt.node.nodeValue=t; n.last[i]=t; });
+  });
+}
+function srQueue(){ if(!srRaf) srRaf=requestAnimationFrame(srPaint); }
+addEventListener('scroll',srQueue,{passive:true});
+addEventListener('resize',srQueue);
 function scrollRevealArm(view){
-  if(!view||countUpLessMotion||!('IntersectionObserver' in window)) return;
+  if(!view||countUpLessMotion) return;
+  if(SR_SCRUB){
+    view.classList.add('sr-scrub');
+    /* 숫자 원래 값은 한 번만 읽어 둔다 · 다시 걸 때 글자가 그대로(내가 쓴 값)면 예전 것을 쓰고, 새로 그려졌으면 새로 읽는다 */
+    const els=[...view.querySelectorAll('.num:not([data-nocount])')].filter(el=>!(el.parentElement&&el.parentElement.closest('.num')));
+    const keep=srNums.filter(n=>!view.contains(n.el));
+    els.forEach(el=>{
+      if(el.__countRaf){ cancelAnimationFrame(el.__countRaf); el.__countRaf=0; }
+      let n=el.__sr;
+      const same=n&&n.parts.every((pt,i)=>pt.node.isConnected&&pt.node.parentNode&&el.contains(pt.node)&&pt.node.nodeValue===n.last[i]);
+      if(!same){ const parts=countUpParts(el); if(!parts.length) return; n=el.__sr={el,parts,last:parts.map(pt=>pt.node.nodeValue)}; }
+      keep.push(n);
+    });
+    srNums=keep; srQueue();
+    return;
+  }
+  if(!('IntersectionObserver' in window)) return;
   if(!srObserver) srObserver=new IntersectionObserver(ents=>{
     ents.forEach(en=>{
       if(!en.isIntersecting) return;
