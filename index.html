@@ -4760,12 +4760,39 @@ window.BAROYAM_FONT=(function(){
   .settings-view[data-settings-panel="accesslog"]{height:auto}
   .al-manager{display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--body)}
   .al-manager[hidden],.al-lock[hidden]{display:none}
-  /* 보안로그 잠금 · 탭 가운데 작은 상자 */
-  .al-lock{display:flex;flex-direction:column;gap:10px;max-width:340px;margin:60px auto 0;text-align:center}
-  .al-lock-title{font-size:16px;font-weight:600;color:var(--ink)}
-  .al-lock-row{display:flex;gap:8px}
-  .al-lock-row .ui-field{flex:1;min-width:0}
-  .al-lock-msg{min-height:18px;margin:0;font-size:12px;color:var(--neg)}
+  /* 보안로그 잠금 · 창 가운데 · 위에 천천히 숨 쉬듯 일렁이는 빛 구슬(로딩 느낌) · 확인하는 동안은 빨라진다 */
+  .al-lock{--orb-a:#f062e6;--orb-b:#8a6cff;--orb-c:#4aa8ff;
+    display:flex;flex-direction:column;align-items:center;gap:0;width:min(360px,100%);margin:0 auto;
+    min-height:min(560px,62vh);justify-content:center;text-align:center;animation:alLockIn .7s cubic-bezier(.22,1,.36,1) both}
+  @keyframes alLockIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .al-orb{position:relative;width:132px;height:132px;margin-bottom:26px;border-radius:50%;
+    animation:alOrbSpin 14s linear infinite, alOrbMorph 7s ease-in-out infinite}
+  .al-orb::before{content:'';position:absolute;inset:-34px;border-radius:50%;
+    background:radial-gradient(circle,color-mix(in srgb,var(--orb-b) 22%,transparent) 0%,transparent 65%);filter:blur(12px);
+    animation:alOrbBreath 3.6s ease-in-out infinite}
+  .al-orb i,.al-orb b{position:absolute;border-radius:50%;filter:blur(16px);mix-blend-mode:normal}
+  .al-orb i:nth-child(1){inset:18% 20% 8% 6%;background:var(--orb-a);opacity:.95;filter:blur(14px);animation:alBlobA 5.2s ease-in-out infinite}
+  .al-orb i:nth-child(2){inset:2% 8% 34% 26%;background:var(--orb-c);opacity:.85;filter:blur(14px);animation:alBlobB 6.4s ease-in-out infinite}
+  .al-orb i:nth-child(3){inset:26% 4% 10% 34%;background:var(--orb-b);opacity:.9;filter:blur(14px);animation:alBlobC 4.6s ease-in-out infinite}
+  .al-orb b{inset:16% 18% 46% 40%;background:#fff;opacity:.5;filter:blur(14px);animation:alBlobB 4s ease-in-out infinite reverse}
+  @keyframes alOrbSpin{to{transform:rotate(360deg)}}
+  @keyframes alOrbMorph{0%,100%{border-radius:50% 50% 50% 50%}33%{border-radius:58% 42% 52% 48%}66%{border-radius:44% 56% 46% 54%}}
+  @keyframes alOrbBreath{0%,100%{transform:scale(.92);opacity:.7}50%{transform:scale(1.08);opacity:1}}
+  @keyframes alBlobA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(14px,10px) scale(1.12)}}
+  @keyframes alBlobB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-16px,12px) scale(.9)}}
+  @keyframes alBlobC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-8px,-14px) scale(1.15)}}
+  .al-lock.is-busy .al-orb{animation-duration:2.4s,2s}
+  .al-lock.is-busy .al-orb i{animation-duration:1.4s}
+  .al-lock.is-shake .al-lock-row{animation:alShake .42s cubic-bezier(.36,.07,.19,.97)}
+  @keyframes alShake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  .al-lock-title{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.3px}
+  .al-lock-sub{margin:6px 0 22px;font-size:13px;color:var(--mute)}
+  .al-lock-row{display:flex;gap:8px;width:100%}
+  .al-lock-row .ui-field{flex:1;min-width:0;height:44px;border-radius:14px;text-align:center;font-size:16px;letter-spacing:6px}
+  .al-lock-row .ui-field::placeholder{letter-spacing:0;font-size:13.5px}
+  .al-lock-row .ui-btn{height:44px;border-radius:14px;padding:0 20px}
+  .al-lock-msg{min-height:18px;margin:10px 0 0;font-size:12.5px;color:var(--mute)}
+  .al-lock-msg.is-err{color:var(--neg)}
   .al-hint{margin:0 0 6px;font-size:12px;line-height:1.55;color:var(--mute)}
   .al-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
   .al-sub{font-size:12.5px;font-weight:600;color:var(--ink)}
@@ -6942,8 +6969,9 @@ window.BAROYAM_FONT=(function(){
                  탭을 열 때마다 보안로그 비밀번호를 한 번 더 묻는다(맞히기 전에는 기록을 읽지도 않음) -->
             <section class="settings-view" data-settings-panel="accesslog" hidden>
               <form class="al-lock" id="alLock" autocomplete="off">
+                <div class="al-orb" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
                 <div class="al-lock-title">보안로그</div>
-                <p class="al-hint">접속 기록은 팀장 비밀번호와 별도로 보안로그 비밀번호를 넣어야 열려요.</p>
+                <p class="al-lock-sub">접속 기록은 보안로그 비밀번호를 한 번 더 넣어야 열려요</p>
                 <div class="al-lock-row">
                   <input class="ui-field pw-mask" type="text" id="alLockPw" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="보안로그 비밀번호">
                   <button type="submit" class="ui-btn primary">열기</button>
@@ -11558,7 +11586,7 @@ window.CsGuide=(function(){
   }
   function relock(){
     manager.hidden=true; lockForm.hidden=false;
-    lockMsg.textContent=''; lockPw.value='';
+    lockMsg.textContent=''; lockMsg.classList.remove('is-err'); lockForm.classList.remove('is-busy','is-shake'); lockPw.value='';
     rowsEl.innerHTML=''; devBox.innerHTML=''; officeBox.innerHTML='';
     setTimeout(()=>lockPw.focus(),0);
   }
@@ -11566,8 +11594,12 @@ window.CsGuide=(function(){
     e.preventDefault();
     if(!lockPw.value){ lockPw.focus(); return; }
     if(!(window.crypto&&crypto.subtle)){ lockMsg.textContent='이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'; return; }
-    lockMsg.textContent='확인하는 중…';
-    if((await lockHash(lockPw.value))!==LOCK.hash){ lockMsg.textContent='비밀번호가 맞지 않아요'; lockPw.value=''; lockPw.focus(); return; }
+    lockMsg.textContent='확인하는 중…'; lockMsg.classList.remove('is-err');
+    lockForm.classList.remove('is-shake'); lockForm.classList.add('is-busy');
+    const ok=(await lockHash(lockPw.value))===LOCK.hash;
+    lockForm.classList.remove('is-busy');
+    if(!ok){ lockMsg.textContent='비밀번호가 맞지 않아요'; lockMsg.classList.add('is-err');
+      void lockForm.offsetWidth; lockForm.classList.add('is-shake'); lockPw.value=''; lockPw.focus(); return; }
     lockForm.hidden=true; manager.hidden=false; lockPw.value=''; lockMsg.textContent='';
     load();
   });
