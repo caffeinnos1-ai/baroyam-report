@@ -4760,9 +4760,12 @@ window.BAROYAM_FONT=(function(){
   .al-orb::before{content:"";position:absolute;inset:-46px;border-radius:50%;
     background:radial-gradient(circle,color-mix(in srgb,var(--orb-b) 26%,transparent) 0%,color-mix(in srgb,var(--orb-a) 10%,transparent) 40%,transparent 68%);
     filter:blur(10px);animation:alBreath 4.2s ease-in-out infinite}
-  .al-core{position:absolute;inset:0;border-radius:50%;overflow:hidden;filter:blur(1.5px);
-    animation:alMorph 8s ease-in-out infinite;
-    box-shadow:0 18px 50px -10px color-mix(in srgb,var(--orb-b) 55%,transparent),0 0 40px -6px color-mix(in srgb,var(--orb-a) 45%,transparent)}
+  /* 끝선이 없도록 가장자리를 둥글게 지우고(mask) 흐림 정도가 숨 쉬듯 오간다 · 테두리 그림자는 두지 않는다 */
+  .al-core{position:absolute;inset:-14%;border-radius:50%;overflow:hidden;
+    -webkit-mask:radial-gradient(circle closest-side,#000 52%,rgba(0,0,0,.55) 72%,transparent 100%);
+            mask:radial-gradient(circle closest-side,#000 52%,rgba(0,0,0,.55) 72%,transparent 100%);
+    animation:alMorph 8s ease-in-out infinite, alSoft 5s ease-in-out infinite}
+  @keyframes alSoft{0%,100%{filter:blur(4px) saturate(1.1)}50%{filter:blur(11px) saturate(1.25)}}
   .al-aura{position:absolute;inset:-30%;background:conic-gradient(from 0deg,var(--orb-a),var(--orb-b),var(--orb-c),#b8f0ff,var(--orb-a));
     filter:blur(22px);animation:alSpin 7s linear infinite}
   .al-core i,.al-core b{position:absolute;border-radius:50%;filter:blur(16px)}
@@ -4771,14 +4774,15 @@ window.BAROYAM_FONT=(function(){
   .al-core i:nth-child(4){inset:34% -6% 4% 38%;background:var(--orb-b);opacity:.85;animation:alBlobC 4.8s ease-in-out infinite}
   .al-core b{inset:12% 20% 50% 38%;background:#fff;opacity:.7;filter:blur(12px);animation:alBlobB 4.4s ease-in-out infinite reverse}
   /* 물결 고리 · 구슬에서 바깥으로 번져 사라진다 */
-  .al-halo{position:absolute;inset:0;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--orb-b) 45%,transparent);
-    animation:alHalo 4.2s cubic-bezier(.2,.6,.3,1) infinite;opacity:0}
-  .al-halo+.al-halo{animation-delay:2.1s;border-color:color-mix(in srgb,var(--orb-a) 40%,transparent)}
-  @keyframes alHalo{0%{transform:scale(.92);opacity:.8}100%{transform:scale(1.75);opacity:0}}
+  .al-halo{position:absolute;inset:4%;border-radius:50%;filter:blur(14px);
+    background:radial-gradient(circle,transparent 45%,color-mix(in srgb,var(--orb-b) 45%,transparent) 62%,transparent 75%);
+    animation:alHalo 5s cubic-bezier(.2,.6,.3,1) infinite;opacity:0}
+  .al-halo+.al-halo{animation-delay:2.5s;background:radial-gradient(circle,transparent 45%,color-mix(in srgb,var(--orb-a) 40%,transparent) 62%,transparent 75%)}
+  @keyframes alHalo{0%{transform:scale(.85);opacity:.9}100%{transform:scale(1.7);opacity:0}}
   /* 별빛 · 구슬 둘레를 서로 다른 거리·속도로 돌며 반짝인다 */
   .al-spark{position:absolute;left:50%;top:50%;width:0;height:0;animation:alSpin 9s linear infinite}
   .al-spark::after{content:"";position:absolute;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:#fff;
-    box-shadow:0 0 8px 2px color-mix(in srgb,var(--orb-c) 80%,transparent);left:96px;top:0;animation:alTwinkle 2.4s ease-in-out infinite}
+    box-shadow:0 0 10px 3px color-mix(in srgb,var(--orb-c) 70%,transparent);filter:blur(.6px);left:96px;top:0;animation:alTwinkle 2.4s ease-in-out infinite}
   .al-spark:nth-of-type(4){animation-duration:13s;animation-direction:reverse}
   .al-spark:nth-of-type(4)::after{left:-88px;top:30px;width:4px;height:4px;box-shadow:0 0 8px 2px color-mix(in srgb,var(--orb-a) 80%,transparent);animation-delay:.8s}
   .al-spark:nth-of-type(5){animation-duration:16s}
