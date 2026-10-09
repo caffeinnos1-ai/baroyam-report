@@ -4692,28 +4692,33 @@ window.BAROYAM_FONT=(function(){
   .kb-people-title{font-size:12.5px;font-weight:600;color:var(--ink)}
   .kb-people-title small{font-weight:500;color:var(--mute);margin-left:6px}
 
-  /* 관리자 설정 · 접속기록 · 기기 목록(이름 붙이기)과 최근 접속 표 */
+  /* 관리자 설정 · 접속기록 · 기기 목록(이름 붙이기)과 최근 접속 표 · 작게, 장식 없이 */
   .settings-view[data-settings-panel="accesslog"]{height:auto}
-  .al-manager{display:flex;flex-direction:column;gap:12px}
-  .al-sub{font-size:12.5px;font-weight:600;color:var(--ink);margin-top:4px}
-  .al-sub span{font-weight:500;color:var(--mute);margin-left:4px}
-  .al-devs{display:flex;flex-direction:column;gap:8px}
-  .al-dev{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px;align-items:center;
-    border:1px solid var(--line);border-radius:14px;padding:10px 14px;background:var(--bg)}
-  .al-dev.is-me{border-color:var(--btn)}
-  .al-dev .ui-field{width:100%}
-  .al-dev-meta{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:12px;font-weight:500;color:var(--mute)}
-  .al-dev-meta b{font-weight:600;color:var(--ink)}
-  .al-me{padding:2px 8px;border-radius:999px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:11px;font-weight:600}
-  .al-table-wrap{border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:460px}
-  .al-table{width:100%;border-collapse:collapse;font-size:12.5px;color:var(--body)}
-  .al-table th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:600;color:var(--mute);
-    padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
-  .al-table td{padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
-  .al-table tr:last-child td{border-bottom:0}
-  .al-table td.al-dev-name{font-weight:500;color:var(--ink)}
-  .al-table td .al-day{color:var(--mute);margin-right:6px}
-  .al-tag{margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:11px;font-weight:500}
+  .al-manager{display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--body)}
+  .al-hint{margin:0 0 6px;font-size:12px;line-height:1.55;color:var(--mute)}
+  .al-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+  .al-sub{font-size:12.5px;font-weight:600;color:var(--ink)}
+  .al-sub span{font-weight:400;color:var(--mute);margin-left:4px}
+  .al-devs,.al-table-wrap{border-top:1px solid var(--line)}
+  .al-dev{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .al-dev input{flex:none;width:170px;height:28px;padding:0 8px;border:1px solid transparent;border-radius:6px;
+    background:transparent;font:inherit;font-size:12.5px;font-weight:500;color:var(--ink)}
+  .al-dev input::placeholder{color:var(--mute);font-weight:400}
+  .al-dev input:hover{border-color:var(--line)}
+  .al-dev input:focus{outline:0;border-color:var(--btn);background:var(--paper)}
+  .al-dev-meta{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--mute)}
+  .al-me{color:var(--btn-soft-ink);font-weight:500}
+  .al-me::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--btn);margin:0 5px 1px 0;vertical-align:middle}
+  .al-pick{height:28px;min-width:0;padding:0 10px;font-size:12px}
+  .al-table-wrap{max-height:380px;overflow:auto}
+  .al-table{width:100%;border-collapse:collapse}
+  #alManager .al-table th{position:sticky;top:0;background:var(--paper);text-align:left;font-size:11.5px;font-weight:500;color:var(--mute);
+    padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  #alManager .al-table td{text-align:left;font-size:12.5px;font-weight:400;color:var(--body);padding:6px 8px;
+    border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+  #alManager .al-table td:first-child{color:var(--mute)}
+  #alManager .al-table td.al-dev-name{color:var(--ink);font-weight:500}
+  #alManager .al-table tr:last-child td{border-bottom:0}
 
   /* 관리자 설정 · 권한설정(회원별 사이드바 메뉴 보이기) · 부품은 ui-chip·ui-btn 을 쓴다 */
   .settings-view[data-settings-panel="access"]{height:auto}
@@ -6867,14 +6872,14 @@ window.BAROYAM_FONT=(function(){
             </section>
             <!-- 접속기록 · 어느 기기(브라우저)에서 누가 언제 들어왔는지 · 기기마다 이름을 붙인다 -->
             <section class="settings-view" data-settings-panel="accesslog" hidden>
-              <div class="al-manager">
-                <p class="mg-hint">보안 점검용이에요. 회원으로 들어올 때마다 한 줄씩 남고(같은 기기·회원의 새로고침은 30분에 한 번), <b>90일</b>이 지나면 저절로 지워져요. 사무실 PC들은 밖에서 보면 IP가 같아서, 브라우저마다 만든 <b>기기 번호</b>로 어느 PC인지 가려요. 기기 이름 칸에 "회사 PC-디자인"처럼 적어 두세요.<br>같은 PC라도 브라우저가 다르거나 시크릿 창·인터넷 기록 삭제 뒤에는 새 기기로 잡혀요.</p>
-                <div class="al-sub">기기 <span id="alDevCount"></span></div>
+              <div class="al-manager" id="alManager">
+                <p class="al-hint">보안 점검용 기록이에요. 회원으로 들어올 때 남고 90일 뒤 지워져요. 사무실 PC는 IP가 같아서 기기 이름으로 구분해요.</p>
+                <div class="al-head"><div class="al-sub">기기<span id="alDevCount"></span></div></div>
                 <div class="al-devs" id="alDevs"></div>
-                <div class="al-sub">최근 접속</div>
-                <div class="ui-chips" id="alFilter" role="group" aria-label="기기 고르기"></div>
+                <div class="al-head"><div class="al-sub">최근 접속</div>
+                  <button type="button" class="ui-field al-pick" id="alFilter" aria-haspopup="listbox">전체 기기</button></div>
                 <div class="al-table-wrap"><table class="al-table">
-                  <thead><tr><th>시각</th><th>기기</th><th>회원</th><th>IP</th><th>브라우저 · OS</th></tr></thead>
+                  <thead><tr><th>시각</th><th>기기</th><th>회원</th><th>IP</th><th>브라우저</th></tr></thead>
                   <tbody id="alRows"></tbody>
                 </table></div>
                 <p class="wf-checked" id="alNote"></p>
@@ -11350,7 +11355,7 @@ window.CsGuide=(function(){
   let rows=null, names={}, pick='', failed=false;
   const me=()=>window.BAROYAM_DEVICE?window.BAROYAM_DEVICE.id():'';
   const short=id=>String(id||'').replace(/-/g,'').slice(0,6);
-  const devName=id=>names[id]||('이름 없는 기기 · '+short(id));
+  const devName=id=>names[id]||('이름 없는 기기 '+short(id));
   /* 브라우저 · OS 를 사람이 읽는 말로 */
   function ua(s){
     s=String(s||''); if(!s) return '—';
@@ -11365,7 +11370,7 @@ window.CsGuide=(function(){
   function when(t){
     const d=new Date(t); if(isNaN(d)) return '';
     const p=n=>String(n).padStart(2,'0');
-    return `<span class="al-day">${d.getMonth()+1}.${p(d.getDate())} (${WD[d.getDay()]})</span>${p(d.getHours())}:${p(d.getMinutes())}`;
+    return `${d.getMonth()+1}.${p(d.getDate())} ${WD[d.getDay()]} ${p(d.getHours())}:${p(d.getMinutes())}`;
   }
   function devices(){
     const by={};
@@ -11381,25 +11386,27 @@ window.CsGuide=(function(){
   function render(){
     const list=devices(), mine=me();
     countEl.textContent=rows?list.length+'대':'';
-    devBox.innerHTML=list.map(d=>`<div class="al-dev${d.id===mine?' is-me':''}">
-        <input class="ui-field" data-dev="${esc(d.id)}" value="${esc(names[d.id]||'')}" maxlength="30"
-          placeholder="이름 없는 기기 · ${esc(short(d.id))}" aria-label="기기 이름">
-        <div class="al-dev-meta">
-          ${d.id===mine?'<span class="al-me">지금 이 기기</span>':''}
-          ${d.last?`<span>마지막 <b>${when(d.last.at)}</b></span><span>${esc(ua(d.last.user_agent))}</span>`:'<span>아직 기록 없음</span>'}
-          ${d.members.size?`<span>회원 <b>${esc([...d.members].join(', '))}</b></span>`:''}
-          ${d.ips.size?`<span>IP ${esc([...d.ips].slice(0,3).join(', '))}${d.ips.size>3?' 외':''}</span>`:''}
-          ${d.n?`<span>${d.n}회</span>`:''}
-        </div>
-      </div>`).join('');
+    /* 한 줄 = 기기 · 이름 칸은 글자처럼 보이다가 올리면 테두리 · 나머지는 흐린 글 한 줄 */
+    devBox.innerHTML=list.map(d=>{
+      const bits=[];
+      if(d.id===mine) bits.push('<span class="al-me">이 기기</span>');
+      if(d.last) bits.push(when(d.last.at),esc(ua(d.last.user_agent)));
+      else bits.push('아직 기록 없음');
+      if(d.members.size) bits.push(esc([...d.members].join(', ')));
+      if(d.ips.size) bits.push(esc([...d.ips].slice(0,2).join(', '))+(d.ips.size>2?' 외':''));
+      if(d.n) bits.push(d.n+'회');
+      return `<div class="al-dev"><input data-dev="${esc(d.id)}" value="${esc(names[d.id]||'')}" maxlength="30"
+          placeholder="이름 없는 기기 ${esc(short(d.id))}" aria-label="기기 이름"><div class="al-dev-meta">${bits.join(' · ')}</div></div>`;
+    }).join('');
     if(pick&&!list.some(d=>d.id===pick)) pick='';
-    filterEl.innerHTML=`<button type="button" class="ui-chip" data-dev="" aria-pressed="${!pick}">전체 <b>${(rows||[]).length}</b></button>`+
-      list.filter(d=>d.n).map(d=>`<button type="button" class="ui-chip" data-dev="${esc(d.id)}" aria-pressed="${pick===d.id}">${esc(devName(d.id))} <b>${d.n}</b></button>`).join('');
+    filterEl.textContent=pick?devName(pick):'전체 기기';
+    filterEl.onclick=()=>UI.menu(filterEl,[{value:'',label:'전체 기기',sub:String((rows||[]).length)}]
+      .concat(list.filter(d=>d.n).map(d=>({value:d.id,label:devName(d.id),sub:String(d.n)}))),pick,v=>{ pick=v; render(); });
     const shown=(rows||[]).filter(r=>!pick||r.device_id===pick);
     rowsEl.innerHTML=shown.map(r=>`<tr>
         <td>${when(r.at)}</td>
-        <td class="al-dev-name">${esc(devName(r.device_id))}${r.device_id===mine?'<span class="al-tag">이 기기</span>':''}</td>
-        <td>${esc(r.member_name||r.member_id||'')}${r.kind==='pick'?'<span class="al-tag">프로필 선택</span>':''}</td>
+        <td class="al-dev-name">${esc(devName(r.device_id))}</td>
+        <td>${esc(r.member_name||r.member_id||'')}</td>
         <td>${esc(r.ip||'—')}</td>
         <td>${esc(ua(r.user_agent))}</td>
       </tr>`).join('')||`<tr><td colspan="5">${rows?'기록이 없어요.':'불러오는 중…'}</td></tr>`;
@@ -11430,7 +11437,6 @@ window.CsGuide=(function(){
   }
   devBox.addEventListener('change',e=>{ const inp=e.target.closest('input[data-dev]'); if(inp) saveName(inp); });
   devBox.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input[data-dev]')) e.target.blur(); });
-  filterEl.addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(!b) return; pick=b.dataset.dev||''; render(); });
   tab.addEventListener('click',load);
 })();
 
