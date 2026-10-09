@@ -4558,7 +4558,7 @@ window.BAROYAM_FONT=(function(){
   /* 관리자 설정 · 다른 대화상자와 틀을 같이 쓰지만 이 창만 넓고 높게 */
   .settings-panel.admin-panel{max-width:960px;height:min(780px,90vh)}
   /* 워크플로우 탭은 표가 넓어 가로 스크롤이 생기지 않게 창을 넓힌다 */
-  .settings-panel.admin-panel:has(.settings-view[data-settings-panel="kimbiseo"]:not([hidden])){max-width:min(1240px,96vw)}
+  .settings-panel.admin-panel:has(.settings-view[data-settings-panel="kimbiseo"]:not([hidden])){max-width:min(1360px,96vw)}
   .admin-panel .mini-sidebar{width:200px}
   /* 설정창 왼쪽 탭 · 사이드바(--sb-bg)보다 한 단계 밝은 중분류 톤(--sn-bg)을 써서
      바깥 사이드바 → 설정창 탭 → 본문(paper) 순으로 밝아지게 맞췄다 */
@@ -4731,6 +4731,8 @@ window.BAROYAM_FONT=(function(){
   /* 김비서 AI 탭 · 이름이 두 줄로 꺾이지 않게 한 단계 작게 · 종류별 묶음 줄(누르면 접고 폄) */
   .kb-table .wt-name{font-size:13px;white-space:nowrap}
   .kb-table .wt-name small{font-size:11px}
+  /* 실패 횟수는 최근 실행 아래 줄로 · 한 줄에 늘어놓으면 표가 넓어져 가로 스크롤이 생긴다 */
+  .kb-table .wt-fail{display:block;margin-top:2px;font-size:11px}
   .kb-table td{padding:7px 8px}
   .kb-table tr.kb-group td{background:color-mix(in srgb,var(--chip-flat) 70%,transparent);padding:7px 10px;cursor:pointer;user-select:none}
   .kb-table tbody tr.kb-group:hover td{background:var(--chip-flat)}
@@ -11311,7 +11313,7 @@ window.CsGuide=(function(){
           /* 실패 횟수는 최근 7일 기준(hist 가 이미 7일치) */
           const recent=hist, fails=recent.filter(r=>r.conclusion!=='success');
           last=`${esc(fmt(run.run_at))}${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록</a>`:''}`
-            +(fails.length?` <span class="wt-fail">· 7일간 ${recent.length}회 중 ${fails.length}회 실패</span>`:'');
+            +(fails.length?` <span class="wt-fail">7일간 ${recent.length}회 중 ${fails.length}회 실패</span>`:'');
         }
       }
       const tip=a.desc+(a.cmds?' · 대화: '+a.cmds.join(' / '):'')+' · '+(a.host||'VPS 서버 '+a.task);
