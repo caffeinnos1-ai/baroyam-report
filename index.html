@@ -4556,8 +4556,12 @@ window.BAROYAM_FONT=(function(){
   .settings-close:hover{background:var(--bg);color:var(--ink)}
   .settings-body{flex:1;display:flex;min-height:0}
   /* 관리자 설정 · 다른 대화상자와 틀을 같이 쓰지만 이 창만 넓고 높게 */
-  .settings-panel.admin-panel{max-width:960px;height:min(780px,90vh);transition:max-width .55s cubic-bezier(.22,1,.36,1)}
-  @media (prefers-reduced-motion:reduce){.settings-panel.admin-panel{transition:none}}
+  /* 탭을 바꿀 때 창 폭이 부드럽게 늘고 줄며, 새 탭 내용은 살짝 아래에서 떠오른다 ·
+     윈도우의 "애니메이션 표시"를 끈 PC 는 움직임 줄이기로 잡혀 연출이 사라지므로 이 창만은 그 설정을 따르지 않는다(사용자 요청) */
+  .settings-panel.admin-panel{max-width:960px;height:min(780px,90vh);transition:max-width .9s cubic-bezier(.65,0,.25,1)}
+  .admin-panel .settings-view.active{animation:adminViewIn .6s cubic-bezier(.22,1,.36,1) both}
+  .admin-panel .settings-view[data-settings-panel="kimbiseo"].active{animation-duration:.8s;animation-delay:.15s}
+  @keyframes adminViewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   /* 워크플로우 탭은 표가 넓어 가로 스크롤이 생기지 않게 창을 넓힌다 */
   .settings-panel.admin-panel:has(.settings-view[data-settings-panel="kimbiseo"]:not([hidden])){max-width:1360px}
   .admin-panel .mini-sidebar{width:200px}
