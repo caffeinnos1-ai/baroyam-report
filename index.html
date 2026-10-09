@@ -903,12 +903,14 @@ window.BAROYAM_DB=(function(){
   /* ---------- 자동화 실행 이력 (automation_runs) ----------
      예전 automation-status.json 은 워크플로우별 "최신 1건"만 담은 스냅샷이라
      언제부터 실패했는지 알 수 없었다. 여기서는 최신순 이력을 그대로 돌려준다 */
-  async function automationRuns(limit){
+  /* opts.since(ISO) 이후만 · opts.only(이름 목록)만 · 늘 켜진 봇이 10분마다 쌓는 줄 때문에 기간으로 볼 때는 이름을 좁힌다 */
+  async function automationRuns(limit,opts){
     if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
     const c=await client();
-    const r=await c.from('automation_runs')
-      .select('workflow,conclusion,url,run_at')
-      .order('run_at',{ascending:false}).limit(limit||300);
+    let q=c.from('automation_runs').select('workflow,conclusion,url,run_at');
+    if(opts&&opts.since) q=q.gte('run_at',opts.since);
+    if(opts&&opts.only) q=q.in('workflow',opts.only);
+    const r=await q.order('run_at',{ascending:false}).limit(limit||300);
     if(r.error) throw r.error;
     return r.data||[];
   }
@@ -4555,6 +4557,8 @@ window.BAROYAM_FONT=(function(){
   .settings-body{flex:1;display:flex;min-height:0}
   /* 관리자 설정 · 다른 대화상자와 틀을 같이 쓰지만 이 창만 넓고 높게 */
   .settings-panel.admin-panel{max-width:960px;height:min(780px,90vh)}
+  /* 워크플로우 탭은 표가 넓어 가로 스크롤이 생기지 않게 창을 넓힌다 */
+  .settings-panel.admin-panel:has(.settings-view[data-settings-panel="kimbiseo"]:not([hidden])){max-width:min(1240px,96vw)}
   .admin-panel .mini-sidebar{width:200px}
   /* 설정창 왼쪽 탭 · 사이드바(--sb-bg)보다 한 단계 밝은 중분류 톤(--sn-bg)을 써서
      바깥 사이드바 → 설정창 탭 → 본문(paper) 순으로 밝아지게 맞췄다 */
@@ -11304,9 +11308,10 @@ window.CsGuide=(function(){
         if(!run) st='<span class="wt-st">기록 없음</span>';
         else st=`<span class="wt-st ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'정상':'실패'}</span>`;
         if(run){
-          const recent=hist.slice(0,12), fails=recent.filter(r=>r.conclusion!=='success');
+          /* 실패 횟수는 최근 7일 기준(hist 가 이미 7일치) */
+          const recent=hist, fails=recent.filter(r=>r.conclusion!=='success');
           last=`${esc(fmt(run.run_at))}${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록</a>`:''}`
-            +(fails.length?` <span class="wt-fail">· ${recent.length}회 중 ${fails.length}회 실패</span>`:'');
+            +(fails.length?` <span class="wt-fail">· 7일간 ${recent.length}회 중 ${fails.length}회 실패</span>`:'');
         }
       }
       const tip=a.desc+(a.cmds?' · 대화: '+a.cmds.join(' / '):'')+' · '+(a.host||'VPS 서버 '+a.task);
@@ -11332,9 +11337,13 @@ window.CsGuide=(function(){
   function load(){
     render();
     if(!window.BAROYAM_DB){ byName=false; render(); return; }
-    window.BAROYAM_DB.automationRuns().then(rows=>{
+    /* 정해진 시각에 도는 것은 최근 7일 기록 전부(실패 횟수용) · 늘 켜진 것은 최신 한 줄만 쓰므로 예전처럼 최근 300줄 */
+    const timed=AUTOMATIONS.filter(a=>!a.always&&a.record).map(a=>a.record);
+    const since=new Date(Date.now()-7*864e5).toISOString();
+    Promise.all([window.BAROYAM_DB.automationRuns(1000,{since,only:timed}),window.BAROYAM_DB.automationRuns()]).then(([week,latest])=>{
       const by={};
-      (rows||[]).forEach(r=>{ (by[r.workflow]=by[r.workflow]||[]).push(r); });
+      (week||[]).forEach(r=>{ (by[r.workflow]=by[r.workflow]||[]).push(r); });
+      (latest||[]).forEach(r=>{ if(timed.indexOf(r.workflow)<0) (by[r.workflow]=by[r.workflow]||[]).push(r); });
       byName=by; render();
     }).catch(err=>{ console.error(err); byName=false; render(); });
   }
