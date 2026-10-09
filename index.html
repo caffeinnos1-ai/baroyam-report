@@ -4752,19 +4752,24 @@ window.BAROYAM_FONT=(function(){
   .settings-panel.admin-panel:has(.settings-view[data-settings-panel="erpmap"]:not([hidden])){max-width:1360px}
   .em-manager{display:flex;flex-direction:column;gap:10px}
   .em-wrap{display:flex;gap:14px;align-items:flex-start}
-  .em-scroll{flex:1;min-width:0;overflow-x:auto;border:1px solid var(--line);border-radius:14px}
-  .em-map{position:relative;display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));column-gap:64px;padding:14px 18px 18px;min-width:820px}
-  .em-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-  .em-lines path{fill:none;stroke:var(--line);stroke-width:1.4;transition:stroke .2s,opacity .2s}
-  .em-lines path.ro{stroke-dasharray:4 4}
-  .em-lines path.on{stroke:var(--btn);stroke-width:1.8}
-  .em-map.picked .em-lines path:not(.on){opacity:.25}
-  .em-col{display:flex;flex-direction:column;gap:7px;position:relative;z-index:1}
-  .em-col-h{font-size:11.5px;font-weight:500;color:var(--mute);margin:0 0 3px;padding-left:2px}
-  .em-node{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;
+  /* 캔버스 · 바탕(점 격자)을 끌면 이동, 휠·트랙패드로 확대축소 · 노드 자리는 JS 가 정한다(선이 덜 엉키게 순서를 고름) */
+  .em-view{flex:1;min-width:0;position:relative;height:min(600px,62vh);overflow:hidden;border:1px solid var(--line);border-radius:14px;
+    cursor:grab;touch-action:none;user-select:none;
+    background-image:radial-gradient(circle,var(--line) 1px,transparent 1.3px);background-size:18px 18px}
+  .em-view.grabbing{cursor:grabbing}
+  .em-map{position:absolute;left:0;top:0;transform-origin:0 0}
+  .em-zoom{position:absolute;right:10px;bottom:10px;z-index:3;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+  .em-zoom output{min-width:44px;text-align:center;font-size:11.5px;color:var(--mute)}
+  .em-lines{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+  .em-lines path{fill:none;stroke:var(--line);stroke-width:1.2;transition:stroke .2s,opacity .2s}
+  .em-lines path.ro{stroke-dasharray:3 3}
+  .em-lines path.on{stroke:var(--btn);stroke-width:1.6}
+  .em-map.picked .em-lines path:not(.on){opacity:.2}
+  .em-col-h{position:absolute;font-size:11px;font-weight:500;color:var(--mute);white-space:nowrap}
+  .em-node{all:unset;position:absolute;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:0;padding:0 8px;border:1px solid var(--line);border-radius:8px;
     background:var(--paper);cursor:pointer;transition:border-color .2s,background .2s,opacity .2s}
-  .em-node b{font-size:12.5px;font-weight:500;color:var(--ink)}
-  .em-node small{font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .em-node b{font-size:11px;font-weight:500;color:var(--ink);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .em-node small{font-size:9.5px;color:var(--mute);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .em-node:hover{border-color:var(--btn)}
   .em-node:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
   .em-node.off{opacity:.55}
@@ -4773,7 +4778,7 @@ window.BAROYAM_FONT=(function(){
   .em-map.picked .em-node.cur{opacity:1;border-color:var(--btn);background:var(--btn-soft)}
   .em-map.picked .em-node.cur b{color:var(--btn-soft-ink)}
   .em-detail{width:250px;flex:none;border:1px solid var(--line);border-radius:14px;padding:14px 15px;font-size:12.5px;color:var(--body);
-    line-height:1.6;position:sticky;top:0}
+    line-height:1.6;position:sticky;top:0;max-height:min(600px,62vh);overflow-y:auto;overflow-wrap:anywhere}
   .em-detail h4{margin:0 0 2px;font-size:14px;font-weight:600;color:var(--ink)}
   .em-detail .em-kind{font-size:11px;color:var(--mute);margin-bottom:8px}
   .em-detail p{margin:0 0 10px}
@@ -7084,9 +7089,17 @@ window.BAROYAM_FONT=(function(){
             <!-- ERP 노드 · 화면·데이터·자동화가 어떻게 이어져 있는지 한 장에 · 노드를 누르면 이어진 것만 밝아진다(읽기 전용) -->
             <section class="settings-view" data-settings-panel="erpmap" hidden>
               <div class="em-manager">
-                <p class="mg-hint">대시보드가 어디서 데이터를 읽고 어디에 저장하는지, 자동으로 도는 일이 무엇을 채우는지 한 장으로 정리했어요. 노드를 누르면 이어진 것만 밝아지고 오른쪽에 설명이 나와요. 실선은 읽고 저장, 점선은 읽기만이에요.</p>
+                <p class="mg-hint">대시보드가 어디서 데이터를 읽고 어디에 저장하는지, 자동으로 도는 일이 무엇을 채우는지 한 장으로 정리했어요. 노드를 누르면 이어진 것만 밝아지고 오른쪽에 설명이 나와요. 바탕을 끌면 움직이고, 휠로 확대·축소해요. 실선은 읽고 저장, 점선은 읽기만이에요.</p>
                 <div class="em-wrap">
-                  <div class="em-scroll"><div class="em-map" id="emMap"><svg class="em-lines" id="emLines" aria-hidden="true"></svg></div></div>
+                  <div class="em-view" id="emView">
+                    <div class="em-map" id="emMap"><svg class="em-lines" id="emLines" aria-hidden="true"></svg></div>
+                    <div class="em-zoom">
+                      <button type="button" class="ui-btn sm ghost icon" id="emZoomOut" aria-label="축소">−</button>
+                      <output id="emZoomPct">100%</output>
+                      <button type="button" class="ui-btn sm ghost icon" id="emZoomIn" aria-label="확대">+</button>
+                      <button type="button" class="ui-btn sm ghost" id="emZoomFit">맞춤</button>
+                    </div>
+                  </div>
                   <aside class="em-detail" id="emDetail" aria-live="polite"></aside>
                 </div>
               </div>
@@ -11406,8 +11419,8 @@ window.CsGuide=(function(){
     ['pc',0,'회원 PC 브라우저','사무실·집 PC','대시보드를 여는 곳입니다. 브라우저마다 기기 번호(baroyam_device_id)를 만들어 보안로그에 씁니다. 같은 브라우저의 여러 창은 localStorage 를 같이 씁니다.'],
     ['glogin',0,'구글 로그인','공용 계정 하나','모두 같은 구글 계정으로 들어옵니다. Supabase 로그인 세션이 데이터 읽기·쓰기 열쇠이고, 구글 권한(drive) 하나를 드라이브·매출 시트·업로드가 같이 씁니다(1시간 · baroyam_gtoken_v1).'],
     ['member',0,'회원 고르기','프로필 · 팀장 비밀번호','로그인 뒤 회원(프로필)을 고릅니다. 역할이 팀장이면 비밀번호를 한 번 더 묻습니다. 회원마다 보이는 메뉴는 관리자 설정 › 권한설정을 따릅니다.'],
-    ['ext',0,'크롬 확장','바로얌 재고 수집','판매·재고의 "어드민 수집" 단추가 부릅니다. 이지어드민 창을 최소화로 열어 재고·당일판매 표를 읽어 대시보드로 넘깁니다. 사람은 로그인만 합니다.'],
-    ['collector',0,'리뷰 수집기','회사 PC 127.0.0.1:4317','회사 PC에서 로그인하면 자동으로 켜집니다. 판매처 리뷰를 모으고, /dashboard 로 이 저장소의 index.html 을 그대로 펴 줍니다.'],
+    ['ext',3,'크롬 확장','바로얌 재고 수집','판매·재고의 "어드민 수집" 단추가 부릅니다. 이지어드민 창을 최소화로 열어 재고·당일판매 표를 읽어 대시보드로 넘깁니다. 사람은 로그인만 합니다.'],
+    ['collector',3,'리뷰 수집기','회사 PC 127.0.0.1:4317','회사 PC에서 로그인하면 자동으로 켜집니다. 판매처 리뷰를 모으고, /dashboard 로 이 저장소의 index.html 을 그대로 펴 줍니다.'],
 
     ['home',1,'마이홈','현황·퀵링크·기록노트','회원마다 퀵링크·기록노트(myhome:<회원id>)와 프로젝트 현황 카드를 봅니다.'],
     ['project',1,'프로젝트','보드판 · 캘린더','한 프로젝트 = projects 표 한 줄. 바꾼 칸만 얹어 저장하고, 삭제는 deleted_at 만 적습니다. 첨부 파일은 brand-files 보관함 project/ 아래.'],
@@ -11503,44 +11516,134 @@ window.CsGuide=(function(){
   const els={};
   let built=false, cur=null;
 
+  /* 크기(캔버스 좌표) · 노드 NW×NH, 줄 사이 GX, 노드 사이 GY */
+  const NW=128, NH=34, GX=120, GY=9, TOP=26;
+  const view=document.getElementById('emView');
+  const pct=document.getElementById('emZoomPct');
+  const pos={};             /* id → {x,y} */
+  let W=0, H=0, k=1, tx=0, ty=0, moved=false, touched=false;
+
+  /* 줄마다 노드 순서를 고른다 · 이웃 노드 높이의 평균(barycenter)으로 몇 번 정렬해 보고,
+     옆 줄끼리 선이 엇갈리는 수가 가장 적은 순서를 쓴다 */
+  function layout(){
+    const cols=COLS.map((_,ci)=>NODES.filter(n=>n[1]===ci).map(n=>n[0]));
+    const maxN=Math.max(...cols.map(c=>c.length));
+    const nb={}; NODES.forEach(n=>nb[n[0]]=[]);
+    EDGES.forEach(e=>{ nb[e[0]].push(e[1]); nb[e[1]].push(e[0]); });
+    const y={};
+    const place=()=>cols.forEach(c=>{ const off=(maxN-c.length)*(NH+GY)/2; c.forEach((id,i)=>y[id]=off+i*(NH+GY)); });
+    const cross=()=>{ let n=0;
+      for(let i=0;i<EDGES.length;i++) for(let j=i+1;j<EDGES.length;j++){
+        const a=EDGES[i], b=EDGES[j];
+        let a0=a[0],a1=a[1],b0=b[0],b1=b[1];
+        const ca=[byId[a0][1],byId[a1][1]], cb=[byId[b0][1],byId[b1][1]];
+        if(ca[0]===ca[1]||cb[0]===cb[1]) continue;
+        if(ca[0]>ca[1]){ [a0,a1]=[a1,a0]; ca.reverse(); }
+        if(cb[0]>cb[1]){ [b0,b1]=[b1,b0]; cb.reverse(); }
+        if(ca[0]!==cb[0]||ca[1]!==cb[1]||a0===b0||a1===b1) continue;
+        if((y[a0]-y[b0])*(y[a1]-y[b1])<0) n++;
+      } return n; };
+    place();
+    let best=cols.map(c=>c.slice()), bestN=cross();
+    const sweep=[1,2,3,0,1,2,3,2,1,0];
+    for(let it=0;it<6;it++) sweep.forEach(ci=>{
+      const c=cols[ci], bc={};
+      c.forEach(id=>{ const o=nb[id].filter(x=>byId[x][1]!==ci); bc[id]=o.length?o.reduce((s,x)=>s+y[x],0)/o.length:y[id]; });
+      c.sort((p,q)=>bc[p]-bc[q]); place();
+      const n=cross(); if(n<bestN){ bestN=n; best=cols.map(c=>c.slice()); }
+    });
+    best.forEach((c,ci)=>{ const off=(maxN-c.length)*(NH+GY)/2; c.forEach((id,i)=>pos[id]={x:40+ci*(NW+GX), y:TOP+off+i*(NH+GY)}); });
+    W=40*2+COLS.length*NW+(COLS.length-1)*GX; H=TOP+maxN*(NH+GY)+20;
+  }
   function build(){
     built=true;
+    layout();
+    map.style.width=W+'px'; map.style.height=H+'px';
+    svg.setAttribute('width',W); svg.setAttribute('height',H);
     COLS.forEach((title,ci)=>{
-      const col=document.createElement('div'); col.className='em-col';
-      col.innerHTML=`<div class="em-col-h">${esc(title)}</div>`;
-      NODES.filter(n=>n[1]===ci).forEach(n=>{
-        const b=document.createElement('button'); b.type='button'; b.className='em-node'+(n[5]?' off':''); b.dataset.id=n[0];
-        b.innerHTML=`<b>${esc(n[2])}</b><small>${esc(n[3])}</small>`;
-        b.addEventListener('click',()=>pick(cur===n[0]?null:n[0]));
-        col.appendChild(b); els[n[0]]=b;
-      });
-      map.appendChild(col);
+      const h=document.createElement('div'); h.className='em-col-h'; h.textContent=title;
+      h.style.left=(40+ci*(NW+GX))+'px'; h.style.top=Math.max(0,Math.min(...NODES.filter(n=>n[1]===ci).map(n=>pos[n[0]].y))-20)+'px';
+      map.appendChild(h);
+    });
+    NODES.forEach(n=>{
+      const b=document.createElement('button'); b.type='button'; b.className='em-node'+(n[5]?' off':''); b.dataset.id=n[0];
+      b.style.cssText=`left:${pos[n[0]].x}px;top:${pos[n[0]].y}px;width:${NW}px;height:${NH}px`;
+      b.title=n[2]+' · '+n[3];
+      b.innerHTML=`<b>${esc(n[2])}</b><small>${esc(n[3])}</small>`;
+      b.addEventListener('click',()=>{ if(moved) return; pick(cur===n[0]?null:n[0]); });
+      map.appendChild(b); els[n[0]]=b;
     });
     EDGES.forEach(e=>{
       const p=document.createElementNS('http://www.w3.org/2000/svg','path');
       if(e[3]==='r') p.classList.add('ro');
       svg.appendChild(p); e.el=p;
     });
-    new ResizeObserver(draw).observe(map);
+    draw();
+    bindView();
   }
-  /* 노드 자리는 offset 으로 잰다 · 탭이 떠오르는 애니메이션(transform) 중에도 어긋나지 않게 */
-  function box(el){ return {x:el.offsetLeft+el.offsetParent.offsetLeft, y:el.offsetTop+el.offsetParent.offsetTop, w:el.offsetWidth, h:el.offsetHeight}; }
   function draw(){
-    if(!built||!map.offsetWidth) return;
     EDGES.forEach(e=>{
-      const a=box(els[e[0]]), b=box(els[e[1]]);
+      const a=pos[e[0]], b=pos[e[1]];
       const ca=byId[e[0]][1], cb=byId[e[1]][1];
       let d;
       if(ca===cb){ /* 같은 줄 · 바깥으로 둥글게(첫 줄은 왼쪽, 나머지는 오른쪽) */
-        const left=ca===0, x1=left?a.x:a.x+a.w, x2=left?b.x:b.x+b.w, y1=a.y+a.h/2, y2=b.y+b.h/2;
-        const k=(left?-1:1)*Math.min(46,14+Math.abs(y2-y1)*.18);
-        d=`M${x1},${y1} C${x1+k},${y1} ${x2+k},${y2} ${x2},${y2}`;
+        const left=ca===0, x1=left?a.x:a.x+NW, y1=a.y+NH/2, y2=b.y+NH/2;
+        const kk=(left?-1:1)*Math.min(40,12+Math.abs(y2-y1)*.15);
+        d=`M${x1},${y1} C${x1+kk},${y1} ${x1+kk},${y2} ${x1},${y2}`;
       }else{
-        const r=ca<cb, x1=r?a.x+a.w:a.x, x2=r?b.x:b.x+b.w, y1=a.y+a.h/2, y2=b.y+b.h/2, m=(x2-x1)*.5;
+        const r=ca<cb, x1=r?a.x+NW:a.x, x2=r?b.x:b.x+NW, y1=a.y+NH/2, y2=b.y+NH/2, m=(x2-x1)*.5;
         d=`M${x1},${y1} C${x1+m},${y1} ${x2-m},${y2} ${x2},${y2}`;
       }
       e.el.setAttribute('d',d);
     });
+  }
+  /* 캔버스 이동·확대 · 점 격자 바탕도 같이 움직여 캔버스처럼 보이게 */
+  function apply(){
+    map.style.transform=`translate(${tx}px,${ty}px) scale(${k})`;
+    view.style.backgroundSize=`${18*k}px ${18*k}px`;
+    view.style.backgroundPosition=`${tx}px ${ty}px`;
+    pct.textContent=Math.round(k*100)+'%';
+  }
+  function zoomAt(nk,cx,cy){
+    nk=Math.min(2.5,Math.max(.3,nk));
+    tx=cx-(cx-tx)*nk/k; ty=cy-(cy-ty)*nk/k; k=nk; apply();
+  }
+  function fit(){
+    const vw=view.clientWidth, vh=view.clientHeight;
+    if(!vw||!vh) return;
+    k=Math.min(1.4,Math.max(.3,Math.min((vw-24)/W,(vh-24)/H)));
+    tx=(vw-W*k)/2; ty=(vh-H*k)/2; apply();
+  }
+  function bindView(){
+    view.addEventListener('wheel',e=>{
+      e.preventDefault();
+      const r=view.getBoundingClientRect();
+      touched=true;
+      /* 마우스 휠·트랙패드 집기(ctrl) = 확대축소, 트랙패드 두 손가락 밀기 = 이동 */
+      const wheel=e.deltaMode!==0||(Number.isInteger(e.deltaY)&&Math.abs(e.deltaY)>=40&&!e.deltaX);
+      if(e.ctrlKey||wheel) zoomAt(k*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)),e.clientX-r.left,e.clientY-r.top);
+      else { tx-=e.deltaX; ty-=e.deltaY; apply(); }
+    },{passive:false});
+    let drag=null;
+    view.addEventListener('pointerdown',e=>{
+      if(e.button!==0||e.target.closest('.em-zoom')) return;
+      drag={x:e.clientX,y:e.clientY,tx,ty,id:e.pointerId}; moved=false;
+    });
+    view.addEventListener('pointermove',e=>{
+      if(!drag) return;
+      const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+      if(!moved&&Math.hypot(dx,dy)<4) return;
+      if(!moved){ moved=true; view.classList.add('grabbing'); view.setPointerCapture(drag.id); }
+      touched=true; tx=drag.tx+dx; ty=drag.ty+dy; apply();
+    });
+    const end=()=>{ if(!drag) return; drag=null; view.classList.remove('grabbing'); setTimeout(()=>{ moved=false; },0); };
+    view.addEventListener('pointerup',end); view.addEventListener('pointercancel',end);
+    const mid=()=>[view.clientWidth/2,view.clientHeight/2];
+    document.getElementById('emZoomIn').addEventListener('click',()=>{ touched=true; zoomAt(k*1.25,...mid()); });
+    document.getElementById('emZoomOut').addEventListener('click',()=>{ touched=true; zoomAt(k/1.25,...mid()); });
+    document.getElementById('emZoomFit').addEventListener('click',()=>{ touched=false; fit(); });
+    /* 창 폭이 바뀌는 동안(탭 전환 애니메이션) 아직 손대지 않았으면 계속 맞춘다 */
+    new ResizeObserver(()=>{ if(!touched) fit(); }).observe(view);
   }
   function pick(id){
     cur=id;
@@ -11568,7 +11671,8 @@ window.CsGuide=(function(){
       `<p>왼쪽부터 <b>입구</b>(어떻게 들어오는지) → <b>화면</b>(사이드바 메뉴) → <b>데이터</b>(Supabase·구글) → <b>바깥 서비스·자동화</b>(VPS·김비서 등) 순서예요.</p>`+
       `<p>노드를 누르면 이어진 곳과 무엇을 주고받는지 여기에 나와요. 한 번 더 누르면 전체 보기로 돌아가요.</p>`;
   }
-  tab.addEventListener('click',()=>{ if(!built){ build(); intro(); } requestAnimationFrame(draw); });
+  /* 처음 열 때만 화면에 맞춘다 · 다시 열면 보던 자리 그대로 */
+  tab.addEventListener('click',()=>{ if(!built){ build(); intro(); requestAnimationFrame(fit); } });
 })();
 
 /* 관리자 설정 · 워크플로우(예전 이름 김비서 AI · 10-09 옛 워크플로우 탭의 GitHub 수집을 합침) · 슬랙 봇 "김비서"(바로얌AI 봇)가 하는 자동화 목록 ·
