@@ -3981,22 +3981,20 @@ window.BAROYAM_FONT=(function(){
   .trend-platform-icon{display:inline-flex;align-items:center;gap:8px}
   .trend-platform-icon svg{width:16px;height:16px;display:block;flex:none;margin:-1px 0}
   .trend-platform-icon.active svg{filter:drop-shadow(0 0 1.5px #fff)}
-  /* 네이버 카테고리(식품/냉동간편식) 전환 · 네이버가 활성일 때만 새로고침과 같은 줄에 나타난다 ·
-     이 화면에서만 쓰는 컴포넌트라 사이트 기본 인디고 대신 네이버 브랜드 그린을 쓴다 */
-  .trend-naver-subcat{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-    padding:6px 8px 6px 14px;border-radius:999px;background:rgba(3,199,90,.1);
-    border:1.5px solid rgba(3,199,90,.32)}
+  /* 네이버 카테고리(식품/냉동간편식)·성별 전환 · 네이버가 활성일 때만 새로고침과 같은 줄에 나타난다 ·
+     초록 바탕·주황 알약이 겹쳐 어수선해서 표준 탭(.ui-tabs)과 같은 무채색 세그먼트로 바꿨다(2026-10-09) */
+  .trend-naver-subcat{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
   .trend-naver-subcat[hidden]{display:none}
-  .trend-naver-subcat-label{font-size:12px;font-weight:600;color:#5e9c81;letter-spacing:.02em;margin-right:2px}
-  .trend-naver-subcat-sep{width:1px;align-self:stretch;min-height:22px;background:rgba(3,199,90,.28);margin:0 2px}
-  .trend-subcat-btn{all:unset;box-sizing:border-box;cursor:pointer;font-size:12.5px;font-weight:600;
-    padding:7px 14px;border-radius:999px;color:var(--body);background:var(--paper);
-    border:1.5px solid var(--line);letter-spacing:-.2px;transition:background .15s,color .15s,border-color .15s}
-  .trend-subcat-btn:hover{border-color:#6bbf90;color:#5e9c81}
-  .trend-subcat-btn.active{background:#6bbf90;color:#fff;border-color:#6bbf90;
-    box-shadow:0 6px 14px -6px rgba(3,199,90,.55)}
-  html[data-theme="dark"] .trend-naver-subcat{background:rgba(3,199,90,.14)}
-  html[data-theme="dark"] .trend-naver-subcat-label{color:#3fdb8f}
+  .trend-seg-group{display:inline-flex;align-items:center;gap:9px}
+  .trend-naver-subcat-label{font-size:12px;font-weight:500;color:var(--mute)}
+  .trend-seg{display:inline-flex;gap:2px;padding:3px;border-radius:12px;background:var(--chip-flat)}
+  .trend-subcat-btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;
+    height:30px;padding:0 14px;border-radius:9px;font-size:12.5px;font-weight:500;color:var(--mute);
+    transition:background .15s,color .15s,box-shadow .15s}
+  .trend-subcat-btn:hover{color:var(--ink)}
+  .trend-subcat-btn.active{background:var(--paper);color:var(--ink);font-weight:600;
+    box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+  .trend-subcat-btn:focus-visible{outline:2px solid var(--btn);outline-offset:1px}
   .trend-cloud-word[data-tip]:hover::after{
     content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
     background:var(--panel-dark);color:#fff;font-size:11.5px;font-weight:600;padding:6px 10px;
@@ -5354,7 +5352,7 @@ window.BAROYAM_FONT=(function(){
   .ag-btn.primary,.ag-hist-page.active,.ag-nt-btn.active,.gm-btn.primary,.goal-edit-save,
   .man-editbtn.is-editing,.member-add-form button,.mg-add-item button:hover,.plan-edit-btn:hover,
   .rev-date-quick.active,.mh-btn.primary,.mh-note-add,.hero-view-tab.active,
-  .trend-subcat-btn.active,.mini-sb-item.active,#memberGate .mp-pw-submit,
+  .mini-sb-item.active,#memberGate .mp-pw-submit,
   .gv-cats button.on,html[data-theme="dark"] .gv-cats button.on{
     background:var(--btn);border-color:var(--btn);color:#fff;opacity:1}
   .ag-btn.primary:hover,.gm-btn.primary:hover,.goal-edit-save:hover,.member-add-form button:hover,
@@ -5367,9 +5365,9 @@ window.BAROYAM_FONT=(function(){
   .sb-subnav-home:hover,.sb-subnav-home.active{background:var(--btn-soft);color:var(--btn-soft-ink)}
   .sb-subnav-item.active::before{background:var(--btn-soft-ink)}
   .rev-csv-btn:hover{border-color:var(--btn)}
-  .hero-view-tab:hover,.gv-cats button:hover,.trend-subcat-btn:hover,.rev-date-quick:hover{border-color:var(--btn);color:var(--btn)}
+  .hero-view-tab:hover,.gv-cats button:hover,.rev-date-quick:hover{border-color:var(--btn);color:var(--btn)}
   html[data-theme="dark"] .hero-view-tab:hover,html[data-theme="dark"] .gv-cats button:hover,
-  html[data-theme="dark"] .trend-subcat-btn:hover,html[data-theme="dark"] .rev-date-quick:hover{color:var(--btn-soft-ink)}
+  html[data-theme="dark"] .rev-date-quick:hover{color:var(--btn-soft-ink)}
   /* ===== 표준 UI 부품 (ui-*) · 새로 만드는 버튼·탭·칩·입력칸·날짜선택은 전부 이것만 쓴다 =====
      화면마다 xx-btn·xx-tab·xx-cal 을 새로 만들다 모양이 제각각이 된 것을 막는다 ·
      규칙은 AGENTS.md "UI 부품 규칙", 모양 견본은 ui-sample.html · 색은 위 --btn 계열만 쓴다 */
@@ -7390,14 +7388,17 @@ window.BAROYAM_FONT=(function(){
 
           <div class="ag-toolbar" style="margin-top:22px">
             <div class="trend-naver-subcat" id="trendNaverSubcat" hidden>
-              <span class="trend-naver-subcat-label">카테고리</span>
-              <button type="button" class="trend-subcat-btn active" data-cat="food">식품</button>
-              <button type="button" class="trend-subcat-btn" data-cat="frozen">냉동간편식</button>
-              <span class="trend-naver-subcat-sep"></span>
-              <span class="trend-naver-subcat-label">성별</span>
-              <button type="button" class="trend-subcat-btn active" data-gender="all">전체</button>
-              <button type="button" class="trend-subcat-btn" data-gender="f">여성</button>
-              <button type="button" class="trend-subcat-btn" data-gender="m">남성</button>
+              <span class="trend-seg-group"><span class="trend-naver-subcat-label">카테고리</span>
+                <span class="trend-seg" role="group" aria-label="카테고리">
+                  <button type="button" class="trend-subcat-btn active" data-cat="food">식품</button>
+                  <button type="button" class="trend-subcat-btn" data-cat="frozen">냉동간편식</button>
+                </span></span>
+              <span class="trend-seg-group"><span class="trend-naver-subcat-label">성별</span>
+                <span class="trend-seg" role="group" aria-label="성별">
+                  <button type="button" class="trend-subcat-btn active" data-gender="all">전체</button>
+                  <button type="button" class="trend-subcat-btn" data-gender="f">여성</button>
+                  <button type="button" class="trend-subcat-btn" data-gender="m">남성</button>
+                </span></span>
             </div>
             <div class="ag-actions" style="align-items:center;gap:10px;margin-left:auto">
             <button type="button" class="ag-btn" id="trendRefreshBtn">새로고침</button>
