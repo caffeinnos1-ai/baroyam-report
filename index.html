@@ -4702,6 +4702,24 @@ window.BAROYAM_FONT=(function(){
   .kb-cmds{display:flex;flex-wrap:wrap;gap:6px}
   .kb-cmd{padding:4px 9px;border-radius:8px;background:var(--paper);border:1px solid var(--line);
     font-size:12px;font-weight:600;color:var(--ink)}
+  /* 2026-10-09 · 카드가 늘어 보기 어려워 접속기록 표와 같은 목록으로 바꿨다(카드용 wf-card 등은 남겨 둠) ·
+     한 줄 = 자동화 하나 · 설명은 줄에 올리면 말풍선(title) */
+  .wf-table{width:100%;border-collapse:collapse;border-top:1px solid var(--line)}
+  .wf-table th{text-align:left;font-size:11.5px;font-weight:500;color:var(--mute);padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .wf-table td{text-align:left;font-size:12.5px;font-weight:400;color:var(--body);padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .wf-table tr:last-child td{border-bottom:0}
+  .wf-table tbody tr:hover td{background:color-mix(in srgb,var(--chip-flat) 55%,transparent)}
+  .wf-table .wt-name{color:var(--ink);font-weight:500}
+  .wf-table .wt-name small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;color:var(--mute)}
+  .wf-table .wt-num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .wf-table .wt-sub{color:var(--mute)}
+  .wf-table .wt-fail{color:var(--neg);font-weight:500}
+  .wf-table a{color:var(--body);text-decoration:underline;text-underline-offset:2px}
+  .wt-st{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--mute)}
+  .wt-st::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--line)}
+  .wt-st.is-ok{color:var(--body)} .wt-st.is-ok::before{background:var(--pos)}
+  .wt-st.is-fail{color:var(--neg);font-weight:500} .wt-st.is-fail::before{background:var(--neg)}
+  .wt-st.is-live::before{background:var(--mute)}
   .kb-people{border:1px dashed var(--line);border-radius:14px;padding:12px 15px;display:flex;flex-direction:column;gap:8px}
   .kb-people-title{font-size:12.5px;font-weight:600;color:var(--ink)}
   .kb-people-title small{font-weight:500;color:var(--mute);margin-left:6px}
@@ -11191,29 +11209,17 @@ window.CsGuide=(function(){
   const HIST_MAX=12;      /* 카드에 점으로 보여 줄 최근 실행 수 */
   function render(){
     const by=(byName&&typeof byName==='object')?byName:{};
-    list.innerHTML=WORKFLOWS.map(w=>{
+    list.innerHTML='<table class="wf-table"><thead><tr><th>이름</th><th>일정</th><th>다음 실행</th><th>최근 실행</th><th>상태</th></tr></thead><tbody>'+WORKFLOWS.map(w=>{
       const hist=by[w.name]||[], run=hist[0], nx=nextRun(w.times);
       const ok=run&&run.conclusion==='success';
-      const badge=!run?'<span class="wf-status">기록 없음</span>'
-        :`<span class="wf-status ${ok?'is-ok':'is-fail'}">${ok?'정상':'실패'}</span>`;
-      /* 실행 이력을 한 문장으로 적는다 · 점으로 보여 주던 것을 글로 바꿨다.
-         점은 색만으로 말해서 무슨 뜻인지 바로 와닿지 않았다 */
-      const recent=hist.slice(0,HIST_MAX);
-      const fails=recent.filter(r=>r.conclusion!=='success');
-      let histText='';
-      if(!recent.length) histText='실행 기록 없음';
-      else if(!fails.length) histText=`최근 ${recent.length}회 모두 정상`;
-      else histText=`최근 ${recent.length}회 중 <b>${fails.length}회 실패</b> · 마지막 실패 ${esc(fmt(fails[0].run_at))}`;
-      const last=run
-        ? `<span>마지막 실행 <b>${esc(fmt(run.run_at))}</b>${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록 보기</a>`:''}</span>`
-        : '';
-      /* 다음 실행은 칩을 강조해서 보여 주므로 따로 적지 않는다 */
-      return `<div class="wf-card">
-        <div class="wf-top"><div class="wf-name">${esc(w.name)}</div>${badge}</div>
-        <div class="wf-times"><span class="wf-times-label">매일</span>${w.times.map(t=>`<span class="wf-time${t===nx.time?' is-next':''}"${t===nx.time?` title="다음 실행 · ${esc(nx.label)}"`:''}>${t}</span>`).join('')}</div>
-        <div class="wf-meta"><span>${histText}</span>${last}</div>
-      </div>`;
-    }).join('');
+      const st=!run?'<span class="wt-st">기록 없음</span>':`<span class="wt-st ${ok?'is-ok':'is-fail'}">${ok?'정상':'실패'}</span>`;
+      const recent=hist.slice(0,HIST_MAX), fails=recent.filter(r=>r.conclusion!=='success');
+      const last=run?`${esc(fmt(run.run_at))}${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록</a>`:''}`
+        +(fails.length?` <span class="wt-fail">· ${recent.length}회 중 ${fails.length}회 실패</span>`:''):'<span class="wt-sub">-</span>';
+      const mins=[...new Set(w.times.map(t=>t.slice(3)))];
+      const sched='매일 '+(w.times.length>=12&&mins.length===1?'매시 '+mins[0]+'분':w.times.join(' · '));
+      return `<tr><td class="wt-name">${esc(w.name)}</td><td class="wt-num">${esc(sched)}</td><td class="wt-num">${esc(nx.label)}</td><td class="wt-num">${last}</td><td>${st}</td></tr>`;
+    }).join('')+'</tbody></table>';
     if(byName===false){ checked.textContent='최근 실행 기록을 불러오지 못했어요.'; return; }
     if(!byName){ checked.textContent=''; return; }
     let total=0, newest='';
@@ -11310,38 +11316,33 @@ window.CsGuide=(function(){
   let byName=null;   /* null=아직 안 읽음 · false=읽지 못함 · 객체=이름별 실행 이력(최신순) */
   function render(){
     const by=(byName&&typeof byName==='object')?byName:{};
-    list.innerHTML=AUTOMATIONS.map(a=>{
-      let badge, times='', meta='';
+    list.innerHTML='<table class="wf-table"><thead><tr><th>이름</th><th>일정</th><th>다음 실행</th><th>최근 실행</th><th>상태</th></tr></thead><tbody>'+AUTOMATIONS.map(a=>{
+      let st, sched, next='<span class="wt-sub">-</span>', last='<span class="wt-sub">-</span>';
       if(a.always){
         /* 서버가 10분마다 켜짐 여부를 덮어쓴다 · 30분 넘게 소식이 없으면 서버가 멈춘 것 */
         const run=(by[a.record]||[])[0];
         const stale=run&&(Date.now()-new Date(run.run_at))>30*60*1000;
-        if(!run) badge='<span class="wf-status is-live">늘 켜 둠</span>';
-        else if(stale) badge='<span class="wf-status is-fail" title="서버가 30분 넘게 소식이 없어요">연락 끊김</span>';
-        else badge=`<span class="wf-status ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'켜짐':'꺼짐'}</span>`;
-        if(run) meta=`<span>마지막 확인 <b>${esc(fmt(run.run_at))}</b> · 10분마다 확인</span>`;
+        if(!run) st='<span class="wt-st is-live">늘 켜 둠</span>';
+        else if(stale) st='<span class="wt-st is-fail" title="서버가 30분 넘게 소식이 없어요">연락 끊김</span>';
+        else st=`<span class="wt-st ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'켜짐':'꺼짐'}</span>`;
+        sched=a.task==='systemd'?'늘 켜짐':'10분마다';
+        if(run) last=`${esc(fmt(run.run_at))} <span class="wt-sub">확인</span>`;
       }else{
-        const nx=nextRun(a);
-        times=`<div class="wf-times"><span class="wf-times-label">${esc(dayLabel(a.days))}</span>`+
-          a.times.map(t=>`<span class="wf-time is-next" title="다음 실행 · ${esc(nx?nx.label:'')}">${t}</span>`).join('')+
-          (nx?`<span class="wf-times-label">다음 ${esc(nx.label)}</span>`:'')+'</div>';
+        const nx=nextRun(a), mins=[...new Set(a.times.map(t=>t.slice(3)))];
+        sched=dayLabel(a.days)+' '+(a.times.length>=12&&mins.length===1?'매시 '+mins[0]+'분':a.times.join(' · '));
+        if(nx) next=esc(nx.label);
         const hist=a.record?(by[a.record]||[]):[], run=hist[0];
-        if(!run) badge='<span class="wf-status">기록 없음</span>';
-        else badge=`<span class="wf-status ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'정상':'실패'}</span>`;
-        if(a.record&&hist.length){
+        if(!run) st='<span class="wt-st">기록 없음</span>';
+        else st=`<span class="wt-st ${run.conclusion==='success'?'is-ok':'is-fail'}">${run.conclusion==='success'?'정상':'실패'}</span>`;
+        if(run){
           const recent=hist.slice(0,12), fails=recent.filter(r=>r.conclusion!=='success');
-          meta=`<span>${fails.length?`최근 ${recent.length}회 중 <b>${fails.length}회 실패</b>`:`최근 ${recent.length}회 모두 정상`}</span>`+
-            `<span>마지막 실행 <b>${esc(fmt(run.run_at))}</b>${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록 보기</a>`:''}</span>`;
+          last=`${esc(fmt(run.run_at))}${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록</a>`:''}`
+            +(fails.length?` <span class="wt-fail">· ${recent.length}회 중 ${fails.length}회 실패</span>`:'');
         }
       }
-      return `<div class="wf-card">
-        <div class="wf-top"><div class="wf-name">${esc(a.name)} <span class="wf-times-label">· ${esc(a.where)}</span></div>${badge}</div>
-        <div class="wf-desc">${esc(a.desc)}</div>
-        ${times}
-        ${a.cmds?`<div class="kb-cmds">${a.cmds.map(c=>`<span class="kb-cmd">${esc(c)}</span>`).join('')}</div>`:''}
-        <div class="wf-meta">${meta}<span>VPS 서버 · <b>${esc(a.task)}</b></span></div>
-      </div>`;
-    }).join('');
+      const tip=a.desc+(a.cmds?' · 대화: '+a.cmds.join(' / '):'')+' · VPS 서버 '+a.task;
+      return `<tr title="${esc(tip)}"><td class="wt-name">${esc(a.name)}<small>${esc(a.where)}</small></td><td class="wt-num">${esc(sched)}</td><td class="wt-num">${next}</td><td class="wt-num">${last}</td><td>${st}</td></tr>`;
+    }).join('')+'</tbody></table>';
     /* 김비서가 알아보는 회원 · 회원설정의 슬랙 칩에서 넣은 슬랙 ID 기준 */
     const MEM=window.BAROYAM_MEMBERS, P=window.BAROYAM_PROFILES;
     const members=(MEM&&MEM.load())||[];
