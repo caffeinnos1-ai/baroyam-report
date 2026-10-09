@@ -2211,18 +2211,8 @@ window.BAROYAM_FONT=(function(){
   :is(#view-month,#view-week) .mr-head{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;color:var(--ink)}
   :is(#view-month,#view-week) .mr-head i{width:9px;height:9px;border-radius:50%;flex:none}
   :is(#view-month,#view-week) .mr-head .achip{margin-left:auto;font-size:11.5px;padding:2px 8px}
-  /* 스크롤하면 나타나기(scrollRevealArm) · 기다리는 섹션은 흐리게 조금 아래에 두고 안의 움직임을 멈춰 둔다 */
-  :is(#view-month,#view-week) section.sr-wait{opacity:0;transform:translateY(22px)}
+  /* 줄마다 차례로(scrollRevealArm) · 기다리는 섹션은 막대·도넛을 시작 모양에 멈춰 둔다(섹션 자체는 그대로 보임) */
   :is(#view-month,#view-week) section.sr-wait *{animation-play-state:paused!important}
-  :is(#view-month,#view-week) section.sr-in{transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
-  /* 스크롤에 맞춰 움직이기(SR_SCRUB) · 섹션은 들어오는 동안 떠오르고, 막대·도넛은 저마다 화면에 들어오는 만큼 자란다 */
-  @keyframes srRise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
-  @supports (animation-timeline:view()){
-    :is(#view-month,#view-week).sr-scrub section.section{animation:srRise linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
-    :is(#view-month,#view-week).sr-scrub :is(.tbar,.gbar,.vbar,.rfill,.tshare i,.track .fill,.wk-bar i,.donut.is-ring svg g,.donut.is-ring svg.rcall g,.ttot,.gv){
-      animation-timeline:view()!important;animation-range:entry 10% cover 42%!important;animation-delay:0s!important;
-      animation-duration:auto!important;animation-timing-function:cubic-bezier(.3,.7,.3,1)!important}
-  }
   :is(#view-month,#view-week) .mr-line{display:grid;grid-template-columns:34px 1fr 58px;align-items:center;gap:10px}
   :is(#view-month,#view-week) .mr-line .rm{font-size:11.5px;font-weight:600;color:var(--mute)}
   :is(#view-month,#view-week) .mr-line .rtrack{height:12px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
@@ -9859,7 +9849,7 @@ function countUpText(part,v){
 function countUpIn(root){
   if(!root) return;
   const els=[...root.querySelectorAll('.num:not([data-nocount])')]
-    .filter(el=>!(el.parentElement&&el.parentElement.closest('.num'))&&!el.closest('.sr-wait,.sr-scrub'));
+    .filter(el=>!(el.parentElement&&el.parentElement.closest('.num'))&&!el.closest('.sr-wait'));
   els.forEach(el=>{
     if(el.__countRaf){ cancelAnimationFrame(el.__countRaf); el.__countRaf=0; }
     const parts=countUpParts(el);
@@ -9882,57 +9872,54 @@ function countUpIn(root){
 /* 스크롤하면 나타나기(2026-10-09 사용자 요청) · 매출데이터에 들어오면 첫 화면에 보이는 섹션만 바로 움직이고,
    아래 섹션은 숨겨 둔 채 그래프 움직임을 멈춰 두었다가(sr-wait) 스크롤로 화면에 들어올 때 떠오르며 움직이고 숫자를 센다 ·
    화면을 열 때마다(activateView) 다시 건다 · 움직임 줄이기 설정이면 아무것도 하지 않는다 */
-let srObserver=null;
-/* 스크롤에 맞춰 움직이기(10-09 사용자: "스크롤을 내리면서 애니메이션이 반응하도록") · 브라우저가 스크롤 연동 애니메이션
-   (animation-timeline:view())을 알면 막대·도넛·섹션이 화면 속 위치에 따라 자라고(올리면 다시 줄어듦), 숫자도 스크롤 위치만큼 센다 ·
-   모르는 브라우저는 아래 '들어오면 한 번 재생'(sr-wait) 방식 */
-const SR_SCRUB=!!(window.CSS&&CSS.supports&&CSS.supports('animation-timeline','view()'));
-let srNums=[], srRaf=0;
-function srPaint(){
+/* 줄마다 차례로(10-09 사용자: "1번 보고 2번 라인 봤을 때 숫자 모션이 나와야") · 화면이 커서 처음부터 여러 섹션이 보여도
+   들어올 때는 맨 위 섹션만 움직이고, 나머지는 막대·도넛을 시작 모양(0)에 멈춰 두고 숫자도 0으로 둔다 ·
+   스크롤해서 그 섹션 머리가 화면 위에서 55% 선(가운데쯤)을 넘으면 그때 움직이고 숫자를 센다(한 번만) */
+let srWait=[], srRaf=0;
+function srReveal(sec){
+  sec.classList.remove('sr-wait'); sec.classList.add('sr-in');
+  (sec.__srNums||[]).forEach(n=>n.parts.forEach(pt=>{ pt.node.nodeValue=pt.orig; }));   /* 원래 숫자로 돌려놓고 센다 */
+  sec.__srNums=null;
+  countUpIn(sec);
+}
+function srCheck(){
   srRaf=0;
-  const H=innerHeight;
-  srNums.forEach(n=>{
-    if(!n.el.isConnected||!n.el.offsetParent) return;
-    const top=n.el.getBoundingClientRect().top;
-    const q=Math.max(0,Math.min(1,(H*0.98-top)/(H*0.38))), e=1-Math.pow(1-q,3);
-    n.parts.forEach((pt,i)=>{ const t=countUpText(pt,pt.to*e); if(pt.node.nodeValue!==t) pt.node.nodeValue=t; n.last[i]=t; });
+  const line=innerHeight*0.55;
+  let k=0;
+  srWait=srWait.filter(sec=>{
+    if(!sec.isConnected||!sec.offsetParent) return false;
+    if(sec.getBoundingClientRect().top<line){
+      /* 한 번에 여러 섹션이 선을 넘으면 위에서부터 0.3초씩 차례로 */
+      const d=k++*300; if(d) setTimeout(()=>srReveal(sec),d); else srReveal(sec);
+      return false;
+    }
+    return true;
   });
 }
-function srQueue(){ if(!srRaf) srRaf=requestAnimationFrame(srPaint); }
-addEventListener('scroll',srQueue,{passive:true});
-addEventListener('resize',srQueue);
+addEventListener('scroll',()=>{ if(srWait.length&&!srRaf) srRaf=requestAnimationFrame(srCheck); },{passive:true});
 function scrollRevealArm(view){
   if(!view||countUpLessMotion) return;
-  if(SR_SCRUB){
-    view.classList.add('sr-scrub');
-    /* 숫자 원래 값은 한 번만 읽어 둔다 · 다시 걸 때 글자가 그대로(내가 쓴 값)면 예전 것을 쓰고, 새로 그려졌으면 새로 읽는다 */
-    const els=[...view.querySelectorAll('.num:not([data-nocount])')].filter(el=>!(el.parentElement&&el.parentElement.closest('.num')));
-    const keep=srNums.filter(n=>!view.contains(n.el));
-    els.forEach(el=>{
-      if(el.__countRaf){ cancelAnimationFrame(el.__countRaf); el.__countRaf=0; }
-      let n=el.__sr;
-      const same=n&&n.parts.every((pt,i)=>pt.node.isConnected&&pt.node.parentNode&&el.contains(pt.node)&&pt.node.nodeValue===n.last[i]);
-      if(!same){ const parts=countUpParts(el); if(!parts.length) return; n=el.__sr={el,parts,last:parts.map(pt=>pt.node.nodeValue)}; }
-      keep.push(n);
-    });
-    srNums=keep; srQueue();
-    return;
-  }
-  if(!('IntersectionObserver' in window)) return;
-  if(!srObserver) srObserver=new IntersectionObserver(ents=>{
-    ents.forEach(en=>{
-      if(!en.isIntersecting) return;
-      const sec=en.target; srObserver.unobserve(sec);
-      sec.classList.remove('sr-wait'); sec.classList.add('sr-in');
-      countUpIn(sec);
-    });
-  },{rootMargin:'0px 0px -12% 0px',threshold:0.05});
-  const fold=innerHeight*0.92;
-  view.querySelectorAll('section.section').forEach(sec=>{
-    srObserver.unobserve(sec); sec.classList.remove('sr-in','sr-wait');
-    if(sec.getBoundingClientRect().top<fold) return;   /* 첫 화면에 보이는 섹션은 바로 */
-    sec.classList.add('sr-wait'); srObserver.observe(sec);
+  const secs=[...view.querySelectorAll('section.section')];
+  srWait=srWait.filter(sec=>!view.contains(sec));
+  let first=true;
+  secs.forEach(sec=>{
+    if(sec.__srNums) (sec.__srNums).forEach(n=>n.parts.forEach(pt=>{ if(pt.node.isConnected&&pt.node.nodeValue===pt.zero) pt.node.nodeValue=pt.orig; }));
+    sec.__srNums=null; sec.classList.remove('sr-in','sr-wait');
+    const r=sec.getBoundingClientRect();
+    /* 맨 위 섹션(또는 이미 지나 위로 올라간 섹션)은 바로 */
+    if(first&&r.height){ first=false; return; }
+    if(r.bottom<=0) return;
+    sec.classList.add('sr-wait');
+    sec.__srNums=[...sec.querySelectorAll('.num:not([data-nocount])')]
+      .filter(el=>!(el.parentElement&&el.parentElement.closest('.num')))
+      .map(el=>{ if(el.__countRaf){ cancelAnimationFrame(el.__countRaf); el.__countRaf=0; }
+        const parts=countUpParts(el).map(pt=>Object.assign(pt,{orig:pt.node.nodeValue,zero:countUpText(pt,0)}));
+        parts.forEach(pt=>{ pt.node.nodeValue=pt.zero; });
+        return {el,parts}; });
+    srWait.push(sec);
   });
+  /* 이미 스크롤해 내려와 있으면 선을 넘은 섹션은 바로 */
+  if(scrollY>0) srCheck();
 }
 /* 지금 열려 있는 보고서만 다시 센다 · 숨어 있는 화면은 열 때 activateView가 부른다 */
 function countUpVisibleReport(){
