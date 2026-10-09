@@ -2234,6 +2234,15 @@ window.BAROYAM_FONT=(function(){
   #view-week .chcard .roas-big{color:var(--ink);font-size:36px;margin:12px 0 0}
   #view-week .chcard .roas-big small{font-size:14px;font-weight:600;color:var(--mute);margin-left:6px;letter-spacing:0}
   #view-week .chcard .mr-lines{display:flex;flex-direction:column;gap:6px;margin:12px 0 4px}
+  /* 광고 카드 아래 두 칸(광고비 | 광고매출) · 2026-10-09 카드 정리 */
+  #view-week .chcard{background:var(--paper)}
+  #view-week .chcard::before{height:3px}
+  #view-week .chcard .roas-cap{margin-top:4px;font-size:12.5px}
+  #view-week .ad-stats{display:grid;grid-template-columns:1fr 1fr;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  #view-week .ad-stats>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+  #view-week .ad-stats>div+div{padding-left:14px;border-left:1px solid var(--line)}
+  #view-week .ad-stats span{font-size:12px;font-weight:500;color:var(--mute)}
+  #view-week .ad-stats b{font-size:15.5px;font-weight:600;color:var(--ink);white-space:nowrap}
   #view-week .chcard .mr-line{grid-template-columns:34px 1fr 52px}
   #view-week .chcard .crow:first-of-type{margin-top:12px}
   #view-week .chcard .crow{padding:11px 0}
@@ -7122,7 +7131,7 @@ window.BAROYAM_FONT=(function(){
 
       <!-- 3. 6월 광고 성과 -->
       <section class="section divtop" style="padding-top:38px;padding-bottom:16px">
-        <div class="shead"><div class="snum">03</div><div><div class="stitle" id="adTitle">8월 채널별 광고 성과</div><div class="ssub">광고비 · 광고매출 · ROAS</div></div></div>
+        <div class="shead"><div class="snum">03</div><div><div class="stitle" id="adTitle">8월 채널별 광고 성과</div><div class="ssub" id="adSub">광고비 · 광고매출 · ROAS</div></div></div>
         <div class="chcards" id="adCards"></div>
       </section>
 
@@ -9783,19 +9792,19 @@ function renderReport(data){
 
   /* 3. 광고 카드 */
   document.getElementById('adTitle').textContent=`${data.currLabel} 채널별 광고 성과`;
+  /* 카드에는 ROAS·지난달 대비·광고비·광고매출만 둔다 · 기간은 제목 아래 한 줄로 빼고, 금액은 만 단위(정확한 금액은 올리면 말풍선) */
+  document.getElementById('adSub').textContent=`ROAS · 광고비 · 광고매출 · ${data.currMonthNum}/${data.currDay}까지 · ${data.prevLabel} 대비`;
   document.getElementById('adCards').innerHTML=RCH.map(c=>{
     const j=data.adCurr[c], m=data.adPrev[c]; const rj=roasPct(j.rev,j.cost), rm=roasPct(m.rev,m.cost);
-    const rMx=Math.max(rj,rm)||1, k=WK_CLS[c]||'self';
+    const k=WK_CLS[c]||'self';
     return `<div class="chcard ch-${k}" style="--cc:${CH_COLOR[c]}">
       <div class="ch-name"><i></i>${c}${achipDelta(pct(rj,rm))}</div>
       <div class="roas-big num">${rj}%<small>ROAS</small></div>
-      <div class="roas-cap">${data.currLabel} ${data.currMonthNum}/${data.currDay}까지 · ${data.prevLabel} ${rm}%</div>
-      <div class="mr-lines">
-        <div class="mr-line prev ch-${k}"><span class="rm">${data.prevLabel}</span><div class="rtrack"><div class="rfill" style="width:${rm/rMx*100}%"></div></div><span class="rval num">${rm}%</span></div>
-        <div class="mr-line curr ch-${k}"><span class="rm">${data.currLabel}</span><div class="rtrack"><div class="rfill" style="width:${rj/rMx*100}%;--i:1"></div></div><span class="rval num">${rj}%</span></div>
+      <div class="roas-cap">${data.prevLabel} ${rm}%</div>
+      <div class="ad-stats">
+        <div title="${wonRaw(j.cost)}원"><span>광고비</span><b class="num">${j.cost?eok(j.cost)+'원':'0원'}</b></div>
+        <div title="${wonRaw(j.rev)}원"><span>광고매출</span><b class="num">${j.rev?eok(j.rev)+'원':'0원'}</b></div>
       </div>
-      <div class="crow"><span class="lab">광고비</span><span class="cmp num">${wonRaw(j.cost)}원</span></div>
-      <div class="crow"><span class="lab">광고매출</span><span class="cmp num">${wonRaw(j.rev)}원</span></div>
     </div>`;}).join('');
 
   /* 3b. 도넛 */
@@ -23539,9 +23548,3 @@ window.baroyamAsk=function(title,body,okText){
 </body>
 </html>
 
-<style id="__om-edit-overrides">
-#adCards >div:nth-child(3) >.roas-big { color: rgb(240, 200, 92) !important }
-#adCards >div:nth-child(3) >.roas-big { color: rgb(240, 97, 92) !important }
-#adCards >div:nth-child(3) { border-color: rgb(231, 231, 240) !important }
-html[data-theme="dark"] #adCards >div:nth-child(3) { border-color: var(--line) !important }
-</style>
