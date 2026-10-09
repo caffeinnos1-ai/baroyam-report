@@ -4746,6 +4746,45 @@ window.BAROYAM_FONT=(function(){
   .kb-people-title{font-size:12.5px;font-weight:600;color:var(--ink)}
   .kb-people-title small{font-weight:500;color:var(--mute);margin-left:6px}
 
+  /* 관리자 설정 · ERP 노드 · 네 줄(입구·화면·데이터·바깥과 자동화)에 노드를 세우고 SVG 선으로 잇는다 ·
+     노드를 고르면 이어진 노드·선만 강조색, 나머지는 흐려진다 */
+  .settings-view[data-settings-panel="erpmap"]{height:auto}
+  .settings-panel.admin-panel:has(.settings-view[data-settings-panel="erpmap"]:not([hidden])){max-width:1360px}
+  .em-manager{display:flex;flex-direction:column;gap:10px}
+  .em-wrap{display:flex;gap:14px;align-items:flex-start}
+  .em-scroll{flex:1;min-width:0;overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+  .em-map{position:relative;display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));column-gap:64px;padding:14px 18px 18px;min-width:820px}
+  .em-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .em-lines path{fill:none;stroke:var(--line);stroke-width:1.4;transition:stroke .2s,opacity .2s}
+  .em-lines path.ro{stroke-dasharray:4 4}
+  .em-lines path.on{stroke:var(--btn);stroke-width:1.8}
+  .em-map.picked .em-lines path:not(.on){opacity:.25}
+  .em-col{display:flex;flex-direction:column;gap:7px;position:relative;z-index:1}
+  .em-col-h{font-size:11.5px;font-weight:500;color:var(--mute);margin:0 0 3px;padding-left:2px}
+  .em-node{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:1px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;
+    background:var(--paper);cursor:pointer;transition:border-color .2s,background .2s,opacity .2s}
+  .em-node b{font-size:12.5px;font-weight:500;color:var(--ink)}
+  .em-node small{font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .em-node:hover{border-color:var(--btn)}
+  .em-node:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+  .em-node.off{opacity:.55}
+  .em-map.picked .em-node{opacity:.35}
+  .em-map.picked .em-node.near{opacity:1;background:var(--btn-soft)}
+  .em-map.picked .em-node.cur{opacity:1;border-color:var(--btn);background:var(--btn-soft)}
+  .em-map.picked .em-node.cur b{color:var(--btn-soft-ink)}
+  .em-detail{width:250px;flex:none;border:1px solid var(--line);border-radius:14px;padding:14px 15px;font-size:12.5px;color:var(--body);
+    line-height:1.6;position:sticky;top:0}
+  .em-detail h4{margin:0 0 2px;font-size:14px;font-weight:600;color:var(--ink)}
+  .em-detail .em-kind{font-size:11px;color:var(--mute);margin-bottom:8px}
+  .em-detail p{margin:0 0 10px}
+  .em-detail .em-sub{font-size:11.5px;font-weight:500;color:var(--mute);margin:4px 0 4px}
+  .em-detail ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  .em-detail li button{all:unset;cursor:pointer;display:block;padding:4px 6px;border-radius:7px;width:100%;box-sizing:border-box}
+  .em-detail li button:hover{background:var(--btn-soft)}
+  .em-detail li b{font-weight:500;color:var(--ink)}
+  .em-detail li span{display:block;font-size:11.5px;color:var(--mute)}
+  @media (max-width:900px){.em-wrap{flex-direction:column}.em-detail{width:auto;position:static;align-self:stretch}}
+
   /* 관리자 설정 · 접속기록 · 기기 목록(이름 붙이기)과 최근 접속 표 · 작게, 장식 없이 */
   .settings-view[data-settings-panel="accesslog"]{height:auto}
   .al-manager{display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--body)}
@@ -6925,6 +6964,10 @@ window.BAROYAM_FONT=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="11.5" rx="2"/><path d="M9 20h6M12 16v4"/></svg>
               <span>보안로그</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="erpmap" id="emSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="12" r="2.3"/><circle cx="18.5" cy="5.5" r="2.3"/><circle cx="18.5" cy="18.5" r="2.3"/><path d="M7.7 11 16.3 6.5M7.7 13l8.6 4.5"/></svg>
+              <span>ERP 노드</span>
+            </button>
           </nav>
           <div class="settings-content">
             <section class="settings-view active" data-settings-panel="members">
@@ -7036,6 +7079,16 @@ window.BAROYAM_FONT=(function(){
                   <tbody id="alRows"></tbody>
                 </table></div>
                 <p class="wf-checked" id="alNote"></p>
+              </div>
+            </section>
+            <!-- ERP 노드 · 화면·데이터·자동화가 어떻게 이어져 있는지 한 장에 · 노드를 누르면 이어진 것만 밝아진다(읽기 전용) -->
+            <section class="settings-view" data-settings-panel="erpmap" hidden>
+              <div class="em-manager">
+                <p class="mg-hint">대시보드가 어디서 데이터를 읽고 어디에 저장하는지, 자동으로 도는 일이 무엇을 채우는지 한 장으로 정리했어요. 노드를 누르면 이어진 것만 밝아지고 오른쪽에 설명이 나와요. 실선은 읽고 저장, 점선은 읽기만이에요.</p>
+                <div class="em-wrap">
+                  <div class="em-scroll"><div class="em-map" id="emMap"><svg class="em-lines" id="emLines" aria-hidden="true"></svg></div></div>
+                  <aside class="em-detail" id="emDetail" aria-live="polite"></aside>
+                </div>
               </div>
             </section>
           </div>
@@ -11335,6 +11388,187 @@ window.CsGuide=(function(){
     });
   });
 
+})();
+
+/* 관리자 설정 · ERP 노드 · 화면·데이터·자동화가 어떻게 이어지는지 보여 주는 지도(읽기 전용 · 저장 없음) ·
+   구조가 바뀌면 NODES·EDGES 를 같이 고친다(HISTORY.md "지금 구조 한눈에" 와 맞춤) ·
+   EDGES 의 세 번째 값은 선에 붙는 설명, 네 번째 'r' 은 읽기만(점선) */
+(function(){
+  const tab=document.getElementById('emSettingsTab');
+  const map=document.getElementById('emMap');
+  const svg=document.getElementById('emLines');
+  const detail=document.getElementById('emDetail');
+  if(!tab||!map||!svg||!detail) return;
+  const COLS=['입구','화면(사이드바 메뉴)','데이터','바깥 서비스·자동화'];
+  /* [id, 열, 이름, 한 줄, 설명] */
+  const NODES=[
+    ['pages',0,'GitHub Pages','erp.baroyam.com','이 저장소 main 의 index.html 한 파일이 곧 대시보드입니다. 푸시하면 1~2분 뒤 모든 PC에 반영되고, 사본은 두지 않습니다.'],
+    ['pc',0,'회원 PC 브라우저','사무실·집 PC','대시보드를 여는 곳입니다. 브라우저마다 기기 번호(baroyam_device_id)를 만들어 보안로그에 씁니다. 같은 브라우저의 여러 창은 localStorage 를 같이 씁니다.'],
+    ['glogin',0,'구글 로그인','공용 계정 하나','모두 같은 구글 계정으로 들어옵니다. Supabase 로그인 세션이 데이터 읽기·쓰기 열쇠이고, 구글 권한(drive) 하나를 드라이브·매출 시트·업로드가 같이 씁니다(1시간 · baroyam_gtoken_v1).'],
+    ['member',0,'회원 고르기','프로필 · 팀장 비밀번호','로그인 뒤 회원(프로필)을 고릅니다. 역할이 팀장이면 비밀번호를 한 번 더 묻습니다. 회원마다 보이는 메뉴는 관리자 설정 › 권한설정을 따릅니다.'],
+    ['ext',0,'크롬 확장','바로얌 재고 수집','판매·재고의 "어드민 수집" 단추가 부릅니다. 이지어드민 창을 최소화로 열어 재고·당일판매 표를 읽어 대시보드로 넘깁니다. 사람은 로그인만 합니다.'],
+    ['collector',0,'리뷰 수집기','회사 PC 127.0.0.1:4317','회사 PC에서 로그인하면 자동으로 켜집니다. 판매처 리뷰를 모으고, /dashboard 로 이 저장소의 index.html 을 그대로 펴 줍니다.'],
+
+    ['home',1,'마이홈','현황·퀵링크·기록노트','회원마다 퀵링크·기록노트(myhome:<회원id>)와 프로젝트 현황 카드를 봅니다.'],
+    ['project',1,'프로젝트','보드판 · 캘린더','한 프로젝트 = projects 표 한 줄. 바꾼 칸만 얹어 저장하고, 삭제는 deleted_at 만 적습니다. 첨부 파일은 brand-files 보관함 project/ 아래.'],
+    ['sales',1,'매출데이터','주간 · 월간','구글시트의 매출을 로그인한 사람의 구글 권한으로만 읽습니다(페이지에는 숫자를 두지 않음). 쿠팡·네이버·자사몰·톡딜 4채널.'],
+    ['goal',1,'목표설정','월별 목표 · 달성률','목표는 app_settings 에 월별로 저장하고, 달성률은 매출 시트로 계산합니다.'],
+    ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
+    ['profit',1,'손익·마진 관리','마진 계산기 · 원가표','원가표(profit_cost_v1)와 마진 계산기(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
+    ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
+    ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
+    ['drive',1,'드라이브','자산 찾기 · 업로드','구글드라이브 색인(drive_assets_v1)을 브랜드·종류로 거릅니다. 업로드·삭제(휴지통)는 구글 권한으로 드라이브에 직접 합니다.'],
+    ['trend',1,'트렌드분석','구글 · 네이버','GitHub Actions 가 모은 trend_google · trend_naver 표를 읽기만 합니다.'],
+    ['review',1,'리뷰수집','채널별 인박스','회사 PC 리뷰 수집기(4317)와 이야기합니다. 수집기 화면 디자인은 대시보드가 보내 줍니다.'],
+    ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
+    ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
+    ['perf',1,'퍼포먼스마케팅','영상분석 AI','쇼츠 링크를 넣으면 brand-files 의 ytcap/req 에 요청을 올리고, VPS 가 자막(한국어)을 ytcap/res 에 답합니다.'],
+    ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
+    ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
+
+    ['settings',2,'app_settings','칸 이름 → JSON 한 덩어리','대부분의 공용 데이터가 여기 있습니다(members·myhome:<id>·memberProfile:<id>·channels·accounts_v1·orgChart·manualGuide·brand_*·profit_*·inventory_*·daily_sales_*·editAccess·sidebarOrder·appFont…). 통째로 덮어쓰지 않고 blobSync / saveMerged 로 바꾼 것만 얹습니다. 바뀌기 전 값은 app_settings_history 에 보관.'],
+    ['projects',2,'projects','프로젝트 원본 표','09-29부터 프로젝트 원본입니다. 담당자는 이름. 화면은 행을 지우지 않고 deleted_at 만 적고, 바뀌기 전 줄은 projects_history 에 남습니다. 옛 창(rev 3 미만)의 쓰기는 서버가 건너뜁니다.'],
+    ['mirror',2,'거울 표','members · quick_links · notes','app_settings 덩어리를 행으로 펼쳐 둔 사본입니다. 화면은 덩어리에서만 읽습니다.'],
+    ['agendaT',2,'agenda_items','회의안건 표','처음부터 행 단위 표입니다.'],
+    ['cs',2,'cs_guide','상담 가이드 표','상담 답변과 키워드. 김비서가 슬랙 대화에서 키워드로 찾아 답합니다. 수정·삭제 직전 행은 이력 표에 보관.'],
+    ['trendT',2,'trend_google · trend_naver','트렌드 수집 결과','GitHub Actions 가 쌓고 화면은 읽기만 합니다.'],
+    ['runs',2,'automation_runs','자동화 실행 기록','VPS 예약 작업이 끝날 때마다 정상·실패 한 줄, 대화 봇은 10분마다 켜짐 여부를 덮어씁니다. 워크플로우 탭이 보여 줍니다.'],
+    ['access',2,'access_log','보안로그','회원으로 들어올 때 한 줄. 시각·IP·브라우저는 서버 트리거가 채우고 90일 뒤 지웁니다. 화면은 추가·읽기만.'],
+    ['storage',2,'Storage brand-files','비공개 파일 보관함','브랜드 항목 파일·메뉴얼/회의 이미지·프로젝트 첨부·영상 자막 요청(ytcap)을 담습니다. 볼 때 짧은 서명 주소를 받고, 화면에서는 지우지 않습니다.'],
+    ['sheet',2,'구글시트','매출데이터','매출만 남은 시트입니다. "제한됨"이라 로그인한 사람의 구글 권한으로만 읽힙니다.'],
+    ['gdrive',2,'구글드라이브','★제품별_자산 · 카페이노스 공유','파일 본체가 있는 곳. 대시보드는 색인을 읽고, 업로드·휴지통은 구글 권한으로 직접 합니다.'],
+
+    ['vps',3,'VPS 서버','카페24 국내 · cron + systemd','24시간 도는 자동화 서버입니다(코드는 비공개 저장소 caffeinnos-automation). 예약 작업은 cron, 대화 봇·자막 서비스는 systemd 가 늘 켜 둡니다. 실행마다 automation_runs 에 기록.'],
+    ['kim',3,'김비서','슬랙 봇 · 바로얌AI','공지·밥시간·아침 인사·퇴근 전 체크를 보내고, 대화로 내 프로젝트·마감·상담 추천 답변·파일 찾기를 해 줍니다. 회원설정의 슬랙 ID·출근 요일을 씁니다.'],
+    ['slack',3,'슬랙','#공지사항 · 개인 메시지','김비서와 당일판매 보고가 나가는 곳입니다.'],
+    ['ezadmin',3,'이지어드민','재고 · 당일판매','현 재고조회(I100)·당일판매분요약표를 읽습니다. VPS 는 자동 로그인, 크롬 확장은 사람이 로그인.'],
+    ['ytcap',3,'영상 자막 서비스','VPS yt-captions','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아(한국어가 아니면 번역) ytcap/res 에 답합니다.'],
+    ['youtube',3,'유튜브','자막 원본','국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘).'],
+    ['gha',3,'GitHub Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 Supabase 트렌드 표에 쌓습니다.'],
+    ['apps',3,'앱스크립트','09-29 공개 배포 폐기','예전 데이터 API 입니다. 지금은 쓰지 않지만 index.html 의 AGENDA_API_URL 줄은 지우면 저장이 멈추므로 그대로 둡니다.',true]
+  ];
+  /* [가, 나, 설명, 'r'=읽기만] */
+  const EDGES=[
+    ['pages','pc','index.html 을 받아 엶','r'],
+    ['pc','glogin','로그인'],
+    ['glogin','member','세션 확인 뒤 회원 고르기'],
+    ['member','home','권한설정에 맞는 메뉴로 들어감'],
+    ['member','access','들어올 때 접속 한 줄'],
+    ['home','settings','myhome:<회원id> 퀵링크·기록노트'],
+    ['home','projects','프로젝트 현황','r'],
+    ['project','projects','바꾼 칸만 저장 · 삭제는 deleted_at'],
+    ['project','storage','첨부 파일 project/'],
+    ['sales','sheet','구글 권한으로 매출 읽기','r'],
+    ['goal','settings','월별 목표'],
+    ['goal','sheet','달성률 계산용 매출','r'],
+    ['ops','settings','inventory_v1 · daily_sales_v1'],
+    ['ops','ext','어드민 수집 단추'],
+    ['profit','settings','profit_cost_v1 · profit_calc_v1'],
+    ['brand','settings','brand_strategy_v1 · 틀 · 이미지'],
+    ['brand','storage','항목 파일'],
+    ['brand','gdrive','드라이브 연동·받기'],
+    ['drive','settings','drive_assets_v1 색인'],
+    ['drive','gdrive','찾기·업로드·휴지통'],
+    ['trend','trendT','트렌드 그래프','r'],
+    ['review','collector','리뷰 모으기'],
+    ['manual','settings','manualGuide · 문서 · orgChart'],
+    ['manual','cs','상담 가이드'],
+    ['manual','storage','문서 이미지 manual/'],
+    ['agenda','agendaT','안건'],
+    ['agenda','storage','메모 이미지 agenda/'],
+    ['perf','storage','자막 요청 ytcap/req → res'],
+    ['account','settings','accounts_v1'],
+    ['admin','settings','회원·권한·순서·글꼴·틀'],
+    ['admin','runs','워크플로우 상태','r'],
+    ['admin','access','보안로그','r'],
+    ['settings','mirror','덩어리를 행으로 펼침'],
+    ['ext','ezadmin','이지어드민 창에서 표 읽기','r'],
+    ['vps','ezadmin','재고 07:00·16:30 · 당일판매','r'],
+    ['vps','settings','inventory_v1 · daily_sales_v1 채움'],
+    ['vps','runs','실행마다 정상·실패'],
+    ['vps','kim','대화 봇 늘 켜 둠'],
+    ['vps','slack','당일판매 보고 16:15'],
+    ['vps','ytcap','자막 서비스 늘 켜 둠'],
+    ['kim','slack','알림·대화'],
+    ['kim','projects','내 프로젝트·마감','r'],
+    ['kim','cs','상담 키워드 답변','r'],
+    ['kim','gdrive','"○○ 보내줘" 파일 찾기','r'],
+    ['kim','settings','슬랙 ID·출근 요일','r'],
+    ['ytcap','storage','ytcap/res · cache 에 답'],
+    ['ytcap','youtube','자막 받기','r'],
+    ['gha','trendT','트렌드 쌓기']
+  ];
+  const byId={}; NODES.forEach(n=>byId[n[0]]=n);
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const els={};
+  let built=false, cur=null;
+
+  function build(){
+    built=true;
+    COLS.forEach((title,ci)=>{
+      const col=document.createElement('div'); col.className='em-col';
+      col.innerHTML=`<div class="em-col-h">${esc(title)}</div>`;
+      NODES.filter(n=>n[1]===ci).forEach(n=>{
+        const b=document.createElement('button'); b.type='button'; b.className='em-node'+(n[5]?' off':''); b.dataset.id=n[0];
+        b.innerHTML=`<b>${esc(n[2])}</b><small>${esc(n[3])}</small>`;
+        b.addEventListener('click',()=>pick(cur===n[0]?null:n[0]));
+        col.appendChild(b); els[n[0]]=b;
+      });
+      map.appendChild(col);
+    });
+    EDGES.forEach(e=>{
+      const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+      if(e[3]==='r') p.classList.add('ro');
+      svg.appendChild(p); e.el=p;
+    });
+    new ResizeObserver(draw).observe(map);
+  }
+  /* 노드 자리는 offset 으로 잰다 · 탭이 떠오르는 애니메이션(transform) 중에도 어긋나지 않게 */
+  function box(el){ return {x:el.offsetLeft+el.offsetParent.offsetLeft, y:el.offsetTop+el.offsetParent.offsetTop, w:el.offsetWidth, h:el.offsetHeight}; }
+  function draw(){
+    if(!built||!map.offsetWidth) return;
+    EDGES.forEach(e=>{
+      const a=box(els[e[0]]), b=box(els[e[1]]);
+      const ca=byId[e[0]][1], cb=byId[e[1]][1];
+      let d;
+      if(ca===cb){ /* 같은 줄 · 바깥으로 둥글게(첫 줄은 왼쪽, 나머지는 오른쪽) */
+        const left=ca===0, x1=left?a.x:a.x+a.w, x2=left?b.x:b.x+b.w, y1=a.y+a.h/2, y2=b.y+b.h/2;
+        const k=(left?-1:1)*Math.min(46,14+Math.abs(y2-y1)*.18);
+        d=`M${x1},${y1} C${x1+k},${y1} ${x2+k},${y2} ${x2},${y2}`;
+      }else{
+        const r=ca<cb, x1=r?a.x+a.w:a.x, x2=r?b.x:b.x+b.w, y1=a.y+a.h/2, y2=b.y+b.h/2, m=(x2-x1)*.5;
+        d=`M${x1},${y1} C${x1+m},${y1} ${x2-m},${y2} ${x2},${y2}`;
+      }
+      e.el.setAttribute('d',d);
+    });
+  }
+  function pick(id){
+    cur=id;
+    map.classList.toggle('picked',!!id);
+    Object.values(els).forEach(el=>el.classList.remove('cur','near'));
+    EDGES.forEach(e=>e.el.classList.remove('on'));
+    if(!id){ intro(); return; }
+    els[id].classList.add('cur');
+    const links=[];
+    EDGES.forEach(e=>{
+      if(e[0]!==id&&e[1]!==id) return;
+      e.el.classList.add('on');
+      const other=e[0]===id?e[1]:e[0];
+      els[other].classList.add('near');
+      links.push([other,e[2],e[3]==='r']);
+    });
+    const n=byId[id];
+    detail.innerHTML=`<h4>${esc(n[2])}</h4><div class="em-kind">${esc(COLS[n[1]])} · ${esc(n[3])}</div><p>${esc(n[4])}</p>`+
+      (links.length?`<div class="em-sub">이어진 곳 ${links.length}</div><ul>${links.map(l=>
+        `<li><button type="button" data-go="${l[0]}"><b>${esc(byId[l[0]][2])}</b><span>${esc(l[1])}${l[2]?' · 읽기만':''}</span></button></li>`).join('')}</ul>`:'');
+    detail.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{ pick(b.dataset.go); els[b.dataset.go].focus({preventScroll:true}); }));
+  }
+  function intro(){
+    detail.innerHTML=`<h4>ERP 구조</h4><div class="em-kind">노드 ${NODES.length} · 연결 ${EDGES.length}</div>`+
+      `<p>왼쪽부터 <b>입구</b>(어떻게 들어오는지) → <b>화면</b>(사이드바 메뉴) → <b>데이터</b>(Supabase·구글) → <b>바깥 서비스·자동화</b>(VPS·김비서 등) 순서예요.</p>`+
+      `<p>노드를 누르면 이어진 곳과 무엇을 주고받는지 여기에 나와요. 한 번 더 누르면 전체 보기로 돌아가요.</p>`;
+  }
+  tab.addEventListener('click',()=>{ if(!built){ build(); intro(); } requestAnimationFrame(draw); });
 })();
 
 /* 관리자 설정 · 워크플로우(예전 이름 김비서 AI · 10-09 옛 워크플로우 탭의 GitHub 수집을 합침) · 슬랙 봇 "김비서"(바로얌AI 봇)가 하는 자동화 목록 ·
