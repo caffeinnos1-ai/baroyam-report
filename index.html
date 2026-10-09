@@ -4724,6 +4724,15 @@ window.BAROYAM_FONT=(function(){
   .wt-st.is-ok{color:var(--body)} .wt-st.is-ok::before{background:var(--pos)}
   .wt-st.is-fail{color:var(--neg);font-weight:500} .wt-st.is-fail::before{background:var(--neg)}
   .wt-st.is-live::before{background:var(--mute)}
+  /* 김비서 AI 탭 · 이름이 두 줄로 꺾이지 않게 한 단계 작게 · 종류별 묶음 줄(누르면 접고 폄) */
+  .kb-table .wt-name{font-size:13px;white-space:nowrap}
+  .kb-table .wt-name small{font-size:11px}
+  .kb-table td{padding:7px 8px}
+  .kb-table tr.kb-group td{background:color-mix(in srgb,var(--chip-flat) 70%,transparent);padding:7px 10px;cursor:pointer;user-select:none}
+  .kb-table tbody tr.kb-group:hover td{background:var(--chip-flat)}
+  .kb-group-in{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .kb-group-in i{font-style:normal;display:inline-flex;width:14px;justify-content:center;color:var(--mute);font-weight:500}
+  .kb-group-in b{font-weight:500;color:var(--mute);font-size:11.5px}
   .kb-people{border:1px dashed var(--line);border-radius:14px;padding:12px 15px;display:flex;flex-direction:column;gap:8px}
   .kb-people-title{font-size:12.5px;font-weight:600;color:var(--ink)}
   .kb-people-title small{font-weight:500;color:var(--mute);margin-left:6px}
@@ -11280,42 +11289,45 @@ window.CsGuide=(function(){
   const WD=['일','월','화','수','목','금','토'];
   /* days · 도는 요일(0=일) · times 가 없으면 늘 켜져 있는 것 · record 는 automation_runs 의 workflow 이름(crontab.txt 와 같게) */
   const AUTOMATIONS=[
-    {name:'당일판매분요약표', where:'#재고알림', days:[0,1,2,3,4,5,6], times:['16:15'], record:'당일판매분요약표 (Slack)',
+    {name:'당일판매분요약표', cat:'report', where:'#재고알림', days:[0,1,2,3,4,5,6], times:['16:15'], record:'당일판매분요약표 (Slack)',
      desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올리고, 같은 표를 ERP 당일판매현황에도 저장해요.', task:'cron'},
     /* caffeinnos-automation/daily_report.js --erp-only · 낮에는 슬랙 없이 ERP 당일판매현황(daily_sales_v1)에만 */
-    {name:'당일판매현황 수집', where:'ERP 판매·재고 · 당일판매현황', days:[0,1,2,3,4,5,6], times:['11:00','14:00'], record:'당일판매현황 수집',
+    {name:'당일판매현황 수집', cat:'collect', where:'ERP 판매·재고 · 당일판매현황', days:[0,1,2,3,4,5,6], times:['11:00','14:00'], record:'당일판매현황 수집',
      desc:'낮 중간에 이지어드민 당일판매분요약표를 읽어 당일판매현황 화면만 새로 채워요(슬랙에는 보내지 않음).', task:'cron'},
     /* caffeinnos-automation/inventory_report.js · 막힌 날은 재고현황의 "어드민 수집" 단추(크롬 확장 ezadmin-extension · 사람은 로그인만) */
-    {name:'재고현황 수집', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
+    {name:'재고현황 수집', cat:'collect', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
-    {name:'밥시간 알림', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['10:50'],
+    {name:'밥시간 알림', cat:'notice', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['10:50'],
      record:'밥시간 알림',
      desc:'"🍱 밥시간 알림 · 메뉴를 주문해 주세요!"', task:'cron'},
-    {name:'점심시간 종료 안내', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['12:00'],
+    {name:'점심시간 종료 안내', cat:'notice', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['12:00'],
      desc:'"⏰ 점심시간이 끝났어요. 오후 업무를 시작해 주세요." + 김비서 응원 한마디(날마다 바뀜)', record:'점심시간 종료 안내', task:'cron'},
-    {name:'사무실 청소 알림', where:'#공지사항 · @channel', days:[1], times:['12:10'],
+    {name:'사무실 청소 알림', cat:'notice', where:'#공지사항 · @channel', days:[1], times:['12:10'],
      desc:'"🧹 사무실 청소 시간 · 지금부터 20분간 사무실 청소를 합니다."', record:'사무실 청소 알림', task:'cron'},
-    {name:'아침 프로젝트 인사', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['08:10'],
+    {name:'아침 프로젝트 인사', cat:'project', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['08:10'],
      desc:'그날 출근하는 회원 모두에게 좋은 아침 인사와 맡은 프로젝트 현황(긴급·오늘/내일 마감)을 보내요.', record:'아침 프로젝트 인사', task:'cron'},
-    {name:'퇴근 전 프로젝트 체크', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['16:00'],
+    {name:'퇴근 전 프로젝트 체크', cat:'project', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['16:00'],
      desc:'그날 출근하는 회원 모두에게 긴급·내일 마감 프로젝트를 알리고 완료·수정·진행도 업데이트를 부탁해요 + 응원 한마디.', record:'퇴근 전 프로젝트 체크', task:'cron'},
     /* caffeinnos-automation/cafe24_sales.js · 매시간 7분 최근 3일, 새벽 4:37 최근 60일 */
-    {name:'카페24 매출 수집', where:'ERP 매출 · 자사몰', days:[0,1,2,3,4,5,6],
+    {name:'카페24 매출 수집', cat:'collect', where:'ERP 매출 · 자사몰', days:[0,1,2,3,4,5,6],
      times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':07'), record:'카페24 매출 수집',
      desc:'카페24 주문을 받아 날짜별 실결제금액(취소·환불 차감)을 저장해요. 매출 화면의 자사몰 숫자가 이 값으로 바뀌어요.', task:'cron'},
-    {name:'김비서 대화', where:'김비서 개인 메시지', always:true,
+    {name:'김비서 대화', cat:'live', where:'김비서 개인 메시지', always:true,
      record:'김비서 대화',
      desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. 서버에서 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd',
      cmds:['안녕 · 도움말 → 짧은 안내','예시 → 자세한 사용법','내 프로젝트','마감 (7일 안)','○○ 보내줘 → 미리보기 5개 → 번호로 원본','고객 문의 → 상담 가이드 추천 답변']},
     /* caffeinnos-automation/yt_captions.js · systemd yt-captions · 상태는 vps/bot_check.sh 가 10분마다 한 줄(run_id vps-yt-captions) */
-    {name:'영상분석 자막', where:'ERP 퍼포먼스마케팅 · 영상분석 AI', always:true,
+    {name:'영상분석 자막', cat:'live', where:'ERP 퍼포먼스마케팅 · 영상분석 AI', always:true,
      record:'영상분석 자막',
      desc:'영상분석 AI에서 AI분석을 누르면 서버가 유튜브 자막(CC)을 대신 받아 와요. 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd'},
     /* 받는 사람은 김태섭(팀장·개발자) 한 명 · caffeinnos-automation/run_watch.js */
-    {name:'자동화 실패 알림', where:'김태섭 개인 메시지', always:true,
+    {name:'자동화 실패 알림', cat:'live', where:'김태섭 개인 메시지', always:true,
      record:'자동화 실패 알림',
      desc:'10분마다 실행 기록을 보고, 어느 자동화든 실패하면 · 다시 정상으로 돌아오면 김태섭 팀장에게 알려요. 같은 실패는 한 번만 보내요.', task:'cron'}
   ];
+  /* 표에서 묶어 보이는 종류 · 이 순서대로 · 접은 묶음은 이 창 메모리에만 */
+  const GROUPS=[{id:'collect',label:'데이터 수집'},{id:'report',label:'슬랙 보고'},{id:'notice',label:'공지 알림'},{id:'project',label:'프로젝트 알림'},{id:'live',label:'상시 실행'}];
+  const folded=new Set();
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pad=n=>String(n).padStart(2,'0');
   function fmt(iso){
@@ -11341,7 +11353,7 @@ window.CsGuide=(function(){
   let byName=null;   /* null=아직 안 읽음 · false=읽지 못함 · 객체=이름별 실행 이력(최신순) */
   function render(){
     const by=(byName&&typeof byName==='object')?byName:{};
-    list.innerHTML='<table class="wf-table"><thead><tr><th>이름</th><th>일정</th><th>다음 실행</th><th>최근 실행</th><th>상태</th></tr></thead><tbody>'+AUTOMATIONS.map(a=>{
+    const row=a=>{
       let st, sched, next='<span class="wt-sub">-</span>', last='<span class="wt-sub">-</span>';
       if(a.always){
         /* 서버가 10분마다 켜짐 여부를 덮어쓴다 · 30분 넘게 소식이 없으면 서버가 멈춘 것 */
@@ -11367,6 +11379,12 @@ window.CsGuide=(function(){
       }
       const tip=a.desc+(a.cmds?' · 대화: '+a.cmds.join(' / '):'')+' · VPS 서버 '+a.task;
       return `<tr title="${esc(tip)}"><td class="wt-name">${esc(a.name)}<small>${esc(a.where)}</small></td><td class="wt-num">${esc(sched)}</td><td class="wt-num">${next}</td><td class="wt-num">${last}</td><td>${st}</td></tr>`;
+    };
+    list.innerHTML='<table class="wf-table kb-table"><thead><tr><th>이름</th><th>일정</th><th>다음 실행</th><th>최근 실행</th><th>상태</th></tr></thead><tbody>'+GROUPS.map(g=>{
+      const items=AUTOMATIONS.filter(a=>(a.cat||'live')===g.id); if(!items.length) return '';
+      const shut=folded.has(g.id);
+      return `<tr class="kb-group" data-group="${g.id}" aria-expanded="${!shut}"><td colspan="5"><span class="kb-group-in"><i>${shut?'+':'−'}</i>${esc(g.label)}<b>${items.length}</b></span></td></tr>`
+        +(shut?'':items.map(row).join(''));
     }).join('')+'</tbody></table>';
     /* 김비서가 알아보는 회원 · 회원설정의 슬랙 칩에서 넣은 슬랙 ID 기준 */
     const MEM=window.BAROYAM_MEMBERS, P=window.BAROYAM_PROFILES;
@@ -11389,6 +11407,10 @@ window.CsGuide=(function(){
     }).catch(err=>{ console.error(err); byName=false; render(); });
   }
   tab.addEventListener('click',load);
+  list.addEventListener('click',e=>{
+    const g=e.target.closest('tr.kb-group'); if(!g) return;
+    const id=g.dataset.group; folded.has(id)?folded.delete(id):folded.add(id); render();
+  });
   document.addEventListener('baroyam:profiles',()=>{ if(!list.closest('[hidden]')) render(); });
 })();
 
