@@ -4751,6 +4751,13 @@ window.BAROYAM_FONT=(function(){
   /* 관리자 설정 · 접속기록 · 기기 목록(이름 붙이기)과 최근 접속 표 · 작게, 장식 없이 */
   .settings-view[data-settings-panel="accesslog"]{height:auto}
   .al-manager{display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--body)}
+  .al-manager[hidden],.al-lock[hidden]{display:none}
+  /* 보안로그 잠금 · 탭 가운데 작은 상자 */
+  .al-lock{display:flex;flex-direction:column;gap:10px;max-width:340px;margin:60px auto 0;text-align:center}
+  .al-lock-title{font-size:16px;font-weight:600;color:var(--ink)}
+  .al-lock-row{display:flex;gap:8px}
+  .al-lock-row .ui-field{flex:1;min-width:0}
+  .al-lock-msg{min-height:18px;margin:0;font-size:12px;color:var(--neg)}
   .al-hint{margin:0 0 6px;font-size:12px;line-height:1.55;color:var(--mute)}
   .al-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
   .al-sub{font-size:12.5px;font-weight:600;color:var(--ink)}
@@ -6840,7 +6847,7 @@ window.BAROYAM_FONT=(function(){
             </button>
             <button class="mini-sb-item" type="button" data-settings-view="accesslog" id="alSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="11.5" rx="2"/><path d="M9 20h6M12 16v4"/></svg>
-              <span>접속기록</span>
+              <span>보안로그</span>
             </button>
           </nav>
           <div class="settings-content">
@@ -6923,9 +6930,19 @@ window.BAROYAM_FONT=(function(){
                 <p class="wf-checked" id="kbChecked"></p>
               </div>
             </section>
-            <!-- 접속기록 · 어느 기기(브라우저)에서 누가 언제 들어왔는지 · 기기마다 이름을 붙인다 -->
+            <!-- 보안로그(예전 이름 접속기록) · 어느 기기(브라우저)에서 누가 언제 들어왔는지 · 기기마다 이름을 붙인다 ·
+                 탭을 열 때마다 보안로그 비밀번호를 한 번 더 묻는다(맞히기 전에는 기록을 읽지도 않음) -->
             <section class="settings-view" data-settings-panel="accesslog" hidden>
-              <div class="al-manager" id="alManager">
+              <form class="al-lock" id="alLock" autocomplete="off">
+                <div class="al-lock-title">보안로그</div>
+                <p class="al-hint">접속 기록은 팀장 비밀번호와 별도로 보안로그 비밀번호를 넣어야 열려요.</p>
+                <div class="al-lock-row">
+                  <input class="ui-field pw-mask" type="text" id="alLockPw" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="보안로그 비밀번호">
+                  <button type="submit" class="ui-btn primary">열기</button>
+                </div>
+                <p class="al-lock-msg" id="alLockMsg" role="alert"></p>
+              </form>
+              <div class="al-manager" id="alManager" hidden>
                 <p class="al-hint">보안 점검용 기록이에요. 회원으로 들어올 때 남고 90일 뒤 지워져요. 회사 IP를 등록해 두면 그 밖에서 들어온 접속을 <b>외부</b>로 표시해요.</p>
                 <div class="al-head"><div class="al-sub">회사 IP<span id="alOfficeSub"></span></div>
                   <button type="button" class="ui-btn sm soft" id="alOfficeAdd" hidden></button></div>
@@ -11486,7 +11503,33 @@ window.CsGuide=(function(){
   officeBox.addEventListener('click',e=>{ const b=e.target.closest('[data-ip-del]'); if(b) saveOffice(b.dataset.ipDel,false); });
   devBox.addEventListener('change',e=>{ const inp=e.target.closest('input[data-dev]'); if(inp) saveName(inp); });
   devBox.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input[data-dev]')) e.target.blur(); });
-  tab.addEventListener('click',load);
+  /* 보안로그 잠금 · 공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적는다(계정관리 잠금과 같은 방식, 소금만 다름) ·
+     탭을 누를 때마다 다시 잠그고, 맞히기 전에는 access_log 를 읽지 않는다 · 화면을 가리는 잠금이라 서버 자체를 막지는 않는다 */
+  const LOCK={salt:'baroyam-securitylog-v1',iterations:200000,hash:'551d6a7025f0742331737777e8950108966bc859e9e13db51cf5f17c0d6f2f59'};
+  const lockForm=document.getElementById('alLock'), lockPw=document.getElementById('alLockPw'),
+        lockMsg=document.getElementById('alLockMsg'), manager=document.getElementById('alManager');
+  async function lockHash(pw){
+    const enc=new TextEncoder();
+    const key=await crypto.subtle.importKey('raw',enc.encode(String(pw)),'PBKDF2',false,['deriveBits']);
+    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(LOCK.salt),iterations:LOCK.iterations,hash:'SHA-256'},key,256);
+    return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  function relock(){
+    manager.hidden=true; lockForm.hidden=false;
+    lockMsg.textContent=''; lockPw.value='';
+    rowsEl.innerHTML=''; devBox.innerHTML=''; officeBox.innerHTML='';
+    setTimeout(()=>lockPw.focus(),0);
+  }
+  lockForm.addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(!lockPw.value){ lockPw.focus(); return; }
+    if(!(window.crypto&&crypto.subtle)){ lockMsg.textContent='이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'; return; }
+    lockMsg.textContent='확인하는 중…';
+    if((await lockHash(lockPw.value))!==LOCK.hash){ lockMsg.textContent='비밀번호가 맞지 않아요'; lockPw.value=''; lockPw.focus(); return; }
+    lockForm.hidden=true; manager.hidden=false; lockPw.value=''; lockMsg.textContent='';
+    load();
+  });
+  tab.addEventListener('click',relock);
 })();
 
 /* 최상단 바 프로필 · 로그인한 계정을 보여주고, 관리자 모드 켜기/끄기 · 설정 · 로그아웃을 모아 둔다 */
