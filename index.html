@@ -6823,13 +6823,9 @@ window.BAROYAM_FONT=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6l2.5 5.1 5.6.8-4.05 3.95.96 5.6L12 16.4l-5.01 2.65.96-5.6L3.9 9.5l5.6-.8Z"/></svg>
               <span>브랜드전략실설정</span>
             </button>
-            <button class="mini-sb-item" type="button" data-settings-view="workflow" id="wfSettingsTab">
+            <button class="mini-sb-item" type="button" data-settings-view="kimbiseo" id="kbSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="6" height="5" rx="1.4"/><rect x="14.5" y="15" width="6" height="5" rx="1.4"/><path d="M6.5 9v3.5a2 2 0 0 0 2 2h9V15"/></svg>
               <span>워크플로우</span>
-            </button>
-            <button class="mini-sb-item" type="button" data-settings-view="kimbiseo" id="kbSettingsTab">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="7.5" width="15" height="11" rx="3"/><path d="M12 7.5V4.5"/><circle cx="12" cy="3.8" r=".9"/><circle cx="9.3" cy="12.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.7" cy="12.6" r="1.1" fill="currentColor" stroke="none"/><path d="M2.5 12v2.5M21.5 12v2.5"/></svg>
-              <span>김비서 AI</span>
             </button>
             <button class="mini-sb-item" type="button" data-settings-view="accesslog" id="alSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="11.5" rx="2"/><path d="M9 20h6M12 16v4"/></svg>
@@ -6908,16 +6904,9 @@ window.BAROYAM_FONT=(function(){
                 <div class="mg-list" id="bsLabelEditor"></div>
               </div>
             </section>
-            <section class="settings-view" data-settings-panel="workflow" hidden>
-              <div class="wf-manager">
-                <p class="mg-hint">데이터를 모아 오는 자동 수집(구글트렌드·네이버데이터랩, 앞으로 붙일 API 수집)을 모아 둡니다. 슬랙으로 알리는 자동화는 <b>김비서 AI</b> 탭에 있어요. 최근 실행 기록은 하루 세 번(10·15·17시) 갱신됩니다.</p>
-                <div class="wf-list" id="wfList"></div>
-                <p class="wf-checked" id="wfChecked"></p>
-              </div>
-            </section>
             <section class="settings-view" data-settings-panel="kimbiseo" hidden>
               <div class="wf-manager">
-                <p class="mg-hint"><b>김비서</b>는 슬랙의 바로얌AI 봇이에요. 슬랙으로 보내는 알림과 대화 봇을 여기에 모아 둡니다. 모두 <b>VPS 서버</b>(카페24)에서 24시간 돌아서 회사 PC가 꺼져 있어도 나가요. 실행할 때마다 정상·실패가 여기에 기록돼요.</p>
+                <p class="mg-hint">자동으로 도는 일을 모두 모아 둡니다. 슬랙 알림·대화 봇(<b>김비서</b> · 바로얌AI 봇)과 이지어드민·카페24 수집은 <b>VPS 서버</b>(카페24)에서 24시간 돌고, 구글트렌드·네이버데이터랩 수집은 <b>GitHub Actions</b>에서 돕니다. 실행할 때마다 정상·실패가 기록돼요. 이름에 마우스를 올리면 하는 일이 보여요.</p>
                 <div class="wf-list" id="kbList"></div>
                 <div class="kb-people" id="kbPeople"></div>
                 <p class="wf-checked" id="kbChecked"></p>
@@ -11209,72 +11198,7 @@ window.CsGuide=(function(){
 
 })();
 
-/* 관리자 설정 · 워크플로우 · 데이터 자동 수집(구글트렌드·네이버데이터랩, 앞으로 붙일 API 수집)의 실행 시각과 최근 결과 ·
-   슬랙으로 알리는 자동화는 아래 김비서 AI 탭이 같은 카드 모양으로 따로 보여 준다 ·
-   실행 시각은 스케줄러에만 있어 실제 실행 기록(9/16~)을 보고 적어 둔다. 시각이 바뀌면 WORKFLOWS만 고친다 ·
-   실행 기록은 Supabase automation_runs 에서 읽는다 · baroyam-report의 refresh-status
-   워크플로우가 하루 세 번 GitHub Actions 실행 결과를 그 표에 쌓는다 */
-(function(){
-  const tab=document.getElementById('wfSettingsTab');
-  const list=document.getElementById('wfList');
-  const checked=document.getElementById('wfChecked');
-  if(!tab||!list) return;
-  const WORKFLOWS=[
-    {name:'구글트렌드 수집', times:['09:00','12:00','15:00','18:00']},
-    {name:'네이버데이터랩 수집', times:['09:00']},
-    /* 점검 · 위 수집과 김비서 AI 탭 자동화의 GitHub 실행 결과를 모아 automation_runs 에 쌓는 refresh-status 자신 ·
-       GitHub 예약 실행은 늦게 도는 일이 잦아 시각은 예약 기준이다 */
-    {name:'자동화 현황 데이터 갱신', times:['10:00','15:00','17:00']}
-  ];
-  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const pad=n=>String(n).padStart(2,'0');
-  function fmt(iso){
-    const d=new Date(iso); if(isNaN(d)) return '';
-    return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-  /* 오늘 남은 시각 중 가장 이른 것, 없으면 내일 첫 시각 */
-  function nextRun(times){
-    const now=new Date(), cur=pad(now.getHours())+':'+pad(now.getMinutes());
-    const t=times.find(x=>x>cur);
-    return t?{time:t,label:'오늘 '+t}:{time:times[0],label:'내일 '+times[0]};
-  }
-  /* null=아직 안 읽음 · false=읽지 못함 · 객체=워크플로우 이름별 실행 이력(최신순) */
-  let byName=null;
-  const HIST_MAX=12;      /* 카드에 점으로 보여 줄 최근 실행 수 */
-  function render(){
-    const by=(byName&&typeof byName==='object')?byName:{};
-    list.innerHTML='<table class="wf-table"><thead><tr><th>이름</th><th>일정</th><th>다음 실행</th><th>최근 실행</th><th>상태</th></tr></thead><tbody>'+WORKFLOWS.map(w=>{
-      const hist=by[w.name]||[], run=hist[0], nx=nextRun(w.times);
-      const ok=run&&run.conclusion==='success';
-      const st=!run?'<span class="wt-st">기록 없음</span>':`<span class="wt-st ${ok?'is-ok':'is-fail'}">${ok?'정상':'실패'}</span>`;
-      const recent=hist.slice(0,HIST_MAX), fails=recent.filter(r=>r.conclusion!=='success');
-      const last=run?`${esc(fmt(run.run_at))}${run.url?` · <a href="${esc(run.url)}" target="_blank" rel="noopener">기록</a>`:''}`
-        +(fails.length?` <span class="wt-fail">· ${recent.length}회 중 ${fails.length}회 실패</span>`:''):'<span class="wt-sub">-</span>';
-      const mins=[...new Set(w.times.map(t=>t.slice(3)))];
-      const sched='매일 '+(w.times.length>=12&&mins.length===1?'매시 '+mins[0]+'분':w.times.join(' · '));
-      return `<tr><td class="wt-name">${esc(w.name)}</td><td class="wt-num">${esc(sched)}</td><td class="wt-num">${esc(nx.label)}</td><td class="wt-num">${last}</td><td>${st}</td></tr>`;
-    }).join('')+'</tbody></table>';
-    if(byName===false){ checked.textContent='최근 실행 기록을 불러오지 못했어요.'; return; }
-    if(!byName){ checked.textContent=''; return; }
-    let total=0, newest='';
-    WORKFLOWS.forEach(w=>{ const h=by[w.name]||[]; total+=h.length; if(h[0]&&(!newest||h[0].run_at>newest)) newest=h[0].run_at; });
-    checked.textContent=total?`실행 기록 ${total}건 · 가장 최근 ${fmt(newest)}`:'쌓인 실행 기록이 아직 없어요.';
-  }
-  /* 실행 이력은 Supabase(automation_runs)에서 읽는다 ·
-     예전에는 워크플로우가 만든 automation-status.json(최신 1건짜리 스냅샷)을 읽었다 */
-  function load(){
-    render();
-    if(!window.BAROYAM_DB){ byName=false; render(); return; }
-    window.BAROYAM_DB.automationRuns().then(rows=>{
-      const by={};
-      (rows||[]).forEach(r=>{ (by[r.workflow]=by[r.workflow]||[]).push(r); });
-      byName=by; render();
-    }).catch(err=>{ console.error(err); byName=false; render(); });
-  }
-  tab.addEventListener('click',load);
-})();
-
-/* 관리자 설정 · 김비서 AI · 슬랙 봇 "김비서"(바로얌AI 봇)가 하는 자동화 목록 ·
+/* 관리자 설정 · 워크플로우(예전 이름 김비서 AI · 10-09 옛 워크플로우 탭의 GitHub 수집을 합침) · 슬랙 봇 "김비서"(바로얌AI 봇)가 하는 자동화 목록 ·
    코드는 caffeinnos-automation 저장소(daily_report.js·notice_alert.js·slack_bot.js)이고
    2026-09-29 부터 모두 VPS 서버(카페24 가상서버)의 cron 이 켜고, 대화 봇은 systemd(slack-bot)가 늘 켜 둔다 ·
    시각·명령이 바뀌면 AUTOMATIONS 와 caffeinnos-automation/vps/crontab.txt 를 같이 고친다 ·
@@ -11297,6 +11221,14 @@ window.CsGuide=(function(){
     /* caffeinnos-automation/inventory_report.js · 막힌 날은 재고현황의 "어드민 수집" 단추(크롬 확장 ezadmin-extension · 사람은 로그인만) */
     {name:'재고현황 수집', cat:'collect', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
+    /* GitHub Actions(baroyam-trend) · 예전 워크플로우 탭에 따로 있던 것 · 예약 실행이라 늦게 도는 일이 잦다 */
+    {name:'구글트렌드 수집', cat:'collect', where:'ERP 트렌드분석 · GitHub Actions', days:[0,1,2,3,4,5,6], times:['09:00','12:00','15:00','18:00'], record:'구글트렌드 수집',
+     desc:'구글트렌드 검색 관심도를 받아 트렌드분석 화면을 채워요.', host:'GitHub Actions'},
+    {name:'네이버데이터랩 수집', cat:'collect', where:'ERP 트렌드분석 · GitHub Actions', days:[0,1,2,3,4,5,6], times:['09:00'], record:'네이버데이터랩 수집',
+     desc:'네이버데이터랩 검색어 추이를 받아 트렌드분석 화면을 채워요.', host:'GitHub Actions'},
+    /* refresh-status 자신 · GitHub 실행 결과를 모아 automation_runs 에 쌓는다 */
+    {name:'자동화 현황 데이터 갱신', cat:'check', where:'이 표의 GitHub 실행 기록 · GitHub Actions', days:[0,1,2,3,4,5,6], times:['10:00','15:00','17:00'], record:'자동화 현황 데이터 갱신',
+     desc:'GitHub Actions 에서 돈 수집의 정상·실패를 모아 이 표에 기록해요(하루 세 번).', host:'GitHub Actions'},
     {name:'밥시간 알림', cat:'notice', where:'#공지사항 · @channel', days:[1,2,3,4,5], times:['10:50'],
      record:'밥시간 알림',
      desc:'"🍱 밥시간 알림 · 메뉴를 주문해 주세요!"', task:'cron'},
@@ -11321,12 +11253,12 @@ window.CsGuide=(function(){
      record:'영상분석 자막',
      desc:'영상분석 AI에서 AI분석을 누르면 서버가 유튜브 자막(CC)을 대신 받아 와요. 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd'},
     /* 받는 사람은 김태섭(팀장·개발자) 한 명 · caffeinnos-automation/run_watch.js */
-    {name:'자동화 실패 알림', cat:'live', where:'김태섭 개인 메시지', always:true,
+    {name:'자동화 실패 알림', cat:'check', where:'김태섭 개인 메시지', always:true,
      record:'자동화 실패 알림',
      desc:'10분마다 실행 기록을 보고, 어느 자동화든 실패하면 · 다시 정상으로 돌아오면 김태섭 팀장에게 알려요. 같은 실패는 한 번만 보내요.', task:'cron'}
   ];
   /* 표에서 묶어 보이는 종류 · 이 순서대로 · 접은 묶음은 이 창 메모리에만 */
-  const GROUPS=[{id:'collect',label:'데이터 수집'},{id:'report',label:'슬랙 보고'},{id:'notice',label:'공지 알림'},{id:'project',label:'프로젝트 알림'},{id:'live',label:'상시 실행'}];
+  const GROUPS=[{id:'collect',label:'데이터 수집'},{id:'report',label:'슬랙 보고'},{id:'notice',label:'공지 알림'},{id:'project',label:'프로젝트 알림'},{id:'live',label:'상시 실행'},{id:'check',label:'점검'}];
   const folded=new Set();
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pad=n=>String(n).padStart(2,'0');
@@ -11377,7 +11309,7 @@ window.CsGuide=(function(){
             +(fails.length?` <span class="wt-fail">· ${recent.length}회 중 ${fails.length}회 실패</span>`:'');
         }
       }
-      const tip=a.desc+(a.cmds?' · 대화: '+a.cmds.join(' / '):'')+' · VPS 서버 '+a.task;
+      const tip=a.desc+(a.cmds?' · 대화: '+a.cmds.join(' / '):'')+' · '+(a.host||'VPS 서버 '+a.task);
       return `<tr title="${esc(tip)}"><td class="wt-name">${esc(a.name)}<small>${esc(a.where)}</small></td><td class="wt-num">${esc(sched)}</td><td class="wt-num">${next}</td><td class="wt-num">${last}</td><td>${st}</td></tr>`;
     };
     list.innerHTML='<table class="wf-table kb-table"><thead><tr><th>이름</th><th>일정</th><th>다음 실행</th><th>최근 실행</th><th>상태</th></tr></thead><tbody>'+GROUPS.map(g=>{
