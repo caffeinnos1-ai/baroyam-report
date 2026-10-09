@@ -4767,6 +4767,9 @@ window.BAROYAM_FONT=(function(){
   .em-lines path.ro{stroke-dasharray:3 3}
   .em-lines path.on{stroke:var(--btn);stroke-width:1.6}
   .em-map.picked .em-lines path:not(.on){opacity:.2}
+  .em-lines path.x{display:none}
+  .em-lines path.x.on{display:inline;stroke-dasharray:4 3}
+  #emMode{align-self:flex-start}
   .em-col-h{position:absolute;font-size:11px;font-weight:500;color:var(--mute);white-space:nowrap}
   .em-node{all:unset;position:absolute;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:0;padding:0 8px;border:1px solid var(--line);border-radius:8px;
     background:var(--paper);cursor:pointer;transition:border-color .2s,background .2s,opacity .2s}
@@ -7091,10 +7094,13 @@ window.BAROYAM_FONT=(function(){
             <!-- ERP 노드 · 화면·데이터·자동화가 어떻게 이어져 있는지 한 장에 · 노드를 누르면 이어진 것만 밝아진다(읽기 전용) -->
             <section class="settings-view" data-settings-panel="erpmap" hidden>
               <div class="em-manager">
-                <p class="mg-hint">대시보드가 어디서 데이터를 읽고 어디에 저장하는지, 자동으로 도는 일이 무엇을 채우는지 한 장으로 정리했어요. 노드를 누르면 이어진 것만 밝아지고 오른쪽에 설명이 나와요. 바탕을 끌면 움직이고, 휠로 확대·축소해요. 실선은 읽고 저장, 점선은 읽기만이에요.</p>
+                <p class="mg-hint">대시보드가 어디서 데이터를 읽고 어디에 저장하는지, 자동으로 도는 일이 무엇을 채우는지 한 장으로 정리했어요. 노드를 누르면 이어진 것만 밝아지고 오른쪽에 설명이 나와요. 바탕을 끌면 움직이고, 휠로 확대·축소해요. <b>백엔드 구조</b>는 Supabase·VPS·API 같은 서버 쪽을 조직도처럼 위에서부터 보여 줘요.</p>
+                <div class="ui-tabs" id="emMode" aria-label="보기">
+                  <button class="ui-tab" data-value="flow" aria-selected="true">현재 노드</button>
+                  <button class="ui-tab" data-value="infra">백엔드 구조</button>
+                </div>
                 <div class="em-wrap">
                   <div class="em-view" id="emView">
-                    <div class="em-map" id="emMap"><svg class="em-lines" id="emLines" aria-hidden="true"></svg></div>
                     <div class="em-zoom">
                       <button type="button" class="ui-btn sm ghost icon" id="emZoomOut" aria-label="축소">−</button>
                       <output id="emZoomPct">100%</output>
@@ -11406,14 +11412,13 @@ window.CsGuide=(function(){
 })();
 
 /* 관리자 설정 · ERP 노드 · 화면·데이터·자동화가 어떻게 이어지는지 보여 주는 지도(읽기 전용 · 저장 없음) ·
-   구조가 바뀌면 NODES·EDGES 를 같이 고친다(HISTORY.md "지금 구조 한눈에" 와 맞춤) ·
+   두 모드: 현재 노드(NODES·EDGES · 왼쪽→오른쪽) / 백엔드 구조(TREE · 조직도처럼 위→아래) · 모드마다 확대·이동 자리를 따로 기억 ·
+   구조가 바뀌면 NODES·EDGES·TREE 를 같이 고친다(HISTORY.md "지금 구조 한눈에" 와 맞춤) ·
    EDGES 의 세 번째 값은 선에 붙는 설명, 네 번째 'r' 은 읽기만(점선) */
 (function(){
   const tab=document.getElementById('emSettingsTab');
-  const map=document.getElementById('emMap');
-  const svg=document.getElementById('emLines');
   const detail=document.getElementById('emDetail');
-  if(!tab||!map||!svg||!detail) return;
+  if(!tab||!detail||!document.getElementById('emView')) return;
   const COLS=['입구','화면(사이드바 메뉴)','데이터','바깥 서비스·자동화'];
   /* [id, 열, 이름, 한 줄, 설명] */
   const NODES=[
@@ -11513,21 +11518,112 @@ window.CsGuide=(function(){
     ['ytcap','youtube','자막 받기','r'],
     ['gha','trendT','트렌드 쌓기']
   ];
-  const byId={}; NODES.forEach(n=>byId[n[0]]=n);
-  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const els={};
-  let built=false, cur=null;
+  /* 백엔드 구조(조직도 모양) · [id, 위 노드, 이름, 한 줄, 설명, 옆 연결 [[id,설명]…], 흐리게]
+     위 노드가 같은 것끼리 아래로 뻗고, 옆 연결은 노드를 골랐을 때만 점선으로 보인다 */
+  const TREE=[
+    ['erp',null,'바로얌 ERP','화면 · 서버 · 데이터','대시보드를 이루는 서버·데이터·자동화를 위에서부터 나눠 본 그림이에요. 노드를 누르면 그 노드와 옆으로 이어진 곳이 점선으로 나와요.'],
+    ['fe','erp','화면(프런트)','GitHub Pages · erp.baroyam.com','사용자가 실제로 보는 화면입니다. 서버 없이 정적 파일 하나를 GitHub Pages 가 내보내고, 데이터는 브라우저가 Supabase·구글에 직접 묻습니다.'],
+    ['fe-index','fe','index.html','대시보드 한 파일','모든 화면·스타일·스크립트가 들어 있는 원본 하나. 이 저장소 main 에만 둡니다.',[['sb-auth','로그인 세션'],['db-settings','공용 데이터 읽고 저장'],['db-projects','프로젝트 줄 단위 저장'],['db-rows','회의안건·상담가이드'],['sb-storage','파일·이미지 올리고 열기'],['gg-sheets','매출 읽기'],['gg-drive','드라이브 찾기·업로드'],['pc-rev','리뷰 수집'],['pc-ext','어드민 수집']]],
+    ['fe-sample','fe','ui-sample.html','표준 UI 부품 견본','ui-* 버튼·탭·칩·날짜선택의 모양 견본입니다.'],
+    ['fe-ls','fe','브라우저 저장소','localStorage','기기 번호·구글 권한(1시간)·못 올린 고침(~draft)·화면 기억값. 서버가 원본이고 여기는 보조입니다.'],
 
-  /* 크기(캔버스 좌표) · 노드 NW×NH, 줄 사이 GX, 노드 사이 GY */
-  const NW=128, NH=34, GX=120, GY=9, TOP=26;
+    ['sb','erp','Supabase','로그인 · DB · 파일','데이터 서버입니다. 익명 접근은 막혀 있고 로그인한 사람만 읽고 씁니다.'],
+    ['sb-auth','sb','Auth','로그인 세션','구글 로그인으로 받은 세션이 모든 읽기·쓰기의 열쇠입니다. 토큰은 새 서명 키(ECC)를 씁니다.'],
+    ['sb-guard','sb','트리거 · RLS','보호 SQL 04~13','화면 코드만 믿지 않도록 서버에서 지키는 장치들. supabase/ 폴더(git 밖)의 SQL 로 적용합니다.',[['db-projects','행 삭제 금지 · 옛 창 쓰기 건너뜀'],['db-settings','빠진 프로젝트·브랜드 되살림 · 옛 판 거절'],['db-access','IP·브라우저 채움 · 90일 정리'],['db-hist','바뀌기 전 값 보관']]],
+    ['sb-storage','sb','Storage','brand-files 비공개 버킷','브랜드 항목 파일·메뉴얼/회의 이미지·프로젝트 첨부·영상 자막 요청(ytcap). 볼 때 짧은 서명 주소를 받고, 화면에서는 지우지 않습니다.'],
+    ['sb-fn','sb','Edge Function','yt-captions · 안 씀','유튜브가 해외 클라우드 IP 를 막아 VPS 로 옮겼습니다. 대시보드에서 지울 것.',null,true],
+    ['sb-db','sb','Postgres DB','표 · 행','데이터가 담긴 표들입니다.'],
+    ['db-settings','sb-db','app_settings','칸 이름 → JSON','대부분의 공용 데이터. 통째로 덮어쓰지 않고 바꾼 것만 얹어 저장합니다(blobSync / saveMerged).'],
+    ['db-projects','sb-db','projects','프로젝트 원본','한 프로젝트 = 한 줄. 삭제는 deleted_at.'],
+    ['db-rows','sb-db','agenda_items · cs_guide','회의안건 · 상담가이드','처음부터 행 단위인 표.'],
+    ['db-trend','sb-db','trend_google · naver','트렌드 수집 결과','GitHub Actions 가 쌓습니다.'],
+    ['db-runs','sb-db','automation_runs','자동화 실행 기록','관리자 설정 › 워크플로우가 보여 줍니다.'],
+    ['db-access','sb-db','access_log','보안로그','들어올 때 한 줄 · 90일 보관.'],
+    ['db-hist','sb-db','이력 표','*_history','app_settings·projects·cs_guide 가 바뀌기 직전 값. 실수 되돌리기용이지 DB 전체 백업은 아닙니다.'],
+    ['db-mirror','sb-db','거울 표','members · quick_links · notes','app_settings 덩어리를 행으로 펼친 사본. 화면은 읽지 않습니다.',[['db-settings','덩어리를 행으로']]],
+
+    ['gg','erp','구글','로그인 · API','공용 구글 계정 하나로 로그인하고, 같은 권한으로 시트·드라이브를 읽습니다.'],
+    ['gg-oauth','gg','구글 권한','drive 권한 하나','프로필을 고르는 클릭에서 미리 받아 1시간 동안 씁니다(baroyam_gtoken_v1).',[['gg-sheets','시트 읽기 권한'],['gg-drive','드라이브 권한']]],
+    ['gg-sheets','gg','Sheets API','매출 시트','"제한됨" 시트를 로그인한 사람의 권한으로만 읽습니다.'],
+    ['gg-drive','gg','Drive API','★제품별_자산 · 카페이노스 공유','파일 찾기·업로드·휴지통.'],
+
+    ['vps','erp','VPS 서버','카페24 국내 · Node 22','24시간 도는 자동화 서버. 국내 IP 라 이지어드민·유튜브가 막지 않습니다. 코드는 caffeinnos-automation 의 vps/.'],
+    ['vps-check','vps','bot_check.sh','10분마다','상주 서비스가 켜져 있는지 automation_runs 에 덮어씁니다.',[['db-runs','켜짐 여부']]],
+    ['vps-cron','vps','cron 예약','run.sh 로 실행','정해진 시각에 돌고, 끝날 때마다 정상·실패를 남깁니다.'],
+    ['cron-daily','vps-cron','당일판매 보고','16:15 슬랙 · 11·14시 ERP','이지어드민 당일판매분요약표를 읽어 슬랙에 보내고 daily_sales_v1 에 저장.',[['api-ez','당일판매 읽기'],['db-settings','daily_sales_v1'],['api-slack','16:15 보고'],['db-runs','실행 기록']]],
+    ['cron-inv','vps-cron','재고 수집','07:00 · 16:30','이지어드민 현 재고조회(I100)를 읽어 inventory_v1 에 저장.',[['api-ez','현 재고조회'],['db-settings','inventory_v1'],['db-runs','실행 기록']]],
+    ['cron-notice','vps-cron','공지·개인 알림','밥시간 · 아침 · 퇴근 전','#공지사항과 회원별 개인 메시지. 출근 요일이 아니면 개인 알림을 보내지 않습니다.',[['api-slack','알림'],['db-projects','프로젝트 마감 목록'],['db-settings','슬랙 ID·출근 요일'],['db-runs','실행 기록']]],
+    ['vps-sysd','vps','systemd 상주','꺼지면 10초 뒤 재시작','늘 켜 둬야 하는 서비스들.'],
+    ['sd-bot','vps-sysd','김비서','slack-bot · Socket Mode','공개 주소 없이 슬랙 대화를 받습니다. 내 프로젝트·마감·상담 답변·파일 찾기.',[['api-slack','대화'],['db-projects','내 프로젝트'],['db-rows','상담 키워드'],['gg-drive','"○○ 보내줘"']]],
+    ['sd-yt','vps-sysd','yt-captions','영상 자막','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아 답합니다(한국어가 아니면 번역).',[['sb-storage','ytcap 요청·답·cache'],['api-yt','자막 받기'],['api-tr','번역']]],
+
+    ['api','erp','바깥 API','서버·화면이 부르는 곳','바로얌이 만든 것이 아닌 바깥 서비스들입니다.'],
+    ['api-slack','api','Slack API','#공지사항 · DM','김비서와 보고가 나가는 곳.'],
+    ['api-ez','api','이지어드민','재고 · 당일판매','VPS 는 자동 로그인, 크롬 확장은 사람이 로그인.'],
+    ['api-yt','api','유튜브','자막 원본','해외 클라우드 IP 는 로봇으로 막혀 VPS 에서만 받습니다.'],
+    ['api-tr','api','구글 번역','translate.googleapis.com','한국어 자막이 없을 때 VPS 가 번역에 씁니다.'],
+
+    ['gh','erp','GitHub','코드 · 수집','코드가 사는 곳과 데이터 수집 일부.'],
+    ['gh-repo','gh','baroyam-report','공개 · 화면 원본','이 저장소. main 에 푸시하면 1~2분 뒤 Pages 에 반영됩니다.',[['fe','푸시하면 반영']]],
+    ['gh-auto','gh','caffeinnos-automation','비공개 · 서버 코드','김비서·당일판매·재고·자막 코드. VPS 에 올려 돌립니다.',[['vps','서버에 올림']]],
+    ['gh-act','gh','Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 트렌드 표에 쌓습니다.',[['db-trend','트렌드 쌓기'],['db-runs','실행 기록']]],
+
+    ['pc','erp','회사 PC','사람 곁에서 도는 것','PC 가 켜져 있을 때만 움직입니다.'],
+    ['pc-rev','pc','리뷰수집기','127.0.0.1:4317','로그인하면 자동 실행. 판매처 리뷰를 모으고 /dashboard 로 index.html 을 펴 줍니다.'],
+    ['pc-ext','pc','크롬 확장','바로얌 재고 수집','"어드민 수집" 단추로 이지어드민 창을 열어 표를 읽어 옵니다. 사람은 로그인만.',[['api-ez','이지어드민 창 읽기']]],
+
+    ['old','erp','앱스크립트','09-29 공개 배포 폐기','예전 데이터 API. index.html 의 AGENDA_API_URL 줄은 지우면 저장이 멈추므로 그대로 둡니다.',null,true]
+  ];
+
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const view=document.getElementById('emView');
   const pct=document.getElementById('emZoomPct');
-  const pos={};             /* id → {x,y} */
-  let W=0, H=0, k=1, tx=0, ty=0, moved=false, touched=false;
+  const modeBox=document.getElementById('emMode');
+  const NW=128, NH=34;
+  /* 모드마다 따로 들고 있는 것 · 노드·선·크기·보던 자리(확대·이동) */
+  const S={
+    flow:{kind:'flow'},
+    infra:{kind:'infra'}
+  };
+  let st=null, moved=false;
 
-  /* 줄마다 노드 순서를 고른다 · 이웃 노드 높이의 평균(barycenter)으로 몇 번 정렬해 보고,
-     옆 줄끼리 선이 엇갈리는 수가 가장 적은 순서를 쓴다 */
-  function layout(){
+  function newState(s){
+    s.map=document.createElement('div'); s.map.className='em-map'; s.map.hidden=true;
+    s.svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); s.svg.setAttribute('class','em-lines'); s.svg.setAttribute('aria-hidden','true');
+    s.map.appendChild(s.svg); view.insertBefore(s.map,view.firstChild);
+    s.els={}; s.pos={}; s.nodes={}; s.edges=[]; s.k=1; s.tx=0; s.ty=0; s.touched=false; s.cur=null;
+  }
+  function addNode(s,id,title,sub,desc,off,group){
+    s.nodes[id]={id,title,sub,desc,group};
+    const b=document.createElement('button'); b.type='button'; b.className='em-node'+(off?' off':''); b.dataset.id=id;
+    const p=s.pos[id];
+    b.style.cssText=`left:${p.x}px;top:${p.y}px;width:${NW}px;height:${NH}px`;
+    b.title=title+' · '+sub;
+    b.innerHTML=`<b>${esc(title)}</b><small>${esc(sub)}</small>`;
+    b.addEventListener('click',()=>{ if(moved) return; pick(s.cur===id?null:id); });
+    s.map.appendChild(b); s.els[id]=b;
+  }
+  function addPath(s,e,d){
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',d);
+    if(e.ro) p.classList.add('ro');
+    if(e.x) p.classList.add('x');
+    s.svg.appendChild(p); e.el=p; s.edges.push(e);
+  }
+  function sizeMap(s){
+    s.map.style.width=s.W+'px'; s.map.style.height=s.H+'px';
+    s.svg.setAttribute('width',s.W); s.svg.setAttribute('height',s.H);
+  }
+  const curve=(x1,y1,x2,y2,horiz)=>{
+    if(horiz){ const m=(x2-x1)*.5; return `M${x1},${y1} C${x1+m},${y1} ${x2-m},${y2} ${x2},${y2}`; }
+    const m=(y2-y1)*.5; return `M${x1},${y1} C${x1},${y1+m} ${x2},${y2-m} ${x2},${y2}`;
+  };
+
+  /* ── 현재 노드(왼쪽 → 오른쪽 네 줄) · 줄마다 노드 순서를 이웃 노드 높이의 평균(barycenter)으로 몇 번 정렬해 보고,
+     옆 줄끼리 선이 엇갈리는 수가 가장 적은 순서를 쓴다 ── */
+  function buildFlow(s){
+    const GX=120, GY=9, TOP=26;
+    const byId={}; NODES.forEach(n=>byId[n[0]]=n);
     const cols=COLS.map((_,ci)=>NODES.filter(n=>n[1]===ci).map(n=>n[0]));
     const maxN=Math.max(...cols.map(c=>c.length));
     const nb={}; NODES.forEach(n=>nb[n[0]]=[]);
@@ -11550,86 +11646,154 @@ window.CsGuide=(function(){
     const sweep=[1,2,3,0,1,2,3,2,1,0];
     for(let it=0;it<6;it++) sweep.forEach(ci=>{
       const c=cols[ci], bc={};
-      c.forEach(id=>{ const o=nb[id].filter(x=>byId[x][1]!==ci); bc[id]=o.length?o.reduce((s,x)=>s+y[x],0)/o.length:y[id]; });
+      c.forEach(id=>{ const o=nb[id].filter(x=>byId[x][1]!==ci); bc[id]=o.length?o.reduce((t,x)=>t+y[x],0)/o.length:y[id]; });
       c.sort((p,q)=>bc[p]-bc[q]); place();
       const n=cross(); if(n<bestN){ bestN=n; best=cols.map(c=>c.slice()); }
     });
-    best.forEach((c,ci)=>{ const off=(maxN-c.length)*(NH+GY)/2; c.forEach((id,i)=>pos[id]={x:40+ci*(NW+GX), y:TOP+off+i*(NH+GY)}); });
-    W=40*2+COLS.length*NW+(COLS.length-1)*GX; H=TOP+maxN*(NH+GY)+20;
-  }
-  function build(){
-    built=true;
-    layout();
-    map.style.width=W+'px'; map.style.height=H+'px';
-    svg.setAttribute('width',W); svg.setAttribute('height',H);
+    best.forEach((c,ci)=>{ const off=(maxN-c.length)*(NH+GY)/2; c.forEach((id,i)=>s.pos[id]={x:40+ci*(NW+GX), y:TOP+off+i*(NH+GY)}); });
+    s.W=40*2+COLS.length*NW+(COLS.length-1)*GX; s.H=TOP+maxN*(NH+GY)+20;
+    sizeMap(s);
     COLS.forEach((title,ci)=>{
       const h=document.createElement('div'); h.className='em-col-h'; h.textContent=title;
-      h.style.left=(40+ci*(NW+GX))+'px'; h.style.top=Math.max(0,Math.min(...NODES.filter(n=>n[1]===ci).map(n=>pos[n[0]].y))-20)+'px';
-      map.appendChild(h);
-    });
-    NODES.forEach(n=>{
-      const b=document.createElement('button'); b.type='button'; b.className='em-node'+(n[5]?' off':''); b.dataset.id=n[0];
-      b.style.cssText=`left:${pos[n[0]].x}px;top:${pos[n[0]].y}px;width:${NW}px;height:${NH}px`;
-      b.title=n[2]+' · '+n[3];
-      b.innerHTML=`<b>${esc(n[2])}</b><small>${esc(n[3])}</small>`;
-      b.addEventListener('click',()=>{ if(moved) return; pick(cur===n[0]?null:n[0]); });
-      map.appendChild(b); els[n[0]]=b;
+      h.style.left=(40+ci*(NW+GX))+'px'; h.style.top=Math.max(0,Math.min(...cols[ci].map(id=>s.pos[id].y))-20)+'px';
+      s.map.appendChild(h);
     });
     EDGES.forEach(e=>{
-      const p=document.createElementNS('http://www.w3.org/2000/svg','path');
-      if(e[3]==='r') p.classList.add('ro');
-      svg.appendChild(p); e.el=p;
-    });
-    draw();
-    bindView();
-  }
-  function draw(){
-    EDGES.forEach(e=>{
-      const a=pos[e[0]], b=pos[e[1]];
-      const ca=byId[e[0]][1], cb=byId[e[1]][1];
+      const a=s.pos[e[0]], b=s.pos[e[1]], ca=byId[e[0]][1], cb=byId[e[1]][1];
       let d;
       if(ca===cb){ /* 같은 줄 · 바깥으로 둥글게(첫 줄은 왼쪽, 나머지는 오른쪽) */
         const left=ca===0, x1=left?a.x:a.x+NW, y1=a.y+NH/2, y2=b.y+NH/2;
         const kk=(left?-1:1)*Math.min(40,12+Math.abs(y2-y1)*.15);
         d=`M${x1},${y1} C${x1+kk},${y1} ${x1+kk},${y2} ${x1},${y2}`;
       }else{
-        const r=ca<cb, x1=r?a.x+NW:a.x, x2=r?b.x:b.x+NW, y1=a.y+NH/2, y2=b.y+NH/2, m=(x2-x1)*.5;
-        d=`M${x1},${y1} C${x1+m},${y1} ${x2-m},${y2} ${x2},${y2}`;
+        const r=ca<cb;
+        d=curve(r?a.x+NW:a.x,a.y+NH/2,r?b.x:b.x+NW,b.y+NH/2,true);
       }
-      e.el.setAttribute('d',d);
+      addPath(s,{a:e[0],b:e[1],label:e[2],ro:e[3]==='r'},d);
     });
+    NODES.forEach(n=>addNode(s,n[0],n[2],n[3],n[4],n[5],COLS[n[1]]));
+    s.intro=()=>`<h4>현재 노드</h4><div class="em-kind">노드 ${NODES.length} · 연결 ${EDGES.length}</div>`+
+      `<p>왼쪽부터 <b>입구</b>(어떻게 들어오는지) → <b>화면</b>(사이드바 메뉴) → <b>데이터</b>(Supabase·구글) → <b>바깥 서비스·자동화</b>(VPS·김비서 등) 순서예요.</p>`+
+      `<p>실선은 읽고 저장, 점선은 읽기만이에요. 노드를 누르면 이어진 곳과 무엇을 주고받는지 여기에 나와요. 한 번 더 누르면 전체 보기로 돌아가요.</p>`;
   }
+
+  /* ── 백엔드 구조(조직도) · 위에서 아래로 · 자식이 모두 끝 노드면 옆으로 벌리지 않고 세로로 쌓아 폭을 줄인다 ── */
+  function buildInfra(s){
+    const GX=26, LV=46, SG=8, IND=16;   /* 형제 사이 · 층 사이 · 쌓인 노드 사이 · 쌓을 때 들여쓰기 */
+    const kids={}; TREE.forEach(t=>{ kids[t[0]]=[]; });
+    TREE.forEach(t=>{ if(t[1]) kids[t[1]].push(t[0]); });
+    const byId={}; TREE.forEach(t=>byId[t[0]]=t);
+    const tree=[];   /* [부모, 자식, d] */
+    function lay(id,x0,y){
+      const ch=kids[id];
+      if(!ch.length){ s.pos[id]={x:x0,y}; return {w:NW,h:NH}; }
+      const leaves=ch.filter(c=>!kids[c].length), subs=ch.filter(c=>kids[c].length);
+      const cy=y+NH+LV, groups=[];
+      let x=x0, h=0;
+      if(leaves.length){
+        leaves.forEach((c,i)=>s.pos[c]={x:x+IND,y:cy+i*(NH+SG)});
+        groups.push({stack:leaves,ax:x+4});
+        h=Math.max(h,leaves.length*(NH+SG)-SG);
+        x+=NW+IND+GX;
+      }
+      subs.forEach(c=>{ const r=lay(c,x,cy); groups.push({sub:c}); h=Math.max(h,r.h); x+=r.w+GX; });
+      const w=Math.max(NW,x-GX-x0);
+      s.pos[id]={x:x0+(w-NW)/2,y};
+      const px=s.pos[id].x+NW/2, by=y+NH+LV/2;
+      groups.forEach(g=>{
+        if(g.stack) g.stack.forEach(c=>{ const cyy=s.pos[c].y+NH/2;
+          tree.push([id,c,`M${px},${y+NH} V${by} H${g.ax} V${cyy} H${s.pos[c].x}`]); });
+        else { const cx=s.pos[g.sub].x+NW/2; tree.push([id,g.sub,`M${px},${y+NH} V${by} H${cx} V${cy}`]); }
+      });
+      return {w,h:NH+LV+h};
+    }
+    const r=lay('erp',30,20);
+    s.W=r.w+60; s.H=r.h+50;
+    sizeMap(s);
+    tree.forEach(t=>addPath(s,{a:t[0],b:t[1],label:'',tree:true},t[2]));
+    /* 옆 연결 · 고른 노드의 것만 보인다 */
+    TREE.forEach(t=>(t[5]||[]).forEach(l=>{
+      const a=s.pos[t[0]], b=s.pos[l[0]];
+      const down=b.y>a.y+NH, up=a.y>b.y+NH;
+      const d=down?curve(a.x+NW/2,a.y+NH,b.x+NW/2,b.y,false)
+        :up?curve(a.x+NW/2,a.y,b.x+NW/2,b.y+NH,false)
+        :(a.x<b.x?curve(a.x+NW,a.y+NH/2,b.x,b.y+NH/2,true):curve(a.x,a.y+NH/2,b.x+NW,b.y+NH/2,true));
+      addPath(s,{a:t[0],b:l[0],label:l[1],x:true,ro:true},d);
+    }));
+    TREE.forEach(t=>addNode(s,t[0],t[2],t[3],t[4],t[6],t[1]?byId[t[1]][2]+' 아래':'맨 위'));
+    s.intro=()=>`<h4>백엔드 구조</h4><div class="em-kind">노드 ${TREE.length}</div>`+
+      `<p>조직도처럼 위에서부터 <b>화면</b>·<b>Supabase</b>·<b>구글</b>·<b>VPS 서버</b>·<b>바깥 API</b>·<b>GitHub</b>·<b>회사 PC</b>로 나눴어요.</p>`+
+      `<p>노드를 누르면 위·아래 노드와 함께, 다른 갈래로 이어진 곳(예: 재고 수집 → 이지어드민·app_settings)이 점선으로 나와요.</p>`;
+  }
+
+  function pick(id){
+    const s=st; s.cur=id;
+    s.map.classList.toggle('picked',!!id);
+    Object.values(s.els).forEach(el=>el.classList.remove('cur','near'));
+    s.edges.forEach(e=>e.el.classList.remove('on'));
+    if(!id){ detail.innerHTML=s.intro(); return; }
+    s.els[id].classList.add('cur');
+    const up=[], down=[], side=[];
+    s.edges.forEach(e=>{
+      if(e.a!==id&&e.b!==id) return;
+      e.el.classList.add('on'); s.svg.appendChild(e.el);   /* 밝힌 선을 맨 위로 */
+      const other=e.a===id?e.b:e.a;
+      s.els[other].classList.add('near');
+      if(e.tree) (e.a===id?down:up).push([other,s.nodes[other].sub]);
+      else side.push([other,e.label+(e.ro&&!e.x?' · 읽기만':'')]);
+    });
+    const n=s.nodes[id];
+    const list=(t,arr)=>arr.length?`<div class="em-sub">${t} ${arr.length}</div><ul>${arr.map(l=>
+      `<li><button type="button" data-go="${l[0]}"><b>${esc(s.nodes[l[0]].title)}</b><span>${esc(l[1])}</span></button></li>`).join('')}</ul>`:'';
+    detail.innerHTML=`<h4>${esc(n.title)}</h4><div class="em-kind">${esc(n.group)} · ${esc(n.sub)}</div><p>${esc(n.desc)}</p>`+
+      list('위',up)+list('아래',down)+list('이어진 곳',side);
+    detail.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{ pick(b.dataset.go); s.els[b.dataset.go].focus({preventScroll:true}); }));
+  }
+
   /* 캔버스 이동·확대 · 점 격자 바탕도 같이 움직여 캔버스처럼 보이게 */
   function apply(){
-    map.style.transform=`translate(${tx}px,${ty}px) scale(${k})`;
-    view.style.backgroundSize=`${18*k}px ${18*k}px`;
-    view.style.backgroundPosition=`${tx}px ${ty}px`;
-    pct.textContent=Math.round(k*100)+'%';
+    const s=st;
+    s.map.style.transform=`translate(${s.tx}px,${s.ty}px) scale(${s.k})`;
+    view.style.backgroundSize=`${18*s.k}px ${18*s.k}px`;
+    view.style.backgroundPosition=`${s.tx}px ${s.ty}px`;
+    pct.textContent=Math.round(s.k*100)+'%';
   }
   function zoomAt(nk,cx,cy){
-    nk=Math.min(2.5,Math.max(.3,nk));
-    tx=cx-(cx-tx)*nk/k; ty=cy-(cy-ty)*nk/k; k=nk; apply();
+    const s=st; nk=Math.min(2.5,Math.max(.25,nk));
+    s.tx=cx-(cx-s.tx)*nk/s.k; s.ty=cy-(cy-s.ty)*nk/s.k; s.k=nk; apply();
   }
   function fit(){
-    const vw=view.clientWidth, vh=view.clientHeight;
-    if(!vw||!vh) return;
-    k=Math.min(1.4,Math.max(.3,Math.min((vw-24)/W,(vh-24)/H)));
-    tx=(vw-W*k)/2; ty=(vh-H*k)/2; apply();
+    const s=st, vw=view.clientWidth, vh=view.clientHeight;
+    if(!s||!vw||!vh) return;
+    s.k=Math.min(1.4,Math.max(.25,Math.min((vw-24)/s.W,(vh-24)/s.H)));
+    s.tx=(vw-s.W*s.k)/2; s.ty=(vh-s.H*s.k)/2;
+    /* 조직도는 위에서 시작하므로 높이가 남으면 위쪽에 붙인다 */
+    if(s.kind==='infra') s.ty=Math.min(s.ty,16);
+    apply();
+  }
+  function show(mode){
+    const s=S[mode]||S.flow;
+    if(!s.map){ newState(s); (s.kind==='infra'?buildInfra:buildFlow)(s); }
+    Object.values(S).forEach(o=>{ if(o.map) o.map.hidden=o!==s; });
+    st=s;
+    if(s.cur) pick(s.cur); else detail.innerHTML=s.intro();
+    if(!s.fitted){ s.fitted=true; requestAnimationFrame(fit); } else apply();
+    try{ localStorage.setItem('baroyam_erpmap_mode',s.kind); }catch(e){}
   }
   function bindView(){
     view.addEventListener('wheel',e=>{
       e.preventDefault();
       const r=view.getBoundingClientRect();
-      touched=true;
+      st.touched=true;
       /* 마우스 휠·트랙패드 집기(ctrl) = 확대축소, 트랙패드 두 손가락 밀기 = 이동 */
       const wheel=e.deltaMode!==0||(Number.isInteger(e.deltaY)&&Math.abs(e.deltaY)>=40&&!e.deltaX);
-      if(e.ctrlKey||wheel) zoomAt(k*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)),e.clientX-r.left,e.clientY-r.top);
-      else { tx-=e.deltaX; ty-=e.deltaY; apply(); }
+      if(e.ctrlKey||wheel) zoomAt(st.k*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)),e.clientX-r.left,e.clientY-r.top);
+      else { st.tx-=e.deltaX; st.ty-=e.deltaY; apply(); }
     },{passive:false});
     let drag=null;
     view.addEventListener('pointerdown',e=>{
       if(e.button!==0||e.target.closest('.em-zoom')) return;
-      drag={x:e.clientX,y:e.clientY,tx,ty,id:e.pointerId}; moved=false;
+      drag={x:e.clientX,y:e.clientY,tx:st.tx,ty:st.ty,id:e.pointerId}; moved=false;
       const sel=window.getSelection&&window.getSelection(); if(sel&&!sel.isCollapsed&&view.contains(sel.anchorNode)) sel.removeAllRanges();
     });
     view.addEventListener('pointermove',e=>{
@@ -11637,45 +11801,29 @@ window.CsGuide=(function(){
       const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
       if(!moved&&Math.hypot(dx,dy)<4) return;
       if(!moved){ moved=true; view.classList.add('grabbing'); view.setPointerCapture(drag.id); }
-      touched=true; tx=drag.tx+dx; ty=drag.ty+dy; apply();
+      st.touched=true; st.tx=drag.tx+dx; st.ty=drag.ty+dy; apply();
     });
     const end=()=>{ if(!drag) return; drag=null; view.classList.remove('grabbing'); setTimeout(()=>{ moved=false; },0); };
     view.addEventListener('pointerup',end); view.addEventListener('pointercancel',end);
     const mid=()=>[view.clientWidth/2,view.clientHeight/2];
-    document.getElementById('emZoomIn').addEventListener('click',()=>{ touched=true; zoomAt(k*1.25,...mid()); });
-    document.getElementById('emZoomOut').addEventListener('click',()=>{ touched=true; zoomAt(k/1.25,...mid()); });
-    document.getElementById('emZoomFit').addEventListener('click',()=>{ touched=false; fit(); });
+    document.getElementById('emZoomIn').addEventListener('click',()=>{ st.touched=true; zoomAt(st.k*1.25,...mid()); });
+    document.getElementById('emZoomOut').addEventListener('click',()=>{ st.touched=true; zoomAt(st.k/1.25,...mid()); });
+    document.getElementById('emZoomFit').addEventListener('click',()=>{ st.touched=false; fit(); });
     /* 창 폭이 바뀌는 동안(탭 전환 애니메이션) 아직 손대지 않았으면 계속 맞춘다 */
-    new ResizeObserver(()=>{ if(!touched) fit(); }).observe(view);
+    new ResizeObserver(()=>{ if(st&&!st.touched) fit(); }).observe(view);
   }
-  function pick(id){
-    cur=id;
-    map.classList.toggle('picked',!!id);
-    Object.values(els).forEach(el=>el.classList.remove('cur','near'));
-    EDGES.forEach(e=>e.el.classList.remove('on'));
-    if(!id){ intro(); return; }
-    els[id].classList.add('cur');
-    const links=[];
-    EDGES.forEach(e=>{
-      if(e[0]!==id&&e[1]!==id) return;
-      e.el.classList.add('on');
-      const other=e[0]===id?e[1]:e[0];
-      els[other].classList.add('near');
-      links.push([other,e[2],e[3]==='r']);
-    });
-    const n=byId[id];
-    detail.innerHTML=`<h4>${esc(n[2])}</h4><div class="em-kind">${esc(COLS[n[1]])} · ${esc(n[3])}</div><p>${esc(n[4])}</p>`+
-      (links.length?`<div class="em-sub">이어진 곳 ${links.length}</div><ul>${links.map(l=>
-        `<li><button type="button" data-go="${l[0]}"><b>${esc(byId[l[0]][2])}</b><span>${esc(l[1])}${l[2]?' · 읽기만':''}</span></button></li>`).join('')}</ul>`:'');
-    detail.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{ pick(b.dataset.go); els[b.dataset.go].focus({preventScroll:true}); }));
-  }
-  function intro(){
-    detail.innerHTML=`<h4>ERP 구조</h4><div class="em-kind">노드 ${NODES.length} · 연결 ${EDGES.length}</div>`+
-      `<p>왼쪽부터 <b>입구</b>(어떻게 들어오는지) → <b>화면</b>(사이드바 메뉴) → <b>데이터</b>(Supabase·구글) → <b>바깥 서비스·자동화</b>(VPS·김비서 등) 순서예요.</p>`+
-      `<p>노드를 누르면 이어진 곳과 무엇을 주고받는지 여기에 나와요. 한 번 더 누르면 전체 보기로 돌아가요.</p>`;
-  }
-  /* 처음 열 때만 화면에 맞춘다 · 다시 열면 보던 자리 그대로 */
-  tab.addEventListener('click',()=>{ if(!built){ build(); intro(); requestAnimationFrame(fit); } });
+
+  let started=false;
+  tab.addEventListener('click',()=>{
+    if(started) return;
+    started=true;
+    bindView();
+    let m='flow'; try{ m=localStorage.getItem('baroyam_erpmap_mode')||'flow'; }catch(e){}
+    if(!S[m]) m='flow';
+    modeBox.querySelectorAll('.ui-tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.value===m?'true':'false'));
+    window.UI.tabs(modeBox,v=>show(v));
+    show(m);
+  });
 })();
 
 /* 관리자 설정 · 워크플로우(예전 이름 김비서 AI · 10-09 옛 워크플로우 탭의 GitHub 수집을 합침) · 슬랙 봇 "김비서"(바로얌AI 봇)가 하는 자동화 목록 ·
