@@ -4755,7 +4755,7 @@ window.BAROYAM_FONT=(function(){
   /* 캔버스 · 바탕(점 격자)을 끌면 이동, 휠·트랙패드로 확대축소 · 노드 자리는 JS 가 정한다(선이 덜 엉키게 순서를 고름) */
   .em-view{flex:1;min-width:0;position:relative;height:min(600px,62vh);overflow:hidden;border:1px solid var(--line);border-radius:14px;
     cursor:grab;touch-action:none;user-select:none;
-    background-image:radial-gradient(circle,var(--line) 1px,transparent 1.3px);background-size:18px 18px}
+    background-color:var(--bg);background-image:radial-gradient(circle,color-mix(in srgb,var(--mute) 28%,transparent) 1px,transparent 1.3px);background-size:18px 18px}
   .em-view.grabbing{cursor:grabbing}
   /* 노드는 all:unset 이라 user-select 가 되살아난다 · 캔버스 안 글자는 끌어도 선택되지 않게 */
   .em-view,.em-view *{-webkit-user-select:none;user-select:none}
@@ -4763,7 +4763,11 @@ window.BAROYAM_FONT=(function(){
   .em-zoom{position:absolute;right:10px;bottom:10px;z-index:3;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
   .em-zoom output{min-width:44px;text-align:center;font-size:11.5px;color:var(--mute)}
   .em-lines{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
-  .em-lines path{fill:none;stroke:var(--line);stroke-width:1.2;transition:stroke .2s,opacity .2s}
+  /* 캔버스(--bg)는 노드(--paper)보다 한 톤 어둡게(다크 모드는 노드가 한 톤 밝게) · 선은 흐린 회색 */
+  .em-lines path{fill:none;stroke:color-mix(in srgb,var(--mute) 45%,transparent);stroke-width:1.2;transition:stroke .2s,opacity .2s}
+  .em-map.hovering .em-lines path:not(.hl){opacity:.3}
+  .em-map.hovering .em-lines path.hl{stroke:var(--btn);stroke-width:1.6}
+  .em-lines path.x.hl{display:inline;stroke-dasharray:4 3}
   .em-lines path.ro{stroke-dasharray:3 3}
   .em-lines path.on{stroke:var(--btn);stroke-width:1.6}
   .em-map.picked .em-lines path:not(.on){opacity:.2}
@@ -4772,15 +4776,16 @@ window.BAROYAM_FONT=(function(){
   #emMode{align-self:flex-start}
   .em-col-h{position:absolute;font-size:11px;font-weight:500;color:var(--mute);white-space:nowrap}
   .em-node{all:unset;position:absolute;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:0;padding:0 8px;border:1px solid var(--line);border-radius:8px;
-    background:var(--paper);cursor:pointer;transition:border-color .2s,background .2s,opacity .2s}
+    background:var(--paper);cursor:pointer;transition:border-color .2s,background .2s,opacity .2s;
+    box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 10%,transparent)}
   .em-node b{font-size:11px;font-weight:500;color:var(--ink);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .em-node small{font-size:9.5px;color:var(--mute);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .em-node:hover{border-color:var(--btn)}
   .em-node:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
   .em-node.off{opacity:.55}
   .em-map.picked .em-node{opacity:.35}
-  .em-map.picked .em-node.near{opacity:1;background:var(--btn-soft)}
-  .em-map.picked .em-node.cur{opacity:1;border-color:var(--btn);background:var(--btn-soft)}
+  .em-map.picked .em-node.near{opacity:1;background:linear-gradient(var(--btn-soft),var(--btn-soft)),var(--paper)}
+  .em-map.picked .em-node.cur{opacity:1;border-color:var(--btn);background:linear-gradient(var(--btn-soft),var(--btn-soft)),var(--paper)}
   .em-map.picked .em-node.cur b{color:var(--btn-soft-ink)}
   .em-detail{width:250px;flex:none;border:1px solid var(--line);border-radius:14px;padding:14px 15px;font-size:12.5px;color:var(--body);
     line-height:1.6;position:sticky;top:0;max-height:min(600px,62vh);overflow-y:auto;overflow-wrap:anywhere}
@@ -11501,7 +11506,8 @@ window.CsGuide=(function(){
     ['admin','settings','회원·권한·순서·글꼴·틀'],
     ['admin','runs','워크플로우 상태','r'],
     ['admin','access','보안로그','r'],
-    ['settings','mirror','덩어리를 행으로 펼침'],
+    ['home','mirror','저장할 때 퀵링크·기록노트 행도 맞춤'],
+    ['settings','mirror','열 때 덩어리를 행으로 펼쳐 둠'],
     ['ext','ezadmin','이지어드민 창에서 표 읽기','r'],
     ['vps','ezadmin','재고 07:00·16:30 · 당일판매','r'],
     ['vps','settings','inventory_v1 · daily_sales_v1 채움'],
@@ -11516,7 +11522,8 @@ window.CsGuide=(function(){
     ['kim','settings','슬랙 ID·출근 요일','r'],
     ['ytcap','storage','ytcap/res · cache 에 답'],
     ['ytcap','youtube','자막 받기','r'],
-    ['gha','trendT','트렌드 쌓기']
+    ['gha','trendT','트렌드 쌓기'],
+    ['gha','runs','실행마다 정상·실패']
   ];
   /* 백엔드 구조(조직도 모양) · [id, 위 노드, 이름, 한 줄, 설명, 옆 연결 [[id,설명]…], 흐리게]
      위 노드가 같은 것끼리 아래로 뻗고, 옆 연결은 노드를 골랐을 때만 점선으로 보인다 */
@@ -11601,6 +11608,10 @@ window.CsGuide=(function(){
     b.title=title+' · '+sub;
     b.innerHTML=`<b>${esc(title)}</b><small>${esc(sub)}</small>`;
     b.addEventListener('click',()=>{ if(moved) return; pick(s.cur===id?null:id); });
+    /* 마우스를 올리면(고른 노드가 없을 때) 이어진 선만 미리 밝힌다 */
+    b.addEventListener('mouseenter',()=>{ if(s.cur) return; s.map.classList.add('hovering');
+      s.edges.forEach(e=>{ if(e.a===id||e.b===id){ e.el.classList.add('hl'); s.svg.appendChild(e.el); } }); });
+    b.addEventListener('mouseleave',()=>{ s.map.classList.remove('hovering'); s.edges.forEach(e=>e.el.classList.remove('hl')); });
     s.map.appendChild(b); s.els[id]=b;
   }
   function addPath(s,e,d){
@@ -11658,18 +11669,55 @@ window.CsGuide=(function(){
       h.style.left=(40+ci*(NW+GX))+'px'; h.style.top=Math.max(0,Math.min(...cols[ci].map(id=>s.pos[id].y))-20)+'px';
       s.map.appendChild(h);
     });
-    EDGES.forEach(e=>{
-      const a=s.pos[e[0]], b=s.pos[e[1]], ca=byId[e[0]][1], cb=byId[e[1]][1];
-      let d;
-      if(ca===cb){ /* 같은 줄 · 바깥으로 둥글게(첫 줄은 왼쪽, 나머지는 오른쪽) */
-        const left=ca===0, x1=left?a.x:a.x+NW, y1=a.y+NH/2, y2=b.y+NH/2;
-        const kk=(left?-1:1)*Math.min(40,12+Math.abs(y2-y1)*.15);
-        d=`M${x1},${y1} C${x1+kk},${y1} ${x1+kk},${y2} ${x1},${y2}`;
-      }else{
-        const r=ca<cb;
-        d=curve(r?a.x+NW:a.x,a.y+NH/2,r?b.x:b.x+NW,b.y+NH/2,true);
+    /* 선 긋기 · ① 한 줄을 건너뛰는 선은 가운데 줄의 노드 사이 틈(가장 가까운 곳)으로 지나가게 하고
+       ② 한 노드의 같은 쪽에 선이 여럿 붙으면 한 점에 몰리지 않게 상대 높이 순서대로 나눠 붙인다 */
+    const colX=ci=>40+ci*(NW+GX);
+    const gaps=ci=>{ const ys=best[ci].map(id=>s.pos[id].y).sort((p,q)=>p-q), g=[ys[0]-GY-6];
+      for(let i=1;i<ys.length;i++) g.push((ys[i-1]+NH+ys[i])/2);
+      g.push(ys[ys.length-1]+NH+GY+6); return g; };
+    const laneUse={};
+    const plan=EDGES.map(e=>{
+      let [ia,ib]=[e[0],e[1]], ca=byId[ia][1], cb=byId[ib][1];
+      if(ca>cb){ [ia,ib]=[ib,ia]; [ca,cb]=[cb,ca]; }
+      const p={e,ia,ib,ca,cb,via:[]};
+      if(ca===cb){ p.side=ca===0?'L':'R'; return p; }
+      /* 건너뛰는 줄마다 지나갈 틈 고르기 · 같은 틈을 여럿이 쓰면 조금씩 비켜 지난다 */
+      for(let c=ca+1;c<cb;c++){
+        const want=(s.pos[ia].y+s.pos[ib].y)/2+NH/2;
+        const gy=gaps(c).reduce((m,g)=>Math.abs(g-want)<Math.abs(m-want)?g:m);
+        const key=c+':'+gy, n=laneUse[key]=(laneUse[key]||0)+1;
+        p.via.push({x1:colX(c)-14,x2:colX(c)+NW+14,y:gy+(n-1)*4*(n%2?1:-1)});
       }
-      addPath(s,{a:e[0],b:e[1],label:e[2],ro:e[3]==='r'},d);
+      return p;
+    });
+    /* 붙는 자리 나누기 · (노드, 쪽)마다 상대편 높이 순으로 */
+    const ports={};
+    const push=(id,side,p,otherY)=>{ (ports[id+side]=ports[id+side]||[]).push({p,otherY,id}); };
+    plan.forEach(p=>{
+      if(p.side){ push(p.ia,p.side,p,s.pos[p.ib].y); push(p.ib,p.side,p,s.pos[p.ia].y); return; }
+      push(p.ia,'R',p,p.via.length?p.via[0].y:s.pos[p.ib].y+NH/2);
+      push(p.ib,'L',p,p.via.length?p.via[p.via.length-1].y:s.pos[p.ia].y+NH/2);
+    });
+    Object.values(ports).forEach(list=>{
+      list.sort((u,v)=>u.otherY-v.otherY);
+      const n=list.length, top=s.pos[list[0].id].y+7, span=NH-14;
+      list.forEach((o,i)=>{ const yy=n===1?top+span/2:top+span*i/(n-1);
+        (o.p.py=o.p.py||{})[o.id===o.p.ia&&!(o.p.side&&o.p.ia===o.p.ib)?'a':'b']=yy; });
+    });
+    plan.forEach(p=>{
+      const A=s.pos[p.ia], B=s.pos[p.ib], ya=p.py.a, yb=p.py.b;
+      let d;
+      if(p.side){ /* 같은 줄 · 바깥으로 둥글게(첫 줄은 왼쪽, 나머지는 오른쪽) */
+        const left=p.side==='L', x1=left?A.x:A.x+NW;
+        const kk=(left?-1:1)*Math.min(44,14+Math.abs(yb-ya)*.16);
+        d=`M${x1},${ya} C${x1+kk},${ya} ${x1+kk},${yb} ${x1},${yb}`;
+      }else{
+        let x=A.x+NW, y=ya; d='';
+        p.via.forEach(v=>{ d+=(d?' ':'')+curve(x,y,v.x1,v.y,true)+` L${v.x2},${v.y}`; x=v.x2; y=v.y; });
+        d+=(d?' ':'')+curve(x,y,B.x,yb,true);
+        d=d.replace(/ M[\d.-]+,[\d.-]+/g,'');   /* 이어 그리기 · 중간 M 을 지운다 */
+      }
+      addPath(s,{a:p.e[0],b:p.e[1],label:p.e[2],ro:p.e[3]==='r'},d);
     });
     NODES.forEach(n=>addNode(s,n[0],n[2],n[3],n[4],n[5],COLS[n[1]]));
     s.intro=()=>`<h4>현재 노드</h4><div class="em-kind">노드 ${NODES.length} · 연결 ${EDGES.length}</div>`+
@@ -11728,7 +11776,7 @@ window.CsGuide=(function(){
 
   function pick(id){
     const s=st; s.cur=id;
-    s.map.classList.toggle('picked',!!id);
+    s.map.classList.toggle('picked',!!id); s.map.classList.remove('hovering'); s.edges.forEach(e=>e.el.classList.remove('hl'));
     Object.values(s.els).forEach(el=>el.classList.remove('cur','near'));
     s.edges.forEach(e=>e.el.classList.remove('on'));
     if(!id){ detail.innerHTML=s.intro(); return; }
