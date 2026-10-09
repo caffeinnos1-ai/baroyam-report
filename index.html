@@ -2720,6 +2720,15 @@ window.BAROYAM_FONT=(function(){
   #pfBrandPick,#pfMixBrandPick{width:200px}
   /* 아래 판매처 탭 줄 · 화면 아래 고정 · 계산 표 마지막 줄이 가리지 않게 칸 아래를 비워 둔다 */
   .pf-pane[data-pf-pane="calc"]{padding-bottom:90px}
+  /* 고른 판매처 색으로 강조색을 바꾼다(paintTone) · 자사몰·그 밖은 원래 강조색 */
+  .pf-pane[data-tone="naver"]{--tone:var(--naver)}
+  .pf-pane[data-tone="coupang"]{--tone:var(--coupang)}
+  .pf-pane[data-tone="talk"]{--tone:var(--talk)}
+  .pf-pane[data-tone="st11"]{--tone:var(--neg)}
+  .pf-pane[data-tone]{--btn:var(--tone);--btn-hover:color-mix(in srgb,var(--tone) 86%,#000);
+    --btn-soft:color-mix(in srgb,var(--tone) 10%,transparent);--btn-soft-ink:color-mix(in srgb,var(--tone) 88%,#000)}
+  html[data-theme="dark"] .pf-pane[data-tone]{--btn-hover:color-mix(in srgb,var(--tone) 85%,#fff);
+    --btn-soft:color-mix(in srgb,var(--tone) 16%,transparent);--btn-soft-ink:color-mix(in srgb,var(--tone) 75%,#fff)}
   /* 맨 아래 판매처 줄 · 맨 위 검색 줄(.topbar)을 위아래로 뒤집은 모양 · 사이드바 오른쪽 끝부터 창 오른쪽 끝까지 붙는다 ·
      단추는 맨 위 단추 줄(.hero-view-tabs)과 같은 알약 · 첫 단추가 대시보드 안 첫 단추와 같은 세로줄에 오게 왼쪽 여백은 스크립트가 맞춘다 */
   .pf-sheetbar{position:fixed;bottom:0;left:0;right:0;z-index:30;min-height:58px;display:flex;align-items:center;
@@ -15141,7 +15150,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const n=id=>prods.filter(g=>g.chan?g.chan===id:rows.some(r=>r.g===g.id&&chanOf(r)===id)).length;
     $('pfChanTabs').innerHTML=chans.map(c=>'<button type="button" class="hero-view-tab'+(c.id===chanF?' active':'')+'" role="tab" data-value="'+esc(c.id)+'" aria-selected="'+(c.id===chanF?'true':'false')+'">'
       +esc(c.name)+' <span class="n">'+n(c.id)+'</span></button>').join('');
+    paintTone();
     placeBar();
+  }
+  /* 고른 판매처의 색으로 마진 계산기 강조색(--btn 계열)을 바꾼다(10-09 사용자 요청) ·
+     스마트스토어=네이버 초록 · 쿠팡 파랑 · 톡딜 보라 · 11번가 빨강 · 자사몰과 그 밖은 원래 강조색 ·
+     판매처 색(--naver 등)은 다크 모드 값이 따로 있어 그대로 따라간다 */
+  function paintTone(){
+    const pane=view.querySelector('[data-pf-pane="calc"]'); if(!pane) return;
+    const c=COST.data.chans[curChan()], nm=((c&&c.name)||'').replace(/\s/g,'').toLowerCase();
+    const tone=/네이버|스마트스토어|naver|smartstore/.test(nm)?'naver':/쿠팡|coupang/.test(nm)?'coupang'
+      :/톡딜|카카오|talk|kakao/.test(nm)?'talk':/11번가|11st/.test(nm)?'st11':'';
+    if(tone) pane.dataset.tone=tone; else delete pane.dataset.tone;
   }
   /* 아래 탭 줄은 fixed 라(.paper 가 overflow:hidden 이라 sticky 가 안 먹음) 사이드바 오른쪽 끝(.main 왼쪽)부터 붙이고,
      첫 단추를 대시보드 안 맨 위 단추와 같은 세로줄에 맞춘다 */
