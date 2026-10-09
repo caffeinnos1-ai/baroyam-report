@@ -940,7 +940,26 @@ window.BAROYAM_DB=(function(){
     if(r.error) throw r.error;
     return r.data||[];
   }
+  /* ---------- 접속기록 (access_log) ----------
+     화면은 기기 번호·회원만 보낸다 · 시각·IP·브라우저·계정은 서버 트리거가 요청에서 직접 채운다(화면이 꾸밀 수 없게) */
+  async function accessLogAdd(row){
+    if(!(await ensureSession())) return false;
+    const c=await client();
+    const r=await c.from('access_log').insert(row);
+    if(r.error){ console.warn('[바로얌] 접속기록을 남기지 못했습니다',r.error); return false; }
+    return true;
+  }
+  async function accessLogList(limit){
+    if(!(await ensureSession())) throw new Error('로그인이 필요합니다');
+    const c=await client();
+    const r=await c.from('access_log')
+      .select('at,device_id,member_id,member_name,kind,ip,user_agent,email')
+      .order('at',{ascending:false}).limit(limit||500);
+    if(r.error) throw r.error;
+    return r.data||[];
+  }
   return {signInWithGoogle:signInWithGoogle,session:session,ensureSession:ensureSession,
+    accessLogAdd:accessLogAdd,accessLogList:accessLogList,
     trendGoogle:trendGoogle,trendNaver:trendNaver,automationRuns:automationRuns,cafe24Daily:cafe24Daily,
     agendaList:agendaList,agendaUpsert:agendaUpsert,agendaSetTrashed:agendaSetTrashed,
     agendaSave:agendaSave,agendaHide:agendaHide,
@@ -954,6 +973,43 @@ window.BAROYAM_DB=(function(){
     loadProjects:loadProjects,saveProject:saveProject,saveProjectOrder:saveProjectOrder,deleteProject:deleteProject,
     projCanon:projCanon,
     sdkOk:sdkOk,signOut:signOut};
+})();
+
+/* 접속기록 · 브라우저마다 기기 번호를 하나 만들어 두고, 회원으로 들어올 때 한 줄 남긴다 ·
+   사무실 PC들은 밖에서 보면 공인 IP 가 같아서 IP 만으로는 어느 PC인지 모른다 → 기기 번호로 가린다 ·
+   기기 이름은 관리자 설정 › 접속기록에서 붙인다(app_settings 의 access_devices_v1) ·
+   같은 PC라도 브라우저가 다르거나 시크릿 창·브라우저 데이터 삭제면 새 기기로 잡힌다 */
+window.BAROYAM_DEVICE=(function(){
+  const ID_KEY='baroyam_device_id', LAST_KEY='baroyam_acc_last', PICK_KEY='baroyam_acc_pick', GAP=30*60*1000;
+  let mem='';
+  function id(){
+    try{
+      let v=localStorage.getItem(ID_KEY);
+      if(!v){
+        v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID()
+          :'d'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+        localStorage.setItem(ID_KEY,v);
+      }
+      return v;
+    }catch(e){ return mem||(mem='m'+Math.random().toString(36).slice(2,12)); }
+  }
+  /* 프로필을 고른 직후 새로고침되므로 그 표시를 세션에 남겨 둔다 */
+  function markPick(){ try{ sessionStorage.setItem(PICK_KEY,'1'); }catch(e){} }
+  /* 프로필을 고르고 들어온 것은 늘 남기고, 새로고침·새 창은 같은 회원이면 30분에 한 번만 */
+  function log(memberId){
+    const DB=window.BAROYAM_DB;
+    if(!DB||!DB.accessLogAdd||!memberId) return;
+    let pick=false, last=null;
+    try{ pick=sessionStorage.getItem(PICK_KEY)==='1'; sessionStorage.removeItem(PICK_KEY); }catch(e){}
+    try{ last=JSON.parse(localStorage.getItem(LAST_KEY)||'null'); }catch(e){}
+    if(!pick&&last&&last.m===memberId&&Date.now()-last.t<GAP) return;
+    let name='';
+    try{ const m=window.BAROYAM_MEMBERS.byId(memberId); name=(m&&m.name)||''; }catch(e){}
+    DB.accessLogAdd({device_id:id(),member_id:memberId,member_name:name,kind:pick?'pick':'open'}).then(ok=>{
+      if(ok) try{ localStorage.setItem(LAST_KEY,JSON.stringify({m:memberId,t:Date.now()})); }catch(e){}
+    }).catch(err=>console.warn(err));
+  }
+  return {id:id,markPick:markPick,log:log};
 })();
 </script>
 
@@ -1447,6 +1503,8 @@ window.BAROYAM_EDIT_ACCESS=(function(){
         if(meRaw) P0.setMe('');   /* 지워지거나 비활성이 된 회원, 옛 건너뛰기 값을 비운다 */
         window.BAROYAM_LEAD.clear();
         root.classList.add('member-locked');
+      }else if(window.BAROYAM_DEVICE){
+        window.BAROYAM_DEVICE.log(meRaw);   /* 접속기록 · 어느 기기에서 누구로 들어왔는지 */
       }
     }catch(e){ console.error(e); }
   }
@@ -4634,6 +4692,29 @@ window.BAROYAM_FONT=(function(){
   .kb-people-title{font-size:12.5px;font-weight:600;color:var(--ink)}
   .kb-people-title small{font-weight:500;color:var(--mute);margin-left:6px}
 
+  /* 관리자 설정 · 접속기록 · 기기 목록(이름 붙이기)과 최근 접속 표 */
+  .settings-view[data-settings-panel="accesslog"]{height:auto}
+  .al-manager{display:flex;flex-direction:column;gap:12px}
+  .al-sub{font-size:12.5px;font-weight:600;color:var(--ink);margin-top:4px}
+  .al-sub span{font-weight:500;color:var(--mute);margin-left:4px}
+  .al-devs{display:flex;flex-direction:column;gap:8px}
+  .al-dev{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px;align-items:center;
+    border:1px solid var(--line);border-radius:14px;padding:10px 14px;background:var(--bg)}
+  .al-dev.is-me{border-color:var(--btn)}
+  .al-dev .ui-field{width:100%}
+  .al-dev-meta{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:12px;font-weight:500;color:var(--mute)}
+  .al-dev-meta b{font-weight:600;color:var(--ink)}
+  .al-me{padding:2px 8px;border-radius:999px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:11px;font-weight:600}
+  .al-table-wrap{border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:460px}
+  .al-table{width:100%;border-collapse:collapse;font-size:12.5px;color:var(--body)}
+  .al-table th{position:sticky;top:0;background:var(--paper);text-align:left;font-weight:600;color:var(--mute);
+    padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .al-table td{padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .al-table tr:last-child td{border-bottom:0}
+  .al-table td.al-dev-name{font-weight:500;color:var(--ink)}
+  .al-table td .al-day{color:var(--mute);margin-right:6px}
+  .al-tag{margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:11px;font-weight:500}
+
   /* 관리자 설정 · 권한설정(회원별 사이드바 메뉴 보이기) · 부품은 ui-chip·ui-btn 을 쓴다 */
   .settings-view[data-settings-panel="access"]{height:auto}
   .ax-manager{display:flex;flex-direction:column;gap:14px}
@@ -6307,7 +6388,7 @@ window.BAROYAM_FONT=(function(){
   function cancelPw(){
     pending=''; pwForm.hidden=true; card.classList.remove('is-pw'); pwInput.value=''; pwError.textContent='';
   }
-  function enter(id){ P.setMe(id); location.reload(); }
+  function enter(id){ P.setMe(id); if(window.BAROYAM_DEVICE) window.BAROYAM_DEVICE.markPick(); location.reload(); }
   /* 고른 사람만 남기고 커지게 한 뒤 들어간다 · 움직임 줄이기 설정이면 바로 */
   const calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   function enterWithMotion(item,id){
@@ -6671,6 +6752,10 @@ window.BAROYAM_FONT=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="7.5" width="15" height="11" rx="3"/><path d="M12 7.5V4.5"/><circle cx="12" cy="3.8" r=".9"/><circle cx="9.3" cy="12.6" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.7" cy="12.6" r="1.1" fill="currentColor" stroke="none"/><path d="M2.5 12v2.5M21.5 12v2.5"/></svg>
               <span>김비서 AI</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="accesslog" id="alSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="11.5" rx="2"/><path d="M9 20h6M12 16v4"/></svg>
+              <span>접속기록</span>
+            </button>
           </nav>
           <div class="settings-content">
             <section class="settings-view active" data-settings-panel="members">
@@ -6757,6 +6842,21 @@ window.BAROYAM_FONT=(function(){
                 <div class="wf-list" id="kbList"></div>
                 <div class="kb-people" id="kbPeople"></div>
                 <p class="wf-checked" id="kbChecked"></p>
+              </div>
+            </section>
+            <!-- 접속기록 · 어느 기기(브라우저)에서 누가 언제 들어왔는지 · 기기마다 이름을 붙인다 -->
+            <section class="settings-view" data-settings-panel="accesslog" hidden>
+              <div class="al-manager">
+                <p class="mg-hint">회원으로 들어올 때마다 한 줄씩 남아요(같은 기기·회원의 새로고침은 30분에 한 번). 사무실 PC들은 밖에서 보면 IP가 같아서, 브라우저마다 만든 <b>기기 번호</b>로 어느 PC인지 가려요. 기기 이름 칸에 "회사 PC-디자인"처럼 적어 두세요.<br>같은 PC라도 브라우저가 다르거나 시크릿 창·인터넷 기록 삭제 뒤에는 새 기기로 잡혀요.</p>
+                <div class="al-sub">기기 <span id="alDevCount"></span></div>
+                <div class="al-devs" id="alDevs"></div>
+                <div class="al-sub">최근 접속</div>
+                <div class="ui-chips" id="alFilter" role="group" aria-label="기기 고르기"></div>
+                <div class="al-table-wrap"><table class="al-table">
+                  <thead><tr><th>시각</th><th>기기</th><th>회원</th><th>IP</th><th>브라우저 · OS</th></tr></thead>
+                  <tbody id="alRows"></tbody>
+                </table></div>
+                <p class="wf-checked" id="alNote"></p>
               </div>
             </section>
           </div>
@@ -11213,6 +11313,104 @@ window.CsGuide=(function(){
   }
   tab.addEventListener('click',load);
   document.addEventListener('baroyam:profiles',()=>{ if(!list.closest('[hidden]')) render(); });
+})();
+
+/* 관리자 설정 · 접속기록 · access_log(서버가 IP·브라우저를 채움)를 기기별로 보여 주고 기기 이름을 붙인다 ·
+   기기 이름은 app_settings 의 access_devices_v1 = {names:{기기번호:이름}} 에 saveMerged 로 바꾼 것만 얹는다 */
+(function(){
+  const tab=document.getElementById('alSettingsTab');
+  const devBox=document.getElementById('alDevs'), rowsEl=document.getElementById('alRows'),
+        filterEl=document.getElementById('alFilter'), note=document.getElementById('alNote'),
+        countEl=document.getElementById('alDevCount');
+  if(!tab||!devBox||!rowsEl) return;
+  const NAMES_KEY='access_devices_v1';
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const WD=['일','월','화','수','목','금','토'];
+  let rows=null, names={}, pick='', failed=false;
+  const me=()=>window.BAROYAM_DEVICE?window.BAROYAM_DEVICE.id():'';
+  const short=id=>String(id||'').replace(/-/g,'').slice(0,6);
+  const devName=id=>names[id]||('이름 없는 기기 · '+short(id));
+  /* 브라우저 · OS 를 사람이 읽는 말로 */
+  function ua(s){
+    s=String(s||''); if(!s) return '—';
+    const br=/Whale\//.test(s)?'웨일':/Edg\//.test(s)?'엣지':/SamsungBrowser/.test(s)?'삼성 인터넷':/OPR\//.test(s)?'오페라'
+      :/Firefox\//.test(s)?'파이어폭스':/Chrome\//.test(s)?'크롬':/Safari\//.test(s)?'사파리':'기타 브라우저';
+    const tok={'웨일':'Whale','엣지':'Edg','삼성 인터넷':'SamsungBrowser','오페라':'OPR','파이어폭스':'Firefox','크롬':'Chrome','사파리':'Version'}[br];
+    const ver=tok&&(s.match(new RegExp(tok+'\\/(\\d+)'))||[])[1];
+    const os=/iPhone/.test(s)?'아이폰':/iPad/.test(s)?'아이패드':/Android/.test(s)?'안드로이드':/Windows/.test(s)?'윈도우'
+      :/Mac OS X/.test(s)?'맥':/Linux/.test(s)?'리눅스':'';
+    return br+(ver?' '+ver:'')+(os?' · '+os:'');
+  }
+  function when(t){
+    const d=new Date(t); if(isNaN(d)) return '';
+    const p=n=>String(n).padStart(2,'0');
+    return `<span class="al-day">${d.getMonth()+1}.${p(d.getDate())} (${WD[d.getDay()]})</span>${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  function devices(){
+    const by={};
+    (rows||[]).forEach(r=>{
+      const d=by[r.device_id]||(by[r.device_id]={id:r.device_id,n:0,last:r,members:new Set(),ips:new Set()});
+      d.n++; if(r.member_name) d.members.add(r.member_name); if(r.ip) d.ips.add(r.ip);
+    });
+    /* 이 기기는 기록이 아직 없어도 맨 위에 둬서 이름부터 붙일 수 있게 한다 */
+    const mine=me();
+    if(mine&&!by[mine]) by[mine]={id:mine,n:0,last:null,members:new Set(),ips:new Set()};
+    return Object.values(by).sort((a,b)=>(b.id===mine)-(a.id===mine)||String(b.last&&b.last.at).localeCompare(String(a.last&&a.last.at)));
+  }
+  function render(){
+    const list=devices(), mine=me();
+    countEl.textContent=rows?list.length+'대':'';
+    devBox.innerHTML=list.map(d=>`<div class="al-dev${d.id===mine?' is-me':''}">
+        <input class="ui-field" data-dev="${esc(d.id)}" value="${esc(names[d.id]||'')}" maxlength="30"
+          placeholder="이름 없는 기기 · ${esc(short(d.id))}" aria-label="기기 이름">
+        <div class="al-dev-meta">
+          ${d.id===mine?'<span class="al-me">지금 이 기기</span>':''}
+          ${d.last?`<span>마지막 <b>${when(d.last.at)}</b></span><span>${esc(ua(d.last.user_agent))}</span>`:'<span>아직 기록 없음</span>'}
+          ${d.members.size?`<span>회원 <b>${esc([...d.members].join(', '))}</b></span>`:''}
+          ${d.ips.size?`<span>IP ${esc([...d.ips].slice(0,3).join(', '))}${d.ips.size>3?' 외':''}</span>`:''}
+          ${d.n?`<span>${d.n}회</span>`:''}
+        </div>
+      </div>`).join('');
+    if(pick&&!list.some(d=>d.id===pick)) pick='';
+    filterEl.innerHTML=`<button type="button" class="ui-chip" data-dev="" aria-pressed="${!pick}">전체 <b>${(rows||[]).length}</b></button>`+
+      list.filter(d=>d.n).map(d=>`<button type="button" class="ui-chip" data-dev="${esc(d.id)}" aria-pressed="${pick===d.id}">${esc(devName(d.id))} <b>${d.n}</b></button>`).join('');
+    const shown=(rows||[]).filter(r=>!pick||r.device_id===pick);
+    rowsEl.innerHTML=shown.map(r=>`<tr>
+        <td>${when(r.at)}</td>
+        <td class="al-dev-name">${esc(devName(r.device_id))}${r.device_id===mine?'<span class="al-tag">이 기기</span>':''}</td>
+        <td>${esc(r.member_name||r.member_id||'')}${r.kind==='pick'?'<span class="al-tag">프로필 선택</span>':''}</td>
+        <td>${esc(r.ip||'—')}</td>
+        <td>${esc(ua(r.user_agent))}</td>
+      </tr>`).join('')||`<tr><td colspan="5">${rows?'기록이 없어요.':'불러오는 중…'}</td></tr>`;
+    note.textContent=failed?'접속기록을 불러오지 못했어요. Supabase 에 access_log 표가 있는지 확인해 주세요.':
+      (rows&&rows.length>=500?'최근 500건까지 보여요.':'');
+  }
+  async function load(){
+    render();
+    const DB=window.BAROYAM_DB;
+    if(!DB){ failed=true; render(); return; }
+    try{
+      const [r,n]=await Promise.all([DB.accessLogList(500),DB.loadSetting(NAMES_KEY)]);
+      rows=r; names=(n&&n.names)||{}; failed=false;
+    }catch(err){ console.error(err); failed=true; rows=rows||[]; }
+    render();
+  }
+  async function saveName(inp){
+    const id=inp.dataset.dev, v=inp.value.trim();
+    if((names[id]||'')===v) return;
+    const DB=window.BAROYAM_DB;
+    const next=DB&&await DB.saveMerged(NAMES_KEY,cur=>{
+      const o=(cur&&typeof cur==='object')?cur:{}, nm=Object.assign({},o.names||{});
+      if(v) nm[id]=v; else delete nm[id];
+      return Object.assign({},o,{names:nm,updatedAt:Date.now()});
+    });
+    if(!next){ note.textContent='기기 이름을 저장하지 못했어요. 다시 시도해 주세요.'; return; }
+    names=next.names||{}; render();
+  }
+  devBox.addEventListener('change',e=>{ const inp=e.target.closest('input[data-dev]'); if(inp) saveName(inp); });
+  devBox.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input[data-dev]')) e.target.blur(); });
+  filterEl.addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(!b) return; pick=b.dataset.dev||''; render(); });
+  tab.addEventListener('click',load);
 })();
 
 /* 최상단 바 프로필 · 로그인한 계정을 보여주고, 관리자 모드 켜기/끄기 · 설정 · 로그아웃을 모아 둔다 */
