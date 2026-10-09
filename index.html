@@ -4806,15 +4806,15 @@ window.BAROYAM_FONT=(function(){
   .al-lock-row input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:var(--ink);
     font:inherit;font-size:17px;letter-spacing:8px;text-align:center;padding-left:34px}
   .al-lock-row input::placeholder{letter-spacing:0;font-size:14px;color:var(--mute)}
-  /* 화살표 단추도 구슬과 같은 분홍→보라→파랑 · 올리면 색이 흐르고 살짝 떠오른다 */
-  .al-lock-row .ui-btn{width:40px;height:40px;min-width:40px;padding:0;border-radius:50%;border:0;color:#fff;
-    background:linear-gradient(135deg,var(--orb-a),var(--orb-b) 55%,var(--orb-c));background-size:180% 180%;background-position:0% 50%;
+  /* 화살표 단추는 구슬에 어울리는 보라 · 공통 .ui-btn.primary(주황)가 뒤에 있어 선택자를 더 세게 쓴다 · 올리면 색이 흐르고 살짝 떠오른다 */
+  .al-lock .al-lock-row .ui-btn.primary{width:40px;height:40px;min-width:40px;padding:0;border-radius:50%;border:0;color:#fff;
+    background:linear-gradient(135deg,#a98bff,var(--orb-b) 50%,#6a4cf0);background-size:180% 180%;background-position:0% 50%;
     box-shadow:0 6px 16px -6px color-mix(in srgb,var(--orb-b) 75%,transparent);
     transition:background-position .6s ease,transform .2s ease,box-shadow .2s ease}
-  .al-lock-row .ui-btn:hover{background-position:100% 50%;transform:translateY(-1px);
-    box-shadow:0 10px 22px -8px color-mix(in srgb,var(--orb-b) 85%,transparent)}
-  .al-lock-row .ui-btn:active{transform:scale(.94)}
-  .al-lock.is-busy .al-lock-row .ui-btn{animation:alBtnFlow 1.2s linear infinite}
+  .al-lock .al-lock-row .ui-btn.primary:hover{background:linear-gradient(135deg,#a98bff,var(--orb-b) 50%,#6a4cf0);background-size:180% 180%;
+    background-position:100% 50%;transform:translateY(-1px);box-shadow:0 10px 22px -8px color-mix(in srgb,var(--orb-b) 85%,transparent)}
+  .al-lock .al-lock-row .ui-btn.primary:active{transform:scale(.94)}
+  .al-lock.is-busy .al-lock-row .ui-btn.primary{animation:alBtnFlow 1.2s linear infinite}
   @keyframes alBtnFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
   .al-lock-msg{min-height:18px;margin:14px 0 0;font-size:12.5px;color:var(--mute)}
   .al-lock-msg.is-err{color:var(--neg)}
