@@ -3981,6 +3981,15 @@ window.BAROYAM_FONT=(function(){
   .trend-platform-icon{display:inline-flex;align-items:center;gap:8px}
   .trend-platform-icon svg{width:16px;height:16px;display:block;flex:none;margin:-1px 0}
   .trend-platform-icon.active svg{filter:drop-shadow(0 0 1.5px #fff)}
+  /* 구글/네이버 전환도 아래 카테고리·성별과 같은 무채색 세그먼트로(2026-10-09) · 다른 화면의 hero-view-tab 은 그대로 */
+  #trendPlatformIcons{gap:2px;width:fit-content;margin:20px 48px 14px;padding:3px;border-radius:12px;background:var(--chip-flat)}
+  #trendPlatformIcons .hero-view-tab{height:32px;padding:0 15px;border:0;border-radius:9px;background:none;box-shadow:none;
+    font-size:13px;font-weight:500;color:var(--mute);transition:background .15s,color .15s,box-shadow .15s}
+  #trendPlatformIcons .hero-view-tab:hover{color:var(--ink);border:0}
+  #trendPlatformIcons .hero-view-tab.active{background:var(--paper);color:var(--ink);font-weight:600;
+    box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+  #trendPlatformIcons .hero-view-tab:not(.active) svg{opacity:.75}
+  #trendPlatformIcons .trend-platform-icon.active svg{filter:none}
   /* 네이버 카테고리(식품/냉동간편식)·성별 전환 · 네이버가 활성일 때만 새로고침과 같은 줄에 나타난다 ·
      초록 바탕·주황 알약이 겹쳐 어수선해서 표준 탭(.ui-tabs)과 같은 무채색 세그먼트로 바꿨다(2026-10-09) */
   .trend-naver-subcat{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
