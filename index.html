@@ -11242,15 +11242,15 @@ window.CsGuide=(function(){
      desc:'"⏰ 점심시간이 끝났어요. 오후 업무를 시작해 주세요." + 김비서 응원 한마디(날마다 바뀜)', record:'점심시간 종료 안내', task:'cron'},
     {name:'사무실 청소 알림', cat:'notice', where:'#공지사항 · @channel', days:[1], times:['12:10'],
      desc:'"🧹 사무실 청소 시간 · 지금부터 20분간 사무실 청소를 합니다."', record:'사무실 청소 알림', task:'cron'},
-    {name:'아침 프로젝트 인사', cat:'project', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['08:10'],
+    {name:'아침 프로젝트 인사', cat:'kimbiseo', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['08:10'],
      desc:'그날 출근하는 회원 모두에게 좋은 아침 인사와 맡은 프로젝트 현황(긴급·오늘/내일 마감)을 보내요.', record:'아침 프로젝트 인사', task:'cron'},
-    {name:'퇴근 전 프로젝트 체크', cat:'project', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['16:00'],
+    {name:'퇴근 전 프로젝트 체크', cat:'kimbiseo', where:'김비서 개인 메시지', days:[1,2,3,4,5], times:['16:00'],
      desc:'그날 출근하는 회원 모두에게 긴급·내일 마감 프로젝트를 알리고 완료·수정·진행도 업데이트를 부탁해요 + 응원 한마디.', record:'퇴근 전 프로젝트 체크', task:'cron'},
     /* caffeinnos-automation/cafe24_sales.js · 매시간 7분 최근 3일, 새벽 4:37 최근 60일 */
     {name:'카페24 매출 수집', cat:'collect', where:'ERP 매출 · 자사몰', days:[0,1,2,3,4,5,6],
      times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':07'), record:'카페24 매출 수집',
      desc:'카페24 주문을 받아 날짜별 실결제금액(취소·환불 차감)을 저장해요. 매출 화면의 자사몰 숫자가 이 값으로 바뀌어요.', task:'cron'},
-    {name:'김비서 대화', cat:'live', where:'김비서 개인 메시지', always:true,
+    {name:'김비서 대화', cat:'kimbiseo', where:'김비서 개인 메시지', always:true,
      record:'김비서 대화',
      desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. 서버에서 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd',
      cmds:['안녕 · 도움말 → 짧은 안내','예시 → 자세한 사용법','내 프로젝트','마감 (7일 안)','○○ 보내줘 → 미리보기 5개 → 번호로 원본','고객 문의 → 상담 가이드 추천 답변']},
@@ -11264,7 +11264,7 @@ window.CsGuide=(function(){
      desc:'10분마다 실행 기록을 보고, 어느 자동화든 실패하면 · 다시 정상으로 돌아오면 김태섭 팀장에게 알려요. 같은 실패는 한 번만 보내요.', task:'cron'}
   ];
   /* 표에서 묶어 보이는 종류 · 이 순서대로 · 접은 묶음은 이 창 메모리에만 */
-  const GROUPS=[{id:'collect',label:'데이터 수집'},{id:'report',label:'슬랙 보고'},{id:'notice',label:'공지 알림'},{id:'project',label:'프로젝트 알림'},{id:'live',label:'상시 실행'},{id:'check',label:'점검'}];
+  const GROUPS=[{id:'collect',label:'데이터 수집'},{id:'report',label:'슬랙 보고'},{id:'notice',label:'공지 알림'},{id:'kimbiseo',label:'김비서 AI'},{id:'live',label:'상시 실행'},{id:'check',label:'점검'}];
   const folded=new Set();
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pad=n=>String(n).padStart(2,'0');
