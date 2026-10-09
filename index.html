@@ -2719,16 +2719,21 @@ window.BAROYAM_FONT=(function(){
   [data-pf-pane="bom"] .pf-add input.pf-num{text-align:center}
   #pfBrandPick,#pfMixBrandPick{width:200px}
   /* 아래 판매처 탭 줄 · 화면 아래 고정 · 계산 표 마지막 줄이 가리지 않게 칸 아래를 비워 둔다 */
-  .pf-pane[data-pf-pane="calc"]{padding-bottom:90px}
-  /* 고른 판매처 색으로 강조색을 바꾼다(paintTone) · 자사몰·그 밖은 원래 강조색 */
-  .pf-pane[data-tone="naver"]{--tone:var(--naver)}
-  .pf-pane[data-tone="coupang"]{--tone:var(--coupang)}
-  .pf-pane[data-tone="talk"]{--tone:var(--talk)}
-  .pf-pane[data-tone="st11"]{--tone:var(--neg)}
-  .pf-pane[data-tone]{--btn:var(--tone);--btn-hover:color-mix(in srgb,var(--tone) 86%,#000);
+  .pf-pane[data-pf-pane="calc"]{padding-bottom:90px;--btn-base:var(--btn);--btn-soft-base:var(--btn-soft);--btn-soft-ink-base:var(--btn-soft-ink)}
+  /* 고른 판매처 색은 세 곳에만 입힌다(10-09 사용자 · 버튼·아래 탭은 원래 강조색): 위 배너 · 상품 머리 · 마진/마진률/최소 ROAS 칸 ·
+     paintTone 이 #view-profit 과 계산기 칸에 data-tone 을 단다 · 배너는 마진 계산기 탭일 때만 · 자사몰·그 밖은 원래 색 */
+  :is(#view-profit,.pf-pane)[data-tone="naver"]{--tone:var(--naver)}
+  :is(#view-profit,.pf-pane)[data-tone="coupang"]{--tone:var(--coupang)}
+  :is(#view-profit,.pf-pane)[data-tone="talk"]{--tone:var(--talk)}
+  :is(#view-profit,.pf-pane)[data-tone="st11"]{--tone:var(--neg)}
+  #view-profit[data-tone]:has([data-pf-pane="calc"]:not([hidden])) .plan-hero{--hero-accent:var(--tone);
+    background:color-mix(in srgb,var(--tone) 6%,var(--paper));border-color:color-mix(in srgb,var(--tone) 16%,var(--line))}
+  .pf-pane[data-tone] :is(.pf-book-head,.pf-book-head .pf-ad,.pf-calc td.out.key,.pf-calc th.key){--btn:var(--tone);
     --btn-soft:color-mix(in srgb,var(--tone) 10%,transparent);--btn-soft-ink:color-mix(in srgb,var(--tone) 88%,#000)}
-  html[data-theme="dark"] .pf-pane[data-tone]{--btn-hover:color-mix(in srgb,var(--tone) 85%,#fff);
+  html[data-theme="dark"] .pf-pane[data-tone] :is(.pf-book-head,.pf-book-head .pf-ad,.pf-calc td.out.key,.pf-calc th.key){
     --btn-soft:color-mix(in srgb,var(--tone) 16%,transparent);--btn-soft-ink:color-mix(in srgb,var(--tone) 75%,#fff)}
+  /* 상품 머리 안 단추(+ 옵션 추가·⋯)·이름 칸은 원래 강조색 */
+  .pf-pane[data-tone] .pf-book-head :is(.ui-btn,.ui-field){--btn:var(--btn-base);--btn-soft:var(--btn-soft-base);--btn-soft-ink:var(--btn-soft-ink-base)}
   /* 맨 아래 판매처 줄 · 맨 위 검색 줄(.topbar)을 위아래로 뒤집은 모양 · 사이드바 오른쪽 끝부터 창 오른쪽 끝까지 붙는다 ·
      단추는 맨 위 단추 줄(.hero-view-tabs)과 같은 알약 · 첫 단추가 대시보드 안 첫 단추와 같은 세로줄에 오게 왼쪽 여백은 스크립트가 맞춘다 */
   .pf-sheetbar{position:fixed;bottom:0;left:0;right:0;z-index:30;min-height:58px;display:flex;align-items:center;
@@ -15161,7 +15166,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const c=COST.data.chans[curChan()], nm=((c&&c.name)||'').replace(/\s/g,'').toLowerCase();
     const tone=/네이버|스마트스토어|naver|smartstore/.test(nm)?'naver':/쿠팡|coupang/.test(nm)?'coupang'
       :/톡딜|카카오|talk|kakao/.test(nm)?'talk':/11번가|11st/.test(nm)?'st11':'';
-    if(tone) pane.dataset.tone=tone; else delete pane.dataset.tone;
+    [pane,view].forEach(el=>{ if(tone) el.dataset.tone=tone; else delete el.dataset.tone; });
   }
   /* 아래 탭 줄은 fixed 라(.paper 가 overflow:hidden 이라 sticky 가 안 먹음) 사이드바 오른쪽 끝(.main 왼쪽)부터 붙이고,
      첫 단추를 대시보드 안 맨 위 단추와 같은 세로줄에 맞춘다 */
