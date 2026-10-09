@@ -4851,6 +4851,8 @@ window.BAROYAM_FONT=(function(){
   #alManager .al-table td.al-ext{color:var(--warn);font-weight:500}
   .al-ip{display:flex;align-items:center;gap:12px;padding:6px 0 6px 8px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink)}
   .al-ip span{flex:1;font-size:12px;color:var(--mute)}
+  .al-geo{color:var(--mute)}
+  .al-ip .al-geo,.al-ip .al-ext{flex:none;margin-left:-8px}
   .al-ip-empty{padding:8px 0 8px 8px;border-bottom:1px solid var(--line);font-size:12px;color:var(--mute)}
   .al-table-wrap{max-height:380px;overflow:auto}
   .al-table{width:100%;border-collapse:collapse}
@@ -11523,6 +11525,53 @@ window.CsGuide=(function(){
     const p=n=>String(n).padStart(2,'0');
     return `${d.getMonth()+1}.${p(d.getDate())} ${WD[d.getDay()]} ${p(d.getHours())}:${p(d.getMinutes())}`;
   }
+  /* IP 지역 · 기록에 나온 IP 만 ipinfo.io(안 되면 ipwho.is)에 물어 시·도(해외면 나라)만 붙인다 ·
+     IP 말고는 보내지 않고, 답은 이 브라우저에 30일 기억(baroyam_ipgeo_v1 = {IP:{r,f,at}}) */
+  const GEO_KEY='baroyam_ipgeo_v1', GEO_TTL=30*864e5;
+  let geo={}; try{ geo=JSON.parse(localStorage.getItem(GEO_KEY)||'{}')||{}; }catch(e){ geo={}; }
+  const KR_REGION=[[/seoul/,'서울'],[/busan/,'부산'],[/daegu/,'대구'],[/incheon/,'인천'],[/gwangju/,'광주'],[/daejeon/,'대전'],
+    [/ulsan/,'울산'],[/sejong/,'세종'],[/gyeonggi/,'경기'],[/gangwon/,'강원'],[/(north chungcheong|chungcheongbuk|chungbuk)/,'충북'],
+    [/(south chungcheong|chungcheongnam|chungnam)/,'충남'],[/(north jeolla|jeollabuk|jeonbuk)/,'전북'],[/(south jeolla|jeollanam|jeonnam)/,'전남'],
+    [/(north gyeongsang|gyeongsangbuk|gyeongbuk)/,'경북'],[/(south gyeongsang|gyeongsangnam|gyeongnam)/,'경남'],[/jeju/,'제주']];
+  function geoName(cc,region,city){
+    cc=String(cc||'').toUpperCase();
+    if(cc&&cc!=='KR'){
+      try{ return {r:new Intl.DisplayNames(['ko'],{type:'region'}).of(cc)||cc,f:true}; }catch(e){ return {r:cc,f:true}; }
+    }
+    /* 시·도 이름으로 먼저 찾는다 · 도시까지 섞으면 경기 광주(Gwangju-si)가 광주광역시로 잡힌다 */
+    const find=s=>KR_REGION.find(([re])=>re.test(String(s||'').toLowerCase()));
+    const hit=find(region)||find(city);
+    return {r:hit?hit[1]:(cc?'국내':''),f:false};
+  }
+  const isPrivateIp=ip=>/^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1|f[cd]|fe80)/i.test(ip);
+  async function getJson(url){
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),5000);
+    try{ const res=await fetch(url,{signal:ctl.signal}); if(!res.ok) throw new Error(res.status); return await res.json(); }
+    finally{ clearTimeout(t); }
+  }
+  async function lookupIp(ip){
+    try{ const j=await getJson('https://ipinfo.io/'+encodeURIComponent(ip)+'/json');
+      if(j&&j.country) return geoName(j.country,j.region,j.city); }catch(e){}
+    try{ const j=await getJson('https://ipwho.is/'+encodeURIComponent(ip)+'?fields=success,country_code,region,city');
+      if(j&&j.success) return geoName(j.country_code,j.region,j.city); }catch(e){}
+    return null;
+  }
+  let geoBusy=false;
+  async function fillGeo(){
+    if(geoBusy||!rows) return; geoBusy=true;
+    const now=Date.now();
+    const need=[...new Set(rows.map(r=>r.ip).concat(Object.keys(office)).filter(Boolean))]
+      .filter(ip=>!isPrivateIp(ip)&&!(geo[ip]&&now-geo[ip].at<GEO_TTL)).slice(0,40);
+    for(const ip of need){
+      const g=await lookupIp(ip);
+      if(g&&g.r){ geo[ip]=Object.assign(g,{at:now}); render(); }
+    }
+    try{ localStorage.setItem(GEO_KEY,JSON.stringify(geo)); }catch(e){}
+    geoBusy=false;
+  }
+  /* IP 옆에 붙일 지역 글 · 해외는 주황 */
+  const geoTag=ip=>{ const g=ip&&geo[ip]; if(!g||!g.r) return '';
+    return g.f?` · <span class="al-ext">${esc(g.r)}</span>`:` · <span class="al-geo">${esc(g.r)}</span>`; };
   function devices(){
     const by={};
     (rows||[]).forEach(r=>{
@@ -11541,7 +11590,7 @@ window.CsGuide=(function(){
     const myIp=(all.find(r=>r.device_id===mine&&r.ip)||{}).ip||'';
     officeSub.textContent=hasOffice()?(extN?'':' · 외부 접속 없음'):'';
     if(extN) officeSub.innerHTML=` · <span class="al-ext">외부 접속 ${extN}건</span>`;
-    officeBox.innerHTML=Object.keys(office).sort().map(ip=>`<div class="al-ip">${esc(ip)}<span>${ip===myIp?'지금 이 기기의 IP':''}</span>
+    officeBox.innerHTML=Object.keys(office).sort().map(ip=>`<div class="al-ip">${esc(ip)}${geoTag(ip)}<span>${ip===myIp?'지금 이 기기의 IP':''}</span>
         <button type="button" class="ui-btn sm ghost" data-ip-del="${esc(ip)}">빼기</button></div>`).join('')
       ||`<div class="al-ip-empty">아직 없어요. 사무실 PC에서 이 화면을 열고 "지금 IP를 회사로 등록"을 누르세요.</div>`;
     officeAdd.hidden=!myIp||!!office[myIp];
@@ -11569,7 +11618,7 @@ window.CsGuide=(function(){
         <td>${when(r.at)}</td>
         <td class="al-dev-name">${esc(devName(r.device_id))}</td>
         <td>${esc(r.member_name||r.member_id||'')}</td>
-        <td${isExt(r)?' class="al-ext"':''}>${esc(r.ip||'—')}${isExt(r)?' · 외부':''}</td>
+        <td${isExt(r)?' class="al-ext"':''}>${esc(r.ip||'—')}${isExt(r)?' · 외부':''}${geoTag(r.ip)}</td>
         <td>${esc(ua(r.user_agent))}</td>
       </tr>`).join('')||`<tr><td colspan="5">${rows?'기록이 없어요.':'불러오는 중…'}</td></tr>`;
     note.textContent=failed?'접속기록을 불러오지 못했어요. Supabase 에 access_log 표가 있는지 확인해 주세요.':
@@ -11584,6 +11633,7 @@ window.CsGuide=(function(){
       rows=r; names=(n&&n.names)||{}; office=(n&&n.office)||{}; failed=false;
     }catch(err){ console.error(err); failed=true; rows=rows||[]; }
     render();
+    fillGeo();
   }
   async function saveName(inp){
     const id=inp.dataset.dev, v=inp.value.trim();
