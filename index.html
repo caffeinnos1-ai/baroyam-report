@@ -4750,38 +4750,64 @@ window.BAROYAM_FONT=(function(){
   .settings-view[data-settings-panel="accesslog"]{height:auto}
   .al-manager{display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--body)}
   .al-manager[hidden],.al-lock[hidden]{display:none}
-  /* 보안로그 잠금 · 창 가운데 · 위에 천천히 숨 쉬듯 일렁이는 빛 구슬(로딩 느낌) · 확인하는 동안은 빨라진다 */
+  /* 보안로그 잠금 · 창 가운데 · 위에 오로라처럼 일렁이는 빛 구슬(물결 고리·도는 별빛) · 확인하는 동안은 빨라진다 ·
+     구슬 색(분홍·보라·파랑)은 화면 공용 색에 없어 이 화면에만 둔다 */
   .al-lock{--orb-a:#f062e6;--orb-b:#8a6cff;--orb-c:#4aa8ff;
-    display:flex;flex-direction:column;align-items:center;gap:0;width:min(360px,100%);margin:0 auto;
-    min-height:min(560px,62vh);justify-content:center;text-align:center;animation:alLockIn .7s cubic-bezier(.22,1,.36,1) both}
-  @keyframes alLockIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-  .al-orb{position:relative;width:132px;height:132px;margin-bottom:26px;border-radius:50%;
-    animation:alOrbSpin 14s linear infinite, alOrbMorph 7s ease-in-out infinite}
-  .al-orb::before{content:'';position:absolute;inset:-34px;border-radius:50%;
-    background:radial-gradient(circle,color-mix(in srgb,var(--orb-b) 22%,transparent) 0%,transparent 65%);filter:blur(12px);
-    animation:alOrbBreath 3.6s ease-in-out infinite}
-  .al-orb i,.al-orb b{position:absolute;border-radius:50%;filter:blur(16px);mix-blend-mode:normal}
-  .al-orb i:nth-child(1){inset:18% 20% 8% 6%;background:var(--orb-a);opacity:.95;filter:blur(14px);animation:alBlobA 5.2s ease-in-out infinite}
-  .al-orb i:nth-child(2){inset:2% 8% 34% 26%;background:var(--orb-c);opacity:.85;filter:blur(14px);animation:alBlobB 6.4s ease-in-out infinite}
-  .al-orb i:nth-child(3){inset:26% 4% 10% 34%;background:var(--orb-b);opacity:.9;filter:blur(14px);animation:alBlobC 4.6s ease-in-out infinite}
-  .al-orb b{inset:16% 18% 46% 40%;background:#fff;opacity:.5;filter:blur(14px);animation:alBlobB 4s ease-in-out infinite reverse}
-  @keyframes alOrbSpin{to{transform:rotate(360deg)}}
-  @keyframes alOrbMorph{0%,100%{border-radius:50% 50% 50% 50%}33%{border-radius:58% 42% 52% 48%}66%{border-radius:44% 56% 46% 54%}}
-  @keyframes alOrbBreath{0%,100%{transform:scale(.92);opacity:.7}50%{transform:scale(1.08);opacity:1}}
-  @keyframes alBlobA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(14px,10px) scale(1.12)}}
-  @keyframes alBlobB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-16px,12px) scale(.9)}}
-  @keyframes alBlobC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-8px,-14px) scale(1.15)}}
-  .al-lock.is-busy .al-orb{animation-duration:2.4s,2s}
-  .al-lock.is-busy .al-orb i{animation-duration:1.4s}
+    display:flex;flex-direction:column;align-items:center;width:min(340px,100%);margin:0 auto;
+    min-height:min(560px,62vh);justify-content:center;text-align:center;animation:alLockIn .8s cubic-bezier(.22,1,.36,1) both}
+  @keyframes alLockIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .al-orb{position:relative;width:150px;height:150px;margin-bottom:38px}
+  .al-orb::before{content:"";position:absolute;inset:-46px;border-radius:50%;
+    background:radial-gradient(circle,color-mix(in srgb,var(--orb-b) 26%,transparent) 0%,color-mix(in srgb,var(--orb-a) 10%,transparent) 40%,transparent 68%);
+    filter:blur(10px);animation:alBreath 4.2s ease-in-out infinite}
+  .al-core{position:absolute;inset:0;border-radius:50%;overflow:hidden;filter:blur(1.5px);
+    animation:alMorph 8s ease-in-out infinite;
+    box-shadow:0 18px 50px -10px color-mix(in srgb,var(--orb-b) 55%,transparent),0 0 40px -6px color-mix(in srgb,var(--orb-a) 45%,transparent)}
+  .al-aura{position:absolute;inset:-30%;background:conic-gradient(from 0deg,var(--orb-a),var(--orb-b),var(--orb-c),#b8f0ff,var(--orb-a));
+    filter:blur(22px);animation:alSpin 7s linear infinite}
+  .al-core i,.al-core b{position:absolute;border-radius:50%;filter:blur(16px)}
+  .al-core i:nth-child(2){inset:30% 30% 0 -6%;background:var(--orb-a);opacity:.9;animation:alBlobA 5.2s ease-in-out infinite}
+  .al-core i:nth-child(3){inset:-8% -4% 40% 34%;background:var(--orb-c);opacity:.8;animation:alBlobB 6.6s ease-in-out infinite}
+  .al-core i:nth-child(4){inset:34% -6% 4% 38%;background:var(--orb-b);opacity:.85;animation:alBlobC 4.8s ease-in-out infinite}
+  .al-core b{inset:12% 20% 50% 38%;background:#fff;opacity:.7;filter:blur(12px);animation:alBlobB 4.4s ease-in-out infinite reverse}
+  /* 물결 고리 · 구슬에서 바깥으로 번져 사라진다 */
+  .al-halo{position:absolute;inset:0;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--orb-b) 45%,transparent);
+    animation:alHalo 4.2s cubic-bezier(.2,.6,.3,1) infinite;opacity:0}
+  .al-halo+.al-halo{animation-delay:2.1s;border-color:color-mix(in srgb,var(--orb-a) 40%,transparent)}
+  @keyframes alHalo{0%{transform:scale(.92);opacity:.8}100%{transform:scale(1.75);opacity:0}}
+  /* 별빛 · 구슬 둘레를 서로 다른 거리·속도로 돌며 반짝인다 */
+  .al-spark{position:absolute;left:50%;top:50%;width:0;height:0;animation:alSpin 9s linear infinite}
+  .al-spark::after{content:"";position:absolute;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:#fff;
+    box-shadow:0 0 8px 2px color-mix(in srgb,var(--orb-c) 80%,transparent);left:96px;top:0;animation:alTwinkle 2.4s ease-in-out infinite}
+  .al-spark:nth-of-type(4){animation-duration:13s;animation-direction:reverse}
+  .al-spark:nth-of-type(4)::after{left:-88px;top:30px;width:4px;height:4px;box-shadow:0 0 8px 2px color-mix(in srgb,var(--orb-a) 80%,transparent);animation-delay:.8s}
+  .al-spark:nth-of-type(5){animation-duration:16s}
+  .al-spark:nth-of-type(5)::after{left:20px;top:-104px;width:3px;height:3px;animation-delay:1.6s}
+  @keyframes alTwinkle{0%,100%{opacity:.15}50%{opacity:1}}
+  @keyframes alSpin{to{transform:rotate(360deg)}}
+  @keyframes alMorph{0%,100%{border-radius:50%}25%{border-radius:56% 44% 52% 48%/48% 54% 46% 52%}50%{border-radius:46% 54% 44% 56%/54% 46% 56% 44%}75%{border-radius:52% 48% 56% 44%/46% 52% 48% 54%}}
+  @keyframes alBreath{0%,100%{transform:scale(.9);opacity:.65}50%{transform:scale(1.1);opacity:1}}
+  @keyframes alBlobA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(16px,-12px) scale(1.15)}}
+  @keyframes alBlobB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,14px) scale(.88)}}
+  @keyframes alBlobC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-10px,-16px) scale(1.18)}}
+  .al-lock.is-busy .al-core{animation-duration:2.4s}
+  .al-lock.is-busy .al-aura{animation-duration:1.2s}
+  .al-lock.is-busy .al-halo{animation-duration:1.4s}
+  .al-lock.is-busy .al-halo+.al-halo{animation-delay:.7s}
   .al-lock.is-shake .al-lock-row{animation:alShake .42s cubic-bezier(.36,.07,.19,.97)}
   @keyframes alShake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
-  .al-lock-title{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.3px}
-  .al-lock-sub{margin:6px 0 22px;font-size:13px;color:var(--mute)}
-  .al-lock-row{display:flex;gap:8px;width:100%}
-  .al-lock-row .ui-field{flex:1;min-width:0;height:44px;border-radius:14px;text-align:center;font-size:16px;letter-spacing:6px}
-  .al-lock-row .ui-field::placeholder{letter-spacing:0;font-size:13.5px}
-  .al-lock-row .ui-btn{height:44px;border-radius:14px;padding:0 20px}
-  .al-lock-msg{min-height:18px;margin:10px 0 0;font-size:12.5px;color:var(--mute)}
+  .al-lock-title{font-size:19px;font-weight:600;color:var(--ink);letter-spacing:-.2px;margin-bottom:20px}
+  /* 입력칸과 단추를 한 알약 안에 · 단추는 오른쪽 안쪽의 둥근 화살표 */
+  .al-lock-row{display:flex;align-items:center;gap:6px;width:100%;height:52px;padding:0 6px 0 20px;border-radius:999px;
+    background:var(--paper);border:1px solid var(--line);
+    box-shadow:0 10px 30px -14px color-mix(in srgb,var(--orb-b) 45%,transparent);transition:border-color .2s,box-shadow .2s}
+  .al-lock-row:focus-within{border-color:color-mix(in srgb,var(--orb-b) 55%,var(--line));
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--orb-b) 14%,transparent),0 12px 34px -14px color-mix(in srgb,var(--orb-b) 60%,transparent)}
+  .al-lock-row input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:var(--ink);
+    font:inherit;font-size:17px;letter-spacing:8px;text-align:center;padding-left:34px}
+  .al-lock-row input::placeholder{letter-spacing:0;font-size:14px;color:var(--mute)}
+  .al-lock-row .ui-btn{width:40px;height:40px;min-width:40px;padding:0;border-radius:50%}
+  .al-lock-msg{min-height:18px;margin:14px 0 0;font-size:12.5px;color:var(--mute)}
   .al-lock-msg.is-err{color:var(--neg)}
   .al-hint{margin:0 0 6px;font-size:12px;line-height:1.55;color:var(--mute)}
   .al-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
@@ -6959,12 +6985,15 @@ window.BAROYAM_FONT=(function(){
                  탭을 열 때마다 보안로그 비밀번호를 한 번 더 묻는다(맞히기 전에는 기록을 읽지도 않음) -->
             <section class="settings-view" data-settings-panel="accesslog" hidden>
               <form class="al-lock" id="alLock" autocomplete="off">
-                <div class="al-orb" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+                <div class="al-orb" aria-hidden="true">
+                  <span class="al-halo"></span><span class="al-halo"></span>
+                  <span class="al-core"><span class="al-aura"></span><i></i><i></i><i></i><b></b></span>
+                  <span class="al-spark"></span><span class="al-spark"></span><span class="al-spark"></span>
+                </div>
                 <div class="al-lock-title">보안로그</div>
-                <p class="al-lock-sub">접속 기록은 보안로그 비밀번호를 한 번 더 넣어야 열려요</p>
                 <div class="al-lock-row">
-                  <input class="ui-field pw-mask" type="text" id="alLockPw" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="보안로그 비밀번호">
-                  <button type="submit" class="ui-btn primary">열기</button>
+                  <input class="pw-mask" type="text" id="alLockPw" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="보안로그 비밀번호">
+                  <button type="submit" class="ui-btn primary icon" aria-label="열기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
                 </div>
                 <p class="al-lock-msg" id="alLockMsg" role="alert"></p>
               </form>
