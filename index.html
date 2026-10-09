@@ -5735,6 +5735,9 @@ window.BAROYAM_FONT=(function(){
   .bs-mini .bs-item-meta{font-weight:500;font-variant-numeric:tabular-nums}
   .bs-mini .bs-item-meta .bs-prog-bar{height:3px}
   .bs-mini .bs-prog-bar i{background:color-mix(in srgb,var(--ink) 55%,transparent)}
+  /* 100% 다 찬 브랜드만 강조색 막대·숫자 */
+  .bs-mini .bs-item-meta.is-full .bs-prog-bar i{background:var(--btn)}
+  .bs-mini .bs-item-meta.is-full span{color:var(--btn-soft-ink);font-weight:600}
   .bs-mini .bs-item .bs-dday{padding:0;background:none;font-size:11.5px;font-weight:500;color:var(--mute)}
   .bs-mini .bs-item .bs-dday.soon{color:var(--warn)}
   .bs-mini .bs-item .bs-dday.over{color:var(--neg)}
@@ -22424,7 +22427,7 @@ window.baroyamAsk=function(title,body,okText){
     return '<button type="button" class="bs-item" data-id="'+esc(b.id)+'" aria-current="'+(b.id===openId)+'">'
       +'<span class="bs-thumb" aria-hidden="true">'+(imageOf(b)?'<img alt="" src="'+esc(imageOf(b))+'">':esc((b.name||'?').trim().charAt(0)))+'</span>'
       +'<span class="bs-item-main"><div class="bs-item-top"><span class="bs-item-name">'+esc(b.name||'(이름 없음)')+'</span><span class="bs-dday '+d.c+'">'+esc(d.t)+'</span></div>'
-      +'<div class="bs-item-meta"><div class="bs-prog-bar"><i style="width:'+p.pct+'%"></i></div><span>'+p.pct+'%</span></div>'
+      +'<div class="bs-item-meta'+(p.pct>=100?' is-full':'')+'"><div class="bs-prog-bar"><i style="width:'+p.pct+'%"></i></div><span>'+p.pct+'%</span></div>'
       +'</span></button>';
   }
   function msg(t){ const m=$('bsMsg'); m.textContent=t||''; m.hidden=!t; }
