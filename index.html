@@ -4556,9 +4556,10 @@ window.BAROYAM_FONT=(function(){
   .settings-close:hover{background:var(--bg);color:var(--ink)}
   .settings-body{flex:1;display:flex;min-height:0}
   /* 관리자 설정 · 다른 대화상자와 틀을 같이 쓰지만 이 창만 넓고 높게 */
-  .settings-panel.admin-panel{max-width:960px;height:min(780px,90vh)}
+  .settings-panel.admin-panel{max-width:960px;height:min(780px,90vh);transition:max-width .55s cubic-bezier(.22,1,.36,1)}
+  @media (prefers-reduced-motion:reduce){.settings-panel.admin-panel{transition:none}}
   /* 워크플로우 탭은 표가 넓어 가로 스크롤이 생기지 않게 창을 넓힌다 */
-  .settings-panel.admin-panel:has(.settings-view[data-settings-panel="kimbiseo"]:not([hidden])){max-width:min(1360px,96vw)}
+  .settings-panel.admin-panel:has(.settings-view[data-settings-panel="kimbiseo"]:not([hidden])){max-width:1360px}
   .admin-panel .mini-sidebar{width:200px}
   /* 설정창 왼쪽 탭 · 사이드바(--sb-bg)보다 한 단계 밝은 중분류 톤(--sn-bg)을 써서
      바깥 사이드바 → 설정창 탭 → 본문(paper) 순으로 밝아지게 맞췄다 */
