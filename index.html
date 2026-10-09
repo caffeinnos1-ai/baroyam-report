@@ -5713,6 +5713,27 @@ window.BAROYAM_FONT=(function(){
   .bs-mini .bs-item{border:1px solid var(--line);background:var(--paper)}
   .bs-mini .bs-item:hover{border-color:color-mix(in srgb,var(--btn) 45%,var(--line));background:var(--paper)}
   .bs-mini .bs-item[aria-current="true"]{background:var(--btn-soft);border-color:var(--btn);box-shadow:none}
+  /* 2026-10-09 무채색 정리(사용자: "주황톤이 너무 많고 AI 티가 난다") · 상자 테두리 대신 줄 목록,
+     고른 브랜드는 연한 회색 바탕, 진행 막대는 글자색 계열, 출시 상태는 알약 대신 작은 글자 */
+  body.view-is-brand .bs-mini{box-shadow:none;border:1px solid var(--line);padding:16px 10px 10px}
+  .bs-mini-head{align-items:center;padding:0 6px}
+  .bs-mini-head h2 span{margin-left:4px;font-size:13px;font-weight:500;color:var(--mute)}
+  .bs-mini-tools{padding:0 2px}
+  .bs-mini .bs-list{gap:1px}
+  .bs-mini .bs-item{border:0;border-radius:10px;padding:9px 8px;background:none}
+  .bs-mini .bs-item:hover{background:var(--chip-flat)}
+  .bs-mini .bs-item[aria-current="true"]{background:var(--chip-flat);border:0}
+  .bs-mini .bs-item[aria-current="true"] .bs-item-name{color:var(--ink)}
+  .bs-mini .bs-thumb{width:34px;height:34px;border:0;background:var(--chip-flat);color:var(--body);font-weight:500}
+  .bs-mini .bs-item[aria-current="true"] .bs-thumb:not(:has(img)){background:var(--paper)}
+  .bs-mini .bs-item-name{font-size:13.5px;font-weight:500;color:var(--body)}
+  .bs-mini .bs-item-meta{font-weight:500;font-variant-numeric:tabular-nums}
+  .bs-mini .bs-item-meta .bs-prog-bar{height:3px}
+  .bs-mini .bs-prog-bar i{background:color-mix(in srgb,var(--ink) 55%,transparent)}
+  .bs-mini .bs-item .bs-dday{padding:0;background:none;font-size:11.5px;font-weight:500;color:var(--mute)}
+  .bs-mini .bs-item .bs-dday.soon{color:var(--warn)}
+  .bs-mini .bs-item .bs-dday.over{color:var(--neg)}
+  .bs-mini .bs-item .bs-dday.done{color:var(--mute)}
   .bs-list{display:flex;flex-direction:column;gap:4px}
   .bs-item{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;
     border:1px solid transparent;cursor:pointer;transition:var(--ui-ease)}
@@ -6938,10 +6959,10 @@ window.BAROYAM_FONT=(function(){
     <!-- 브랜드전략실 브랜드 목록 · 대시보드(.paper) 바깥 왼쪽에 따로 뜬 작은 대시보드 ·
          브랜드전략실 화면(body.view-is-brand)에서만 보이고, 스크롤을 따라온다 -->
     <aside class="bs-mini" id="bsMini" aria-label="브랜드 목록">
-      <div class="bs-mini-head"><h2>브랜드 목록</h2><span id="bsCount"></span></div>
-      <button type="button" class="ui-btn primary block" id="bsNewBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>새 브랜드
-      </button>
+      <div class="bs-mini-head"><h2>브랜드 <span id="bsCount"></span></h2>
+        <button type="button" class="ui-btn sm" id="bsNewBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>새 브랜드
+        </button></div>
       <div class="bs-mini-tools">
         <label class="ui-field sm block bs-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
@@ -22353,7 +22374,7 @@ window.baroyamAsk=function(title,body,okText){
   /* ---------- 왼쪽 목록 ---------- */
   function renderGrid(){
     const list=live();
-    $('bsCount').textContent=list.length?list.length+'개':'';
+    $('bsCount').textContent=list.length?String(list.length):'';
     /* 고른 브랜드가 없거나 지워졌으면 첫 브랜드를 고른다 */
     if(!openId||!list.some(function(b){ return b.id===openId; })){
       openId=null;
