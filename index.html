@@ -4710,6 +4710,11 @@ window.BAROYAM_FONT=(function(){
   .al-me{color:var(--btn-soft-ink);font-weight:500}
   .al-me::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--btn);margin:0 5px 1px 0;vertical-align:middle}
   .al-pick{height:28px;min-width:0;padding:0 10px;font-size:12px}
+  .al-ext{color:var(--warn)}
+  #alManager .al-table td.al-ext{color:var(--warn);font-weight:500}
+  .al-ip{display:flex;align-items:center;gap:12px;padding:6px 0 6px 8px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink)}
+  .al-ip span{flex:1;font-size:12px;color:var(--mute)}
+  .al-ip-empty{padding:8px 0 8px 8px;border-bottom:1px solid var(--line);font-size:12px;color:var(--mute)}
   .al-table-wrap{max-height:380px;overflow:auto}
   .al-table{width:100%;border-collapse:collapse}
   #alManager .al-table th{position:sticky;top:0;background:var(--paper);text-align:left;font-size:11.5px;font-weight:500;color:var(--mute);
@@ -6876,7 +6881,10 @@ window.BAROYAM_FONT=(function(){
             <!-- 접속기록 · 어느 기기(브라우저)에서 누가 언제 들어왔는지 · 기기마다 이름을 붙인다 -->
             <section class="settings-view" data-settings-panel="accesslog" hidden>
               <div class="al-manager" id="alManager">
-                <p class="al-hint">보안 점검용 기록이에요. 회원으로 들어올 때 남고 90일 뒤 지워져요. 사무실 PC는 IP가 같아서 기기 이름으로 구분해요.</p>
+                <p class="al-hint">보안 점검용 기록이에요. 회원으로 들어올 때 남고 90일 뒤 지워져요. 회사 IP를 등록해 두면 그 밖에서 들어온 접속을 <b>외부</b>로 표시해요.</p>
+                <div class="al-head"><div class="al-sub">회사 IP<span id="alOfficeSub"></span></div>
+                  <button type="button" class="ui-btn sm soft" id="alOfficeAdd" hidden></button></div>
+                <div class="al-devs" id="alOffice"></div>
                 <div class="al-head"><div class="al-sub">기기<span id="alDevCount"></span></div></div>
                 <div class="al-devs" id="alDevs"></div>
                 <div class="al-head"><div class="al-sub">최근 접속</div>
@@ -11345,17 +11353,21 @@ window.CsGuide=(function(){
 })();
 
 /* 관리자 설정 · 접속기록 · access_log(서버가 IP·브라우저를 채움)를 기기별로 보여 주고 기기 이름을 붙인다 ·
-   기기 이름은 app_settings 의 access_devices_v1 = {names:{기기번호:이름}} 에 saveMerged 로 바꾼 것만 얹는다 */
+   기기 이름·회사 IP 는 app_settings 의 access_devices_v1 = {names:{기기번호:이름}, office:{IP:등록 시각}} 에 saveMerged 로 바꾼 것만 얹는다 */
 (function(){
   const tab=document.getElementById('alSettingsTab');
   const devBox=document.getElementById('alDevs'), rowsEl=document.getElementById('alRows'),
         filterEl=document.getElementById('alFilter'), note=document.getElementById('alNote'),
-        countEl=document.getElementById('alDevCount');
+        countEl=document.getElementById('alDevCount'), officeBox=document.getElementById('alOffice'),
+        officeAdd=document.getElementById('alOfficeAdd'), officeSub=document.getElementById('alOfficeSub');
   if(!tab||!devBox||!rowsEl) return;
   const NAMES_KEY='access_devices_v1';
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const WD=['일','월','화','수','목','금','토'];
-  let rows=null, names={}, pick='', failed=false;
+  /* office = 회사 IP 목록 {IP:등록 시각} · 여기 없는 IP 에서 들어온 줄을 "외부"로 본다(등록 전에는 표시 안 함) */
+  let rows=null, names={}, office={}, pick='', failed=false;
+  const hasOffice=()=>Object.keys(office).length>0;
+  const isExt=r=>hasOffice()&&!!r.ip&&!office[r.ip];
   const me=()=>window.BAROYAM_DEVICE?window.BAROYAM_DEVICE.id():'';
   const short=id=>String(id||'').replace(/-/g,'').slice(0,6);
   const devName=id=>names[id]||('이름 없는 기기 '+short(id));
@@ -11378,8 +11390,8 @@ window.CsGuide=(function(){
   function devices(){
     const by={};
     (rows||[]).forEach(r=>{
-      const d=by[r.device_id]||(by[r.device_id]={id:r.device_id,n:0,last:r,members:new Set(),ips:new Set()});
-      d.n++; if(r.member_name) d.members.add(r.member_name); if(r.ip) d.ips.add(r.ip);
+      const d=by[r.device_id]||(by[r.device_id]={id:r.device_id,n:0,ext:0,last:r,members:new Set(),ips:new Set()});
+      d.n++; if(isExt(r)) d.ext++; if(r.member_name) d.members.add(r.member_name); if(r.ip) d.ips.add(r.ip);
     });
     /* 이 기기는 기록이 아직 없어도 맨 위에 둬서 이름부터 붙일 수 있게 한다 */
     const mine=me();
@@ -11387,8 +11399,17 @@ window.CsGuide=(function(){
     return Object.values(by).sort((a,b)=>(b.id===mine)-(a.id===mine)||String(b.last&&b.last.at).localeCompare(String(a.last&&a.last.at)));
   }
   function render(){
-    const list=devices(), mine=me();
+    const list=devices(), mine=me(), all=rows||[], extN=all.filter(isExt).length;
     countEl.textContent=rows?list.length+'대':'';
+    /* 회사 IP · 지금 이 기기의 마지막 IP 를 한 번에 등록할 수 있게 한다 */
+    const myIp=(all.find(r=>r.device_id===mine&&r.ip)||{}).ip||'';
+    officeSub.textContent=hasOffice()?(extN?'':' · 외부 접속 없음'):'';
+    if(extN) officeSub.innerHTML=` · <span class="al-ext">외부 접속 ${extN}건</span>`;
+    officeBox.innerHTML=Object.keys(office).sort().map(ip=>`<div class="al-ip">${esc(ip)}<span>${ip===myIp?'지금 이 기기의 IP':''}</span>
+        <button type="button" class="ui-btn sm ghost" data-ip-del="${esc(ip)}">빼기</button></div>`).join('')
+      ||`<div class="al-ip-empty">아직 없어요. 사무실 PC에서 이 화면을 열고 "지금 IP를 회사로 등록"을 누르세요.</div>`;
+    officeAdd.hidden=!myIp||!!office[myIp];
+    officeAdd.dataset.ip=myIp; officeAdd.textContent=`지금 IP를 회사로 등록 (${myIp})`;
     /* 한 줄 = 기기 · 이름 칸은 글자처럼 보이다가 올리면 테두리 · 나머지는 흐린 글 한 줄 */
     devBox.innerHTML=list.map(d=>{
       const bits=[];
@@ -11398,19 +11419,22 @@ window.CsGuide=(function(){
       if(d.members.size) bits.push(esc([...d.members].join(', ')));
       if(d.ips.size) bits.push(esc([...d.ips].slice(0,2).join(', '))+(d.ips.size>2?' 외':''));
       if(d.n) bits.push(d.n+'회');
+      if(d.ext) bits.push(`<span class="al-ext">외부 ${d.ext}회</span>`);
       return `<div class="al-dev"><input data-dev="${esc(d.id)}" value="${esc(names[d.id]||'')}" maxlength="30"
           placeholder="이름 없는 기기 ${esc(short(d.id))}" aria-label="기기 이름"><div class="al-dev-meta">${bits.join(' · ')}</div></div>`;
     }).join('');
-    if(pick&&!list.some(d=>d.id===pick)) pick='';
-    filterEl.textContent=pick?devName(pick):'전체 기기';
-    filterEl.onclick=()=>UI.menu(filterEl,[{value:'',label:'전체 기기',sub:String((rows||[]).length)}]
+    if(pick&&pick!=='ext'&&!list.some(d=>d.id===pick)) pick='';
+    if(pick==='ext'&&!hasOffice()) pick='';
+    filterEl.textContent=pick==='ext'?'외부 접속만':pick?devName(pick):'전체 기기';
+    filterEl.onclick=()=>UI.menu(filterEl,[{value:'',label:'전체 기기',sub:String(all.length)}]
+      .concat(hasOffice()?[{value:'ext',label:'외부 접속만',sub:String(extN)}]:[])
       .concat(list.filter(d=>d.n).map(d=>({value:d.id,label:devName(d.id),sub:String(d.n)}))),pick,v=>{ pick=v; render(); });
-    const shown=(rows||[]).filter(r=>!pick||r.device_id===pick);
+    const shown=all.filter(r=>pick==='ext'?isExt(r):(!pick||r.device_id===pick));
     rowsEl.innerHTML=shown.map(r=>`<tr>
         <td>${when(r.at)}</td>
         <td class="al-dev-name">${esc(devName(r.device_id))}</td>
         <td>${esc(r.member_name||r.member_id||'')}</td>
-        <td>${esc(r.ip||'—')}</td>
+        <td${isExt(r)?' class="al-ext"':''}>${esc(r.ip||'—')}${isExt(r)?' · 외부':''}</td>
         <td>${esc(ua(r.user_agent))}</td>
       </tr>`).join('')||`<tr><td colspan="5">${rows?'기록이 없어요.':'불러오는 중…'}</td></tr>`;
     note.textContent=failed?'접속기록을 불러오지 못했어요. Supabase 에 access_log 표가 있는지 확인해 주세요.':
@@ -11422,7 +11446,7 @@ window.CsGuide=(function(){
     if(!DB){ failed=true; render(); return; }
     try{
       const [r,n]=await Promise.all([DB.accessLogList(500),DB.loadSetting(NAMES_KEY)]);
-      rows=r; names=(n&&n.names)||{}; failed=false;
+      rows=r; names=(n&&n.names)||{}; office=(n&&n.office)||{}; failed=false;
     }catch(err){ console.error(err); failed=true; rows=rows||[]; }
     render();
   }
@@ -11438,6 +11462,18 @@ window.CsGuide=(function(){
     if(!next){ note.textContent='기기 이름을 저장하지 못했어요. 다시 시도해 주세요.'; return; }
     names=next.names||{}; render();
   }
+  async function saveOffice(ip,on){
+    const DB=window.BAROYAM_DB;
+    const next=DB&&await DB.saveMerged(NAMES_KEY,cur=>{
+      const o=(cur&&typeof cur==='object')?cur:{}, of=Object.assign({},o.office||{});
+      if(on) of[ip]=Date.now(); else delete of[ip];
+      return Object.assign({},o,{office:of,updatedAt:Date.now()});
+    });
+    if(!next){ note.textContent='회사 IP를 저장하지 못했어요. 다시 시도해 주세요.'; return; }
+    office=next.office||{}; names=next.names||names; render();
+  }
+  officeAdd.addEventListener('click',()=>{ if(officeAdd.dataset.ip) saveOffice(officeAdd.dataset.ip,true); });
+  officeBox.addEventListener('click',e=>{ const b=e.target.closest('[data-ip-del]'); if(b) saveOffice(b.dataset.ipDel,false); });
   devBox.addEventListener('change',e=>{ const inp=e.target.closest('input[data-dev]'); if(inp) saveName(inp); });
   devBox.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input[data-dev]')) e.target.blur(); });
   tab.addEventListener('click',load);
