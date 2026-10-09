@@ -2209,6 +2209,10 @@ window.BAROYAM_FONT=(function(){
   :is(#view-month,#view-week) .mr-head{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;color:var(--ink)}
   :is(#view-month,#view-week) .mr-head i{width:9px;height:9px;border-radius:50%;flex:none}
   :is(#view-month,#view-week) .mr-head .achip{margin-left:auto;font-size:11.5px;padding:2px 8px}
+  /* 스크롤하면 나타나기(scrollRevealArm) · 기다리는 섹션은 흐리게 조금 아래에 두고 안의 움직임을 멈춰 둔다 */
+  :is(#view-month,#view-week) section.sr-wait{opacity:0;transform:translateY(22px)}
+  :is(#view-month,#view-week) section.sr-wait *{animation-play-state:paused!important}
+  :is(#view-month,#view-week) section.sr-in{transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
   :is(#view-month,#view-week) .mr-line{display:grid;grid-template-columns:34px 1fr 58px;align-items:center;gap:10px}
   :is(#view-month,#view-week) .mr-line .rm{font-size:11.5px;font-weight:600;color:var(--mute)}
   :is(#view-month,#view-week) .mr-line .rtrack{height:12px;border-radius:999px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}
@@ -9793,7 +9797,7 @@ function countUpText(part,v){
 function countUpIn(root){
   if(!root) return;
   const els=[...root.querySelectorAll('.num:not([data-nocount])')]
-    .filter(el=>!(el.parentElement&&el.parentElement.closest('.num')));
+    .filter(el=>!(el.parentElement&&el.parentElement.closest('.num'))&&!el.closest('.sr-wait'));
   els.forEach(el=>{
     if(el.__countRaf){ cancelAnimationFrame(el.__countRaf); el.__countRaf=0; }
     const parts=countUpParts(el);
@@ -9813,11 +9817,32 @@ function countUpIn(root){
     el.__countRaf=requestAnimationFrame(step);
   });
 }
+/* 스크롤하면 나타나기(2026-10-09 사용자 요청) · 매출데이터에 들어오면 첫 화면에 보이는 섹션만 바로 움직이고,
+   아래 섹션은 숨겨 둔 채 그래프 움직임을 멈춰 두었다가(sr-wait) 스크롤로 화면에 들어올 때 떠오르며 움직이고 숫자를 센다 ·
+   화면을 열 때마다(activateView) 다시 건다 · 움직임 줄이기 설정이면 아무것도 하지 않는다 */
+let srObserver=null;
+function scrollRevealArm(view){
+  if(!view||countUpLessMotion||!('IntersectionObserver' in window)) return;
+  if(!srObserver) srObserver=new IntersectionObserver(ents=>{
+    ents.forEach(en=>{
+      if(!en.isIntersecting) return;
+      const sec=en.target; srObserver.unobserve(sec);
+      sec.classList.remove('sr-wait'); sec.classList.add('sr-in');
+      countUpIn(sec);
+    });
+  },{rootMargin:'0px 0px -12% 0px',threshold:0.05});
+  const fold=innerHeight*0.92;
+  view.querySelectorAll('section.section').forEach(sec=>{
+    srObserver.unobserve(sec); sec.classList.remove('sr-in','sr-wait');
+    if(sec.getBoundingClientRect().top<fold) return;   /* 첫 화면에 보이는 섹션은 바로 */
+    sec.classList.add('sr-wait'); srObserver.observe(sec);
+  });
+}
 /* 지금 열려 있는 보고서만 다시 센다 · 숨어 있는 화면은 열 때 activateView가 부른다 */
 function countUpVisibleReport(){
   ['view-week','view-month'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el&&el.style.display!=='none') countUpIn(el);
+    if(el&&el.style.display!=='none'){ scrollRevealArm(el); countUpIn(el); }   /* 데이터가 들어와 섹션 높이가 바뀌었으니 다시 건다 */
   });
 }
 
@@ -12243,7 +12268,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
 
     /* 매출데이터로 들어오면 그 보고서의 숫자를 0에서부터 올린다 */
-    if(v==='week'||v==='month') countUpIn(document.getElementById('view-'+v));
+    if(v==='week'||v==='month'){ scrollRevealArm(document.getElementById('view-'+v)); countUpIn(document.getElementById('view-'+v)); }
     const isSales=(v==='month'||v==='week');
     salesToggle.classList.toggle('active',isSales);
     if(isSales) lastSalesView=v;
