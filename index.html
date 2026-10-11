@@ -2403,6 +2403,42 @@ window.BAROYAM_FONT=(function(){
   .cm-phone{aspect-ratio:9/16;max-width:230px;margin:6px auto 0;border-radius:26px;border:6px solid var(--ink);
     background:var(--bg);display:grid;place-items:center;padding:24px;text-align:center}
   .cm-phone span{font-size:12px;line-height:1.6;color:var(--mute);word-break:keep-all}
+  /* 승인 요청 · 목록 | 재생 | 승인·검수 결과 */
+  .cm-approve{display:grid;grid-template-columns:330px minmax(0,1fr) 320px;gap:16px;align-items:start}
+  .cm-approve[hidden]{display:none}
+  .cm-count{color:var(--btn-soft-ink)}
+  .cm-ap-list{display:flex;flex-direction:column;position:sticky;top:16px;max-height:calc(100vh - 48px)}
+  .cm-ap-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}
+  .cm-ap-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin:0 -6px;padding:0 6px}
+  .cm-ap-item{display:flex;gap:12px;padding:10px;border:1px solid var(--line);border-radius:12px;cursor:pointer;transition:var(--ui-ease)}
+  .cm-ap-item:hover{border-color:color-mix(in srgb,var(--btn) 45%,var(--line))}
+  .cm-ap-item.is-on{border-color:var(--btn);background:color-mix(in srgb,var(--btn-soft) 50%,var(--paper))}
+  .cm-thumb{position:relative;flex:none;width:72px;aspect-ratio:9/16;border-radius:8px;background:var(--chip-flat)}
+  .cm-thumb span{position:absolute;right:4px;bottom:4px;padding:1px 5px;border-radius:5px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px;font-weight:600}
+  .cm-ap-body{min-width:0;display:flex;flex-direction:column;gap:3px}
+  .cm-ap-body p{margin:0}
+  .cm-ap-topic{font-size:11.5px;color:var(--mute);line-height:1.45;word-break:break-all}
+  .cm-ap-topic b{font-weight:600;color:var(--btn-soft-ink)}
+  .cm-ap-file{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .cm-ap-meta{font-size:11.5px;color:var(--mute);margin-bottom:6px!important}
+  .cm-ap-body .ui-btn-row{gap:5px;flex-wrap:nowrap}
+  .cm-ap-body .ui-btn.sm{padding:0 9px}
+  .cm-stage{display:grid;place-items:center;min-height:560px;padding:20px;border-radius:16px;background:var(--chip-flat)}
+  .cm-stage .cm-phone{width:100%;max-width:340px;margin:0}
+  .cm-ap-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cm-ap-acts .cm-span{grid-column:1/-1}
+  .cm-box{margin:0;padding:10px 12px;border-radius:var(--ui-r);background:var(--chip-flat);font-size:12.5px;line-height:1.55;color:var(--body);word-break:break-all;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .cm-scores{display:flex;flex-direction:column;gap:9px;margin:14px 0 10px}
+  .cm-score{display:grid;grid-template-columns:76px 1fr 32px;align-items:center;gap:10px;font-size:12px;color:var(--body)}
+  .cm-score .cm-bar i{background:var(--btn)}
+  .cm-score b{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .cm-score.is-avg{padding-top:9px;border-top:1px solid var(--line)}
+  .cm-score.is-avg span{font-weight:600;color:var(--ink)}
+  @media (max-width:1280px){
+    .cm-approve{grid-template-columns:300px minmax(0,1fr)}
+    .cm-approve>.cm-col{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  }
+  @media (max-width:900px){ .cm-approve{grid-template-columns:1fr} .cm-ap-list{position:static;max-height:520px} }
   @media (max-width:1280px){
     .cm-make{grid-template-columns:300px minmax(0,1fr)}
     .cm-make>.cm-col:last-child{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
@@ -9244,6 +9280,90 @@ window.BAROYAM_FONT=(function(){
             </div>
           </aside>
         </div>
+        <!-- 승인 요청 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 승인·반려와 검수 결과 -->
+        <div class="cm-approve" data-content-pane="approve" hidden>
+          <aside class="cm-card cm-ap-list">
+            <h3>승인 요청 <span class="cm-count">9</span></h3>
+            <div class="cm-ap-filters">
+              <button type="button" class="ui-field"><span class="t">전체 주제</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <button type="button" class="ui-field"><span class="t">최신순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+            <div class="cm-ap-scroll">
+              <div class="cm-ap-item is-on">
+                <div class="cm-thumb"><span>00:39</span></div>
+                <div class="cm-ap-body">
+                  <p class="cm-ap-topic"><b>승인 요청 1</b> · 2026-10-11-자취생에게쫀득란빵토핑계란빵</p>
+                  <p class="cm-ap-file">final.mp4</p>
+                  <p class="cm-ap-meta">10/11 16:38 · 31.5MB</p>
+                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
+                </div>
+              </div>
+              <div class="cm-ap-item">
+                <div class="cm-thumb"><span>00:37</span></div>
+                <div class="cm-ap-body">
+                  <p class="cm-ap-topic"><b>승인 요청 2</b> · 2026-10-11-아이간식1분해결</p>
+                  <p class="cm-ap-file">final.mp4</p>
+                  <p class="cm-ap-meta">10/11 14:01 · 30.3MB</p>
+                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
+                </div>
+              </div>
+              <div class="cm-ap-item">
+                <div class="cm-thumb"><span>00:40</span></div>
+                <div class="cm-ap-body">
+                  <p class="cm-ap-topic"><b>승인 요청 3</b> · 2026-10-11-주부에게쫀득란빵토핑계란빵</p>
+                  <p class="cm-ap-file">final_수정1.mp4</p>
+                  <p class="cm-ap-meta">10/11 13:58 · 34.4MB</p>
+                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
+                </div>
+              </div>
+              <div class="cm-ap-item">
+                <div class="cm-thumb"><span>00:31</span></div>
+                <div class="cm-ap-body">
+                  <p class="cm-ap-topic"><b>승인 요청 4</b> · 2026-10-09-워킹맘간식</p>
+                  <p class="cm-ap-file">final_v5.mp4</p>
+                  <p class="cm-ap-meta">10/9 23:36 · 36.6MB</p>
+                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
+                </div>
+              </div>
+              <div class="cm-ap-item">
+                <div class="cm-thumb"><span>00:31</span></div>
+                <div class="cm-ap-body">
+                  <p class="cm-ap-topic"><b>승인 요청 5</b> · 2026-10-09-워킹맘간식</p>
+                  <p class="cm-ap-file">final_v4.mp4</p>
+                  <p class="cm-ap-meta">10/9 22:10 · 35.9MB</p>
+                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
+                </div>
+              </div>
+            </div>
+          </aside>
+          <div class="cm-stage">
+            <div class="cm-phone"><span>목록에서 영상을 고르면 여기서 재생돼요</span></div>
+          </div>
+          <aside class="cm-col">
+            <div class="cm-card">
+              <h3>빠른 작업</h3>
+              <div class="cm-ap-acts">
+                <button type="button" class="ui-btn primary">승인</button>
+                <button type="button" class="ui-btn">반려</button>
+                <button type="button" class="ui-btn soft cm-span">휴지통으로</button>
+              </div>
+            </div>
+            <div class="cm-card">
+              <h3>제목</h3>
+              <input class="ui-field block" value="final">
+            </div>
+            <div class="cm-card">
+              <h3>주제 · 파일</h3>
+              <p class="cm-box">2026-10-11-자취생에게쫀득란빵토핑계란빵 · 10/11 16:38 · 31.5MB</p>
+            </div>
+            <div class="cm-card">
+              <h3>검수 결과</h3>
+              <p class="cm-box"><span class="cm-tag is-done">통과</span> 평균 8.83</p>
+              <div class="cm-scores"><div class="cm-score"><span>훅</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>정보</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>템포</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>화면</span><div class="cm-bar"><i style="width:40%"></i></div><b>4</b></div><div class="cm-score"><span>소리</span><div class="cm-bar"><i style="width:90%"></i></div><b>9</b></div><div class="cm-score"><span>자연스러운 마무리</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score is-avg"><span>평균</span><div class="cm-bar"><i style="width:88.3%"></i></div><b>8.83</b></div></div>
+              <p class="cm-hint">막대는 10점 만점 기준입니다.</p>
+            </div>
+          </aside>
+        </div>
         <div class="profit-empty" data-content-pane="other" hidden>준비 중입니다</div>
       </div><!-- /view-content -->
       <!-- 손익·마진 관리 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
@@ -15795,7 +15915,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     items.forEach(b=>b.classList.toggle('active',b===el));
     if(title) title.textContent=(el.querySelector('.sb-subnav-label')||el).textContent.trim();
     document.querySelectorAll('#view-content [data-content-pane]').forEach(p=>{
-      p.hidden=(p.dataset.contentPane==='make')!==(el.dataset.content==='make');
+      const has=!!document.querySelector('#view-content [data-content-pane="'+el.dataset.content+'"]');
+      p.hidden=p.dataset.contentPane!==(has?el.dataset.content:'other');
     });
   }
   btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
