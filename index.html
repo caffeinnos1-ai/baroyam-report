@@ -2350,6 +2350,64 @@ window.BAROYAM_FONT=(function(){
   .profit-empty{margin-top:34px;min-height:360px;display:grid;place-items:center;border:1px dashed var(--line);
     border-radius:16px;color:var(--mute);font-size:15px;font-weight:500}
   .profit-empty[hidden]{display:none}
+  /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
+  .cm-make{display:grid;grid-template-columns:320px minmax(0,1fr) 300px;gap:16px;align-items:start;margin-top:18px}
+  .cm-make[hidden]{display:none}
+  .cm-col{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .cm-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .cm-card h3{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+  .cm-lead{margin:0 0 16px;font-size:12.5px;line-height:1.6;color:var(--body);word-break:keep-all}
+  .cm-field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .cm-field>label{font-size:13px;font-weight:600;color:var(--ink)}
+  .cm-field>label em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute);margin-left:4px}
+  .cm-hint{margin:0;font-size:11.5px;color:var(--mute);line-height:1.5}
+  .cm-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .cm-src{font-size:12.5px;color:var(--body)}
+  .cm-src b{font-weight:600;color:var(--btn-soft-ink)}
+  .cm-go{margin-top:4px}
+  .cm-check{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12.5px;color:var(--body);cursor:pointer}
+  .cm-check input{accent-color:var(--btn);width:15px;height:15px;margin:0}
+  .cm-tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600;
+    background:var(--btn-soft);color:var(--btn-soft-ink);white-space:nowrap}
+  .cm-tag.is-done{background:var(--pos-soft);color:var(--pos)}
+  .cm-card .ui-tabs+.cm-jobs{margin-top:12px;max-width:440px}
+  .cm-job-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .cm-job-head h3{margin:0;font-size:17px}
+  .cm-brief{margin:0 0 18px;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+  .cm-brief>div{display:flex;gap:10px}
+  .cm-brief dt{flex:none;width:72px;color:var(--mute)}
+  .cm-brief dd{margin:0;color:var(--body)}
+  .cm-step{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:12px;color:var(--mute)}
+  .cm-step b{font-size:14px;font-weight:600;color:var(--ink)}
+  .cm-step-n{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--btn);color:#fff;font-size:12px;font-weight:600}
+  .cm-scripts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .cm-script{display:flex;flex-direction:column;border:1px solid color-mix(in srgb,var(--btn) 40%,var(--line));border-radius:14px;
+    background:color-mix(in srgb,var(--btn-soft) 45%,var(--paper));padding:16px}
+  .cm-script p{margin:0}
+  .cm-script-tag{font-size:12px;font-weight:600;color:var(--btn-soft-ink)}
+  .cm-script .cm-script-why{margin-top:4px;font-size:12px;color:var(--btn-soft-ink);line-height:1.5}
+  .cm-script .cm-script-flow{margin-top:10px;font-size:11.5px;color:var(--body);line-height:1.55}
+  .cm-script h4{margin:14px 0 8px;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.3px}
+  .cm-script-hook{font-size:12px;color:var(--body)}
+  .cm-script .cm-script-meta{margin-top:8px;font-size:11.5px;color:var(--mute)}
+  .cm-script-lines{margin:12px 0 14px;padding-left:22px;font-size:13px;line-height:1.85;color:var(--ink)}
+  .cm-script-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+  .cm-role{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px}
+  .cm-role>.cm-role-head,.cm-role>p{grid-column:1/-1}
+  .cm-role-head{display:flex;align-items:center;gap:8px}
+  .cm-role-head b{font-size:14px;font-weight:600;color:var(--ink)}
+  .cm-role p{margin:6px 0 14px;font-size:12px;color:var(--body);line-height:1.5}
+  .cm-bar{height:6px;border-radius:999px;background:var(--chip-flat);overflow:hidden}
+  .cm-bar i{display:block;height:100%;border-radius:inherit;background:var(--pos)}
+  .cm-bar-n{font-size:12px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .cm-phone{aspect-ratio:9/16;max-width:230px;margin:6px auto 0;border-radius:26px;border:6px solid var(--ink);
+    background:var(--bg);display:grid;place-items:center;padding:24px;text-align:center}
+  .cm-phone span{font-size:12px;line-height:1.6;color:var(--mute);word-break:keep-all}
+  @media (max-width:1280px){
+    .cm-make{grid-template-columns:300px minmax(0,1fr)}
+    .cm-make>.cm-col:last-child{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  }
+  @media (max-width:900px){ .cm-make{grid-template-columns:1fr} }
   /* 손익·마진 관리 · 순수익 요약·마진 계산기·원가표 모두 가로로 길게(대시보드 흰 판은 그대로 두고 폭만 넓힘) */
   body.view-is-profit .wrap{max-width:1720px;padding-left:24px;padding-right:24px}
   @media (max-width:760px){ body.view-is-profit .wrap{padding-left:16px;padding-right:16px} }
@@ -5755,6 +5813,12 @@ window.BAROYAM_FONT=(function(){
   .ui-chip[aria-pressed="true"],.ui-chip.on{background:var(--btn-soft);border-color:var(--btn);color:var(--btn-soft-ink)}
   .ui-chip b{font-weight:600;color:var(--mute)}
   .ui-chip[aria-pressed="true"] b,.ui-chip.on b{color:inherit}
+  /* cards · 칩을 제목+한 줄 설명이 있는 고르기 카드로(두 칸 격자) · 설명은 <small> */
+  .ui-chips.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .ui-chips.cards .ui-chip{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px;height:auto;min-height:58px;
+    padding:11px 13px;border-radius:var(--ui-r);white-space:normal;text-align:left;color:var(--ink);font-size:13px}
+  .ui-chips.cards .ui-chip small{font-size:11.5px;font-weight:400;line-height:1.4;color:var(--mute)}
+  .ui-chips.cards .ui-chip[aria-pressed="true"] small,.ui-chips.cards .ui-chip.on small{color:var(--btn-soft-ink)}
   /* 색 고르기 · 동그란 견본 한 줄 · 라디오라 폼에서 그대로 읽힌다 · 견본 색은 --sw 로 넘긴다 */
   .ui-swatches{display:flex;flex-wrap:wrap;gap:8px}
   .ui-swatch{position:relative;display:inline-flex;cursor:pointer}
@@ -9068,12 +9132,123 @@ window.BAROYAM_FONT=(function(){
         </section>
       </div><!-- /view-perf -->
       <div id="view-content" style="display:none">
-        <section>
-          <div class="plan-hero">
-            <div class="ptag">마케팅</div>
-            <div class="ptitle" id="contentViewTitle">새 영상 만들기</div>
-          </div>
-        </section>
+        <div class="plan-hero">
+          <div class="ptag">마케팅</div>
+          <div class="ptitle" id="contentViewTitle">새 영상 만들기</div>
+        </div>
+        <!-- 새 영상 만들기 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 만들기 설정 | 가운데 진행 중인 영상·대본 고르기 | 오른쪽 작가·편집자·검수자와 미리보기 -->
+        <div class="cm-make" data-content-pane="make">
+          <aside class="cm-col">
+            <div class="ui-chips cards cm-modes">
+              <button type="button" class="ui-chip" aria-pressed="false">직접 기획<small>설정을 채우고 대본 6개 중 골라요</small></button>
+              <button type="button" class="ui-chip" aria-pressed="true">한 번에 완성<small>제품·타깃만 넣으면 영상까지</small></button>
+            </div>
+            <div class="cm-card">
+              <h3>한 번에 완성</h3>
+              <p class="cm-lead">작가가 대본 6개를 쓰면 검수자 추천 1위로 더빙·편집·검수까지 이어서 해요. 완성되면 승인 요청에 올라와요.</p>
+              <div class="cm-field"><label>제품 <em>필수</em></label>
+                <input class="ui-field block" placeholder="제품 이름 (예: 쫀득란빵 토핑 계란빵)"></div>
+              <div class="cm-field"><label>어느 채널 영상인가요 <em>필수</em></label>
+                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">주부채널 <b>직장인</b></button></div>
+                <p class="cm-hint">채널을 고르면 그 채널의 편집 스타일(목소리·자막·훅 등)로 만들어요.</p></div>
+              <div class="cm-field"><label>누구에게 보여 줄 건가요? <em>한 명을 상상해야 공감이 살아요</em></label>
+                <div class="ui-chips">
+                  <button type="button" class="ui-chip" aria-pressed="false">직장인</button>
+                  <button type="button" class="ui-chip" aria-pressed="false">자취생</button>
+                  <button type="button" class="ui-chip" aria-pressed="true">주부</button>
+                  <button type="button" class="ui-chip" aria-pressed="false">워킹맘</button>
+                </div>
+                <input class="ui-field block" placeholder="직접 입력 (예: 신혼부부)"></div>
+              <div class="cm-field"><label>소스 폴더 <em>폴더 안의 영상·사진으로 만들어요</em></label>
+                <div class="cm-row"><span class="cm-src"><b>영상</b> · 소스 58개</span><button type="button" class="ui-btn sm">폴더 선택하기</button></div></div>
+              <div class="cm-field"><label>어떤 포맷으로 만들까요</label>
+                <div class="ui-chips cards">
+                  <button type="button" class="ui-chip" aria-pressed="true">꿀팁형<small>번호 붙인 해결팁 3–5개</small></button>
+                  <button type="button" class="ui-chip" aria-pressed="false">후기형<small>써 본 사람의 솔직한 첫인상·장단점</small></button>
+                  <button type="button" class="ui-chip" aria-pressed="false">공감 상황극형<small>'이거 완전 나' 순간 → 해결</small></button>
+                  <button type="button" class="ui-chip" aria-pressed="false">비교형<small>전·후, 이것 vs 저것</small></button>
+                </div></div>
+              <button type="button" class="ui-btn primary block cm-go">영상까지 한 번에 만들기</button>
+              <label class="cm-check"><input type="checkbox" checked> 다 만들면 검수자 검사까지 받기</label>
+            </div>
+          </aside>
+
+          <main class="cm-col">
+            <div class="cm-card">
+              <div class="ui-tabs">
+                <button type="button" class="ui-tab" aria-selected="true">진행 중 <span class="n">1</span></button>
+                <button type="button" class="ui-tab" aria-selected="false">승인 대기 <span class="n">3</span></button>
+              </div>
+              <div class="ui-chips cards cm-jobs">
+                <button type="button" class="ui-chip" aria-pressed="true">아이간식 추천!<small><span class="cm-tag">대본 고르기</span></small></button>
+              </div>
+            </div>
+            <div class="cm-card">
+              <div class="cm-job-head">
+                <h3>아이간식 추천! <span class="cm-tag">대본 고르기</span></h3>
+                <button type="button" class="ui-btn sm danger">중단하고 삭제</button>
+              </div>
+              <dl class="cm-brief">
+                <div><dt>만들기</dt><dd>쇼츠 제작 · 대상: 주부 · 쫀득란빵 토핑 계란빵</dd></div>
+                <div><dt>상황</dt><dd>남편, 아이간식</dd></div>
+                <div><dt>포인트</dt><dd>1분조리 · 토핑 계란빵 3가지맛 · 소비기한 1년이라 생각나면 먹기좋음</dd></div>
+                <div><dt>확인된 사실</dt><dd>렌지 1분조리</dd></div>
+              </dl>
+              <div class="cm-step"><span class="cm-step-n">1</span><b>대본 고르기</b><span>2회차 · 그대로 쓰거나, 카드에서 바로 고쳐서 편집을 시작하세요</span></div>
+              <div class="cm-scripts">
+              <article class="cm-script">
+                <div class="cm-script-tag">검수자 추천</div>
+                <p class="cm-script-why">0초 노른자 단면에 '등교 10분 전' 숫자 훅, 끝까지 동선이 깔끔해요</p>
+                <p class="cm-script-flow">후보 B · 꿀팁형 · 숫자 훅 → 꿀팁 3가지 → 우유·커피 들고 출발</p>
+                <h4>“등교 10분 전에도, 아침은 먹어요.”</h4>
+                <p class="cm-script-hook">훅 타이틀: 밥 대신 든든한 아침</p>
+                <p class="cm-script-meta">약 38.6초 · 306자 · 장면 16개 · 대본 점검 통과</p>
+                <ol class="cm-script-lines"><li>등교 10분 전에도, 아침은 먹어요.</li><li>남편 출근 전에도요.</li><li>꿀팁 첫 번째, 장 볼 때 쟁여 두기!</li><li>소비기한이 1년이라, 넉넉히 사 둬요.</li><li>그럼 전날 밤, 메뉴 고민이 없어요.</li><li>꿀팁 두 번째, 아침엔 레인지 1분!</li><li>애 옷 입히는 사이, 다 데워져요.</li><li>꿀팁 세 번째, 맛은 애가 고르기!</li></ol>
+                <div class="cm-script-foot">
+                  <button type="button" class="ui-btn">고쳐서 쓰기</button>
+                  <button type="button" class="ui-btn primary">이대로 편집 시작</button>
+                </div>
+              </article>
+              <article class="cm-script">
+                <div class="cm-script-tag">검수자 추천</div>
+                <p class="cm-script-why">'아침밥 이제 안 차려요' 반전 훅에 그냥 나가는 장면이 딱 맞아요</p>
+                <p class="cm-script-flow">후보 C · 꿀팁형 · 반전 훅 → 꿀팁 3가지 → 차리는 아침보다 먹고 가는 아침</p>
+                <h4>“저는 아침밥, 이제 안 차려요.”</h4>
+                <p class="cm-script-hook">훅 타이틀: 밥상 대신 이걸로 바꿨어요</p>
+                <p class="cm-script-meta">약 37.2초 · 295자 · 장면 16개 · 대본 점검 통과</p>
+                <ol class="cm-script-lines"><li>저는 아침밥, 이제 안 차려요.</li><li>차려 놓으면, 그냥 나가거든요.</li><li>그래서 바꾼 꿀팁, 세 가지예요.</li><li>첫 번째는 맛을, 세 가지로 사 두기!</li><li>대파베이컨에 콘치즈, 페퍼로니까지!</li><li>두 번째는 데우기, 레인지 1분!</li><li>머리 묶는 사이, 다 데워져요.</li><li>세 번째는 넉넉히, 쟁여 둘 때 꺼내요.</li></ol>
+                <div class="cm-script-foot">
+                  <button type="button" class="ui-btn">고쳐서 쓰기</button>
+                  <button type="button" class="ui-btn primary">이대로 편집 시작</button>
+                </div>
+              </article>
+              </div>
+            </div>
+          </main>
+
+          <aside class="cm-col">
+            <div class="cm-card cm-role">
+              <div class="cm-role-head"><b>작가</b><span class="cm-tag is-done">완료</span></div>
+              <p>대본 후보 6개 완성. 검수자 추천 중</p>
+              <div class="cm-bar"><i style="width:100%"></i></div><span class="cm-bar-n">100%</span>
+            </div>
+            <div class="cm-card cm-role">
+              <div class="cm-role-head"><b>편집자</b><span class="cm-tag">대기</span></div>
+              <p>대기 중</p>
+              <div class="cm-bar"><i style="width:0%"></i></div><span class="cm-bar-n">0%</span>
+            </div>
+            <div class="cm-card cm-role">
+              <div class="cm-role-head"><b>검수자</b><span class="cm-tag is-done">완료</span></div>
+              <p>대본 후보 2개 추천 완료. 대표님 선택 대기</p>
+              <div class="cm-bar"><i style="width:100%"></i></div><span class="cm-bar-n">100%</span>
+            </div>
+            <div class="cm-card">
+              <h3>실시간 편집 미리보기</h3>
+              <div class="cm-phone"><span>대본을 고르면 편집이 시작되고, 여기서 실시간으로 보여요</span></div>
+            </div>
+          </aside>
+        </div>
+        <div class="profit-empty" data-content-pane="other" hidden>준비 중입니다</div>
       </div><!-- /view-content -->
       <!-- 손익·마진 관리 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-profit" style="display:none">
@@ -12992,7 +13167,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
     /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브·계정관리)은 1720px 를 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account');
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account'||v==='content');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
     document.body.classList.toggle('view-is-profit',v==='profit');
@@ -15623,6 +15798,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function pick(el){
     items.forEach(b=>b.classList.toggle('active',b===el));
     if(title) title.textContent=(el.querySelector('.sb-subnav-label')||el).textContent.trim();
+    document.querySelectorAll('#view-content [data-content-pane]').forEach(p=>{
+      p.hidden=(p.dataset.contentPane==='make')!==(el.dataset.content==='make');
+    });
   }
   btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
   items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('content'); pick(el); }));
