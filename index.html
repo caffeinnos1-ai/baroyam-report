@@ -2444,6 +2444,24 @@ window.BAROYAM_FONT=(function(){
   .cm-up-lab label em{font-style:normal;font-weight:500;font-size:11.5px;color:var(--btn-soft-ink);margin-left:4px}
   .cm-up-lab .ui-btn.sm{height:24px;padding:0 6px;color:var(--btn-soft-ink)}
   .cm-up textarea.ui-field{resize:vertical;min-height:118px}
+  /* 채널 관리 · 채널 카드 격자 */
+  .cm-channels[hidden]{display:none}
+  .cm-box.cm-note{display:block;margin-bottom:16px}
+  .cm-note b{font-weight:600;color:var(--ink)}
+  .cm-ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;align-items:start}
+  .cm-ch h3{margin-bottom:14px}
+  .cm-ch .cm-brief{gap:9px;margin-bottom:16px}
+  .cm-ch .cm-brief dd{color:var(--ink);line-height:1.6;flex:1;min-width:0}
+  .cm-ch-week{display:flex;align-items:center;gap:10px}
+  .cm-ch-week .cm-bar{flex:1}
+  .cm-ch-week span{font-size:12px;font-variant-numeric:tabular-nums}
+  .cm-ch-styles{display:flex;gap:6px;margin-bottom:6px}
+  .cm-ch-styles figure{margin:0;width:56px;text-align:center}
+  .cm-ch-styles .cm-thumb{width:100%;aspect-ratio:4/5}
+  .cm-ch-styles figcaption{margin-top:3px;font-size:11px;color:var(--mute)}
+  .cm-ch-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cm-ch-grid .ui-btn.cm-ch-add{height:160px;background:transparent;border:1.5px dashed color-mix(in srgb,var(--btn) 40%,var(--line));border-radius:16px}
+  .cm-ch-grid .ui-btn.cm-ch-add:hover{background:var(--btn-soft);border-color:var(--btn)}
   @media (max-width:1280px){
     .cm-approve{grid-template-columns:300px minmax(0,1fr)}
     .cm-approve>.cm-col{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
@@ -9423,6 +9441,34 @@ window.BAROYAM_FONT=(function(){
                 <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">아동용 아님</button><button type="button" class="ui-chip" aria-pressed="false">아동용</button></div></div>
             </div>
           </aside>
+        </div>
+        <!-- 채널 관리 · 지금은 모양만(눌러도 동작하지 않음) · 채널 카드 격자 + 채널 추가 -->
+        <div class="cm-channels" data-content-pane="channels" hidden>
+          <p class="cm-box cm-note">임시 화면이에요. 유튜브 API 연동 전이라 <b>채널 연결과 업로드는 모의로</b> 동작해요. 실제 유튜브에는 아무것도 올라가지 않아요.</p>
+          <div class="cm-ch-grid">
+            <div class="cm-card cm-ch">
+              <h3>주부채널 <span class="cm-cnt">유튜브 연결 안 됨</span></h3>
+              <dl class="cm-brief">
+                <div><dt>타깃</dt><dd>직장인 · 주부</dd></div>
+                <div><dt>업로드</dt><dd>매일 12:00 · 19:00</dd></div>
+                <div><dt>우선순위</dt><dd>보통</dd></div>
+                <div><dt>이번 7일</dt><dd class="cm-ch-week"><div class="cm-bar"><i style="width:0%"></i></div><span>0 / 14</span></dd></div>
+                <div><dt>다음 업로드</dt><dd>-</dd></div>
+                <div><dt>편집 스타일</dt><dd>
+                  <div class="cm-ch-styles">
+                    <figure><div class="cm-thumb"></div><figcaption>훅</figcaption></figure>
+                    <figure><div class="cm-thumb"></div><figcaption>자막</figcaption></figure>
+                    <figure><div class="cm-thumb"></div><figcaption>카메라</figcaption></figure>
+                  </div>
+                  차분한 여성 · 정보형 · R4 구절 자막(기본) · 형광펜 손글씨 훅</dd></div>
+              </dl>
+              <div class="cm-ch-acts">
+                <button type="button" class="ui-btn">설정</button>
+                <button type="button" class="ui-btn primary">유튜브 연결</button>
+              </div>
+            </div>
+            <button type="button" class="ui-btn soft cm-ch-add">+ 채널 추가</button>
+          </div>
         </div>
         <div class="profit-empty" data-content-pane="other" hidden>준비 중입니다</div>
       </div><!-- /view-content -->
