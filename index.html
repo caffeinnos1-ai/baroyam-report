@@ -2351,7 +2351,7 @@ window.BAROYAM_FONT=(function(){
     border-radius:16px;color:var(--mute);font-size:15px;font-weight:500}
   .profit-empty[hidden]{display:none}
   /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
-  .cm-make{display:grid;grid-template-columns:320px minmax(0,1fr) 300px;gap:16px;align-items:start;margin-top:18px}
+  .cm-make{display:grid;grid-template-columns:320px minmax(0,1fr) 300px;gap:16px;align-items:start}
   .cm-make[hidden]{display:none}
   .cm-col{display:flex;flex-direction:column;gap:12px;min-width:0}
   .cm-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
@@ -9132,10 +9132,6 @@ window.BAROYAM_FONT=(function(){
         </section>
       </div><!-- /view-perf -->
       <div id="view-content" style="display:none">
-        <div class="plan-hero">
-          <div class="ptag">마케팅</div>
-          <div class="ptitle" id="contentViewTitle">새 영상 만들기</div>
-        </div>
         <!-- 새 영상 만들기 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 만들기 설정 | 가운데 진행 중인 영상·대본 고르기 | 오른쪽 작가·편집자·검수자와 미리보기 -->
         <div class="cm-make" data-content-pane="make">
           <aside class="cm-col">
