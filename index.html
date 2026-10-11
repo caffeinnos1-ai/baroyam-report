@@ -2434,6 +2434,16 @@ window.BAROYAM_FONT=(function(){
   .cm-score b{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .cm-score.is-avg{padding-top:9px;border-top:1px solid var(--line)}
   .cm-score.is-avg span{font-weight:600;color:var(--ink)}
+  /* 완성본 · 유튜브 업로드 준비 */
+  .cm-up-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .cm-cnt{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+  .cm-up .cm-field{gap:6px;margin-bottom:14px}
+  .cm-up .cm-field:last-child{margin-bottom:0}
+  .cm-up-lab{display:flex;align-items:center;gap:8px;min-height:24px}
+  .cm-up-lab label{flex:1;font-size:13px;font-weight:600;color:var(--ink)}
+  .cm-up-lab label em{font-style:normal;font-weight:500;font-size:11.5px;color:var(--btn-soft-ink);margin-left:4px}
+  .cm-up-lab .ui-btn.sm{height:24px;padding:0 6px;color:var(--btn-soft-ink)}
+  .cm-up textarea.ui-field{resize:vertical;min-height:118px}
   @media (max-width:1280px){
     .cm-approve{grid-template-columns:300px minmax(0,1fr)}
     .cm-approve>.cm-col{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
@@ -9361,6 +9371,56 @@ window.BAROYAM_FONT=(function(){
               <p class="cm-box"><span class="cm-tag is-done">통과</span> 평균 8.83</p>
               <div class="cm-scores"><div class="cm-score"><span>훅</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>정보</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>템포</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>화면</span><div class="cm-bar"><i style="width:40%"></i></div><b>4</b></div><div class="cm-score"><span>소리</span><div class="cm-bar"><i style="width:90%"></i></div><b>9</b></div><div class="cm-score"><span>자연스러운 마무리</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score is-avg"><span>평균</span><div class="cm-bar"><i style="width:88.3%"></i></div><b>8.83</b></div></div>
               <p class="cm-hint">막대는 10점 만점 기준입니다.</p>
+            </div>
+          </aside>
+        </div>
+        <!-- 완성본 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 유튜브 업로드 준비 -->
+        <div class="cm-approve" data-content-pane="done" hidden>
+          <aside class="cm-card cm-ap-list">
+            <h3>완성본 <span class="cm-count">1</span></h3>
+            <div class="cm-ap-filters">
+              <button type="button" class="ui-field"><span class="t">전체 주제</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <button type="button" class="ui-field"><span class="t">최신순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+            <div class="cm-ap-scroll">
+              <div class="cm-ap-item is-on">
+                <div class="cm-thumb"><span>00:31</span></div>
+                <div class="cm-ap-body">
+                  <p class="cm-ap-topic"><b>완성 1</b> · 2026-10-09-쫀득란빵</p>
+                  <p class="cm-ap-file">final_v6.mp4</p>
+                  <p class="cm-ap-meta">10/9 20:52 · 26.9MB</p>
+                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button></div>
+                </div>
+              </div>
+            </div>
+          </aside>
+          <div class="cm-stage">
+            <div class="cm-phone"><span>목록에서 영상을 고르면 여기서 재생돼요</span></div>
+          </div>
+          <aside class="cm-col">
+            <div class="cm-card">
+              <h3>빠른 작업</h3>
+              <button type="button" class="ui-btn soft block">휴지통으로</button>
+            </div>
+            <div class="cm-card cm-up">
+              <div class="cm-up-head"><h3>유튜브 업로드 준비</h3><span class="cm-cnt">필수 4/5</span></div>
+              <div class="cm-field"><div class="cm-up-lab"><label>채널 예약</label></div>
+                <p class="cm-box">연결된 채널이 없어요. 채널 관리에서 먼저 유튜브 채널을 연결해 주세요.</p></div>
+              <div class="cm-field"><div class="cm-up-lab"><label>제목 <em>필수</em></label><span class="cm-cnt">10/100</span><button type="button" class="ui-btn ghost sm">복사</button></div>
+                <input class="ui-field block" value="출근 전 1분 아침"></div>
+              <div class="cm-field"><div class="cm-up-lab"><label>설명</label><span class="cm-cnt">84/5000</span><button type="button" class="ui-btn ghost sm">복사</button></div>
+                <textarea class="ui-field block" rows="4">이거 1분 돌리면 아침 끝납니다. 외투도 못 챙기고 뛰쳐나왔죠? 편의점 들를 5분도 없고요.
+
+3종 중 원픽은?</textarea></div>
+              <div class="cm-field"><div class="cm-up-lab"><label>해시태그</label><button type="button" class="ui-btn ghost sm">복사</button></div>
+                <input class="ui-field block" value="#shorts #추운 #아침 #출근길">
+                <p class="cm-hint">설명 맨 끝에 붙여요. 앞의 3개가 제목 위에 보이고, 15개가 넘으면 전부 무시돼요.</p></div>
+              <div class="cm-field"><div class="cm-up-lab"><label>태그</label><span class="cm-cnt">36/500</span><button type="button" class="ui-btn ghost sm">복사</button></div>
+                <input class="ui-field block" value="쇼츠, 추운 아침 출근길 1분 아침 간편식 쫀득란빵(계란빵) 3종"></div>
+              <div class="cm-field"><div class="cm-up-lab"><label>공개 상태 <em>필수</em></label></div>
+                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">비공개</button><button type="button" class="ui-chip" aria-pressed="false">일부 공개</button><button type="button" class="ui-chip" aria-pressed="false">공개</button><button type="button" class="ui-chip" aria-pressed="false">예약</button></div></div>
+              <div class="cm-field"><div class="cm-up-lab"><label>시청자층 <em>필수</em></label></div>
+                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">아동용 아님</button><button type="button" class="ui-chip" aria-pressed="false">아동용</button></div></div>
             </div>
           </aside>
         </div>
