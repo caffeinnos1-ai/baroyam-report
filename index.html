@@ -2487,6 +2487,82 @@ window.BAROYAM_FONT=(function(){
   .cm-ch-styles .cm-thumb{width:100%;aspect-ratio:4/5}
   .cm-ch-styles figcaption{margin-top:3px;font-size:11px;color:var(--mute)}
   .cm-ch-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cm-ch-styles .cm-frame{width:100%;aspect-ratio:4/5;border-radius:8px}
+  .cm-ch-styles .cm-hook b{font-size:11px;white-space:nowrap}
+  .cm-ch-styles .cm-hook small{font-size:7px}
+  .cm-ch-styles .cm-cap{font-size:7.5px}
+  /* 채널 설정 · 설정을 누르면 채널 카드 아래에 펼쳐진다 · 왼쪽 채널 정보 | 오른쪽 편집 스타일(새 영상 만들기에서 이 채널을 고르면 이 값으로 고정) */
+  .cm-ch-set{margin-top:16px}
+  .cm-ch-set[hidden]{display:none}
+  .cm-set-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .cm-set-head h3{margin:0;font-size:17px}
+  .cm-set-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+  .cm-set-grid>aside{position:sticky;top:16px}
+  .cm-set-grid .cm-field>label em{display:block;margin:2px 0 0}
+  .cm-style-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-bottom:16px}
+  .cm-style-head b{font-size:15px;font-weight:600;color:var(--ink)}
+  .cm-style-head span{font-size:12px;color:var(--mute)}
+  .cm-style-sec{margin-bottom:20px}
+  .cm-style-sec>label{display:block;margin-bottom:8px;font-size:13px;font-weight:600;color:var(--ink)}
+  .cm-style-sec .ui-chips.thumbs.voice{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .cm-set-foot{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:16px;border-top:1px solid var(--line)}
+  .cm-set-foot .ui-btn:first-child{margin-right:auto}
+  /* 목소리 카드 · 재생 동그라미 + 소리 막대 */
+  .cm-voice{display:flex;align-items:center;gap:10px;height:62px;padding:0 12px;background:var(--chip-flat)}
+  .cm-play{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--paper);
+    border:1px solid var(--line);color:var(--btn-soft-ink)}
+  .cm-play svg{width:12px;height:12px;margin-left:2px}
+  .cm-wave{flex:1;display:flex;align-items:center;gap:2px;height:36px;color:color-mix(in srgb,var(--btn) 45%,var(--line))}
+  .cm-wave i{flex:1;min-width:1px;border-radius:2px;background:currentColor}
+  .ui-chip[aria-pressed="true"] .cm-wave{color:var(--btn)}
+  /* 영상 미리보기 칸 · 사진 대신 그린 장면 · 글자색은 실제 영상처럼 다크 모드와 상관없이 같다 */
+  .cm-frame{--cap:#fff;--cap-hi:#ffd43b;--cap-red:#ff5a4f;--cap-ink:#1d1d1f;
+    position:relative;aspect-ratio:4/5;overflow:hidden;
+    background:radial-gradient(60% 45% at 50% 108%,rgba(30,30,34,.85) 0 60%,transparent 61%),
+      linear-gradient(180deg,#a8b8c6 0%,#c9a27a 42%,#7d6a52 70%,#4a463f 100%)}
+  .cm-frame.food{background:radial-gradient(50% 32% at 52% 62%,#f4c64e 0 55%,#e9a43a 56% 70%,transparent 71%),
+      radial-gradient(70% 50% at 50% 75%,#f1e3c8 0 60%,transparent 61%),linear-gradient(180deg,#6b5a4a,#3a3029)}
+  .cm-frame.pack{background:radial-gradient(42% 36% at 50% 58%,#e94f37 0 62%,transparent 63%),
+      radial-gradient(48% 40% at 50% 58%,#f2c230 0 70%,transparent 71%),linear-gradient(180deg,#7c8088,#4d5056)}
+  .cm-cap{position:absolute;left:6%;right:6%;top:58%;text-align:center;font-size:11px;font-weight:600;line-height:1.25;color:var(--cap);
+    letter-spacing:-.3px;text-shadow:0 0 2px var(--cap-ink),0 0 2px var(--cap-ink),0 1px 3px rgba(0,0,0,.6)}
+  .cm-cap em{font-style:normal;color:var(--cap-red)}
+  .cm-cap.kw em{font-size:15px}
+  .cm-cap.sing em{color:var(--cap-hi)}
+  .cm-cap.hand{font-weight:500;font-size:12px;transform:rotate(-3deg)}
+  .cm-cap.mini{top:auto;bottom:9%;font-size:8.5px;font-weight:500}
+  .cm-cap.top{top:8%;font-size:12px}
+  .cm-cap.box em{display:inline-block;padding:0 3px;border-radius:3px;background:var(--cap-hi);color:var(--cap-ink);text-shadow:none;font-size:13px}
+  .cm-cap.box{top:auto;bottom:16%}
+  .cm-hook{position:absolute;left:8%;right:8%;top:12%;text-align:center;color:var(--cap);line-height:1.1;
+    text-shadow:0 0 2px var(--cap-ink),0 1px 3px rgba(0,0,0,.6)}
+  .cm-hook small{display:block;font-size:9px;font-weight:600}
+  .cm-hook b{display:inline-block;font-size:17px;font-weight:600;letter-spacing:-.6px}
+  .cm-hook.goth b{font-size:18px;color:var(--cap-hi)}
+  .cm-hook.hl b{padding:0 3px;background:linear-gradient(transparent 45%,var(--cap-hi) 45% 90%,transparent 90%);color:var(--cap-ink);text-shadow:none;transform:rotate(-2deg)}
+  .cm-hook.hand b{color:var(--cap-hi);transform:rotate(-4deg)}
+  .cm-hook.seal b{padding:1px 5px;border:2px solid var(--cap);background:var(--cap-red);transform:rotate(-5deg)}
+  .cm-hook.mono b{padding:1px 6px;background:var(--cap-ink);font-family:ui-monospace,Consolas,monospace;font-weight:500;font-size:14px}
+  .cm-hook.paper b{padding:2px 6px;background:#f3eee2;color:var(--cap-ink);text-shadow:none;transform:rotate(2deg);box-shadow:0 2px 4px rgba(0,0,0,.35)}
+  /* 카드에 마우스를 올리면 실제 움직임을 흉내 낸다 */
+  .ui-chip:hover .cm-cap.a-fade{animation:cm-fade 1.2s ease infinite}
+  .ui-chip:hover .cm-cap.a-cut{animation:cm-cut 1s steps(1) infinite}
+  .ui-chip:hover .cm-cap.a-rise{animation:cm-rise 1.2s ease infinite}
+  .ui-chip:hover .cm-cap.a-word em{animation:cm-pop 1.2s ease infinite}
+  .ui-chip:hover .cm-cap.a-type{animation:cm-type 1.4s steps(8) infinite}
+  .ui-chip:hover .cm-cap.a-left{animation:cm-left 1.2s ease infinite}
+  .ui-chip:hover .cm-cap.a-emph em{display:inline-block;animation:cm-pop 1s ease infinite}
+  .ui-chip:hover .cm-hook b{animation:cm-pop 1.2s ease infinite}
+  .ui-chip:hover .cm-frame.zoom{animation:cm-zoom 2.4s ease-in-out infinite alternate}
+  @keyframes cm-fade{0%{opacity:0}40%,100%{opacity:1}}
+  @keyframes cm-cut{0%{opacity:0}30%{opacity:1}}
+  @keyframes cm-rise{0%{opacity:0;transform:translateY(10px)}40%,100%{opacity:1;transform:none}}
+  @keyframes cm-pop{0%{transform:scale(.6);opacity:0}35%{transform:scale(1.15);opacity:1}55%,100%{transform:none}}
+  @keyframes cm-type{0%{clip-path:inset(0 100% 0 0)}100%{clip-path:inset(0 0 0 0)}}
+  @keyframes cm-left{0%{opacity:0;transform:translateX(-14px)}40%,100%{opacity:1;transform:none}}
+  @keyframes cm-zoom{to{background-size:125% 125%;background-position:center}}
+  @media (prefers-reduced-motion:reduce){ .ui-chip:hover .cm-frame *, .ui-chip:hover .cm-frame{animation:none!important} }
+  @media (max-width:900px){ .cm-set-grid{grid-template-columns:1fr} .cm-set-grid>aside{position:static} }
   .cm-ch-grid .ui-btn.cm-ch-add{height:160px;background:transparent;border:1.5px dashed color-mix(in srgb,var(--btn) 40%,var(--line));border-radius:16px}
   .cm-ch-grid .ui-btn.cm-ch-add:hover{background:var(--btn-soft);border-color:var(--btn)}
   @media (max-width:1280px){
@@ -5913,6 +5989,15 @@ window.BAROYAM_FONT=(function(){
     padding:11px 13px;border-radius:var(--ui-r);white-space:normal;text-align:left;color:var(--ink);font-size:13px}
   .ui-chips.cards .ui-chip small{font-size:11.5px;font-weight:400;line-height:1.4;color:var(--mute)}
   .ui-chips.cards .ui-chip[aria-pressed="true"] small,.ui-chips.cards .ui-chip.on small{color:var(--btn-soft-ink)}
+  /* thumbs · 위에 그림(첫 자식), 아래 이름이 있는 고르기 카드 격자 · 이름 아래 설명은 <small> */
+  .ui-chips.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+  .ui-chips.thumbs .ui-chip{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;height:auto;padding:0;
+    border-radius:var(--ui-r);overflow:hidden;white-space:normal;text-align:left;font-size:12px;line-height:1.35}
+  .ui-chips.thumbs .ui-chip>:first-child{display:block;flex:none}
+  .ui-chips.thumbs .ui-chip>span:last-child{padding:7px 9px 8px}
+  .ui-chips.thumbs .ui-chip small{display:block;margin-top:2px;font-size:11px;font-weight:400;color:var(--mute)}
+  .ui-chips.thumbs .ui-chip[aria-pressed="true"] small{color:var(--btn-soft-ink)}
+  .ui-chips.thumbs .ui-chip[aria-pressed="true"]{box-shadow:0 0 0 1px var(--btn)}
   /* 색 고르기 · 동그란 견본 한 줄 · 라디오라 폼에서 그대로 읽힌다 · 견본 색은 --sw 로 넘긴다 */
   .ui-swatches{display:flex;flex-wrap:wrap;gap:8px}
   .ui-swatch{position:relative;display:inline-flex;cursor:pointer}
@@ -9542,18 +9627,88 @@ window.BAROYAM_FONT=(function(){
                   </ul></dd></div>
                 <div><dt>편집 스타일</dt><dd>
                   <div class="cm-ch-styles">
-                    <figure><div class="cm-thumb"></div><figcaption>훅</figcaption></figure>
-                    <figure><div class="cm-thumb"></div><figcaption>자막</figcaption></figure>
-                    <figure><div class="cm-thumb"></div><figcaption>카메라</figcaption></figure>
+                    <figure><div class="cm-frame food"><span class="cm-hook hl"><small>출근 전</small><b>1분 아침</b></span></div><figcaption>훅</figcaption></figure>
+                    <figure><div class="cm-frame"><span class="cm-cap">편의점 들를 <em>5분</em>도</span></div><figcaption>자막</figcaption></figure>
+                    <figure><div class="cm-frame pack"></div><figcaption>카메라</figcaption></figure>
                   </div>
                   차분한 여성 · 정보형 · R4 구절 자막(기본) · 형광펜 손글씨 훅</dd></div>
               </dl>
               <div class="cm-ch-acts">
-                <button type="button" class="ui-btn">설정</button>
+                <button type="button" class="ui-btn" data-cm-set="open" aria-expanded="false" aria-controls="cmChSet">설정</button>
                 <button type="button" class="ui-btn primary">이 채널로 새 영상</button>
               </div>
             </div>
             <button type="button" class="ui-btn soft cm-ch-add">+ 채널 추가</button>
+          </div>
+          <!-- 채널 설정 · 설정을 누르면 펼쳐진다(모양만 · 저장하지 않음) · 편집 스타일은 이 채널 영상을 늘 같은 모양으로 만들기 위한 값 -->
+          <div class="cm-card cm-ch-set" id="cmChSet" hidden>
+            <div class="cm-set-head"><h3>주부채널 설정</h3><button type="button" class="ui-btn ghost sm" data-cm-set="close">접기</button></div>
+            <div class="cm-set-grid">
+              <aside>
+                <div class="cm-field"><label>채널 이름</label><input class="ui-field block" value="주부채널"></div>
+                <div class="cm-field"><label>타깃</label><input class="ui-field block" value="직장인 · 주부"></div>
+                <div class="cm-field"><label>채널 방향 <em>작가에게 전달돼요</em></label><input class="ui-field block" value="주부" placeholder="예: 바쁜 아침을 아껴 주는 살림 꿀팁"></div>
+                <div class="cm-field"><label>업로드 시간 <em>쉼표로 구분 · 하루에 이 개수만큼 올려요</em></label><input class="ui-field block" value="12:00, 19:00"></div>
+                <div class="cm-field"><label>우선순위</label>
+                  <div class="ui-chips" data-one><button type="button" class="ui-chip" aria-pressed="false">높음</button><button type="button" class="ui-chip" aria-pressed="true">보통</button><button type="button" class="ui-chip" aria-pressed="false">낮음</button></div></div>
+                <label class="cm-check"><input type="checkbox" checked> 사용 중 (끄면 자동 배분에서 빠져요)</label>
+              </aside>
+              <div>
+                <div class="cm-style-head"><b>편집 스타일</b><span>카드에 마우스를 올리면 움직임이 보여요 · ▶로 목소리 미리듣기 · 새 영상 만들기에서 이 채널을 고르면 이 값으로 고정돼요</span></div>
+                <div class="cm-style-sec"><label>목소리 톤</label>
+                  <div class="ui-chips thumbs voice" data-one>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-voice"><span class="cm-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg></span><span class="cm-wave"><i style="height:100%"></i><i style="height:45%"></i><i style="height:70%"></i><i style="height:20%"></i><i style="height:30%"></i><i style="height:25%"></i><i style="height:30%"></i><i style="height:100%"></i><i style="height:55%"></i><i style="height:20%"></i><i style="height:25%"></i><i style="height:60%"></i><i style="height:20%"></i><i style="height:30%"></i><i style="height:70%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:60%"></i><i style="height:30%"></i><i style="height:25%"></i><i style="height:70%"></i><i style="height:20%"></i><i style="height:55%"></i><i style="height:30%"></i><i style="height:60%"></i><i style="height:55%"></i></span></span><span>밝은 여성 · 판매형 (기본)<small>빠르기 +40% · 쉼 0.08초 · 3.48초</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="true"><span class="cm-voice"><span class="cm-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg></span><span class="cm-wave"><i style="height:20%"></i><i style="height:55%"></i><i style="height:55%"></i><i style="height:70%"></i><i style="height:20%"></i><i style="height:60%"></i><i style="height:20%"></i><i style="height:25%"></i><i style="height:45%"></i><i style="height:80%"></i><i style="height:70%"></i><i style="height:45%"></i><i style="height:25%"></i><i style="height:30%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:25%"></i><i style="height:45%"></i><i style="height:30%"></i><i style="height:55%"></i><i style="height:55%"></i><i style="height:60%"></i><i style="height:100%"></i><i style="height:30%"></i><i style="height:25%"></i><i style="height:30%"></i></span></span><span>차분한 여성 · 정보형<small>빠르기 +20% · 음높이 −2Hz · 쉼 0.22초 · 4.06초</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-voice"><span class="cm-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg></span><span class="cm-wave"><i style="height:55%"></i><i style="height:20%"></i><i style="height:55%"></i><i style="height:60%"></i><i style="height:40%"></i><i style="height:25%"></i><i style="height:70%"></i><i style="height:100%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:40%"></i><i style="height:100%"></i><i style="height:80%"></i><i style="height:60%"></i><i style="height:45%"></i><i style="height:60%"></i><i style="height:30%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:25%"></i><i style="height:40%"></i><i style="height:100%"></i><i style="height:40%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:30%"></i></span></span><span>대화체 남성 · 공감형<small>빠르기 +30% · 음높이 +5Hz · 쉼 0.18초 · 3.72초</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-voice"><span class="cm-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg></span><span class="cm-wave"><i style="height:30%"></i><i style="height:25%"></i><i style="height:70%"></i><i style="height:45%"></i><i style="height:100%"></i><i style="height:45%"></i><i style="height:40%"></i><i style="height:70%"></i><i style="height:20%"></i><i style="height:30%"></i><i style="height:25%"></i><i style="height:55%"></i><i style="height:100%"></i><i style="height:100%"></i><i style="height:100%"></i><i style="height:55%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:40%"></i><i style="height:30%"></i><i style="height:30%"></i><i style="height:80%"></i><i style="height:40%"></i><i style="height:30%"></i><i style="height:20%"></i><i style="height:80%"></i></span></span><span>또박또박 남성 · 설명형<small>빠르기 +15% · 쉼 0.3초 · 4.85초</small></span></button>
+                  </div></div>
+                <div class="cm-style-sec"><label>자막 스타일</label>
+                  <div class="ui-chips thumbs" data-one>
+                  <button type="button" class="ui-chip" aria-pressed="true"><span class="cm-frame "><span class="cm-cap">편의점 들를 <em>5분</em>도</span></span><span>R4 구절 자막 (기본)</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap kw">편의점 들를 <em>5분</em>도</span></span><span>키워드 크게<small>강조 단어만 굵고 크게</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap sing">편의점 <em>들를 5분</em>도</span></span><span>노래방 자막<small>말하는 단어가 노랗게</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap hand">편의점 들를 <em>5분</em>도</span></span><span>손글씨 자막<small>R5 붓글씨 결</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap mini">편의점 들를 5분도</span></span><span>미니멀 정보형<small>작은 글씨 · 아래</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap top">편의점 들를<br><em>5분</em>도</span></span><span>위쪽 굵은 고딕<small>두 줄 정보형</small></span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap box">편의점 들를 <em>5분도</em></span></span><span>화려한 텍스트 효과</span></button>
+                  </div></div>
+                <div class="cm-style-sec"><label>자막 등장</label>
+                  <div class="ui-chips thumbs" data-one>
+                  <button type="button" class="ui-chip" aria-pressed="true"><span class="cm-frame "><span class="cm-cap a-fade">편의점 들를 <em>5분</em>도</span></span><span>자막 은은한 등장 (기본)</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap a-cut">편의점 들를 <em>5분</em>도</span></span><span>자막 바로 교체</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap a-rise">편의점 들를 <em>5분</em>도</span></span><span>아래에서 살짝 올라옴</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap a-word">편의점 들를 <em>5분</em>도</span></span><span>단어별로 말할 때 등장</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap a-type">편의점 들를 <em>5분</em>도</span></span><span>타자처럼 한 글자씩</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap a-left">편의점 들를 <em>5분</em>도</span></span><span>왼쪽부터 쓸어 나타남</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame "><span class="cm-cap a-emph">편의점 들를 <em>5분</em>도</span></span><span>강조 단어만 툭</span></button>
+                  </div></div>
+                <div class="cm-style-sec"><label>훅 타이틀</label>
+                  <div class="ui-chips thumbs" data-one>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame food"><span class="cm-hook hand"><small>출근 전</small><b>1분 아침</b></span><span class="cm-cap mini">아침 끝납니다</span></span><span>손글씨 써지는 훅 (기본)</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame food"><span class="cm-hook goth"><small>출근 전</small><b>1분 아침</b></span><span class="cm-cap mini">아침 끝납니다</span></span><span>굵은 고딕 훅</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="true"><span class="cm-frame food"><span class="cm-hook hl"><small>출근 전</small><b>1분 아침</b></span><span class="cm-cap mini">아침 끝납니다</span></span><span>형광펜 손글씨 훅</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame food"><span class="cm-hook seal"><small>출근 전</small><b>1분 아침</b></span><span class="cm-cap mini">아침 끝납니다</span></span><span>붉은 인장 훅</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame food"><span class="cm-hook mono"><small>출근 전</small><b>1분 아침</b></span><span class="cm-cap mini">아침 끝납니다</span></span><span>고정폭 타자 훅</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame food"><span class="cm-hook paper"><small>출근 전</small><b>1분 아침</b></span><span class="cm-cap mini">아침 끝납니다</span></span><span>신문 조각 헤드라인 훅</span></button>
+                  </div></div>
+                <div class="cm-style-sec"><label>카메라</label>
+                  <div class="ui-chips thumbs" data-one>
+                  <button type="button" class="ui-chip" aria-pressed="true"><span class="cm-frame pack zoom"></span><span>무드별 천천히 줌 (기본)</span></button>
+                  <button type="button" class="ui-chip" aria-pressed="false"><span class="cm-frame pack"></span><span>카메라 고정</span></button>
+                  </div></div>
+                <div class="cm-style-sec"><label>배경음</label>
+                  <div class="ui-btn-row"><button type="button" class="ui-field"><span class="t">무드에 맞게 자동</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button type="button" class="ui-btn icon" aria-label="배경음 미리듣기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg></button></div></div>
+                <div class="cm-style-sec"><label>효과음</label>
+                  <div class="ui-chips" data-one><button type="button" class="ui-chip" aria-pressed="true">화면 동작 소리만 (기본)</button><button type="button" class="ui-chip" aria-pressed="false">효과음 없음</button></div></div>
+                <div class="cm-style-sec"><label>길이</label>
+                  <div class="ui-chips" data-one><button type="button" class="ui-chip" aria-pressed="true">30~40초 · 빠른 템포</button><button type="button" class="ui-chip" aria-pressed="false">40~60초 · 정보형</button></div></div>
+              </div>
+            </div>
+            <div class="cm-set-foot">
+              <button type="button" class="ui-btn danger sm">채널 삭제</button>
+              <button type="button" class="ui-btn" data-cm-set="close">취소</button>
+              <button type="button" class="ui-btn primary" data-cm-set="close">저장</button>
+            </div>
           </div>
         </div>
         <div class="profit-empty" data-content-pane="other" hidden>준비 중입니다</div>
@@ -16119,6 +16274,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   const salesToggleBtn=document.getElementById('sbSalesToggle');
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+})();
+
+/* 콘텐츠마케팅 › 채널 관리 · 설정 판 펼치기/접기와 칩 한 개 고르기만(모양 확인용 · 저장하지 않음) */
+(function(){
+  const set=document.getElementById('cmChSet');
+  if(!set) return;
+  const openBtn=document.querySelector('[data-cm-set="open"]');
+  function show(on){ set.hidden=!on; if(openBtn) openBtn.setAttribute('aria-expanded',on?'true':'false'); if(on) set.scrollIntoView({behavior:'smooth',block:'start'}); }
+  document.querySelectorAll('[data-cm-set]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.cmSet==='open'?set.hidden:false)));
+  set.addEventListener('click',e=>{
+    const chip=e.target.closest('[data-one] .ui-chip'); if(!chip) return;
+    chip.parentElement.querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',c===chip?'true':'false'));
+  });
 })();
 
 /* 판매·재고 · 배너 위 단추 두 개(당일판매현황 / 재고현황) · 고른 것은 이 브라우저에 기억한다 */
