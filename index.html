@@ -2358,6 +2358,7 @@ window.BAROYAM_FONT=(function(){
   .cm-card h3{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
   .cm-lead{margin:0 0 16px;font-size:12.5px;line-height:1.6;color:var(--body);word-break:keep-all}
   .cm-field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .cm-field[hidden]{display:none}
   .cm-field>label{font-size:13px;font-weight:600;color:var(--ink)}
   .cm-field>label em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute);margin-left:4px}
   .cm-hint{margin:0;font-size:11.5px;color:var(--mute);line-height:1.5}
@@ -2467,6 +2468,56 @@ window.BAROYAM_FONT=(function(){
     .cm-approve>.cm-col{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
   }
   @media (max-width:900px){ .cm-approve{grid-template-columns:1fr} .cm-ap-list{position:static;max-height:520px} }
+  /* 제작실 연동 (2026-10-11) · 상태·진행·대본 고치기·검수표 */
+  #view-content.cm-is-off [data-content-pane]{display:none!important}
+  .cm-off{max-width:640px}
+  .cm-off[hidden]{display:none}
+  .cm-off .cm-lead b{font-weight:600;color:var(--ink);word-break:break-all}
+  .cm-msg{margin:10px 0 0;font-size:12px;line-height:1.5;color:var(--pos)}
+  .cm-msg:empty{display:none}
+  .cm-msg.is-bad{color:var(--neg)}
+  .cm-tag.is-bad{background:var(--neg-soft);color:var(--neg)}
+  .cm-tag.is-idle{background:var(--chip-flat);color:var(--mute)}
+  .cm-empty-line{margin:12px 0 0}
+  .cm-busy{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:12px 14px;border-radius:var(--ui-r);background:var(--btn-soft);
+    color:var(--btn-soft-ink);font-size:12.5px;line-height:1.55}
+  .cm-busy.is-ok{background:var(--pos-soft);color:var(--pos)}
+  .cm-busy.is-bad{background:var(--neg-soft);color:var(--neg)}
+  .cm-dot{flex:none;width:8px;height:8px;border-radius:50%;background:currentColor;animation:collector-pulse 1s ease-in-out infinite alternate}
+  .cm-steps{display:flex;gap:6px;margin:0 0 16px;padding:0;list-style:none;counter-reset:cms}
+  .cm-steps li{flex:1;counter-increment:cms;padding:7px 0 0;border-top:3px solid var(--chip-flat);font-size:11.5px;color:var(--mute)}
+  .cm-steps li::before{content:counter(cms) ". "}
+  .cm-steps li.is-done{border-color:color-mix(in srgb,var(--btn) 45%,var(--line));color:var(--body)}
+  .cm-steps li.is-now{border-color:var(--btn);color:var(--btn-soft-ink);font-weight:600}
+  .cm-script{border-color:var(--line);background:var(--paper)}
+  .cm-script.is-rec{border-color:color-mix(in srgb,var(--btn) 40%,var(--line));background:color-mix(in srgb,var(--btn-soft) 45%,var(--paper))}
+  .cm-script:not(.is-rec) .cm-script-tag{color:var(--mute)}
+  .cm-edit-lab{display:block;margin:12px 0 6px;font-size:12px;font-weight:600;color:var(--ink)}
+  .cm-edit-lines{display:flex;flex-direction:column;gap:5px;line-height:1.4}
+  .cm-pass{display:flex;gap:8px;margin-top:14px}
+  .cm-pass .ui-field{flex:1}
+  .cm-log{margin-top:16px;font-size:12px;color:var(--body)}
+  .cm-log summary{cursor:pointer;color:var(--mute);font-weight:500}
+  .cm-log ul{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+  .cm-log li span{display:inline-block;width:62px;color:var(--mute);font-variant-numeric:tabular-nums}
+  .cm-review{margin:10px 0 0;max-height:360px;overflow:auto;padding:12px;border-radius:var(--ui-r);background:var(--chip-flat);
+    font-family:inherit;font-size:11.5px;line-height:1.6;color:var(--body);white-space:pre-wrap;word-break:break-all}
+  .cm-thumb{overflow:hidden}
+  .cm-thumb video,.cm-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+  .cm-dur:empty{display:none}
+  .cm-phone{overflow:hidden}
+  .cm-phone img{display:block;width:100%;height:100%;object-fit:cover;border-radius:18px}
+  .cm-live-info{margin:8px 0 0;text-align:center}
+  .cm-live-info:empty{display:none}
+  .cm-player{display:block;width:auto;max-width:100%;height:min(76vh,760px);aspect-ratio:9/16;border-radius:22px;background:#000}
+  .cm-up-save{margin-top:6px}
+  .cm-up-save .cm-msg{margin:0}
+  .cm-ch.is-form .cm-field{margin-bottom:12px}
+  .cm-ch-picks{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .cm-ch-pick{min-width:0}
+  .cm-ch-pick .ui-field{min-width:0}
+  .cm-ch-pick span{display:block;margin-bottom:4px;font-size:11.5px;color:var(--mute)}
+  .cm-ch-acts3{grid-template-columns:1fr 1fr 1fr;margin-top:14px}
   @media (max-width:1280px){
     .cm-make{grid-template-columns:300px minmax(0,1fr)}
     .cm-make>.cm-col:last-child{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
@@ -9196,279 +9247,31 @@ window.BAROYAM_FONT=(function(){
         </section>
       </div><!-- /view-perf -->
       <div id="view-content" style="display:none">
-        <!-- 새 영상 만들기 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 만들기 설정 | 가운데 진행 중인 영상·대본 고르기 | 오른쪽 작가·편집자·검수자와 미리보기 -->
+        <!-- 콘텐츠마케팅 · MDIER 제작실(이 PC의 127.0.0.1:8780)과 이야기한다 · 안은 아래 "콘텐츠마케팅 · MDIER 제작실 연동" 스크립트가 그린다 -->
+        <div class="cm-card cm-off" id="cmOffline" hidden>
+          <h3>제작실이 꺼져 있습니다</h3>
+          <p class="cm-lead">영상은 MDIER 제작실이 켜진 PC에서만 만들고 봅니다. 그 PC에서 <b>G:\내 드라이브\AI\MDIER\대시보드\제작실 열기.bat</b> 을 실행한 뒤 다시 연결을 눌러 주세요.</p>
+          <p class="cm-hint">크롬이 "로컬 네트워크의 기기에 접근"을 물으면 허용을 눌러야 연결됩니다.</p>
+          <button type="button" class="ui-btn primary" id="cmRetry">다시 연결</button>
+        </div>
         <div class="cm-make" data-content-pane="make">
-          <aside class="cm-col">
-            <div class="ui-chips cards cm-modes">
-              <button type="button" class="ui-chip" aria-pressed="false">직접 기획<small>설정을 채우고 대본 6개 중 골라요</small></button>
-              <button type="button" class="ui-chip" aria-pressed="true">한 번에 완성<small>제품·타깃만 넣으면 영상까지</small></button>
-            </div>
-            <div class="cm-card">
-              <h3>한 번에 완성</h3>
-              <p class="cm-lead">작가가 대본 6개를 쓰면 검수자 추천 1위로 더빙·편집·검수까지 이어서 해요. 완성되면 승인 요청에 올라와요.</p>
-              <div class="cm-field"><label>제품 <em>필수</em></label>
-                <input class="ui-field block" placeholder="제품 이름 (예: 쫀득란빵 토핑 계란빵)"></div>
-              <div class="cm-field"><label>어느 채널 영상인가요 <em>필수</em></label>
-                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">주부채널 <b>직장인</b></button></div>
-                <p class="cm-hint">채널을 고르면 그 채널의 편집 스타일(목소리·자막·훅 등)로 만들어요.</p></div>
-              <div class="cm-field"><label>누구에게 보여 줄 건가요? <em>한 명을 상상해야 공감이 살아요</em></label>
-                <div class="ui-chips">
-                  <button type="button" class="ui-chip" aria-pressed="false">직장인</button>
-                  <button type="button" class="ui-chip" aria-pressed="false">자취생</button>
-                  <button type="button" class="ui-chip" aria-pressed="true">주부</button>
-                  <button type="button" class="ui-chip" aria-pressed="false">워킹맘</button>
-                </div>
-                <input class="ui-field block" placeholder="직접 입력 (예: 신혼부부)"></div>
-              <div class="cm-field"><label>소스 폴더 <em>폴더 안의 영상·사진으로 만들어요</em></label>
-                <div class="cm-row"><span class="cm-src"><b>영상</b> · 소스 58개</span><button type="button" class="ui-btn sm">폴더 선택하기</button></div></div>
-              <div class="cm-field"><label>어떤 포맷으로 만들까요</label>
-                <div class="ui-chips cards">
-                  <button type="button" class="ui-chip" aria-pressed="true">꿀팁형<small>번호 붙인 해결팁 3–5개</small></button>
-                  <button type="button" class="ui-chip" aria-pressed="false">후기형<small>써 본 사람의 솔직한 첫인상·장단점</small></button>
-                  <button type="button" class="ui-chip" aria-pressed="false">공감 상황극형<small>'이거 완전 나' 순간 → 해결</small></button>
-                  <button type="button" class="ui-chip" aria-pressed="false">비교형<small>전·후, 이것 vs 저것</small></button>
-                </div></div>
-              <button type="button" class="ui-btn primary block cm-go">영상까지 한 번에 만들기</button>
-              <label class="cm-check"><input type="checkbox" checked> 다 만들면 검수자 검사까지 받기</label>
-            </div>
-          </aside>
-
-          <main class="cm-col">
-            <div class="cm-card">
-              <div class="ui-tabs">
-                <button type="button" class="ui-tab" aria-selected="true">진행 중 <span class="n">1</span></button>
-                <button type="button" class="ui-tab" aria-selected="false">승인 대기 <span class="n">3</span></button>
-              </div>
-              <div class="ui-chips cards cm-jobs">
-                <button type="button" class="ui-chip" aria-pressed="true">아이간식 추천!<small><span class="cm-tag">대본 고르기</span></small></button>
-              </div>
-            </div>
-            <div class="cm-card">
-              <div class="cm-job-head">
-                <h3>아이간식 추천! <span class="cm-tag">대본 고르기</span></h3>
-                <button type="button" class="ui-btn sm danger">중단하고 삭제</button>
-              </div>
-              <dl class="cm-brief">
-                <div><dt>만들기</dt><dd>쇼츠 제작 · 대상: 주부 · 쫀득란빵 토핑 계란빵</dd></div>
-                <div><dt>상황</dt><dd>남편, 아이간식</dd></div>
-                <div><dt>포인트</dt><dd>1분조리 · 토핑 계란빵 3가지맛 · 소비기한 1년이라 생각나면 먹기좋음</dd></div>
-                <div><dt>확인된 사실</dt><dd>렌지 1분조리</dd></div>
-              </dl>
-              <div class="cm-step"><span class="cm-step-n">1</span><b>대본 고르기</b><span>2회차 · 그대로 쓰거나, 카드에서 바로 고쳐서 편집을 시작하세요</span></div>
-              <div class="cm-scripts">
-              <article class="cm-script">
-                <div class="cm-script-tag">검수자 추천</div>
-                <p class="cm-script-why">0초 노른자 단면에 '등교 10분 전' 숫자 훅, 끝까지 동선이 깔끔해요</p>
-                <p class="cm-script-flow">후보 B · 꿀팁형 · 숫자 훅 → 꿀팁 3가지 → 우유·커피 들고 출발</p>
-                <h4>“등교 10분 전에도, 아침은 먹어요.”</h4>
-                <p class="cm-script-hook">훅 타이틀: 밥 대신 든든한 아침</p>
-                <p class="cm-script-meta">약 38.6초 · 306자 · 장면 16개 · 대본 점검 통과</p>
-                <ol class="cm-script-lines"><li>등교 10분 전에도, 아침은 먹어요.</li><li>남편 출근 전에도요.</li><li>꿀팁 첫 번째, 장 볼 때 쟁여 두기!</li><li>소비기한이 1년이라, 넉넉히 사 둬요.</li><li>그럼 전날 밤, 메뉴 고민이 없어요.</li><li>꿀팁 두 번째, 아침엔 레인지 1분!</li><li>애 옷 입히는 사이, 다 데워져요.</li><li>꿀팁 세 번째, 맛은 애가 고르기!</li></ol>
-                <div class="cm-script-foot">
-                  <button type="button" class="ui-btn">고쳐서 쓰기</button>
-                  <button type="button" class="ui-btn primary">이대로 편집 시작</button>
-                </div>
-              </article>
-              <article class="cm-script">
-                <div class="cm-script-tag">검수자 추천</div>
-                <p class="cm-script-why">'아침밥 이제 안 차려요' 반전 훅에 그냥 나가는 장면이 딱 맞아요</p>
-                <p class="cm-script-flow">후보 C · 꿀팁형 · 반전 훅 → 꿀팁 3가지 → 차리는 아침보다 먹고 가는 아침</p>
-                <h4>“저는 아침밥, 이제 안 차려요.”</h4>
-                <p class="cm-script-hook">훅 타이틀: 밥상 대신 이걸로 바꿨어요</p>
-                <p class="cm-script-meta">약 37.2초 · 295자 · 장면 16개 · 대본 점검 통과</p>
-                <ol class="cm-script-lines"><li>저는 아침밥, 이제 안 차려요.</li><li>차려 놓으면, 그냥 나가거든요.</li><li>그래서 바꾼 꿀팁, 세 가지예요.</li><li>첫 번째는 맛을, 세 가지로 사 두기!</li><li>대파베이컨에 콘치즈, 페퍼로니까지!</li><li>두 번째는 데우기, 레인지 1분!</li><li>머리 묶는 사이, 다 데워져요.</li><li>세 번째는 넉넉히, 쟁여 둘 때 꺼내요.</li></ol>
-                <div class="cm-script-foot">
-                  <button type="button" class="ui-btn">고쳐서 쓰기</button>
-                  <button type="button" class="ui-btn primary">이대로 편집 시작</button>
-                </div>
-              </article>
-              </div>
-            </div>
-          </main>
-
-          <aside class="cm-col">
-            <div class="cm-card cm-role">
-              <div class="cm-role-head"><b>작가</b><span class="cm-tag is-done">완료</span></div>
-              <p>대본 후보 6개 완성. 검수자 추천 중</p>
-              <div class="cm-bar"><i style="width:100%"></i></div><span class="cm-bar-n">100%</span>
-            </div>
-            <div class="cm-card cm-role">
-              <div class="cm-role-head"><b>편집자</b><span class="cm-tag">대기</span></div>
-              <p>대기 중</p>
-              <div class="cm-bar"><i style="width:0%"></i></div><span class="cm-bar-n">0%</span>
-            </div>
-            <div class="cm-card cm-role">
-              <div class="cm-role-head"><b>검수자</b><span class="cm-tag is-done">완료</span></div>
-              <p>대본 후보 2개 추천 완료. 대표님 선택 대기</p>
-              <div class="cm-bar"><i style="width:100%"></i></div><span class="cm-bar-n">100%</span>
-            </div>
-            <div class="cm-card">
-              <h3>실시간 편집 미리보기</h3>
-              <div class="cm-phone"><span>대본을 고르면 편집이 시작되고, 여기서 실시간으로 보여요</span></div>
-            </div>
-          </aside>
+          <aside class="cm-col" id="cmMakeLeft"></aside>
+          <div class="cm-col" id="cmMakeMid"></div>
+          <aside class="cm-col" id="cmMakeRight"></aside>
         </div>
-        <!-- 승인 요청 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 승인·반려와 검수 결과 -->
         <div class="cm-approve" data-content-pane="approve" hidden>
-          <aside class="cm-card cm-ap-list">
-            <h3>승인 요청 <span class="cm-count">9</span></h3>
-            <div class="cm-ap-filters">
-              <button type="button" class="ui-field"><span class="t">전체 주제</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-              <button type="button" class="ui-field"><span class="t">최신순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-            </div>
-            <div class="cm-ap-scroll">
-              <div class="cm-ap-item is-on">
-                <div class="cm-thumb"><span>00:39</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>승인 요청 1</b> · 2026-10-11-자취생에게쫀득란빵토핑계란빵</p>
-                  <p class="cm-ap-file">final.mp4</p>
-                  <p class="cm-ap-meta">10/11 16:38 · 31.5MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:37</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>승인 요청 2</b> · 2026-10-11-아이간식1분해결</p>
-                  <p class="cm-ap-file">final.mp4</p>
-                  <p class="cm-ap-meta">10/11 14:01 · 30.3MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:40</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>승인 요청 3</b> · 2026-10-11-주부에게쫀득란빵토핑계란빵</p>
-                  <p class="cm-ap-file">final_수정1.mp4</p>
-                  <p class="cm-ap-meta">10/11 13:58 · 34.4MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:31</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>승인 요청 4</b> · 2026-10-09-워킹맘간식</p>
-                  <p class="cm-ap-file">final_v5.mp4</p>
-                  <p class="cm-ap-meta">10/9 23:36 · 36.6MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:31</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>승인 요청 5</b> · 2026-10-09-워킹맘간식</p>
-                  <p class="cm-ap-file">final_v4.mp4</p>
-                  <p class="cm-ap-meta">10/9 22:10 · 35.9MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-            </div>
-          </aside>
-          <div class="cm-stage">
-            <div class="cm-phone"><span>목록에서 영상을 고르면 여기서 재생돼요</span></div>
-          </div>
-          <aside class="cm-col">
-            <div class="cm-card">
-              <h3>빠른 작업</h3>
-              <div class="cm-ap-acts">
-                <button type="button" class="ui-btn primary">승인</button>
-                <button type="button" class="ui-btn">반려</button>
-                <button type="button" class="ui-btn soft cm-span">휴지통으로</button>
-              </div>
-            </div>
-            <div class="cm-card">
-              <h3>제목</h3>
-              <input class="ui-field block" value="final">
-            </div>
-            <div class="cm-card">
-              <h3>주제 · 파일</h3>
-              <p class="cm-box">2026-10-11-자취생에게쫀득란빵토핑계란빵 · 10/11 16:38 · 31.5MB</p>
-            </div>
-            <div class="cm-card">
-              <h3>검수 결과</h3>
-              <p class="cm-box"><span class="cm-tag is-done">통과</span> 평균 8.83</p>
-              <div class="cm-scores"><div class="cm-score"><span>훅</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>정보</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>템포</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>화면</span><div class="cm-bar"><i style="width:40%"></i></div><b>4</b></div><div class="cm-score"><span>소리</span><div class="cm-bar"><i style="width:90%"></i></div><b>9</b></div><div class="cm-score"><span>자연스러운 마무리</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score is-avg"><span>평균</span><div class="cm-bar"><i style="width:88.3%"></i></div><b>8.83</b></div></div>
-              <p class="cm-hint">막대는 10점 만점 기준입니다.</p>
-            </div>
-          </aside>
+          <aside class="cm-card cm-ap-list" id="cmApList"></aside>
+          <div class="cm-stage" id="cmApStage"></div>
+          <aside class="cm-col" id="cmApSide"></aside>
         </div>
-        <!-- 완성본 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 유튜브 업로드 준비 -->
         <div class="cm-approve" data-content-pane="done" hidden>
-          <aside class="cm-card cm-ap-list">
-            <h3>완성본 <span class="cm-count">1</span></h3>
-            <div class="cm-ap-filters">
-              <button type="button" class="ui-field"><span class="t">전체 주제</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-              <button type="button" class="ui-field"><span class="t">최신순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-            </div>
-            <div class="cm-ap-scroll">
-              <div class="cm-ap-item is-on">
-                <div class="cm-thumb"><span>00:31</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>완성 1</b> · 2026-10-09-쫀득란빵</p>
-                  <p class="cm-ap-file">final_v6.mp4</p>
-                  <p class="cm-ap-meta">10/9 20:52 · 26.9MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button></div>
-                </div>
-              </div>
-            </div>
-          </aside>
-          <div class="cm-stage">
-            <div class="cm-phone"><span>목록에서 영상을 고르면 여기서 재생돼요</span></div>
-          </div>
-          <aside class="cm-col">
-            <div class="cm-card">
-              <h3>빠른 작업</h3>
-              <button type="button" class="ui-btn soft block">휴지통으로</button>
-            </div>
-            <div class="cm-card cm-up">
-              <div class="cm-up-head"><h3>유튜브 업로드 준비</h3><span class="cm-cnt">필수 4/5</span></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>채널 예약</label></div>
-                <p class="cm-box">연결된 채널이 없어요. 채널 관리에서 먼저 유튜브 채널을 연결해 주세요.</p></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>제목 <em>필수</em></label><span class="cm-cnt">10/100</span><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <input class="ui-field block" value="출근 전 1분 아침"></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>설명</label><span class="cm-cnt">84/5000</span><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <textarea class="ui-field block" rows="4">이거 1분 돌리면 아침 끝납니다. 외투도 못 챙기고 뛰쳐나왔죠? 편의점 들를 5분도 없고요.
-
-3종 중 원픽은?</textarea></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>해시태그</label><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <input class="ui-field block" value="#shorts #추운 #아침 #출근길">
-                <p class="cm-hint">설명 맨 끝에 붙여요. 앞의 3개가 제목 위에 보이고, 15개가 넘으면 전부 무시돼요.</p></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>태그</label><span class="cm-cnt">36/500</span><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <input class="ui-field block" value="쇼츠, 추운 아침 출근길 1분 아침 간편식 쫀득란빵(계란빵) 3종"></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>공개 상태 <em>필수</em></label></div>
-                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">비공개</button><button type="button" class="ui-chip" aria-pressed="false">일부 공개</button><button type="button" class="ui-chip" aria-pressed="false">공개</button><button type="button" class="ui-chip" aria-pressed="false">예약</button></div></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>시청자층 <em>필수</em></label></div>
-                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">아동용 아님</button><button type="button" class="ui-chip" aria-pressed="false">아동용</button></div></div>
-            </div>
-          </aside>
+          <aside class="cm-card cm-ap-list" id="cmDnList"></aside>
+          <div class="cm-stage" id="cmDnStage"></div>
+          <aside class="cm-col" id="cmDnSide"></aside>
         </div>
-        <!-- 채널 관리 · 지금은 모양만(눌러도 동작하지 않음) · 채널 카드 격자 + 채널 추가 -->
         <div class="cm-channels" data-content-pane="channels" hidden>
           <p class="cm-box cm-note">임시 화면이에요. 유튜브 API 연동 전이라 <b>채널 연결과 업로드는 모의로</b> 동작해요. 실제 유튜브에는 아무것도 올라가지 않아요.</p>
-          <div class="cm-ch-grid">
-            <div class="cm-card cm-ch">
-              <h3>주부채널 <span class="cm-cnt">유튜브 연결 안 됨</span></h3>
-              <dl class="cm-brief">
-                <div><dt>타깃</dt><dd>직장인 · 주부</dd></div>
-                <div><dt>업로드</dt><dd>매일 12:00 · 19:00</dd></div>
-                <div><dt>우선순위</dt><dd>보통</dd></div>
-                <div><dt>이번 7일</dt><dd class="cm-ch-week"><div class="cm-bar"><i style="width:0%"></i></div><span>0 / 14</span></dd></div>
-                <div><dt>다음 업로드</dt><dd>-</dd></div>
-                <div><dt>편집 스타일</dt><dd>
-                  <div class="cm-ch-styles">
-                    <figure><div class="cm-thumb"></div><figcaption>훅</figcaption></figure>
-                    <figure><div class="cm-thumb"></div><figcaption>자막</figcaption></figure>
-                    <figure><div class="cm-thumb"></div><figcaption>카메라</figcaption></figure>
-                  </div>
-                  차분한 여성 · 정보형 · R4 구절 자막(기본) · 형광펜 손글씨 훅</dd></div>
-              </dl>
-              <div class="cm-ch-acts">
-                <button type="button" class="ui-btn">설정</button>
-                <button type="button" class="ui-btn primary">유튜브 연결</button>
-              </div>
-            </div>
-            <button type="button" class="ui-btn soft cm-ch-add">+ 채널 추가</button>
-          </div>
+          <div class="cm-ch-grid" id="cmChGrid"></div>
         </div>
         <div class="profit-empty" data-content-pane="other" hidden>준비 중입니다</div>
       </div><!-- /view-content -->
@@ -11844,6 +11647,7 @@ window.CsGuide=(function(){
     ['member',0,'회원 고르기','프로필 · 팀장 비밀번호','로그인 뒤 회원(프로필)을 고릅니다. 역할이 팀장이면 비밀번호를 한 번 더 묻습니다. 회원마다 보이는 메뉴는 관리자 설정 › 권한설정을 따릅니다.'],
     ['ext',3,'크롬 확장','바로얌 재고 수집','판매·재고의 "어드민 수집" 단추가 부릅니다. 이지어드민 창을 최소화로 열어 재고·당일판매 표를 읽어 대시보드로 넘깁니다. 사람은 로그인만 합니다.'],
     ['collector',3,'리뷰 수집기','회사 PC 127.0.0.1:4317','회사 PC에서 로그인하면 자동으로 켜집니다. 판매처 리뷰를 모으고, /dashboard 로 이 저장소의 index.html 을 그대로 펴 줍니다.'],
+    ['mdier',3,'MDIER 제작실','PC 127.0.0.1:8780','쇼츠 제작 AI 팀(작가·편집자·검수자)이 도는 PC 서버입니다(G:\내 드라이브\AI\MDIER · 도구/dashboard.py). 콘텐츠마케팅 화면이 이 PC에서 API 를 부르고, 영상·대본·채널은 그 폴더에 저장됩니다. 켜져 있지 않은 PC에서는 "제작실이 꺼져 있습니다"만 보입니다.'],
 
     ['home',1,'마이홈','현황·퀵링크·기록노트','회원마다 퀵링크·기록노트(myhome:<회원id>)와 프로젝트 현황 카드를 봅니다.'],
     ['project',1,'프로젝트','보드판 · 캘린더','한 프로젝트 = projects 표 한 줄. 바꾼 칸만 얹어 저장하고, 삭제는 deleted_at 만 적습니다. 첨부 파일은 brand-files 보관함 project/ 아래.'],
@@ -11858,6 +11662,7 @@ window.CsGuide=(function(){
     ['review',1,'리뷰수집','채널별 인박스','회사 PC 리뷰 수집기(4317)와 이야기합니다. 수집기 화면 디자인은 대시보드가 보내 줍니다.'],
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
+    ['content',1,'콘텐츠마케팅','채널 · 새 영상 · 승인 · 완성본','MDIER 제작실(127.0.0.1:8780)에 주문하고 진행·승인·업로드 준비를 봅니다. Supabase 에는 저장하지 않습니다.'],
     ['perf',1,'퍼포먼스마케팅','영상분석 AI','쇼츠 링크를 넣으면 brand-files 의 ytcap/req 에 요청을 올리고, VPS 가 자막(한국어)을 ytcap/res 에 답합니다.'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
@@ -11913,6 +11718,7 @@ window.CsGuide=(function(){
     ['agenda','agendaT','안건'],
     ['agenda','storage','메모 이미지 agenda/'],
     ['perf','storage','자막 요청 ytcap/req → res'],
+    ['content','mdier','주문·대본 고르기·승인·채널'],
     ['account','settings','accounts_v1'],
     ['admin','settings','회원·권한·순서·글꼴·틀'],
     ['admin','runs','워크플로우 상태','r'],
@@ -11941,7 +11747,7 @@ window.CsGuide=(function(){
   const TREE=[
     ['erp',null,'바로얌 ERP','화면 · 서버 · 데이터','대시보드를 이루는 서버·데이터·자동화를 위에서부터 나눠 본 그림이에요. 노드를 누르면 그 노드와 옆으로 이어진 곳이 점선으로 나와요.'],
     ['fe','erp','화면(프런트)','GitHub Pages · erp.baroyam.com','사용자가 실제로 보는 화면입니다. 서버 없이 정적 파일 하나를 GitHub Pages 가 내보내고, 데이터는 브라우저가 Supabase·구글에 직접 묻습니다.'],
-    ['fe-index','fe','index.html','대시보드 한 파일','모든 화면·스타일·스크립트가 들어 있는 원본 하나. 이 저장소 main 에만 둡니다.',[['sb-auth','로그인 세션'],['db-settings','공용 데이터 읽고 저장'],['db-projects','프로젝트 줄 단위 저장'],['db-rows','회의안건·상담가이드'],['sb-storage','파일·이미지 올리고 열기'],['gg-sheets','매출 읽기'],['gg-drive','드라이브 찾기·업로드'],['pc-rev','리뷰 수집'],['pc-ext','어드민 수집']]],
+    ['fe-index','fe','index.html','대시보드 한 파일','모든 화면·스타일·스크립트가 들어 있는 원본 하나. 이 저장소 main 에만 둡니다.',[['sb-auth','로그인 세션'],['db-settings','공용 데이터 읽고 저장'],['db-projects','프로젝트 줄 단위 저장'],['db-rows','회의안건·상담가이드'],['sb-storage','파일·이미지 올리고 열기'],['gg-sheets','매출 읽기'],['gg-drive','드라이브 찾기·업로드'],['pc-rev','리뷰 수집'],['pc-ext','어드민 수집'],['pc-mdier','영상 제작']]],
     ['fe-sample','fe','ui-sample.html','표준 UI 부품 견본','ui-* 버튼·탭·칩·날짜선택의 모양 견본입니다.'],
     ['fe-ls','fe','브라우저 저장소','localStorage','기기 번호·구글 권한(1시간)·못 올린 고침(~draft)·화면 기억값. 서버가 원본이고 여기는 보조입니다.'],
 
@@ -11988,6 +11794,7 @@ window.CsGuide=(function(){
 
     ['pc','erp','회사 PC','사람 곁에서 도는 것','PC 가 켜져 있을 때만 움직입니다.'],
     ['pc-rev','pc','리뷰수집기','127.0.0.1:4317','로그인하면 자동 실행. 판매처 리뷰를 모으고 /dashboard 로 index.html 을 펴 줍니다.'],
+    ['pc-mdier','pc','MDIER 제작실','127.0.0.1:8780','쇼츠 제작 AI 팀 서버(제작실 열기.bat). 콘텐츠마케팅 화면이 CORS 로 부릅니다(허용 주소는 dashboard.py 의 ERP_ORIGINS).'],
     ['pc-ext','pc','크롬 확장','바로얌 재고 수집','"어드민 수집" 단추로 이지어드민 창을 열어 표를 읽어 옵니다. 사람은 로그인만.',[['api-ez','이지어드민 창 읽기']]],
 
     ['old','erp','앱스크립트','09-29 공개 배포 폐기','예전 데이터 API. index.html 의 AGENDA_API_URL 줄은 지우면 저장이 멈추므로 그대로 둡니다.',null,true]
@@ -16033,6 +15840,603 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   const salesToggleBtn=document.getElementById('sbSalesToggle');
   if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+})();
+
+/* 콘텐츠마케팅 · MDIER 제작실 연동 (2026-10-11)
+   영상은 MDIER 제작실(G:\내 드라이브\AI\MDIER · 도구/dashboard.py)이 켜진 PC에서만 만든다 ·
+   이 화면은 그 PC의 http://127.0.0.1:8780 API 를 불러 그리고 누르는 일을 그대로 보낸다(저장은 제작실 폴더 · Supabase 를 쓰지 않음) ·
+   제작실이 꺼져 있거나 다른 PC면 "제작실이 꺼져 있습니다"만 보인다 */
+(function(){
+  const MD='http://127.0.0.1:8780/';
+  const root=document.getElementById('view-content');
+  if(!root) return;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const enc=p=>String(p).split('/').map(encodeURIComponent).join('/');
+  const media=p=>MD+'media/'+enc(p);
+  const chev='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  const LS=(k,v)=>{ try{ if(v===undefined) return JSON.parse(localStorage.getItem('baroyam_cm_'+k)||'null'); localStorage.setItem('baroyam_cm_'+k,JSON.stringify(v)); }catch(e){ return null; } };
+
+  async function get(p){
+    const r=await fetch(MD+p,{cache:'no-store'});
+    if(!r.ok) throw new Error('제작실 응답 '+r.status);
+    return r.json();
+  }
+  async function post(p,body){
+    const r=await fetch(MD+'api/'+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+    const j=await r.json().catch(()=>({ok:false,error:'제작실 응답을 읽지 못했습니다'}));
+    if(!j.ok) throw new Error(j.error||'실패했습니다');
+    return j;
+  }
+
+  /* ---------- 상태 ---------- */
+  let pane='make', online=null, busy=false;
+  let opts=null, ch=null, orders=[], vids={pending:[],done:[]}, status=null;
+  let mode=LS('mode')||'quick', curOrder='', orderTab='active', editing=null;   // editing = {file, data}
+  let sel={approve:'',done:''}, filt={approve:'',done:''}, sort={approve:'new',done:'new'};
+  let rejecting=false, upl=null, uplPath='', chEdit=null, chConnect='';
+  const sig={};
+  const changed=(k,v)=>{ const s=JSON.stringify(v); if(sig[k]===s) return false; sig[k]=s; return true; };
+
+  const STAGE={writing:'작가 작성 중',script_review:'대본 고르기',script_edit:'대본 다듬기',producing:'제작 중',reviewing:'검수 중',fixing:'재수정 중',done:'승인 대기',error:'확인 필요'};
+  const stageTone=s=>s==='done'?' is-done':s==='error'?' is-bad':'';
+  const AGENTS=[['writer','작가'],['editor','편집자'],['reviewer','검수자']];
+  const AG_STATE={idle:'대기',working:'작업 중',done:'완료',error:'문제'};
+  const KINDS=[['script','대사·내용'],['caption','자막'],['visual','화면·컷'],['sound','소리'],['etc','기타']];
+  const STYLE_KEYS=[['voice','목소리'],['caption','자막'],['caption_motion','자막 등장'],['hook','훅'],['camera','카메라'],['sfx','효과음'],['bgm','배경음'],['length','길이']];
+  const fmtSize=b=>b>=1048576?(b/1048576).toFixed(1)+'MB':Math.round(b/1024)+'KB';
+  const fmtTime=t=>{ const d=new Date(t*1000); return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  const fmtAt=s=>s?String(s).replace('T',' ').slice(5):'-';
+  const styleName=v=>String(v||'').split('|');
+  function optLabel(k,v){
+    if(!opts) return v;
+    if(k==='voice') return (opts.voices||{})[v]||v;
+    if(k==='bgm') return v==='auto'||!v?'자동':String(v).replace(/\.mp3$/,'');
+    return ((opts.options||{})[k]||{})[v]||v;
+  }
+  function optList(k){
+    if(!opts) return [];
+    if(k==='voice') return Object.entries(opts.voices||{}).map(([value,label])=>({value,label}));
+    if(k==='bgm') return [{value:'auto',label:'자동'}].concat((opts.bgm||[]).map(f=>({value:f,label:f.replace(/\.mp3$/,'')})));
+    return Object.entries((opts.options||{})[k]||{}).map(([value,label])=>({value,label}));
+  }
+  const thumbs=st=>'<div class="cm-ch-styles">'+[['hook','훅'],['caption','자막'],['camera','카메라']].map(([k,l])=>
+    '<figure><div class="cm-thumb">'+(st&&st[k]?'<img alt="" loading="lazy" src="'+MD+'템플릿/'+encodeURIComponent(k+'_'+st[k])+'.jpg" onerror="this.remove()">':'')+'</div><figcaption>'+l+'</figcaption></figure>').join('')+'</div>';
+  function note(el,msg,bad){ if(!el) return; el.textContent=msg||''; el.classList.toggle('is-bad',!!bad); }
+
+  /* ---------- 제작실 연결 ---------- */
+  function setOnline(v){
+    if(online===v) return;
+    online=v;
+    root.classList.toggle('cm-is-off',!v);
+    $('cmOffline').hidden=!!v;
+    if(!v){ ['approve','done'].forEach(k=>{ const n=$(k==='approve'?'contentApproveCount':'contentDoneCount'); if(n) n.textContent='-'; }); }
+  }
+  async function refresh(force){
+    if(busy) return;
+    busy=true;
+    try{
+      if(!opts) opts=await get('api/options');
+      const jobs=[get('api/videos').then(v=>{ vids=v; })];
+      if(pane==='make'||pane==='done'||pane==='channels'||!ch) jobs.push(post('ch/state').then(s=>{ ch=s; }));
+      if(pane==='make'){ jobs.push(get('api/orders').then(j=>{ orders=j.orders||[]; })); jobs.push(get('status.json?t='+Date.now()).then(s=>{ status=s; }).catch(()=>{})); }
+      await Promise.all(jobs);
+      setOnline(true);
+      paint(force);
+    }catch(e){
+      setOnline(false);
+    }finally{ busy=false; }
+  }
+  function paint(force){
+    const ac=$('contentApproveCount'), dc=$('contentDoneCount');
+    if(ac) ac.textContent=vids.pending.length;
+    if(dc) dc.textContent=vids.done.length;
+    if(pane==='make') paintMake(force);
+    else if(pane==='approve'||pane==='done') paintVideos(pane,force);
+    else if(pane==='channels') paintChannels(force);
+  }
+
+  /* ---------- 새 영상 만들기 · 왼쪽 주문 ---------- */
+  function activeChannels(){ return ((ch&&ch.channels)||[]).filter(c=>c.active!==false); }
+  function paintForm(force){
+    if(!changed('form',[mode,activeChannels().map(c=>[c.id,c.name,c.defaults]),opts&&opts.audiences,opts&&opts.sources])&&!force) return;
+    const box=$('cmMakeLeft'), d=(opts&&opts.defaults)||{};
+    const last=LS('form')||{};
+    const quick=mode==='quick';
+    const chs=activeChannels();
+    const chId=chs.some(c=>c.id===last.channel)?last.channel:(chs.length===1?chs[0].id:'');
+    const aud=last.audience||[];
+    const srcs=(last.sources||[]).filter(s=>(opts.sources||[]).includes(s));
+    const style=last.style&&(opts.options.style||{})[last.style]?last.style:(d.style||'tips');
+    const chip=(attr,val,label,on,extra)=>'<button type="button" class="ui-chip" '+attr+'="'+esc(val)+'" aria-pressed="'+(on?'true':'false')+'">'+esc(label)+(extra||'')+'</button>';
+    const selCh=chs.find(c=>c.id===chId);
+    box.innerHTML=
+      '<div class="ui-chips cards cm-modes">'
+      +'<button type="button" class="ui-chip" data-mode="direct" aria-pressed="'+(!quick)+'">직접 기획<small>설정을 채우고 대본 6개 중 골라요</small></button>'
+      +'<button type="button" class="ui-chip" data-mode="quick" aria-pressed="'+quick+'">한 번에 완성<small>제품·타깃만 넣으면 영상까지</small></button></div>'
+      +'<form class="cm-card" id="cmOrderForm" autocomplete="off">'
+      +'<h3>'+(quick?'한 번에 완성':'제작 설정')+'</h3>'
+      +'<p class="cm-lead">'+(quick?'작가가 대본 6개를 쓰면 검수자 추천 1위로 더빙·편집·검수까지 이어서 해요. 완성되면 승인 요청에 올라와요.'
+        :'작가가 각도가 다른 대본 6개를 쓰고 검수자가 2개를 추천해요. 가운데에서 골라 편집을 시작하세요.')+'</p>'
+      +(chs.length?'<div class="cm-field"><label>어느 채널 영상인가요 <em>필수</em></label><div class="ui-chips" id="cmChPick">'
+        +chs.map(c=>chip('data-ch',c.id,c.name,c.id===chId,c.audience?' <b>'+esc(c.audience)+'</b>':'')).join('')+'</div>'
+        +'<div id="cmChStyle">'+(selCh?thumbs(selCh.defaults)+'<p class="cm-hint">'+esc(STYLE_KEYS.slice(0,4).map(([k])=>optLabel(k,selCh.defaults[k])).filter(Boolean).join(' · '))+' · 편집 스타일은 채널 관리에서 고쳐요</p>'
+          :'<p class="cm-hint">채널을 고르면 그 채널의 편집 스타일(목소리·자막·훅 등)로 만들어요.</p>')+'</div></div>':'')
+      +(quick?'':'<div class="cm-field"><label>주제 <em>필수</em></label><input class="ui-field block" id="cmTopic" placeholder="예: 바쁜 아침 1분 아침밥" value="'+esc(last.topic||'')+'"></div>')
+      +'<div class="cm-field"><label>'+(quick?'제품 <em>필수</em>':'보여줄 것')+'</label><input class="ui-field block" id="cmShow" placeholder="'+(quick?'제품 이름 (예: 쫀득란빵 토핑 계란빵)':'제품·장소·방법 (예: 쫀득란빵 토핑 계란빵)')+'" value="'+esc(last.show||'')+'"></div>'
+      +'<div class="cm-field"><label>누구에게 보여 줄 건가요?'+(quick?' <em>필수</em>':' <em>한 명을 상상해야 공감이 살아요</em>')+'</label><div class="ui-chips" id="cmAudPick">'
+        +(opts.audiences||[]).map(a=>chip('data-aud',a,a,aud.includes(a))).join('')+'</div>'
+        +'<input class="ui-field block" id="cmAudIn" placeholder="직접 입력 (예: 신혼부부)" value="'+esc(aud.filter(a=>!(opts.audiences||[]).includes(a)).join(', '))+'"></div>'
+      +(quick?'':'<div class="cm-field"><label>그 사람의 상황·고민</label><input class="ui-field block" id="cmSituation" maxlength="150" placeholder="예: 아침마다 애 밥 챙기느라 정신없음" value="'+esc(last.situation||'')+'"></div>'
+        +'<div class="cm-field"><label>꼭 들어갈 포인트 <em>최대 3개</em></label>'+[0,1,2].map(i=>'<input class="ui-field block cm-usp" maxlength="60" placeholder="포인트 '+(i+1)+'" value="'+esc((last.usp||[])[i]||'')+'">').join('')+'</div>'
+        +'<div class="cm-field"><label>확인된 숫자·사실 <em>적은 숫자만 대본에 써요</em></label><input class="ui-field block" id="cmFacts" maxlength="240" placeholder="예: 전자레인지 1분" value="'+esc(last.facts||'')+'"></div>')
+      +'<div class="cm-field"><label>소스 폴더 <em>필수 · 폴더 안의 영상·사진으로 만들어요</em></label><div class="ui-chips" id="cmSrcPick">'
+        +(opts.sources||[]).map(s=>chip('data-src',s,s.split('/').slice(-1)[0],srcs.includes(s))).join('')+'</div></div>'
+      +'<div class="cm-field"><label>어떤 포맷으로 만들까요</label><div class="ui-chips cards" id="cmStylePick">'
+        +Object.entries((opts.options||{}).style||{}).map(([k,v])=>{ const [n,sub]=styleName(v); return '<button type="button" class="ui-chip" data-style="'+esc(k)+'" aria-pressed="'+(k===style)+'">'+esc(n)+'<small>'+esc(sub||'')+'</small></button>'; }).join('')+'</div></div>'
+      +'<button type="submit" class="ui-btn primary block cm-go" id="cmGo">'+(quick?'영상까지 한 번에 만들기':'AI 대본 만들기')+'</button>'
+      +'<label class="cm-check"><input type="checkbox" id="cmReview"'+((last.review!=null?last.review:d.review!==false)?' checked':'')+'> 다 만들면 검수자 검사까지 받기</label>'
+      +'<p class="cm-msg" id="cmMsg"></p>'
+      +'</form>';
+  }
+  function readForm(){
+    const pressed=(id,attr)=>[...$(id).querySelectorAll('.ui-chip[aria-pressed="true"]')].map(b=>b.getAttribute(attr));
+    const extra=($('cmAudIn').value||'').split(/[,·]/).map(s=>s.trim()).filter(Boolean);
+    return {
+      channel:$('cmChPick')?(pressed('cmChPick','data-ch')[0]||''):'',
+      topic:$('cmTopic')?$('cmTopic').value.trim():'',
+      show:$('cmShow').value.trim(),
+      audience:[...pressed('cmAudPick','data-aud'),...extra],
+      situation:$('cmSituation')?$('cmSituation').value.trim():'',
+      usp:[...root.querySelectorAll('.cm-usp')].map(i=>i.value.trim()).filter(Boolean),
+      facts:$('cmFacts')?$('cmFacts').value.trim():'',
+      sources:pressed('cmSrcPick','data-src'),
+      style:pressed('cmStylePick','data-style')[0]||'tips',
+      review:$('cmReview').checked
+    };
+  }
+  async function submitOrder(){
+    const f=readForm(), msg=$('cmMsg'), quick=mode==='quick';
+    LS('form',f);
+    const chs=activeChannels();
+    if(chs.length&&!f.channel) return note(msg,'어느 채널 영상인지 골라 주세요',true);
+    if(quick&&!f.show) return note(msg,'제품 이름을 적어 주세요',true);
+    if(!f.audience.length&&quick) return note(msg,'타깃을 하나 골라 주세요',true);
+    if(!quick&&!f.topic) return note(msg,'주제를 적어 주세요',true);
+    if(!f.sources.length) return note(msg,'소스 폴더를 하나 이상 골라 주세요',true);
+    const c=chs.find(x=>x.id===f.channel);
+    const st={...((c&&c.defaults)||{}),channel:f.channel,audience:f.audience,situation:f.situation,show:f.show,usp:f.usp,facts:f.facts,
+      sources:f.sources,style:f.style,review:f.review,auto:quick};
+    let topic=f.topic;
+    if(quick){ topic=f.audience[0]+'에게 '+f.show; Object.assign(st,{situation:'',usp:[],facts:'',length:'short'}); }
+    $('cmGo').disabled=true; note(msg,'주문을 넣는 중…');
+    try{
+      const j=await post('orders',{topic,settings:st});
+      curOrder=j.folder; orderTab='active'; editing=null;
+      note(msg,quick?'주문 접수! 대본 → 추천 1위 자동 선택 → 더빙·편집·검수까지 이어서 해요(보통 20~30분). 완성되면 승인 요청에 올라와요.'
+        :'주문 접수! 작가가 대본 6개를 쓰고 있어요(5~10분). 가운데에서 진행을 볼 수 있어요.');
+      if($('cmTopic')) $('cmTopic').value='';
+      LS('form',{...f,topic:''});
+      refresh(true);
+    }catch(e){ note(msg,'주문 실패: '+e.message,true); }
+    $('cmGo').disabled=false;
+  }
+
+  /* ---------- 새 영상 만들기 · 가운데 주문 진행 ---------- */
+  function paintMake(force){
+    paintForm(force);
+    if(editing&&!force) { paintRight(); return; }      // 대본을 고치는 동안은 가운데를 다시 그리지 않는다
+    const tabOf=o=>o.stage==='done'?'pending':'active';
+    if(!orders.some(o=>o.folder===curOrder)){
+      const first=orders.find(o=>tabOf(o)===orderTab)||orders[0];
+      curOrder=first?first.folder:'';
+      if(first) orderTab=tabOf(first);
+    }
+    const o=orders.find(x=>x.folder===curOrder);
+    if(changed('mid',[orders.map(x=>[x.folder,x.stage,x.updated]),curOrder,orderTab,editing&&editing.file])||force){
+      const nA=orders.filter(x=>tabOf(x)==='active').length, nP=orders.length-nA;
+      const list=orders.filter(x=>tabOf(x)===orderTab);
+      $('cmMakeMid').innerHTML=
+        '<div class="cm-card"><div class="ui-tabs" id="cmOrderTabs">'
+        +'<button type="button" class="ui-tab" data-value="active" aria-selected="'+(orderTab==='active')+'">진행 중 <span class="n">'+nA+'</span></button>'
+        +'<button type="button" class="ui-tab" data-value="pending" aria-selected="'+(orderTab==='pending')+'">승인 대기 <span class="n">'+nP+'</span></button></div>'
+        +(list.length?'<div class="ui-chips cards cm-jobs">'+list.map(x=>'<button type="button" class="ui-chip" data-order="'+esc(x.folder)+'" aria-pressed="'+(x.folder===curOrder)+'">'
+          +esc(x.topic)+'<small><span class="cm-tag'+stageTone(x.stage)+'">'+(STAGE[x.stage]||x.stage)+'</span></small></button>').join('')+'</div>'
+          :'<p class="cm-hint cm-empty-line">'+(orderTab==='active'?'만들고 있는 영상이 없어요. 왼쪽에서 주문하세요.':'승인을 기다리는 주문이 없어요.')+'</p>')
+        +'</div>'
+        +(o?orderDetail(o):'');
+    }
+    paintRight();
+  }
+  function stepOf(st){ return st==='writing'||st==='script_review'?1:st==='script_edit'?2:st==='producing'?3:st==='reviewing'||st==='fixing'?4:st==='done'?5:1; }
+  function orderDetail(o){
+    const s=o.settings||{}, cur=stepOf(o.stage), last=(o.log||[]).slice(-1)[0]||{};
+    const steps=['대본 고르기','대본 다듬기','편집','검수','승인'];
+    const row=(k,v)=>v?'<div><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>':'';
+    let body='';
+    const round=(o.rounds||[]).slice(-1)[0];
+    if(o.stage==='error') body+='<p class="cm-busy is-bad">'+esc(o.error||last.msg||'문제가 생겼어요')+'</p>';
+    if(o.stage==='writing'){
+      const rv=/검수자가 2개를/.test(last.msg||'');
+      body+='<p class="cm-busy"><span class="cm-dot"></span>'+(rv?'대본 6개가 나왔어요. 검수자가 그중 2개를 추천하는 중이에요(1~3분).'
+        :'작가가 서로 다른 대본 6개를 쓰고 있어요'+((o.passes||[]).length?' (패스 메모 반영 중)':'')+'. 보통 5~10분 걸려요.'+(s.auto?' 끝나면 검수자 추천 1위로 바로 제작해요.':''))+'</p>';
+    }
+    if(round&&(o.stage==='script_review'||o.stage==='error')){
+      const cands=[...round.candidates].sort((a,b)=>(a.rec?a.rec_rank||1:9)-(b.rec?b.rec_rank||1:9));
+      body+='<div class="cm-step"><span class="cm-step-n">1</span><b>대본 고르기</b><span>'+(o.rounds.length)+'회차 · 그대로 쓰거나, 카드에서 바로 고쳐서 편집을 시작하세요</span></div>'
+        +'<div class="cm-scripts">'+cands.map(c=>scriptCard(o,c)).join('')+'</div>'
+        +'<div class="cm-pass"><input class="ui-field" id="cmPassNote" placeholder="전부 마음에 안 들면 이유 한 줄 (예: 더 웃기게)"><button type="button" class="ui-btn" data-act="pass">전부 패스하고 새로 받기</button></div>';
+    }
+    if(o.stage==='script_edit') body+='<p class="cm-busy">고른 대본: '+esc(String(o.picked_from||'').split('/').pop())+'</p>'
+      +'<div class="ui-btn-row"><button type="button" class="ui-btn" data-act="repick">다른 후보 다시 고르기</button><button type="button" class="ui-btn primary" data-act="confirm-draft">이 대본으로 편집 시작</button></div>';
+    if(o.stage==='producing'||o.stage==='reviewing'||o.stage==='fixing') body+='<p class="cm-busy"><span class="cm-dot"></span>'+esc(last.msg||'만드는 중이에요')+' · 오른쪽 미리보기에서 편집되는 장면을 볼 수 있어요.</p>';
+    if(o.stage==='done') body+='<p class="cm-busy is-ok">'+esc(last.msg||'영상이 완성됐어요.')+'</p><div class="ui-btn-row"><button type="button" class="ui-btn primary" data-act="go-approve">승인 요청에서 보기</button></div>';
+    const log=(o.log||[]).slice(-6).reverse();
+    return '<div class="cm-card" data-folder="'+esc(o.folder)+'">'
+      +'<div class="cm-job-head"><h3>'+esc(o.topic)+' <span class="cm-tag'+stageTone(o.stage)+'">'+(STAGE[o.stage]||o.stage)+'</span></h3>'
+      +'<button type="button" class="ui-btn sm danger" data-act="reset">'+(o.stage==='done'?'삭제':'중단하고 삭제')+'</button></div>'
+      +'<dl class="cm-brief">'
+      +row('만들기',(s.auto?'한 번에 완성 · ':'')+((s.channel_info||{}).name||'채널 없음')+' · '+(styleName(((opts.options||{}).style||{})[s.style])[0]||''))
+      +row('대상',(s.audience||[]).join(', '))+row('보여줄 것',s.show)+row('상황',s.situation)
+      +row('포인트',(s.usp||[]).join(' · '))+row('확인된 사실',s.facts)+'</dl>'
+      +'<ol class="cm-steps">'+steps.map((t,i)=>'<li class="'+(i+1<cur?'is-done':i+1===cur?'is-now':'')+'">'+t+'</li>').join('')+'</ol>'
+      +body
+      +(log.length?'<details class="cm-log"><summary>진행 기록</summary><ul>'+log.map(l=>'<li><span>'+esc(l.t||'')+'</span>'+esc(l.msg||'')+'</li>').join('')+'</ul></details>':'')
+      +'</div>';
+  }
+  function scriptCard(o,c){
+    const ed=editing&&editing.file===c.file?editing.data:null;
+    const head='<div class="cm-script-tag">'+(c.rec?'검수자 추천':'후보 '+esc(String(c.file).match(/_([A-Z])\.json$/)?.[1]||''))+'</div>'
+      +(c.rec_reason?'<p class="cm-script-why">'+esc(c.rec_reason)+'</p>':'')
+      +'<p class="cm-script-flow">'+esc(c.angle||'')+'</p>';
+    if(ed) return '<article class="cm-script is-rec is-editing" data-file="'+esc(c.file)+'">'+head
+      +'<label class="cm-edit-lab">훅 문구</label><textarea class="ui-field block" data-ed="hook_text" rows="2">'+esc(ed.hook_text)+'</textarea>'
+      +'<label class="cm-edit-lab">대사</label><ol class="cm-script-lines cm-edit-lines">'+ed.scenes.map((sc,i)=>'<li><input class="ui-field block sm" data-scene="'+i+'" value="'+esc(sc.narration)+'"></li>').join('')+'</ol>'
+      +'<label class="cm-edit-lab">마무리 문구</label><input class="ui-field block" data-ed="cta_text" value="'+esc(ed.cta_text)+'">'
+      +'<div class="cm-script-foot"><button type="button" class="ui-btn" data-act="edit-cancel">취소</button><button type="button" class="ui-btn primary" data-act="edit-go">고친 대로 편집 시작</button></div></article>';
+    return '<article class="cm-script'+(c.rec?' is-rec':'')+'" data-file="'+esc(c.file)+'">'+head
+      +'<h4>“'+esc(c.hook_line||'')+'”</h4>'
+      +(c.hook_text?'<p class="cm-script-hook">훅 타이틀: '+esc(String(c.hook_text).replace(/\n/g,' '))+'</p>':'')
+      +'<p class="cm-script-meta">약 '+(c.est_sec||'?')+'초 · '+(c.chars||'?')+'자 · 장면 '+((c.scenes||[]).length)+'개 · 대본 점검: '+esc(c.check||'-')+(c.cta?' · 마무리: '+esc(c.cta):'')+'</p>'
+      +'<ol class="cm-script-lines">'+(c.scenes||[]).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ol>'
+      +'<div class="cm-script-foot"><button type="button" class="ui-btn" data-act="edit">고쳐서 쓰기</button><button type="button" class="ui-btn'+(c.rec?' primary':'')+'" data-act="pick">이대로 편집 시작</button></div></article>';
+  }
+
+  /* ---------- 새 영상 만들기 · 오른쪽 직원·미리보기 ---------- */
+  let liveAt=0;
+  function paintRight(){
+    const box=$('cmMakeRight'), ag=(status&&status.agents)||{};
+    if(changed('right',[ag,status&&status.topic])||!box.querySelector('.cm-role')){
+      box.innerHTML=AGENTS.map(([k,n])=>{ const a=ag[k]||{state:'idle',message:'대기 중',progress:0}, pct=Math.round((a.progress||0)*100);
+        return '<div class="cm-card cm-role"><div class="cm-role-head"><b>'+n+'</b><span class="cm-tag'+(a.state==='done'?' is-done':a.state==='error'?' is-bad':a.state==='idle'?' is-idle':'')+'">'+(AG_STATE[a.state]||a.state)+'</span></div>'
+          +'<p>'+esc(a.message||'')+'</p><div class="cm-bar"><i style="width:'+pct+'%"></i></div><span class="cm-bar-n">'+pct+'%</span></div>'; }).join('')
+        +'<div class="cm-card"><h3>실시간 편집 미리보기</h3><div class="cm-phone" id="cmLive"><span>대본을 고르면 편집이 시작되고, 여기서 실시간으로 보여요</span></div><p class="cm-hint cm-live-info" id="cmLiveInfo"></p></div>';
+      liveAt=0;
+    }
+    const o=orders.find(x=>x.folder===curOrder);
+    if(o&&(o.stage==='producing'||o.stage==='fixing')){
+      const base=media(o.folder)+'/';
+      fetch(base+'_live.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+        if(!j||j.at===liveAt||(o.updated&&j.at<o.updated-5)) return;
+        liveAt=j.at;
+        $('cmLive').innerHTML='<img alt="편집 중인 장면" src="'+base+'_live.jpg?t='+j.at+'">';
+        $('cmLiveInfo').textContent='컷 '+j.cut+'/'+j.cuts+' · '+(+j.t).toFixed(1)+'/'+(+j.total).toFixed(1)+'초';
+      }).catch(()=>{});
+    }else if(liveAt){ liveAt=0; $('cmLive').innerHTML='<span>대본을 고르면 편집이 시작되고, 여기서 실시간으로 보여요</span>'; $('cmLiveInfo').textContent=''; }
+  }
+
+  async function orderAct(act,btn){
+    const card=btn.closest('[data-folder]'), folder=card&&card.dataset.folder;
+    const sc=btn.closest('.cm-script'), file=sc&&sc.dataset.file;
+    btn.disabled=true;
+    try{
+      if(act==='pick'){ await post('orders/confirm',{folder,file}); editing=null; }
+      else if(act==='edit'){ const j=await post('orders/script',{folder,file}); editing={file,data:j.script}; paintMake(true); return; }
+      else if(act==='edit-cancel'){ editing=null; paintMake(true); return; }
+      else if(act==='edit-go'){
+        const d=editing.data;
+        const script={hook_text:sc.querySelector('[data-ed="hook_text"]').value,cta_text:sc.querySelector('[data-ed="cta_text"]').value,cta_sub:d.cta_sub||'',
+          scenes:d.scenes.map((s,i)=>({narration:sc.querySelector('[data-scene="'+i+'"]').value,highlight:s.highlight||[]}))};
+        await post('orders/confirm',{folder,file,script}); editing=null;
+      }
+      else if(act==='pass'){ await post('orders/pass',{folder,note:($('cmPassNote')||{}).value||''}); }
+      else if(act==='repick'){ await post('orders/repick',{folder}); }
+      else if(act==='confirm-draft'){ await post('orders/confirm',{folder}); }
+      else if(act==='reset'){
+        if(!confirm('이 주문을 멈추고 폴더째 휴지통으로 옮길까요?\n(제작실 휴지통 폴더에서 되살릴 수 있어요)')){ btn.disabled=false; return; }
+        await post('orders/reset',{folder}); curOrder='';
+      }
+      else if(act==='go-approve'){ const b=document.querySelector('#sbContentSubnav [data-content="approve"]'); if(b) b.click(); return; }
+      await refresh(true);
+    }catch(e){ alert(e.message); btn.disabled=false; }
+  }
+
+  /* ---------- 승인 요청 · 완성본 ---------- */
+  function parseReview(text){
+    const rows=[],seen=new Set(); let avg=null,verdict=null;
+    const v=String(text||'').match(/\*\*판정[:：]?\s*([^*\n]+)\*\*/)||String(text||'').match(/판정[:：]\s*([^\n]+)/);
+    if(v) verdict=v[1].trim();
+    for(const line of String(text||'').split('\n')){
+      const m=line.match(/^\|\s*\**([^|*]+?)\**\s*\|\s*\**(\d+(?:\.\d+)?)\**\s*\|/);
+      if(!m){ if(rows.length>=3&&line.trim()==='') break; continue; }
+      const k=m[1].trim(), n=parseFloat(m[2]);
+      if(/평균/.test(k)){ avg=n; continue; }
+      if(n<=10&&k.length<=10&&!/^[\d.\s]+$/.test(k)&&!seen.has(k)){ seen.add(k); rows.push([k,n]); }
+    }
+    return {rows:rows.slice(0,8),avg,verdict};
+  }
+  function listOf(kind){
+    let l=(kind==='approve'?vids.pending:vids.done).slice();
+    if(filt[kind]) l=l.filter(v=>v.project===filt[kind]);
+    l.sort((a,b)=>sort[kind]==='new'?b.mtime-a.mtime:a.mtime-b.mtime);
+    return l;
+  }
+  function paintVideos(kind,force){
+    const all=kind==='approve'?vids.pending:vids.done, list=listOf(kind);
+    if(!all.some(v=>v.path===sel[kind])) sel[kind]=(list[0]||{}).path||'';
+    const P=kind==='approve'?'cmAp':'cmDn';
+    if(changed(kind+'list',[all.map(v=>[v.path,v.mtime]),sel[kind],filt[kind],sort[kind]])||force){
+      $(P+'List').innerHTML='<h3>'+(kind==='approve'?'승인 요청':'완성본')+' <span class="cm-count">'+all.length+'</span></h3>'
+        +'<div class="cm-ap-filters"><button type="button" class="ui-field" data-pick="topic"><span class="t">'+esc(filt[kind]?filt[kind].replace(/^\d{4}-\d{2}-\d{2}[-_]/,''):'전체 주제')+'</span>'+chev+'</button>'
+        +'<button type="button" class="ui-field" data-pick="sort"><span class="t">'+(sort[kind]==='new'?'최신순':'오래된순')+'</span>'+chev+'</button></div>'
+        +'<div class="cm-ap-scroll">'+(list.length?list.map((v,i)=>'<div class="cm-ap-item'+(v.path===sel[kind]?' is-on':'')+'" data-path="'+esc(v.path)+'">'
+          +'<div class="cm-thumb"><video muted preload="metadata" src="'+media(v.path)+'#t=1"></video><span class="cm-dur"></span></div>'
+          +'<div class="cm-ap-body"><p class="cm-ap-topic"><b>'+(kind==='approve'?'승인 요청 ':'완성 ')+(i+1)+'</b> · '+esc(v.project||'완성본')+'</p>'
+          +'<p class="cm-ap-file">'+esc(v.file)+'</p><p class="cm-ap-meta">'+fmtTime(v.mtime)+' · '+fmtSize(v.size)+'</p>'
+          +'<div class="ui-btn-row"><button type="button" class="ui-btn sm" data-vact="view">영상 보기</button>'
+          +(kind==='approve'?'<button type="button" class="ui-btn sm" data-vact="approve">승인</button><button type="button" class="ui-btn sm" data-vact="reject">반려</button>':'')
+          +'</div></div></div>').join(''):'<p class="cm-hint cm-empty-line">'+(kind==='approve'?'승인을 기다리는 영상이 없어요.':'아직 완성본이 없어요.')+'</p>')+'</div>';
+      $(P+'List').querySelectorAll('video').forEach(vd=>vd.addEventListener('loadedmetadata',()=>{
+        const s=Math.round(vd.duration||0); vd.nextElementSibling.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); },{once:true}));
+    }
+    const v=all.find(x=>x.path===sel[kind]);
+    if(changed(kind+'stage',sel[kind])||force){
+      $(P+'Stage').innerHTML=v?'<video class="cm-player" controls playsinline preload="metadata" src="'+media(v.path)+'"></video>'
+        :'<div class="cm-phone"><span>목록에서 영상을 고르면 여기서 재생돼요</span></div>';
+    }
+    if(kind==='approve') paintApSide(v,force); else paintDnSide(v,force);
+  }
+  function paintApSide(v,force){
+    if(!changed('apside',[v&&v.path,v&&v.review,rejecting])&&!force) return;
+    const box=$('cmApSide');
+    if(!v){ box.innerHTML='<div class="cm-card"><h3>빠른 작업</h3><p class="cm-hint">고를 영상이 없어요.</p></div>'; return; }
+    const r=parseReview(v.review);
+    const pass=r.verdict&&/통과/.test(r.verdict);
+    box.innerHTML=(rejecting
+      ?'<div class="cm-card"><h3>반려하기</h3><div class="cm-field"><label>문제 종류</label><div class="ui-chips" id="cmRjKinds">'
+        +KINDS.map(([k,l])=>'<button type="button" class="ui-chip" data-kind="'+k+'" aria-pressed="false">'+l+'</button>').join('')+'</div></div>'
+        +'<div class="cm-field"><label>무엇이 아쉬운지 <em>직원에게 그대로 전달돼요</em></label><textarea class="ui-field block" id="cmRjReason" rows="4" placeholder="예: 3번 장면 자막이 얼굴을 가려요 / 배경음이 커요"></textarea></div>'
+        +'<div class="cm-ap-acts"><button type="button" class="ui-btn" data-sact="reject-cancel">취소</button><button type="button" class="ui-btn danger" data-sact="reject-send">반려 보내기</button></div>'
+        +'<p class="cm-msg" id="cmRjMsg"></p></div>'
+      :'<div class="cm-card"><h3>빠른 작업</h3><div class="cm-ap-acts"><button type="button" class="ui-btn primary" data-sact="approve">승인</button>'
+        +'<button type="button" class="ui-btn" data-sact="reject">반려</button><button type="button" class="ui-btn soft cm-span" data-sact="delete">휴지통으로</button></div></div>')
+      +'<div class="cm-card"><h3>주제 · 파일</h3><p class="cm-box">'+esc(v.project)+' · '+esc(v.file)+' · '+fmtTime(v.mtime)+' · '+fmtSize(v.size)+'</p></div>'
+      +'<div class="cm-card"><h3>검수 결과</h3>'
+      +(r.rows.length?'<p class="cm-box">'+(r.verdict?'<span class="cm-tag'+(pass?' is-done':' is-bad')+'">'+esc(r.verdict.split(/[\s(]/)[0])+'</span> ':'')+(r.avg!=null?'평균 '+r.avg:'')+'</p>'
+        +'<div class="cm-scores">'+r.rows.map(([k,n])=>'<div class="cm-score"><span>'+esc(k)+'</span><div class="cm-bar"><i style="width:'+n*10+'%"></i></div><b>'+n+'</b></div>').join('')
+        +(r.avg!=null?'<div class="cm-score is-avg"><span>평균</span><div class="cm-bar"><i style="width:'+r.avg*10+'%"></i></div><b>'+r.avg+'</b></div>':'')+'</div>'
+        +'<p class="cm-hint">막대는 10점 만점 기준입니다.</p>'
+        :'<p class="cm-hint">'+(v.review?'점수표를 읽지 못했어요. 아래 검수표 전체를 보세요.':'아직 검수 점수표가 없어요.')+'</p>')
+      +(v.review?'<details class="cm-log"><summary>검수표 전체 보기</summary><pre class="cm-review">'+esc(v.review)+'</pre></details>':'')
+      +'</div>';
+  }
+  async function vidAct(kind,act,path,btn){
+    if(btn) btn.disabled=true;
+    try{
+      if(act==='approve'){ if(!confirm('승인하면 완성본 폴더로 옮겨요. 승인할까요?')) return; await post('approve',{path}); }
+      else if(act==='delete'){ if(!confirm('이 영상을 제작실 휴지통으로 옮길까요?')) return; await post('delete',{path}); }
+      else if(act==='reject-send'){
+        const kinds=[...$('cmRjKinds').querySelectorAll('[aria-pressed="true"]')].map(b=>b.dataset.kind), reason=$('cmRjReason').value.trim();
+        if(!reason){ note($('cmRjMsg'),kinds.length?'무엇이 아쉬운지 한 줄만 적어 주세요':'문제 종류를 고르고 무엇이 아쉬운지 적어 주세요',true); return; }
+        await post('reject',{path,reason,kinds,script:null}); rejecting=false;
+        alert('반려했어요. 직원들이 고쳐서 다시 올려요(새 영상 만들기 › 진행 중에서 볼 수 있어요).');
+      }
+      sel[kind]=''; await refresh(true);
+    }catch(e){ alert(e.message); }
+    finally{ if(btn&&btn.isConnected) btn.disabled=false; }
+  }
+
+  /* ---------- 완성본 · 유튜브 업로드 준비 ---------- */
+  const U_TEXT=[['title','제목',100,true],['description','설명',5000],['hashtags','해시태그'],['tags','태그',500]];
+  async function paintDnSide(v,force){
+    const box=$('cmDnSide');
+    if(!v){ if(changed('dnside','')||force) box.innerHTML='<div class="cm-card"><h3>빠른 작업</h3><p class="cm-hint">고를 영상이 없어요.</p></div>'; return; }
+    const q=((ch&&ch.queue)||[]).find(x=>x.path===v.path&&x.status!=='done');
+    const own=(((ch&&ch.waiting)||[]).find(x=>x.path===v.path)||{}).channel||'';
+    const conn=((ch&&ch.channels)||[]).filter(c=>c.connected&&c.active!==false);
+    const key=[v.path,q&&[q.id,q.channel,q.at,q.status],conn.map(c=>c.id)];
+    if(!changed('dnside',key)&&!force) return;
+    if(uplPath!==v.path){ uplPath=v.path; upl=null; try{ upl=(await post('upload-meta',{path:v.path})).meta; }catch(e){ upl={error:e.message}; } if(uplPath!==v.path) return; }
+    const m=upl||{};
+    const chName=id=>(((ch&&ch.channels)||[]).find(c=>c.id===id)||{}).name||id;
+    const count=k=>String(m[k]||'').length;
+    box.innerHTML='<div class="cm-card"><h3>빠른 작업</h3><button type="button" class="ui-btn soft block" data-sact="delete">휴지통으로</button></div>'
+      +'<div class="cm-card cm-up" id="cmUp"><div class="cm-up-head"><h3>유튜브 업로드 준비</h3><span class="cm-cnt" id="cmUpReady"></span></div>'
+      +(m.error?'<p class="cm-box">'+esc(m.error)+'</p>':'')
+      +'<div class="cm-field"><div class="cm-up-lab"><label>채널 예약</label></div>'
+        +(q?'<p class="cm-box">'+esc(chName(q.channel))+' · '+esc(fmtAt(q.at))+' 예약됨 (모의)</p><div class="ui-btn-row"><button type="button" class="ui-btn sm" data-sact="unschedule" data-id="'+esc(q.id)+'">예약 취소</button></div>'
+          :conn.length?'<div class="ui-btn-row"><button type="button" class="ui-btn sm" data-sact="schedule">'+(own?esc(chName(own))+'에 ':'')+'다음 빈 시간으로 예약하기</button></div><p class="cm-hint">제목을 먼저 저장해야 예약돼요. 유튜브 연동 전이라 모의 예약이에요.</p>'
+          :'<p class="cm-box">연결된 채널이 없어요. 채널 관리에서 먼저 유튜브 채널을 연결해 주세요.</p>')+'</div>'
+      +U_TEXT.map(([k,l,max,req])=>'<div class="cm-field"><div class="cm-up-lab"><label>'+l+(req?' <em>필수</em>':'')+'</label>'
+        +(max?'<span class="cm-cnt" data-cnt="'+k+'">'+count(k)+'/'+max+'</span>':'')+'<button type="button" class="ui-btn ghost sm" data-copy="'+k+'">복사</button></div>'
+        +(k==='description'?'<textarea class="ui-field block" data-u="'+k+'" maxlength="'+max+'" rows="5">'+esc(m[k]||'')+'</textarea>'
+          :'<input class="ui-field block" data-u="'+k+'"'+(max?' maxlength="'+max+'"':'')+' value="'+esc(m[k]||'')+'">')
+        +(k==='hashtags'?'<p class="cm-hint">설명 맨 끝에 붙여요. 앞의 3개가 제목 위에 보이고, 15개가 넘으면 전부 무시돼요.</p>':'')+'</div>').join('')
+      +segField('visibility','공개 상태',[['private','비공개'],['unlisted','일부 공개'],['public','공개'],['schedule','예약']],m.visibility)
+      +'<div class="cm-field" id="cmUpSched"'+(m.visibility==='schedule'?'':' hidden')+'><div class="cm-up-lab"><label>예약 시각</label></div><input class="ui-field block" data-u="schedule" placeholder="예: 2026-10-12 19:00" value="'+esc(String(m.schedule||'').replace('T',' '))+'"></div>'
+      +segField('kids','시청자층',[['no','아동용 아님'],['yes','아동용']],m.kids)
+      +segField('altered','변경·합성 콘텐츠',[['no','아니요'],['yes','예']],m.altered)
+      +'<div class="ui-btn-row cm-up-save"><button type="button" class="ui-btn primary" data-sact="upl-save">저장</button><span class="cm-msg" id="cmUpMsg">'+(m.draft?'대본·주문으로 만든 초안이에요. 확인하고 저장해 주세요.':'')+'</span></div>'
+      +'</div>';
+    upReady();
+  }
+  function segField(k,label,list,cur){
+    return '<div class="cm-field"><div class="cm-up-lab"><label>'+label+' <em>필수</em></label></div><div class="ui-chips" data-seg="'+k+'">'
+      +list.map(([v,l])=>'<button type="button" class="ui-chip" data-v="'+v+'" aria-pressed="'+(v===cur)+'">'+l+'</button>').join('')+'</div></div>';
+  }
+  function readUpl(){
+    const box=$('cmUp'), m={...(upl||{})};
+    box.querySelectorAll('[data-u]').forEach(i=>{ m[i.dataset.u]=i.value; });
+    box.querySelectorAll('[data-seg]').forEach(g=>{ const b=g.querySelector('[aria-pressed="true"]'); m[g.dataset.seg]=b?b.dataset.v:''; });
+    if(m.schedule) m.schedule=String(m.schedule).trim().replace(' ','T');
+    return m;
+  }
+  function upReady(){
+    const m=readUpl(), el=$('cmUpReady'); if(!el) return;
+    const n=[String(m.title||'').trim()&&String(m.title||'').length<=100, m.visibility&&(m.visibility!=='schedule'||m.schedule), m.kids, !(upl&&upl.draft), m.altered].filter(Boolean).length;
+    el.textContent='필수 '+n+'/5';
+  }
+
+  /* ---------- 채널 관리 ---------- */
+  function paintChannels(force){
+    if(!changed('ch',[ch&&ch.channels,chEdit&&chEdit.id,chConnect])&&!force) return;
+    const chs=(ch&&ch.channels)||[], pr=(ch&&ch.priority)||{};
+    let html=chs.map(c=>chEdit&&chEdit.id===c.id?chForm(c):chCard(c,pr)).join('');
+    html+=chEdit&&!chEdit.id?chForm({}):'<button type="button" class="ui-btn soft cm-ch-add" data-cact="add">+ 채널 추가</button>';
+    $('cmChGrid').innerHTML=html;
+  }
+  function chCard(c,pr){
+    const pct=c.week_target?Math.min(100,Math.round(c.week/c.week_target*100)):0, st=c.defaults||{};
+    return '<div class="cm-card cm-ch" data-id="'+esc(c.id)+'">'
+      +'<h3>'+esc(c.name)+' <span class="cm-cnt">'+(c.connected?esc((c.yt||{}).handle||'연결됨')+' 연결됨(모의)':'유튜브 연결 안 됨')+'</span>'+(c.active===false?' <span class="cm-tag is-idle">사용 안 함</span>':'')+'</h3>'
+      +'<dl class="cm-brief">'
+      +'<div><dt>타깃</dt><dd>'+esc([c.audience,c.tone].filter(Boolean).join(' · ')||'-')+'</dd></div>'
+      +'<div><dt>업로드</dt><dd>매일 '+esc((c.times||[]).join(' · '))+'</dd></div>'
+      +'<div><dt>우선순위</dt><dd>'+esc(pr[c.priority]||c.priority||'-')+'</dd></div>'
+      +'<div><dt>이번 7일</dt><dd class="cm-ch-week"><div class="cm-bar"><i style="width:'+pct+'%"></i></div><span>'+(c.week||0)+' / '+(c.week_target||0)+'</span></dd></div>'
+      +'<div><dt>다음 업로드</dt><dd>'+esc(c.next?fmtAt(c.next):'-')+'</dd></div>'
+      +'<div><dt>편집 스타일</dt><dd>'+thumbs(st)+esc([optLabel('voice',st.voice),optLabel('caption',st.caption),optLabel('hook',st.hook)].filter(Boolean).join(' · '))+'</dd></div>'
+      +'</dl>'
+      +(chConnect===c.id
+        ?'<div class="cm-field"><label>연결할 유튜브 채널</label><input class="ui-field block" data-cf="title" placeholder="채널 이름 (비우면 '+esc(c.name)+')"><input class="ui-field block" data-cf="handle" placeholder="핸들 (예: @baroyam)"></div>'
+          +'<div class="cm-ch-acts"><button type="button" class="ui-btn" data-cact="connect-cancel">취소</button><button type="button" class="ui-btn primary" data-cact="connect-go">연결</button></div>'
+        :'<div class="cm-ch-acts"><button type="button" class="ui-btn" data-cact="edit">설정</button>'
+          +(c.connected?'<button type="button" class="ui-btn" data-cact="disconnect">연결 해제</button>':'<button type="button" class="ui-btn primary" data-cact="connect">유튜브 연결</button>')+'</div>')
+      +'</div>';
+  }
+  function chForm(c){
+    const st=c.defaults||{}, pr=(ch&&ch.priority)||{high:'높음',normal:'보통',low:'낮음'}, cur=c.priority||'normal';
+    return '<div class="cm-card cm-ch is-form" data-id="'+esc(c.id||'')+'"><h3>'+(c.id?esc(c.name)+' 설정':'새 채널')+'</h3>'
+      +'<div class="cm-field"><label>채널 이름 <em>필수</em></label><input class="ui-field block" data-cf="name" maxlength="30" value="'+esc(c.name||'')+'"></div>'
+      +'<div class="cm-field"><label>타깃</label><input class="ui-field block" data-cf="audience" maxlength="30" placeholder="예: 직장인" value="'+esc(c.audience||'')+'"></div>'
+      +'<div class="cm-field"><label>채널 방향</label><input class="ui-field block" data-cf="tone" maxlength="120" placeholder="예: 주부 · 살림 꿀팁" value="'+esc(c.tone||'')+'"></div>'
+      +'<div class="cm-field"><label>업로드 시간 <em>필수 · 쉼표로 여러 개</em></label><input class="ui-field block" data-cf="times" placeholder="12:00, 19:00" value="'+esc((c.times||['19:00']).join(', '))+'"></div>'
+      +'<div class="cm-field"><label>우선순위</label><div class="ui-chips" data-cseg="priority">'+Object.entries(pr).map(([k,l])=>'<button type="button" class="ui-chip" data-v="'+k+'" aria-pressed="'+(k===cur)+'">'+esc(l)+'</button>').join('')+'</div></div>'
+      +'<div class="cm-field"><label>편집 스타일 <em>새 영상 만들기에서 이 채널을 고르면 그대로 써요</em></label><div class="cm-ch-picks">'
+        +STYLE_KEYS.map(([k,l])=>{ const v=st[k]||((opts&&opts.defaults)||{})[k]||''; return '<div class="cm-ch-pick"><span>'+l+'</span><button type="button" class="ui-field block" data-style-key="'+k+'" data-v="'+esc(v)+'"><span class="t">'+esc(optLabel(k,v)||'기본')+'</span>'+chev+'</button></div>'; }).join('')
+      +'</div></div>'
+      +'<label class="cm-check"><input type="checkbox" data-cf="active"'+(c.active===false?'':' checked')+'> 사용 중</label>'
+      +'<div class="cm-ch-acts cm-ch-acts3">'+(c.id?'<button type="button" class="ui-btn danger" data-cact="delete">삭제</button>':'<span></span>')
+      +'<button type="button" class="ui-btn" data-cact="cancel">취소</button><button type="button" class="ui-btn primary" data-cact="save">저장</button></div>'
+      +'<p class="cm-msg" id="cmChMsg"></p></div>';
+  }
+  async function chAct(act,btn){
+    const card=btn.closest('.cm-ch'), id=card?card.dataset.id:'';
+    try{
+      if(act==='add'){ chEdit={id:''}; paintChannels(true); return; }
+      if(act==='edit'){ chEdit={id}; chConnect=''; paintChannels(true); return; }
+      if(act==='cancel'){ chEdit=null; paintChannels(true); return; }
+      if(act==='connect'){ chConnect=id; chEdit=null; paintChannels(true); return; }
+      if(act==='connect-cancel'){ chConnect=''; paintChannels(true); return; }
+      btn.disabled=true;
+      if(act==='connect-go'){ ch=await post('ch/connect',{id,title:card.querySelector('[data-cf="title"]').value,handle:card.querySelector('[data-cf="handle"]').value}); chConnect=''; }
+      else if(act==='disconnect'){ if(!confirm('이 채널의 유튜브 연결을 해제할까요?')){ btn.disabled=false; return; } ch=await post('ch/disconnect',{id}); }
+      else if(act==='delete'){ if(!confirm('이 채널을 지울까요? 아직 안 올라간 예약은 배정 대기로 돌아가요.')){ btn.disabled=false; return; } ch=await post('ch/delete',{id}); chEdit=null; }
+      else if(act==='save'){
+        const g=k=>card.querySelector('[data-cf="'+k+'"]');
+        const defaults={}; card.querySelectorAll('[data-style-key]').forEach(b=>{ if(b.dataset.v) defaults[b.dataset.styleKey]=b.dataset.v; });
+        const p=card.querySelector('[data-cseg="priority"] [aria-pressed="true"]');
+        const channel={id:id||undefined,name:g('name').value,audience:g('audience').value,tone:g('tone').value,
+          times:g('times').value.split(/[,\s]+/).filter(Boolean),priority:p?p.dataset.v:'normal',active:g('active').checked,defaults};
+        ch=await post('ch/save',{channel}); chEdit=null;
+      }
+      sig.form=''; paintChannels(true);
+    }catch(e){ const m=$('cmChMsg'); if(m) note(m,e.message,true); else alert(e.message); if(btn.isConnected) btn.disabled=false; }
+  }
+
+  /* ---------- 누르기 ---------- */
+  root.addEventListener('click',e=>{
+    const t=e.target;
+    const chip=t.closest('.ui-chip');
+    // 칩 켜고 끄기 · 하나만 고르는 묶음은 나머지를 끈다
+    if(chip&&!chip.closest('.cm-jobs')&&!chip.closest('.cm-modes')){
+      const g=chip.parentElement, one=g.matches('#cmChPick,#cmStylePick,[data-seg],[data-cseg]')||(g.id==='cmAudPick'&&mode==='quick');
+      const on=chip.getAttribute('aria-pressed')!=='true';
+      if(one) g.querySelectorAll('.ui-chip').forEach(b=>b.setAttribute('aria-pressed','false'));
+      chip.setAttribute('aria-pressed',one?'true':String(on));
+      if(g.id==='cmChPick'){ LS('form',{...readForm()}); sig.form=''; paintForm(true); }
+      if(g.dataset.seg==='visibility') $('cmUpSched').hidden=chip.dataset.v!=='schedule';
+      if(g.dataset.seg) upReady();
+      return;
+    }
+    const m=t.closest('.cm-modes .ui-chip');
+    if(m){ LS('form',readForm()); mode=m.dataset.mode; LS('mode',mode); paintForm(true); return; }
+    const job=t.closest('[data-order]');
+    if(job){ curOrder=job.dataset.order; editing=null; paintMake(true); return; }
+    const tab=t.closest('#cmOrderTabs .ui-tab');
+    if(tab){ orderTab=tab.dataset.value; curOrder=''; editing=null; paintMake(true); return; }
+    const act=t.closest('[data-act]');
+    if(act){ orderAct(act.dataset.act,act); return; }
+    // 승인 요청·완성본
+    const kind=pane==='done'?'done':'approve';
+    const pick=t.closest('[data-pick]');
+    if(pick){
+      if(pick.dataset.pick==='topic'){
+        const all=kind==='approve'?vids.pending:vids.done, names=[...new Set(all.map(v=>v.project))];
+        UI.menu(pick,[{value:'',label:'전체 주제'}].concat(names.map(n=>({value:n,label:n.replace(/^\d{4}-\d{2}-\d{2}[-_]/,''),sub:all.filter(v=>v.project===n).length+'개'}))),filt[kind],v=>{ filt[kind]=v; paintVideos(kind,true); });
+      }else UI.menu(pick,[{value:'new',label:'최신순'},{value:'old',label:'오래된순'}],sort[kind],v=>{ sort[kind]=v; paintVideos(kind,true); });
+      e.stopPropagation(); return;
+    }
+    const vact=t.closest('[data-vact]'), item=t.closest('.cm-ap-item');
+    if(item){
+      const path=item.dataset.path;
+      if(path!==sel[kind]){ sel[kind]=path; rejecting=false; }
+      if(vact&&vact.dataset.vact==='approve') vidAct(kind,'approve',path,vact);
+      else if(vact&&vact.dataset.vact==='reject'){ rejecting=true; }
+      paintVideos(kind,true);
+      if(vact&&vact.dataset.vact==='view'){ const pl=root.querySelector('[data-content-pane="'+kind+'"] .cm-player'); if(pl) pl.play().catch(()=>{}); }
+      return;
+    }
+    const sact=t.closest('[data-sact]');
+    if(sact){
+      const a=sact.dataset.sact, path=sel[kind];
+      if(a==='reject'){ rejecting=true; paintApSide(vids.pending.find(v=>v.path===path),true); }
+      else if(a==='reject-cancel'){ rejecting=false; paintApSide(vids.pending.find(v=>v.path===path),true); }
+      else if(a==='upl-save'){
+        sact.disabled=true; const msg=$('cmUpMsg');
+        post('upload-meta/save',{path,meta:readUpl()}).then(j=>{ upl={...j.meta,draft:false}; note(msg,'저장했어요.'); upReady(); return refresh(); })
+          .catch(err=>note(msg,'저장 실패: '+err.message,true)).finally(()=>{ sact.disabled=false; });
+      }
+      else if(a==='schedule'){ sact.disabled=true; post('ch/add',{path}).then(s=>{ ch=s; sig.dnside=''; paintDnSide(vids.done.find(v=>v.path===path),true); }).catch(err=>{ alert(err.message); sact.disabled=false; }); }
+      else if(a==='unschedule'){ sact.disabled=true; post('ch/remove',{id:sact.dataset.id}).then(s=>{ ch=s; paintDnSide(vids.done.find(v=>v.path===path),true); }).catch(err=>{ alert(err.message); sact.disabled=false; }); }
+      else vidAct(kind,a,path,sact);
+      return;
+    }
+    const cp=t.closest('[data-copy]');
+    if(cp){ const i=$('cmUp').querySelector('[data-u="'+cp.dataset.copy+'"]'); navigator.clipboard.writeText(i?i.value:'').then(()=>{ cp.textContent='복사됨'; setTimeout(()=>{ cp.textContent='복사'; },1200); }); return; }
+    // 채널 관리
+    const sk=t.closest('[data-style-key]');
+    if(sk){ const k=sk.dataset.styleKey; UI.menu(sk,optList(k),sk.dataset.v,v=>{ sk.dataset.v=v; sk.querySelector('.t').textContent=optLabel(k,v); }); e.stopPropagation(); return; }
+    const cact=t.closest('[data-cact]');
+    if(cact){ chAct(cact.dataset.cact,cact); return; }
+  });
+  root.addEventListener('input',e=>{
+    if(e.target.closest('#cmOrderForm')) LS('form',readForm());
+    const u=e.target.closest('[data-u]');
+    if(u){ const c=root.querySelector('[data-cnt="'+u.dataset.u+'"]'); if(c) c.textContent=u.value.length+'/'+u.maxLength; upReady(); }
+  });
+  root.addEventListener('submit',e=>{ if(e.target.id==='cmOrderForm'){ e.preventDefault(); submitOrder(); } });
+  $('cmRetry').addEventListener('click',()=>{ online=null; refresh(true); });
+
+  /* ---------- 사이드탭 · 주기 갱신 ---------- */
+  function visible(){ return root.style.display!=='none'&&!document.hidden; }
+  document.querySelectorAll('#sbContentSubnav [data-content]').forEach(b=>b.addEventListener('click',()=>{
+    pane=b.dataset.content; rejecting=false; refresh(true);
+  }));
+  const first=document.querySelector('#sbContentSubnav [data-content].active'); if(first) pane=first.dataset.content;
+  setInterval(()=>{ if(visible()) refresh(); },4000);
+  document.addEventListener('visibilitychange',()=>{ if(visible()) refresh(); });
+  const sb=document.getElementById('sbContentBtn'); if(sb) sb.addEventListener('click',()=>setTimeout(()=>refresh(true),0));
 })();
 
 /* 판매·재고 · 배너 위 단추 두 개(당일판매현황 / 재고현황) · 고른 것은 이 브라우저에 기억한다 */
