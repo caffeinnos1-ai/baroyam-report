@@ -2426,7 +2426,7 @@ window.BAROYAM_FONT=(function(){
   .cm-ap-list{display:flex;flex-direction:column;position:sticky;top:16px;max-height:calc(100vh - 48px)}
   .cm-ap-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}
   .cm-ap-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin:0 -6px;padding:0 6px}
-  .cm-ap-item{display:flex;flex-wrap:wrap;gap:12px;padding:10px;border:1px solid var(--line);border-radius:12px;cursor:pointer;transition:var(--ui-ease)}
+  .cm-ap-item{display:flex;gap:12px;padding:10px;border:1px solid var(--line);border-radius:12px;cursor:pointer;transition:var(--ui-ease)}
   .cm-ap-item:hover{border-color:color-mix(in srgb,var(--btn) 45%,var(--line))}
   .cm-ap-item.is-on{border-color:var(--btn);background:color-mix(in srgb,var(--btn-soft) 50%,var(--paper))}
   .cm-thumb{position:relative;flex:none;width:72px;aspect-ratio:9/16;border-radius:8px;background:var(--chip-flat)}
@@ -2440,7 +2440,6 @@ window.BAROYAM_FONT=(function(){
   .cm-ap-body .ui-btn-row{gap:5px;flex-wrap:nowrap}
   .cm-ap-body .ui-btn.sm{padding:0 9px}
   .cm-ap-body{flex:1}
-  .cm-ap-item>.cm-flow{flex-basis:100%;padding-top:10px;border-top:1px dashed var(--line)}
   .cm-ap-topic .cm-tag{height:18px;padding:0 6px;font-size:10.5px;margin-right:4px}
   .cm-chips-sm .ui-chip{height:var(--ui-h-sm)}
   .cm-ap-acts+.cm-hint{margin-top:10px}
@@ -9443,7 +9442,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">10/11 16:38 · 31.5MB</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본<em>자동</em></li><li class="is-done">편집</li><li class="is-now">승인</li><li>예약</li><li>업로드</li></ol>
               </div>
               <div class="cm-ap-item">
                 <div class="cm-thumb"><span>00:37</span></div>
@@ -9453,7 +9451,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">10/11 14:01 · 30.3MB</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본</li><li class="is-done">편집</li><li class="is-now">승인</li><li>예약</li><li>업로드</li></ol>
               </div>
               <div class="cm-ap-item">
                 <div class="cm-thumb"><span>00:40</span></div>
@@ -9463,7 +9460,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">10/11 13:58 · 34.4MB</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본</li><li class="is-done">편집<em>수정1</em></li><li class="is-now">승인</li><li>예약</li><li>업로드</li></ol>
               </div>
               <div class="cm-ap-item">
                 <div class="cm-thumb"><span>00:31</span></div>
@@ -9473,7 +9469,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">10/9 23:36 · 36.6MB</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본<em>자동</em></li><li class="is-done">편집<em>수정2</em></li><li class="is-now">승인</li><li>예약</li><li>업로드</li></ol>
               </div>
               <div class="cm-ap-item">
                 <div class="cm-thumb"><span>00:31</span></div>
@@ -9483,7 +9478,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">10/9 22:10 · 35.9MB</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본<em>자동</em></li><li class="is-done">편집<em>수정1</em></li><li class="is-now">승인</li><li>예약</li><li>업로드</li></ol>
               </div>
             </div>
           </aside>
@@ -9548,7 +9542,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">주부채널 · 26.9MB</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본</li><li class="is-done">편집</li><li class="is-done">승인</li><li class="is-now">예약<em>10/12 12:00</em></li><li>업로드</li></ol>
               </div>
               <div class="cm-ap-item">
                 <div class="cm-thumb"><span>00:37</span></div>
@@ -9558,7 +9551,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">주부채널 · 30.1MB</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본</li><li class="is-done">편집<em>수정1</em></li><li class="is-done">승인</li><li class="is-now">예약<em>10/12 19:00</em></li><li>업로드</li></ol>
               </div>
               <div class="cm-ap-item">
                 <div class="cm-thumb"><span>00:34</span></div>
@@ -9568,7 +9560,6 @@ window.BAROYAM_FONT=(function(){
                   <p class="cm-ap-meta">주부채널 · 10/11 12:00 올림</p>
                   <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm ghost">유튜브에서 보기</button></div>
                 </div>
-                <ol class="cm-flow"><li class="is-done">주문</li><li class="is-done">대본</li><li class="is-done">편집</li><li class="is-done">승인</li><li class="is-done">예약</li><li class="is-done">업로드<em>10/11 12:00</em></li></ol>
               </div>
             </div>
           </aside>
