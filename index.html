@@ -4891,6 +4891,11 @@ window.BAROYAM_FONT=(function(){
   .al-sub{font-size:12.5px;font-weight:600;color:var(--ink)}
   .al-sub span{font-weight:400;color:var(--mute);margin-left:4px}
   .al-devs,.al-table-wrap{border-top:1px solid var(--line)}
+  /* 최근 접속 | 기기 두 탭 · 한 번에 하나만 보인다 */
+  .al-tab-n{margin-left:5px;font-weight:400;color:var(--mute)}
+  .al-devs[hidden],.al-table-wrap[hidden],.al-pick[hidden]{display:none}
+  .al-dev-meta[data-go]{cursor:pointer}
+  .al-dev-meta[data-go]:hover{color:var(--ink)}
   .al-dev{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
   .al-dev input{flex:none;width:170px;height:28px;padding:0 8px;border:1px solid transparent;border-radius:6px;
     background:transparent;font:inherit;font-size:12.5px;font-weight:500;color:var(--ink)}
@@ -7085,11 +7090,11 @@ window.BAROYAM_FONT=(function(){
                 <div class="al-head"><div class="al-sub">회사 IP<span id="alOfficeSub"></span></div>
                   <button type="button" class="ui-btn sm soft" id="alOfficeAdd" hidden></button></div>
                 <div class="al-devs" id="alOffice"></div>
-                <div class="al-head"><div class="al-sub">기기<span id="alDevCount"></span></div></div>
-                <div class="al-devs" id="alDevs"></div>
-                <div class="al-head"><div class="al-sub">최근 접속</div>
+                <div class="al-head">
+                  <div id="alTabs"><button class="ui-tab" data-value="log" aria-selected="true">최근 접속<span class="al-tab-n" id="alLogCount"></span></button><button class="ui-tab" data-value="dev">기기<span class="al-tab-n" id="alDevCount"></span></button></div>
                   <button type="button" class="ui-field al-pick" id="alFilter" aria-haspopup="listbox">전체 기기</button></div>
-                <div class="al-table-wrap"><table class="al-table">
+                <div class="al-devs" id="alDevs" hidden></div>
+                <div class="al-table-wrap" id="alLog"><table class="al-table">
                   <thead><tr><th>시각</th><th>기기</th><th>회원</th><th>IP</th><th>브라우저</th></tr></thead>
                   <tbody id="alRows"></tbody>
                 </table></div>
@@ -12037,6 +12042,18 @@ window.CsGuide=(function(){
         officeAdd=document.getElementById('alOfficeAdd'), officeSub=document.getElementById('alOfficeSub');
   if(!tab||!devBox||!rowsEl) return;
   const NAMES_KEY='access_devices_v1';
+  /* 최근 접속 | 기기 탭 · 고른 탭은 이 브라우저에 기억(baroyam_al_tab) */
+  const tabsBox=document.getElementById('alTabs'), logBox=document.getElementById('alLog'),
+        logCount=document.getElementById('alLogCount');
+  let view='log'; try{ if(localStorage.getItem('baroyam_al_tab')==='dev') view='dev'; }catch(e){}
+  function showView(v){
+    view=v==='dev'?'dev':'log';
+    devBox.hidden=view!=='dev'; if(logBox) logBox.hidden=view!=='log'; filterEl.hidden=view!=='log';
+    try{ localStorage.setItem('baroyam_al_tab',view); }catch(e){}
+  }
+  const alTabs=tabsBox&&window.UI?UI.tabs(tabsBox,showView):null;
+  if(alTabs) alTabs.set(view);
+  showView(view);
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const WD=['일','월','화','수','목','금','토'];
   /* office = 회사 IP 목록 {IP:등록 시각} · 여기 없는 IP 에서 들어온 줄을 "외부"로 본다(등록 전에는 표시 안 함) */
@@ -12122,7 +12139,8 @@ window.CsGuide=(function(){
   }
   function render(){
     const list=devices(), mine=me(), all=rows||[], extN=all.filter(isExt).length;
-    countEl.textContent=rows?list.length+'대':'';
+    countEl.textContent=rows?list.length:'';
+    if(logCount) logCount.textContent=rows?all.length:'';
     /* 회사 IP · 지금 이 기기의 마지막 IP 를 한 번에 등록할 수 있게 한다 */
     const myIp=(all.find(r=>r.device_id===mine&&r.ip)||{}).ip||'';
     officeSub.textContent=hasOffice()?(extN?'':' · 외부 접속 없음'):'';
@@ -12142,7 +12160,7 @@ window.CsGuide=(function(){
       if(d.n) bits.push(d.n+'회');
       if(d.ext) bits.push(`<span class="al-ext">외부 ${d.ext}회</span>`);
       return `<div class="al-dev"><input data-dev="${esc(d.id)}" value="${esc(names[d.id]||'')}" maxlength="30"
-          placeholder="이름 없는 기기 ${esc(short(d.id))}" aria-label="기기 이름"><div class="al-dev-meta">${bits.join(' · ')}</div></div>`;
+          placeholder="이름 없는 기기 ${esc(short(d.id))}" aria-label="기기 이름"><div class="al-dev-meta"${d.n?` data-go="${esc(d.id)}" title="이 기기의 접속 기록 보기"`:''}>${bits.join(' · ')}</div></div>`;
     }).join('');
     if(pick&&pick!=='ext'&&!list.some(d=>d.id===pick)) pick='';
     if(pick==='ext'&&!hasOffice()) pick='';
@@ -12198,6 +12216,11 @@ window.CsGuide=(function(){
   officeBox.addEventListener('click',e=>{ const b=e.target.closest('[data-ip-del]'); if(b) saveOffice(b.dataset.ipDel,false); });
   devBox.addEventListener('change',e=>{ const inp=e.target.closest('input[data-dev]'); if(inp) saveName(inp); });
   devBox.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input[data-dev]')) e.target.blur(); });
+  /* 기기 줄의 시각·IP 글을 누르면 최근 접속 탭으로 가서 그 기기만 거른다 */
+  devBox.addEventListener('click',e=>{
+    const m=e.target.closest('[data-go]'); if(!m) return;
+    pick=m.dataset.go; if(alTabs) alTabs.set('log'); showView('log'); render();
+  });
   /* 보안로그 잠금 · 공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적는다(계정관리 잠금과 같은 방식, 소금만 다름) ·
      탭을 누를 때마다 다시 잠그고, 맞히기 전에는 access_log 를 읽지 않는다 · 화면을 가리는 잠금이라 서버 자체를 막지는 않는다 */
   const LOCK={salt:'baroyam-securitylog-v1',iterations:200000,hash:'551d6a7025f0742331737777e8950108966bc859e9e13db51cf5f17c0d6f2f59'};
