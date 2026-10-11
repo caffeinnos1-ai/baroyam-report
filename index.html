@@ -5353,6 +5353,10 @@ window.BAROYAM_FONT=(function(){
   /* 판매처 점 · 메뉴얼가이드 선택 점과 같은 작은 점, 선택되면 글자색(주황)으로 바뀐다 */
   .sb-subnav-dot{flex:none;width:5px;height:5px;margin:0 1.5px;border-radius:50%;background:var(--mute)}
   .sb-subnav-flat .sb-subnav-item.active .sb-subnav-dot{background:currentColor}
+  /* 항목 오른쪽 개수(콘텐츠마케팅 승인 요청 등) · 0이면 흐리게 */
+  .sb-subnav-label{flex:1;min-width:0}
+  .sb-subnav-count{flex:none;margin-left:auto;font-size:12px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+  .sb-subnav-item.active .sb-subnav-count{color:currentColor}
   /* 중간사이드탭 · 글자는 왼쪽 정렬, 점은 모든 항목에서 같은 왼쪽 자리(14px)에 ·
      아이콘이 있던 홈 단추(통합리뷰수집·통계·전체 목차 등)도 아이콘 대신 같은 점 · 판매처 점은 판매처 색 그대로 */
   .sb-subnav-home,.sb-subnav-flat .sb-subnav-item{position:relative;justify-content:flex-start;text-align:left;padding-left:27px;padding-right:22px}
@@ -6905,14 +6909,27 @@ window.BAROYAM_FONT=(function(){
       <div class="sb-subnav-head">
         <div class="sb-subnav-title">콘텐츠마케팅</div>
       </div>
+      <div class="sb-subnav-caption">레퍼런스</div>
       <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item active" data-content="make">콘텐츠 제작</button>
+        <button type="button" class="sb-subnav-item active" data-content="shorts">유튜브 쇼츠</button>
+        <button type="button" class="sb-subnav-item" data-content="coupangRank">쿠팡 상품순위</button>
       </div>
       <div class="sb-subnav-sep"></div>
-      <div class="sb-subnav-caption">피드 등록</div>
+      <div class="sb-subnav-caption">제작</div>
       <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item" data-content="insta">인스타 등록</button>
-        <button type="button" class="sb-subnav-item" data-content="blog">블로그 등록</button>
+        <button type="button" class="sb-subnav-item" data-content="make">새 영상 만들기</button>
+      </div>
+      <div class="sb-subnav-sep"></div>
+      <div class="sb-subnav-caption">영상</div>
+      <div class="sb-subnav-flat">
+        <button type="button" class="sb-subnav-item" data-content="approve"><span class="sb-subnav-label">승인 요청</span><b class="sb-subnav-count" id="contentApproveCount">0</b></button>
+        <button type="button" class="sb-subnav-item" data-content="done"><span class="sb-subnav-label">완성본</span><b class="sb-subnav-count" id="contentDoneCount">0</b></button>
+      </div>
+      <div class="sb-subnav-sep"></div>
+      <div class="sb-subnav-caption">채널</div>
+      <div class="sb-subnav-flat">
+        <button type="button" class="sb-subnav-item" data-content="channels">채널 관리</button>
+        <button type="button" class="sb-subnav-item" data-content="stats">성과 조회</button>
       </div>
     </nav>
 
@@ -9062,7 +9079,7 @@ window.BAROYAM_FONT=(function(){
         <section>
           <div class="plan-hero">
             <div class="ptag">마케팅</div>
-            <div class="ptitle" id="contentViewTitle">콘텐츠 제작</div>
+            <div class="ptitle" id="contentViewTitle">유튜브 쇼츠</div>
           </div>
         </section>
       </div><!-- /view-content -->
@@ -15604,7 +15621,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   showVideo();   // 링크가 없으면 영상 자리에 안내를 띄운다
 })();
 
-/* 콘텐츠마케팅 사이드탭 · 퍼포먼스마케팅과 같은 방식 · 콘텐츠 제작 / 피드 등록(인스타·블로그)(화면 내용은 아직 제목만 있다) */
+/* 콘텐츠마케팅 사이드탭 · 퍼포먼스마케팅과 같은 방식 · 레퍼런스 / 제작 / 영상(승인 요청·완성본 개수) / 채널(화면 내용은 아직 제목만 있다) */
 (function(){
   const btn=document.getElementById('sbContentBtn');
   const subnav=document.getElementById('sbContentSubnav');
@@ -15613,7 +15630,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const items=[...subnav.querySelectorAll('[data-content]')];
   function pick(el){
     items.forEach(b=>b.classList.toggle('active',b===el));
-    if(title) title.textContent=el.textContent.trim();
+    if(title) title.textContent=(el.querySelector('.sb-subnav-label')||el).textContent.trim();
   }
   btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
   items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('content'); pick(el); }));
