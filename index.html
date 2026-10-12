@@ -9911,7 +9911,7 @@ window.BAROYAM_FONT=(function(){
                 <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처별 순수익</h3><p id="psChanSub"></p></div></div>
                 <div class="pf-scroll"><table class="ps-table" id="psChan"></table></div>
               </div>
-              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 인건비 · 수수료 = 매출 × 품목별 원가표의 판매처 수수료율 · 부가세 = (매출 − 수수료 − 원가 − 배송비) ÷ 11 (마진 계산기와 같은 방식) · 인건비는 달마다 직접 적습니다</span></div>
+              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 인건비 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다(기본 부가세 = (매출 − 수수료 − 원가 − 배송비) ÷ 11) · 인건비는 달마다 직접 적습니다</span></div>
             </div>
           </div>
         </section>
@@ -17756,7 +17756,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const PS_CH=Object.keys(PS_ALIAS);
   let psSel=null;   /* 고른 기간 · 달 순번(문자) 또는 'ytd' */
   const psData=()=>{ const d=window.baroyamReportData; return d&&Array.isArray(d.months)&&d.months.length?d:null; };
-  const psShort=n=>{ if(!isFinite(n)) return '–'; const a=Math.abs(n), sg=n<0?'−':'';
+  const psShort=n=>{ if(!isFinite(n)) return '–'; if(Math.abs(n)<5000) return '0'; const a=Math.abs(n), sg=n<0?'−':'';
     return sg+(typeof eokCheon==='function'?eokCheon(a):Math.round(a/10000).toLocaleString('ko-KR')+'만'); };
   const psWon=n=>(n<0?'−':'')+Math.round(Math.abs(n)).toLocaleString('ko-KR');
   /* 달 목록 · 이름표('9월'·'10월')에서 달 번호를 읽고, 이번 달보다 뒤 번호면 작년 달로 본다 */
@@ -17772,7 +17772,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function psRate(c){
     const al=PS_ALIAS[c]||[c];
     const ch=live(COST.data&&COST.data.chans).find(x=>al.some(a=>String(x.name||'').replace(/\s/g,'').includes(a)));
-    return ch&&num(ch.rate)!=null?{rate:num(ch.rate),name:ch.name}:null;
+    return ch&&num(ch.rate)!=null?Object.assign({rate:num(ch.rate),name:ch.name},ruleOf(ch)):null;
   }
   const psShipFee=()=>{ const s=live(COST.data&&COST.data.ship)[0]; return s&&num(s.fee)?num(s.fee):PS_TEMP.ship; };
   const psCost=(c,sales)=>sales*PS_TEMP.costRate;
@@ -17783,8 +17783,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const rows=PS_CH.map(c=>{
       let sales=0, ad=0;
       list.forEach(mm=>{ sales+=+(d.monthlySales[c]||[])[mm.i]||0; const a=(d.monthlyAd[c]||[])[mm.i]; ad+=a&&+a.cost||0; });
-      const r=psRate(c), fee=sales*((r?r.rate:0)/100), cost=psCost(c,sales), ship=psShip(c,sales);
-      const vat=Math.max(0,(sales-fee-cost-ship)/11);
+      /* 판매처 계산법(품목별 원가표 › 판매처 수수료)을 마진 계산기와 똑같이 따른다 · 수수료 부가세 10% 더함 · 부가세 남는 돈÷11 / 매출÷11 / 없음 */
+      const r=psRate(c), fee=sales*((r?r.rate:0)/100)*(r&&r.feeVat==='inc'?1.1:1), cost=psCost(c,sales), ship=psShip(c,sales);
+      const vat=!r||!r.vatMode?Math.max(0,(sales-fee-cost-ship)/11):(r.vatMode==='sale'?sales/11:0);
       return {c,sales,ad,fee,cost,ship,vat,rate:r,profit:sales-fee-ad-cost-ship-vat};
     });
     const t={sales:0,ad:0,fee:0,cost:0,ship:0,vat:0,profit:0};
@@ -17832,7 +17833,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('psFall').innerHTML='<div class="ps-row base"><span class="l">매출</span><div class="ps-track"><i style="left:'+X(0)+';width:'+W(0,t.sales)+'"></i></div><span class="v" title="'+psWon(t.sales)+'원">'+psShort(t.sales)+'</span></div>'
       +bars.map(b=>'<div class="ps-row'+(b.tmp?' temp':'')+'"><span class="l">'+b.l+(b.tmp?'<em>임시</em>':'')+'</span>'
         +'<div class="ps-track"><i style="left:'+X(Math.min(b.from,b.to))+';width:'+W(b.from,b.to)+'"></i></div>'
-        +'<span class="v" title="'+psWon(b.v)+'원">'+(b.k==='labor'&&laborIn?laborIn:'−'+psShort(b.v)+'<small>'+pct(t.sales?b.v/t.sales:0)+'</small>')+'</span></div>').join('')
+        +'<span class="v" title="'+psWon(b.v)+'원">'+(b.k==='labor'&&laborIn?laborIn:(b.v>=5000?'−':'')+psShort(b.v)+'<small>'+pct(t.sales?b.v/t.sales:0)+'</small>')+'</span></div>').join('')
       +'<div class="ps-row end'+(t.net<0?' minus':'')+'"><span class="l">순수익</span><div class="ps-track"><i style="left:'+X(Math.min(0,t.net))+';width:'+W(0,t.net)+'"></i></div>'
       +'<span class="v'+(t.net<0?' neg':'')+'" title="'+psWon(t.net)+'원">'+psShort(t.net)+'<small>'+pct(rate)+'</small></span></div>';
     const li=$('psLaborIn');
