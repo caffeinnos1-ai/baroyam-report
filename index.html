@@ -2772,7 +2772,7 @@ window.BAROYAM_FONT=(function(){
   @media (prefers-reduced-motion:reduce){ #ivFetch.busy::before,#ivFetch.busy .ic,#ivFetch.busy .ic svg,#ivFetch.busy .lb,#ivFetch.done .ic{animation:none} #ivFetch .ic svg{transition:none} }
   .pf-grow{flex:1}
   /* 순수익 요약 (ps-*) */
-  #psMonth{width:170px}
+  #psMonth{min-width:170px}
   .ps-temp{display:inline-flex;align-items:center;gap:6px;height:var(--ui-h-sm);padding:0 12px;border-radius:999px;font-size:12px;font-weight:500;
     color:var(--warn);background:var(--warn-soft)}
   .ps-temp:empty{display:none}
@@ -9889,7 +9889,7 @@ window.BAROYAM_FONT=(function(){
                매출·광고비는 매출 시트, 수수료율·발송비는 품목별 원가표 · 원가·배송비는 실제 판매 수량이 쌓이기 전까지 임시 가상 값 -->
           <div class="pf-pane" data-pf-pane="summary" hidden>
             <div class="pf-bar">
-              <button type="button" class="ui-field sm" id="psMonth" aria-haspopup="listbox"><span class="t">기간</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+              <button type="button" class="ui-field sm" id="psMonth" aria-label="기간 선택"></button>
               <span class="ps-temp" id="psTemp"></span>
               <span class="pf-grow"></span>
               <span class="pf-note" id="psSrc"></span>
@@ -9911,7 +9911,7 @@ window.BAROYAM_FONT=(function(){
                 <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처별 순수익</h3><p id="psChanSub"></p></div></div>
                 <div class="pf-scroll"><table class="ps-table" id="psChan"></table></div>
               </div>
-              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 인건비 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다(기본 부가세 = (매출 − 수수료 − 원가 − 배송비) ÷ 11) · 인건비는 달마다 직접 적습니다</span></div>
+              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 인건비 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다(기본 부가세 = (매출 − 수수료 − 원가 − 배송비) ÷ 11) · 인건비는 한 달(1일~말일)을 골랐을 때 직접 적습니다 · 시트는 달 단위라 기간에 걸친 날 수만큼 나누고, 시트 값이 없는 날은 마지막 마감 달의 하루 평균으로 채운 가상 값입니다</span></div>
             </div>
           </div>
         </section>
@@ -17754,20 +17754,31 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const PS_ALIAS={'쿠팡':['쿠팡'],'네이버':['스마트스토어','네이버','스스'],'자사몰':['자사몰','카페24','카페이노스'],'톡딜':['톡딜','카카오']};
   const PS_KEY={'쿠팡':'coupang','네이버':'naver','자사몰':'self','톡딜':'talk'};
   const PS_CH=Object.keys(PS_ALIAS);
-  let psSel=null;   /* 고른 기간 · 달 순번(문자) 또는 'ytd' */
+  /* 고른 기간 {start,end}('YYYY-MM-DD') · 시트는 달 단위라 기간에 걸친 날 수만큼 나눠(일할) 더한다 ·
+     시트 값이 없는 날(앞으로 올 날·시트에 없는 달)은 마지막 마감 달의 하루 평균으로 채운 가상 값이다 */
+  let psRange=null, psPicker=null;
   const psData=()=>{ const d=window.baroyamReportData; return d&&Array.isArray(d.months)&&d.months.length?d:null; };
   const psShort=n=>{ if(!isFinite(n)) return '–'; if(Math.abs(n)<5000) return '0'; const a=Math.abs(n), sg=n<0?'−':'';
     return sg+(typeof eokCheon==='function'?eokCheon(a):Math.round(a/10000).toLocaleString('ko-KR')+'만'); };
   const psWon=n=>(n<0?'−':'')+Math.round(Math.abs(n)).toLocaleString('ko-KR');
-  /* 달 목록 · 이름표('9월'·'10월')에서 달 번호를 읽고, 이번 달보다 뒤 번호면 작년 달로 본다 */
+  const p2=n=>String(n).padStart(2,'0');
+  const psIso=(y,m,dd)=>{ const t=new Date(Date.UTC(y,m-1,dd)); return t.getUTCFullYear()+'-'+p2(t.getUTCMonth()+1)+'-'+p2(t.getUTCDate()); };
+  const psDay=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))/864e5;
+  const psAdd=(s,n)=>{ const t=new Date((psDay(s)+n)*864e5); return t.getUTCFullYear()+'-'+p2(t.getUTCMonth()+1)+'-'+p2(t.getUTCDate()); };
+  const psSpan=(a,b)=>a>b?0:psDay(b)-psDay(a)+1;
+  const psDim=(y,m)=>new Date(Date.UTC(y,m,0)).getUTCDate();
+  const psMonthRange=(y,m)=>({start:psIso(y,m,1),end:psIso(y,m,psDim(y,m))});
+  const psDot=s=>(+s.slice(5,7))+'.'+(+s.slice(8,10));
+  /* 달 목록 · 이름표('9월'·'10월')에서 달 번호를 읽고, 이번 달보다 뒤 번호면 작년 달로 본다 · dataEnd = 시트 값이 있는 마지막 날 */
   function psMonths(d){
     const now=new Date(), nm=now.getMonth()+1, ny=now.getFullYear();
     return d.months.map((lb,i)=>{
       const m=+((String(lb).match(/(\d+)\s*월/)||[])[1]||0);
       const y=m>nm?ny-1:ny;
       const open=m===nm&&y===ny&&d.currMonthNum===m&&d.currDay<d.daysInCurrMonth;
-      return {i,m,y,key:y+'-'+String(m).padStart(2,'0'),label:m?m+'월':String(lb),open};
-    });
+      const dim=psDim(y,m||1), dataDays=open?d.currDay:dim;
+      return {i,m,y,key:y+'-'+p2(m),label:m?m+'월':String(lb),open,start:psIso(y,m||1,1),end:psIso(y,m||1,dim),dataEnd:psIso(y,m||1,dataDays),dataDays};
+    }).filter(x=>x.m);
   }
   function psRate(c){
     const al=PS_ALIAS[c]||[c];
@@ -17778,48 +17789,66 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const psCost=(c,sales)=>sales*PS_TEMP.costRate;
   const psShip=(c,sales)=>sales/PS_TEMP.aov*psShipFee();
   const psLabor=key=>{ const o=COST.data&&COST.data.labor&&COST.data.labor[key]; return o&&num(o.v)||0; };
-  /* 고른 달들의 판매처별 계산 + 합계 */
-  function psCalc(d,list){
+  /* 기간(r)의 판매처별 계산 + 합계 · virt = 가상으로 채운 날 수 */
+  function psCalc(d,ms,r){
+    const closed=ms.filter(m=>!m.open), base=closed[closed.length-1]||ms[ms.length-1];
+    let realDays=0;
+    const parts=ms.map(m=>{ const s=r.start>m.start?r.start:m.start, e=r.end<m.dataEnd?r.end:m.dataEnd, n=psSpan(s,e); realDays+=n; return {m,f:n/m.dataDays}; }).filter(x=>x.f>0);
+    const virt=Math.max(0,psSpan(r.start,r.end)-realDays);
     const rows=PS_CH.map(c=>{
       let sales=0, ad=0;
-      list.forEach(mm=>{ sales+=+(d.monthlySales[c]||[])[mm.i]||0; const a=(d.monthlyAd[c]||[])[mm.i]; ad+=a&&+a.cost||0; });
+      const S=i=>+(d.monthlySales[c]||[])[i]||0, A=i=>{ const a=(d.monthlyAd[c]||[])[i]; return a&&+a.cost||0; };
+      parts.forEach(({m,f})=>{ sales+=S(m.i)*f; ad+=A(m.i)*f; });
+      if(virt&&base){ sales+=S(base.i)/base.dataDays*virt; ad+=A(base.i)/base.dataDays*virt; }
       /* 판매처 계산법(품목별 원가표 › 판매처 수수료)을 마진 계산기와 똑같이 따른다 · 수수료 부가세 10% 더함 · 부가세 남는 돈÷11 / 매출÷11 / 없음 */
-      const r=psRate(c), fee=sales*((r?r.rate:0)/100)*(r&&r.feeVat==='inc'?1.1:1), cost=psCost(c,sales), ship=psShip(c,sales);
-      const vat=!r||!r.vatMode?Math.max(0,(sales-fee-cost-ship)/11):(r.vatMode==='sale'?sales/11:0);
-      return {c,sales,ad,fee,cost,ship,vat,rate:r,profit:sales-fee-ad-cost-ship-vat};
+      const rt=psRate(c), fee=sales*((rt?rt.rate:0)/100)*(rt&&rt.feeVat==='inc'?1.1:1), cost=psCost(c,sales), ship=psShip(c,sales);
+      const vat=!rt||!rt.vatMode?Math.max(0,(sales-fee-cost-ship)/11):(rt.vatMode==='sale'?sales/11:0);
+      return {c,sales,ad,fee,cost,ship,vat,rate:rt,profit:sales-fee-ad-cost-ship-vat};
     });
     const t={sales:0,ad:0,fee:0,cost:0,ship:0,vat:0,profit:0};
-    rows.forEach(r=>Object.keys(t).forEach(k=>t[k]+=r[k]));
-    t.labor=list.reduce((a,mm)=>a+psLabor(mm.key),0);
-    t.net=t.profit-t.labor;
+    rows.forEach(x=>Object.keys(t).forEach(k=>t[k]+=x[k]));
+    /* 인건비 · 기간에 걸친 달마다 (그 달 인건비 × 걸친 날 ÷ 그 달 날 수) */
+    t.labor=0;
+    for(let y=+r.start.slice(0,4), m=+r.start.slice(5,7); psIso(y,m,1)<=r.end; m===12?(y++,m=1):m++){
+      const mr=psMonthRange(y,m), s=r.start>mr.start?r.start:mr.start, e=r.end<mr.end?r.end:mr.end;
+      t.labor+=psLabor(y+'-'+p2(m))*psSpan(s,e)/psDim(y,m);
+    }
+    t.net=t.profit-t.labor; t.virt=virt; t.part=parts.some(x=>x.f<1);
     return {rows,t};
+  }
+  /* 기간이 꼭 한 달(1일~말일)이면 그 달 {y,m} */
+  function psWhole(r){
+    const y=+r.start.slice(0,4), m=+r.start.slice(5,7), mr=psMonthRange(y,m);
+    return r.start===mr.start&&r.end===mr.end?{y,m,key:y+'-'+p2(m),label:m+'월'}:null;
   }
   function paintSummary(){
     const d=psData(), body=$('psBody'), empty=$('psEmpty');
     empty.hidden=!!d; body.hidden=!d;
     $('psTemp').textContent=d?'원가·배송비는 임시 가상 데이터 · 원가 = 매출의 '+Math.round(PS_TEMP.costRate*100)+'% · 배송비 = 주문 '+(PS_TEMP.aov/10000)+'만원당 '+psShipFee().toLocaleString('ko-KR')+'원':'';
     if(!d){ $('psSrc').textContent=''; return; }
-    const ms=psMonths(d), yr=new Date().getFullYear(), closed=ms.filter(m=>!m.open);
+    const ms=psMonths(d), closed=ms.filter(m=>!m.open);
     /* 처음엔 마감된 마지막 달(월간 보고서와 같은 기준) · 고른 기간은 이 브라우저에 기억 */
-    if(psSel==null||(psSel!=='ytd'&&!ms.some(m=>String(m.i)===psSel))){
-      let k=null; try{ k=localStorage.getItem('baroyam_ps_period'); }catch(e){}
-      const km=ms.find(m=>m.key===k), def=closed[closed.length-1]||ms[ms.length-1];
-      psSel=k==='ytd'?'ytd':String((km||def).i);
+    if(!psRange){
+      try{ const v=JSON.parse(localStorage.getItem('baroyam_ps_range')||'null'); if(v&&/^\d{4}-\d\d-\d\d$/.test(v.start)&&/^\d{4}-\d\d-\d\d$/.test(v.end)&&v.start<=v.end) psRange=v; }catch(e){}
+      if(!psRange){ const b=closed[closed.length-1]||ms[ms.length-1]; psRange=b?{start:b.start,end:b.end}:psMonthRange(new Date().getFullYear(),new Date().getMonth()+1); }
     }
-    const ytd=psSel==='ytd';
-    const list=ytd?closed.filter(m=>m.y===yr):ms.filter(m=>String(m.i)===psSel);
-    const one=!ytd?list[0]:null;
-    const lab=ytd?(list.length?list[0].m+'–'+list[list.length-1].m+'월 누적':'올해 누적'):one.label+(one.open?' (진행 중)':'');
-    $('psMonth').querySelector('.t').textContent=lab;
-    $('psSrc').textContent='매출·광고비: 매출 시트'+(one&&one.open?' · '+d.currDay+'일까지':'')+' · 수수료율·발송비: 품목별 원가표';
-    const {rows,t}=psCalc(d,list);
-    /* KPI · 순수익은 전월 대비 */
-    let cmp='';
-    if(one){ const pm=ms[ms.indexOf(one)-1]; if(pm){ const diff=t.net-psCalc(d,[pm]).t.net;
-      cmp='<span class="'+(diff>=0?'up':'down')+'">'+(diff>=0?'▲ ':'▼ ')+psShort(Math.abs(diff))+'</span> '+pm.label+' 대비'; } }
+    if(!psPicker&&window.UI&&UI.datePicker){
+      const now=new Date();
+      psPicker=UI.datePicker($('psMonth'),{mode:'range',value:psRange,placeholder:'기간 선택',
+        presets:['month','prevMonth','last30','custom'],resetValue:psMonthRange(now.getFullYear(),now.getMonth()+1),onChange:v=>{ if(v) psPick(v); }});
+    }else if(psPicker) psPicker.set(psRange);
+    const r=psRange, one=psWhole(r);
+    const lab=one?(one.y!==new Date().getFullYear()?one.y+'년 ':'')+one.label:psDot(r.start)+' ~ '+psDot(r.end)+' ('+psSpan(r.start,r.end)+'일)';
+    const {rows,t}=psCalc(d,ms,r);
+    $('psSrc').textContent='매출·광고비: 매출 시트'+(t.part?' · 달 값을 날 수로 나눠 계산':'')+(t.virt?' · 시트 값이 없는 '+t.virt+'일은 가상':'')+' · 수수료율·발송비: 품목별 원가표';
+    /* KPI · 순수익은 직전 같은 길이 기간(한 달이면 지난달) 대비 */
+    const len=psSpan(r.start,r.end);
+    const pr=one?psMonthRange(one.m===1?one.y-1:one.y,one.m===1?12:one.m-1):{start:psAdd(r.start,-len),end:psAdd(r.start,-1)};
+    const pc=psCalc(d,ms,pr).t, diff=t.net-pc.net;
+    const cmp=pc.virt>=psSpan(pr.start,pr.end)?'':'<span class="'+(diff>=0?'up':'down')+'">'+(diff>=0?'▲ ':'▼ ')+psShort(Math.abs(diff))+'</span> '+(one?(one.m===1?12:one.m-1)+'월':'직전 '+len+'일')+' 대비';
     const cost=t.sales-t.net, rate=t.sales?t.net/t.sales:0;
     $('psKpis').innerHTML=
-      '<div class="ps-kpi"><div class="k">매출</div><div class="v" title="'+psWon(t.sales)+'원">'+psShort(t.sales)+'</div><div class="s">'+lab+'</div></div>'
+      '<div class="ps-kpi"><div class="k">매출</div><div class="v" title="'+psWon(t.sales)+'원">'+psShort(t.sales)+'</div><div class="s">'+lab+(t.virt?' · 가상 '+t.virt+'일':'')+'</div></div>'
       +'<div class="ps-kpi"><div class="k">총비용</div><div class="v" title="'+psWon(cost)+'원">'+psShort(cost)+'</div><div class="s">매출의 '+pct(t.sales?cost/t.sales:0)+'</div></div>'
       +'<div class="ps-kpi main"><div class="k">순수익</div><div class="v'+(t.net<0?' neg':'')+'" title="'+psWon(t.net)+'원">'+psShort(t.net)+'</div><div class="s">'+(cmp||'&nbsp;')+'</div></div>'
       +'<div class="ps-kpi"><div class="k">순이익률</div><div class="v'+(t.net<0?' neg':'')+'">'+pct(rate)+'</div><div class="s">순수익 ÷ 매출</div></div>';
@@ -17829,11 +17858,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const bars=steps.map(([l,k,tmp])=>{ const v=t[k]; const b={l,k,tmp,v,from:run-v,to:run}; run-=v; lo=Math.min(lo,run); return b; });
     const span=Math.max(t.sales,1)-lo, X=x=>((x-lo)/span*100).toFixed(2)+'%', W=(a,b)=>(Math.abs(b-a)/span*100).toFixed(2)+'%';
     const ro=!canEdit();
+    /* 인건비는 한 달(1일~말일)을 골랐을 때만 그 달 값을 적는다 · 다른 기간은 날 수만큼 나눈 값을 보여 준다 */
     const laborIn=one?'<input class="ui-field" id="psLaborIn" inputmode="numeric" placeholder="0" value="'+(psLabor(one.key)?comma(psLabor(one.key)):'')+'"'+(ro?' readonly':'')+' title="'+one.label+' 인건비(원)'+(ro?'':' · 적고 Enter')+'">':null;
-    $('psFall').innerHTML='<div class="ps-row base"><span class="l">매출</span><div class="ps-track"><i style="left:'+X(0)+';width:'+W(0,t.sales)+'"></i></div><span class="v" title="'+psWon(t.sales)+'원">'+psShort(t.sales)+'</span></div>'
+    $('psFall').innerHTML='<div class="ps-row base'+(t.virt?' temp':'')+'"><span class="l">매출'+(t.virt?'<em>가상 '+t.virt+'일</em>':'')+'</span><div class="ps-track"><i style="left:'+X(0)+';width:'+W(0,t.sales)+'"></i></div><span class="v" title="'+psWon(t.sales)+'원">'+psShort(t.sales)+'</span></div>'
       +bars.map(b=>'<div class="ps-row'+(b.tmp?' temp':'')+'"><span class="l">'+b.l+(b.tmp?'<em>임시</em>':'')+'</span>'
         +'<div class="ps-track"><i style="left:'+X(Math.min(b.from,b.to))+';width:'+W(b.from,b.to)+'"></i></div>'
-        +'<span class="v" title="'+psWon(b.v)+'원">'+(b.k==='labor'&&laborIn?laborIn:(b.v>=5000?'−':'')+psShort(b.v)+'<small>'+pct(t.sales?b.v/t.sales:0)+'</small>')+'</span></div>').join('')
+        +'<span class="v" title="'+psWon(b.v)+'원'+(b.k==='labor'&&!one?' · 달 인건비를 날 수로 나눈 값 · 한 달을 고르면 적을 수 있습니다':'')+'">'+(b.k==='labor'&&laborIn?laborIn:(b.v>=5000?'−':'')+psShort(b.v)+'<small>'+pct(t.sales?b.v/t.sales:0)+'</small>')+'</span></div>').join('')
       +'<div class="ps-row end'+(t.net<0?' minus':'')+'"><span class="l">순수익</span><div class="ps-track"><i style="left:'+X(Math.min(0,t.net))+';width:'+W(0,t.net)+'"></i></div>'
       +'<span class="v'+(t.net<0?' neg':'')+'" title="'+psWon(t.net)+'원">'+psShort(t.net)+'<small>'+pct(rate)+'</small></span></div>';
     const li=$('psLaborIn');
@@ -17844,39 +17874,35 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       li.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); li.blur(); } else if(e.key==='Escape'){ li.value=psLabor(one.key)?comma(psLabor(one.key)):''; li.blur(); } });
       li.addEventListener('change',save);
     }
-    /* 월별 추이 · 막대를 누르면 그 달로 */
-    const tr=ms.map(m=>({m,v:psCalc(d,[m]).t.net}));
+    /* 월별 추이 · 시트 값만(가상 없음) · 고른 기간에 걸친 달은 칠하고, 막대를 누르면 그 달 전체로 */
+    const tr=ms.map(m=>({m,v:psCalc(d,ms,{start:m.start,end:m.dataEnd}).t.net}));
     const mxP=Math.max(1,...tr.map(x=>x.v)), mxN=Math.max(0,...tr.map(x=>-x.v)), H=190;
     const hp=H*mxP/(mxP+mxN), hn=H-hp;
-    $('psTrend').innerHTML=tr.map(x=>'<div class="ps-col'+(x.m.open?' open':'')+(one&&x.m===one?' on':'')+'" data-i="'+x.m.i+'" title="'+x.m.label+(x.m.open?' (진행 중)':'')+' · '+psWon(x.v)+'원">'
+    $('psTrend').innerHTML=tr.map(x=>'<div class="ps-col'+(x.m.open?' open':'')+(r.start<=x.m.end&&r.end>=x.m.start?' on':'')+'" data-i="'+x.m.i+'" title="'+x.m.label+(x.m.open?' ('+psDot(x.m.dataEnd)+'까지)':'')+' · '+psWon(x.v)+'원">'
       +'<span class="amt'+(x.v<0?' neg':'')+'">'+psShort(x.v)+'</span>'
       +'<div class="pos" style="height:'+hp.toFixed(1)+'px"><i style="height:'+(x.v>0?(x.v/mxP*hp).toFixed(1):0)+'px"></i></div>'
       +(hn>0?'<div class="ngz" style="height:'+hn.toFixed(1)+'px"><i style="height:'+(x.v<0?(-x.v/mxN*hn).toFixed(1):0)+'px"></i></div>':'')
       +'<span class="m">'+x.m.label+'</span></div>').join('');
     /* 판매처별 표 */
-    const miss=rows.filter(r=>r.sales&&!r.rate).map(r=>r.c);
-    $('psChanSub').textContent=lab+(miss.length?' · 수수료율이 원가표에 없어 0%로 계산: '+miss.join('·'):'');
+    const miss=rows.filter(x=>x.sales&&!x.rate).map(x=>x.c);
+    $('psChanSub').textContent=lab+(t.virt?' · 가상 '+t.virt+'일 포함':'')+(miss.length?' · 수수료율이 원가표에 없어 0%로 계산: '+miss.join('·'):'');
     const td=(v,c)=>'<td'+(c?' class="'+c+'"':'')+'>'+psWon(v)+'</td>';
     $('psChan').innerHTML='<thead><tr><th>판매처</th><th>매출</th><th>판매처 수수료</th><th>광고비</th><th>상품 원가 <em>임시</em></th><th>배송비 <em>임시</em></th><th>부가세</th><th>순수익</th><th>순이익률</th></tr></thead><tbody>'
-      +rows.map(r=>'<tr><td><span class="ch ch-'+PS_KEY[r.c]+'"><i></i>'+r.c+(r.rate?'<small>'+esc(r.rate.name)+' '+comma(r.rate.rate)+'%</small>':'')+'</span></td>'
-        +td(r.sales)+td(r.fee)+td(r.ad)+td(r.cost,'t')+td(r.ship,'t')+td(r.vat)+td(r.profit,'p'+(r.profit<0?' neg':''))+'<td class="'+(r.profit<0?'neg':'')+'">'+(r.sales?pct(r.profit/r.sales):'–')+'</td></tr>').join('')
+      +rows.map(x=>'<tr><td><span class="ch ch-'+PS_KEY[x.c]+'"><i></i>'+x.c+(x.rate?'<small>'+esc(x.rate.name)+' '+comma(x.rate.rate)+'%</small>':'')+'</span></td>'
+        +td(x.sales)+td(x.fee)+td(x.ad)+td(x.cost,'t')+td(x.ship,'t')+td(x.vat)+td(x.profit,'p'+(x.profit<0?' neg':''))+'<td class="'+(x.profit<0?'neg':'')+'">'+(x.sales?pct(x.profit/x.sales):'–')+'</td></tr>').join('')
       +'</tbody><tfoot><tr><td>판매처 합계</td>'+td(t.sales)+td(t.fee)+td(t.ad)+td(t.cost,'t')+td(t.ship,'t')+td(t.vat)+td(t.profit,'p'+(t.profit<0?' neg':''))+'<td>'+(t.sales?pct(t.profit/t.sales):'–')+'</td></tr>'
       +'<tr><td>인건비</td><td colspan="6"></td>'+td(-t.labor)+'<td></td></tr>'
       +'<tr class="fin"><td>순수익</td><td colspan="6"></td>'+td(t.net,'p'+(t.net<0?' neg':''))+'<td class="'+(t.net<0?'neg':'')+'">'+(t.sales?pct(rate):'–')+'</td></tr></tfoot>';
   }
   function psPick(v){
-    psSel=String(v);
-    try{ const d=psData(), m=d&&psMonths(d).find(x=>String(x.i)===psSel); localStorage.setItem('baroyam_ps_period',psSel==='ytd'?'ytd':(m?m.key:'')); }catch(e){}
+    psRange={start:v.start,end:v.end};
+    try{ localStorage.setItem('baroyam_ps_range',JSON.stringify(psRange)); }catch(e){}
     paintSummary();
   }
-  $('psMonth').addEventListener('click',e=>{
-    const d=psData(); if(!d||!window.UI) return;
-    const ms=psMonths(d), yr=new Date().getFullYear(), closed=ms.filter(m=>!m.open&&m.y===yr);
-    const opts=ms.slice().reverse().map(m=>({value:String(m.i),label:m.label+(m.y!==yr?' ('+m.y+')':''),sub:m.open?'진행 중':''}));
-    if(closed.length) opts.unshift({value:'ytd',label:'올해 누적',sub:closed[0].m+'–'+closed[closed.length-1].m+'월 마감'});
-    UI.menu(e.currentTarget,opts,psSel,psPick);
+  $('psTrend').addEventListener('click',e=>{
+    const c=e.target.closest('.ps-col'), d=psData(); if(!c||!d) return;
+    const m=psMonths(d).find(x=>String(x.i)===c.dataset.i); if(m) psPick({start:m.start,end:m.end});
   });
-  $('psTrend').addEventListener('click',e=>{ const c=e.target.closest('.ps-col'); if(c) psPick(c.dataset.i); });
   document.addEventListener('baroyam:report',()=>{ if(view.style.display!=='none'&&pane==='summary') paintSummary(); });
 
   /* ---------- 열기·다시 받기 ---------- */
