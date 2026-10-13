@@ -2877,6 +2877,26 @@ window.BAROYAM_FONT=(function(){
   .ps-man-table tr.none td{padding:24px 10px;text-align:center;white-space:normal;color:var(--mute)}
   .ps-rep{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:500;color:var(--mute);background:var(--chip-flat);white-space:nowrap}
   .ps-rep.on{color:var(--btn-soft-ink);background:var(--btn-soft)}
+  button.ps-rep{border:0;font:inherit;font-size:11.5px;font-weight:500;cursor:pointer;padding:3px 10px;transition:box-shadow .15s}
+  button.ps-rep i{font-style:normal;font-size:9px;margin-left:2px;opacity:.7}
+  button.ps-rep:hover,button.ps-rep:focus-visible{box-shadow:inset 0 0 0 1.5px currentColor}
+  .ps-span-pop{width:300px;display:flex;flex-direction:column;gap:10px}
+  .ps-span-mode{align-self:stretch}
+  .ps-span-mode .ui-tab{flex:1}
+  .ps-span-year{display:flex;align-items:center;justify-content:space-between}
+  .ps-span-year b{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .ps-span-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+  .ps-span-m{all:unset;box-sizing:border-box;height:34px;border-radius:var(--ui-r);text-align:center;font-size:13px;font-weight:500;color:var(--body);cursor:pointer}
+  .ps-span-m:hover{background:var(--chip-flat)}
+  .ps-span-m.now{box-shadow:inset 0 0 0 1px var(--line)}
+  .ps-span-m.in{background:var(--btn-soft);color:var(--btn-soft-ink);border-radius:0}
+  .ps-span-m.on{background:var(--btn);color:#fff;font-weight:600}
+  .ps-span-m[disabled]{opacity:.35;cursor:default;background:none}
+  .ps-span-m:focus-visible{box-shadow:var(--ui-ring)}
+  .ps-span-forever{align-self:flex-start}
+  .ps-span-sum{margin:0;padding:8px 10px;border-radius:10px;background:var(--chip-flat);font-size:12px;color:var(--body)}
+  .ps-span-foot{display:flex;justify-content:flex-end;gap:6px}
+  .ps-span-warn{margin:0;font-size:11.5px;line-height:1.5;color:var(--warn)}
   .ps-man-table tfoot td{font-weight:600;color:var(--ink);padding:10px}
   @keyframes psFlash{0%,40%{background:color-mix(in srgb,var(--btn-soft) 90%,var(--paper))}100%{background:transparent}}
   .ps-table tr.flash td{animation:psFlash 1.8s ease-out}
@@ -18052,7 +18072,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           html+='<tr class="item'+(x.id===psLastAdd?' flash':'')+'" data-id="'+esc(x.id)+'">'
             +'<td><input class="ui-field sm" data-k="name" maxlength="40" value="'+esc(x.name||'')+'"'+(ro?' readonly':'')+' aria-label="항목 이름"></td>'
             +'<td class="r"><input class="ui-field sm ps-amt" data-k="amt" inputmode="numeric" value="'+(num(x.amt)?comma(num(x.amt)):'')+'"'+(ro?' readonly':'')+' aria-label="한 달 금액(원)"></td>'
-            +'<td><span class="ps-rep'+(x.rep?' on':'')+'">'+repTxt+'</span></td>'
+            +'<td>'+(ro?'<span class="ps-rep'+(x.rep?' on':'')+'">'+repTxt+'</span>':'<button type="button" class="ps-rep'+(x.rep?' on':'')+'" data-ps-span title="반복 기간 바꾸기 · 시작 달을 앞당기면 지난달에도 들어갑니다">'+repTxt+' <i>▾</i></button>')+'</td>'
             +'<td class="act">'+(ro?'':'<button type="button" class="ui-btn sm ghost icon" data-ps-more aria-label="더 보기" title="반복 바꾸기·빼기">⋯</button>')+'</td></tr>';
         });
       });
@@ -18187,7 +18207,93 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     COST.mark(); paintSummary();
   });
   $('psManTable').addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input')&&!e.isComposing){ e.preventDefault(); e.target.blur(); } });
+  /* ---------- 반복 기간 고르기 ----------
+     항목 줄의 "매달 · 10월부터"/"이번 달만" 알약을 누르면 뜬다 · 매달 반복이면 시작 달~끝 달(비우면 계속), 한 달만이면 그 달 하나 ·
+     시작을 앞당기면 지난달 목록·계산에도 그 항목이 들어간다 */
+  let spanPop=null;
+  function psSpanOpen(btn,id){
+    const x=psItems().find(i=>i.id===id); if(!x||!canEdit()) return;
+    if(spanPop) spanPop.close();
+    const pop=document.createElement('div');
+    pop.className='ui-pop ps-span-pop'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','반복 기간');
+    document.body.appendChild(pop);
+    const st={rep:!!x.rep, from:x.from, to:x.rep?(x.to||''):x.from, pick:'from', year:+x.from.slice(0,4)};
+    const nowKey=new Date().getFullYear()+'-'+p2(new Date().getMonth()+1);
+    function paint(){
+      const y=st.year, lo=st.from, hi=st.rep?(st.to||'9999-12'):st.from;
+      let h='<div class="ui-tabs ps-span-mode"><button type="button" class="ui-tab" data-mode="rep" aria-selected="'+st.rep+'">매달 반복</button><button type="button" class="ui-tab" data-mode="once" aria-selected="'+!st.rep+'">한 달만</button></div>';
+      if(st.rep) h+='<div class="ui-dfields">'
+        +'<button type="button" class="ui-dfield'+(st.pick==='from'?' active':'')+'" data-pick="from"><span>시작 달</span><b>'+psKeyLabel(st.from)+'</b></button><span class="ui-dfield-sep">~</span>'
+        +'<button type="button" class="ui-dfield'+(st.pick==='to'?' active':'')+(st.to?'':' empty')+'" data-pick="to"><span>끝 달</span><b>'+(st.to?psKeyLabel(st.to):'계속')+'</b></button></div>';
+      h+='<div class="ps-span-year"><button type="button" class="ui-btn sm ghost icon" data-y="-1" aria-label="지난해">‹</button><b>'+y+'년</b><button type="button" class="ui-btn sm ghost icon" data-y="1" aria-label="다음 해">›</button></div><div class="ps-span-grid">';
+      for(let m=1;m<=12;m++){
+        const k=y+'-'+p2(m), on=k===st.from||(st.rep&&k===st.to)||(!st.rep&&k===st.from), inR=k>lo&&k<hi;
+        const dis=st.rep&&st.pick==='to'&&k<st.from;
+        h+='<button type="button" class="ps-span-m'+(on?' on':'')+(inR?' in':'')+(k===nowKey?' now':'')+'" data-k="'+k+'"'+(dis?' disabled':'')+'>'+m+'월</button>';
+      }
+      h+='</div>';
+      if(st.rep&&st.pick==='to') h+='<button type="button" class="ui-chip ps-span-forever" aria-pressed="'+!st.to+'" data-forever>끝 없이 계속</button>';
+      h+='<p class="ps-span-sum">'+(st.rep?psKeyLabel(st.from)+'부터 '+(st.to?psKeyLabel(st.to)+'까지':'계속')+' 매달 '+psWon(num(x.amt)||0)+'원':psKeyLabel(st.from)+' 한 달만 '+psWon(num(x.amt)||0)+'원')+'</p>'
+        +(()=>{ const ov=overlaps(); return ov.length?'<p class="ps-span-warn">같은 항목 '+ov.map(o=>psWon(num(o.amt)||0)+'원('+psKeyLabel(o.from)+(o.rep?'~'+(o.to?psKeyLabel(o.to):''):'')+')').join(', ')+'과 겹치는 달은 이 금액으로 바꿉니다</p>':''; })()
+        +'<div class="ps-span-foot"><button type="button" class="ui-btn sm ghost" data-close>취소</button><button type="button" class="ui-btn sm primary" data-ok>적용</button></div>';
+      pop.innerHTML=h;
+    }
+    /* 같은 분류·이름의 다른 토막(금액을 중간 달에서 바꿔 나뉜 것 등)과 겹치는 달 · 적용하면 그 토막을 줄이거나 지워 두 번 세지 않는다 */
+    function overlaps(){
+      const a=st.from, b=st.rep?(st.to||'9999-12'):st.from, nm=String(x.name||'').trim(), cv=catOf(x.cat).v;
+      return psItems().filter(o=>o.id!==id&&catOf(o.cat).v===cv&&String(o.name||'').trim()===nm)
+        .filter(o=>{ const oa=o.from, ob=o.rep?(o.to||'9999-12'):o.from; return oa<=b&&a<=ob; });
+    }
+    function trim(){
+      const a=st.from, b=st.rep?(st.to||'9999-12'):st.from;
+      overlaps().forEach(o=>{
+        const oa=o.from, ob=o.rep?(o.to||'9999-12'):o.from;
+        if(oa<a&&ob>b) psSet(o.id,{to:psShift(a,-1)});            /* 새 기간을 감싸면 앞쪽만 남김 */
+        else if(oa<a) psSet(o.id,{to:psShift(a,-1)});             /* 앞쪽에서 겹침 → 새 시작 전 달까지 */
+        else if(ob>b) psSet(o.id,{from:psShift(b,1)});            /* 뒤쪽에서 겹침 → 새 끝 다음 달부터 */
+        else psSet(o.id,{del:Date.now()});                        /* 새 기간 안에 쏙 들어감 → 지움 */
+      });
+    }
+    function place(){
+      const r=btn.getBoundingClientRect(), w=pop.offsetWidth, hh=pop.offsetHeight;
+      let left=Math.min(Math.max(8,r.right-w),innerWidth-w-8), top=r.bottom+8;
+      if(top+hh>innerHeight-8&&r.top-8-hh>=8) top=r.top-8-hh;
+      pop.style.left=left+'px'; pop.style.top=Math.max(8,top)+'px';
+    }
+    pop.addEventListener('click',e=>{
+      e.stopPropagation();
+      const t=e.target.closest('button'); if(!t||t.disabled) return;
+      if(t.dataset.mode){ st.rep=t.dataset.mode==='rep'; if(!st.rep) st.to=st.from; else { st.to=''; st.pick='from'; } paint(); place(); return; }
+      if(t.dataset.pick){ st.pick=t.dataset.pick; paint(); return; }
+      if(t.dataset.y){ st.year+=+t.dataset.y; paint(); return; }
+      if('forever' in t.dataset){ st.to=''; paint(); return; }
+      if(t.dataset.k){
+        const k=t.dataset.k;
+        if(!st.rep){ st.from=k; st.to=k; }
+        else if(st.pick==='from'){ st.from=k; if(st.to&&st.to<k) st.to=''; st.pick='to'; }
+        else st.to=k;
+        paint(); return;
+      }
+      if('close' in t.dataset){ api.close(); return; }
+      if('ok' in t.dataset){
+        trim();
+        psSet(id,{rep:st.rep,from:st.from,to:st.rep?st.to:st.from});
+        psLastAdd=id; clearTimeout(psFlashT); psFlashT=setTimeout(()=>{ psLastAdd=null; },2000);
+        COST.mark(); api.close();
+        /* 지금 보는 달이 새 기간 밖이면 시작 달로 옮겨 바로 보이게 */
+        const one=psRange&&psWhole(psRange), nx=Object.assign({},x,{rep:st.rep,from:st.from,to:st.rep?st.to:st.from});
+        if(one&&!psOn(nx,one.key)) psPick(psKeyRange(st.from)); else paintSummary();
+      }
+    });
+    const outside=e=>{ if(!pop.contains(e.target)&&e.target!==btn) api.close(); };
+    const esc=e=>{ if(e.key==='Escape') api.close(); };
+    const api={close(){ pop.remove(); document.removeEventListener('mousedown',outside,true); document.removeEventListener('keydown',esc); removeEventListener('resize',place); if(spanPop===api) spanPop=null; }};
+    spanPop=api;
+    paint(); place();
+    setTimeout(()=>{ document.addEventListener('mousedown',outside,true); document.addEventListener('keydown',esc); addEventListener('resize',place); },0);
+  }
   $('psManTable').addEventListener('click',e=>{
+    const sp=e.target.closest('[data-ps-span]'); if(sp){ psSpanOpen(sp,sp.closest('[data-id]').dataset.id); return; }
     const b=e.target.closest('[data-ps-more]'), one=psRange&&psWhole(psRange); if(!b||!canEdit()||!one) return;
     const id=b.closest('[data-id]').dataset.id, x=psItems().find(i=>i.id===id); if(!x) return;
     const k=one.key, L=psKeyLabel(k), opts=[];
