@@ -6904,7 +6904,7 @@ window.BAROYAM_FONT=(function(){
 
   /* 달 단위 기간 고르기 · 날짜가 필요 없고 몇 년 몇 월~몇 월만 고를 때(순수익 요약 등) ·
      UI.monthPicker(button, {value:{start:'YYYY-MM',end:'YYYY-MM'}, presets, max, onChange}) ·
-     모양은 기간 달력과 같다: 빠른 선택 → 시작 달~끝 달 → ‹ 연도 › 와 1~12월 → 초기화/적용 */
+     빠른 선택 → ‹ 연도 › 와 1~12월(처음 누른 달 = 시작, 다음 누른 달 = 끝 · 사이는 칠함) → 초기화/적용 · 시작/끝 칸은 사용자 요청으로 뺐다 */
   const MP_LABEL={thisMonth:'이번 달',prevMonth:'지난 달',last3:'최근 3개월',thisYear:'올해',lastYear:'지난해'};
   const ym=(y,m)=>{ const t=y*12+m-1; return Math.floor(t/12)+'-'+pad(t%12+1); };
   function mpPreset(k){
@@ -6944,8 +6944,6 @@ window.BAROYAM_FONT=(function(){
       const on=presetOf(draft.start&&draft.end?draft:null);
       const lo=draft.start, hi=draft.end||draft.start, nowK=ym(cy,new Date().getMonth()+1);
       let h='<div class="ui-cal-quick">'+presets.map(k=>'<button type="button" class="ui-chip" data-quick="'+k+'" aria-pressed="'+(on===k)+'">'+esc(MP_LABEL[k]||k)+'</button>').join('')+'</div>';
-      const field=(k,t)=>'<button type="button" class="ui-dfield'+(pick===k?' active':'')+(draft[k]?'':' empty')+'" data-pick="'+k+'"><span>'+t+'</span><b>'+(draft[k]?draft[k].replace('-','.'):'선택')+'</b></button>';
-      h+='<div class="ui-dfields">'+field('start','시작 달')+'<span class="ui-dfield-sep">~</span>'+field('end','끝 달')+'</div>';
       h+='<div class="ui-cal-head"><span class="ui-cal-navs"><button type="button" class="ui-btn ghost icon sm" data-y="-1" aria-label="이전 해">‹</button></span>'
         +'<span class="ui-cal-title">'+viewY+'년</span>'
         +'<span class="ui-cal-navs"><button type="button" class="ui-btn ghost icon sm" data-y="1" aria-label="다음 해">›</button></span></div>';
