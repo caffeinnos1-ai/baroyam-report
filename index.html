@@ -18204,7 +18204,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     let html='';
     if(key){
       html='<colgroup><col><col style="width:170px"><col style="width:190px"><col style="width:48px"></colgroup>'
-        +'<thead><tr><th>항목</th><th class="r">한 달 금액</th><th>반복</th><th></th></tr></thead><tbody>';
+        +'<thead><tr><th>분류</th><th class="r">한 달 금액</th><th>반복</th><th></th></tr></thead><tbody>';
       if(!list.length) html+='<tr class="none"><td colspan="4">'+(ro?'이 달에 적힌 비용이 없습니다':'위 칸에 적고 Enter · 매달 나가는 요금제는 "매달 반복"을 켜고 한 번만 적으면 됩니다 · 지난달에 이번 달만 적은 것은 "지난달 항목 불러오기"')+'</td></tr>';
       psCats().forEach(c=>{
         const its=list.filter(x=>catOf(x.cat).v===c.v); if(!its.length) return;
