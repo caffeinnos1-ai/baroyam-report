@@ -18535,9 +18535,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const many=x.rep&&x.from<k;
     const opts=[{value:'edit',label:'수정',sub:'이름·금액 고치기'+(many?' · 금액은 '+L+'부터 바뀜':'')},
       {value:'del',label:'삭제',sub:many?psKeyLabel(x.from)+'부터 들어간 금액이 모두 빠집니다':'이 항목을 지웁니다'}];
-    UI.menu(b,opts,null,v=>{
+    UI.menu(b,opts,null,async v=>{
       if(v==='edit'){ const inp=row.querySelector('[data-k="name"]'); if(inp){ inp.focus(); inp.select(); } return; }
-      if(!confirm('"'+x.name+'"을(를) '+(many?psKeyLabel(x.from)+'부터 모든 달에서 ':'')+'삭제할까요?')) return;
+      /* 앱 공통 삭제 확인창(baroyamAsk) · 없으면 브라우저 확인창 */
+      const q='"'+(x.name||'이름 없는 항목')+'"을(를) 삭제하시겠어요?', d=many?psKeyLabel(x.from)+'부터 들어간 금액이 모든 달에서 빠집니다.':'이 항목이 목록과 계산에서 빠집니다.';
+      const ok=window.baroyamAsk?await window.baroyamAsk(q,d,'삭제'):confirm(q);
+      if(!ok) return;
       psSet(id,{del:Date.now()});
       COST.mark(); paintSummary();
     });
