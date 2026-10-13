@@ -2896,6 +2896,14 @@ window.BAROYAM_FONT=(function(){
   .ps-span-forever{align-self:flex-start}
   .ps-span-sum{margin:0;padding:8px 10px;border-radius:10px;background:var(--chip-flat);font-size:12px;color:var(--body)}
   .ps-span-foot{display:flex;justify-content:flex-end;gap:6px}
+  .ps-sug{max-width:min(440px,calc(100vw - 16px))}
+  .ps-sug-head{padding:6px 10px 4px;font-size:11px;font-weight:500;color:var(--mute)}
+  .ps-sug .ui-opt{min-height:44px}
+  .ps-sug .nm{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .ps-sug .nm em{font-style:normal;font-size:11px;font-weight:400;color:var(--mute)}
+  .ps-sug mark{background:var(--btn-soft);color:var(--btn-soft-ink);border-radius:3px;padding:0 1px}
+  .ps-sug small{display:flex;flex-direction:column;align-items:flex-end;gap:1px;color:var(--ink)}
+  .ps-sug small i{font-style:normal;font-size:10.5px;font-weight:400;color:var(--mute)}
   .ps-span-warn{margin:0;font-size:11.5px;line-height:1.5;color:var(--warn)}
   .ps-man-table tfoot td{font-weight:600;color:var(--ink);padding:10px}
   @keyframes psFlash{0%,40%{background:color-mix(in srgb,var(--btn-soft) 90%,var(--paper))}100%{background:transparent}}
@@ -10007,7 +10015,7 @@ window.BAROYAM_FONT=(function(){
                   <form class="ps-man-add" id="psManAdd" autocomplete="off">
                     <label><span>분류</span><button type="button" class="ui-field" id="psManCat" aria-haspopup="listbox"><span class="t">외부 광고비</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                       <input class="ui-field" id="psManCatNew" maxlength="20" placeholder="새 분류 이름 · Enter" aria-label="새 분류 이름" hidden></label>
-                    <label><span>항목 이름</span><input class="ui-field" name="name" maxlength="40" placeholder="예: 인플루언서, 카페24 요금제" list="psManNames"></label>
+                    <label><span>항목 이름</span><input class="ui-field" name="name" maxlength="40" placeholder="예: 인플루언서 · 앞 글자만 쳐도 추천" autocomplete="off"></label>
                     <label><span>한 달 금액</span><input class="ui-field ps-amt" name="amt" inputmode="numeric" placeholder="0원"></label>
                     <label><span>반복</span><button type="button" class="ui-chip" id="psManRep" aria-pressed="false" title="켜면 다음 달부터도 저절로 들어갑니다(요금제·구독·고정 대행료)">매달 반복</button></label>
                     <button type="submit" class="ui-btn primary">추가</button>
@@ -18083,8 +18091,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       $('psManPrev').title=fresh.length?fresh.map(x=>x.name).join(' · '):'불러올 지난달 "이번 달만" 항목이 없습니다(매달 반복은 저절로 들어옵니다)';
     }
     $('psManTable').innerHTML=html; $('psManTable').hidden=!key;
-    const names=new Set(); psItems().forEach(x=>{ if(x.name) names.add(String(x.name).trim()); });
-    $('psManNames').innerHTML=[...names].map(n=>'<option value="'+esc(n)+'">').join('');
     /* 손익 목록 · 자동으로 들어오는 것과 직접 적은 것을 한 표에 */
     const L=(lbl,src,v,o)=>{ o=o||{}; return '<tr class="'+(o.cls||'')+'"><td>'+lbl+'</td><td class="src">'+(src||'')+'</td><td class="r'+(v<0?' neg':'')+'">'+(o.minus&&Math.abs(v)>=1?'−':'')+psWon(o.minus?Math.abs(v):v)+'</td><td class="r pc">'+(t.sales&&o.pct!==false?pct(Math.abs(v)/t.sales):'')+'</td></tr>'; };
     let led='<thead><tr><th>항목</th><th>어디서</th><th class="r">금액(원)</th><th class="r">매출 대비</th></tr></thead><tbody>';
@@ -18178,7 +18184,96 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   $('psManCatNew').addEventListener('blur',e=>{ if(!e.target.value.trim()) setTimeout(()=>psCatNew(false),150); });
   $('psManRep').addEventListener('click',()=>{ addRep=!addRep; $('psManRep').setAttribute('aria-pressed',addRep?'true':'false'); });
-  $('psManAdd').elements.name.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); $('psManAdd').elements.amt.focus(); } });
+  /* ---------- 항목 이름 추천 ----------
+     전에 적은 항목을 이름마다 모아 "몇 달 썼는지(자주) → 최근에 쓴 순"으로 보인다 · 지금 고른 분류의 항목이 먼저 ·
+     "톡"처럼 앞 글자·중간 글자, "ㅌㄷ"처럼 초성으로도 찾는다 · 고르면 이름·마지막 금액·분류·반복을 한 번에 채운다(규칙으로 고르는 추천 · AI 아님) */
+  const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+  const choOf=s=>String(s).replace(/[가-힣]/g,ch=>CHO[Math.floor((ch.charCodeAt(0)-0xAC00)/588)]);
+  const sugNorm=s=>String(s||'').toLowerCase().replace(/\s/g,'');
+  function psSuggestList(q){
+    const groups={}, nowKey=new Date().getFullYear()+'-'+p2(new Date().getMonth()+1);
+    psItems().forEach(x=>{
+      const nm=String(x.name||'').trim(); if(!nm) return;
+      const g=groups[nm]||(groups[nm]={name:nm,months:0,last:null,cats:{}});
+      const end=x.rep?(x.to&&x.to<nowKey?x.to:nowKey):x.from;
+      let n=0; for(let k=x.from;k<=end&&n<24;k=psShift(k,1)) n++;
+      g.months+=Math.max(1,n);
+      const cv=catOf(x.cat).v; g.cats[cv]=(g.cats[cv]||0)+Math.max(1,n);
+      if(!g.last||x.from>g.last.from||(x.from===g.last.from&&(x.ord||0)>(g.last.ord||0))) g.last=x;
+    });
+    const nq=sugNorm(q), cq=choOf(nq), onlyCho=/^[ㄱ-ㅎ]+$/.test(nq);
+    const key=psRange&&psWhole(psRange)?psWhole(psRange).key:null;
+    const have=new Set(key?psMonthItems(key).map(x=>String(x.name||'').trim()):[]);
+    return Object.values(groups).map(g=>{
+      const n=sugNorm(g.name);
+      let hit=0;
+      if(!nq) hit=1;
+      else if(n.startsWith(nq)) hit=3;
+      else if(n.includes(nq)) hit=2;
+      else if(onlyCho&&choOf(n).includes(cq)) hit=1;
+      if(!hit) return null;
+      const cat=Object.keys(g.cats).sort((a,b)=>g.cats[b]-g.cats[a])[0];
+      return {g,hit,cat,same:cat===catOf(addCat).v,have:have.has(g.name)};
+    }).filter(Boolean)
+      .sort((a,b)=>(b.hit-a.hit)||(b.same-a.same)||(b.g.months-a.g.months)||String(b.g.last.from).localeCompare(String(a.g.last.from)))
+      .slice(0,8);
+  }
+  let sugPop=null, sugList=[], sugAt=-1;
+  function sugClose(){ if(sugPop) sugPop.hidden=true; sugList=[]; sugAt=-1; }
+  function sugPaint(){
+    const inp=$('psManAdd').elements.name;
+    sugList=psSuggestList(inp.value);
+    if(!sugList.length||document.activeElement!==inp){ sugClose(); return; }
+    if(!sugPop){
+      sugPop=document.createElement('div'); sugPop.className='ui-pop ui-menu ps-sug'; sugPop.setAttribute('role','listbox');
+      sugPop.addEventListener('mousedown',e=>e.preventDefault());   /* 누르는 동안 이름 칸 포커스를 잃지 않게 */
+      sugPop.addEventListener('click',e=>{ const b=e.target.closest('.ui-opt'); if(b) sugPick(+b.dataset.i); });
+      document.body.appendChild(sugPop);
+    }
+    if(sugAt>=sugList.length) sugAt=sugList.length-1;
+    const hl=(t,q)=>{ const nq=String(q||'').trim(); const i=nq?t.indexOf(nq):-1; return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+nq.length))+'</mark>'+esc(t.slice(i+nq.length)); };
+    sugPop.innerHTML='<div class="ps-sug-head">추천 · 전에 적은 항목'+(inp.value.trim()?'':' (자주 쓴 순)')+'</div>'
+      +sugList.map((s,i)=>{ const x=s.g.last;
+        return '<button type="button" class="ui-opt" role="option" data-i="'+i+'" aria-selected="'+(i===sugAt)+'">'
+          +'<span class="nm">'+hl(s.g.name,inp.value)+'<em>'+esc(catOf(s.cat).l)+(x.rep?' · 매달':'')+(s.have?' · 이번 달에 있음':'')+'</em></span>'
+          +'<small>'+psWon(num(x.amt)||0)+'원<i>'+s.g.months+'달</i></small></button>'; }).join('');
+    const r=inp.getBoundingClientRect();
+    sugPop.style.minWidth=Math.max(280,r.width)+'px';
+    sugPop.hidden=false;
+    const h=sugPop.offsetHeight;
+    sugPop.style.left=Math.min(r.left,innerWidth-sugPop.offsetWidth-8)+'px';
+    sugPop.style.top=(r.bottom+6+h>innerHeight-8&&r.top-6-h>=8?r.top-6-h:r.bottom+6)+'px';
+  }
+  function sugPick(i){
+    const s=sugList[i]; if(!s) return;
+    const f=$('psManAdd'), x=s.g.last;
+    f.elements.name.value=s.g.name;
+    f.elements.amt.value=num(x.amt)?comma(num(x.amt)):'';
+    addCat=s.cat; $('psManCat').querySelector('.t').textContent=catOf(s.cat).l;
+    addRep=!!x.rep; $('psManRep').setAttribute('aria-pressed',addRep?'true':'false');
+    sugClose();
+    f.elements.amt.focus(); f.elements.amt.select();
+  }
+  (function(){
+    const inp=$('psManAdd').elements.name;
+    inp.removeAttribute('list');
+    inp.addEventListener('input',()=>{ sugAt=-1; sugPaint(); });
+    inp.addEventListener('focus',()=>{ sugAt=-1; sugPaint(); });
+    inp.addEventListener('blur',()=>setTimeout(()=>{ if(document.activeElement!==inp) sugClose(); },120));
+    inp.addEventListener('keydown',e=>{
+      if(e.isComposing) return;
+      const open=sugPop&&!sugPop.hidden&&sugList.length;
+      if(open&&(e.key==='ArrowDown'||e.key==='ArrowUp')){
+        e.preventDefault(); e.stopImmediatePropagation();
+        sugAt=e.key==='ArrowDown'?(sugAt+1)%sugList.length:(sugAt<=0?sugList.length-1:sugAt-1); sugPaint(); return;
+      }
+      if(open&&e.key==='Enter'&&sugAt>=0){ e.preventDefault(); e.stopImmediatePropagation(); sugPick(sugAt); return; }
+      if(open&&e.key==='Escape'){ e.preventDefault(); e.stopImmediatePropagation(); sugClose(); return; }
+      if(e.key==='Enter'){ e.preventDefault(); sugClose(); $('psManAdd').elements.amt.focus(); }
+    });
+    addEventListener('resize',()=>{ if(sugPop&&!sugPop.hidden) sugPaint(); });
+    addEventListener('scroll',e=>{ if(sugPop&&!sugPop.hidden&&!sugPop.contains(e.target)) sugClose(); },true);
+  })();
   $('psManAdd').addEventListener('submit',e=>{
     e.preventDefault();
     const one=psRange&&psWhole(psRange); if(!canEdit()||!one) return;
