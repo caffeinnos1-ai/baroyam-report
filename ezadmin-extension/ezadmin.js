@@ -7,6 +7,8 @@
 const I100_PATH = '/template35.htm';
 const I100_URL = 'https://ga83.ezadmin.co.kr/template35.htm?template=I100';
 const LOGIN_URL = 'https://login3.ezadmin.co.kr/login.htm';
+// 당일판매분요약표 · 1.5.0 부터 메뉴를 누르지 않고 이 주소로 바로 간다(background SALES_URL 과 같음)
+const SALES_URL = 'https://ga83.ezadmin.co.kr/template40.htm?template=F304';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // 확장을 새로고침(↻)하면 그 전부터 열려 있던 이지어드민 창의 이 코드는 확장과 끊긴다 · 그때 sendMessage 는 그 자리에서
 // 오류("Extension context invalidated")를 던지므로 받아서 조용히 null 로 돌려준다(그 창은 수집 창이 아니다)
@@ -84,8 +86,43 @@ async function collect() {
 const norm = (t) => String(t || '').replace(/\s+/g, '');
 const numOf = (t) => { const m = norm(t).match(/-?[\d,]+/); return m ? m[0].replace(/,/g, '') : null; };
 
-// 당일판매분요약표 화면인가 · 표 머리 칸 id 가 <표id>_normal_stock 이다
-const isSalesPage = () => !!document.querySelector('table.ui-jqgrid-btable') && !!document.querySelector('[id$="_normal_stock"],[aria-describedby$="_normal_stock"]');
+// 당일판매분요약표 화면인가 · 주소가 F304 이거나, 표 머리 칸 id 가 <표id>_normal_stock 이다
+const onF304 = () => /template=F304(&|$)/.test(location.search);
+const isSalesPage = () => onF304() || (!!document.querySelector('table.ui-jqgrid-btable') && !!document.querySelector('[id$="_normal_stock"],[aria-describedby$="_normal_stock"]'));
+
+// 요약표 위 "항목 | 개수" 상자의 송장수량(예: 1,101장) · 슬랙 보고의 출고 숫자와 같은 것(사용자 확인 2026-10-13) ·
+// 라벨 바로 옆 칸 → 같은 열 아래 칸 → 위로 올라가며 라벨을 뺀 글 순서로 숫자를 찾는다
+function readLabeled(names) {
+  const want = names.map(norm);
+  const labels = [...document.querySelectorAll('td,th,div,span,p,a,li,dt,dd,strong,b,label')].filter((el) =>
+    want.includes(norm(el.textContent)) && !el.querySelector('td,th,div,span,p,a,li,dt,dd,strong,b,label'));
+  for (const label of labels) {
+    for (let sib = label.nextElementSibling; sib; sib = sib.nextElementSibling) {
+      const v = numOf(sib.textContent);
+      if (v !== null) return v;
+    }
+    const cell = label.closest('td,th'), tr = cell && cell.closest('tr');
+    if (tr) {
+      for (let sib = cell.nextElementSibling; sib; sib = sib.nextElementSibling) {
+        const v = numOf(sib.textContent);
+        if (v !== null) return v;
+      }
+      const idx = [...tr.children].indexOf(cell);
+      for (let row = tr.nextElementSibling; row; row = row.nextElementSibling) {
+        const v = row.children[idx] && numOf(row.children[idx].textContent);
+        if (v !== null) return v;
+      }
+    }
+    let el = label.parentElement;
+    for (let d = 0; d < 3 && el; d++, el = el.parentElement) {
+      let t = norm(el.textContent);
+      for (const w of want) t = t.replace(w, '');
+      const v = numOf(t);
+      if (v !== null) return v;
+    }
+  }
+  return null;
+}
 
 // 메인 화면 "처리현황 · 배송(금일)" · daily_report.js readShippedToday 와 같은 순서로 찾는다
 function readShipped() {
@@ -115,24 +152,6 @@ function readShipped() {
   return null;
 }
 
-// 메뉴의 "당일판매분요약표"로 · 주소가 보이는 링크면 그 주소로 가고, javascript: 링크면 정산통계를 연 뒤 누른다
-async function goSalesPage() {
-  const find = (txt) => [...document.querySelectorAll('a,li,span,div')].find((el) => norm(el.innerText || el.textContent) === txt && !el.querySelector('a,li'));
-  const menu = await waitFor(() => find('당일판매분요약표'), 10000);
-  if (!menu) throw new Error('메뉴에서 "당일판매분요약표"를 찾지 못했습니다 · 이지어드민 메뉴 이름이 바뀌었는지 확인해 주세요.');
-  const a = menu.closest('a') || menu;
-  const href = a.getAttribute && a.getAttribute('href');
-  if (href && !/^javascript:/i.test(href) && href !== '#') { location.href = new URL(href, location.href).href; return; }
-  // 메뉴는 javascript: 링크라 확장(이 스크립트)이 누르면 크롬 보안 규칙(CSP)이 막는다 → 페이지 쪽에서 눌러 달라고 한다(background mainClick)
-  const r = await send({ type: 'mainClick', patterns: ['^정산통계$', '^당일판매분요약표$'] });
-  if (r && r.ok && r.clicked.includes('^당일판매분요약표$')) return;
-  // 누르자마자 페이지가 넘어가면 응답이 실패로 올 수 있다 · 넘어갔으면 이 스크립트는 여기서 끊기고 새 페이지에서 이어 간다
-  if (await waitFor(isSalesPage, 15000)) return;
-  // 링크 모양을 알아보지 못했으면('?' 로 시작) 그 링크 글을 그대로 보여 준다 · 그걸 보고 고친다
-  const odd = r && r.clicked ? r.clicked.filter((c) => c.startsWith('?')).map((c) => c.slice(1)) : [];
-  throw new Error('메뉴 "당일판매분요약표"를 누르지 못했습니다' + (odd.length ? ' · 링크: ' + odd.join(' / ') : '') + (r && r.message ? ' · ' + r.message : ''));
-}
-
 async function collectSales() {
   banner('당일판매를 검색하는 중…');
   status('당일판매분요약표에서 검색하는 중');
@@ -143,6 +162,7 @@ async function collectSales() {
   await waitFor(() => document.querySelector('table.ui-jqgrid-btable tbody > tr[id]'), 20000);
   await sleep(700);
   const grid = document.querySelector('table.ui-jqgrid-btable');
+  if (!grid) throw new Error('당일판매분요약표의 표를 찾지 못했습니다 · 이지어드민 화면이 바뀌었는지 확인해 주세요.');
   const gid = grid.id;
   const rows = [...grid.querySelectorAll('tbody > tr[id]')].map((tr) => {
     const c = (f) => { const td = tr.querySelector(`td[aria-describedby="${gid}_${f}"]`); return td ? td.innerText.trim() : null; };
@@ -151,37 +171,33 @@ async function collectSales() {
   }).filter(Boolean);
   const head = [...document.querySelectorAll('td.header2')].find((e) => e.innerText.trim() === '주문수량');
   const orders = head && head.nextElementSibling ? head.nextElementSibling.innerText.trim() : null;
-  return { rows, orders };
+  return { rows, orders, invoices: readLabeled(['송장수량']) };
 }
 
 // 지금 화면이 템플릿 화면(현 재고조회 등)인지 · 첫 화면(메인)이 아니면 배송(금일) 숫자가 없으니 찾지 않는다
 const onTemplate = () => /template=/.test(location.search);
 
 async function runSales(who) {
-  // 요약표 주소로 바로 열었으면 표가 그려질 때까지만 기다린다 · 현 재고조회 같은 다른 화면이면 기다리지 않는다
-  const maybeSales = onTemplate() && !/template=I100(&|$)/.test(location.search);
-  if (isSalesPage() || (maybeSales && (await waitFor(isSalesPage, 8000)))) {
-    // 다음부터 이 화면을 바로 열도록 주소를 기억해 둔다(background)
-    if (onTemplate()) send({ type: 'meta', salesUrl: location.href });
-    const { rows, orders } = await collectSales();
+  if (isSalesPage()) {
+    if (!(await waitFor(() => document.querySelector('table.ui-jqgrid-btable'), 15000))) throw new Error('당일판매분요약표 화면이 열리지 않았습니다(15초).');
+    const { rows, orders, invoices } = await collectSales();
     banner(`${rows.length}개 상품을 읽었습니다 · 대시보드에 저장하는 중…`);
-    const res = await send({ type: 'rows', rows, orders });
+    // 송장수량을 못 읽은 날은 로그인 직후 첫 화면에서 챙긴 배송(금일)을 background 가 대신 붙인다
+    const res = await send({ type: 'rows', rows, orders, shipped: invoices });
     if (res && res.ok) banner(res.message || '저장했습니다');
     else banner((res && res.message) || '대시보드에 저장하지 못했습니다', 'error');
     return;
   }
   if (who.moves >= 3) throw new Error('당일판매분요약표 화면으로 넘어가지 못했습니다(3번 시도).');
-  // 첫 화면에만 있는 배송(금일) 숫자를 먼저 챙긴다(처리현황은 늦게 채워지므로 잠깐 기다린다)
+  // 로그인 직후 첫 화면이면 배송(금일) 숫자를 챙겨 둔다(요약표에서 송장수량을 못 읽을 때 대신 씀)
   if (who.shipped == null && !onTemplate()) {
-    const v = await waitFor(readShipped, 6000);
+    const v = await waitFor(readShipped, 4000);
     if (v !== null) await send({ type: 'meta', shipped: v });
   }
   banner('로그인 확인 · 당일판매분요약표로 이동합니다');
   status('로그인 확인 · 당일판매분요약표를 여는 중');
   await send({ type: 'meta', moved: true });
-  await goSalesPage();
-  // javascript: 메뉴가 같은 쪽 안에서 화면만 바꾸는 경우 · 새로 읽히지 않으므로 여기서 이어 간다
-  if (await waitFor(isSalesPage, 15000)) await runSales({ ...who, moves: 99 });
+  location.href = SALES_URL;
 }
 
 // 수집 탭에서 막은 이지어드민 안내창 내용(background quietDialogs) · 무슨 말이었는지 대시보드 안내 줄에 남긴다
@@ -193,7 +209,7 @@ document.addEventListener('baroyam-dialog', (e) => status('이지어드민 안�
 
   // 로그인 화면 · 이때만 창을 앞으로 띄우고, 사람이 로그인할 때까지 아무것도 하지 않는다
   if (/login/i.test(location.pathname)) {
-    banner('로그인하면 창이 내려가고 재고를 자동으로 가져옵니다');
+    banner('로그인하면 창이 내려가고 ' + (who.kind === 'sales' ? '당일판매를' : '재고를') + ' 자동으로 가져옵니다');
     status('이지어드민 창에서 로그인해 주세요 · 로그인하면 창이 내려가고 자동으로 가져옵니다');
     send({ type: 'show' });
     return;

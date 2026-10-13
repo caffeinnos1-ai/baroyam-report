@@ -8,6 +8,9 @@
 // 지금 하는 일(어느 창·어느 대시보드 탭)은 서비스 워커가 잠들어도 남도록 storage.session 에 둔다.
 
 const I100_URL = 'https://ga83.ezadmin.co.kr/template35.htm?template=I100';
+// 당일판매분요약표 · 1.5.0 부터 메뉴(정산통계 > 당일판매분요약표)를 누르지 않고 이 주소로 바로 연다(사용자가 알려 준 주소 ·
+// 메뉴 누르기가 javascript: 링크·CSP 로 자주 막혔고, 예전 기억 주소는 template35 만 받아 template40 인 이 화면을 기억하지 못했다)
+const SALES_URL = 'https://ga83.ezadmin.co.kr/template40.htm?template=F304';
 const JOB_TTL_MS = 10 * 60 * 1000; // 로그인 기다림까지 넉넉히 10분
 
 const getJob = async () => {
@@ -110,9 +113,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       try {
         const old = await getJob();
         if (old) { await endJob(); await chrome.windows.remove(old.winId).catch(() => {}); }
-        // 당일판매는 한 번 찾아간 요약표 주소를 기억해 두었다가 바로 연다(현 재고조회 → 메뉴 이동을 건너뜀 · 1.3.5~)
-        const { salesUrl } = await chrome.storage.local.get('salesUrl');
-        const url = msg.kind === 'sales' && salesUrl ? salesUrl : I100_URL;
+        const url = msg.kind === 'sales' ? SALES_URL : I100_URL;
         const win = await chrome.windows.create({ url, type: 'normal', state: 'minimized', focused: false });
         const tab = win.tabs[0];
         await setJob({ winId: win.id, tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
@@ -152,7 +153,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'meta') {
       if (msg.shipped !== undefined) job.shipped = msg.shipped;
       if (msg.moved) job.moves = (job.moves || 0) + 1;
-      if (msg.salesUrl && /^https:\/\/[\w.-]+\.ezadmin\.co\.kr\/template35\.htm\?template=/.test(msg.salesUrl)) await chrome.storage.local.set({ salesUrl: msg.salesUrl });
       await setJob(job);
       sendResponse({ ok: true, moves: job.moves || 0 });
       return;

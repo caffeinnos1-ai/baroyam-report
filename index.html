@@ -18309,9 +18309,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const sales=window.baroyamOpsTab==='sales', note=sales?dsNote:ivNote;
     if($('ivFetch').classList.contains('busy')){ jobNote('수집 중입니다 · 이지어드민 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
     if(!ivHasExt()){ note(''); ivGuide(true,sales?'dsGuide':'ivGuide'); return; }
-    /* 당일판매는 확장 1.2.0 부터 · 그 전 확장은 재고만 안다 */
+    /* 당일판매는 확장 1.5.0 부터 · 요약표(F304) 주소로 바로 연다 · 그 전 확장은 메뉴 누르기가 자주 막혔다 */
     const ver=(document.documentElement.dataset.baroyamInvExt||'0').split('.').map(Number);
-    if(sales&&(ver[0]||0)*1000+(ver[1]||0)<1002){
+    if(sales&&(ver[0]||0)*1000+(ver[1]||0)<1005){
       note('크롬 확장 "김비서AI 확장프로그램"을 새 버전으로 바꿔야 당일판매를 가져올 수 있습니다 · chrome://extensions 에서 이 확장의 새로고침(↻)을 누른 뒤 이 화면도 새로고침해 주세요');
       return;
     }
@@ -18419,7 +18419,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +(low?'<i class="warn" title="현재고가 '+DS_LOW+'개 아래인 판매 상품">재고 적음<b>'+low+'</b></i>':'');
     const kpi=(cls,label,val,unit,sub)=>'<div class="ds-kpi'+(cls?' '+cls:'')+'"><small>'+label+'</small><b>'+(val==null?'–':comma(val)+'<em>'+unit+'</em>')+'</b><span>'+sub+'</span></div>';
     $('dsKpis').innerHTML=list.length||d.shipped!=null?
-      kpi('main','당일 배송수량',d.shipped!=null?d.shipped:null,'건',d.shipped!=null?'이지어드민 처리현황 · 배송(금일)':(d.orders!=null?'배송 숫자를 못 읽음 · 주문수량 '+comma(d.orders)+'건':'배송 숫자를 못 읽었습니다'))
+      kpi('main','송장수량',d.shipped!=null?d.shipped:null,'장',d.shipped!=null?'오늘 출고된 송장 · 슬랙 보고와 같은 숫자':(d.orders!=null?'배송 숫자를 못 읽음 · 주문수량 '+comma(d.orders)+'건':'배송 숫자를 못 읽었습니다'))
       +kpi('','판매 수량',qtySum,'개','상품별 당일수량 합계')
       +kpi('','판매 상품',list.length,'개','브랜드 '+groups.length+'곳'):'';
     if(!groups.length){ $('dsGrid').innerHTML=blank(today?'오늘은 아직 출고된 이력이 없습니다':'받아 온 판매가 비어 있습니다','ds-none'); return; }
