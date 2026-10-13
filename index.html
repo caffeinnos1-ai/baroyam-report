@@ -2912,11 +2912,18 @@ window.BAROYAM_FONT=(function(){
   .ps-led tr.man td{color:var(--ink)}
   .ps-led small.cnt{font-size:11px;color:var(--mute);font-weight:400}
   .ps-led tr.man-item td{font-size:12.5px;color:var(--body);border-bottom-color:color-mix(in srgb,var(--line) 55%,transparent)}
-  .ps-led tr.man-item td:first-child{padding-left:30px}
+  .ps-led tr.sub.man-item td:first-child{padding-left:40px}
   .ps-led tr.man-item td:first-child::before{content:'·';margin-right:6px;color:var(--mute)}
-  .ps-led td.src{color:var(--mute);font-size:12px;text-align:left}
-  .ps-led td.pc{color:var(--mute);font-size:12px;width:90px}
-  .ps-led tr.sub td:first-child{padding-left:22px}
+  table.ps-led{table-layout:fixed}
+  .ps-led col.c-src{width:240px} .ps-led col.c-amt{width:170px} .ps-led col.c-pc{width:96px}
+  .ps-table.ps-led th.l{text-align:left}
+  .ps-led th,.ps-led td{padding-left:14px;padding-right:14px}
+  .ps-led td{padding-top:11px;padding-bottom:11px;font-size:13.5px}
+  .ps-led td:first-child{font-weight:500;color:var(--ink)}
+  .ps-led td.src{color:var(--mute);font-size:12px;text-align:left;overflow:hidden;text-overflow:ellipsis}
+  .ps-led td.r{font-variant-numeric:tabular-nums}
+  .ps-led td.pc{color:var(--mute);font-size:12px}
+  .ps-led tr.sub td:first-child{padding-left:28px}
   .ps-led tr.grp td{font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--chip-flat) 30%,var(--paper))}
   .ps-led tr.tmp td:first-child em{font-style:normal;font-size:10.5px;padding:1px 6px;border-radius:999px;color:var(--warn);background:var(--warn-soft)}
   .ps-led tr.tmp td.r{color:var(--warn)}
@@ -18201,7 +18208,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('psManTable').innerHTML=html; $('psManTable').hidden=!key;
     /* 손익 목록 · 자동으로 들어오는 것과 직접 적은 것을 한 표에 */
     const L=(lbl,src,v,o)=>{ o=o||{}; return '<tr class="'+(o.cls||'')+'"><td>'+lbl+'</td><td class="src">'+(src||'')+'</td><td class="r'+(v<0?' neg':'')+'">'+(o.minus&&Math.abs(v)>=1?'−':'')+psWon(o.minus?Math.abs(v):v)+'</td><td class="r pc">'+(t.sales&&o.pct!==false?pct(Math.abs(v)/t.sales):'')+'</td></tr>'; };
-    let led='<thead><tr><th>항목</th><th>어디서</th><th class="r">금액(원)</th><th class="r">매출 대비</th></tr></thead><tbody>';
+    let led='<colgroup><col><col class="c-src"><col class="c-amt"><col class="c-pc"></colgroup>'
+      +'<thead><tr><th>항목</th><th class="l">어디서</th><th class="r">금액(원)</th><th class="r">매출 대비</th></tr></thead><tbody>';
     led+=rows.map(x=>L('<span class="ch ch-'+PS_KEY[x.c]+'"><i></i>'+x.c+' 매출</span>','매출 시트'+(t.virt?' · 가상 '+t.virt+'일':''),x.sales,{cls:'sub',pct:false})).join('');
     led+=L('매출 합계','',t.sales,{cls:'grp',pct:false});
     led+=L('판매처 수수료','품목별 원가표 계산법',t.fee,{minus:1});
