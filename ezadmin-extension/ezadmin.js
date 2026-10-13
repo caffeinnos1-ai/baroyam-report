@@ -156,11 +156,26 @@ async function collectSales() {
   banner('당일판매를 검색하는 중…');
   status('당일판매분요약표에서 검색하는 중');
   await sleep(800);
+  // 검색 전에 보이던 송장수량 · 검색 뒤 4~8초 지나야 새 숫자로 바뀐다(사용자 확인 2026-10-13) · 그 전 값을 읽지 않으려고 기억해 둔다
+  const before = readLabeled(['송장수량']);
   // 검색 단추도 javascript: 일 수 있어 페이지 쪽에서 누른다 · 단추가 없으면 페이지 쪽에서 F2 를 보낸다
   await send({ type: 'mainClick', patterns: ['^검색\\s*\\(F2\\)$'], visible: true, f2: true });
   // 판매가 0건인 날에는 행이 끝내 생기지 않는다 · 20초 기다려 없으면 빈 표로 넘긴다(daily_report.js 와 같음)
-  await waitFor(() => document.querySelector('table.ui-jqgrid-btable tbody > tr[id]'), 20000);
-  await sleep(700);
+  const salesRows = () => document.querySelectorAll('table.ui-jqgrid-btable tbody > tr[id]').length;
+  await waitFor(salesRows, 20000);
+  // 송장수량이 새로 나올 때까지(검색 전과 달라지거나 비어 있다 채워질 때까지) 최대 15초 · 같은 숫자면 15초 뒤 그대로 쓴다
+  status('검색 결과와 송장수량을 기다리는 중(4~8초)');
+  await waitFor(() => { const v = readLabeled(['송장수량']); return v !== null && v !== before; }, 15000);
+  // 줄 수가 1.5초 동안 그대로일 때까지 · 표가 다 그려진 뒤에 읽는다
+  for (let last = -1, i = 0; i < 20 && salesRows() !== last; i++) { last = salesRows(); await sleep(1500); }
+  // 한 쪽에 다 안 들어오면 500개씩 보기로 바꾼다(재고현황과 같음)
+  const total = pagingTotal();
+  if (total && total > salesRows()) {
+    const sel = document.querySelector('select.ui-pg-selbox');
+    if (sel) { sel.value = '500'; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    await waitFor(() => salesRows() >= Math.min(total, 500), 30000);
+    await sleep(1000);
+  }
   const grid = document.querySelector('table.ui-jqgrid-btable');
   if (!grid) throw new Error('당일판매분요약표의 표를 찾지 못했습니다 · 이지어드민 화면이 바뀌었는지 확인해 주세요.');
   const gid = grid.id;
@@ -171,6 +186,7 @@ async function collectSales() {
   }).filter(Boolean);
   const head = [...document.querySelectorAll('td.header2')].find((e) => e.innerText.trim() === '주문수량');
   const orders = head && head.nextElementSibling ? head.nextElementSibling.innerText.trim() : null;
+  if ((pagingTotal() || 0) > rows.length) throw new Error(`판매 목록을 다 읽지 못했습니다: ${rows.length} / ${pagingTotal()}`);
   return { rows, orders, invoices: readLabeled(['송장수량']) };
 }
 
