@@ -18530,24 +18530,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const b=e.target.closest('[data-ps-more]'), one=psRange&&psWhole(psRange); if(!b||!canEdit()||!one) return;
     e.stopPropagation();   /* 문서 클릭이 방금 연 메뉴를 바로 닫지 않게(그래서 ⋯ 를 눌러도 아무것도 안 뜨던 것) */
     const row=b.closest('[data-id]'), id=row.dataset.id, x=psItems().find(i=>i.id===id); if(!x) return;
-    const k=one.key, L=psKeyLabel(k), opts=[];
-    /* 수정 · 삭제를 먼저, 그다음 기간·분류 */
-    opts.push({value:'edit',label:'수정',sub:'이름·금액 고치기'+(x.rep&&x.from<k?' · 금액은 '+L+'부터 바뀜':'')});
-    opts.push({value:'span',label:'반복 기간 바꾸기',sub:x.rep?'매달 · '+psKeyLabel(x.from)+'부터'+(x.to?' '+psKeyLabel(x.to)+'까지':''):'이번 달만'});
-    opts.push({value:'cat',label:'분류 바꾸기',sub:'지금 '+catOf(x.cat).l});
-    if(x.rep&&x.to!==k) opts.push({value:'stop',label:L+'까지만 쓰기',sub:'다음 달부터 빠집니다 · 해지한 요금제'});
-    if(x.rep&&x.from<k) opts.push({value:'cut',label:L+'부터 삭제',sub:'지난달까지 기록은 남깁니다'});
-    opts.push({value:'del',label:x.rep&&x.from<k?'모든 달에서 삭제':'삭제',sub:x.rep&&x.from<k?psKeyLabel(x.from)+'부터 들어간 금액이 모두 빠집니다':'이 항목을 지웁니다'});
+    const k=one.key, L=psKeyLabel(k);
+    /* ⋯ 는 수정·삭제만(사용자 요청) · 반복 기간은 반복 알약을 눌러 바꾼다 */
+    const many=x.rep&&x.from<k;
+    const opts=[{value:'edit',label:'수정',sub:'이름·금액 고치기'+(many?' · 금액은 '+L+'부터 바뀜':'')},
+      {value:'del',label:'삭제',sub:many?psKeyLabel(x.from)+'부터 들어간 금액이 모두 빠집니다':'이 항목을 지웁니다'}];
     UI.menu(b,opts,null,v=>{
       if(v==='edit'){ const inp=row.querySelector('[data-k="name"]'); if(inp){ inp.focus(); inp.select(); } return; }
-      if(v==='span'){ const sp=row.querySelector('[data-ps-span]'); psSpanOpen(sp||b,id); return; }
-      if(v==='cat'){
-        UI.menu(b,psCats().filter(c=>c.v!==catOf(x.cat).v).map(c=>({value:c.v,label:c.l,sub:c.hint})),null,cv=>{ psSet(id,{cat:cv}); psLastAdd=id; clearTimeout(psFlashT); psFlashT=setTimeout(()=>{ psLastAdd=null; },2000); COST.mark(); paintSummary(); });
-        return;
-      }
-      if(v==='stop') psSet(id,{to:k});
-      else if(v==='cut') psSet(id,{to:psShift(k,-1)});
-      else if(v==='del'){ if(!confirm('"'+x.name+'"을(를) '+(x.rep&&x.from<k?psKeyLabel(x.from)+'부터 모든 달에서 ':'')+'삭제할까요?')) return; psSet(id,{del:Date.now()}); }
+      if(!confirm('"'+x.name+'"을(를) '+(many?psKeyLabel(x.from)+'부터 모든 달에서 ':'')+'삭제할까요?')) return;
+      psSet(id,{del:Date.now()});
       COST.mark(); paintSummary();
     });
   });
