@@ -2390,7 +2390,7 @@ window.BAROYAM_FONT=(function(){
   /* 인스타콘텐츠 › 성과 (ip-*) · 디자인 초안 · 계정 연결 전에는 예시 데이터로 그린다 */
   .ip{margin-top:22px;display:flex;flex-direction:column;gap:16px}
   .ip[hidden]{display:none}
-  .ip-card{background:var(--paper);border-radius:20px;box-shadow:var(--mh-card-shadow);padding:18px 20px;min-width:0}
+  .ip-card{background:var(--paper);border-radius:20px;border:1px solid var(--line);padding:18px 20px;min-width:0}
   .ip-card h3{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
   .ip-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
   .ip-card-head small{font-size:12px;color:var(--mute)}
@@ -10485,7 +10485,7 @@ window.BAROYAM_FONT=(function(){
           </div>
         </section>
       </div><!-- /view-ops -->
-      <!-- 인스타콘텐츠 · 가로형 대시보드(view-is-wide) · 배너 위 단추 세 개(성과 / 일정 / 업로드) · 화면 내용은 아직 비어 있다 -->
+      <!-- 인스타콘텐츠 · 손익·마진 관리처럼 흰 판을 넓게(view-is-profit) · 배너 위 단추 세 개(성과 / 일정 / 업로드) · 화면 내용은 아직 비어 있다 -->
       <div id="view-insta" style="display:none">
         <div class="hero-view-tabs" id="instaTabs" role="tablist" aria-label="인스타콘텐츠 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-insta="perf" data-sub="게시물·릴스의 조회·반응·팔로워 변화를 봅니다.">성과</button>
@@ -14318,10 +14318,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
     /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브·계정관리)은 1720px 를 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account'||v==='content'||v==='insta');
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account'||v==='content');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
-    document.body.classList.toggle('view-is-profit',v==='profit');
+    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta');   /* 인스타콘텐츠도 손익처럼 흰 판을 넓게 */
     if(v==='profit'&&window.baroyamProfitOpen) window.baroyamProfitOpen();
     if(v==='ops'&&window.baroyamOpsOpen) window.baroyamOpsOpen();
     if(v==='insta'&&window.baroyamInstaOpen) window.baroyamInstaOpen();
