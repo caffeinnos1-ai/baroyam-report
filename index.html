@@ -2359,8 +2359,7 @@ window.BAROYAM_FONT=(function(){
   .ig-tools .ig-grp>span{font-size:12px;font-weight:500;color:var(--mute)}
   .ig-tools #igQ{width:200px}
   .ig-tools .ig-end{margin-left:auto;display:flex;align-items:center;gap:8px}
-  .ig-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
-  .ig-body .pj-mcal-week{min-height:118px}
+  #igCal .pj-mcal-week{min-height:118px}
   .ig-dot{display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:6px;background:var(--bar,var(--mute));flex:none}
   .ig-chip-c{display:inline-flex;align-items:center}
   /* 막대 · 완료는 흐리게 + ✓, 지난 예정(아직 안 올림)은 빨간 점 */
@@ -2369,43 +2368,6 @@ window.BAROYAM_FONT=(function(){
   #igCal .pj-mcal-bar.is-done{opacity:.55}
   #igCal .pj-mcal-bar.is-done .nm::before{content:"✓ ";color:var(--pos)}
   #igCal .pj-mcal-bar.is-late::after{content:"";flex:none;width:6px;height:6px;margin-left:6px;border-radius:99px;background:var(--neg)}
-  /* 오른쪽 · 다가오는 업로드 */
-  .ig-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:20px;background:var(--paper);
-    box-shadow:var(--mh-card-shadow);max-height:calc(100vh - 32px);min-height:0}
-  .ig-side h3{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
-  .ig-side-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .ig-pace{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-  .ig-pace div{padding:9px 10px;border-radius:12px;background:var(--chip-flat)}
-  .ig-pace b{display:block;font-size:17px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
-  .ig-pace b span{font-size:12px;font-weight:500;color:var(--mute)}
-  .ig-pace small{display:block;margin-top:1px;font-size:11px;font-weight:500;color:var(--mute)}
-  .ig-pace .is-warn b{color:var(--warn)}
-  .ig-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;margin:0 -6px;padding:0 6px}
-  .ig-day{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line)}
-  .ig-day:first-child{border-top:0}
-  .ig-when{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding-top:4px}
-  .ig-when b{font-size:13px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
-  .ig-when small{font-size:11px;font-weight:500;color:var(--mute)}
-  .ig-when.is-today b,.ig-when.is-today small{color:var(--btn)}
-  .ig-when.is-sun b{color:var(--neg)}
-  .ig-when.is-late b{color:var(--neg)}
-  .ig-posts{display:flex;flex-direction:column;gap:4px;min-width:0}
-  .ig-post{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:6px;min-width:0;padding:6px 8px;border-radius:8px;cursor:pointer;
-    border-left:3px solid var(--bar);background:color-mix(in srgb,var(--bar) 10%,var(--paper));font-size:12.5px;font-weight:500;color:var(--ink)}
-  .ig-post:hover{background:color-mix(in srgb,var(--bar) 20%,var(--paper))}
-  .ig-post:focus-visible{box-shadow:var(--ui-ring)}
-  .ig-post .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ig-post .tm,.ig-post .st{flex:none;font-size:11px;font-weight:500;color:var(--mute);font-variant-numeric:tabular-nums}
-  .ig-post.is-done{opacity:.55}
-  .ig-post.is-late .st{color:var(--neg)}
-  .ig-empty{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px;padding:0 8px;
-    border:1px dashed var(--line);border-radius:8px;font-size:12px;font-weight:500;color:var(--mute);cursor:pointer}
-  .ig-empty:hover{border-color:var(--btn);color:var(--btn-soft-ink);background:var(--btn-soft)}
-  .ig-empty:focus-visible{box-shadow:var(--ui-ring)}
-  .ig-empty b{font-weight:600}
-  .ig-empty.is-long{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));color:var(--warn)}
-  .ig-none{padding:28px 0;text-align:center;font-size:12.5px;color:var(--mute)}
-  .ig-trash{align-self:flex-start;font-size:12px}
   .ig-trash[hidden]{display:none}
   /* 일정 창 */
   .settings-panel.ig-dlg{max-width:520px;height:auto;max-height:90vh}
@@ -2416,7 +2378,6 @@ window.BAROYAM_FONT=(function(){
   .ig-form .ig-meta{font-size:11.5px;color:var(--mute)}
   .ig-form .ig-meta:empty{display:none}
   .ig-dlg [hidden]{display:none}
-  @media (max-width:1100px){ .ig-body{grid-template-columns:1fr} .ig-side{position:static;max-height:none} .ig-list{max-height:420px} }
   @media (max-width:760px){ .ig-tools #igQ{width:100%} .ig-tools .ig-end{margin-left:0;width:100%} .ig-form .ig-row2{grid-template-columns:1fr} }
   /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
   .cm-make{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
@@ -10396,26 +10357,18 @@ window.BAROYAM_FONT=(function(){
           </div>
           <div class="profit-empty" data-insta-pane="perf">아직 준비 중인 화면입니다.</div>
           <!-- 일정 · 인스타 담당자가 날마다 무엇을 올릴지 미리 짜 두는 캘린더 · 프로젝트와 다른 저장 칸(app_settings insta_schedule_v1) ·
-               담당자 없음 · 거르기는 형식·상태·검색 · 오른쪽에 오늘부터 며칠 동안의 업로드와 비어 있는 날 -->
+               담당자 없음 · 거르기는 형식·상태·검색 -->
           <div class="ig-plan" data-insta-pane="plan" hidden>
             <div class="ig-tools">
               <div class="ig-grp"><span>형식</span><div class="ui-chips" id="igTypeF"></div></div>
               <div class="ig-grp"><span>상태</span><div class="ui-chips" id="igStateF"></div></div>
               <div class="ig-end">
                 <input class="ui-field sm" id="igQ" placeholder="제목·메모 검색" aria-label="일정 검색">
+                <button type="button" class="ui-btn ghost sm" id="igTrash" hidden></button>
                 <button type="button" class="ui-btn primary" id="igAdd">+ 업로드 일정</button>
               </div>
             </div>
-            <div class="ig-body">
-              <div class="pj-mcal" id="igCal"></div>
-              <aside class="ig-side" aria-label="다가오는 업로드">
-                <div class="ig-side-head"><h3>다가오는 업로드</h3>
-                  <div class="ui-tabs" id="igRange"><button class="ui-tab" data-value="7">7일</button><button class="ui-tab" data-value="14">14일</button><button class="ui-tab" data-value="30">30일</button></div></div>
-                <div class="ig-pace" id="igPace"></div>
-                <div class="ig-list" id="igList"></div>
-                <button type="button" class="ui-btn ghost sm ig-trash" id="igTrash" hidden></button>
-              </aside>
-            </div>
+            <div class="pj-mcal" id="igCal"></div>
           </div>
           <div class="profit-empty" data-insta-pane="upload" hidden>아직 준비 중인 화면입니다.</div>
         </section>
@@ -16978,8 +16931,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   /* ---------- 거르기 ---------- */
   const F={type:new Set(),state:'',q:''};
-  let calMonth=today().slice(0,7), range=14;
-  try{ const r=+localStorage.getItem('baroyam_insta_range'); if([7,14,30].indexOf(r)>=0) range=r; }catch(e){}
+  let calMonth=today().slice(0,7);
   function match(p){
     if(F.type.size&&!F.type.has(p.type||'feed')) return false;
     if(F.state==='todo'&&p.state==='done') return false;
@@ -17042,35 +16994,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +(inMonth?'':'<div class="pj-mcal-empty">'+(st.error?'일정을 불러오지 못했습니다 · 잠시 뒤 다시 엽니다':st.loaded?'이 달에 잡힌 업로드가 없습니다':'불러오는 중…')+'</div>')+'</div>';
   }
 
-  /* ---------- 오른쪽 · 오늘부터 range 일 · 날마다 올릴 것을 보이고, 연달아 비어 있는 날은 한 줄로 묶어 채우기를 권한다 ---------- */
-  function paintSide(list){
-    const t=today(), end=dayAdd(t,range-1);
-    const ins=list.filter(p=>p.date>=t&&p.date<=end).sort(sortPosts);
-    const late=list.filter(isLate).sort(sortPosts);
-    const byDay={}; ins.forEach(p=>(byDay[p.date]=byDay[p.date]||[]).push(p));
-    const empty=range-Object.keys(byDay).length;
-    let longest=0, run=0;
-    for(let i=0;i<range;i++){ if(byDay[dayAdd(t,i)]) run=0; else{ run++; if(run>longest) longest=run; } }
-    $('igPace').innerHTML='<div><b>'+ins.length+'</b><small>올릴 것</small></div>'
-      +'<div'+(empty>range/2?' class="is-warn"':'')+'><b>'+empty+'<span>/'+range+'일</span></b><small>비어 있는 날</small></div>'
-      +'<div'+(longest>=3?' class="is-warn"':'')+'><b>'+longest+'<span>일</span></b><small>가장 긴 공백</small></div>';
-    const post=p=>{ const ty=typeOf(p.type);
-      return '<button type="button" class="ig-post'+(p.state==='done'?' is-done':'')+(isLate(p)?' is-late':'')+'" data-id="'+esc(p.id)+'" style="--bar:'+ty.c+'" title="'+esc(ty.l+' · '+stateOf(p.state).l)+'">'
-        +(p.time?'<span class="tm">'+esc(p.time)+'</span>':'')+'<span class="nm">'+esc(p.title||'제목 없음')+'</span><span class="st">'+(isLate(p)?md(p.date)+' 지남':esc(stateOf(p.state).l))+'</span></button>'; };
-    const when=(d,sub)=>'<div class="ig-when'+(d===t?' is-today':'')+(dow(d)===0?' is-sun':'')+'"><b>'+md(d)+' '+DOW[dow(d)]+'</b><small>'+sub+'</small></div>';
-    const dd=i=>i===0?'오늘':i===1?'내일':'D-'+i;
-    let html='';
-    if(late.length) html+='<div class="ig-day"><div class="ig-when is-late"><b>지난 예정</b><small>'+late.length+'개</small></div><div class="ig-posts">'+late.map(post).join('')+'</div></div>';
-    for(let i=0;i<range;){
-      const d=dayAdd(t,i);
-      if(byDay[d]){ html+='<div class="ig-day">'+when(d,dd(i))+'<div class="ig-posts">'+byDay[d].map(post).join('')+'</div></div>'; i++; continue; }
-      let j=i; while(j+1<range&&!byDay[dayAdd(t,j+1)]) j++;
-      const n=j-i+1;
-      html+='<div class="ig-day">'+when(d,dd(i))+'<div class="ig-posts"><button type="button" class="ig-empty'+(n>=3?' is-long':'')+'" data-add-date="'+d+'" title="'+md(d)+'에 업로드 일정 추가">'
-        +'<span>'+(n===1?'비어 있음':'<b>'+md(d)+' ~ '+md(dayAdd(t,j))+'</b> · '+n+'일 비어 있음')+'</span><span>+ 채우기</span></button></div></div>';
-      i=j+1;
-    }
-    $('igList').innerHTML=st.loaded?html:'<div class="ig-none">'+(st.error?'불러오지 못했습니다':'불러오는 중…')+'</div>';
+  /* 지운 일정 되살리기 단추 · 지운 것이 있을 때만 보인다 */
+  function paintTrash(){
     const trash=Object.values(st.data.posts).filter(p=>p&&p.del);
     const tb=$('igTrash'); tb.hidden=!trash.length; tb.textContent='지운 일정 '+trash.length+'개 · 되살리기';
   }
@@ -17081,7 +17006,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     paintFilters(all);
     const list=all.filter(match);
     paintCal(list);
-    paintSide(list);
+    paintTrash();
   }
 
   /* ---------- 일정 창 ---------- */
@@ -17160,12 +17085,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     const add=e.target.closest('[data-add-date]');
     if(add){ openDlg(null,{date:add.dataset.addDate}); return; }
-    const bar=e.target.closest('.pj-mcal-bar,.ig-post');
+    const bar=e.target.closest('.pj-mcal-bar');
     if(bar){
       if(justDragged){ justDragged=false; return; }
       const p=st.data.posts[bar.dataset.id];
       if(!p) return;
-      if(bar.classList.contains('ig-post')&&p.date.slice(0,7)!==calMonth){ calMonth=p.date.slice(0,7); paint(); }
       openDlg(p.id);
     }
   });
@@ -17184,9 +17108,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       setPost(id,{del:null});
     });
   });
-  if(window.UI&&window.UI.tabs){
-    window.UI.tabs($('igRange'),v=>{ range=+v||14; try{ localStorage.setItem('baroyam_insta_range',String(range)); }catch(e){} paint(); }).set(String(range));
-  }
 
   /* 막대 끌기 · 다른 날 칸에 놓으면 업로드 날짜가 바뀐다(시간은 그대로) · 프로젝트 캘린더처럼 좌표로 날짜를 찾는다 */
   const cal=$('igCal');
