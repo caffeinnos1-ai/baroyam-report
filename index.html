@@ -10009,8 +10009,8 @@ window.BAROYAM_FONT=(function(){
       <div id="view-profit" style="display:none">
         <!-- 마진 계산기 / 품목별 원가표 / 순수익 요약(맨 오른쪽) · 트렌드분석처럼 배너 위 알약 단추로 고른다(예전 사이드바 중간 탭은 화면을 가려 뺐다) -->
         <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="손익·마진 관리 화면">
-          <button type="button" class="hero-view-tab active" role="tab" data-profit="calc" data-sub="아래에서 판매처(자사몰·쿠팡·스마트스토어 …)를 고르고, 상품마다 옵션의 원가·판매가를 넣으면 마진·마진률·최소 ROAS가 바로 나옵니다.">마진 계산기</button>
-          <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진 계산기가 이 값을 씁니다.">품목별 원가표</button>
+          <button type="button" class="hero-view-tab active" role="tab" data-profit="calc" data-sub="아래에서 판매처(자사몰·쿠팡·스마트스토어 …)를 고르고, 상품마다 옵션의 원가·판매가를 넣으면 마진·마진률·최소 ROAS가 바로 나옵니다.">마진표</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진표가 이 값을 씁니다.">품목별 원가표</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
         </div>
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
@@ -10054,7 +10054,7 @@ window.BAROYAM_FONT=(function(){
               <!-- 한 줄에 세 상자 · 상품 원가(가장 넓게) → 프라임 발송비 구간 → 판매처 수수료 -->
               <div class="pf-card">
                 <div class="pf-card-head">
-                  <div class="pf-card-tt"><h3>상품 원가</h3><p>마진 계산기 원가 칸에서 고르는 상품</p></div>
+                  <div class="pf-card-tt"><h3>상품 원가</h3><p>마진표 원가 칸에서 고르는 상품</p></div>
                   <button type="button" class="ui-field sm" id="pfBrandPick" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <span class="pf-grow"></span>
                   <input class="ui-field sm" id="pfItemQ" placeholder="상품 검색" aria-label="상품 검색">
@@ -10085,7 +10085,7 @@ window.BAROYAM_FONT=(function(){
                 </form>
               </div>
               <div class="pf-card">
-                <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처 수수료</h3><p>마진 계산기 아래 판매처 탭이 됩니다</p></div></div>
+                <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처 수수료</h3><p>마진표 아래 판매처 탭이 됩니다</p></div></div>
                 <table class="pf-list" id="pfChanTable"></table>
                 <form class="pf-add" id="pfChanAdd" autocomplete="off">
                   <input class="ui-field sm" name="name" maxlength="30" placeholder="판매처 (예: 쿠팡)" required>
@@ -12475,7 +12475,7 @@ window.CsGuide=(function(){
     ['sales',1,'매출데이터','주간 · 월간','구글시트의 매출을 로그인한 사람의 구글 권한으로만 읽습니다(페이지에는 숫자를 두지 않음). 쿠팡·네이버·자사몰·톡딜 4채널.'],
     ['goal',1,'목표설정','월별 목표 · 달성률','목표는 app_settings 에 월별로 저장하고, 달성률은 매출 시트로 계산합니다.'],
     ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
-    ['profit',1,'손익·마진 관리','마진 계산기 · 원가표','원가표(profit_cost_v1)와 마진 계산기(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
+    ['profit',1,'손익·마진 관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
     ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
     ['drive',1,'드라이브','자산 찾기 · 업로드','구글드라이브 색인(drive_assets_v1)을 브랜드·종류로 거릅니다. 업로드·삭제(휴지통)는 구글 권한으로 드라이브에 직접 합니다.'],
