@@ -2474,6 +2474,35 @@ window.BAROYAM_FONT=(function(){
   .ip-mets div{display:flex;flex-direction:column;font-size:10.5px;color:var(--mute)}
   .ip-mets b{font-size:12.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .ip-er{font-size:11.5px;font-weight:600;color:var(--pos)}
+  /* 배너 아래 · 계정 성과 / 콘텐츠 성과(보관함) 나누기 */
+  .ip-switch{display:flex;align-items:center;gap:12px}
+  .ip-switch .ui-tab b{margin-left:4px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
+  .ip-view[hidden]{display:none}
+  .ip-view{display:flex;flex-direction:column;gap:16px}
+  /* 콘텐츠 성과(보관함) */
+  .ip-lib-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .ip-lib-bar #ipQ{width:220px}
+  .ip-sum{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--mute)}
+  .ip-sum b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ip-hot{position:absolute;right:8px;bottom:8px;padding:1px 7px;border-radius:99px;background:var(--pos-soft);color:var(--pos);font-size:11px;font-weight:600}
+  .ip-more{display:flex;justify-content:center;margin-top:16px}
+  .ip-more[hidden]{display:none}
+  .ip-table-wrap{overflow-x:auto}
+  .ip-table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ip-table th{padding:8px 10px;text-align:right;font-weight:500;color:var(--mute);border-bottom:1px solid var(--line);white-space:nowrap}
+  .ip-table th[data-sort]{cursor:pointer}
+  .ip-table th[data-sort]:hover,.ip-table th.is-on{color:var(--ink)}
+  .ip-table th.is-on::after{content:" ▼";font-size:10px}
+  .ip-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ip-table th:first-child,.ip-table td:first-child{text-align:left}
+  .ip-table tr:hover td{background:var(--chip-flat)}
+  .ip-table .post{display:flex;align-items:center;gap:10px;min-width:280px;max-width:520px;color:inherit;text-decoration:none}
+  .ip-table .sq{position:relative;width:44px;height:44px;flex:none;border-radius:8px;overflow:hidden;
+    background:linear-gradient(150deg,color-mix(in srgb,var(--bar) 22%,var(--paper)),color-mix(in srgb,var(--bar) 55%,var(--paper)))}
+  .ip-table .sq img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ip-table .cap{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--body)}
+  .ip-table .ty{display:inline-flex;align-items:center;color:var(--body)}
+  .ip-table .ip-hot{position:static;margin-left:6px}
   /* 올리기 좋은 시간 */
   .ip-heat{display:grid;grid-template-columns:28px repeat(8,minmax(0,1fr));gap:4px;font-size:11px;color:var(--mute)}
   .ip-heat span{display:flex;align-items:center;justify-content:center}
@@ -10499,9 +10528,12 @@ window.BAROYAM_FONT=(function(){
             <div class="psub" id="instaViewSub">게시물·릴스의 조회·반응·팔로워 변화를 봅니다.</div>
             <button type="button" class="ui-btn soft sm ig-cfg" id="igCfg" hidden title="일정 화면의 형식·상태·필터 이름 바꾸기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>필터 이름 설정</button>
           </div>
-          <!-- 성과 · 서버(VPS insta_insights.js)가 채운 insta_insights_v1 을 읽고, 비어 있으면 예시 데이터 · 계정 줄 → 숫자 여섯 칸 → 팔로워 추이 | 형식별 → 콘텐츠 순위 → 올리기 좋은 시간 | 팔로워 구성 -->
+          <!-- 성과 · 서버(VPS insta_insights.js)가 채운 insta_insights_v1 을 읽고, 비어 있으면 예시 데이터 · 계정 줄 → [계정 성과] 숫자 여섯 칸 → 팔로워 추이 | 형식별 → 올리기 좋은 시간 | 팔로워 구성 · [콘텐츠 성과] 게시물 보관함 -->
           <div class="ip" id="ipRoot" data-insta-pane="perf">
+            <!-- 배너 바로 아래 · 계정 성과(요약) / 콘텐츠 성과(올린 게시물 전체 보관함 · 양이 많아 따로 둔다) -->
+            <div class="ip-switch"><div class="ui-tabs" id="ipView" aria-label="성과 보기"><button class="ui-tab" data-value="over">계정 성과</button><button class="ui-tab" data-value="lib">콘텐츠 성과<b id="ipLibN"></b></button></div></div>
             <div class="ip-card ip-acct" id="ipAcct"></div>
+            <div class="ip-view" id="ipOver">
             <div class="ip-kpis" id="ipKpis"></div>
             <div class="ip-row">
               <div class="ip-card">
@@ -10516,12 +10548,6 @@ window.BAROYAM_FONT=(function(){
                 <div class="ip-note" id="ipTypeNote"></div>
               </div>
             </div>
-            <div class="ip-card">
-              <div class="ip-card-head"><div><h3>콘텐츠 성과</h3><small>이 기간에 올린 게시물 · 상위 10개</small></div>
-                <div class="ip-acct-end"><div class="ui-chips" id="ipPostType"></div>
-                  <div class="ui-tabs" id="ipSort"><button class="ui-tab" data-value="reach">도달</button><button class="ui-tab" data-value="er">참여율</button><button class="ui-tab" data-value="saves">저장</button><button class="ui-tab" data-value="shares">공유</button></div></div></div>
-              <div class="ip-posts" id="ipPosts"></div>
-            </div>
             <div class="ip-row is-even">
               <div class="ip-card">
                 <div class="ip-card-head"><div><h3>올리기 좋은 시간</h3><small>요일·시간대별 팔로워 접속</small></div></div>
@@ -10533,6 +10559,22 @@ window.BAROYAM_FONT=(function(){
               <div class="ip-card">
                 <div class="ip-card-head"><div><h3>팔로워 구성</h3><small>성별 · 나이 · 지역</small></div></div>
                 <div class="ip-aud" id="ipAud"></div>
+              </div>
+            </div>
+            </div>
+            <div class="ip-view" id="ipLib" hidden>
+              <div class="ip-card">
+                <div class="ip-card-head"><div><h3>콘텐츠 성과</h3><small>올린 게시물 전체 · 기간·형식·설명으로 찾고, 누르면 인스타그램에서 엽니다</small></div>
+                  <div class="ip-acct-end">
+                    <input class="ui-field sm" id="ipQ" placeholder="설명 검색" aria-label="게시물 설명 검색" autocomplete="off">
+                    <div class="ui-tabs" id="ipPeriod"><button class="ui-tab" data-value="all">전체</button><button class="ui-tab" data-value="90">90일</button><button class="ui-tab" data-value="30">30일</button><button class="ui-tab" data-value="7">7일</button></div>
+                    <div class="ui-tabs" id="ipMode"><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
+                  </div></div>
+                <div class="ip-lib-bar"><div class="ui-chips" id="ipPostType"></div>
+                  <div class="ui-tabs" id="ipSort"><button class="ui-tab" data-value="new">최신</button><button class="ui-tab" data-value="reach">도달</button><button class="ui-tab" data-value="er">참여율</button><button class="ui-tab" data-value="saves">저장</button><button class="ui-tab" data-value="shares">공유</button></div></div>
+                <div class="ip-sum" id="ipLibSum"></div>
+                <div id="ipPosts" style="margin-top:14px"></div>
+                <div class="ip-more" id="ipMore" hidden><button type="button" class="ui-btn ghost" id="ipMoreBtn"></button></div>
               </div>
             </div>
           </div>
@@ -17495,7 +17537,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     const CAPS=['신제품 홀떡피자 첫 공개 · 한 판에 담은 바삭함','냉동실 털이 3분 간식 레시피','고객님이 보내 주신 먹방 후기 모음','에어프라이어 8분이면 끝! 겉바속촉 꿀팁','이번 주 한정 1+1 이벤트 안내','직원들이 뽑은 최애 메뉴 TOP5','야식 고민 끝 · 콘치즈 계란빵','공장 견학 비하인드 · 이렇게 만들어져요','캠핑 갈 때 꼭 챙기는 간편식','아이 간식으로 좋은 저당 메뉴 모음','리뷰 이벤트 당첨자 발표','바로얌 브랜드 이야기 · 처음 만든 날'];
     const posts=[];
-    for(let i=0;i<40;i++){
+    for(let i=0;i<140;i++){
       const type=['reels','feed','carousel','reels','carousel'][i%5];
       const at=dayAdd(end,-Math.round(i*4.3+rnd()*2));
       const k=type==='reels'?2.2:type==='carousel'?1.35:1;
@@ -17527,8 +17569,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let D=sample(), loaded=false;
 
   /* ---------- 그리기 ---------- */
-  let range=30, sortBy='reach', typeF='';
-  try{ const r=+localStorage.getItem('baroyam_ip_range'); if([7,30,90].indexOf(r)>=0) range=r; }catch(e){}
+  let range=30, view='over';
+  try{ const r=+localStorage.getItem('baroyam_ip_range'); if([7,30,90].indexOf(r)>=0) range=r; if(localStorage.getItem('baroyam_ip_view')==='lib') view='lib'; }catch(e){}
   const er=p=>p.reach?(p.likes+p.comments+p.saves+p.shares)/p.reach*100:0;
   const whenTxt=iso=>{ const t=new Date(Date.parse(iso)+9*3600e3); return (t.getUTCMonth()+1)+'월 '+t.getUTCDate()+'일 '+String(t.getUTCHours()).padStart(2,'0')+':'+String(t.getUTCMinutes()).padStart(2,'0'); };
 
@@ -17541,9 +17583,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('ipAcct').innerHTML='<div class="ip-avatar">'+pic+'</div>'
       +'<div class="ip-who"><b>@'+esc(a.username||'')+'</b><small>'+state+'</small></div>'
       +'<div class="ip-nums"><div><b>'+num(a.media||0)+'</b><small>게시물</small></div><div><b>'+num(f)+'</b><small>팔로워</small></div><div><b>'+num(a.follows||0)+'</b><small>팔로잉</small></div></div>'
-      +'<div class="ip-acct-end"><div class="ui-tabs" id="ipRange">'+[7,30,90].map(v=>'<button class="ui-tab" data-value="'+v+'">'+v+'일</button>').join('')+'</div>'
+      +'<div class="ip-acct-end">'+(view==='over'?'<div class="ui-tabs" id="ipRange">'+[7,30,90].map(v=>'<button class="ui-tab" data-value="'+v+'">'+v+'일</button>').join('')+'</div>':'')
       +(D.demo?'<button type="button" class="ui-btn primary" id="ipConnect">인스타그램 계정 연결</button>':'')+'</div>';
-    if(window.UI&&window.UI.tabs) window.UI.tabs($('ipRange'),v=>{ range=+v||30; try{ localStorage.setItem('baroyam_ip_range',String(range)); }catch(e){} paint(); }).set(String(range));
+    if($('ipRange')&&window.UI&&window.UI.tabs) window.UI.tabs($('ipRange'),v=>{ range=+v||30; try{ localStorage.setItem('baroyam_ip_range',String(range)); }catch(e){} paint(); }).set(String(range));
     if($('ipConnect')) $('ipConnect').addEventListener('click',()=>{
       const msg='연결은 서버(김비서 VPS)가 맡습니다. 메타 앱에서 만든 인스타그램 토큰을 서버에 한 번 넣으면, 하루 세 번(07:20·13:20·19:20) 계정·게시물 성과를 받아 이 화면에 채웁니다. 토큰은 서버가 7일마다 스스로 갱신합니다.';
       if(window.baroyamAsk) window.baroyamAsk('인스타그램 계정 연결',msg); else alert(msg);
@@ -17613,19 +17655,46 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +(sv?' 저장은 '+TYPES[sv.type].l+'에서 가장 많이 일어납니다.':''):'이 기간에 올린 게시물이 적어 형식끼리 견주기 어렵습니다.';
   }
 
-  function paintPosts(curP){
-    const key={reach:p=>p.reach,er:er,saves:p=>p.saves,shares:p=>p.shares}[sortBy];
-    const list=curP.filter(p=>!typeF||p.type===typeF).sort((a,b)=>key(b)-key(a)).slice(0,10);
-    const cnt=k=>curP.filter(p=>p.type===k).length;
-    $('ipPostType').innerHTML='<button type="button" class="ui-chip" data-t="" aria-pressed="'+(!typeF)+'">전체 <b>'+curP.length+'</b></button>'
-      +Object.keys(TYPES).map(k=>'<button type="button" class="ui-chip ig-chip-c" data-t="'+k+'" aria-pressed="'+(typeF===k)+'" style="--bar:'+TYPES[k].c+'"><i class="ig-dot"></i>'+TYPES[k].l+' <b>'+cnt(k)+'</b></button>').join('');
-    const big={reach:p=>'<b>'+num(p.reach)+'</b> 도달',er:p=>'<b>'+er(p).toFixed(1)+'%</b> 참여',saves:p=>'<b>'+num(p.saves)+'</b> 저장',shares:p=>'<b>'+num(p.shares)+'</b> 공유'}[sortBy];
-    $('ipPosts').innerHTML=list.length?list.map((p,i)=>'<'+(p.link?'a href="'+esc(p.link)+'" target="_blank" rel="noopener" title="인스타그램에서 보기"':'div')+' class="ip-post" style="--bar:'+TYPES[p.type].c+'">'
-      +'<div class="ip-thumb">'+(p.thumb?'<img src="'+esc(p.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':'')
-        +'<span class="rk">'+(i+1)+'</span><span class="ty">'+TYPES[p.type].l+'</span><span class="big">'+big(p)+'</span></div>'
-      +'<div class="ip-post-body"><small>'+md(p.at)+' 올림 · <span class="ip-er">참여율 '+er(p).toFixed(1)+'%</span></small><p>'+esc(p.caption||'(설명 없음)')+'</p>'
-      +'<div class="ip-mets"><div><b>'+num(p.likes)+'</b>좋아요</div><div><b>'+num(p.comments)+'</b>댓글</div><div><b>'+num(p.saves)+'</b>저장</div><div><b>'+num(p.shares)+'</b>공유</div></div></div></'+(p.link?'a':'div')+'>').join('')
-      :'<div class="profit-empty">이 기간에 올린 게시물이 없습니다.</div>';
+  /* ---------- 콘텐츠 성과(보관함) · 올린 게시물 전체 · 기간·형식·설명으로 거르고 카드/목록으로 본다 · 24개씩 더 보기 ---------- */
+  const LIB={period:'all',type:'',q:'',sort:'new',mode:'card',show:24};
+  try{ const m=localStorage.getItem('baroyam_ip_libmode'); if(m==='card'||m==='list') LIB.mode=m; }catch(e){}
+  const SORTS={new:p=>(p.time||p.at||''),reach:p=>p.reach,views:p=>p.views,likes:p=>p.likes,comments:p=>p.comments,er:er,saves:p=>p.saves,shares:p=>p.shares};
+  const byKey=k=>(a,b)=>{ const x=SORTS[k](a), y=SORTS[k](b); return x<y?1:x>y?-1:0; };
+  function paintLib(){
+    const from=LIB.period==='all'?'':dayAdd(today(),-(+LIB.period-1)), q=LIB.q.toLowerCase();
+    const base=D.posts.filter(p=>(!from||p.at>=from)&&(!q||(p.caption||'').toLowerCase().indexOf(q)>=0));
+    const list=base.filter(p=>!LIB.type||p.type===LIB.type).sort(byKey(LIB.sort));
+    const cnt=k=>base.filter(p=>p.type===k).length;
+    $('ipPostType').innerHTML='<button type="button" class="ui-chip" data-t="" aria-pressed="'+(!LIB.type)+'">전체 <b>'+base.length+'</b></button>'
+      +Object.keys(TYPES).map(k=>'<button type="button" class="ui-chip ig-chip-c" data-t="'+k+'" aria-pressed="'+(LIB.type===k)+'" style="--bar:'+TYPES[k].c+'"><i class="ig-dot"></i>'+TYPES[k].l+' <b>'+cnt(k)+'</b></button>').join('');
+    const sum=k=>list.reduce((s,p)=>s+(p[k]||0),0), reachSum=sum('reach');
+    const avg=list.length?reachSum/list.length:0;
+    $('ipLibSum').innerHTML='<span>게시물 <b>'+list.length.toLocaleString('ko-KR')+'</b>개</span><span>평균 도달 <b>'+num(avg)+'</b></span>'
+      +'<span>평균 참여율 <b>'+(reachSum?((sum('likes')+sum('comments')+sum('saves')+sum('shares'))/reachSum*100).toFixed(1):'0.0')+'%</b></span><span>저장 <b>'+num(sum('saves'))+'</b></span><span>공유 <b>'+num(sum('shares'))+'</b></span>';
+    /* 평균 도달의 1.5배를 넘은 게시물은 "평균 ×n" 표시 */
+    const hot=p=>avg&&p.reach>=avg*1.5?'<span class="ip-hot">평균 ×'+(p.reach/avg).toFixed(1)+'</span>':'';
+    const shown=list.slice(0,LIB.show);
+    const open=(p,cls,title)=>'<'+(p.link?'a href="'+esc(p.link)+'" target="_blank" rel="noopener" title="'+title+'"':'div')+' class="'+cls+'" style="--bar:'+TYPES[p.type].c+'">';
+    const close=p=>'</'+(p.link?'a':'div')+'>';
+    const img=p=>p.thumb?'<img src="'+esc(p.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">':'';
+    if(!list.length){ $('ipPosts').innerHTML='<div class="profit-empty">'+(D.posts.length?'조건에 맞는 게시물이 없습니다.':'아직 받은 게시물이 없습니다.')+'</div>'; }
+    else if(LIB.mode==='list'){
+      const H=[['post','게시물'],['new','올린 날'],['type','형식'],['reach','도달'],['views','조회'],['likes','좋아요'],['comments','댓글'],['saves','저장'],['shares','공유'],['er','참여율']];
+      $('ipPosts').innerHTML='<div class="ip-table-wrap"><table class="ip-table"><thead><tr>'
+        +H.map(h=>'<th'+(SORTS[h[0]]?' data-sort="'+h[0]+'"':'')+(LIB.sort===h[0]?' class="is-on"':'')+'>'+h[1]+'</th>').join('')+'</tr></thead><tbody>'
+        +shown.map(p=>'<tr><td>'+open(p,'post','인스타그램에서 보기')+'<span class="sq">'+img(p)+'</span><span class="cap">'+esc(p.caption||'(설명 없음)')+'</span>'+close(p)+'</td>'
+          +'<td>'+p.at.slice(2).replace(/-/g,'.')+'</td><td><span class="ty" style="--bar:'+TYPES[p.type].c+'"><i class="ig-dot"></i>'+TYPES[p.type].l+'</span></td>'
+          +'<td>'+num(p.reach)+hot(p)+'</td><td>'+num(p.views)+'</td><td>'+num(p.likes)+'</td><td>'+num(p.comments)+'</td><td>'+num(p.saves)+'</td><td>'+num(p.shares)+'</td><td>'+er(p).toFixed(1)+'%</td></tr>').join('')
+        +'</tbody></table></div>';
+    }else{
+      const big={new:p=>'<b>'+num(p.reach)+'</b> 도달',reach:p=>'<b>'+num(p.reach)+'</b> 도달',er:p=>'<b>'+er(p).toFixed(1)+'%</b> 참여',saves:p=>'<b>'+num(p.saves)+'</b> 저장',shares:p=>'<b>'+num(p.shares)+'</b> 공유'}[LIB.sort]||(p=>'<b>'+num(p.reach)+'</b> 도달');
+      $('ipPosts').innerHTML='<div class="ip-posts">'+shown.map((p,i)=>open(p,'ip-post','인스타그램에서 보기')
+        +'<div class="ip-thumb">'+img(p)+(LIB.sort==='new'?'':'<span class="rk">'+(i+1)+'</span>')+'<span class="ty">'+TYPES[p.type].l+'</span><span class="big">'+big(p)+'</span>'+hot(p)+'</div>'
+        +'<div class="ip-post-body"><small>'+md(p.at)+' 올림 · <span class="ip-er">참여율 '+er(p).toFixed(1)+'%</span></small><p>'+esc(p.caption||'(설명 없음)')+'</p>'
+        +'<div class="ip-mets"><div><b>'+num(p.likes)+'</b>좋아요</div><div><b>'+num(p.comments)+'</b>댓글</div><div><b>'+num(p.saves)+'</b>저장</div><div><b>'+num(p.shares)+'</b>공유</div></div></div>'+close(p)).join('')+'</div>';
+    }
+    $('ipMore').hidden=list.length<=LIB.show;
+    $('ipMoreBtn').textContent='더 보기 · 남은 '+(list.length-LIB.show).toLocaleString('ko-KR')+'개';
   }
 
   function paintHeat(){
@@ -17654,7 +17723,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const cur=D.daily.slice(-range), prev=D.daily.slice(-range*2,-range);
     const from=cur.length?cur[0].d:today(), pfrom=prev.length?prev[0].d:from;
     const curP=D.posts.filter(p=>p.at>=from), prevP=D.posts.filter(p=>p.at>=pfrom&&p.at<from);
-    paintAcct(cur); paintKpis(cur,prev,curP,prevP); paintFollow(cur); paintTypes(curP); paintPosts(curP); paintHeat(); paintAud();
+    $('ipOver').hidden=view!=='over'; $('ipLib').hidden=view!=='lib';
+    $('ipLibN').textContent=D.posts.length?D.posts.length.toLocaleString('ko-KR'):'';
+    paintAcct(cur);
+    if(view==='lib'){ paintLib(); return; }
+    paintKpis(cur,prev,curP,prevP); paintFollow(cur); paintTypes(curP); paintHeat(); paintAud();
     $('ipFollowSub').textContent=cur.length?md(from)+' ~ '+md(cur[cur.length-1].d)+' · 아래 막대는 하루 순증':'';
   }
   async function load(){
@@ -17667,8 +17740,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(real) D=real;
     paint();
   }
-  if(window.UI&&window.UI.tabs) window.UI.tabs($('ipSort'),v=>{ sortBy=v||'reach'; paint(); }).set(sortBy);
-  $('ipPostType').addEventListener('click',e=>{ const c=e.target.closest('[data-t]'); if(!c) return; typeF=c.dataset.t; paint(); });
+  const T=(id,fn,v)=>{ if(window.UI&&window.UI.tabs) return window.UI.tabs($(id),fn).set(v); };
+  T('ipView',v=>{ view=v==='lib'?'lib':'over'; try{ localStorage.setItem('baroyam_ip_view',view); }catch(e){} paint(); },view);
+  const libTabs={sort:null};
+  libTabs.sort=window.UI&&window.UI.tabs?window.UI.tabs($('ipSort'),v=>{ LIB.sort=v||'new'; LIB.show=24; paint(); }):null;
+  if(libTabs.sort) libTabs.sort.set(LIB.sort);
+  T('ipPeriod',v=>{ LIB.period=v||'all'; LIB.show=24; paint(); },LIB.period);
+  T('ipMode',v=>{ LIB.mode=v==='list'?'list':'card'; try{ localStorage.setItem('baroyam_ip_libmode',LIB.mode); }catch(e){} paint(); },LIB.mode);
+  $('ipPostType').addEventListener('click',e=>{ const c=e.target.closest('[data-t]'); if(!c) return; LIB.type=c.dataset.t; LIB.show=24; paint(); });
+  $('ipQ').addEventListener('input',e=>{ LIB.q=e.target.value.trim(); LIB.show=24; paint(); });
+  $('ipMoreBtn').addEventListener('click',()=>{ LIB.show+=24; paint(); });
+  /* 목록 머리를 누르면 그 칸으로 정렬(위 정렬 탭에 있는 것은 탭도 같이 옮긴다) */
+  $('ipPosts').addEventListener('click',e=>{ const th=e.target.closest('th[data-sort]'); if(!th) return; LIB.sort=th.dataset.sort; LIB.show=24; if(libTabs.sort) libTabs.sort.set(LIB.sort); paint(); });
   $('ipToPlan').addEventListener('click',()=>{ const b=document.querySelector('#instaTabs [data-insta="plan"]'); if(b) b.click(); });
   paint();
   /* 성과 탭을 볼 때마다 서버 값을 다시 읽는다(하루 세 번 바뀌므로 그 정도로 충분) */
