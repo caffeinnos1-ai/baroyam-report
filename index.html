@@ -2833,6 +2833,27 @@ window.BAROYAM_FONT=(function(){
   .ps-table tfoot td{font-weight:500;color:var(--ink);background:color-mix(in srgb,var(--chip-flat) 30%,var(--paper))}
   .ps-table tfoot tr.fin td{font-size:14px;font-weight:600;border-bottom:0}
   .ps-table tfoot tr.fin td.p{color:var(--btn)}
+  .ps-link{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+  .ps-link b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:12px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft)}
+  .ps-link:hover{color:var(--btn)}
+  .settings-panel.ps-ext{max-width:560px;height:auto;max-height:min(720px,90vh)}
+  .ps-ext .settings-head{gap:12px}
+  .ps-ext-nav{display:inline-flex;align-items:center;gap:4px;margin-right:auto}
+  .ps-ext-nav b{min-width:84px;text-align:center;font-size:14px;font-weight:600;color:var(--ink)}
+  .ps-ext-body{padding:4px 22px 0;display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
+  .ps-ext-sub{margin:0;font-size:12.5px;color:var(--mute);line-height:1.5}
+  .ps-ext-add{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:8px}
+  .ps-ext-add[hidden]{display:none}
+  .ps-amt{text-align:right;font-variant-numeric:tabular-nums}
+  .ps-ext-list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+  .ps-ext-row{display:grid;grid-template-columns:minmax(0,1fr) 150px 30px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+  .ps-ext-row .ui-field{border-color:transparent;background:transparent}
+  .ps-ext-row:hover .ui-field,.ps-ext-row .ui-field:focus{border-color:var(--line);background:var(--paper)}
+  .ps-ext-row [data-k="amt"]{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ps-ext-none{padding:22px 4px;text-align:center;font-size:13px;color:var(--mute)}
+  .ps-ext-total{font-size:13px;color:var(--mute)}
+  .ps-ext-total b{margin-left:6px;font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  @media (max-width:560px){ .ps-ext-add{grid-template-columns:1fr 1fr} .ps-ext-add .ui-btn{grid-column:1/-1} .ps-ext-row{grid-template-columns:minmax(0,1fr) 110px 30px} }
   @media (max-width:1100px){ .ps-grid{grid-template-columns:1fr} }
   @media (max-width:760px){ .ps-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .ps-row{grid-template-columns:92px minmax(0,1fr) 112px;gap:8px} .ps-row .v .ui-field{width:100px} }
   .pf-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
@@ -9893,6 +9914,7 @@ window.BAROYAM_FONT=(function(){
               <span class="ps-temp" id="psTemp"></span>
               <span class="pf-grow"></span>
               <span class="pf-note" id="psSrc"></span>
+              <button type="button" class="ui-btn sm soft" data-ext-open>+ 외부 광고비</button>
             </div>
             <div class="pf-empty" id="psEmpty" hidden>매출데이터를 아직 불러오지 못했습니다 · 사이드바 아래 <b>새로고침</b>을 눌러 주세요</div>
             <div class="ps-body" id="psBody">
@@ -9911,7 +9933,7 @@ window.BAROYAM_FONT=(function(){
                 <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처별 순수익</h3><p id="psChanSub"></p></div></div>
                 <div class="pf-scroll"><table class="ps-table" id="psChan"></table></div>
               </div>
-              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 인건비 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다(기본 부가세 = (매출 − 수수료 − 원가 − 배송비) ÷ 11) · 인건비는 한 달(1일~말일)을 골랐을 때 직접 적습니다 · 시트는 달 단위라 기간에 걸친 날 수만큼 나누고, 시트 값이 없는 날은 마지막 마감 달의 하루 평균으로 채운 가상 값입니다</span></div>
+              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 외부 광고비 − 상품 원가 − 배송비 − 부가세 − 인건비 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다(기본 부가세 = (매출 − 수수료 − 원가 − 배송비) ÷ 11) · 외부 광고비(인플루언서·체험단 등 판매처 밖 광고)는 달마다 항목으로 적습니다 · 인건비는 한 달(1일~말일)을 골랐을 때 직접 적습니다 · 시트는 달 단위라 기간에 걸친 날 수만큼 나누고, 시트 값이 없는 날은 마지막 마감 달의 하루 평균으로 채운 가상 값입니다</span></div>
             </div>
           </div>
         </section>
@@ -9959,6 +9981,36 @@ window.BAROYAM_FONT=(function(){
               <span class="pf-grow"></span>
               <button type="button" class="ui-btn ghost" data-pf-close>취소</button>
               <button type="button" class="ui-btn primary" id="pfRuleOk">저장</button>
+            </div>
+          </div>
+        </div>
+        <!-- 외부 광고비 · 달마다 항목(이름·금액)을 적는다 · 적는 즉시 저장 -->
+        <div class="settings-overlay" id="psExtDlg" hidden>
+          <div class="settings-panel ps-ext" role="dialog" aria-modal="true" aria-labelledby="psExtTitle">
+            <div class="settings-head">
+              <h2 id="psExtTitle">외부 광고비</h2>
+              <div class="ps-ext-nav">
+                <button type="button" class="ui-btn sm ghost icon" data-ext-nav="-1" aria-label="지난달">‹</button>
+                <b id="psExtMonth"></b>
+                <button type="button" class="ui-btn sm ghost icon" data-ext-nav="1" aria-label="다음 달">›</button>
+              </div>
+              <button type="button" class="settings-close" data-pf-close aria-label="닫기">✕</button>
+            </div>
+            <div class="ps-ext-body">
+              <p class="ps-ext-sub">판매처 광고비(매출 시트)에 없는, 회사가 따로 쓰는 광고비입니다 · 예: 인플루언서, 체험단, 옥외광고, 대행 수수료</p>
+              <form class="ps-ext-add" id="psExtAdd" autocomplete="off">
+                <input class="ui-field" name="name" maxlength="40" placeholder="항목 이름 (예: 인플루언서)" list="psExtNames" aria-label="항목 이름">
+                <input class="ui-field ps-amt" name="amt" inputmode="numeric" placeholder="금액(원)" aria-label="금액(원)">
+                <button type="submit" class="ui-btn primary">추가</button>
+              </form>
+              <datalist id="psExtNames"></datalist>
+              <div class="ps-ext-list" id="psExtList"></div>
+            </div>
+            <div class="pf-mix-foot">
+              <button type="button" class="ui-btn sm soft" id="psExtPrev">지난달 항목 불러오기</button>
+              <span class="pf-grow"></span>
+              <span class="ps-ext-total">합계 <b id="psExtTotal"></b></span>
+              <button type="button" class="ui-btn ghost" data-pf-close>닫기</button>
             </div>
           </div>
         </div>
@@ -16586,7 +16638,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     };
     return st;
   }
-  const normCost=v=>{ v=obj(v); return Object.assign({},v,{items:obj(v.items),ship:obj(v.ship),chans:obj(v.chans),labor:obj(v.labor)}); };
+  const normCost=v=>{ v=obj(v); return Object.assign({},v,{items:obj(v.items),ship:obj(v.ship),chans:obj(v.chans),labor:obj(v.labor),extAd:obj(v.extAd)}); };
   const normCalc=v=>{ v=obj(v); return Object.assign({},v,{sheets:obj(v.sheets),prods:obj(v.prods),rows:obj(v.rows)}); };
   /* 처음 한 번 · 붙여 준 계산표(홀떡피자 메타광고)에 있던 판매처 수수료·프라임 발송비로 시작한다 · id 를 고정해 두 PC가 동시에 만들어도 겹치지 않는다 */
   const COST=store('profit_cost_v1',normCost,()=>normCost({
@@ -17808,12 +17860,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const t={sales:0,ad:0,fee:0,cost:0,ship:0,vat:0,profit:0};
     rows.forEach(x=>Object.keys(t).forEach(k=>t[k]+=x[k]));
     /* 인건비 · 기간에 걸친 달마다 (그 달 인건비 × 걸친 날 ÷ 그 달 날 수) */
-    t.labor=0;
+    t.labor=0; t.ext=0;
     for(let y=+r.start.slice(0,4), m=+r.start.slice(5,7); psIso(y,m,1)<=r.end; m===12?(y++,m=1):m++){
-      const mr=psMonthRange(y,m), s=r.start>mr.start?r.start:mr.start, e=r.end<mr.end?r.end:mr.end;
-      t.labor+=psLabor(y+'-'+p2(m))*psSpan(s,e)/psDim(y,m);
+      const mr=psMonthRange(y,m), s=r.start>mr.start?r.start:mr.start, e=r.end<mr.end?r.end:mr.end, f=psSpan(s,e)/psDim(y,m);
+      t.labor+=psLabor(y+'-'+p2(m))*f; t.ext+=extSum(y+'-'+p2(m))*f;
     }
-    t.net=t.profit-t.labor; t.virt=virt; t.part=parts.some(x=>x.f<1);
+    t.net=t.profit-t.ext-t.labor; t.virt=virt; t.part=parts.some(x=>x.f<1);
     return {rows,t};
   }
   /* 기간이 꼭 한 달(1일~말일)이면 그 달 {y,m} */
@@ -17853,7 +17905,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +'<div class="ps-kpi main"><div class="k">순수익</div><div class="v'+(t.net<0?' neg':'')+'" title="'+psWon(t.net)+'원">'+psShort(t.net)+'</div><div class="s">'+(cmp||'&nbsp;')+'</div></div>'
       +'<div class="ps-kpi"><div class="k">순이익률</div><div class="v'+(t.net<0?' neg':'')+'">'+pct(rate)+'</div><div class="s">순수익 ÷ 매출</div></div>';
     /* 폭포 · 매출에서 비용을 하나씩 깎는다 */
-    const steps=[['판매처 수수료','fee'],['광고비','ad'],['상품 원가','cost',1],['배송비','ship',1],['부가세','vat'],['인건비','labor']];
+    const steps=[['판매처 수수료','fee'],['광고비','ad'],['외부 광고비','ext'],['상품 원가','cost',1],['배송비','ship',1],['부가세','vat'],['인건비','labor']];
     let run=t.sales, lo=0;
     const bars=steps.map(([l,k,tmp])=>{ const v=t[k]; const b={l,k,tmp,v,from:run-v,to:run}; run-=v; lo=Math.min(lo,run); return b; });
     const span=Math.max(t.sales,1)-lo, X=x=>((x-lo)/span*100).toFixed(2)+'%', W=(a,b)=>(Math.abs(b-a)/span*100).toFixed(2)+'%';
@@ -17861,7 +17913,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     /* 인건비는 한 달(1일~말일)을 골랐을 때만 그 달 값을 적는다 · 다른 기간은 날 수만큼 나눈 값을 보여 준다 */
     const laborIn=one?'<input class="ui-field" id="psLaborIn" inputmode="numeric" placeholder="0" value="'+(psLabor(one.key)?comma(psLabor(one.key)):'')+'"'+(ro?' readonly':'')+' title="'+one.label+' 인건비(원)'+(ro?'':' · 적고 Enter')+'">':null;
     $('psFall').innerHTML='<div class="ps-row base'+(t.virt?' temp':'')+'"><span class="l">매출'+(t.virt?'<em>가상 '+t.virt+'일</em>':'')+'</span><div class="ps-track"><i style="left:'+X(0)+';width:'+W(0,t.sales)+'"></i></div><span class="v" title="'+psWon(t.sales)+'원">'+psShort(t.sales)+'</span></div>'
-      +bars.map(b=>'<div class="ps-row'+(b.tmp?' temp':'')+'"><span class="l">'+b.l+(b.tmp?'<em>임시</em>':'')+'</span>'
+      +bars.map(b=>'<div class="ps-row'+(b.tmp?' temp':'')+'"><span class="l">'+(b.k==='ext'?'<button type="button" class="ps-link" data-ext-open title="외부 광고비 적기">'+b.l+' <b>＋</b></button>':b.l)+(b.tmp?'<em>임시</em>':'')+'</span>'
         +'<div class="ps-track"><i style="left:'+X(Math.min(b.from,b.to))+';width:'+W(b.from,b.to)+'"></i></div>'
         +'<span class="v" title="'+psWon(b.v)+'원'+(b.k==='labor'&&!one?' · 달 인건비를 날 수로 나눈 값 · 한 달을 고르면 적을 수 있습니다':'')+'">'+(b.k==='labor'&&laborIn?laborIn:(b.v>=5000?'−':'')+psShort(b.v)+'<small>'+pct(t.sales?b.v/t.sales:0)+'</small>')+'</span></div>').join('')
       +'<div class="ps-row end'+(t.net<0?' minus':'')+'"><span class="l">순수익</span><div class="ps-track"><i style="left:'+X(Math.min(0,t.net))+';width:'+W(0,t.net)+'"></i></div>'
@@ -17891,8 +17943,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +rows.map(x=>'<tr><td><span class="ch ch-'+PS_KEY[x.c]+'"><i></i>'+x.c+(x.rate?'<small>'+esc(x.rate.name)+' '+comma(x.rate.rate)+'%</small>':'')+'</span></td>'
         +td(x.sales)+td(x.fee)+td(x.ad)+td(x.cost,'t')+td(x.ship,'t')+td(x.vat)+td(x.profit,'p'+(x.profit<0?' neg':''))+'<td class="'+(x.profit<0?'neg':'')+'">'+(x.sales?pct(x.profit/x.sales):'–')+'</td></tr>').join('')
       +'</tbody><tfoot><tr><td>판매처 합계</td>'+td(t.sales)+td(t.fee)+td(t.ad)+td(t.cost,'t')+td(t.ship,'t')+td(t.vat)+td(t.profit,'p'+(t.profit<0?' neg':''))+'<td>'+(t.sales?pct(t.profit/t.sales):'–')+'</td></tr>'
+      +'<tr><td><button type="button" class="ps-link" data-ext-open title="외부 광고비 적기">외부 광고비 <b>＋</b></button></td><td colspan="6"></td>'+td(-t.ext)+'<td></td></tr>'
       +'<tr><td>인건비</td><td colspan="6"></td>'+td(-t.labor)+'<td></td></tr>'
       +'<tr class="fin"><td>순수익</td><td colspan="6"></td>'+td(t.net,'p'+(t.net<0?' neg':''))+'<td class="'+(t.net<0?'neg':'')+'">'+(t.sales?pct(rate):'–')+'</td></tr></tfoot>';
+    if(extKey&&!$('psExtDlg').hidden) extPaint();
   }
   function psPick(v){
     psRange={start:v.start,end:v.end};
@@ -17902,6 +17956,83 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('psTrend').addEventListener('click',e=>{
     const c=e.target.closest('.ps-col'), d=psData(); if(!c||!d) return;
     const m=psMonths(d).find(x=>String(x.i)===c.dataset.i); if(m) psPick({start:m.start,end:m.end});
+  });
+  /* ---------- 외부 광고비 · 판매처 광고 말고 회사가 달마다 쓰는 광고비(인플루언서·체험단 등) ----------
+     profit_cost_v1.extAd['2026-10'] = {items:{id:{id,name,amt,ord,del?}}} · 항목마다 id 라 두 PC가 동시에 적어도 merge3 가 합친다 ·
+     창에서 적는 즉시 저장(COST.mark) · 지우기는 del 시각만 단다 */
+  let extKey=null;
+  const extOf=key=>live(COST.data&&COST.data.extAd&&COST.data.extAd[key]&&COST.data.extAd[key].items);
+  const extSum=key=>extOf(key).reduce((a,x)=>a+(num(x.amt)||0),0);
+  const extShift=(key,n)=>{ let y=+key.slice(0,4), m=+key.slice(5,7)+n; while(m<1){ m+=12; y--; } while(m>12){ m-=12; y++; } return y+'-'+p2(m); };
+  function extBox(key){
+    const all=Object.assign({},COST.data.extAd);
+    const box=Object.assign({},all[key]); box.items=Object.assign({},box.items);
+    all[key]=box; COST.data.extAd=all; return box.items;
+  }
+  function extPaint(){
+    const key=extKey, ro=!canEdit(), list=extOf(key), y=+key.slice(0,4), m=+key.slice(5,7);
+    $('psExtMonth').textContent=(y!==new Date().getFullYear()?y+'년 ':'')+m+'월';
+    $('psExtAdd').hidden=ro; $('psExtPrev').hidden=ro;
+    $('psExtList').innerHTML=list.length?list.map(x=>'<div class="ps-ext-row" data-id="'+esc(x.id)+'">'
+        +'<input class="ui-field sm" data-k="name" maxlength="40" value="'+esc(x.name||'')+'"'+(ro?' readonly':'')+' aria-label="항목 이름">'
+        +'<input class="ui-field sm ps-amt" data-k="amt" inputmode="numeric" value="'+(num(x.amt)?comma(num(x.amt)):'')+'"'+(ro?' readonly':'')+' aria-label="금액(원)">'
+        +(ro?'':'<button type="button" class="ui-btn sm ghost icon" data-del title="빼기" aria-label="빼기">✕</button>')+'</div>').join('')
+      :'<div class="ps-ext-none">'+(ro?'적힌 외부 광고비가 없습니다':'위 칸에 항목 이름과 금액을 적고 Enter · 매달 나가는 것은 아래 "지난달 항목 불러오기"')+'</div>';
+    const prev=extOf(extShift(key,-1)), have=new Set(list.map(x=>String(x.name||'').trim()));
+    const fresh=prev.filter(x=>!have.has(String(x.name||'').trim()));
+    $('psExtPrev').disabled=!fresh.length;
+    $('psExtPrev').title=prev.length?(fresh.length?fresh.map(x=>x.name).join(' · '):'지난달 항목이 이미 모두 있습니다'):'지난달에 적힌 항목이 없습니다';
+    $('psExtTotal').textContent=psWon(extSum(key))+'원';
+    /* 이름 추천 · 다른 달에 적었던 이름들 */
+    const names=new Set(); Object.keys(obj(COST.data&&COST.data.extAd)).forEach(k=>extOf(k).forEach(x=>{ if(x.name) names.add(String(x.name).trim()); }));
+    $('psExtNames').innerHTML=[...names].map(n=>'<option value="'+esc(n)+'">').join('');
+  }
+  function extOpen(key){
+    if(!COST.data) return;
+    extKey=key; extPaint(); $('psExtDlg').hidden=false;
+    setTimeout(()=>{ const f=$('psExtAdd').hidden?null:$('psExtAdd').elements.name; if(f) f.focus(); },30);
+  }
+  function extClose(){ $('psExtDlg').hidden=true; extKey=null; paintSummary(); }
+  $('psExtDlg').addEventListener('click',e=>{
+    if(e.target===$('psExtDlg')||e.target.closest('[data-pf-close]')){ extClose(); return; }
+    const nav=e.target.closest('[data-ext-nav]'); if(nav){ extKey=extShift(extKey,+nav.dataset.extNav); extPaint(); return; }
+    const del=e.target.closest('[data-del]');
+    if(del&&canEdit()){ const id=del.closest('[data-id]').dataset.id, items=extBox(extKey);
+      items[id]=Object.assign({},items[id],{del:Date.now()}); COST.mark(); extPaint(); }
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('psExtDlg').hidden) extClose(); });
+  $('psExtAdd').addEventListener('submit',e=>{
+    e.preventDefault(); if(!canEdit()) return;
+    const f=e.currentTarget, name=f.elements.name.value.trim(), amt=num(f.elements.amt.value);
+    if(!name){ f.elements.name.focus(); return; }
+    if(amt==null){ f.elements.amt.focus(); return; }
+    const items=extBox(extKey), id=uid(), ord=extOf(extKey).reduce((a,x)=>Math.max(a,x.ord||0),0)+1;
+    items[id]={id,name,amt,ord}; COST.mark();
+    f.reset(); extPaint(); f.elements.name.focus();
+  });
+  /* 이름 칸에서 Enter 면 금액 칸으로 */
+  $('psExtAdd').elements.name.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); $('psExtAdd').elements.amt.focus(); } });
+  $('psExtList').addEventListener('change',e=>{
+    const inp=e.target.closest('input[data-k]'); if(!inp||!canEdit()) return;
+    const id=inp.closest('[data-id]').dataset.id, items=extBox(extKey), k=inp.dataset.k;
+    const v=k==='amt'?(num(inp.value)||0):inp.value.trim();
+    if(k==='name'&&!v){ extPaint(); return; }
+    items[id]=Object.assign({},items[id],{[k]:v}); COST.mark(); extPaint();
+  });
+  $('psExtList').addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('input')&&!e.isComposing){ e.preventDefault(); e.target.blur(); } });
+  $('psExtPrev').addEventListener('click',()=>{
+    if(!canEdit()) return;
+    const have=new Set(extOf(extKey).map(x=>String(x.name||'').trim()));
+    const fresh=extOf(extShift(extKey,-1)).filter(x=>!have.has(String(x.name||'').trim()));
+    if(!fresh.length) return;
+    const items=extBox(extKey); let ord=extOf(extKey).reduce((a,x)=>Math.max(a,x.ord||0),0);
+    fresh.forEach(x=>{ const id=uid(); items[id]={id,name:x.name,amt:num(x.amt)||0,ord:++ord}; });
+    COST.mark(); extPaint();
+  });
+  /* 여는 곳 · 위 단추 줄 · 폭포의 외부 광고비 줄 · 표의 외부 광고비 줄 → 고른 기간의 첫 달 */
+  view.addEventListener('click',e=>{
+    if(!e.target.closest('[data-ext-open]')) return;
+    if(!psRange) return; extOpen(psRange.start.slice(0,7));
   });
   document.addEventListener('baroyam:report',()=>{ if(view.style.display!=='none'&&pane==='summary') paintSummary(); });
 
