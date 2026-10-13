@@ -2512,24 +2512,33 @@ window.BAROYAM_FONT=(function(){
   .ip-scale{display:flex;align-items:center;gap:6px}
   .ip-scale i{width:56px;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--chip-flat),var(--self))}
   /* 팔로워 구성 */
-  .ip-aud{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
-  .ip-aud h4{margin:0 0 10px;font-size:12.5px;font-weight:500;color:var(--mute)}
-  .ip-gender{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px;margin-bottom:8px}
-  .ip-gender i:first-child{background:var(--talk)}
-  .ip-gender i:last-child{background:var(--coupang)}
-  .ip-glab{display:flex;justify-content:space-between;font-size:12px;color:var(--body);margin-bottom:18px}
-  .ip-glab b{font-weight:600}
-  .ip-ages{display:flex;align-items:flex-end;gap:8px;height:110px}
-  .ip-ages div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;font-size:11px;color:var(--mute)}
-  .ip-ages i{width:100%;max-width:34px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))}
-  .ip-ages b{font-size:11px;font-weight:600;color:var(--ink)}
-  .ip-cities{display:flex;flex-direction:column;gap:9px}
-  .ip-city{display:grid;grid-template-columns:52px minmax(0,1fr) 40px;align-items:center;gap:8px;font-size:12px;color:var(--body)}
-  .ip-city .bar{height:8px;border-radius:99px;background:var(--chip-flat);overflow:hidden}
-  .ip-city .bar i{display:block;height:100%;border-radius:99px;background:color-mix(in srgb,var(--self) 65%,var(--paper))}
-  .ip-city b{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  /* 팔로워 구성 · 맨 위 한 줄 요약 → 성별 두 칸 + 나뉜 막대 → 나이 | 지역 가로 막대(가장 많은 줄만 진하게) · 한 색(--self)의 진하기로만 나눈다 */
+  .ip-aud{display:flex;flex-direction:column;gap:18px}
+  .ip-aud-sum{padding:10px 12px;border-radius:12px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12.5px;line-height:1.5}
+  .ip-aud-sum b{font-weight:600}
+  .ip-aud h4{margin:0 0 10px;font-size:12px;font-weight:500;color:var(--mute)}
+  .ip-gen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .ip-gen>div{display:flex;align-items:baseline;gap:8px;padding:10px 14px;border-radius:12px;background:var(--chip-flat)}
+  .ip-gen i{width:9px;height:9px;border-radius:3px;flex:none;align-self:center}
+  .ip-gen span{font-size:12.5px;color:var(--body)}
+  .ip-gen b{margin-left:auto;font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ip-gen b small{font-size:12px;font-weight:500;color:var(--mute);margin-left:1px}
+  .ip-gen-bar{display:flex;gap:2px;height:8px;margin-top:10px;border-radius:99px;overflow:hidden;background:var(--chip-flat)}
+  .ip-gen-bar i{display:block;height:100%}
+  .ip-c-f{background:color-mix(in srgb,var(--self) 78%,var(--paper))}
+  .ip-c-m{background:color-mix(in srgb,var(--self) 38%,var(--paper))}
+  .ip-c-u{background:color-mix(in srgb,var(--mute) 30%,var(--paper))}
+  .ip-gen-u{margin-top:6px;font-size:11.5px;color:var(--mute)}
+  .ip-aud-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+  .ip-bars{display:flex;flex-direction:column;gap:9px}
+  .ip-bars>div{display:grid;grid-template-columns:58px minmax(0,1fr) 44px;align-items:center;gap:10px;font-size:12.5px;color:var(--body)}
+  .ip-bars .bar{height:8px;border-radius:99px;background:var(--chip-flat);overflow:hidden}
+  .ip-bars .bar i{display:block;height:100%;border-radius:99px;background:color-mix(in srgb,var(--self) 38%,var(--paper))}
+  .ip-bars b{text-align:right;font-weight:500;color:var(--body);font-variant-numeric:tabular-nums}
+  .ip-bars .is-top span,.ip-bars .is-top b{font-weight:600;color:var(--ink)}
+  .ip-bars .is-top .bar i{background:linear-gradient(90deg,color-mix(in srgb,var(--self) 55%,var(--paper)),color-mix(in srgb,var(--self) 78%,var(--paper)))}
   @media (max-width:1280px){ .ip-kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
-  @media (max-width:1000px){ .ip-row,.ip-row.is-even,.ip-aud{grid-template-columns:1fr} .ip-acct-end{margin-left:0} .ip-nums{margin-left:0} }
+  @media (max-width:1000px){ .ip-row,.ip-row.is-even,.ip-aud-cols{grid-template-columns:1fr} .ip-acct-end{margin-left:0} .ip-nums{margin-left:0} }
   @media (max-width:640px){ .ip-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media (max-width:760px){ .ig-tools #igQ{width:100%} .ig-tools .ig-end{margin-left:0;width:100%} .ig-form .ig-row2{grid-template-columns:1fr} }
   /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
@@ -17710,13 +17719,23 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   function paintAud(){
     const A=D.audience;
-    if(!A||!(A.gender||A.ages||A.cities)){ $('ipAud').innerHTML='<div class="profit-empty" style="grid-column:1/-1">팔로워 구성은 팔로워가 100명 이상일 때 인스타그램이 알려 줍니다.</div>'; return; }
-    const g=A.gender, ages=A.ages||[], cities=A.cities||[];
-    const amx=Math.max(1,...ages.map(x=>x[1])), cmx=Math.max(1,...cities.map(x=>x[1]));
-    $('ipAud').innerHTML='<div>'+(g?'<h4>성별</h4><div class="ip-gender"><i style="width:'+g.f+'%"></i><i style="width:'+g.m+'%"></i></div>'
-      +'<div class="ip-glab"><span>여성 <b>'+g.f+'%</b></span>'+(g.u?'<span>밝히지 않음 '+g.u+'%</span>':'')+'<span>남성 <b>'+g.m+'%</b></span></div>':'')
-      +(ages.length?'<h4>나이</h4><div class="ip-ages">'+ages.map(a=>'<div><b>'+a[1]+'%</b><i style="height:'+(a[1]/amx*80)+'%"></i>'+esc(a[0])+'</div>').join('')+'</div>':'')+'</div>'
-      +'<div>'+(cities.length?'<h4>지역</h4><div class="ip-cities">'+cities.slice(0,6).map(c=>'<div class="ip-city"><span>'+esc(c[0])+'</span><div class="bar"><i style="width:'+(c[1]/cmx*100)+'%"></i></div><b>'+c[1]+'%</b></div>').join('')+'</div>':'')+'</div>';
+    if(!A||!(A.gender||A.ages||A.cities)){ $('ipAud').innerHTML='<div class="profit-empty">팔로워 구성은 팔로워가 100명 이상일 때 인스타그램이 알려 줍니다.</div>'; return; }
+    const g=A.gender, ages=(A.ages||[]).filter(x=>x[1]>0), cities=(A.cities||[]).slice(0,6);
+    const top=a=>a.reduce((m,x)=>x[1]>m[1]?x:m,a[0]);
+    const bars=(rows,lab)=>{ const mx=Math.max(1,...rows.map(x=>x[1])), t=top(rows);
+      return '<div class="ip-bars">'+rows.map(x=>'<div class="'+(x===t?'is-top':'')+'"><span>'+esc(lab(x[0]))+'</span><div class="bar"><i style="width:'+(x[1]/mx*100).toFixed(1)+'%"></i></div><b>'+x[1]+'%</b></div>').join('')+'</div>'; };
+    const ageLab=k=>/\+$/.test(k)?k.replace('+','')+'세 이상':k.replace('-','~')+'세';
+    /* 한 줄 요약 · 가장 많은 나이대·성별, 위 두 지역의 합 */
+    const sum=[];
+    if(ages.length) sum.push('<b>'+ageLab(top(ages)[0])+'</b>');
+    if(g) sum.push('<b>'+(g.f>=g.m?'여성 '+g.f:'남성 '+g.m)+'%</b>');
+    if(cities.length>1) sum.push(esc(cities[0][0])+'·'+esc(cities[1][0])+' <b>'+Math.round(cities[0][1]+cities[1][1])+'%</b>');
+    else if(cities.length) sum.push(esc(cities[0][0])+' <b>'+cities[0][1]+'%</b>');
+    $('ipAud').innerHTML=(sum.length?'<div class="ip-aud-sum">주 팔로워 · '+sum.join(' · ')+'</div>':'')
+      +(g?'<div><h4>성별</h4><div class="ip-gen"><div><i class="ip-c-f"></i><span>여성</span><b>'+g.f+'<small>%</small></b></div><div><i class="ip-c-m"></i><span>남성</span><b>'+g.m+'<small>%</small></b></div></div>'
+        +'<div class="ip-gen-bar"><i class="ip-c-f" style="width:'+g.f+'%"></i><i class="ip-c-m" style="width:'+g.m+'%"></i>'+(g.u?'<i class="ip-c-u" style="width:'+g.u+'%"></i>':'')+'</div>'
+        +(g.u?'<div class="ip-gen-u">밝히지 않음 '+g.u+'%</div>':'')+'</div>':'')
+      +((ages.length||cities.length)?'<div class="ip-aud-cols">'+(ages.length?'<div><h4>나이</h4>'+bars(ages,ageLab)+'</div>':'')+(cities.length?'<div><h4>지역</h4>'+bars(cities,k=>k)+'</div>':'')+'</div>':'');
   }
 
   function paint(){
