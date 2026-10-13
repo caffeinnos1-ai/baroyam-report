@@ -6949,7 +6949,8 @@ window.BAROYAM_FONT=(function(){
     function render(){
       const on=presetOf(draft.start&&draft.end?draft:null);
       const lo=draft.start, hi=draft.end||draft.start, nowK=ym(cy,new Date().getMonth()+1);
-      let h='<div class="ui-cal-quick">'+presets.map(k=>'<button type="button" class="ui-chip" data-quick="'+k+'" aria-pressed="'+(on===k)+'">'+esc(MP_LABEL[k]||k)+'</button>').join('')+'</div>';
+      /* presets:[] 이면 빠른 선택 줄을 그리지 않는다 */
+      let h=!presets.length?'':'<div class="ui-cal-quick">'+presets.map(k=>'<button type="button" class="ui-chip" data-quick="'+k+'" aria-pressed="'+(on===k)+'">'+esc(MP_LABEL[k]||k)+'</button>').join('')+'</div>';
       h+='<div class="ui-cal-head"><span class="ui-cal-navs"><button type="button" class="ui-btn ghost icon sm" data-y="-1" aria-label="이전 해">‹</button></span>'
         +'<span class="ui-cal-title">'+viewY+'년</span>'
         +'<span class="ui-cal-navs"><button type="button" class="ui-btn ghost icon sm" data-y="1" aria-label="다음 해">›</button></span></div>';
@@ -18117,7 +18118,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const mv={start:psRange.start.slice(0,7),end:psRange.end.slice(0,7)};
     if(!psPicker&&window.UI&&UI.monthPicker){
       const now=new Date(), nk=now.getFullYear()+'-'+p2(now.getMonth()+1);
-      psPicker=UI.monthPicker($('psMonth'),{value:mv,placeholder:'기간 선택',presets:['thisMonth','prevMonth','last3','thisYear','lastYear'],
+      psPicker=UI.monthPicker($('psMonth'),{value:mv,placeholder:'기간 선택',presets:[],
         resetValue:{start:nk,end:nk},onChange:v=>{ if(v) psPick({start:psKeyRange(v.start).start,end:psKeyRange(v.end).end}); }});
     }else if(psPicker) psPicker.set(mv);
     const r=psRange, one=psWhole(r);
