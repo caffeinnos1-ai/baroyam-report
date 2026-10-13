@@ -178,8 +178,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return;
     }
 
+    // 이지어드민 창 · 실패 → 대시보드 안내 줄에 이유를 알리고, 이지어드민 창은 닫지 않고 앞으로 띄워 둔다 ·
+    // 1.5.2 까지는 대시보드가 "알렸다"고 ok 를 돌려주면 저장 성공처럼 창을 닫아, 검색을 기다리다 창이 그냥 사라졌다(2026-10-13 사용자 지적)
+    if (msg.type === 'error') {
+      await chrome.tabs.sendMessage(job.dashTabId, { ...msg, kind: job.kind || 'inventory' }).catch(() => null);
+      await endJob();
+      await showWin(job);
+      sendResponse({ ok: false, message: msg.message });
+      return;
+    }
+
     // 이지어드민 창 · 읽은 표 → 대시보드가 저장하고 결과를 돌려준다
-    if (msg.type === 'rows' || msg.type === 'error') {
+    if (msg.type === 'rows') {
       const reply = await chrome.tabs.sendMessage(job.dashTabId, { ...msg, kind: job.kind || 'inventory', shipped: msg.shipped != null ? msg.shipped : job.shipped }).catch(() => null);
       if (reply && reply.ok) {
         await endJob();

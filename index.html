@@ -18327,7 +18327,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(d.type==='status'){ if(d.done) ivBusy(false); if(d.message) jobNote(d.message); return; }
     if(d.type!=='inventory'&&d.type!=='inventory-error') return;
     const ack=(ok,message)=>window.postMessage({source:'baroyam-dashboard',type:'inventory-ack',id:d.id,ok,message},location.origin);
-    if(d.type==='inventory-error'){ ivNote('수집하지 못했습니다 · '+(d.message||'')); ivBusy(false); ack(true,'대시보드에 알렸습니다'); return; }
+    if(d.type==='inventory-error'){ ivNote('수집하지 못했습니다 · '+(d.message||'')+' · 이지어드민 창을 닫지 않고 앞에 띄워 두었습니다'); ivBusy(false); ack(true,'대시보드에 알렸습니다'); return; }
     let ok=false, msg;
     try{
       const items=(Array.isArray(d.rows)?d.rows:[]).filter(r=>r&&String(r.name||'').trim()).map(ivToItem);
@@ -18449,7 +18449,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(e.source!==window||!d||d.source!=='baroyam-inv-ext') return;
     if(d.type!=='sales'&&d.type!=='sales-error') return;
     const ack=(ok,message)=>window.postMessage({source:'baroyam-dashboard',type:'inventory-ack',id:d.id,ok,message},location.origin);
-    if(d.type==='sales-error'){ dsNote('수집하지 못했습니다 · '+(d.message||'')); ivBusy(false); ack(true,'대시보드에 알렸습니다'); return; }
+    if(d.type==='sales-error'){ dsNote('수집하지 못했습니다 · '+(d.message||'')+' · 이지어드민 창을 닫지 않고 앞에 띄워 두었습니다'); ivBusy(false); ack(true,'대시보드에 알렸습니다'); return; }
     let ok=false, msg;
     try{
       if(!DS.loaded) await DS.load();          /* 이름 매핑을 먼저 받아 둔다 */
