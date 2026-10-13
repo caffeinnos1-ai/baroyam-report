@@ -3188,6 +3188,7 @@ window.BAROYAM_FONT=(function(){
   .pf-rule-row b{display:block;font-size:14px;font-weight:600;color:var(--ink)}
   .pf-rule-row small{display:block;margin-top:3px;font-size:12px;color:var(--mute)}
   .pf-rule-in{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--body)}
+  .pf-rule-in2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .pf-rule-in .ui-field{width:84px;text-align:center}
   .pf-rule-row .ui-tabs{flex:none}
   .pf-rule-ex{margin:14px 0 2px;padding:10px 14px;border-radius:12px;background:var(--chip-flat);font-size:12.5px;color:var(--body);line-height:1.5}
@@ -10037,7 +10038,7 @@ window.BAROYAM_FONT=(function(){
                 <div class="pf-books" id="pfCalcTable"></div>
               </div>
               <div class="pf-foot">
-                <span class="pf-note">자동 값 칸은 두 번 눌러 직접 고칠 수 있습니다(비우면 다시 자동 · 고친 칸은 점선 밑줄) · 부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 · 정산예정금 = 판매가+배송비 − 수수료</span>
+                <span class="pf-note">자동 값 칸은 두 번 눌러 직접 고칠 수 있습니다(비우면 다시 자동 · 고친 칸은 점선 밑줄) · 부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진(판매처 계산법의 보정 %) · 정산예정금 = 판매가+배송비 − 수수료</span>
               </div>
             </div>
             <!-- 판매처 · 맨 위 단추 줄(순수익 요약/마진 계산기/품목별 원가표)과 같은 모양의 맨 아래 단추 줄 ·
@@ -10189,6 +10190,9 @@ window.BAROYAM_FONT=(function(){
                 <div class="ui-tabs" id="pfRuleFeeVat"><button class="ui-tab" data-value="">그대로</button><button class="ui-tab" data-value="inc">10% 더함</button></div></div>
               <div class="pf-rule-row"><div><b>부가세 계산</b><small>마진에서 뺄 부가세</small></div>
                 <div class="ui-tabs" id="pfRuleVat"><button class="ui-tab" data-value="">남는 돈 ÷ 11</button><button class="ui-tab" data-value="sale">매출 ÷ 11</button><button class="ui-tab" data-value="none">없음</button></div></div>
+              <div class="pf-rule-row"><div><b>최소 ROAS 보정</b><small>(판매가+배송비) ÷ 마진에 이 비율만큼 더함 · 1.5 → × 1.015 · 없으면 비워 두기</small></div>
+                <div class="pf-rule-in2"><label class="pf-rule-in"><input class="ui-field sm pf-num" id="pfRuleRoas" inputmode="decimal" placeholder="0" aria-label="최소 ROAS 보정">%</label>
+                <div class="ui-tabs" id="pfRuleRoasAd"><button class="ui-tab" data-value="">광고 중일 때만</button><button class="ui-tab" data-value="all">늘</button></div></div></div>
               <div class="pf-rule-ex" id="pfRuleEx"></div>
             </div>
             <div class="pf-mix-foot">
@@ -16846,12 +16850,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 판매처 계산법 · 값이 없으면 예전 그대로(판매가 × 수수료율 · 남는 돈 ÷ 11) */
   const VAT_MODES=[{value:'',label:'남는 돈 ÷ 11',sub:'(판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11'},
     {value:'sale',label:'매출 ÷ 11',sub:'(판매가+배송비) ÷ 11'},{value:'none',label:'없음',sub:'부가세를 빼지 않음'}];
-  function ruleOf(ch){ ch=ch||{}; return {shipRate:num(ch.shipRate)||0,feeVat:ch.feeVat==='inc'?'inc':'',vatMode:ch.vatMode==='sale'||ch.vatMode==='none'?ch.vatMode:''}; }
+  /* roasAdj 최소 ROAS 보정 % (예: 1.5 → × 1.015) · roasAd '' = 광고 중인 상품만, 'all' = 늘 */
+  function ruleOf(ch){ ch=ch||{}; return {shipRate:num(ch.shipRate)||0,feeVat:ch.feeVat==='inc'?'inc':'',vatMode:ch.vatMode==='sale'||ch.vatMode==='none'?ch.vatMode:'',
+    roasAdj:num(ch.roasAdj)||0,roasAd:ch.roasAd==='all'?'all':''}; }
   function ruleText(ch){
     const R=ruleOf(ch), t=['판매가 '+comma(num(ch&&ch.rate)||0)+'%'];
     if(R.shipRate) t.push('배송비 '+comma(R.shipRate)+'%');
     if(R.feeVat) t.push('수수료 부가세 +10%');
     t.push('부가세 '+VAT_MODES.find(m=>m.value===R.vatMode).label);
+    if(R.roasAdj) t.push('ROAS +'+comma(R.roasAdj)+'%'+(R.roasAd?'':'(광고 중)'));
     return t.join(' · ');
   }
   function calc(r){
@@ -16877,9 +16884,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const rev=sale+ship, fee=O('fee')!=null?O('fee'):feeAuto;
     const pre=rev-cost-prime-fee, vatAuto=R.vatMode==='none'?0:(R.vatMode==='sale'?rev/11:pre/11);
     const vat=O('vat')!=null?O('vat'):vatAuto, margin=O('margin')!=null?O('margin'):pre-vat;
+    /* 최소 ROAS 보정 · 판매처 계산법에 적은 % 만큼 높인다(사용자 엑셀 자사몰 광고 중: (판매가+배송비) ÷ 마진 × 1.015) */
+    const roasK=R.roasAdj&&(R.roasAd==='all'||isAd(r))?1+R.roasAdj/100:1;
     return Object.assign(o,{sale,rev,fee,vat,margin,
       disc:O('disc')!=null?O('disc')/100:(price?1-sale/price:null), unit:O('unit')!=null?O('unit'):(units?sale/units:null),
-      mrate:O('mrate')!=null?O('mrate')/100:(rev?margin/rev:null), roas:O('roas')!=null?O('roas')/100:(margin>0?rev/margin:null),
+      mrate:O('mrate')!=null?O('mrate')/100:(rev?margin/rev:null), roas:O('roas')!=null?O('roas')/100:(margin>0?rev/margin*roasK:null),
       settle:O('settle')!=null?O('settle'):rev-fee});
   }
 
@@ -17050,6 +17059,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const ch=COST.data.chans[r.chan]; if(ch){
       const R=ruleOf(ch), fT=tr.querySelector('[data-o="fee"]'), vT=tr.querySelector('[data-o="vat"]');
       if(fT&&num(man.fee)==null) fT.title='판매가 × 수수료율'+(R.shipRate?' + 배송비 × '+comma(R.shipRate)+'%':'')+(R.feeVat?' · 부가세 10% 더함':'')+' · 두 번 눌러 직접 고치기';
+      const rT=tr.querySelector('[data-o="roas"]');
+      if(rT&&num(man.roas)==null&&R.roasAdj) rT.title='(판매가+배송비) ÷ 마진'+(R.roasAd==='all'||isAd(r)?' × '+(1+R.roasAdj/100).toFixed(4).replace(/0+$/,''):'')+' · '+(R.roasAd?'늘':'광고 중일 때만')+' '+comma(R.roasAdj)+'% 보정 · 두 번 눌러 직접 고치기';
       if(vT&&num(man.vat)==null) vT.title='부가세 '+VAT_MODES.find(m=>m.value===R.vatMode).sub+' · 두 번 눌러 직접 고치기'; }
     const cb=tr.querySelector('.pf-cost');
     if(cb){
@@ -17290,13 +17301,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   /* ---------- 판매처 계산법 창 · 판매가 수수료율 · 배송비 수수료율 · 수수료 부가세 · 부가세 계산 ---------- */
   const rdlg=$('pfRuleDlg'); let ruleFor=null;
-  const rFeeVat=window.UI.tabs($('pfRuleFeeVat'),()=>ruleEx()), rVat=window.UI.tabs($('pfRuleVat'),()=>ruleEx());
-  function ruleDraft(){ return {rate:num($('pfRuleRate').value)||0,shipRate:num($('pfRuleShip').value)||0,feeVat:rFeeVat.value||'',vatMode:rVat.value||''}; }
+  const rFeeVat=window.UI.tabs($('pfRuleFeeVat'),()=>ruleEx()), rVat=window.UI.tabs($('pfRuleVat'),()=>ruleEx()), rRoasAd=window.UI.tabs($('pfRuleRoasAd'),()=>ruleEx());
+  function ruleDraft(){ return {rate:num($('pfRuleRate').value)||0,shipRate:num($('pfRuleShip').value)||0,feeVat:rFeeVat.value||'',vatMode:rVat.value||'',
+    roasAdj:num($('pfRuleRoas').value)||0,roasAd:rRoasAd.value||''}; }
   function ruleEx(){
     /* 예시 한 줄 · 판매가 10,000 · 배송비 3,000 일 때 */
     const d=ruleDraft(), fee=(10000*d.rate/100+3000*d.shipRate/100)*(d.feeVat==='inc'?1.1:1);
     $('pfRuleEx').innerHTML='예시 · 판매가 10,000원 · 배송비 3,000원이면 수수료 <b>'+comma(Math.round(fee))+'원</b>'
-      +' · 부가세는 '+esc(VAT_MODES.find(m=>m.value===d.vatMode).sub);
+      +' · 부가세는 '+esc(VAT_MODES.find(m=>m.value===d.vatMode).sub)
+      +(d.roasAdj?' · 최소 ROAS는 '+(d.roasAd?'늘':'광고 중인 상품만')+' × '+esc((1+d.roasAdj/100).toFixed(4).replace(/0+$/,'')):'');
   }
   function openRule(id){
     const ch=COST.data.chans[id]; if(!ch) return;
@@ -17304,12 +17317,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('pfRuleTitle').textContent=(ch.name||'판매처')+' 계산법';
     $('pfRuleRate').value=comma(num(ch.rate)); $('pfRuleShip').value=R.shipRate?comma(R.shipRate):'';
     rFeeVat.set(R.feeVat); rVat.set(R.vatMode);
+    $('pfRuleRoas').value=R.roasAdj?comma(R.roasAdj):''; rRoasAd.set(R.roasAd);
     rdlg.querySelectorAll('input,.ui-tab').forEach(x=>{ x.disabled=ro; });
     $('pfRuleOk').hidden=ro;
     ruleEx(); rdlg.hidden=false; if(!ro) $('pfRuleRate').focus();
   }
   function closeRule(){ rdlg.hidden=true; ruleFor=null; }
-  ['pfRuleRate','pfRuleShip'].forEach(id=>$(id).addEventListener('input',ruleEx));
+  ['pfRuleRate','pfRuleShip','pfRuleRoas'].forEach(id=>$(id).addEventListener('input',ruleEx));
   $('pfRuleOk').addEventListener('click',()=>{
     const ch=ruleFor&&COST.data.chans[ruleFor];
     if(ch&&canEdit()){
