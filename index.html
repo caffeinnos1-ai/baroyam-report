@@ -2351,6 +2351,73 @@ window.BAROYAM_FONT=(function(){
   .profit-empty{margin-top:34px;min-height:360px;display:grid;place-items:center;border:1px dashed var(--line);
     border-radius:16px;color:var(--mute);font-size:15px;font-weight:500}
   .profit-empty[hidden]{display:none}
+  /* 인스타콘텐츠 › 일정 (ig-*) · 캘린더 모양은 프로젝트 캘린더(.pj-mcal-*)를 그대로 쓰고, 오른쪽에 다가오는 업로드 목록을 둔다 */
+  .ig-plan{margin-top:22px;display:flex;flex-direction:column;gap:14px}
+  .ig-plan[hidden]{display:none}
+  .ig-tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px}
+  .ig-tools .ig-grp{display:flex;align-items:center;gap:8px}
+  .ig-tools .ig-grp>span{font-size:12px;font-weight:500;color:var(--mute)}
+  .ig-tools #igQ{width:200px}
+  .ig-tools .ig-end{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .ig-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+  .ig-body .pj-mcal-week{min-height:118px}
+  .ig-dot{display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:6px;background:var(--bar,var(--mute));flex:none}
+  .ig-chip-c{display:inline-flex;align-items:center}
+  /* 막대 · 완료는 흐리게 + ✓, 지난 예정(아직 안 올림)은 빨간 점 */
+  #igCal .pj-mcal-bar .tm{flex:none;margin-right:6px;font-weight:500;color:var(--mute);font-variant-numeric:tabular-nums}
+  #igCal .pj-mcal-bar .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #igCal .pj-mcal-bar.is-done{opacity:.55}
+  #igCal .pj-mcal-bar.is-done .nm::before{content:"✓ ";color:var(--pos)}
+  #igCal .pj-mcal-bar.is-late::after{content:"";flex:none;width:6px;height:6px;margin-left:6px;border-radius:99px;background:var(--neg)}
+  /* 오른쪽 · 다가오는 업로드 */
+  .ig-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:20px;background:var(--paper);
+    box-shadow:var(--mh-card-shadow);max-height:calc(100vh - 32px);min-height:0}
+  .ig-side h3{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
+  .ig-side-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .ig-pace{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .ig-pace div{padding:9px 10px;border-radius:12px;background:var(--chip-flat)}
+  .ig-pace b{display:block;font-size:17px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ig-pace b span{font-size:12px;font-weight:500;color:var(--mute)}
+  .ig-pace small{display:block;margin-top:1px;font-size:11px;font-weight:500;color:var(--mute)}
+  .ig-pace .is-warn b{color:var(--warn)}
+  .ig-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;margin:0 -6px;padding:0 6px}
+  .ig-day{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+  .ig-day:first-child{border-top:0}
+  .ig-when{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding-top:4px}
+  .ig-when b{font-size:13px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ig-when small{font-size:11px;font-weight:500;color:var(--mute)}
+  .ig-when.is-today b,.ig-when.is-today small{color:var(--btn)}
+  .ig-when.is-sun b{color:var(--neg)}
+  .ig-when.is-late b{color:var(--neg)}
+  .ig-posts{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .ig-post{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:6px;min-width:0;padding:6px 8px;border-radius:8px;cursor:pointer;
+    border-left:3px solid var(--bar);background:color-mix(in srgb,var(--bar) 10%,var(--paper));font-size:12.5px;font-weight:500;color:var(--ink)}
+  .ig-post:hover{background:color-mix(in srgb,var(--bar) 20%,var(--paper))}
+  .ig-post:focus-visible{box-shadow:var(--ui-ring)}
+  .ig-post .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ig-post .tm,.ig-post .st{flex:none;font-size:11px;font-weight:500;color:var(--mute);font-variant-numeric:tabular-nums}
+  .ig-post.is-done{opacity:.55}
+  .ig-post.is-late .st{color:var(--neg)}
+  .ig-empty{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px;padding:0 8px;
+    border:1px dashed var(--line);border-radius:8px;font-size:12px;font-weight:500;color:var(--mute);cursor:pointer}
+  .ig-empty:hover{border-color:var(--btn);color:var(--btn-soft-ink);background:var(--btn-soft)}
+  .ig-empty:focus-visible{box-shadow:var(--ui-ring)}
+  .ig-empty b{font-weight:600}
+  .ig-empty.is-long{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));color:var(--warn)}
+  .ig-none{padding:28px 0;text-align:center;font-size:12.5px;color:var(--mute)}
+  .ig-trash{align-self:flex-start;font-size:12px}
+  .ig-trash[hidden]{display:none}
+  /* 일정 창 */
+  .settings-panel.ig-dlg{max-width:520px;height:auto;max-height:90vh}
+  .ig-form{flex:1;min-height:0;overflow-y:auto;padding:16px 22px 4px;display:flex;flex-direction:column;gap:14px}
+  .ig-form label,.ig-form .ig-f{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:500;color:var(--mute)}
+  .ig-form .ig-row2{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}
+  .ig-form textarea.ui-field{height:auto;min-height:84px;padding:9px 12px;resize:vertical;line-height:1.5;font:inherit;font-size:13.5px}
+  .ig-form .ig-meta{font-size:11.5px;color:var(--mute)}
+  .ig-form .ig-meta:empty{display:none}
+  .ig-dlg [hidden]{display:none}
+  @media (max-width:1100px){ .ig-body{grid-template-columns:1fr} .ig-side{position:static;max-height:none} .ig-list{max-height:420px} }
+  @media (max-width:760px){ .ig-tools #igQ{width:100%} .ig-tools .ig-end{margin-left:0;width:100%} .ig-form .ig-row2{grid-template-columns:1fr} }
   /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
   .cm-make{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
   .cm-make>aside.cm-col{position:sticky;top:16px}
@@ -10328,9 +10395,57 @@ window.BAROYAM_FONT=(function(){
             <div class="psub" id="instaViewSub">게시물·릴스의 조회·반응·팔로워 변화를 봅니다.</div>
           </div>
           <div class="profit-empty" data-insta-pane="perf">아직 준비 중인 화면입니다.</div>
-          <div class="profit-empty" data-insta-pane="plan" hidden>아직 준비 중인 화면입니다.</div>
+          <!-- 일정 · 인스타 담당자가 날마다 무엇을 올릴지 미리 짜 두는 캘린더 · 프로젝트와 다른 저장 칸(app_settings insta_schedule_v1) ·
+               담당자 없음 · 거르기는 형식·상태·검색 · 오른쪽에 오늘부터 며칠 동안의 업로드와 비어 있는 날 -->
+          <div class="ig-plan" data-insta-pane="plan" hidden>
+            <div class="ig-tools">
+              <div class="ig-grp"><span>형식</span><div class="ui-chips" id="igTypeF"></div></div>
+              <div class="ig-grp"><span>상태</span><div class="ui-chips" id="igStateF"></div></div>
+              <div class="ig-end">
+                <input class="ui-field sm" id="igQ" placeholder="제목·메모 검색" aria-label="일정 검색">
+                <button type="button" class="ui-btn primary" id="igAdd">+ 업로드 일정</button>
+              </div>
+            </div>
+            <div class="ig-body">
+              <div class="pj-mcal" id="igCal"></div>
+              <aside class="ig-side" aria-label="다가오는 업로드">
+                <div class="ig-side-head"><h3>다가오는 업로드</h3>
+                  <div class="ui-tabs" id="igRange"><button class="ui-tab" data-value="7">7일</button><button class="ui-tab" data-value="14">14일</button><button class="ui-tab" data-value="30">30일</button></div></div>
+                <div class="ig-pace" id="igPace"></div>
+                <div class="ig-list" id="igList"></div>
+                <button type="button" class="ui-btn ghost sm ig-trash" id="igTrash" hidden></button>
+              </aside>
+            </div>
+          </div>
           <div class="profit-empty" data-insta-pane="upload" hidden>아직 준비 중인 화면입니다.</div>
         </section>
+        <!-- 업로드 일정 창 · 새로 만들기·고치기 같이 쓴다 -->
+        <div class="settings-overlay" id="igDlg" hidden>
+          <div class="settings-panel ig-dlg" role="dialog" aria-modal="true" aria-labelledby="igDlgTitle">
+            <div class="settings-head">
+              <h2 id="igDlgTitle">업로드 일정</h2>
+              <button type="button" class="settings-close" data-ig-close aria-label="닫기">✕</button>
+            </div>
+            <div class="ig-form">
+              <label>제목<input class="ui-field" id="igTitle" maxlength="120" placeholder="예: 신제품 언박싱 릴스" autocomplete="off"></label>
+              <div class="ig-row2">
+                <div class="ig-f">업로드 날짜<button type="button" id="igDate"></button></div>
+                <div class="ig-f">시간<button type="button" class="ui-field" id="igTime" aria-haspopup="listbox"></button></div>
+              </div>
+              <div class="ig-f">형식<div class="ui-chips" id="igType"></div></div>
+              <div class="ig-f">상태<div class="ui-chips" id="igState"></div></div>
+              <label>메모<textarea class="ui-field" id="igMemo" maxlength="3000" placeholder="문구·해시태그·참고 링크 등"></textarea></label>
+              <div class="ig-meta" id="igMeta"></div>
+            </div>
+            <div class="pf-mix-foot">
+              <button type="button" class="ui-btn ghost danger" id="igDel">삭제</button>
+              <button type="button" class="ui-btn ghost" id="igCopy">복제</button>
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn ghost" data-ig-close>취소</button>
+              <button type="button" class="ui-btn primary" id="igOk">저장</button>
+            </div>
+          </div>
+        </div>
       </div><!-- /view-insta -->
       <!-- 견적서 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-quote" style="display:none">
@@ -12501,7 +12616,7 @@ window.CsGuide=(function(){
     ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
     ['profit',1,'손익·마진 관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
-    ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','자리만 있음 · 아직 내용이 없습니다.'],
+    ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','일정은 업로드 예정 캘린더(insta_schedule_v1 · 프로젝트와 따로) · 바꾼 일정만 얹어 저장하고 지우기는 del 표시만. 성과·업로드는 아직 자리만 있습니다.'],
     ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
     ['drive',1,'드라이브','자산 찾기 · 업로드','구글드라이브 색인(drive_assets_v1)을 브랜드·종류로 거릅니다. 업로드·삭제(휴지통)는 구글 권한으로 드라이브에 직접 합니다.'],
     ['trend',1,'트렌드분석','구글 · 네이버','GitHub Actions 가 모은 trend_google · trend_naver 표를 읽기만 합니다.'],
@@ -14046,6 +14161,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     document.body.classList.toggle('view-is-profit',v==='profit');
     if(v==='profit'&&window.baroyamProfitOpen) window.baroyamProfitOpen();
     if(v==='ops'&&window.baroyamOpsOpen) window.baroyamOpsOpen();
+    if(v==='insta'&&window.baroyamInstaOpen) window.baroyamInstaOpen();
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
@@ -16742,12 +16858,383 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     title.textContent=el.textContent.trim(); sub.textContent=el.dataset.sub||'';
     panes.forEach(p=>{ p.hidden=p.dataset.instaPane!==el.dataset.insta; });
+    if(el.dataset.insta==='plan'&&window.baroyamInstaPlan&&document.getElementById('view-insta').style.display!=='none') window.baroyamInstaPlan.open();
   }
   pick(cur);
   items.forEach(el=>el.addEventListener('click',()=>{
     try{ localStorage.setItem('baroyam_insta_tab',el.dataset.insta); }catch(e){}
     pick(el);
   }));
+  window.baroyamInstaOpen=function(){ pick(cur); };
+})();
+
+/* ===== 인스타콘텐츠 › 일정 · 업로드 예정 캘린더 =====
+   app_settings 한 칸 insta_schedule_v1 = {posts:{id:{id,title,date('YYYY-MM-DD' 업로드 날),time('HH:MM'|''),type,state,memo,ord,at,del}}} ·
+   프로젝트(projects 표)와 따로다 · 담당자 칸 없음(누가 맡는지가 아니라 언제 무엇을 올리는지만 본다) ·
+   기록이 사라지지 않게: 목록을 id 객체로 두고 지우기는 del(시각)만 단다(실제로 빼지 않음 · "지운 일정"에서 되살림) ·
+   저장은 통째로 덮지 않고 saveMerged + merge3(마지막으로 맞춘 서버본 = 이 창 메모리) 로 고친 일정의 고친 칸만 얹는다 ·
+   못 보낸 고침은 localStorage 에 base 와 짝으로 남겨 창이 꺼져도 다음에 열면 이어서 보낸다 · 바뀌기 전 값은 서버 app_settings_history 에 남는다 */
+(function(){
+  const root=document.querySelector('#view-insta .ig-plan');
+  if(!root) return;
+  const KEY='insta_schedule_v1', DRAFT='baroyam_insta_draft_v1', IG_REV=1;
+  const DB=()=>window.BAROYAM_DB;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
+  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const TAB=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const isDay=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''));
+  const today=()=>new Date(Date.now()+9*3600*1000).toISOString().slice(0,10);
+  function dayAdd(d,n){ const [y,m,dd]=d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); }
+  const DOW=['일','월','화','수','목','금','토'];
+  const dow=d=>new Date(d+'T00:00:00Z').getUTCDay();
+  const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8));
+
+  /* 형식 · 판매처 색 변수를 빌려 다크 모드에서도 맞는 색 */
+  const TYPES=[{k:'feed',l:'피드',c:'var(--self)'},{k:'reels',l:'릴스',c:'var(--talk)'},{k:'carousel',l:'캐러셀',c:'var(--coupang)'},{k:'story',l:'스토리',c:'var(--naver)'}];
+  const STATES=[{k:'plan',l:'기획'},{k:'make',l:'제작 중'},{k:'ready',l:'업로드 준비'},{k:'done',l:'업로드 완료'}];
+  const typeOf=k=>TYPES.find(t=>t.k===k)||TYPES[0];
+  const stateOf=k=>STATES.find(t=>t.k===k)||STATES[0];
+
+  /* ---------- 저장 ---------- */
+  const norm=v=>{ v=obj(v); const posts={}; Object.keys(obj(v.posts)).forEach(id=>{ const p=v.posts[id]; if(p&&typeof p==='object') posts[id]=Object.assign({},p,{id:id}); }); return Object.assign({},v,{posts:posts}); };
+  const st={data:norm({}),base:null,loaded:false,error:false,dirty:false,busy:false,timer:null};
+  function persist(){
+    try{
+      if(st.dirty||st.busy) localStorage.setItem(DRAFT,JSON.stringify({at:Date.now(),tab:TAB,local:st.data,base:st.base}));
+      else localStorage.removeItem(DRAFT);
+    }catch(e){}
+  }
+  /* 다른 창이 남기고 꺼진 고침(30초 넘게 소식 없음)만 이어받는다 */
+  function restore(){
+    try{
+      const d=JSON.parse(localStorage.getItem(DRAFT)||'null');
+      if(!d||d.tab===TAB||Date.now()-(d.at||0)<30000||!d.local) return false;
+      st.data=norm(d.local); st.base=d.base?norm(d.base):null; st.dirty=true; return true;
+    }catch(e){ return false; }
+  }
+  async function load(){
+    const db=DB(); if(!db||!db.loadSetting){ st.error=true; return; }
+    if(st.dirty||st.busy||st.timer) return;
+    let v;
+    try{ v=await db.loadSetting(KEY,true); }catch(e){ console.error(e); st.error=!st.loaded; paint(); return; }
+    if(st.dirty||st.busy||st.timer) return;
+    if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+    st.error=false;
+    if(!st.loaded&&restore()){ st.loaded=true; paint(); st.timer=setTimeout(flush,300); return; }
+    const next=v?norm(v):st.data;
+    const changed=!st.loaded||!same(next,st.data);
+    st.data=next; st.base=v?clone(next):null; st.loaded=true;
+    if(changed) paint();
+  }
+  function mark(){
+    st.dirty=true; persist();
+    const db=DB(); if(db&&db.saveNotice) db.saveNotice(KEY,'pending');
+    clearTimeout(st.timer); st.timer=setTimeout(flush,700);
+    paint();
+  }
+  async function flush(){
+    st.timer=null;
+    if(st.busy){ st.timer=setTimeout(flush,400); return; }
+    if(!st.dirty) return;
+    const db=DB(); if(!db||!db.saveMerged) return;
+    st.busy=true; st.dirty=false;
+    const sent=clone(st.data), base=st.base;
+    let r=null;
+    try{
+      r=await db.saveMerged(KEY,function(server){
+        if(typeof server==='string'){ try{ server=JSON.parse(server); }catch(e){ server=null; } }
+        const sv=server?norm(server):null;
+        const next=!sv?sent:(base?db.merge3(base,sent,sv):db.union(sent,sv));
+        return Object.assign({},next,{_rev:IG_REV,updatedAt:Date.now()});
+      });
+    }catch(e){ console.error(e); r=null; }
+    st.busy=false;
+    if(!r){
+      st.dirty=true; persist();
+      if(db.saveNotice) db.saveNotice(KEY,'failing');
+      clearTimeout(st.timer); st.timer=setTimeout(flush,15000);
+      return;
+    }
+    const res=norm(r);
+    st.base=clone(res);
+    const now=st.data;
+    st.data=same(now,sent)?res:norm(db.merge3(sent,now,res));
+    persist();
+    if(!st.dirty&&db.saveNotice) db.saveNotice(KEY,'ok');
+    if(!same(st.data,now)) paint();
+  }
+  function setPost(id,patch){
+    const p=st.data.posts[id]||{id:id};
+    st.data.posts[id]=Object.assign({},p,patch,{id:id,at:Date.now()});
+    mark();
+  }
+  const live=()=>Object.values(st.data.posts).filter(p=>p&&!p.del&&isDay(p.date));
+  const sortPosts=(a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'99').localeCompare(b.time||'99')||(a.ord||0)-(b.ord||0);
+  const isLate=p=>p.state!=='done'&&p.date<today();
+
+  /* ---------- 거르기 ---------- */
+  const F={type:new Set(),state:'',q:''};
+  let calMonth=today().slice(0,7), range=14;
+  try{ const r=+localStorage.getItem('baroyam_insta_range'); if([7,14,30].indexOf(r)>=0) range=r; }catch(e){}
+  function match(p){
+    if(F.type.size&&!F.type.has(p.type||'feed')) return false;
+    if(F.state==='todo'&&p.state==='done') return false;
+    if(F.state==='late'&&!isLate(p)) return false;
+    if(F.state==='done'&&p.state!=='done') return false;
+    if(F.q&&((p.title||'')+' '+(p.memo||'')).toLowerCase().indexOf(F.q)<0) return false;
+    return true;
+  }
+  function paintFilters(all){
+    const cnt=k=>all.filter(p=>(p.type||'feed')===k).length;
+    $('igTypeF').innerHTML='<button type="button" class="ui-chip" data-t="" aria-pressed="'+(!F.type.size)+'">전체</button>'
+      +TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-t="'+t.k+'" aria-pressed="'+F.type.has(t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+t.l+' <b>'+cnt(t.k)+'</b></button>').join('');
+    const late=all.filter(isLate).length;
+    const SF=[{k:'',l:'전체'},{k:'todo',l:'업로드 예정',n:all.filter(p=>p.state!=='done').length},{k:'done',l:'업로드 완료',n:all.filter(p=>p.state==='done').length},{k:'late',l:'지난 예정',n:late}];
+    $('igStateF').innerHTML=SF.filter(x=>x.k!=='late'||late||F.state==='late').map(x=>'<button type="button" class="ui-chip" data-s="'+x.k+'" aria-pressed="'+(F.state===x.k)+'">'+x.l+(x.n!=null?' <b>'+x.n+'</b>':'')+'</button>').join('');
+  }
+
+  /* ---------- 캘린더 · 한 주 한 줄, 날마다 그날 올릴 것이 시간 순으로 쌓인다 ---------- */
+  let drag=null, justDragged=false;
+  function paintCal(list){
+    const host=$('igCal'), t=today();
+    const [y,m]=calMonth.split('-').map(Number);
+    const firstDow=new Date(Date.UTC(y,m-1,1)).getUTCDay();
+    const days=new Date(Date.UTC(y,m,0)).getUTCDate();
+    const weeks=Math.ceil((firstDow+days)/7);
+    const gridStart=dayAdd(calMonth+'-01',-firstDow);
+    const byDay={};
+    list.forEach(p=>{ const d=drag&&drag.moved&&drag.id===p.id?drag.to:p.date; (byDay[d]=byDay[d]||[]).push(p); });
+    Object.keys(byDay).forEach(k=>byDay[k].sort(sortPosts));
+    const inMonth=list.filter(p=>p.date.slice(0,7)===calMonth).length;
+    let body='';
+    for(let w=0;w<weeks;w++){
+      const ws=dayAdd(gridStart,w*7);
+      let cells='', bars='', rows=0;
+      for(let i=0;i<7;i++){
+        const d=dayAdd(ws,i), ps=byDay[d]||[];
+        rows=Math.max(rows,ps.length);
+        cells+='<div class="pj-mcal-day'+(d.slice(0,7)!==calMonth?' is-out':'')+(d===t?' is-today':'')+'" data-date="'+d+'" style="grid-column:'+(i+1)+'">'
+          +'<span class="pj-mcal-num num">'+(+d.slice(8))+'</span><button type="button" class="pj-mcal-add" data-add-date="'+d+'" aria-label="'+md(d)+' 업로드 일정 추가" title="이 날 업로드 일정 추가">+</button></div>';
+        ps.forEach((p,k)=>{
+          const ty=typeOf(p.type);
+          bars+='<button type="button" class="pj-mcal-bar can-drag'+(p.state==='done'?' is-done':'')+(isLate(p)?' is-late':'')+(drag&&drag.moved&&drag.id===p.id?' is-dragging':'')+'" data-id="'+esc(p.id)+'"'
+            +' style="grid-column:'+(i+1)+';grid-row:'+(k+2)+';--bar:'+ty.c+'"'
+            +' title="'+esc(p.title||'제목 없음')+' · '+ty.l+' · '+stateOf(p.state).l+(p.time?' · '+p.time:'')+(isLate(p)?' · 날짜가 지났는데 아직 업로드 완료가 아닙니다':'')+' · 끌어서 날짜 옮기기">'
+            +(p.time?'<span class="tm">'+esc(p.time)+'</span>':'')+'<span class="nm">'+esc(p.title||'제목 없음')+'</span></button>';
+        });
+      }
+      body+='<div class="pj-mcal-week" style="grid-template-rows:32px repeat('+rows+',22px) minmax(8px,1fr)">'+cells+bars+'</div>';
+    }
+    host.innerHTML='<div class="pj-mcal-head">'
+        +'<span class="pj-mcal-count">이 달 '+inMonth+'개</span>'
+        +'<span class="pj-mcal-hint">날짜 칸 + 로 더하고 · 끌어서 날짜를 옮기고 · 누르면 열립니다</span>'
+        +'<div class="pj-mcal-move">'
+          +'<button type="button" class="ui-btn ghost sm icon" data-cal="prev" aria-label="이전 달">‹</button>'
+          +'<b class="pj-mcal-month">'+y+'년 '+m+'월</b>'
+          +'<button type="button" class="ui-btn ghost sm icon" data-cal="next" aria-label="다음 달">›</button>'
+          +'<button type="button" class="ui-btn soft sm" data-cal="today">이번 달</button>'
+        +'</div></div>'
+      +'<div class="pj-mcal-box"><div class="pj-mcal-dow">'+DOW.map(d=>'<span>'+d+'</span>').join('')+'</div>'+body
+      +(inMonth?'':'<div class="pj-mcal-empty">'+(st.error?'일정을 불러오지 못했습니다 · 잠시 뒤 다시 엽니다':st.loaded?'이 달에 잡힌 업로드가 없습니다':'불러오는 중…')+'</div>')+'</div>';
+  }
+
+  /* ---------- 오른쪽 · 오늘부터 range 일 · 날마다 올릴 것을 보이고, 연달아 비어 있는 날은 한 줄로 묶어 채우기를 권한다 ---------- */
+  function paintSide(list){
+    const t=today(), end=dayAdd(t,range-1);
+    const ins=list.filter(p=>p.date>=t&&p.date<=end).sort(sortPosts);
+    const late=list.filter(isLate).sort(sortPosts);
+    const byDay={}; ins.forEach(p=>(byDay[p.date]=byDay[p.date]||[]).push(p));
+    const empty=range-Object.keys(byDay).length;
+    let longest=0, run=0;
+    for(let i=0;i<range;i++){ if(byDay[dayAdd(t,i)]) run=0; else{ run++; if(run>longest) longest=run; } }
+    $('igPace').innerHTML='<div><b>'+ins.length+'</b><small>올릴 것</small></div>'
+      +'<div'+(empty>range/2?' class="is-warn"':'')+'><b>'+empty+'<span>/'+range+'일</span></b><small>비어 있는 날</small></div>'
+      +'<div'+(longest>=3?' class="is-warn"':'')+'><b>'+longest+'<span>일</span></b><small>가장 긴 공백</small></div>';
+    const post=p=>{ const ty=typeOf(p.type);
+      return '<button type="button" class="ig-post'+(p.state==='done'?' is-done':'')+(isLate(p)?' is-late':'')+'" data-id="'+esc(p.id)+'" style="--bar:'+ty.c+'" title="'+esc(ty.l+' · '+stateOf(p.state).l)+'">'
+        +(p.time?'<span class="tm">'+esc(p.time)+'</span>':'')+'<span class="nm">'+esc(p.title||'제목 없음')+'</span><span class="st">'+(isLate(p)?md(p.date)+' 지남':esc(stateOf(p.state).l))+'</span></button>'; };
+    const when=(d,sub)=>'<div class="ig-when'+(d===t?' is-today':'')+(dow(d)===0?' is-sun':'')+'"><b>'+md(d)+' '+DOW[dow(d)]+'</b><small>'+sub+'</small></div>';
+    const dd=i=>i===0?'오늘':i===1?'내일':'D-'+i;
+    let html='';
+    if(late.length) html+='<div class="ig-day"><div class="ig-when is-late"><b>지난 예정</b><small>'+late.length+'개</small></div><div class="ig-posts">'+late.map(post).join('')+'</div></div>';
+    for(let i=0;i<range;){
+      const d=dayAdd(t,i);
+      if(byDay[d]){ html+='<div class="ig-day">'+when(d,dd(i))+'<div class="ig-posts">'+byDay[d].map(post).join('')+'</div></div>'; i++; continue; }
+      let j=i; while(j+1<range&&!byDay[dayAdd(t,j+1)]) j++;
+      const n=j-i+1;
+      html+='<div class="ig-day">'+when(d,dd(i))+'<div class="ig-posts"><button type="button" class="ig-empty'+(n>=3?' is-long':'')+'" data-add-date="'+d+'" title="'+md(d)+'에 업로드 일정 추가">'
+        +'<span>'+(n===1?'비어 있음':'<b>'+md(d)+' ~ '+md(dayAdd(t,j))+'</b> · '+n+'일 비어 있음')+'</span><span>+ 채우기</span></button></div></div>';
+      i=j+1;
+    }
+    $('igList').innerHTML=st.loaded?html:'<div class="ig-none">'+(st.error?'불러오지 못했습니다':'불러오는 중…')+'</div>';
+    const trash=Object.values(st.data.posts).filter(p=>p&&p.del);
+    const tb=$('igTrash'); tb.hidden=!trash.length; tb.textContent='지운 일정 '+trash.length+'개 · 되살리기';
+  }
+
+  function paint(){
+    if(!$('igCal')) return;
+    const all=live();
+    paintFilters(all);
+    const list=all.filter(match);
+    paintCal(list);
+    paintSide(list);
+  }
+
+  /* ---------- 일정 창 ---------- */
+  const dlg=$('igDlg');
+  let editId=null, form={};
+  const datePick=window.UI&&window.UI.datePicker?window.UI.datePicker($('igDate'),{mode:'single',onChange:v=>{ form.date=v; }}):null;
+  const TIMES=[{value:'',label:'시간 없음'}];
+  for(let h=7;h<=23;h++) ['00','30'].forEach(mm=>TIMES.push({value:String(h).padStart(2,'0')+':'+mm,label:(h<12?'오전 ':'오후 ')+((h+11)%12+1)+':'+mm}));
+  function paintForm(){
+    $('igTime').innerHTML='<span class="t'+(form.time?'':' ph')+'">'+(form.time?esc((TIMES.find(x=>x.value===form.time)||{label:form.time}).label):'시간 없음')+'</span>';
+    $('igType').innerHTML=TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-v="'+t.k+'" aria-pressed="'+(form.type===t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+t.l+'</button>').join('');
+    $('igState').innerHTML=STATES.map(t=>'<button type="button" class="ui-chip" data-v="'+t.k+'" aria-pressed="'+(form.state===t.k)+'">'+t.l+'</button>').join('');
+  }
+  function openDlg(id,preset){
+    const p=id&&st.data.posts[id];
+    editId=p?id:null;
+    form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:p.state||'plan',memo:p.memo||''}
+          :Object.assign({title:'',date:today(),time:'',type:'feed',state:'plan',memo:''},preset||{});
+    $('igDlgTitle').textContent=p?'업로드 일정 고치기':'새 업로드 일정';
+    $('igTitle').value=form.title; $('igMemo').value=form.memo;
+    if(datePick) datePick.set(form.date);
+    $('igDel').hidden=!p; $('igCopy').hidden=!p;
+    $('igMeta').textContent=p&&p.at?'마지막 수정 '+new Date(p.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    paintForm();
+    dlg.hidden=false;
+    setTimeout(()=>$('igTitle').focus(),0);
+  }
+  function closeDlg(){ dlg.hidden=true; editId=null; }
+  function saveDlg(){
+    form.title=$('igTitle').value.trim(); form.memo=$('igMemo').value;
+    if(!form.title){ $('igTitle').focus(); return; }
+    if(!isDay(form.date)) form.date=today();
+    const id=editId||uid();
+    const patch={title:form.title,date:form.date,time:form.time,type:form.type,state:form.state,memo:form.memo};
+    if(!editId) patch.ord=Date.now();
+    closeDlg();
+    calMonth=form.date.slice(0,7);
+    setPost(id,patch);
+  }
+  dlg.addEventListener('click',e=>{
+    if(e.target===dlg||e.target.closest('[data-ig-close]')){ closeDlg(); return; }
+    const c=e.target.closest('#igType .ui-chip,#igState .ui-chip');
+    if(c){ form.title=$('igTitle').value; form.memo=$('igMemo').value; form[c.parentElement.id==='igType'?'type':'state']=c.dataset.v; paintForm(); }
+  });
+  $('igTime').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('igTime'),TIMES,form.time,v=>{ form.time=v; paintForm(); }); });
+  $('igOk').addEventListener('click',saveDlg);
+  $('igTitle').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); saveDlg(); } });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!dlg.hidden&&!(document.getElementById('askDlg')&&!document.getElementById('askDlg').hidden)) closeDlg(); });
+  $('igCopy').addEventListener('click',()=>{
+    if(!editId) return;
+    form.title=$('igTitle').value.trim(); form.memo=$('igMemo').value;
+    const preset=Object.assign({},form,{state:form.state==='done'?'plan':form.state,title:form.title+' (복사)'});
+    closeDlg(); openDlg(null,preset);
+  });
+  $('igDel').addEventListener('click',async()=>{
+    if(!editId) return;
+    const id=editId, p=st.data.posts[id];
+    const ok=await (window.baroyamAsk?window.baroyamAsk('이 업로드 일정을 지울까요?','"'+(p.title||'제목 없음')+'" · 지운 일정은 "지운 일정 되살리기"에서 언제든 다시 꺼낼 수 있습니다.'):Promise.resolve(window.confirm('지울까요?')));
+    if(!ok) return;
+    closeDlg();
+    setPost(id,{del:Date.now()});
+  });
+
+  /* ---------- 거르기·캘린더·목록 누르기 ---------- */
+  root.addEventListener('click',e=>{
+    const tc=e.target.closest('#igTypeF .ui-chip');
+    if(tc){ const k=tc.dataset.t; if(!k) F.type.clear(); else if(F.type.has(k)) F.type.delete(k); else F.type.add(k); paint(); return; }
+    const sc=e.target.closest('#igStateF .ui-chip');
+    if(sc){ F.state=F.state===sc.dataset.s?'':sc.dataset.s; paint(); return; }
+    const nav=e.target.closest('[data-cal]');
+    if(nav){
+      const k=nav.dataset.cal;
+      if(k==='today') calMonth=today().slice(0,7);
+      else{ const [y,m]=calMonth.split('-').map(Number); calMonth=new Date(Date.UTC(y,m-1+(k==='next'?1:-1),1)).toISOString().slice(0,7); }
+      paint(); return;
+    }
+    const add=e.target.closest('[data-add-date]');
+    if(add){ openDlg(null,{date:add.dataset.addDate}); return; }
+    const bar=e.target.closest('.pj-mcal-bar,.ig-post');
+    if(bar){
+      if(justDragged){ justDragged=false; return; }
+      const p=st.data.posts[bar.dataset.id];
+      if(!p) return;
+      if(bar.classList.contains('ig-post')&&p.date.slice(0,7)!==calMonth){ calMonth=p.date.slice(0,7); paint(); }
+      openDlg(p.id);
+    }
+  });
+  $('igAdd').addEventListener('click',()=>{
+    /* 새 일정은 오늘부터 보아 처음 비어 있는 날로 잡는다 · 하루 비우지 않고 고르게 채우도록 */
+    const has=new Set(live().map(p=>p.date));
+    let d=today(); for(let i=0;i<60&&has.has(d);i++) d=dayAdd(d,1);
+    openDlg(null,{date:d});
+  });
+  $('igQ').addEventListener('input',e=>{ F.q=e.target.value.trim().toLowerCase(); paint(); });
+  $('igTrash').addEventListener('click',e=>{
+    e.stopPropagation();
+    const trash=Object.values(st.data.posts).filter(p=>p&&p.del).sort((a,b)=>(b.del||0)-(a.del||0));
+    window.UI.menu($('igTrash'),trash.map(p=>({value:p.id,label:p.title||'제목 없음',sub:(isDay(p.date)?md(p.date)+' · ':'')+'되살리기'})),null,id=>{
+      const p=st.data.posts[id]; if(p&&isDay(p.date)) calMonth=p.date.slice(0,7);
+      setPost(id,{del:null});
+    });
+  });
+  if(window.UI&&window.UI.tabs){
+    window.UI.tabs($('igRange'),v=>{ range=+v||14; try{ localStorage.setItem('baroyam_insta_range',String(range)); }catch(e){} paint(); }).set(String(range));
+  }
+
+  /* 막대 끌기 · 다른 날 칸에 놓으면 업로드 날짜가 바뀐다(시간은 그대로) · 프로젝트 캘린더처럼 좌표로 날짜를 찾는다 */
+  const cal=$('igCal');
+  function dateAt(x,y){
+    const weeks=[...cal.querySelectorAll('.pj-mcal-week')];
+    if(!weeks.length) return null;
+    let wk=weeks[0], best=Infinity;
+    weeks.forEach(w=>{ const r=w.getBoundingClientRect(); const d=y<r.top?r.top-y:y>r.bottom?y-r.bottom:0; if(d<best){ best=d; wk=w; } });
+    let day=null; best=Infinity;
+    wk.querySelectorAll('.pj-mcal-day').forEach(c=>{ const r=c.getBoundingClientRect(); if(!r.width) return;
+      const d=x<r.left?r.left-x:x>r.right?x-r.right:0; if(d<best){ best=d; day=c; } });
+    return day?day.dataset.date:null;
+  }
+  function endDrag(apply){
+    const d=drag; drag=null;
+    document.body.classList.remove('pj-mcal-dragging');
+    if(!d||!d.moved) return;
+    justDragged=true; setTimeout(()=>{ justDragged=false; },0);
+    const p=st.data.posts[d.id];
+    if(apply&&p&&d.to&&d.to!==p.date) setPost(d.id,{date:d.to});
+    else paint();
+  }
+  cal.addEventListener('pointerdown',e=>{
+    if(e.button!==0) return;
+    const bar=e.target.closest('.pj-mcal-bar.can-drag'); if(!bar) return;
+    const p=st.data.posts[bar.dataset.id]; if(!p) return;
+    drag={id:p.id,to:p.date,moved:false,x:e.clientX,y:e.clientY};
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove',e=>{
+    if(!drag) return;
+    if(!drag.moved){
+      if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)<5) return;
+      drag.moved=true; document.body.classList.add('pj-mcal-dragging');
+    }
+    const at=dateAt(e.clientX,e.clientY);
+    if(!at||(at===drag.to&&cal.querySelector('.pj-mcal-bar.is-dragging'))) return;
+    drag.to=at; paint();
+  });
+  window.addEventListener('pointerup',()=>{ if(drag) endDrag(true); });
+  window.addEventListener('pointercancel',()=>{ if(drag) endDrag(false); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&drag) endDrag(false); });
+
+  /* 화면을 열 때·탭으로 돌아올 때·1분마다(보낼 것이 없고 창이 닫혀 있을 때) 서버본을 다시 받아 다른 PC 고침을 보인다 */
+  const visible=()=>!root.hidden&&$('view-insta').style.display!=='none'&&!document.hidden;
+  document.addEventListener('visibilitychange',()=>{ if(visible()&&dlg.hidden) load(); });
+  setInterval(()=>{ if(visible()&&dlg.hidden&&!drag) load(); },60000);
+  window.baroyamInstaPlan={open(){ paint(); load(); }};
 })();
 
 /* 손익·마진 관리 · 배너 위 단추 세 개(마진 계산기 / 품목별 원가표 / 순수익 요약) · 고른 것은 이 브라우저에 기억한다 */
