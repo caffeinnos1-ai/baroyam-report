@@ -12827,8 +12827,8 @@ window.CsGuide=(function(){
     ['slack',3,'슬랙','#공지사항 · 개인 메시지','김비서와 당일판매 보고가 나가는 곳입니다.'],
     ['ezadmin',3,'이지어드민','재고 · 당일판매','현 재고조회(I100)·당일판매분요약표를 읽습니다. VPS 는 자동 로그인, 크롬 확장은 사람이 로그인.'],
     ['ytcap',3,'영상 자막 서비스','VPS yt-captions','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아(한국어가 아니면 번역) ytcap/res 에 답합니다.'],
-    ['cwriter',3,'대본 서비스','VPS content-writer','brand-files 의 cmjob/req 를 2초마다 보고 Claude(구독 토큰 · 도구 없음)로 기획자 → 검수자를 돌려 cmjob/res 에 답합니다.'],
-    ['claude',3,'Claude','구독 로그인','대본 서비스가 Claude Code 로 부릅니다(API 키 아님 · .env CLAUDE_CODE_OAUTH_TOKEN).'],
+    ['cwriter',3,'대본 서비스','PC content_writer.js','토큰 없이 그 PC 에 로그인된 Claude Code(구독)를 부릅니다. brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자를 돌려 cmjob/res 에 답합니다. PC 가 켜져 있어야 움직입니다(로그인하면 자동 실행).'],
+    ['claude',3,'Claude','PC 의 구독 로그인','대본 서비스가 Claude Code 로 부릅니다(API 키·토큰 없음 · 그 PC 에 로그인된 계정).'],
     ['youtube',3,'유튜브','자막 원본','국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘).'],
     ['gha',3,'GitHub Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 Supabase 트렌드 표에 쌓습니다.'],
     ['apps',3,'앱스크립트','09-29 공개 배포 폐기','예전 데이터 API 입니다. 지금은 쓰지 않지만 index.html 의 AGENDA_API_URL 줄은 지우면 저장이 멈추므로 그대로 둡니다.',true]
@@ -12878,7 +12878,6 @@ window.CsGuide=(function(){
     ['vps','kim','대화 봇 늘 켜 둠'],
     ['vps','slack','당일판매 보고 16:15'],
     ['vps','ytcap','자막 서비스 늘 켜 둠'],
-    ['vps','cwriter','대본 서비스 늘 켜 둠'],
     ['cwriter','storage','cmjob/res 에 답'],
     ['cwriter','claude','기획자·검수자','r'],
     ['kim','slack','알림·대화'],
@@ -12929,14 +12928,14 @@ window.CsGuide=(function(){
     ['vps-sysd','vps','systemd 상주','꺼지면 10초 뒤 재시작','늘 켜 둬야 하는 서비스들.'],
     ['sd-bot','vps-sysd','김비서','slack-bot · Socket Mode','공개 주소 없이 슬랙 대화를 받습니다. 내 프로젝트·마감·상담 답변·파일 찾기.',[['api-slack','대화'],['db-projects','내 프로젝트'],['db-rows','상담 키워드'],['gg-drive','"○○ 보내줘"']]],
     ['sd-yt','vps-sysd','yt-captions','영상 자막','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아 답합니다(한국어가 아니면 번역).',[['sb-storage','ytcap 요청·답·cache'],['api-yt','자막 받기'],['api-tr','번역']]],
-    ['sd-cw','vps-sysd','content-writer','대본 만들기','brand-files 의 cmjob/req 를 2초마다 보고 Claude Code(구독 토큰)로 대본 후보와 검수 점수를 만들어 답합니다.',[['sb-storage','cmjob 요청·답'],['api-claude','기획자·검수자']]],
+    ['pc-cw','pc','대본 만들기','content_writer.js','로그인하면 창 없이 자동 실행(시작프로그램). 그 PC 에 로그인된 Claude Code 로 brand-files 의 cmjob/req 를 받아 기획자 → 검수자 결과를 cmjob/res 에 답합니다.',[['sb-storage','cmjob 요청·답'],['api-claude','기획자·검수자']]],
 
     ['api','erp','바깥 API','서버·화면이 부르는 곳','바로얌이 만든 것이 아닌 바깥 서비스들입니다.'],
     ['api-slack','api','Slack API','#공지사항 · DM','김비서와 보고가 나가는 곳.'],
     ['api-ez','api','이지어드민','재고 · 당일판매','VPS 는 자동 로그인, 크롬 확장은 사람이 로그인.'],
     ['api-yt','api','유튜브','자막 원본','해외 클라우드 IP 는 로봇으로 막혀 VPS 에서만 받습니다.'],
     ['api-tr','api','구글 번역','translate.googleapis.com','한국어 자막이 없을 때 VPS 가 번역에 씁니다.'],
-    ['api-claude','api','Claude','구독 로그인 · Claude Code','대본 서비스가 부릅니다. API 키가 아니라 claude setup-token 으로 받은 구독 토큰을 씁니다.'],
+    ['api-claude','api','Claude','PC 구독 로그인 · Claude Code','대본 서비스가 부릅니다. API 키·토큰이 아니라 그 PC 에 로그인된 Claude 계정을 씁니다.'],
 
     ['gh','erp','GitHub','코드 · 수집','코드가 사는 곳과 데이터 수집 일부.'],
     ['gh-repo','gh','baroyam-report','공개 · 화면 원본','이 저장소. main 에 푸시하면 1~2분 뒤 Pages 에 반영됩니다.',[['fe','푸시하면 반영']]],
@@ -17012,7 +17011,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
 /* 유튜브콘텐츠 › 새 영상 만들기 · 대본 만들기(직접 기획)
    대본 만들기 → brand-files 버킷 cmjob/req/<작업id>.<회차>.<임의>.json 에 주문과 학습 노트를 올리면
-   김비서 VPS(caffeinnos-automation/content_writer.js)가 Claude(구독 로그인 · 도구 없음)로 기획자 → 검수자를 돌려
+   PC 의 대본 서비스(caffeinnos-automation/content_writer.js · 로그인하면 자동 실행)가 그 PC 에 로그인된 Claude(구독 · 도구 없음)로 기획자 → 검수자를 돌려
    cmjob/res/<같은 이름> 에 진행 상황과 결과를 적는다 · 화면은 그 결과를 작업 기록에 옮겨 담는다(VPS 는 7일 뒤 res 를 지움).
    저장: 작업 content_jobs_v1 = {jobs:{id:{id,at,by,input,rounds:{n:{…}},cur,pick,del}}}
          학습 노트 content_lab_v1 = {writerGuide:{t,at,by}, reviewerGuide:{…}, rules:{id:{who,text,at,by,del}}, examples:{id:{…,del}}}
@@ -17209,7 +17208,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
             }else if(res&&res.state!==r.state){
               r.state=res.state; if(res.scripts) r.scripts=res.scripts;   // 진행 상황은 화면에만(저장은 끝날 때 한 번)
             }else if(!res&&Date.now()-Date.parse(r.at)>15*60e3){
-              await jobPatch(j.id,x=>{ const y=(x.rounds||{})[r.n]; if(y&&busy(y)) Object.assign(y,{state:'failed',message:'15분 넘게 대본 서버(VPS)의 답이 없습니다. 서버가 꺼졌거나 Claude 로그인 전일 수 있습니다.'}); });
+              await jobPatch(j.id,x=>{ const y=(x.rounds||{})[r.n]; if(y&&busy(y)) Object.assign(y,{state:'failed',message:'15분 넘게 답이 없습니다. 대본을 만드는 PC 가 꺼져 있었을 수 있어요 · 다시 시도를 눌러 주세요.'}); });
             }
           }
         }
@@ -17307,8 +17306,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(rs.length>1) h+='<div class="cm-rounds"><span class="cm-hint">회차</span><div class="ui-chips">'+rs.map(x=>'<button type="button" class="ui-chip" data-round="'+x.n+'" aria-pressed="'+(x.n===r.n)+'">'+x.n+'회차'+(busy(x)?' · 쓰는 중':x.state==='failed'?' · 실패':'')+'</button>').join('')+'</div></div>';
     if(busy(r)){
       h+='<div class="cm-wait"><b>'+(r.state==='reviewing'?'검수자가 점수를 매기고 있어요':r.state==='writing'?'기획자가 대본을 쓰고 있어요':'대본 서버에 주문을 넘겼어요')+'</b>'+
-        '<span class="cm-bar"><i></i></span><span><span data-cw-sec="'+esc(r.at)+'">0초</span> 지남 · 보통 1~3분 걸려요. 창을 닫아도 서버는 계속 쓰고, 다시 열면 이어서 보여 드려요.'+
-        (r.state==='sent'&&Date.now()-Date.parse(r.at)>40e3?'<br><b style="display:inline;font-size:12.5px;color:var(--warn)">서버가 아직 주문을 받지 않았어요 · VPS 대본 서비스가 꺼져 있을 수 있어요</b>':'')+'</span></div>';
+        '<span class="cm-bar"><i></i></span><span><span data-cw-sec="'+esc(r.at)+'">0초</span> 지남 · 보통 1~3분 걸려요. 창을 닫아도 대본 PC 는 계속 쓰고, 다시 열면 이어서 보여 드려요.'+
+        (r.state==='sent'&&Date.now()-Date.parse(r.at)>40e3?'<br><b style="display:inline;font-size:12.5px;color:var(--warn)">아직 주문을 받지 않았어요 · 대본을 만드는 PC 가 꺼져 있을 수 있어요</b>':'')+'</span></div>';
       if(r.scripts&&r.scripts.length) h+='<div class="cm-scripts">'+r.scripts.map(s=>scriptHtml(j,r,s,-1)).join('')+'</div>';
       box.innerHTML=h; return;
     }
