@@ -2847,6 +2847,8 @@ window.BAROYAM_FONT=(function(){
   .ps-man-add label>span{font-size:11.5px;font-weight:500;color:var(--mute)}
   .ps-man-add .ui-field{width:100%;background:var(--paper)}
   .ps-man-add #psManCat{justify-content:space-between}
+  .ps-man-add #psManCat[hidden],.ps-man-add #psManCatNew[hidden]{display:none}
+  .ps-man-add #psManCatNew{border-color:var(--btn)}
   .ps-man-add .ui-chip{height:var(--ui-h);padding:0 14px}
   .ps-amt{text-align:right;font-variant-numeric:tabular-nums}
   .ps-man-note{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;background:var(--chip-flat);font-size:12.5px;color:var(--body)}
@@ -9983,7 +9985,8 @@ window.BAROYAM_FONT=(function(){
                   <div class="pf-card-head"><div class="pf-card-tt"><h3>직접 적는 비용</h3><p id="psManSub"></p></div><span class="pf-grow"></span>
                     <button type="button" class="ui-btn sm ghost" id="psManPrev">지난달 항목 불러오기</button></div>
                   <form class="ps-man-add" id="psManAdd" autocomplete="off">
-                    <label><span>분류</span><button type="button" class="ui-field" id="psManCat" aria-haspopup="listbox"><span class="t">외부 광고비</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></label>
+                    <label><span>분류</span><button type="button" class="ui-field" id="psManCat" aria-haspopup="listbox"><span class="t">외부 광고비</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                      <input class="ui-field" id="psManCatNew" maxlength="20" placeholder="새 분류 이름 · Enter" aria-label="새 분류 이름" hidden></label>
                     <label><span>항목 이름</span><input class="ui-field" name="name" maxlength="40" placeholder="예: 인플루언서, 카페24 요금제" list="psManNames"></label>
                     <label><span>한 달 금액</span><input class="ui-field ps-amt" name="amt" inputmode="numeric" placeholder="0원"></label>
                     <label><span>반복</span><button type="button" class="ui-chip" id="psManRep" aria-pressed="false" title="켜면 다음 달부터도 저절로 들어갑니다(요금제·구독·고정 대행료)">매달 반복</button></label>
@@ -16673,7 +16676,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     };
     return st;
   }
-  const normCost=v=>{ v=obj(v); return Object.assign({},v,{items:obj(v.items),ship:obj(v.ship),chans:obj(v.chans),labor:obj(v.labor),extAd:obj(v.extAd)}); };
+  const normCost=v=>{ v=obj(v); return Object.assign({},v,{items:obj(v.items),ship:obj(v.ship),chans:obj(v.chans),labor:obj(v.labor),extAd:obj(v.extAd),cats:obj(v.cats),manual:obj(v.manual)}); };
   const normCalc=v=>{ v=obj(v); return Object.assign({},v,{sheets:obj(v.sheets),prods:obj(v.prods),rows:obj(v.rows)}); };
   /* 처음 한 번 · 붙여 준 계산표(홀떡피자 메타광고)에 있던 판매처 수수료·프라임 발송비로 시작한다 · id 를 고정해 두 PC가 동시에 만들어도 겹치지 않는다 */
   const COST=store('profit_cost_v1',normCost,()=>normCost({
@@ -17843,9 +17846,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const PS_KEY={'쿠팡':'coupang','네이버':'naver','자사몰':'self','톡딜':'talk'};
   const PS_CH=Object.keys(PS_ALIAS);
   /* 직접 적는 비용의 분류 · v 는 저장값의 열쇠라 바꾸지 않는다(이름만 바꿈) */
-  const PS_CATS=[{v:'ad',l:'외부 광고비',hint:'인플루언서·체험단·옥외광고·대행 수수료'},{v:'plan',l:'요금제·구독',hint:'쇼핑몰 솔루션·프로그램·툴 월 요금'},
+  const PS_CATS_BASE=[{v:'ad',l:'외부 광고비',hint:'인플루언서·체험단·옥외광고·대행 수수료'},{v:'plan',l:'요금제·구독',hint:'쇼핑몰 솔루션·프로그램·툴 월 요금'},
     {v:'labor',l:'인건비',hint:'급여·4대보험'},{v:'etc',l:'기타 비용',hint:'그 밖에 나가는 돈'}];
-  const catOf=v=>PS_CATS.find(c=>c.v===v)||PS_CATS[3];
+  /* 직접 만든 분류 · profit_cost_v1.cats = {id:{id,l,ord,del?}} · 기본 분류 뒤에 만든 순서로 붙는다 */
+  const psCats=()=>PS_CATS_BASE.concat(live(COST.data&&COST.data.cats).filter(c=>c.l).map(c=>({v:c.id,l:c.l,hint:'직접 만든 분류',own:1})));
+  const catOf=v=>psCats().find(c=>c.v===v)||PS_CATS_BASE[3];
   /* 고른 기간 {start,end}('YYYY-MM-DD') · 시트는 달 단위라 기간에 걸친 날 수만큼 나눠(일할) 더한다 ·
      시트 값이 없는 날(앞으로 올 날·시트에 없는 달)은 마지막 마감 달의 하루 평균으로 채운 가상 값이다 */
   let psRange=null, psPicker=null, psModeTabs=null, psMode='dash', addCat='ad', addRep=false, psLastAdd=null, psFlashT=null;
@@ -17899,7 +17904,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return Object.values(out).filter(x=>x&&!x.del&&x.from);
   }
   const psOn=(x,key)=>x.from<=key&&(x.rep?(!x.to||key<=x.to):key===x.from);
-  const catIdx=v=>{ const i=PS_CATS.findIndex(c=>c.v===v); return i<0?PS_CATS.length:i; };
+  const catIdx=v=>{ const i=psCats().findIndex(c=>c.v===v); return i<0?psCats().length:i; };
   const psMonthItems=key=>psItems().filter(x=>psOn(x,key)).sort((a,b)=>catIdx(a.cat)-catIdx(b.cat)||(a.ord||0)-(b.ord||0));
   function psSet(id,patch){
     const c=COST.data, cur=psItems().find(x=>x.id===id)||(obj(c.manual)[id])||{id};
@@ -17925,7 +17930,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const t={sales:0,ad:0,fee:0,cost:0,ship:0,vat:0,profit:0};
     rows.forEach(x=>Object.keys(t).forEach(k=>t[k]+=x[k]));
     /* 직접 적는 비용 · 기간에 걸친 달마다 (한 달 금액 × 걸친 날 ÷ 그 달 날 수) */
-    t.man={}; PS_CATS.forEach(c=>t.man[c.v]=0); t.manTot=0; t.items={};
+    t.man={}; psCats().forEach(c=>t.man[c.v]=0); t.manTot=0; t.items={};
     const items=psItems();
     for(let y=+r.start.slice(0,4), m=+r.start.slice(5,7); psIso(y,m,1)<=r.end; m===12?(y++,m=1):m++){
       const mr=psMonthRange(y,m), s=r.start>mr.start?r.start:mr.start, e=r.end<mr.end?r.end:mr.end, f=psSpan(s,e)/psDim(y,m), key=y+'-'+p2(m);
@@ -17981,7 +17986,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function paintDash(d,ms,r,one,lab,rows,t){
     const rate=t.sales?t.net/t.sales:0;
     const steps=[['판매처 수수료','fee'],['광고비','ad'],['상품 원가','cost',1],['배송비','ship',1],['부가세','vat']]
-      .concat(PS_CATS.filter(c=>t.man[c.v]>0).map(c=>[c.l,'m:'+c.v,0,1]));
+      .concat(psCats().filter(c=>t.man[c.v]>0).map(c=>[c.l,'m:'+c.v,0,1]));
     let run=t.sales, lo=0;
     const bars=steps.map(([l,k,tmp,man])=>{ const v=man?t.man[k.slice(2)]:t[k]; const b={l,k,tmp,man,v,from:run-v,to:run}; run-=v; lo=Math.min(lo,run); return b; });
     const span=Math.max(t.sales,1)-lo, X=x=>((x-lo)/span*100).toFixed(2)+'%', W=(a,b)=>(Math.abs(b-a)/span*100).toFixed(2)+'%';
@@ -18009,7 +18014,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +rows.map(x=>'<tr><td><span class="ch ch-'+PS_KEY[x.c]+'"><i></i>'+x.c+(x.rate?'<small>'+esc(x.rate.name)+' '+comma(x.rate.rate)+'%</small>':'')+'</span></td>'
         +td(x.sales)+td(x.fee)+td(x.ad)+td(x.cost,'t')+td(x.ship,'t')+td(x.vat)+td(x.profit,'p'+(x.profit<0?' neg':''))+'<td class="'+(x.profit<0?'neg':'')+'">'+(x.sales?pct(x.profit/x.sales):'–')+'</td></tr>').join('')
       +'</tbody><tfoot><tr><td>판매처 합계</td>'+td(t.sales)+td(t.fee)+td(t.ad)+td(t.cost,'t')+td(t.ship,'t')+td(t.vat)+td(t.profit,'p'+(t.profit<0?' neg':''))+'<td>'+(t.sales?pct(t.profit/t.sales):'–')+'</td></tr>'
-      +PS_CATS.filter(c=>t.man[c.v]>0).map(c=>'<tr><td><button type="button" class="ps-link" data-ps-list>'+esc(c.l)+'</button></td><td colspan="6"></td>'+td(-t.man[c.v])+'<td></td></tr>').join('')
+      +psCats().filter(c=>t.man[c.v]>0).map(c=>'<tr><td><button type="button" class="ps-link" data-ps-list>'+esc(c.l)+'</button></td><td colspan="6"></td>'+td(-t.man[c.v])+'<td></td></tr>').join('')
       +'<tr class="fin"><td>순수익</td><td colspan="6"></td>'+td(t.net,'p'+(t.net<0?' neg':''))+'<td class="'+(t.net<0?'neg':'')+'">'+(t.sales?pct(rate):'–')+'</td></tr></tfoot>';
   }
 
@@ -18037,7 +18042,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       html='<colgroup><col><col style="width:170px"><col style="width:190px"><col style="width:48px"></colgroup>'
         +'<thead><tr><th>항목</th><th class="r">한 달 금액</th><th>반복</th><th></th></tr></thead><tbody>';
       if(!list.length) html+='<tr class="none"><td colspan="4">'+(ro?'이 달에 적힌 비용이 없습니다':'위 칸에 적고 Enter · 매달 나가는 요금제는 "매달 반복"을 켜고 한 번만 적으면 됩니다 · 지난달에 이번 달만 적은 것은 "지난달 항목 불러오기"')+'</td></tr>';
-      PS_CATS.forEach(c=>{
+      psCats().forEach(c=>{
         const its=list.filter(x=>catOf(x.cat).v===c.v); if(!its.length) return;
         html+='<tr class="cat-head"><td><b>'+esc(c.l)+'</b><small>'+its.length+'건</small>'
           +(ro?'':'<button type="button" class="ps-link ps-cat-add" data-ps-addcat="'+c.v+'">＋ 이 분류에 추가</button>')+'</td>'
@@ -18071,7 +18076,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     led+=L('배송비 <em>임시</em>','주문 '+(PS_TEMP.aov/10000)+'만원당 '+psShipFee().toLocaleString('ko-KR')+'원',t.ship,{minus:1,cls:'tmp'});
     led+=L('부가세','품목별 원가표 계산법',t.vat,{minus:1});
     led+=L('판매 이익','',t.profit,{cls:'grp'});
-    PS_CATS.forEach(c=>{
+    psCats().forEach(c=>{
       const its=Object.values(t.items).filter(o=>catOf(o.x.cat).v===c.v).sort((a,b)=>(a.x.ord||0)-(b.x.ord||0));
       led+=L('<button type="button" class="ps-link"'+(ro?'':' data-ps-addcat="'+c.v+'"')+' title="'+(ro?'':'이 분류로 적기')+'">'+esc(c.l)+'</button>'+(its.length?' <small class="cnt">'+its.length+'건</small>':''),'직접 적음'+(t.part||!one?' · 날 수로 나눔':''),t.man[c.v],{minus:1,cls:t.man[c.v]?'man':'zero'});
       its.forEach(o=>{ led+=L(esc(o.x.name||''),o.x.rep?'매달 반복':'이번 달만',o.v,{minus:1,cls:'sub man-item'+(o.x.id===psLastAdd?' flash':'')}); });
@@ -18111,9 +18116,47 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(e.target.closest('[data-ps-list]')){ psSetMode('list'); return; }
     const mo=e.target.closest('[data-ps-month]'); if(mo){ psPick(psKeyRange(mo.dataset.psMonth)); }
   });
+  function psCatPick(v){ addCat=v; $('psManCat').querySelector('.t').textContent=catOf(v).l; $('psManAdd').elements.name.focus(); }
   $('psManCat').addEventListener('click',e=>{
-    UI.menu(e.currentTarget,PS_CATS.map(c=>({value:c.v,label:c.l,sub:c.hint})),addCat,v=>{ addCat=v; $('psManCat').querySelector('.t').textContent=catOf(v).l; $('psManAdd').elements.name.focus(); });
+    const btn=e.currentTarget, own=psCats().filter(c=>c.own);
+    const opts=psCats().map(c=>({value:c.v,label:c.l,sub:c.hint}));
+    if(canEdit()){
+      opts.push({value:'__new',label:'＋ 새 분류 만들기',sub:'예: 촬영비, 사무실 임대료, 세무 수수료'});
+      if(own.length) opts.push({value:'__del',label:'만든 분류 지우기',sub:'쓰는 항목이 없는 분류만 지웁니다'});
+    }
+    UI.menu(btn,opts,addCat,v=>{
+      if(v==='__new'){ psCatNew(true); return; }
+      if(v==='__del'){
+        UI.menu(btn,own.map(c=>({value:c.v,label:c.l,sub:psItems().some(x=>x.cat===c.v)?'쓰는 항목이 있어 못 지웁니다':'지우기'})),null,id=>{
+          if(psItems().some(x=>x.cat===id)){ alert('이 분류를 쓰는 항목이 있습니다 · 항목의 ⋯ › 분류 바꾸기로 옮긴 뒤 지워 주세요'); return; }
+          const c=COST.data; c.cats=Object.assign({},obj(c.cats),{[id]:Object.assign({},obj(c.cats)[id],{del:Date.now()})});
+          if(addCat===id) addCat='ad';
+          COST.mark(); paintSummary();
+        });
+        return;
+      }
+      psCatPick(v);
+    });
   });
+  /* 새 분류 · 분류 칸이 그 자리에서 이름 칸으로 바뀐다 · Enter 만들기 · Esc 취소 */
+  function psCatNew(on){
+    const inp=$('psManCatNew'), btn=$('psManCat');
+    inp.hidden=!on; btn.hidden=on;
+    if(on){ inp.value=''; inp.focus(); }
+  }
+  $('psManCatNew').addEventListener('keydown',e=>{
+    if(e.isComposing) return;
+    if(e.key==='Escape'){ e.preventDefault(); psCatNew(false); $('psManCat').focus(); return; }
+    if(e.key!=='Enter') return;
+    e.preventDefault();
+    const l=e.target.value.trim(); if(!l||!canEdit()) return;
+    const same=psCats().find(c=>c.l.replace(/\s/g,'')===l.replace(/\s/g,''));
+    if(same){ psCatNew(false); psCatPick(same.v); return; }
+    const id='c'+uid(), c=COST.data;
+    c.cats=Object.assign({},obj(c.cats),{[id]:{id,l,ord:Date.now()}});
+    COST.mark(); psCatNew(false); psCatPick(id);
+  });
+  $('psManCatNew').addEventListener('blur',e=>{ if(!e.target.value.trim()) setTimeout(()=>psCatNew(false),150); });
   $('psManRep').addEventListener('click',()=>{ addRep=!addRep; $('psManRep').setAttribute('aria-pressed',addRep?'true':'false'); });
   $('psManAdd').elements.name.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); $('psManAdd').elements.amt.focus(); } });
   $('psManAdd').addEventListener('submit',e=>{
@@ -18151,8 +18194,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(!x.rep) opts.push({value:'rep',label:'매달 반복으로 바꾸기',sub:L+'부터 다음 달에도 저절로 들어갑니다'});
     if(x.rep&&!(x.to===k)) opts.push({value:'stop',label:L+'까지만 쓰기',sub:'다음 달부터 빠집니다 · 해지한 요금제'});
     if(x.rep&&x.from<k) opts.push({value:'cut',label:L+'부터 빼기',sub:'지난달까지 기록은 남깁니다'});
+    opts.push({value:'cat',label:'분류 바꾸기',sub:'지금 '+catOf(x.cat).l});
     opts.push({value:'del',label:x.rep&&x.from<k?'처음부터 모두 지우기':'빼기',sub:x.rep&&x.from<k?psKeyLabel(x.from)+'부터 들어간 금액이 모두 빠집니다':'이 달 목록에서 뺍니다'});
     UI.menu(b,opts,null,v=>{
+      if(v==='cat'){
+        UI.menu(b,psCats().filter(c=>c.v!==catOf(x.cat).v).map(c=>({value:c.v,label:c.l,sub:c.hint})),null,cv=>{ psSet(id,{cat:cv}); psLastAdd=id; clearTimeout(psFlashT); psFlashT=setTimeout(()=>{ psLastAdd=null; },2000); COST.mark(); paintSummary(); });
+        return;
+      }
       if(v==='rep') psSet(id,{rep:true,from:k,to:''});
       else if(v==='stop') psSet(id,{to:k});
       else if(v==='cut') psSet(id,{to:psShift(k,-1)});
