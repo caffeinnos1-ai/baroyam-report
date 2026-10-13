@@ -152,14 +152,23 @@ function readShipped() {
   return null;
 }
 
-async function collectSales() {
-  banner('당일판매를 검색하는 중…');
-  status('당일판매분요약표에서 검색하는 중');
+async function collectSales(who) {
+  // 검색을 누르면 이지어드민이 화면을 통째로 다시 연다 · 그러면 이 스크립트도 처음부터 다시 돈다 ·
+  // 1.5.3 까지는 다시 열린 화면에서 또 검색을 눌러 "검색 → 다시 열림 → 검색"을 끝없이 되풀이했다(2026-10-13 사용자 지적) ·
+  // 그래서 검색을 누른 시각을 background 에 남기고, 3분 안에 다시 열린 화면이면 누르지 않고 결과만 기다린다
+  const afterSearch = !!(who && who.searchedAt && Date.now() - who.searchedAt < 3 * 60 * 1000);
+  if (!afterSearch && who && who.searches >= 3) throw new Error('검색을 3번 눌렀는데 결과를 받지 못했습니다.');
+  banner(afterSearch ? '검색 결과를 기다리는 중…' : '당일판매를 검색하는 중…');
+  status(afterSearch ? '검색 결과와 송장수량을 기다리는 중' : '당일판매분요약표에서 검색하는 중');
   await sleep(800);
-  // 검색 전에 보이던 송장수량 · 검색 뒤 4~8초 지나야 새 숫자로 바뀐다(사용자 확인 2026-10-13) · 그 전 값을 읽지 않으려고 기억해 둔다
-  const before = readLabeled(['송장수량']);
-  // 검색 단추도 javascript: 일 수 있어 페이지 쪽에서 누른다 · 단추가 없으면 페이지 쪽에서 F2 를 보낸다
-  await send({ type: 'mainClick', patterns: ['^검색\\s*\\(F2\\)$'], visible: true, f2: true });
+  // 검색 전에 보이던 송장수량 · 검색 뒤 4~8초 지나야 새 숫자로 바뀐다(사용자 확인 2026-10-13) · 그 전 값을 읽지 않으려고 기억해 둔다 ·
+  // 검색 뒤 다시 열린 화면이면 비교할 "검색 전" 값이 없으므로 숫자가 나오기만 기다린다
+  const before = afterSearch ? null : readLabeled(['송장수량']);
+  if (!afterSearch) {
+    await send({ type: 'meta', searched: true });
+    // 검색 단추도 javascript: 일 수 있어 페이지 쪽에서 누른다 · 단추가 없으면 페이지 쪽에서 F2 를 보낸다
+    await send({ type: 'mainClick', patterns: ['^검색\\s*\\(F2\\)$'], visible: true, f2: true });
+  }
   // 판매가 0건인 날에는 행이 끝내 생기지 않는다 · 20초 기다려 없으면 빈 표로 넘긴다(daily_report.js 와 같음)
   const salesRows = () => document.querySelectorAll('table.ui-jqgrid-btable tbody > tr[id]').length;
   await waitFor(salesRows, 20000);
@@ -197,7 +206,7 @@ const onTemplate = () => /template=/.test(location.search);
 async function runSales(who) {
   if (isSalesPage()) {
     if (!(await waitFor(() => document.querySelector('table.ui-jqgrid-btable'), 15000))) throw new Error('당일판매분요약표 화면이 열리지 않았습니다(15초).');
-    const { rows, orders, invoices } = await collectSales();
+    const { rows, orders, invoices } = await collectSales(who);
     banner(`${rows.length}개 상품을 읽었습니다 · 대시보드에 저장하는 중…`);
     // 송장수량을 못 읽은 날은 로그인 직후 첫 화면에서 챙긴 배송(금일)을 background 가 대신 붙인다
     const res = await send({ type: 'rows', rows, orders, shipped: invoices });

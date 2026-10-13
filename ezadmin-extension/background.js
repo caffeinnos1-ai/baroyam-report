@@ -132,7 +132,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'whoami') {
       const job = await getJob();
       const isJob = !!job && job.tabId === tabId;
-      sendResponse({ isJob, kind: isJob ? job.kind || 'inventory' : null, shipped: isJob ? job.shipped : null, moves: isJob ? job.moves || 0 : 0 });
+      sendResponse({ isJob, kind: isJob ? job.kind || 'inventory' : null, shipped: isJob ? job.shipped : null, moves: isJob ? job.moves || 0 : 0, searchedAt: isJob ? job.searchedAt || 0 : 0, searches: isJob ? job.searches || 0 : 0 });
       return;
     }
 
@@ -141,12 +141,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     // 이지어드민 탭 · 로그인 화면이면 창으로 꺼내 앞에 띄우고, 로그인이 끝나면 다시 접힌 묶음으로 돌려놓은 뒤 대시보드를 앞으로
     if (msg.type === 'show') {
+      job.shown = true; await setJob(job);
       await showWin(job);
       sendResponse({ ok: true });
       return;
     }
+    // 로그인하느라 앞에 띄운 창만 내린다 · 1.5.3 까지는 화면이 열릴 때마다 내려, 사람이 지켜보려고 띄운 창도 사라졌다
     if (msg.type === 'hide') {
-      await hideWin(job);
+      if (job.shown) { job.shown = false; await setJob(job); await hideWin(job); }
       sendResponse({ ok: true });
       return;
     }
@@ -155,6 +157,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'meta') {
       if (msg.shipped !== undefined) job.shipped = msg.shipped;
       if (msg.moved) job.moves = (job.moves || 0) + 1;
+      if (msg.searched) { job.searchedAt = Date.now(); job.searches = (job.searches || 0) + 1; }
       await setJob(job);
       sendResponse({ ok: true, moves: job.moves || 0 });
       return;
