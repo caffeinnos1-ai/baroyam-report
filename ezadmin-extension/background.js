@@ -100,8 +100,10 @@ const showWin = (job) => chrome.windows.update(job.winId, { state: 'normal', foc
 async function hideWin(job) {
   const win = await chrome.windows.get(job.winId).catch(() => null);
   if (!win || win.state === 'minimized') return;
+  const watching = win.focused;
   await chrome.windows.update(job.winId, { state: 'minimized' }).catch(() => {});
-  chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
+  // 방금 그 창에서 로그인한 경우에만 대시보드를 앞으로 · 다른 일을 하던 창은 건드리지 않는다
+  if (watching) chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -181,9 +183,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const reply = await chrome.tabs.sendMessage(job.dashTabId, { ...msg, kind: job.kind || 'inventory', shipped: msg.shipped != null ? msg.shipped : job.shipped }).catch(() => null);
       if (reply && reply.ok) {
         await endJob();
+        // 사람이 이지어드민 창을 보고 있을 때만(로그인하느라 앞에 띄운 경우) 대시보드로 돌려보낸다 ·
+        // 기다리는 동안 다른 탭·창으로 가 있던 사람을 대시보드로 끌고 오지 않는다(1.5.2 · "화면이 튕긴다" 지적)
+        const win = await chrome.windows.get(job.winId).catch(() => null);
+        const watching = !!(win && win.focused && win.state !== 'minimized');
         await chrome.windows.remove(job.winId).catch(() => {});
-        chrome.tabs.update(job.dashTabId, { active: true }).catch(() => {});
-        chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
+        if (watching) {
+          chrome.tabs.update(job.dashTabId, { active: true }).catch(() => {});
+          chrome.tabs.get(job.dashTabId).then((t) => chrome.windows.update(t.windowId, { focused: true })).catch(() => {});
+        }
       }
       // 실패하면 사람이 무슨 일인지 볼 수 있게 이지어드민 탭을 창으로 꺼내 앞에 띄워 둔다
       if (!reply || !reply.ok) await showWin(job);

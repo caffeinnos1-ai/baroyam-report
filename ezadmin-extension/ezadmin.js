@@ -163,9 +163,10 @@ async function collectSales() {
   // 판매가 0건인 날에는 행이 끝내 생기지 않는다 · 20초 기다려 없으면 빈 표로 넘긴다(daily_report.js 와 같음)
   const salesRows = () => document.querySelectorAll('table.ui-jqgrid-btable tbody > tr[id]').length;
   await waitFor(salesRows, 20000);
-  // 송장수량이 새로 나올 때까지(검색 전과 달라지거나 비어 있다 채워질 때까지) 최대 15초 · 같은 숫자면 15초 뒤 그대로 쓴다
-  status('검색 결과와 송장수량을 기다리는 중(4~8초)');
-  await waitFor(() => { const v = readLabeled(['송장수량']); return v !== null && v !== before; }, 15000);
+  // 송장수량이 새로 나올 때까지(검색 전과 달라지거나 비어 있다 채워질 때까지) 기다린다 · 바뀌는 즉시 넘어가므로 길게 잡아도 느려지지 않는다 ·
+  // 최대 30초 · 그때까지 같은 숫자면(검색 전부터 이미 오늘 숫자였던 경우) 그대로 쓴다
+  status('검색 결과와 송장수량을 기다리는 중');
+  await waitFor(() => { const v = readLabeled(['송장수량']); return v !== null && v !== before; }, 30000);
   // 줄 수가 1.5초 동안 그대로일 때까지 · 표가 다 그려진 뒤에 읽는다
   for (let last = -1, i = 0; i < 20 && salesRows() !== last; i++) { last = salesRows(); await sleep(1500); }
   // 한 쪽에 다 안 들어오면 500개씩 보기로 바꾼다(재고현황과 같음)
