@@ -6265,6 +6265,17 @@ window.BAROYAM_FONT=(function(){
   .ui-cal-day.sel{background:var(--btn);color:#fff;font-weight:600}
   .ui-cal-day:disabled{opacity:.25;cursor:not-allowed;background:none}
   .ui-cal-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+  /* 달 단위 기간(UI.monthPicker) · 날짜 칸 대신 1~12월 네 줄 */
+  .ui-mcal{width:320px}
+  .ui-mcal-grid{display:grid;grid-template-columns:repeat(4,1fr);row-gap:4px}
+  .ui-mcal-m{all:unset;box-sizing:border-box;height:40px;display:grid;place-items:center;border-radius:10px;
+    font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;cursor:pointer}
+  .ui-mcal-m:hover{background:var(--bg)}
+  .ui-mcal-m:focus-visible{box-shadow:var(--ui-ring)}
+  .ui-mcal-m.today{color:var(--btn-soft-ink);box-shadow:inset 0 0 0 1px var(--line)}
+  .ui-mcal-m.in{border-radius:0;background:var(--btn-soft);box-shadow:none}
+  .ui-mcal-m.sel{background:var(--btn);color:#fff;box-shadow:none}
+  .ui-mcal-m:disabled{opacity:.25;cursor:not-allowed;background:none}
   @media print{
     *,*::before,*::after{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
     @page{size:A4 portrait;margin:9mm}
@@ -6643,6 +6654,8 @@ window.BAROYAM_FONT=(function(){
    UI.datePicker(button, {mode:'single'|'range', value, placeholder, min, max, presets, resetValue, onChange})
      single 값 'YYYY-MM-DD' · range 값 {start:'YYYY-MM-DD', end:'YYYY-MM-DD'} · 비우면 null
      presets(range) · today yesterday week last7 last30 month prevMonth nextMonth custom 중 골라 순서대로
+   UI.monthPicker(button, {value:{start:'YYYY-MM',end:'YYYY-MM'}, presets, max, resetValue, onChange}) · 날짜 없이 몇 년 몇 월~몇 월만
+     presets · thisMonth prevMonth last3 thisYear lastYear 중 골라 순서대로
    UI.tabs(container, onChange) · 안의 .ui-tab[data-value] 중 하나를 고르는 탭 */
 (function(){
   const pad=n=>String(n).padStart(2,'0');
@@ -6882,7 +6895,97 @@ window.BAROYAM_FONT=(function(){
     const on=pop.querySelector('[aria-selected="true"]'); if(on&&on.scrollIntoView) on.scrollIntoView({block:'nearest'});
   }
 
-  window.UI={datePicker,tabs,menu};
+  /* 달 단위 기간 고르기 · 날짜가 필요 없고 몇 년 몇 월~몇 월만 고를 때(순수익 요약 등) ·
+     UI.monthPicker(button, {value:{start:'YYYY-MM',end:'YYYY-MM'}, presets, max, onChange}) ·
+     모양은 기간 달력과 같다: 빠른 선택 → 시작 달~끝 달 → ‹ 연도 › 와 1~12월 → 초기화/적용 */
+  const MP_LABEL={thisMonth:'이번 달',prevMonth:'지난 달',last3:'최근 3개월',thisYear:'올해',lastYear:'지난해'};
+  const ym=(y,m)=>{ const t=y*12+m-1; return Math.floor(t/12)+'-'+pad(t%12+1); };
+  function mpPreset(k){
+    const n=new Date(), y=n.getFullYear(), m=n.getMonth()+1;
+    if(k==='thisMonth') return {start:ym(y,m),end:ym(y,m)};
+    if(k==='prevMonth') return {start:ym(y,m-1),end:ym(y,m-1)};
+    if(k==='last3') return {start:ym(y,m-2),end:ym(y,m)};
+    if(k==='thisYear') return {start:y+'-01',end:y+'-12'};
+    if(k==='lastYear') return {start:(y-1)+'-01',end:(y-1)+'-12'};
+    return null;
+  }
+  function monthPicker(btn,opts){
+    opts=opts||{};
+    const presets=opts.presets||['thisMonth','prevMonth','last3','thisYear'];
+    let value=opts.value||null, draft=null, pick='start', viewY=new Date().getFullYear();
+    btn.classList.add('ui-field'); btn.type='button';
+    btn.setAttribute('aria-haspopup','dialog'); btn.setAttribute('aria-expanded','false');
+    const pop=document.createElement('div');
+    pop.className='ui-pop ui-cal range ui-mcal'; pop.hidden=true;
+    pop.setAttribute('role','dialog'); pop.setAttribute('aria-label',opts.placeholder||'기간 선택');
+    pop.addEventListener('click',e=>e.stopPropagation());
+    document.body.appendChild(pop);
+    const cy=new Date().getFullYear();
+    const lbl=k=>{ const y=+k.slice(0,4), m=+k.slice(5,7); return (y!==cy?y+'.':'')+m+'월'; };
+    const presetOf=r=>r?presets.find(k=>{ const p=mpPreset(k); return p&&p.start===r.start&&p.end===r.end; })||'':'';
+    function paintBtn(){
+      let t='<span class="t ph">'+esc(opts.placeholder||'기간 선택')+'</span>';
+      if(value){
+        const p=presetOf(value), both=value.start.slice(0,4)!==value.end.slice(0,4)||+value.start.slice(0,4)!==cy;
+        const f=k=>both?k.slice(0,4)+'.'+(+k.slice(5,7)):(+k.slice(5,7))+'월';
+        t='<span class="t">'+(p?esc(MP_LABEL[p]):value.start===value.end?esc(lbl(value.start)):esc(f(value.start)+' ~ '+f(value.end)))+'</span>';
+      }
+      btn.innerHTML=CAL_SVG+t;
+      btn.title=value?value.start.replace('-','.')+' ~ '+value.end.replace('-','.'):'';
+    }
+    function render(){
+      const on=presetOf(draft.start&&draft.end?draft:null);
+      const lo=draft.start, hi=draft.end||draft.start, nowK=ym(cy,new Date().getMonth()+1);
+      let h='<div class="ui-cal-quick">'+presets.map(k=>'<button type="button" class="ui-chip" data-quick="'+k+'" aria-pressed="'+(on===k)+'">'+esc(MP_LABEL[k]||k)+'</button>').join('')+'</div>';
+      const field=(k,t)=>'<button type="button" class="ui-dfield'+(pick===k?' active':'')+(draft[k]?'':' empty')+'" data-pick="'+k+'"><span>'+t+'</span><b>'+(draft[k]?draft[k].replace('-','.'):'선택')+'</b></button>';
+      h+='<div class="ui-dfields">'+field('start','시작 달')+'<span class="ui-dfield-sep">~</span>'+field('end','끝 달')+'</div>';
+      h+='<div class="ui-cal-head"><span class="ui-cal-navs"><button type="button" class="ui-btn ghost icon sm" data-y="-1" aria-label="이전 해">‹</button></span>'
+        +'<span class="ui-cal-title">'+viewY+'년</span>'
+        +'<span class="ui-cal-navs"><button type="button" class="ui-btn ghost icon sm" data-y="1" aria-label="다음 해">›</button></span></div>';
+      h+='<div class="ui-mcal-grid">';
+      for(let m=1;m<=12;m++){
+        const k=ym(viewY,m), edge=!!lo&&(k===lo||k===hi), cls=['ui-mcal-m'];
+        if(k===nowK) cls.push('today');
+        if(lo&&hi&&k>lo&&k<hi) cls.push('in');
+        if(edge) cls.push('sel');
+        h+='<button type="button" class="'+cls.join(' ')+'" data-m="'+k+'"'+(opts.max&&k>opts.max?' disabled':'')+(edge?' aria-pressed="true"':'')+'>'+m+'월</button>';
+      }
+      h+='</div><div class="ui-cal-foot"><button type="button" class="ui-btn ghost sm" data-act="reset">초기화</button><button type="button" class="ui-btn primary sm" data-act="apply">적용</button></div>';
+      pop.innerHTML=h; place(pop,btn);
+    }
+    pop.addEventListener('click',e=>{
+      const t=e.target.closest('button'); if(!t||t.disabled) return;
+      if(t.dataset.y){ viewY+=+t.dataset.y; render(); return; }
+      if(t.dataset.quick){ const r=mpPreset(t.dataset.quick); draft={start:r.start,end:r.end}; pick='start'; viewY=+r.end.slice(0,4); render(); return; }
+      if(t.dataset.pick){ pick=t.dataset.pick; render(); return; }
+      if(t.dataset.act==='reset'){ const r=opts.resetValue||null; draft={start:r?r.start:'',end:r?r.end:''}; pick='start'; render(); return; }
+      if(t.dataset.act==='apply'){
+        if(!draft.start){ commit(opts.resetValue||null); return; }
+        commit({start:draft.start,end:draft.end||draft.start}); return;
+      }
+      const k=t.dataset.m; if(!k) return;
+      /* 시작 달부터 고르고 다음 누름이 끝 달 · 앞뒤가 뒤집히면 바꿔 담는다 · 같은 달을 두 번 누르면 그 한 달 */
+      if(pick==='end'&&draft.start){ if(k<draft.start){ draft.end=draft.start; draft.start=k; } else draft.end=k; pick='start'; }
+      else { draft.start=k; draft.end=''; pick='end'; }
+      render();
+    });
+    function commit(v){ value=v; paintBtn(); close(); if(typeof opts.onChange==='function') opts.onChange(value); }
+    function open(){
+      if(openPicker&&openPicker!==api) openPicker.close();
+      draft={start:value?value.start:'',end:value?value.end:''}; pick='start';
+      viewY=value?+value.end.slice(0,4):cy;
+      pop.hidden=false; render();
+      btn.setAttribute('aria-expanded','true'); openPicker=api;
+    }
+    function close(){ if(pop.hidden) return; pop.hidden=true; draft=null; btn.setAttribute('aria-expanded','false'); if(openPicker===api) openPicker=null; }
+    btn.addEventListener('click',e=>{ e.stopPropagation(); pop.hidden?open():close(); });
+    const api={ get value(){ return value; }, set(v){ value=v||null; paintBtn(); }, open, close,
+      reposition(){ if(!pop.hidden) place(pop,btn); }, destroy(){ close(); pop.remove(); } };
+    paintBtn();
+    return api;
+  }
+
+  window.UI={datePicker,monthPicker,tabs,menu};
 })();
 </script>
 </head>
@@ -17983,23 +18086,28 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const ms=psMonths(d), closed=ms.filter(m=>!m.open);
     /* 처음엔 마감된 마지막 달(월간 보고서와 같은 기준) · 고른 기간은 이 브라우저에 기억 */
     if(!psRange){
-      try{ const v=JSON.parse(localStorage.getItem('baroyam_ps_range')||'null'); if(v&&/^\d{4}-\d\d-\d\d$/.test(v.start)&&/^\d{4}-\d\d-\d\d$/.test(v.end)&&v.start<=v.end) psRange=v; }catch(e){}
+      /* 예전에 날짜로 고른 기간도 그 달들 전체로 넓혀 읽는다 */
+      try{ const v=JSON.parse(localStorage.getItem('baroyam_ps_range')||'null'); if(v&&/^\d{4}-\d\d/.test(v.start)&&/^\d{4}-\d\d/.test(v.end)&&v.start<=v.end) psRange={start:psKeyRange(v.start.slice(0,7)).start,end:psKeyRange(v.end.slice(0,7)).end}; }catch(e){}
       if(!psRange){ const b=closed[closed.length-1]||ms[ms.length-1]; psRange=b?{start:b.start,end:b.end}:psMonthRange(new Date().getFullYear(),new Date().getMonth()+1); }
     }
-    if(!psPicker&&window.UI&&UI.datePicker){
-      const now=new Date();
-      psPicker=UI.datePicker($('psMonth'),{mode:'range',value:psRange,placeholder:'기간 선택',
-        presets:['month','prevMonth','last30','custom'],resetValue:psMonthRange(now.getFullYear(),now.getMonth()+1),onChange:v=>{ if(v) psPick(v); }});
-    }else if(psPicker) psPicker.set(psRange);
+    /* 기간은 달 단위로만 고른다(사용자: 날짜는 쓸 일 없음) · 몇 년 몇 월 ~ 몇 월 */
+    const mv={start:psRange.start.slice(0,7),end:psRange.end.slice(0,7)};
+    if(!psPicker&&window.UI&&UI.monthPicker){
+      const now=new Date(), nk=now.getFullYear()+'-'+p2(now.getMonth()+1);
+      psPicker=UI.monthPicker($('psMonth'),{value:mv,placeholder:'기간 선택',presets:['thisMonth','prevMonth','last3','thisYear','lastYear'],
+        resetValue:{start:nk,end:nk},onChange:v=>{ if(v) psPick({start:psKeyRange(v.start).start,end:psKeyRange(v.end).end}); }});
+    }else if(psPicker) psPicker.set(mv);
     const r=psRange, one=psWhole(r);
-    const lab=one?(one.y!==new Date().getFullYear()?one.y+'년 ':'')+one.label:psDot(r.start)+' ~ '+psDot(r.end)+' ('+psSpan(r.start,r.end)+'일)';
+    /* 이름표는 달로 · 여러 달이면 '9월 ~ 10월 (2개월)' · 해가 다르면 '2025년 11월 ~ 2026년 2월' */
+    const sy=+r.start.slice(0,4), ey=+r.end.slice(0,4), sm=+r.start.slice(5,7), em=+r.end.slice(5,7), nMon=(ey-sy)*12+em-sm+1;
+    const lab=one?(one.y!==new Date().getFullYear()?one.y+'년 ':'')+one.label
+      :(sy===ey?(sy!==new Date().getFullYear()?sy+'년 ':'')+sm+'월 ~ '+em+'월':sy+'년 '+sm+'월 ~ '+ey+'년 '+em+'월')+' ('+nMon+'개월)';
     const {rows,t}=psCalc(d,ms,r);
     $('psSrc').textContent='매출·광고비: 매출 시트'+(t.part?' · 달 값을 날 수로 나눠 계산':'')+(t.virt?' · 시트 값이 없는 '+t.virt+'일은 가상':'')+' · 수수료율·발송비: 품목별 원가표';
     /* KPI · 두 보기 모두 · 순수익은 직전 같은 길이 기간(한 달이면 지난달) 대비 */
-    const len=psSpan(r.start,r.end);
-    const pr=one?psKeyRange(psShift(one.key,-1)):{start:psAdd(r.start,-len),end:psAdd(r.start,-1)};
+    const sk=r.start.slice(0,7), pr=one?psKeyRange(psShift(one.key,-1)):{start:psKeyRange(psShift(sk,-nMon)).start,end:psKeyRange(psShift(sk,-1)).end};
     const pc=psCalc(d,ms,pr).t, diff=t.net-pc.net;
-    const cmp=pc.virt>=psSpan(pr.start,pr.end)?'':'<span class="'+(diff>=0?'up':'down')+'">'+(diff>=0?'▲ ':'▼ ')+psShort(Math.abs(diff))+'</span> '+(one?psKeyLabel(psShift(one.key,-1)):'직전 '+len+'일')+' 대비';
+    const cmp=pc.virt>=psSpan(pr.start,pr.end)?'':'<span class="'+(diff>=0?'up':'down')+'">'+(diff>=0?'▲ ':'▼ ')+psShort(Math.abs(diff))+'</span> '+(one?psKeyLabel(psShift(one.key,-1)):'직전 '+nMon+'개월')+' 대비';
     const cost=t.sales-t.net, rate=t.sales?t.net/t.sales:0;
     $('psKpis').innerHTML=
       '<div class="ps-kpi"><div class="k">매출</div><div class="v" title="'+psWon(t.sales)+'원">'+psShort(t.sales)+'</div><div class="s">'+lab+(t.virt?' · 가상 '+t.virt+'일':'')+'</div></div>'
