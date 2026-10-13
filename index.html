@@ -9728,10 +9728,11 @@ window.BAROYAM_FONT=(function(){
            목록은 Supabase 의 app_settings/drive_assets_v1 에서 이 화면을 열 때만 읽어 온다 -->
       <div id="view-drive" style="display:none">
         <div class="drv-view">
-          <!-- 회사 전환 · 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) -->
+          <!-- 회사 전환 · 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 메타광고 → 메타광고, 그 밖 → 카페이노스) -->
           <div class="ui-tabs drv-owner" id="drvOwner">
             <button type="button" class="ui-tab" data-value="바로얌" aria-selected="true">바로얌</button>
             <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">카페이노스</button>
+            <button type="button" class="ui-tab" data-value="메타광고" aria-selected="false">메타광고</button>
           </div>
           <div class="plan-hero">
             <div class="ptag">업무 도구</div>
@@ -10741,6 +10742,7 @@ window.BAROYAM_FONT=(function(){
                 <div class="ui-tabs" id="bsDrvOwner" aria-label="회사">
                   <button class="ui-tab" data-value="바로얌">바로얌</button>
                   <button class="ui-tab" data-value="카페이노스">카페이노스</button>
+                  <button class="ui-tab" data-value="메타광고">메타광고</button>
                 </div>
                 <span class="bs-drv-n" id="bsDrvN"></span>
                 <!-- 업로드 · 드라이브 화면과 같은 창(폴더 고르기·추천)으로 회사 드라이브에 올리고, 올린 파일은 이 항목에 바로 붙는다 -->
@@ -24312,9 +24314,17 @@ window.baroyamAsk=function(title,body,okText){
   const 형식찾기={}; 형식표.forEach(function(t){ t[1].forEach(function(x){ 형식찾기[x]=t[0]; }); });
   function 형식(r){ return 형식찾기[확장자(r.이름)]||'기타'; }
 
-  /* 어느 회사 자산인지 · 지금은 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 그 밖 → 카페이노스) */
-  function 회사(r){
-    return String(r.경로||'').split(' / ')[0]==='★바로얌' ? '바로얌' : '카페이노스';
+  /* 어느 회사 자산인지 · 경로 맨 앞 칸(뿌리폴더 이름)으로 가른다(★바로얌 → 바로얌, 메타광고 → 메타광고, 그 밖 → 카페이노스) */
+  function 뿌리회사(이름){ return 이름==='★바로얌'?'바로얌':(이름==='메타광고'?'메타광고':'카페이노스'); }
+  function 회사(r){ return 뿌리회사(String(r.경로||'').split(' / ')[0]); }
+  /* 화면에서 더하는 뿌리폴더 · 분류 사전(drive_dict_v1 · trend 저장소 드라이브_사전.json)에 아직 없어도 새로고침·업로드가 이 폴더를 훑는다 ·
+     사전에도 같은 이름으로 넣어 두었으니, 밤 색인(로봇 계정)이 이 폴더를 볼 수 있게 공유되면 그쪽에서도 올라온다 */
+  const 더한뿌리={'메타광고':'1EWyHyk89JDQoHppAEk0AjbQTYPmSmoA0'};
+  function 사전보강(사전){
+    if(!사전) return 사전;
+    const 뿌리=Object.assign({},사전['뿌리폴더']||{}), 대시=(사전['대시보드폴더']||[]).slice();
+    Object.keys(더한뿌리).forEach(function(k){ if(!뿌리[k]) 뿌리[k]=더한뿌리[k]; if(대시.indexOf(k)<0) 대시.push(k); });
+    return Object.assign({},사전,{'뿌리폴더':뿌리,'대시보드폴더':대시});
   }
 
   /* 칩으로 거르는 갈래 · 바로얌은 이름에서 뽑은 자산종류, 카페이노스는 판매처 폴더로 나눈다 ·
@@ -24492,7 +24502,7 @@ window.baroyamAsk=function(title,body,okText){
     const 없음=!전체;
     $('drvRow').hidden=없음;
     if(없음){
-      안내(상태.회사+' 자산은 아직 목록에 없어요', '해당 드라이브 폴더를 색인에 넣으면 여기에 나옵니다');
+      안내(상태.회사+' 자산은 아직 목록에 없어요', '위 새로고침 단추를 누르면 드라이브를 다시 훑어 이 폴더의 파일을 가져옵니다');
       return;
     }
     $('drvEmpty').hidden=true; $('drvBody').hidden=false;
@@ -24799,7 +24809,7 @@ window.baroyamAsk=function(title,body,okText){
     단추.disabled=true; 글.textContent='준비 중…';
     try{
       const 토큰=await 토큰P;
-      const 사전=await window.BAROYAM_DB.loadSetting(사전열쇠,true);
+      const 사전=사전보강(await window.BAROYAM_DB.loadSetting(사전열쇠,true));
       if(!사전||!사전['뿌리폴더']) throw new Error('분류 사전이 아직 없어요 · 파이썬 색인을 한 번 올려 주세요');
       const 자산=await 드라이브훑기(사전,토큰,function(폴더,파일){ 글.textContent='폴더 '+폴더+' · 파일 '+파일; });
       const 더할곳=사전['대시보드폴더']||[];
@@ -24929,7 +24939,7 @@ window.baroyamAsk=function(title,body,okText){
   function 뿌리들(회사값){
     const 뿌리=(업.사전&&업.사전['뿌리폴더'])||{};
     if(회사값==='바로얌') return 뿌리['★바로얌']?[{id:뿌리['★바로얌'],name:'★바로얌'}]:[];
-    return ((업.사전&&업.사전['대시보드폴더'])||[]).filter(function(n){ return 뿌리[n]&&n!=='★바로얌'; })
+    return ((업.사전&&업.사전['대시보드폴더'])||[]).filter(function(n){ return 뿌리[n]&&뿌리회사(n)===회사값; })
       .map(function(n){ return {id:뿌리[n],name:n}; });
   }
   async function 드라이브요청(주소, 설정){
@@ -25016,7 +25026,7 @@ window.baroyamAsk=function(title,body,okText){
       document.body.appendChild(창);
     }
     /* 지금 보고 있는 회사를 앞(primary)에 둔다 */
-    const 차례=상태.회사==='카페이노스'?['카페이노스','바로얌']:['바로얌','카페이노스'];
+    const 차례=[상태.회사].concat(['바로얌','카페이노스','메타광고'].filter(function(c){ return c!==상태.회사; }));
     창.innerHTML='<p>어느 드라이브에 올릴까요?</p>'+차례.map(function(c,i){
       return '<button type="button" class="ui-btn block '+(i?'soft':'primary')+'" data-up-co="'+c+'">'+c+' 드라이브에 올리기</button>';
     }).join('');
@@ -25112,7 +25122,7 @@ window.baroyamAsk=function(title,body,okText){
     if(파일들) 파일더하기(파일들); else 파일그리기();
     try{
       await 토큰P;
-      if(!업.사전) 업.사전=await window.BAROYAM_DB.loadSetting(사전열쇠,true);
+      if(!업.사전) 업.사전=사전보강(await window.BAROYAM_DB.loadSetting(사전열쇠,true));
       if(!업.사전||!업.사전['뿌리폴더']) throw new Error('분류 사전이 아직 없어요 · 파이썬 색인을 한 번 올려 주세요');
       if(!줄들) await 열기();
       if(차례!==업.차례) return;
