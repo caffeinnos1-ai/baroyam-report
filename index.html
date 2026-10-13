@@ -185,7 +185,7 @@ window.BAROYAM_DB=(function(){
       /* 드라이브 색인·사전과 계정관리 목록은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 ·
          계정관리(accounts_v1)는 아이디·비밀번호와 올린 로고 그림이 들어 있어, 첫 화면에서 받으면
          느려지고 계정관리 비밀번호를 통과하기 전에 브라우저에 와 버린다 */
-      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,content_lab_v1)');
+      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1)');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
@@ -2594,11 +2594,6 @@ window.BAROYAM_FONT=(function(){
   .cm-msg[hidden]{display:none}
   .cm-modes .ui-chip[data-mode="auto"]{opacity:.55}
   #cwChannelRecent:empty{display:none}
-  .cm-lab-nums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 14px}
-  .cm-lab-nums>div{padding:9px 11px;border:1px solid var(--line);border-radius:var(--ui-r)}
-  .cm-lab-nums dt{font-size:11px;color:var(--mute)}
-  .cm-lab-nums dd{margin:2px 0 0;font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
-  .cm-lab-nums dd small{font-size:11px;font-weight:400;color:var(--mute);margin-left:3px}
   .cm-empty{padding:34px 10px;text-align:center;font-size:13px;line-height:1.6;color:var(--mute)}
   .cm-empty b{display:block;margin-bottom:4px;font-size:14px;font-weight:600;color:var(--ink)}
   .cm-jobs:empty::before{content:'아직 만든 영상이 없어요';grid-column:1/-1;font-size:12.5px;color:var(--mute)}
@@ -2636,7 +2631,6 @@ window.BAROYAM_FONT=(function(){
   .cm-fb .ui-field{flex:1;min-width:0}
   .cm-fb .ui-btn.icon svg{width:15px;height:15px}
   .cm-fb .ui-btn[aria-pressed="true"]{background:var(--btn-soft);color:var(--btn-soft-ink);border-color:transparent}
-  .cm-script-foot.three{grid-template-columns:auto 1fr 1fr}
   .cm-again{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mute)}
   /* 결정한 대본 */
   .cm-final{border:1px solid var(--line);border-radius:14px;padding:16px 18px}
@@ -2644,23 +2638,6 @@ window.BAROYAM_FONT=(function(){
   .cm-final h4{margin:0;font-size:16px;font-weight:600;color:var(--ink)}
   .cm-final .cm-script-lines{margin-bottom:6px}
   .cm-next{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--chip-flat);font-size:12.5px;line-height:1.6;color:var(--body)}
-  /* 학습 노트 창 */
-  .settings-panel.cm-lab-dlg{max-width:780px;height:min(720px,90vh)}
-  .cm-lab-top{flex:none;padding:12px 22px 0}
-  .cm-lab-body{flex:1;min-height:0;overflow-y:auto;padding:14px 22px 22px;display:flex;flex-direction:column;gap:12px}
-  .cm-lab-body .cm-lead{margin:0}
-  .cm-lab-add{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px dashed var(--line);border-radius:14px}
-  .cm-lab-add .row{display:flex;gap:8px}
-  .cm-lab-add .row .ui-field{flex:1;min-width:0}
-  .cm-lab-item{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px}
-  .cm-lab-item>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-  .cm-lab-item b{font-size:13.5px;font-weight:600;color:var(--ink)}
-  .cm-lab-item p{margin:0;font-size:12.5px;line-height:1.6;color:var(--body);white-space:pre-line}
-  .cm-lab-item small{font-size:11px;color:var(--mute)}
-  .cm-lab-guide{display:flex;flex-direction:column;gap:8px}
-  .cm-lab-guide h4{margin:6px 0 0;font-size:13.5px;font-weight:600;color:var(--ink)}
-  .cm-lab-guide textarea{min-height:200px;line-height:1.6;font-size:12.5px}
-  .cm-lab-guide .row{display:flex;justify-content:flex-end;gap:8px}
   @media (max-width:900px){ .cm-scores{grid-template-columns:repeat(2,minmax(0,1fr))} }
   .cm-bar{height:6px;border-radius:999px;background:var(--chip-flat);overflow:hidden}
   .cm-bar i{display:block;height:100%;border-radius:inherit;background:var(--pos)}
@@ -9855,8 +9832,8 @@ window.BAROYAM_FONT=(function(){
         </section>
       </div><!-- /view-perf -->
       <div id="view-content" style="display:none">
-        <!-- 새 영상 만들기 · 직접 기획 → 대본 만들기를 누르면 김비서 VPS 가 Claude 로 기획자(대본 후보) → 검수자(점수·순위)를 돌려 돌려준다 ·
-             주고받기는 brand-files 버킷 cmjob/req·res, 작업 기록은 app_settings content_jobs_v1, 학습 노트(좋은 대본·규칙·지침)는 content_lab_v1 ·
+        <!-- 새 영상 만들기 · 직접 기획 → 대본 만들기를 누르면 PC 의 대본 서비스가 Claude 로 기획자(대본 후보) → 검수자(점수·순위)를 돌려 돌려준다 ·
+             주고받기는 brand-files 버킷 cmjob/req·res, 작업 기록은 app_settings content_jobs_v1 ·
              편집·승인·예약은 아직 없다(단계 줄에 "준비 중") -->
         <div class="cm-make" data-content-pane="make">
           <aside class="cm-col">
@@ -9893,12 +9870,6 @@ window.BAROYAM_FONT=(function(){
               <label class="cm-check"><input type="checkbox" id="cwReview" checked> 검수자 점수·추천 순서까지 받기</label>
               <p class="cm-msg" id="cwFormMsg" hidden></p>
             </div>
-            <div class="cm-card cm-lab">
-              <h3>AI 학습 노트</h3>
-              <p class="cm-lead">좋은 대본과 피드백이 쌓일수록 기획자·검수자가 같이 나아져요. 대본을 만들 때마다 여기 적힌 것을 함께 보냅니다.</p>
-              <dl class="cm-lab-nums" id="cwLabNums"></dl>
-              <button type="button" class="ui-btn soft block" id="cwLabOpen">학습 노트 열기</button>
-            </div>
           </aside>
 
           <main class="cm-col">
@@ -9914,25 +9885,6 @@ window.BAROYAM_FONT=(function(){
             </div>
             <div class="cm-card cm-job" id="cwJob"></div>
           </main>
-
-          <!-- AI 학습 노트 창 · 좋은 대본 / 기획자 규칙 / 검수 기준 / 기본 지침 -->
-          <div class="settings-overlay" id="cwLabDlg" hidden>
-            <div class="settings-panel cm-lab-dlg" role="dialog" aria-modal="true" aria-labelledby="cwLabTitle">
-              <div class="settings-head">
-                <h2 id="cwLabTitle">AI 학습 노트</h2>
-                <button type="button" class="settings-close" data-cw-close aria-label="닫기">✕</button>
-              </div>
-              <div class="cm-lab-top">
-                <div class="ui-tabs" id="cwLabTabs">
-                  <button type="button" class="ui-tab" data-value="ex" aria-selected="true">좋은 대본</button>
-                  <button type="button" class="ui-tab" data-value="writer" aria-selected="false">기획자 규칙</button>
-                  <button type="button" class="ui-tab" data-value="reviewer" aria-selected="false">검수 기준</button>
-                  <button type="button" class="ui-tab" data-value="guide" aria-selected="false">기본 지침</button>
-                </div>
-              </div>
-              <div class="cm-lab-body" id="cwLabBody"></div>
-            </div>
-          </div>
         </div>
         <!-- 승인 요청 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 승인·반려와 검수 결과 -->
         <div class="cm-approve" data-content-pane="approve" hidden>
@@ -12808,7 +12760,7 @@ window.CsGuide=(function(){
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
     ['perf',1,'퍼포먼스마케팅','영상분석 AI','쇼츠 링크를 넣으면 brand-files 의 ytcap/req 에 요청을 올리고, VPS 가 자막(한국어)을 ytcap/res 에 답합니다.'],
-    ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문과 학습 노트를 올리고, VPS 가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1, 학습 노트는 content_lab_v1.'],
+    ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1.'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
 
@@ -12866,7 +12818,7 @@ window.CsGuide=(function(){
     ['agenda','storage','메모 이미지 agenda/'],
     ['perf','storage','자막 요청 ytcap/req → res'],
     ['content','storage','대본 주문 cmjob/req → res'],
-    ['content','settings','content_jobs_v1 · content_lab_v1'],
+    ['content','settings','content_jobs_v1'],
     ['account','settings','accounts_v1'],
     ['admin','settings','회원·권한·순서·글꼴·틀'],
     ['admin','runs','워크플로우 상태','r'],
@@ -17012,18 +16964,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 })();
 
 /* 유튜브콘텐츠 › 새 영상 만들기 · 대본 만들기(직접 기획)
-   대본 만들기 → brand-files 버킷 cmjob/req/<작업id>.<회차>.<임의>.json 에 주문과 학습 노트를 올리면
+   대본 만들기 → brand-files 버킷 cmjob/req/<작업id>.<회차>.<임의>.json 에 주문(지침·지난 회차 피드백 포함)을 올리면
    PC 의 대본 서비스(caffeinnos-automation/content_writer.js · 로그인하면 자동 실행)가 그 PC 에 로그인된 Claude(구독 · 도구 없음)로 기획자 → 검수자를 돌려
-   cmjob/res/<같은 이름> 에 진행 상황과 결과를 적는다 · 화면은 그 결과를 작업 기록에 옮겨 담는다(VPS 는 7일 뒤 res 를 지움).
+   cmjob/res/<같은 이름> 에 진행 상황과 결과를 적는다 · 화면은 그 결과를 작업 기록에 옮겨 담는다(대본 서비스가 7일 뒤 res 를 지움).
    저장: 작업 content_jobs_v1 = {jobs:{id:{id,at,by,input,rounds:{n:{…}},cur,pick,del}}}
-         학습 노트 content_lab_v1 = {writerGuide:{t,at,by}, reviewerGuide:{…}, rules:{id:{who,text,at,by,del}}, examples:{id:{…,del}}}
-   둘 다 saveMerged 로 서버 최신본 위에 "그 작업 하나·그 항목 하나"만 고쳐 얹는다(남이 만든 작업을 덮지 않음) */
+   saveMerged 로 서버 최신본 위에 "그 작업 하나"만 고쳐 얹는다(남이 만든 작업을 덮지 않음) */
 (function(){
   const $=id=>document.getElementById(id);
   const pane=document.querySelector('#view-content [data-content-pane="make"]');
   if(!pane||!$('cwGo')) return;
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const JOBS_KEY='content_jobs_v1', LAB_KEY='content_lab_v1', BUCKET='brand-files';
+  const JOBS_KEY='content_jobs_v1', BUCKET='brand-files';
   const LS_FORM='baroyam_cw_form_v1';
   const TARGETS=['직장인','자취생','주부','워킹맘','학생','부모님'];
   const FORMATS=[['꿀팁형','번호 붙인 해결팁 3–5개'],['후기형','써 본 사람의 솔직한 첫인상·장단점'],['공감 상황극형',"'이거 완전 나' 순간 → 해결"],['비교형','전·후, 이것 vs 저것']];
@@ -17065,16 +17016,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const pending=[];
   function msg(t,ok){ const m=$('cwFormMsg'); if(!m) return; m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-ok',!!ok); }
   async function persist(key,fn){
-    fn(key===JOBS_KEY?st:st.lab, true);   // 화면에 먼저 반영
+    fn(st, true);   // 화면에 먼저 반영
     const DB=window.BAROYAM_DB;
     const next=DB&&await DB.saveMerged(key,server=>{
       const s=clone(server);
-      if(key===JOBS_KEY){ s.jobs=s.jobs||{}; fn(s,false); }
-      else fn(s,false);
+      s.jobs=s.jobs||{}; fn(s,false);
       return s;
     });
     if(!next){ pending.push([key,fn]); msg('저장하지 못했습니다 · 잠시 뒤 저절로 다시 보냅니다(로그인이 풀렸으면 새로고침)'); return false; }
-    if(key===JOBS_KEY) st.jobs=next.jobs||{}; else st.lab=next;
+    st.jobs=next.jobs||{};
     return true;
   }
   setInterval(async()=>{
@@ -17082,16 +17032,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const DB=window.BAROYAM_DB; if(!DB) return;
     const todo=pending.splice(0);
     for(const [key,fn] of todo){
-      const next=await DB.saveMerged(key,server=>{ const s=clone(server); if(key===JOBS_KEY) s.jobs=s.jobs||{}; fn(s,false); return s; });
+      const next=await DB.saveMerged(key,server=>{ const s=clone(server); s.jobs=s.jobs||{}; fn(s,false); return s; });
       if(!next){ pending.push([key,fn]); continue; }
-      if(key===JOBS_KEY) st.jobs=next.jobs||{}; else st.lab=next;
+      st.jobs=next.jobs||{};
     }
     if(!pending.length){ msg(''); paint(); }
   },20000);
   addEventListener('beforeunload',e=>{ if(pending.length){ e.preventDefault(); e.returnValue=''; } });
   // 작업 하나 고치기 · local=true 면 화면 사본(st), 아니면 서버본(s.jobs)
   const jobPatch=(id,f)=>persist(JOBS_KEY,(s)=>{ const j=s.jobs[id]; if(!j) return; f(j); });
-  const labPatch=f=>persist(LAB_KEY,s=>f(s));
 
   async function load(force){
     if(st.loading) return st.loading;
@@ -17099,8 +17048,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     st.loading=(async()=>{
       const DB=window.BAROYAM_DB;
       try{
-        const [j,l]=await Promise.all([DB.loadSetting(JOBS_KEY,true),DB.loadSetting(LAB_KEY,true)]);
-        st.jobs=(j&&j.jobs)||{}; st.lab=l||{}; st.loaded=true;
+        const j=await DB.loadSetting(JOBS_KEY,true);
+        st.jobs=(j&&j.jobs)||{}; st.loaded=true;
       }catch(e){ msg('작업 기록을 읽지 못했습니다 · 새로고침해 주세요'); }
       st.loading=null;
       paint(); poll();
@@ -17142,12 +17091,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(c.dataset.mode==='auto') msg('한 번에 완성은 편집 자동화가 생기면 열립니다 · 지금은 직접 기획으로 대본을 만들어요',true);
   });
 
-  /* ---------- 요청에 함께 보낼 학습 노트 ---------- */
+  /* ---------- 요청에 함께 보낼 것 · 지침 + 이 작업의 지난 회차 피드백 + 사용자가 고른 대본이 검수자 몇 위였는지 ---------- */
   function learnFor(job,round){
-    const lab=st.lab||{};
-    const rules=who=>live(lab.rules).filter(r=>r.who===who).sort((a,b)=>String(a.at).localeCompare(b.at)).map(r=>r.text);
-    const exs=live(lab.examples).sort((a,b)=>((b.format===job.input.format)-(a.format===job.input.format))||String(b.at).localeCompare(a.at)).slice(0,6)
-      .map(e=>({title:e.title,hook:e.hook,lines:e.lines,format:e.format,product:e.product,note:e.note}));
     const feedback=[]; let reviewerNote='';
     Object.values(job.rounds||{}).sort((a,b)=>a.n-b.n).forEach(r=>{
       if(r.n>=round) return;
@@ -17166,9 +17111,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       calib='최근 사용자가 고른 대본 '+picks.length+'개 중 검수자 1위였던 것은 '+desc.filter(d=>d.top).length+'개. 고른 대본: '+desc.map(d=>d.t).join(', ');
     }
     return {
-      writerGuide:(lab.writerGuide&&lab.writerGuide.t)||DEFAULT_WRITER,
-      reviewerGuide:(lab.reviewerGuide&&lab.reviewerGuide.t)||DEFAULT_REVIEWER,
-      writerRules:rules('writer'), reviewerRules:rules('reviewer'), examples:exs, feedback, reviewerNote, calib,
+      writerGuide:DEFAULT_WRITER, reviewerGuide:DEFAULT_REVIEWER, feedback, reviewerNote, calib,
     };
   }
 
@@ -17283,7 +17226,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         '<span class="cm-bar"><i style="width:'+s.p+'%"></i></span></button>';
     }).join('');
     paintJob();
-    paintLabNums();
   }
 
   function paintJob(){
@@ -17358,8 +17300,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       '<button type="button" class="ui-btn sm icon ghost" data-act="down" aria-pressed="'+(f.v<0)+'" title="아쉬워요">'+
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13V4h3v9zM17 13l-4 7a2 2 0 0 1-3-2l1-4H5a2 2 0 0 1-2-2.3l1.2-6A2 2 0 0 1 6.2 4H17"/></svg></button>'+
       '<input class="ui-field sm" data-fb maxlength="300" value="'+esc(f.t||'')+'" placeholder="한 줄 피드백 (예: 훅이 약해요, 숫자로 시작)">'+
-      '<button type="button" class="ui-btn sm ghost" data-act="rule" title="이 피드백을 기획자 규칙으로 남겨 다음 대본부터 늘 지키게 해요">규칙으로</button></div>'+
-      '<div class="cm-script-foot three"><button type="button" class="ui-btn ghost" data-act="star" title="좋은 대본으로 학습 노트에 남겨요">★</button>'+
+      '</div>'+
+      '<div class="cm-script-foot">'+
       '<button type="button" class="ui-btn" data-act="edit">고쳐서 쓰기</button>'+
       '<button type="button" class="ui-btn '+(k===0?'primary':'soft')+'" data-act="pick">이 대본으로 결정</button></div>';
     return h+'</article>';
@@ -17370,7 +17312,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return '<div class="cm-final"><div class="cm-final-head"><h4>“'+esc(p.title)+'”</h4><span class="cm-hint">'+esc(p.round+'회차 후보 '+p.key+(p.edited?' · 고쳐 씀':'')+' · '+fmtAt(p.at)+(p.by?' · '+p.by:''))+'</span></div>'+
       '<p class="cm-script-hook" style="margin-top:8px">훅 타이틀 <b>'+esc(p.hookTitle)+'</b> · 약 '+secOf(p)+'초 · '+p.lines.length+'줄</p>'+
       '<ol class="cm-script-lines">'+p.lines.map(l=>'<li>'+esc(l.say)+(l.scene?'<small>'+esc(l.scene)+'</small>':'')+'</li>').join('')+'</ol>'+
-      '<div class="cm-script-foot three"><button type="button" class="ui-btn ghost" data-act="star-final" title="좋은 대본으로 학습 노트에 남겨요">★</button>'+
+      '<div class="cm-script-foot">'+
       '<button type="button" class="ui-btn" data-act="unpick">다른 대본으로 바꾸기</button><button type="button" class="ui-btn soft" data-act="copy">대본 복사</button></div></div>'+
       '<div class="cm-next"><b>다음 단계 · 편집</b><br>편집 자동화를 붙이면 이 대본이 그대로 편집자에게 넘어가요. 지금은 대본 복사로 써 주세요.</div>';
   }
@@ -17401,19 +17343,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       await jobPatch(j.id,x=>{ const y=x.rounds[r.n]; y.fb=y.fb||{}; y.fb[s.key]=Object.assign({},y.fb[s.key],{v:cur===v?0:v,at:now(),by:me()}); });
       paint(); return;
     }
-    if(act==='rule'){
-      const t=(a.querySelector('[data-fb]').value||'').trim();
-      if(!t){ a.querySelector('[data-fb]').focus(); return; }
-      const id='r'+rid();
-      await labPatch(l=>{ l.rules=l.rules||{}; l.rules[id]={who:'writer',text:t,at:now(),by:me(),from:j.id}; });
-      b.textContent='남김 ✓'; paintLabNums(); return;
-    }
-    if(act==='star'||act==='star-final'){
-      const src=act==='star'?{title:s.title,hook:s.hookTitle,lines:s.lines.map(l=>l.say)}:{title:j.pick.title,hook:j.pick.hookTitle,lines:j.pick.lines.map(l=>l.say)};
-      const id='e'+rid();
-      await labPatch(l=>{ l.examples=l.examples||{}; l.examples[id]=Object.assign(src,{format:j.input.format,product:j.input.product,note:'',src:'job',job:j.id,at:now(),by:me()}); });
-      b.textContent='★ 저장됨'; b.disabled=true; paintLabNums(); return;
-    }
     if(act==='edit'){ st.editing={job:j.id,round:r.n,key:s.key}; paintJob(); return; }
     if(act==='edit-cancel'){ st.editing=null; paintJob(); return; }
     if(act==='pick'||act==='edit-pick'){
@@ -17434,76 +17363,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const p=j.pick, txt='[훅 타이틀] '+p.hookTitle+'\n\n'+p.lines.map(l=>l.say+(l.scene?'  (화면: '+l.scene+')':'')).join('\n');
       try{ await navigator.clipboard.writeText(txt); b.textContent='복사됨 ✓'; }catch(err){ b.textContent='복사 못 함'; }
       return;
-    }
-  });
-
-  /* ---------- 학습 노트 ---------- */
-  function paintLabNums(){
-    const lab=st.lab||{}, rules=live(lab.rules);
-    const picks=live(st.jobs).filter(j=>j.pick);
-    const agree=picks.filter(j=>{ const r=(j.rounds||{})[j.pick.round]||{}; return (r.rank||[])[0]===j.pick.key; }).length;
-    $('cwLabNums').innerHTML=[
-      ['좋은 대본',live(lab.examples).length,'개'],['기획자 규칙',rules.filter(r=>r.who==='writer').length,'개'],
-      ['검수 기준',rules.filter(r=>r.who==='reviewer').length,'개'],['검수자 1위 = 내 선택',picks.length?Math.round(agree/picks.length*100):'–',picks.length?'% · '+picks.length+'번':''],
-    ].map(([k,v,u])=>'<div><dt>'+k+'</dt><dd>'+v+'<small>'+u+'</small></dd></div>').join('');
-  }
-  let labTab='ex';
-  const labTabs=window.UI&&window.UI.tabs?window.UI.tabs($('cwLabTabs'),v=>{ labTab=v; paintLab(); }):null;
-  $('cwLabOpen').addEventListener('click',async()=>{ await load(); $('cwLabDlg').hidden=false; paintLab(); });
-  $('cwLabDlg').addEventListener('click',e=>{ if(e.target===$('cwLabDlg')||e.target.closest('[data-cw-close]')) $('cwLabDlg').hidden=true; });
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('cwLabDlg').hidden) $('cwLabDlg').hidden=true; });
-  function paintLab(){
-    const lab=st.lab||{}, body=$('cwLabBody');
-    if(labTab==='ex'){
-      const exs=live(lab.examples).sort((a,b)=>String(b.at).localeCompare(a.at));
-      body.innerHTML='<p class="cm-lead">기획자가 말투·호흡을 참고하는 대본이에요(같은 포맷이 먼저, 최근 6개). 대본 카드의 ★ 로 넣거나, 잘 된 대본을 직접 붙여 넣으세요.</p>'+
-        '<div class="cm-lab-add"><div class="row"><input class="ui-field" id="cwExProduct" maxlength="120" placeholder="제품 (선택)"><button type="button" class="ui-field" id="cwExFormat" style="flex:0 0 150px"></button></div>'+
-        '<textarea class="ui-field cm-ta" id="cwExLines" rows="6" placeholder="대본을 한 줄씩 붙여 넣으세요 (첫 줄 = 훅)"></textarea>'+
-        '<div class="row"><input class="ui-field" id="cwExNote" maxlength="300" placeholder="좋은 이유 (예: 첫 줄 숫자 훅에 조회수 10만)"><button type="button" class="ui-btn primary" id="cwExAdd">좋은 대본 넣기</button></div></div>'+
-        (exs.length?exs.map(e=>'<div class="cm-lab-item"><div><b>'+esc(e.title||(e.lines||[])[0]||'')+'</b><p>'+esc((e.lines||[]).join('\n'))+'</p>'+
-          (e.note?'<small>좋은 이유 · '+esc(e.note)+'</small>':'')+'<small>'+esc([e.format,e.product,e.src==='job'?'대본 카드에서':'직접 넣음',fmtAt(e.at),e.by].filter(Boolean).join(' · '))+'</small></div>'+
-          '<button type="button" class="ui-btn sm ghost" data-del-ex="'+esc(Object.keys(lab.examples).find(k=>lab.examples[k]===e))+'">빼기</button></div>').join('')
-          :'<div class="cm-empty">아직 좋은 대본이 없어요</div>');
-      let exFormat=FORMATS[0][0];
-      const fb=$('cwExFormat'); const paintF=()=>{ fb.textContent=exFormat+' ▾'; }; paintF();
-      fb.addEventListener('click',()=>window.UI&&window.UI.menu&&window.UI.menu(fb,FORMATS.map(([v])=>({value:v,label:v})),exFormat,v=>{ exFormat=v; paintF(); }));
-      $('cwExAdd').addEventListener('click',async()=>{
-        const lines=$('cwExLines').value.split('\n').map(x=>x.trim()).filter(Boolean);
-        if(!lines.length){ $('cwExLines').focus(); return; }
-        const id='e'+rid();
-        await labPatch(l=>{ l.examples=l.examples||{}; l.examples[id]={title:lines[0],hook:'',lines,format:exFormat,product:$('cwExProduct').value.trim(),note:$('cwExNote').value.trim(),src:'mine',at:now(),by:me()}; });
-        paintLab(); paintLabNums();
-      });
-      return;
-    }
-    if(labTab==='writer'||labTab==='reviewer'){
-      const who=labTab, rows=Object.entries(lab.rules||{}).filter(([,r])=>r&&!r.del&&r.who===who).sort((a,b)=>String(a[1].at).localeCompare(b[1].at));
-      body.innerHTML='<p class="cm-lead">'+(who==='writer'?'기획자가 대본을 쓸 때 꼭 지키는 것이에요. 대본 카드의 피드백에서 "규칙으로"를 눌러도 여기에 쌓여요.':'검수자가 점수를 매길 때 꼭 보는 기준이에요. 예: "첫 줄에 가격이 나오면 훅 점수를 높게"')+'</p>'+
-        '<div class="cm-lab-add"><div class="row"><input class="ui-field" id="cwRuleIn" maxlength="300" placeholder="'+(who==='writer'?'예: 첫 줄은 질문보다 숫자로 시작':'예: 행동 유도가 없으면 통과시키지 않기')+'"><button type="button" class="ui-btn primary" id="cwRuleAdd">추가</button></div></div>'+
-        (rows.length?rows.map(([id,r])=>'<div class="cm-lab-item"><div><p>'+esc(r.text)+'</p><small>'+esc([fmtAt(r.at),r.by,r.from?'대본 피드백에서':''].filter(Boolean).join(' · '))+'</small></div>'+
-          '<button type="button" class="ui-btn sm ghost" data-del-rule="'+esc(id)+'">빼기</button></div>').join(''):'<div class="cm-empty">아직 없어요</div>');
-      const add=async()=>{ const t=$('cwRuleIn').value.trim(); if(!t) return; const id='r'+rid();
-        await labPatch(l=>{ l.rules=l.rules||{}; l.rules[id]={who,text:t,at:now(),by:me()}; }); paintLab(); paintLabNums(); $('cwRuleIn').focus(); };
-      $('cwRuleAdd').addEventListener('click',add);
-      $('cwRuleIn').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing) add(); });
-      return;
-    }
-    const g=k=>(lab[k]&&lab[k].t)||'';
-    body.innerHTML='<p class="cm-lead">기획자·검수자가 늘 받는 기본 지침이에요. 비워 두면 처음 기본값을 써요. 규칙·좋은 대본은 이 지침 뒤에 붙어 함께 갑니다.</p>'+
-      [['writerGuide','기획자 지침',DEFAULT_WRITER],['reviewerGuide','검수자 지침',DEFAULT_REVIEWER]].map(([k,l,d])=>
-        '<div class="cm-lab-guide"><h4>'+l+(lab[k]&&lab[k].at?' <small class="cm-hint" style="font-weight:400">'+esc(fmtAt(lab[k].at)+(lab[k].by?' · '+lab[k].by:''))+'</small>':'')+'</h4>'+
-        '<textarea class="ui-field cm-ta" data-guide="'+k+'">'+esc(g(k)||d)+'</textarea>'+
-        '<div class="row"><button type="button" class="ui-btn ghost sm" data-guide-reset="'+k+'">기본값으로</button><button type="button" class="ui-btn soft sm" data-guide-save="'+k+'">저장</button></div></div>').join('');
-  }
-  $('cwLabBody').addEventListener('click',async e=>{
-    const de=e.target.closest('[data-del-ex]'), dr=e.target.closest('[data-del-rule]'), gs=e.target.closest('[data-guide-save]'), gr=e.target.closest('[data-guide-reset]');
-    if(de){ const id=de.dataset.delEx; await labPatch(l=>{ if(l.examples&&l.examples[id]) l.examples[id].del=now(); }); paintLab(); paintLabNums(); }
-    if(dr){ const id=dr.dataset.delRule; await labPatch(l=>{ if(l.rules&&l.rules[id]) l.rules[id].del=now(); }); paintLab(); paintLabNums(); }
-    if(gs||gr){
-      const k=(gs||gr).dataset.guideSave||(gs||gr).dataset.guideReset;
-      const t=gr?'':$('cwLabBody').querySelector('[data-guide="'+k+'"]').value.trim();
-      await labPatch(l=>{ l[k]={t,at:now(),by:me()}; });
-      paintLab();
     }
   });
 
