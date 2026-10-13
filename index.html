@@ -2593,7 +2593,6 @@ window.BAROYAM_FONT=(function(){
   .cm-msg.is-ok{color:var(--pos)}
   .cm-msg[hidden]{display:none}
   .cm-modes .ui-chip[data-mode="auto"]{opacity:.55}
-  #cwChannelRecent:empty{display:none}
   .cm-empty{padding:34px 10px;text-align:center;font-size:13px;line-height:1.6;color:var(--mute)}
   .cm-empty b{display:block;margin-bottom:4px;font-size:14px;font-weight:600;color:var(--ink)}
   .cm-jobs:empty::before{content:'아직 만든 영상이 없어요';grid-column:1/-1;font-size:12.5px;color:var(--mute)}
@@ -9846,22 +9845,14 @@ window.BAROYAM_FONT=(function(){
               <p class="cm-lead">입력하고 <b>대본 만들기</b>를 누르면 기획자가 대본 후보를 쓰고, 검수자가 점수를 매겨 추천 순서를 정해요. 보통 1~3분 걸려요.</p>
               <div class="cm-field"><label for="cwProduct">제품 <em>필수</em></label>
                 <input class="ui-field block" id="cwProduct" maxlength="120" autocomplete="off" placeholder="제품 이름 (예: 쫀득란빵 토핑 계란빵)"></div>
-              <div class="cm-field"><label for="cwChannel">채널</label>
-                <input class="ui-field block" id="cwChannel" maxlength="60" autocomplete="off" placeholder="채널 이름 (예: 주부채널)">
-                <div class="ui-chips" id="cwChannelRecent"></div></div>
+              <div class="cm-field"><label>어느 채널 영상인가요</label>
+                <div class="ui-chips" id="cwChannel"></div>
+                <p class="cm-hint">채널 관리의 채널이에요. 고른 채널의 타깃·편집 스타일을 대본에 함께 넘겨요.</p></div>
               <div class="cm-field"><label>누구에게 보여 줄 건가요? <em>한 명을 상상해야 공감이 살아요</em></label>
                 <div class="ui-chips" id="cwTarget"></div>
                 <input class="ui-field block" id="cwTargetIn" maxlength="60" autocomplete="off" placeholder="직접 입력 (예: 신혼부부)"></div>
               <div class="cm-field"><label>어떤 포맷으로 만들까요</label>
                 <div class="ui-chips cards" id="cwFormat"></div></div>
-              <div class="cm-field"><label for="cwSituation">상황 <em>언제·어디서 먹나요</em></label>
-                <textarea class="ui-field block cm-ta" id="cwSituation" maxlength="600" rows="2" placeholder="예: 등교 10분 전, 아이 아침 간식"></textarea></div>
-              <div class="cm-field"><label for="cwPoints">강조할 포인트</label>
-                <textarea class="ui-field block cm-ta" id="cwPoints" maxlength="800" rows="2" placeholder="예: 렌지 1분 · 3가지 맛 · 소비기한 1년"></textarea></div>
-              <div class="cm-field"><label for="cwFacts">확인된 사실 <em>이 밖의 효능·수치는 쓰지 않아요</em></label>
-                <textarea class="ui-field block cm-ta" id="cwFacts" maxlength="800" rows="2" placeholder="예: 전자레인지 1분 조리, 개별 포장"></textarea></div>
-              <div class="cm-field"><label for="cwMemo">추가 요청 <em>선택</em></label>
-                <textarea class="ui-field block cm-ta" id="cwMemo" maxlength="800" rows="2" placeholder="예: 반전 훅으로, 마지막은 댓글 유도"></textarea></div>
               <div class="cm-field"><label>영상 길이</label>
                 <div class="ui-chips" id="cwLength"></div></div>
               <div class="cm-field"><label>대본 후보 수</label>
@@ -10087,7 +10078,31 @@ window.BAROYAM_FONT=(function(){
               </dl>
               <div class="cm-ch-acts">
                 <button type="button" class="ui-btn" data-cm-set="open" aria-expanded="false" aria-controls="cmChSet">설정</button>
-                <button type="button" class="ui-btn primary">이 채널로 새 영상</button>
+                <button type="button" class="ui-btn primary" data-cw-new>이 채널로 새 영상</button>
+              </div>
+            </div>
+            <div class="cm-card cm-ch">
+              <h3>간편식덕후 <span class="cm-tag is-done">유튜브 연결됨 · 모의</span></h3>
+              <dl class="cm-brief">
+                <div><dt>타깃</dt><dd>자취생 · 1인 가구</dd></div>
+                <div><dt>업로드</dt><dd>매일 18:00</dd></div>
+                <div><dt>우선순위</dt><dd>보통</dd></div>
+                <div><dt>이번 7일</dt><dd class="cm-ch-week"><div class="cm-bar"><i style="width:43%"></i></div><span>3 / 7</span></dd></div>
+                <div><dt>예약</dt><dd>
+                  <ul class="cm-sched">
+                    <li class="is-empty"><b>10/13 18:00</b><span>비어 있음 · 승인하면 여기로</span></li>
+                  </ul></dd></div>
+                <div><dt>편집 스타일</dt><dd>
+                  <div class="cm-ch-styles">
+                    <figure><div class="cm-frame food"><span class="cm-hook hl"><small>출근 전</small><b>1분 아침</b></span></div><figcaption>훅</figcaption></figure>
+                    <figure><div class="cm-frame"><span class="cm-cap">편의점 들를 <em>5분</em>도</span></div><figcaption>자막</figcaption></figure>
+                    <figure><div class="cm-frame pack"></div><figcaption>카메라</figcaption></figure>
+                  </div>
+                  밝은 남성 · 먹방 리뷰형 · 큰 자막 · 숫자 훅</dd></div>
+              </dl>
+              <div class="cm-ch-acts">
+                <button type="button" class="ui-btn" disabled title="준비 중">설정</button>
+                <button type="button" class="ui-btn primary" data-cw-new>이 채널로 새 영상</button>
               </div>
             </div>
             <button type="button" class="ui-btn soft cm-ch-add">+ 채널 추가</button>
@@ -17060,7 +17075,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* ---------- 입력 칸 ---------- */
   function defForm(){ return {target:'주부',format:'꿀팁형',length:30,count:6}; }
   try{ st.form=Object.assign(defForm(),JSON.parse(localStorage.getItem(LS_FORM)||'{}')); }catch(e){ st.form=defForm(); }
-  const F={product:'cwProduct',channel:'cwChannel',situation:'cwSituation',points:'cwPoints',facts:'cwFacts',memo:'cwMemo'};
+  const F={product:'cwProduct'};
   Object.entries(F).forEach(([k,id])=>{ $(id).value=st.form[k]||''; $(id).addEventListener('input',()=>{ st.form[k]=$(id).value; keepForm(); }); });
   if(!TARGETS.includes(st.form.target)) $('cwTargetIn').value=st.form.target||'';
   $('cwTargetIn').addEventListener('input',()=>{ const v=$('cwTargetIn').value.trim(); st.form.target=v||'주부'; paintForm(); keepForm(); });
@@ -17073,18 +17088,34 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     chips($('cwFormat'),FORMATS.map(([v,s])=>[v,v,s]),st.form.format,true);
     chips($('cwLength'),LENGTHS.map(n=>[n,n+'초']),st.form.length);
     chips($('cwCount'),COUNTS.map(n=>[n,n+'개']),st.form.count);
-    // 전에 쓴 채널
-    const seen=[]; Object.values(st.jobs).sort((a,b)=>String(b.at).localeCompare(a.at)).forEach(j=>{ const c=j.input&&j.input.channel; if(c&&!seen.includes(c)) seen.push(c); });
-    $('cwChannelRecent').innerHTML=seen.slice(0,5).map(c=>'<button type="button" class="ui-chip" data-v="'+esc(c)+'" aria-pressed="'+(st.form.channel===c)+'">'+esc(c)+'</button>').join('');
+    // 채널 = 채널 관리 화면의 채널 카드 · 고른 채널이 없어졌으면 첫 채널
+    const chs=channels();
+    if(!chs.find(c=>c.name===st.form.channel)) st.form.channel=chs[0]?chs[0].name:'';
+    chips($('cwChannel'),chs.map(c=>[c.name,c.name]),st.form.channel);
   }
-  [['cwTarget','target',String],['cwFormat','format',String],['cwLength','length',Number],['cwCount','count',Number],['cwChannelRecent','channel',String]].forEach(([id,k,cv])=>{
+  /* 채널 관리 화면(.cm-ch 카드)에서 채널 이름·타깃·편집 스타일을 읽는다 · 채널 관리가 저장을 갖게 되면 여기만 바꾼다 */
+  function channels(){
+    return [...document.querySelectorAll('#view-content .cm-ch')].map(c=>{
+      const h=c.querySelector('h3'), dd=t=>{ const d=[...c.querySelectorAll('.cm-brief > div')].find(x=>(x.querySelector('dt')||{}).textContent===t); return d?[...d.querySelector('dd').childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join(' ').replace(/\s+/g,' ').trim():''; };   // 글만(그림 카드 글자는 빼고)
+      return {name:h?h.childNodes[0].textContent.trim():'',target:dd('타깃'),style:dd('편집 스타일')};
+    }).filter(c=>c.name);
+  }
+  [['cwTarget','target',String],['cwFormat','format',String],['cwLength','length',Number],['cwCount','count',Number],['cwChannel','channel',String]].forEach(([id,k,cv])=>{
     $(id).addEventListener('click',e=>{
       const c=e.target.closest('.ui-chip'); if(!c) return;
       st.form[k]=cv(c.dataset.v);
       if(k==='target') $('cwTargetIn').value='';
-      if(k==='channel') $('cwChannel').value=st.form.channel;
       paintForm(); keepForm();
     });
+  });
+  // 채널 관리의 "이 채널로 새 영상" → 새 영상 만들기를 열고 그 채널을 고른다
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-cw-new]'); if(!b) return;
+    const h=b.closest('.cm-ch').querySelector('h3');
+    if(h) st.form.channel=h.childNodes[0].textContent.trim();
+    keepForm();
+    const it=document.querySelector('#sbContentSubnav [data-content="make"]'); if(it) it.click();
+    paintForm(); $('cwProduct').focus();
   });
   $('cwModes').addEventListener('click',e=>{
     const c=e.target.closest('.ui-chip'); if(!c) return;
@@ -17166,7 +17197,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   async function create(){
     const f=st.form;
-    f.product=$('cwProduct').value.trim(); f.channel=$('cwChannel').value.trim();
+    f.product=$('cwProduct').value.trim();
+    const ch=channels().find(c=>c.name===f.channel)||{};
     if(!f.product){ msg('제품 이름을 적어 주세요'); $('cwProduct').focus(); return; }
     await load();
     if(!st.loaded) return;
@@ -17174,7 +17206,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     try{
       const id='cj'+rid();
       const job={id,at:now(),by:me(),input:{product:f.product,channel:f.channel,target:f.target,format:f.format,length:f.length,count:f.count,
-        situation:(f.situation||'').trim(),points:(f.points||'').trim(),facts:(f.facts||'').trim(),memo:(f.memo||'').trim(),review:$('cwReview').checked},
+        channelNote:[ch.target&&'타깃 '+ch.target,ch.style&&'편집 스타일 '+ch.style].filter(Boolean).join(' · '),review:$('cwReview').checked},
         rounds:{},cur:1};
       const req=await send(job,1);
       job.rounds[1]={n:1,at:now(),by:me(),req,state:'sent'};
