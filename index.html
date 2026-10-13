@@ -2378,6 +2378,15 @@ window.BAROYAM_FONT=(function(){
   .ig-form .ig-meta{font-size:11.5px;color:var(--mute)}
   .ig-form .ig-meta:empty{display:none}
   .ig-dlg [hidden]{display:none}
+  /* 배너 오른쪽 위 · 필터 이름 설정 단추(일정 탭일 때만) */
+  .plan-hero .ig-cfg{position:absolute;top:22px;right:28px}
+  .plan-hero .ig-cfg[hidden]{display:none}
+  .ig-cfg svg{width:15px;height:15px}
+  .ig-cfg-grp{display:flex;flex-direction:column;gap:8px}
+  .ig-cfg-grp h3{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
+  .ig-cfg-grp p{margin:0;font-size:11.5px;color:var(--mute)}
+  .ig-cfg-row{display:grid;grid-template-columns:110px minmax(0,1fr);align-items:center;gap:10px;font-size:12.5px;font-weight:500;color:var(--body)}
+  .ig-cfg-row>span{display:flex;align-items:center;min-width:0}
   @media (max-width:760px){ .ig-tools #igQ{width:100%} .ig-tools .ig-end{margin-left:0;width:100%} .ig-form .ig-row2{grid-template-columns:1fr} }
   /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
   .cm-make{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
@@ -10356,14 +10365,15 @@ window.BAROYAM_FONT=(function(){
             <div class="ptag">인스타콘텐츠</div>
             <div class="ptitle" id="instaViewTitle">성과</div>
             <div class="psub" id="instaViewSub">게시물·릴스의 조회·반응·팔로워 변화를 봅니다.</div>
+            <button type="button" class="ui-btn soft sm ig-cfg" id="igCfg" hidden title="일정 화면의 형식·상태·필터 이름 바꾸기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>필터 이름 설정</button>
           </div>
           <div class="profit-empty" data-insta-pane="perf">아직 준비 중인 화면입니다.</div>
           <!-- 일정 · 인스타 담당자가 날마다 무엇을 올릴지 미리 짜 두는 캘린더 · 프로젝트와 다른 저장 칸(app_settings insta_schedule_v1) ·
                담당자 없음 · 거르기는 형식·상태·검색 -->
           <div class="ig-plan" data-insta-pane="plan" hidden>
             <div class="ig-tools">
-              <div class="ig-grp"><span>형식</span><div class="ui-chips" id="igTypeF"></div></div>
-              <div class="ig-grp"><span>상태</span><div class="ui-chips" id="igStateF"></div></div>
+              <div class="ig-grp"><span id="igTypeL">형식</span><div class="ui-chips" id="igTypeF"></div></div>
+              <div class="ig-grp"><span id="igStateL">상태</span><div class="ui-chips" id="igStateF"></div></div>
               <div class="ig-end">
                 <input class="ui-field sm" id="igQ" placeholder="제목·메모 검색" aria-label="일정 검색">
                 <button type="button" class="ui-btn ghost sm" id="igTrash" hidden></button>
@@ -10398,6 +10408,22 @@ window.BAROYAM_FONT=(function(){
               <span class="pf-grow"></span>
               <button type="button" class="ui-btn ghost" data-ig-close>취소</button>
               <button type="button" class="ui-btn primary" id="igOk">저장</button>
+            </div>
+          </div>
+        </div>
+        <!-- 필터 이름 설정 창 · 비우면 기본 이름 · 모든 회원에게 같이 보인다(insta_schedule_v1.labels) -->
+        <div class="settings-overlay" id="igCfgDlg" hidden>
+          <div class="settings-panel ig-dlg" role="dialog" aria-modal="true" aria-labelledby="igCfgTitle">
+            <div class="settings-head">
+              <h2 id="igCfgTitle">필터 이름 설정</h2>
+              <button type="button" class="settings-close" data-cfg-close aria-label="닫기">✕</button>
+            </div>
+            <div class="ig-form" id="igCfgBody"></div>
+            <div class="pf-mix-foot">
+              <button type="button" class="ui-btn ghost" id="igCfgReset">기본 이름으로</button>
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn ghost" data-cfg-close>취소</button>
+              <button type="button" class="ui-btn primary" id="igCfgOk">저장</button>
             </div>
           </div>
         </div>
@@ -16813,6 +16839,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     title.textContent=el.textContent.trim(); sub.textContent=el.dataset.sub||'';
     panes.forEach(p=>{ p.hidden=p.dataset.instaPane!==el.dataset.insta; });
+    const cfg=document.getElementById('igCfg'); if(cfg) cfg.hidden=el.dataset.insta!=='plan';
     if(el.dataset.insta==='plan'&&window.baroyamInstaPlan&&document.getElementById('view-insta').style.display!=='none') window.baroyamInstaPlan.open();
   }
   pick(cur);
@@ -16848,9 +16875,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const dow=d=>new Date(d+'T00:00:00Z').getUTCDay();
   const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8));
 
+  /* 이름은 "필터 이름 설정"에서 바꾼다 · labels={type:{k:이름},state:{…},filter:{…},group:{…}} · 비어 있으면 기본 이름(d) · 열쇠(k)는 저장값이라 바꾸지 않는다 */
+  const lab=(g,k,d)=>{ const v=obj(obj(st.data.labels)[g])[k]; return typeof v==='string'&&v.trim()?v.trim():d; };
+  const named=(g,list)=>list.map(t=>Object.defineProperty(t,'l',{get(){ return lab(g,t.k,t.d); },enumerable:true}));
   /* 형식 · 판매처 색 변수를 빌려 다크 모드에서도 맞는 색 */
-  const TYPES=[{k:'feed',l:'피드',c:'var(--self)'},{k:'reels',l:'릴스',c:'var(--talk)'},{k:'carousel',l:'캐러셀',c:'var(--coupang)'},{k:'story',l:'스토리',c:'var(--naver)'}];
-  const STATES=[{k:'plan',l:'기획'},{k:'make',l:'제작 중'},{k:'ready',l:'업로드 준비'},{k:'done',l:'업로드 완료'}];
+  const TYPES=named('type',[{k:'feed',d:'피드',c:'var(--self)'},{k:'reels',d:'릴스',c:'var(--talk)'},{k:'carousel',d:'캐러셀',c:'var(--coupang)'},{k:'story',d:'스토리',c:'var(--naver)'}]);
+  const STATES=named('state',[{k:'plan',d:'기획'},{k:'make',d:'제작 중'},{k:'ready',d:'업로드 준비'},{k:'done',d:'업로드 완료'}]);
+  const FILTERS=named('filter',[{k:'todo',d:'업로드 예정'},{k:'done',d:'업로드 완료'},{k:'late',d:'지난 예정'}]);
+  const GROUPS=named('group',[{k:'type',d:'형식'},{k:'state',d:'상태'}]);
   const typeOf=k=>TYPES.find(t=>t.k===k)||TYPES[0];
   const stateOf=k=>STATES.find(t=>t.k===k)||STATES[0];
 
@@ -16945,10 +16977,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function paintFilters(all){
     const cnt=k=>all.filter(p=>(p.type||'feed')===k).length;
     $('igTypeF').innerHTML='<button type="button" class="ui-chip" data-t="" aria-pressed="'+(!F.type.size)+'">전체</button>'
-      +TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-t="'+t.k+'" aria-pressed="'+F.type.has(t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+t.l+' <b>'+cnt(t.k)+'</b></button>').join('');
+      +TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-t="'+t.k+'" aria-pressed="'+F.type.has(t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+esc(t.l)+' <b>'+cnt(t.k)+'</b></button>').join('');
     const late=all.filter(isLate).length;
-    const SF=[{k:'',l:'전체'},{k:'todo',l:'업로드 예정',n:all.filter(p=>p.state!=='done').length},{k:'done',l:'업로드 완료',n:all.filter(p=>p.state==='done').length},{k:'late',l:'지난 예정',n:late}];
-    $('igStateF').innerHTML=SF.filter(x=>x.k!=='late'||late||F.state==='late').map(x=>'<button type="button" class="ui-chip" data-s="'+x.k+'" aria-pressed="'+(F.state===x.k)+'">'+x.l+(x.n!=null?' <b>'+x.n+'</b>':'')+'</button>').join('');
+    const fl=k=>FILTERS.find(x=>x.k===k).l;
+    const SF=[{k:'',l:'전체'},{k:'todo',l:fl('todo'),n:all.filter(p=>p.state!=='done').length},{k:'done',l:fl('done'),n:all.filter(p=>p.state==='done').length},{k:'late',l:fl('late'),n:late}];
+    $('igTypeL').textContent=GROUPS[0].l; $('igStateL').textContent=GROUPS[1].l;
+    $('igStateF').innerHTML=SF.filter(x=>x.k!=='late'||late||F.state==='late').map(x=>'<button type="button" class="ui-chip" data-s="'+x.k+'" aria-pressed="'+(F.state===x.k)+'">'+esc(x.l)+(x.n!=null?' <b>'+x.n+'</b>':'')+'</button>').join('');
   }
 
   /* ---------- 캘린더 · 한 주 한 줄, 날마다 그날 올릴 것이 시간 순으로 쌓인다 ---------- */
@@ -17019,8 +17053,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   for(let h=7;h<=23;h++) ['00','30'].forEach(mm=>TIMES.push({value:String(h).padStart(2,'0')+':'+mm,label:(h<12?'오전 ':'오후 ')+((h+11)%12+1)+':'+mm}));
   function paintForm(){
     $('igTime').innerHTML='<span class="t'+(form.time?'':' ph')+'">'+(form.time?esc((TIMES.find(x=>x.value===form.time)||{label:form.time}).label):'시간 없음')+'</span>';
-    $('igType').innerHTML=TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-v="'+t.k+'" aria-pressed="'+(form.type===t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+t.l+'</button>').join('');
-    $('igState').innerHTML=STATES.map(t=>'<button type="button" class="ui-chip" data-v="'+t.k+'" aria-pressed="'+(form.state===t.k)+'">'+t.l+'</button>').join('');
+    $('igType').innerHTML=TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-v="'+t.k+'" aria-pressed="'+(form.type===t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+esc(t.l)+'</button>').join('');
+    $('igState').innerHTML=STATES.map(t=>'<button type="button" class="ui-chip" data-v="'+t.k+'" aria-pressed="'+(form.state===t.k)+'">'+esc(t.l)+'</button>').join('');
   }
   function openDlg(id,preset){
     const p=id&&st.data.posts[id];
@@ -17071,6 +17105,40 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     closeDlg();
     setPost(id,{del:Date.now()});
   });
+
+  /* ---------- 필터 이름 설정 · 바꾼 이름만 labels 에 얹는다(merge3 로 칸마다 합쳐 다른 PC의 고침을 지우지 않음) ---------- */
+  const cfgDlg=$('igCfgDlg');
+  const CFG=[
+    {g:'group',h:'필터 묶음 이름',p:'위쪽 거르기 줄 맨 앞에 보이는 이름',list:GROUPS},
+    {g:'type',h:'형식',p:'거르기 칩과 일정 창의 형식 · 색은 그대로',list:TYPES},
+    {g:'state',h:'진행 상태',p:'일정 창에서 고르는 상태',list:STATES},
+    {g:'filter',h:'상태 거르기',p:'위쪽 상태 칩',list:FILTERS}];
+  function openCfg(){
+    $('igCfgBody').innerHTML=CFG.map(c=>'<div class="ig-cfg-grp"><h3>'+c.h+'</h3><p>'+c.p+'</p>'
+      +c.list.map(t=>'<label class="ig-cfg-row"><span>'+(t.c?'<i class="ig-dot" style="--bar:'+t.c+'"></i>':'')+esc(t.d)+'</span>'
+        +'<input class="ui-field sm" maxlength="20" data-g="'+c.g+'" data-k="'+t.k+'" placeholder="'+esc(t.d)+'" value="'+esc(lab(c.g,t.k,''))+'" autocomplete="off"></label>').join('')+'</div>').join('');
+    cfgDlg.hidden=false;
+    const f=cfgDlg.querySelector('input'); if(f) f.focus();
+  }
+  const closeCfg=()=>{ cfgDlg.hidden=true; };
+  function saveCfg(){
+    const L=clone(obj(st.data.labels))||{}; let changed=false;
+    cfgDlg.querySelectorAll('input[data-g]').forEach(i=>{
+      const g=i.dataset.g, k=i.dataset.k, d=CFG.find(c=>c.g===g).list.find(t=>t.k===k).d;
+      let v=i.value.trim(); if(v===d) v='';
+      L[g]=obj(L[g]);
+      if((L[g][k]||'')!==v){ L[g][k]=v; changed=true; }
+    });
+    closeCfg();
+    if(!changed) return;
+    st.data.labels=L; mark();
+  }
+  $('igCfg').addEventListener('click',openCfg);
+  $('igCfgOk').addEventListener('click',saveCfg);
+  $('igCfgReset').addEventListener('click',()=>{ cfgDlg.querySelectorAll('input[data-g]').forEach(i=>{ i.value=''; }); });
+  cfgDlg.addEventListener('click',e=>{ if(e.target===cfgDlg||e.target.closest('[data-cfg-close]')) closeCfg(); });
+  cfgDlg.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing&&e.target.matches('input')){ e.preventDefault(); saveCfg(); } });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!cfgDlg.hidden) closeCfg(); });
 
   /* ---------- 거르기·캘린더·목록 누르기 ---------- */
   root.addEventListener('click',e=>{
