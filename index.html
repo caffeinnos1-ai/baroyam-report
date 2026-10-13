@@ -1300,6 +1300,7 @@ window.BAROYAM_ACCESS=(function(){
     {k:'channel',   name:'판매채널',     sel:'#sbChannelGroup',                        views:['channel']},
     {k:'perf',      name:'퍼포먼스마케팅', sel:'.sidebar .sb-item[data-view="perf"]',  views:['perf']},
     {k:'content',   name:'유튜브콘텐츠', sel:'.sidebar .sb-item[data-view="content"]', views:['content']},
+    {k:'insta',     name:'인스타콘텐츠', sel:'.sidebar .sb-item[data-view="insta"]',   views:['insta']},
     {k:'sales',     name:'매출데이터',   sel:'#sbSalesToggle',                         views:['week','month']},
     {k:'goal',      name:'목표설정',     sel:'.sidebar .sb-item[data-view="goal"]',    views:['goal']},
     {k:'ops',       name:'판매·재고',     sel:'.sidebar .sb-item[data-view="ops"]',     views:['ops']},
@@ -7333,6 +7334,11 @@ window.BAROYAM_FONT=(function(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M10 9.2v5.6l4.8-2.8Z"/></svg>
           <span>유튜브콘텐츠</span>
         </button>
+        <!-- 인스타콘텐츠 · 가로형 대시보드 · 배너 위 단추 세 개(성과 / 일정 / 업로드) · 내용은 아직 비어 있다 -->
+        <button class="sb-item" type="button" data-view="insta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.8" y="3.8" width="16.4" height="16.4" rx="4.6"/><circle cx="12" cy="12" r="3.7"/><circle cx="16.9" cy="7.1" r=".9" fill="currentColor" stroke="none"/></svg>
+          <span>인스타콘텐츠</span>
+        </button>
         <button class="sb-item" type="button" id="sbSalesToggle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V4M16 20v-8M4 20h16"/></svg>
           <span>매출데이터</span>
@@ -10308,6 +10314,24 @@ window.BAROYAM_FONT=(function(){
           </div>
         </section>
       </div><!-- /view-ops -->
+      <!-- 인스타콘텐츠 · 가로형 대시보드(view-is-wide) · 배너 위 단추 세 개(성과 / 일정 / 업로드) · 화면 내용은 아직 비어 있다 -->
+      <div id="view-insta" style="display:none">
+        <div class="hero-view-tabs" id="instaTabs" role="tablist" aria-label="인스타콘텐츠 화면">
+          <button type="button" class="hero-view-tab active" role="tab" data-insta="perf" data-sub="게시물·릴스의 조회·반응·팔로워 변화를 봅니다.">성과</button>
+          <button type="button" class="hero-view-tab" role="tab" data-insta="plan" data-sub="올릴 콘텐츠와 날짜를 한눈에 정리합니다.">일정</button>
+          <button type="button" class="hero-view-tab" role="tab" data-insta="upload" data-sub="완성한 콘텐츠를 올리고 예약합니다.">업로드</button>
+        </div>
+        <section class="section" style="padding-top:0">
+          <div class="plan-hero">
+            <div class="ptag">인스타콘텐츠</div>
+            <div class="ptitle" id="instaViewTitle">성과</div>
+            <div class="psub" id="instaViewSub">게시물·릴스의 조회·반응·팔로워 변화를 봅니다.</div>
+          </div>
+          <div class="profit-empty" data-insta-pane="perf">아직 준비 중인 화면입니다.</div>
+          <div class="profit-empty" data-insta-pane="plan" hidden>아직 준비 중인 화면입니다.</div>
+          <div class="profit-empty" data-insta-pane="upload" hidden>아직 준비 중인 화면입니다.</div>
+        </section>
+      </div><!-- /view-insta -->
       <!-- 견적서 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-quote" style="display:none">
         <section class="section" style="padding-top:0">
@@ -12477,6 +12501,7 @@ window.CsGuide=(function(){
     ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
     ['profit',1,'손익·마진 관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
+    ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','자리만 있음 · 아직 내용이 없습니다.'],
     ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
     ['drive',1,'드라이브','자산 찾기 · 업로드','구글드라이브 색인(drive_assets_v1)을 브랜드·종류로 거릅니다. 업로드·삭제(휴지통)는 구글 권한으로 드라이브에 직접 합니다.'],
     ['trend',1,'트렌드분석','구글 · 네이버','GitHub Actions 가 모은 trend_google · trend_naver 표를 읽기만 합니다.'],
@@ -14002,6 +14027,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     document.getElementById('view-content').style.display=v==='content'?'':'none';
     document.getElementById('view-profit').style.display=v==='profit'?'':'none';
     document.getElementById('view-quote').style.display=v==='quote'?'':'none';
+    document.getElementById('view-insta').style.display=v==='insta'?'':'none';
     document.getElementById('view-ops').style.display=v==='ops'?'':'none';
     document.getElementById('view-brand').style.display=v==='brand'?'':'none';
     if(v==='account'&&window.baroyamAccountOpen) window.baroyamAccountOpen();
@@ -14014,7 +14040,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
     /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브·계정관리)은 1720px 를 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account'||v==='content');
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account'||v==='content'||v==='insta');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
     document.body.classList.toggle('view-is-profit',v==='profit');
@@ -14025,7 +14051,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의 기록은 여기 들어올 때 처음 받아 온다(1MB가 넘어 첫 화면에서는 받지 않는다) */
     if(v==='agenda') document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
-    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda'||v==='perf'||v==='content'||v==='profit'||v==='quote'||v==='ops'||v==='brand');
+    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda'||v==='perf'||v==='content'||v==='profit'||v==='quote'||v==='insta'||v==='ops'||v==='brand');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
@@ -16700,6 +16726,28 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     pick(el,true);
   }));
   window.baroyamOpsOpen=function(){ pick(cur,true); };
+})();
+
+/* 인스타콘텐츠 · 배너 위 단추 세 개(성과 / 일정 / 업로드) · 고른 것은 이 브라우저에 기억한다 */
+(function(){
+  const box=document.getElementById('instaTabs');
+  if(!box) return;
+  const title=document.getElementById('instaViewTitle'), sub=document.getElementById('instaViewSub');
+  const items=[...box.querySelectorAll('[data-insta]')];
+  const panes=[...document.querySelectorAll('#view-insta [data-insta-pane]')];
+  let cur=items[0];
+  try{ const k=localStorage.getItem('baroyam_insta_tab'); cur=items.find(b=>b.dataset.insta===k)||cur; }catch(e){}
+  function pick(el){
+    cur=el;
+    items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
+    title.textContent=el.textContent.trim(); sub.textContent=el.dataset.sub||'';
+    panes.forEach(p=>{ p.hidden=p.dataset.instaPane!==el.dataset.insta; });
+  }
+  pick(cur);
+  items.forEach(el=>el.addEventListener('click',()=>{
+    try{ localStorage.setItem('baroyam_insta_tab',el.dataset.insta); }catch(e){}
+    pick(el);
+  }));
 })();
 
 /* 손익·마진 관리 · 배너 위 단추 세 개(마진 계산기 / 품목별 원가표 / 순수익 요약) · 고른 것은 이 브라우저에 기억한다 */
