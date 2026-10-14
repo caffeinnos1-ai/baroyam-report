@@ -9744,8 +9744,8 @@ window.BAROYAM_FONT=(function(){
         <div class="drv-view">
           <!-- 회사 전환 · 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 메타광고·유튜브 → 같은 이름, 그 밖 → 카페이노스) -->
           <div class="ui-tabs drv-owner" id="drvOwner">
-            <button type="button" class="ui-tab" data-value="바로얌" aria-selected="true">바로얌</button>
-            <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">카페이노스</button>
+            <button type="button" class="ui-tab" data-value="바로얌" aria-selected="true">디자인</button>
+            <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">매장</button>
             <button type="button" class="ui-tab" data-value="메타광고" aria-selected="false">메타광고</button>
             <button type="button" class="ui-tab" data-value="유튜브" aria-selected="false">유튜브</button>
           </div>
@@ -10759,8 +10759,8 @@ window.BAROYAM_FONT=(function(){
               </label>
               <div class="bs-drv-row">
                 <div class="ui-tabs" id="bsDrvOwner" aria-label="회사">
-                  <button class="ui-tab" data-value="바로얌">바로얌</button>
-                  <button class="ui-tab" data-value="카페이노스">카페이노스</button>
+                  <button class="ui-tab" data-value="바로얌">디자인</button>
+                  <button class="ui-tab" data-value="카페이노스">매장</button>
                   <button class="ui-tab" data-value="메타광고">메타광고</button>
                   <button class="ui-tab" data-value="유튜브">유튜브</button>
                 </div>
@@ -24309,6 +24309,9 @@ window.baroyamAsk=function(title,body,okText){
   function 형식(r){ return 형식찾기[확장자(r.이름)]||'기타'; }
 
   /* 어느 회사 자산인지 · 경로 맨 앞 칸(뿌리폴더 이름)으로 가른다(★바로얌 → 바로얌, 메타광고·유튜브 → 같은 이름의 탭, 그 밖 → 카페이노스) */
+  /* 탭에 보일 이름 · 값(바로얌·카페이노스)은 저장·분류 열쇠라 그대로 두고 보이는 이름만 바꾼다 */
+  const 회사이름={'바로얌':'디자인','카페이노스':'매장'};
+  function 탭이름(c){ return 회사이름[c]||c; }
   const 뿌리탭={'★바로얌':'바로얌','메타광고':'메타광고','유튜브':'유튜브'};
   function 뿌리회사(이름){ return 뿌리탭[이름]||'카페이노스'; }
   function 회사(r){ return 뿌리회사(String(r.경로||'').split(' / ')[0]); }
@@ -24497,7 +24500,7 @@ window.baroyamAsk=function(title,body,okText){
     const 없음=!전체;
     $('drvRow').hidden=없음;
     if(없음){
-      안내(상태.회사+' 자산은 아직 목록에 없어요', '위 새로고침 단추를 누르면 드라이브를 다시 훑어 이 폴더의 파일을 가져옵니다');
+      안내(탭이름(상태.회사)+' 자산은 아직 목록에 없어요', '위 새로고침 단추를 누르면 드라이브를 다시 훑어 이 폴더의 파일을 가져옵니다');
       return;
     }
     $('drvEmpty').hidden=true; $('drvBody').hidden=false;
@@ -25023,7 +25026,7 @@ window.baroyamAsk=function(title,body,okText){
     /* 지금 보고 있는 회사를 앞(primary)에 둔다 */
     const 차례=[상태.회사].concat(['바로얌','카페이노스','메타광고','유튜브'].filter(function(c){ return c!==상태.회사; }));
     창.innerHTML='<p>어느 드라이브에 올릴까요?</p>'+차례.map(function(c,i){
-      return '<button type="button" class="ui-btn block '+(i?'soft':'primary')+'" data-up-co="'+c+'">'+c+' 드라이브에 올리기</button>';
+      return '<button type="button" class="ui-btn block '+(i?'soft':'primary')+'" data-up-co="'+c+'">'+탭이름(c)+' 드라이브에 올리기</button>';
     }).join('');
     창.hidden=false;
     const 칸=$('drvUpload').getBoundingClientRect();
@@ -25111,7 +25114,7 @@ window.baroyamAsk=function(title,body,okText){
     업.회사=회사값; 업.길=[];
     if(!다시) 업.파일=[];
     const 창=업창(); 창.hidden=false; 업.열림=true;
-    $('drvUpTitle').textContent=회사값+' 드라이브에 올리기';
+    $('drvUpTitle').textContent=탭이름(회사값)+' 드라이브에 올리기';
     $('drvUpNew').hidden=true; $('drvUpCrumb').innerHTML=''; $('drvUpSugg').hidden=true;
     $('drvUpFolders').innerHTML='<div class="drv-up-note">드라이브 권한을 확인하는 중…</div>';
     if(파일들) 파일더하기(파일들); else 파일그리기();
@@ -25122,7 +25125,7 @@ window.baroyamAsk=function(title,body,okText){
       if(!줄들) await 열기();
       if(차례!==업.차례) return;
       const 뿌리=뿌리들(회사값)[0];
-      if(!뿌리) throw new Error(회사값+' 드라이브 폴더가 분류 사전에 없어요');
+      if(!뿌리) throw new Error(탭이름(회사값)+' 드라이브 폴더가 분류 사전에 없어요');
       /* 처음 위치 · 최근에 올린 곳 → 바로얌은 ★제품별_자산 */
       업.길=[뿌리];
       const 처음=최근목록()[0]||(회사값==='바로얌'?뿌리.name+' / ★제품별_자산':'');
