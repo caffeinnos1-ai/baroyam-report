@@ -3384,6 +3384,11 @@ window.BAROYAM_FONT=(function(){
   .pf-pane[data-pf-pane="calc"]{padding-bottom:90px;--btn-base:var(--btn);--btn-soft-base:var(--btn-soft);--btn-soft-ink-base:var(--btn-soft-ink)}
   /* 고른 판매처 색은 세 곳에만 입힌다(10-09 사용자 · 버튼·아래 탭은 원래 강조색): 위 배너 · 상품 머리 · 마진/마진률/최소 ROAS 칸 ·
      paintTone 이 #view-profit 과 계산기 칸에 data-tone 을 단다 · 배너는 마진 계산기 탭일 때만 · 자사몰·그 밖은 원래 색 */
+  .pf-pane[data-pf-pane="rocket"]{padding-bottom:40px;--btn-base:var(--btn);--btn-soft-base:var(--btn-soft);--btn-soft-ink-base:var(--btn-soft-ink)}
+  .pf-pane[data-pf-pane="rocket"]>.pf-card{border:0;padding:0;background:none}
+  #view-profit:has([data-pf-pane="rocket"]:not([hidden])) .plan-hero{--hero-accent:var(--coupang);
+    background:color-mix(in srgb,var(--coupang) 6%,var(--paper));border-color:color-mix(in srgb,var(--coupang) 16%,var(--line))}
+  #view-profit.pf-ro #pfRkAdd{display:none}
   :is(#view-profit,.pf-pane)[data-tone="naver"]{--tone:var(--naver)}
   :is(#view-profit,.pf-pane)[data-tone="coupang"]{--tone:var(--coupang)}
   :is(#view-profit,.pf-pane)[data-tone="talk"]{--tone:var(--talk)}
@@ -10223,6 +10228,7 @@ window.BAROYAM_FONT=(function(){
         <!-- 마진 계산기 / 품목별 원가표 / 순수익 요약(맨 오른쪽) · 트렌드분석처럼 배너 위 알약 단추로 고른다(예전 사이드바 중간 탭은 화면을 가려 뺐다) -->
         <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="손익·마진 관리 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-profit="calc" data-sub="아래에서 판매처(자사몰·쿠팡·스마트스토어 …)를 고르고, 상품마다 옵션의 원가·판매가를 넣으면 마진·마진률·최소 ROAS가 바로 나옵니다.">마진표</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="rocket" data-sub="쿠팡 로켓프레시로 넣는 상품의 공급가·입고 물류비·판매장려금을 넣으면 옵션별 마진·마진률·최소 ROAS가 바로 나옵니다.">로켓프레시</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진표가 이 값을 씁니다.">품목별 원가표</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
         </div>
@@ -10260,6 +10266,23 @@ window.BAROYAM_FONT=(function(){
               <div class="hero-view-tabs" id="pfChanTabs" role="tablist" aria-label="판매처별 계산표"></div>
             </div>
             <div class="pf-empty" id="pfCalcEmpty" hidden>원가표에 상품·판매처가 없습니다. <b>품목별 원가표</b>에서 먼저 넣어 주세요.</div>
+          </div>
+          <!-- 로켓프레시 · 마진표와 같은 모양(상품 상자 + 옵션 줄) · 쿠팡이 공급가로 사 가므로 판매처 탭·수수료·배송비 대신 공급가·입고 물류비·장려금 -->
+          <div class="pf-pane" data-pf-pane="rocket" data-tone="coupang" hidden>
+            <div class="pf-bar">
+              <button type="button" class="ui-field sm" id="pfRkBrandF" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+              <input class="ui-field sm" id="pfRkQ" placeholder="상품·옵션 검색" aria-label="상품·옵션 검색">
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn sm primary" id="pfRkAdd">+ 상품 등록</button>
+            </div>
+            <div class="pf-card">
+              <div class="pf-calc-wrap">
+                <div class="pf-books" id="pfRkTable"></div>
+              </div>
+              <div class="pf-foot">
+                <span class="pf-note">공급률 = 공급가 ÷ 판매가 · 장려금 = 공급가 × 장려금율 · 부가세 = (공급가 − 원가 − 입고 물류비 − 장려금) ÷ 11 · 마진 = 공급가 − 원가 − 입고 물류비 − 장려금 − 부가세 · 마진률 = 마진 ÷ 공급가 · 최소 ROAS = 판매가 ÷ 마진 · 공급가는 부가세 포함 금액으로 적습니다 · 원가는 품목별 원가표의 상품을 고릅니다</span>
+              </div>
+            </div>
           </div>
           <!-- 품목별 원가표 · 상품 원가(브랜드별) · 프라임 발송비 구간 · 판매처 수수료 -->
           <div class="pf-pane" data-pf-pane="bom" hidden>
@@ -12869,7 +12892,7 @@ window.CsGuide=(function(){
     ['goal','sheet','달성률 계산용 매출','r'],
     ['ops','settings','inventory_v1 · daily_sales_v1'],
     ['ops','ext','어드민 수집 단추'],
-    ['profit','settings','profit_cost_v1 · profit_calc_v1'],
+    ['profit','settings','profit_cost_v1 · profit_calc_v1 · profit_rocket_v1'],
     ['brand','settings','brand_strategy_v1 · 틀 · 이미지'],
     ['brand','storage','항목 파일'],
     ['brand','gdrive','드라이브 연동·받기'],
@@ -18291,6 +18314,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     ship:{'ship-a':{id:'ship-a',name:'구간 1',fee:3600,ord:1},'ship-b':{id:'ship-b',name:'구간 2',fee:4070,ord:2}},
     chans:{'ch-cafe':{id:'ch-cafe',name:'카페이노스',rate:3.85,ord:1}}}));
   const CALC=store('profit_calc_v1',normCalc,()=>normCalc({}));
+  /* 로켓프레시 · profit_rocket_v1 = {prods:{id:{name,ord,del}}, rows:{id:{g,ord,label,item,mix,sale(판매가),supply(공급가),logi(입고 물류비),reb(장려금율 %),ov,del}}} */
+  const normRocket=v=>{ v=obj(v); return Object.assign({},v,{prods:obj(v.prods),rows:obj(v.rows)}); };
+  const ROCKET=store('profit_rocket_v1',normRocket,()=>normRocket({}));
 
   let pane='summary', brandF='', itemQ='';
   const $=id=>document.getElementById(id);
@@ -18736,15 +18762,210 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(inp){ if(inp.scrollIntoView) inp.scrollIntoView({block:'center'}); inp.focus({preventScroll:true}); }
   });
 
+  /* ---------- 로켓프레시 ----------
+     마진표와 같은 모양(상품 상자 + 옵션 줄 · 원가는 원가표 상품 고르기) · 쿠팡이 공급가로 사 가므로 판매처 탭·수수료·배송비·프라임 대신
+     공급가(부가세 포함) · 입고 물류비(개당 아닌 옵션 한 개 기준 금액) · 판매장려금율(공급가의 %) ·
+     장려금 = 공급가 × 장려금율 · 부가세 = (공급가 − 원가 − 물류비 − 장려금) ÷ 11 · 마진 = 그 금액 − 부가세 ·
+     마진률 = 마진 ÷ 공급가 · 공급률 = 공급가 ÷ 판매가 · 최소 ROAS = 판매가 ÷ 마진(쿠팡 광고 매출은 판매가 기준) */
+  let rkBrand='', rkQ='';
+  const RK=()=>ROCKET.data;
+  function rkCalc(r){
+    const base=calc({mix:obj(r.mix)}), ov=obj(r.ov);
+    const cost=num(ov.cost)!=null?num(ov.cost):base.cost;
+    const sale=num(r.sale), supply=num(r.supply), logi=num(r.logi)||0, rebR=num(r.reb)||0;
+    const o={units:base.units,cost,sale,supply,rate:sale&&supply!=null?supply/sale:null};
+    if(supply==null) return o;
+    const reb=supply*rebR/100, pre=supply-cost-logi-reb, vat=pre/11, margin=pre-vat;
+    return Object.assign(o,{logi,reb,vat,margin,mrate:supply?margin/supply:null,roas:margin>0&&sale?sale/margin:null});
+  }
+  const rkRows=()=>{ const d=RK(); return live(d.rows).filter(r=>r.g&&d.prods[r.g]&&!d.prods[r.g].del); };
+  const rkUsed=r=>Object.keys(obj(r.mix)).filter(k=>COST.data.items[k]&&((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0);
+  function rkBrandOf(r){ const u=rkUsed(r); if(u.length) return brandOf(COST.data.items[u[0]]); const it=r.item&&COST.data.items[r.item]; return it?brandOf(it):''; }
+  const rkAuto=r=>[...new Set(rkUsed(r).map(k=>brandOf(COST.data.items[k])))].join(' · ')||rkBrandOf(r);
+  const rkLabel=r=>r.label||rkAuto(r);
+  function rkSolo(r){ const u=rkUsed(r); if(u.length>1) return null; return u[0]||(r.item&&COST.data.items[r.item]?r.item:null); }
+  function rkProdBrands(g){ return [...new Set(rkRows().filter(r=>r.g===g.id).map(rkBrandOf).filter(Boolean))]; }
+  function rkView(){
+    const rows=rkRows(), q=rkQ.trim().toLowerCase();
+    const hit=(g,r)=>!q||((g.name||'')+' '+rkLabel(r)+' '+rkUsed(r).map(k=>COST.data.items[k].name).join(' ')).toLowerCase().indexOf(q)>=0;
+    return live(RK().prods).map(g=>{
+      const mine=rows.filter(r=>r.g===g.id);
+      if(rkBrand&&rkProdBrands(g).indexOf(rkBrand)<0) return null;
+      const nameHit=q&&(g.name||'').toLowerCase().indexOf(q)>=0;
+      const opts=mine.filter(r=>nameHit||hit(g,r));
+      return opts.length||(!mine.length&&(!q||nameHit))?{g,opts}:null;
+    }).filter(Boolean).sort((a,b)=>(a.g.ord||0)-(b.g.ord||0));
+  }
+  /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] */
+  const RK_COLS=[
+    ['label','옵션',14.5,1],['qty','수량',6],['cost','원가',9],
+    ['sale','판매가',8,1],['supply','공급가',8],['rate','공급률',6,0,1],
+    ['logi','입고 물류비',7,1],['reb','장려금율',6],['rebv','장려금',7,0,1],
+    ['margin','마진',8,1,1],['mrate','마진률',6,0,1],['roas','최소 ROAS',6,0,1],['vat','부가세',6,0,1],
+    ['act','',2.5,1]];
+  function rkOut(tr,r){
+    const v=rkCalc(r);
+    const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(!td) return; td.textContent=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); };
+    put('rate',pct(v.rate,0)); put('rebv',won(v.reb)); put('vat',won(v.vat));
+    put('margin',won(v.margin),' key hi'+(v.margin<0?' neg':''));
+    put('mrate',pct(v.mrate),' key hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
+    put('roas',v.margin==null||!v.sale?'–':(v.roas==null?'적자':pct(v.roas,0)),' key hi'+(v.margin!=null&&v.sale&&v.roas==null?' neg':''));
+    const cb=tr.querySelector('.pf-cost');
+    if(cb){
+      const mc=num(obj(r.ov).cost)!=null;
+      cb.innerHTML='<span class="t'+(mc?' man':'')+'">'+(v.units||mc?won(v.cost):'<span class="ph">상품 고르기</span>')+'</span>';
+      cb.title=(mc?'직접 고친 원가 · ':'')+(v.units?won(v.cost)+' · '+v.units+'개 ':'')+'(누르면 상품 고르기 · 원가 직접 입력)';
+    }
+    const qx=tr.querySelector('.pf-qty-x'); if(qx) qx.textContent=v.units?v.units+'개':'–';
+    const li=tr.querySelector('[data-k="label"]'); if(li) li.placeholder=rkAuto(r)||'옵션';
+  }
+  function rkQty(r){
+    const id=rkSolo(r);
+    if(!id) return '<span class="pf-qty-x" title="원가 칸에서 고른 상품들의 개수 합"></span>';
+    const m=obj(r.mix)[id]||{};
+    return '<input class="ui-field sm pf-num" data-q="q" inputmode="numeric" value="'+(num(m.q)||'')+'" placeholder="수량" aria-label="수량">';
+  }
+  function paintRocket(){
+    const T=$('pfRkTable');
+    if(!ROCKET.loaded||!COST.loaded){ T.innerHTML=msg(ROCKET.error||COST.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
+    const all=[...new Set([].concat(...live(RK().prods).map(rkProdBrands)))].sort((a,b)=>a.localeCompare(b,'ko'));
+    if(rkBrand&&all.indexOf(rkBrand)<0) rkBrand='';
+    $('pfRkBrandF').querySelector('.t').textContent=rkBrand||'전체 브랜드';
+    const list=rkView();
+    const cg='<colgroup>'+RK_COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
+    const headRow='<tr class="pf-head">'+RK_COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
+    const H={}; RK_COLS.forEach(cl=>{ H[cl[0]]=cl; });
+    const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!=='label';
+      return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
+    const inp=(k,r,ph,tt,mode)=>'<input class="ui-field sm pf-num" data-k="'+k+'" inputmode="'+(mode||'numeric')+'" value="'+esc(mode?(r[k]==null?'':r[k]):comma(r[k]))+'" placeholder="'+ph+'"'+(tt?' title="'+tt+'"':'')+'>';
+    const row=r=>'<tr data-row="'+esc(r.id)+'">'
+      +td('label','<input class="ui-field sm pf-lbl" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="'+esc(rkAuto(r)||'옵션')+'">')
+      +td('qty',rkQty(r),'pf-key')
+      +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix title="원가표 상품 고르기(여러 상품을 섞어도 됨)"></button>')
+      +td('sale',inp('sale',r,'판매가','쿠팡이 고객에게 파는 값'))
+      +td('supply',inp('supply',r,'공급가','쿠팡에 넘기는 값(부가세 포함)'),'pf-key')
+      +td('rate','','out')
+      +td('logi',inp('logi',r,'0','쿠팡 센터까지 보내는 물류비 · 옵션 한 개 기준'))
+      +td('reb',inp('reb',r,'%','판매장려금 · 공급가의 %','decimal'))
+      +td('rebv','','out')
+      +td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('vat','','out')
+      +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
+      +'</tr>';
+    let h='';
+    list.forEach(({g,opts})=>{
+      h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head">'
+        +'<input class="ui-field pf-book-name" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품 이름 (예: 홀떡피자 로켓프레시)" aria-label="상품 이름">'
+        +'<span class="pf-grow"></span>'
+        +'<button type="button" class="ui-btn sm" data-act="opt">+ 옵션 추가</button>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-act="prod" title="상품 복제·삭제" aria-label="상품 복제·삭제" aria-haspopup="true">⋯</button>'
+        +'</div>'
+        +(opts.length?'<table class="pf-calc">'+cg+'<tbody>'+headRow+opts.map(row).join('')+'</tbody></table>'
+          :'<div class="pf-book-empty">"+ 옵션 추가" 로 옵션 줄을 만들고 원가 칸에서 상품을 고른 뒤 수량·공급가를 넣으면 옵션별 마진이 나옵니다</div>')
+        +'</section>';
+    });
+    if(!list.length) h=msg(rkBrand||rkQ.trim()?'조건에 맞는 상품이 없습니다':'로켓프레시에 등록한 상품이 없습니다 · "+ 상품 등록" 으로 상품 이름을 정하고, 그 안에 옵션을 추가하세요');
+    T.innerHTML=h;
+    T.querySelectorAll('tr[data-row]').forEach(tr=>rkOut(tr,RK().rows[tr.dataset.row]));
+    applyRO();
+  }
+  const rkRowOf=el=>{ const tr=el.closest('tr[data-row]'); return tr?{tr,r:RK().rows[tr.dataset.row]}:null; };
+  const rkProdOf=el=>{ const box=el.closest('[data-prod]'); return box?{box,g:RK().prods[box.dataset.prod]}:null; };
+  const rkFocus=(sel,id,pick)=>{
+    const el=[...$('pfRkTable').querySelectorAll(sel)].find(x=>(x.dataset.row||x.dataset.prod)===id);
+    const inp=el&&(el.querySelector('[data-gk="name"]')||el.querySelector('[data-q="q"]')||el.querySelector('[data-k="label"]'));
+    if(inp){ if(inp.scrollIntoView) inp.scrollIntoView({block:'center'}); inp.focus({preventScroll:true}); if(pick) inp.select(); }
+    return el;
+  };
+  function rkAddRow(g){
+    const prev=rkRows().filter(r=>r.g===g.id).slice(-1)[0], id=uid();
+    /* 입고 물류비·장려금율은 같은 상품의 바로 위 옵션을 따른다 */
+    RK().rows[id]={id,g:g.id,ord:Date.now(),label:'',item:null,mix:{},logi:prev?prev.logi:null,reb:prev?prev.reb:null};
+    rkQ=''; $('pfRkQ').value='';
+    ROCKET.mark(); paintRocket();
+    const tr=rkFocus('tr[data-row]',id), cb=tr&&tr.querySelector('.pf-cost');
+    if(cb){ cb.classList.remove('pf-nudge'); void cb.offsetWidth; cb.classList.add('pf-nudge');
+      cb.addEventListener('animationend',()=>cb.classList.remove('pf-nudge'),{once:true}); }
+  }
+  $('pfRkTable').addEventListener('input',e=>{
+    if(!canEdit()) return;
+    if(e.target.dataset.gk){ const p=rkProdOf(e.target); if(p&&p.g){ p.g[e.target.dataset.gk]=e.target.value; ROCKET.mark(); } return; }
+    const x=rkRowOf(e.target); if(!x||!x.r) return;
+    if(e.target.dataset.q){
+      const id=rkSolo(x.r); if(!id) return;
+      x.r.mix=Object.assign({},obj(x.r.mix));
+      x.r.mix[id]=Object.assign({q:0,f:0},x.r.mix[id]); x.r.mix[id].q=Math.max(0,Math.round(num(e.target.value)||0));
+      if(!x.r.item) x.r.item=id;
+      rkOut(x.tr,x.r); ROCKET.mark(); return;
+    }
+    const k=e.target.dataset.k; if(!k) return;
+    x.r[k]=k==='label'?e.target.value:num(e.target.value);
+    rkOut(x.tr,x.r); ROCKET.mark();
+  });
+  $('pfRkTable').addEventListener('focusout',e=>{
+    const k=e.target.dataset.k; if(!k||k==='label'||k==='reb') return;
+    const x=rkRowOf(e.target); if(x&&x.r) e.target.value=comma(x.r[k]);
+  });
+  $('pfRkTable').addEventListener('click',e=>{
+    if(!canEdit()) return;
+    const b=e.target.closest('button'); if(!b) return;
+    const x=rkRowOf(b);
+    if(!x){
+      const p=rkProdOf(b); if(!p||!p.g) return;
+      if(b.dataset.act==='opt'){ e.stopPropagation(); rkAddRow(p.g); return; }
+      if(b.dataset.act==='prod'){
+        e.stopPropagation();
+        window.UI.menu(b,[{value:'dup',label:'상품 복제'},{value:'del',label:'상품 삭제'}],'',v=>{
+          const mine=rkRows().filter(r=>r.g===p.g.id);
+          if(v==='dup'){
+            const d=RK(), id=uid();
+            d.prods[id]=Object.assign(clone(p.g),{id,name:(p.g.name||'상품')+' 복사',ord:(p.g.ord||0)+0.001}); delete d.prods[id].del;
+            mine.forEach((r,i)=>{ const nid=uid()+i; d.rows[nid]=Object.assign(clone(r),{id:nid,g:id}); delete d.rows[nid].del; });
+            rkQ=''; $('pfRkQ').value=''; rkBrand='';
+            ROCKET.mark(); paintRocket(); rkFocus('[data-prod]',id,true); return;
+          }
+          window.baroyamAsk('"'+(p.g.name||'이 상품')+'" 상품을 지울까요?',mine.length?'안에 있는 옵션 '+mine.length+'개도 함께 사라집니다.':'').then(ok=>{
+            if(!ok) return; const t=Date.now(); p.g.del=t; mine.forEach(r=>{ r.del=t; }); ROCKET.mark(); paintRocket();
+          });
+        });
+      }
+      return;
+    }
+    if(!x.r) return;
+    if(b.hasAttribute('data-mix')){ openMix(x.r,ROCKET); return; }
+    if(b.dataset.act==='more'){
+      e.stopPropagation();
+      window.UI.menu(b,[{value:'dup',label:'복제'},{value:'del',label:'삭제'}],'',v=>{
+        if(v==='dup'){ const n=clone(x.r); n.id=uid(); n.ord=(x.r.ord||0)+0.001; RK().rows[n.id]=n; ROCKET.mark(); paintRocket(); return; }
+        window.baroyamAsk('"'+(rkLabel(x.r)||'이 옵션')+'" 옵션을 지울까요?','').then(ok=>{ if(!ok) return; x.r.del=Date.now(); ROCKET.mark(); paintRocket(); });
+      });
+    }
+  });
+  $('pfRkAdd').addEventListener('click',()=>{
+    if(!canEdit()||!ROCKET.loaded||!COST.loaded) return;
+    const id=uid();
+    RK().prods[id]={id,ord:Date.now(),name:''};
+    rkQ=''; $('pfRkQ').value=''; rkBrand='';
+    ROCKET.mark(); paintRocket(); rkFocus('[data-prod]',id);
+  });
+  $('pfRkBrandF').addEventListener('click',e=>{
+    e.stopPropagation(); if(!ROCKET.loaded) return;
+    const ps=live(RK().prods).map(rkProdBrands);
+    const bs=[...new Set([].concat(...ps))].sort((a,b)=>a.localeCompare(b,'ko'));
+    const opts=[{value:'',label:'전체 브랜드',sub:String(ps.length)}].concat(bs.map(b=>({value:b,label:b,sub:String(ps.filter(x=>x.indexOf(b)>=0).length)})));
+    window.UI.menu($('pfRkBrandF'),opts,rkBrand,v=>{ rkBrand=v; paintRocket(); });
+  });
+  $('pfRkQ').addEventListener('input',e=>{ rkQ=e.target.value; paintRocket(); });
+
   /* ---------- 원가 고르기 창 ---------- */
   let mixFor=null, mixDraft={}, mixBrand='', mixQ='', mixFirst=null;
   const dlg=$('pfMixDlg');
   const brandOf=i=>(i.brand||'').trim()||'기타';
   function brandsOf(list){ return [...new Set(list.map(brandOf))].sort((a,b)=>a.localeCompare(b,'ko')); }
-  function openMix(r){
-    mixFor={r:r.id}; mixDraft=clone(obj(r.mix)); mixQ=''; $('pfMixQ').value='';
+  function openMix(r,S){
+    S=S||CALC;
+    mixFor={r:r.id,S}; mixDraft=clone(obj(r.mix)); mixQ=''; $('pfMixQ').value='';
     const items=COST.data.items, used=Object.keys(mixDraft).find(k=>items[k]&&(num(mixDraft[k].q)||num(mixDraft[k].f)));
-    const gp=r.g&&CALC.data.prods[r.g], gi=(r.item&&items[r.item]?r.item:null)||(gp&&gp.item), git=gi&&items[gi];
+    const gp=r.g&&S.data.prods[r.g], gi=(r.item&&items[r.item]?r.item:null)||(gp&&gp.item), git=gi&&items[gi];
     mixFirst=git?gi:null;
     mixBrand=used?brandOf(items[used]):(git?brandOf(git):'');
     const oc=num(obj(r.ov).cost); $('pfMixCost').value=oc!=null?comma(oc):'';
@@ -18834,7 +19055,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfMixClear').addEventListener('click',()=>{ Object.keys(mixDraft).forEach(k=>{ mixDraft[k]={q:0,f:0}; }); paintMix(); });
   $('pfMixOk').addEventListener('click',()=>{
     if(!canEdit()){ closeMix(); return; }
-    const r=mixFor&&CALC.data.rows[mixFor.r];
+    const S=(mixFor&&mixFor.S)||CALC, r=mixFor&&S.data.rows[mixFor.r];
     if(r){
       const clean={};
       Object.keys(mixDraft).forEach(k=>{ const m=mixDraft[k]; clean[k]={q:num(m.q)||0,f:num(m.f)||0}; });
@@ -18845,7 +19066,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 한 가지 상품만 골랐으면 수량 칸이 그 상품을 가리키게 한다 */
       const on=Object.keys(clean).filter(k=>clean[k].q+clean[k].f>0);
       if(on.length===1) r.item=on[0];
-      CALC.mark(); paintCalc();
+      S.mark(); if(S===CALC) paintCalc(); else paintRocket();
     }
     closeMix();
   });
@@ -20060,19 +20281,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const note=$('pfRoNote'); if(note) note.hidden=!(ro&&pane!=='summary');
     view.querySelectorAll('.pf-calc input,.pf-list input,.pf-book-name').forEach(i=>{ i.readOnly=ro; });
   }
-  function paint(){ if(pane==='calc') paintCalc(); else if(pane==='bom') paintBom(); else if(pane==='summary') paintSummary(); applyRO(); }
+  function paint(){ if(pane==='calc') paintCalc(); else if(pane==='rocket') paintRocket(); else if(pane==='bom') paintBom(); else if(pane==='summary') paintSummary(); applyRO(); }
   ['baroyam:editaccess','baroyam:profiles','baroyam:adminmode'].forEach(ev=>document.addEventListener(ev,()=>{ if(view.style.display!=='none') paint(); }));
   /* 다른 PC 고침이 들어와도, 지금 이 화면에서 칸을 고치는 중이면 다시 그리지 않는다(입력 중인 글자가 날아가지 않게) */
   function soft(){ const a=document.activeElement; if(a&&view.contains(a)&&a.matches('input')) return; if(!dlg.hidden) return; paint(); }
-  COST.onChange=soft; CALC.onChange=soft;
+  COST.onChange=soft; CALC.onChange=soft; ROCKET.onChange=soft;
   /* 새로고침 직후(#profit)에는 로그인 확인이 끝나기 전에 불릴 수 있다 · 못 읽었으면 3초 뒤 다시 받는다 */
   let retry=null;
   async function refresh(){
-    await Promise.all([COST.load(),CALC.load()]); paint();
-    if((COST.error||CALC.error)&&!retry) retry=setTimeout(()=>{ retry=null; if(visible()) refresh(); },3000);
+    await Promise.all([COST.load(),CALC.load(),ROCKET.load()]); paint();
+    if((COST.error||CALC.error||(pane==='rocket'&&ROCKET.error))&&!retry) retry=setTimeout(()=>{ retry=null; if(visible()) refresh(); },3000);
   }
   function visible(){ return view.style.display!=='none'; }
-  setInterval(()=>{ if(visible()&&!document.hidden) Promise.all([COST.load(),CALC.load()]); },60000);
+  setInterval(()=>{ if(visible()&&!document.hidden) Promise.all([COST.load(),CALC.load(),ROCKET.load()]); },60000);
   /* 재고현황 · 판매·재고 화면의 재고 탭을 보고 있을 때만 받는다 · 5분마다 다시(서버가 하루 몇 번 채움) */
   const stockPane=document.querySelector('[data-ops-pane="stock"]');
   const stockVisible=()=>window.baroyamCurrentView==='ops'&&stockPane&&!stockPane.hidden;
@@ -20101,7 +20322,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&salesVisible()) DS.load().then(paintSales); });
   window.baroyamSales={show:salesShow,paint:paintSales};
   if(salesVisible()) salesShow();
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load()]); });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load(),ROCKET.load()]); });
   window.baroyamProfit={
     show(p){ pane=p||'summary'; paint(); refresh(); },
     _calc:calc,
