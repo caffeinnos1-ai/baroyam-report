@@ -18770,6 +18770,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      마진률 = 마진 ÷ 공급가 · 최소 ROAS = 판매가 ÷ 마진(쿠팡 광고 매출은 판매가 기준) */
   let rkBrand='', rkQ='';
   const RK=()=>ROCKET.data;
+  /* % 칸(쿠팡 몫·장려금율)은 "40%" 처럼 % 를 붙여 보인다(10-15 사용자 · 금액 칸과 바로 구분) · 읽을 때는 num() 이 % 를 뗀다 */
+  const rkPct=v=>v==null||v===''?'':comma(v)+'%';
   const rkHidden=k=>!!obj(RK()&&RK().hide)[k];
   function rkCalc(r){
     const base=calc({mix:obj(r.mix)}), ov=obj(r.ov);
@@ -18847,7 +18849,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const H={}; RK_COLS.forEach(cl=>{ H[cl[0]]=cl; });
     const td=(k,inner,cls)=>{ if(rkHidden(k)) return ''; const cl=H[k], g=cl[3]&&k!=='label';
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
-    const inp=(k,r,ph,tt,mode)=>'<input class="ui-field sm pf-num" data-k="'+k+'" inputmode="'+(mode||'numeric')+'" value="'+esc(mode?(r[k]==null?'':r[k]):comma(r[k]))+'" placeholder="'+ph+'"'+(tt?' title="'+tt+'"':'')+'>';
+    const inp=(k,r,ph,tt,mode)=>'<input class="ui-field sm pf-num" data-k="'+k+'" inputmode="'+(mode||'numeric')+'" value="'+esc(mode?rkPct(r[k]):comma(r[k]))+'" placeholder="'+ph+'"'+(tt?' title="'+tt+'"':'')+'>';
     const row=r=>'<tr data-row="'+esc(r.id)+'">'
       +td('label','<input class="ui-field sm pf-lbl" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="'+esc(rkAuto(r)||'옵션')+'">')
       +td('qty',rkQty(r),'pf-key')
@@ -18916,8 +18918,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     rkOut(x.tr,x.r); ROCKET.mark();
   });
   $('pfRkTable').addEventListener('focusout',e=>{
-    const k=e.target.dataset.k; if(!k||k==='label'||k==='reb'||k==='take') return;
-    const x=rkRowOf(e.target); if(x&&x.r) e.target.value=comma(x.r[k]);
+    const k=e.target.dataset.k; if(!k||k==='label') return;
+    const x=rkRowOf(e.target); if(x&&x.r) e.target.value=k==='reb'||k==='take'?rkPct(x.r[k]):comma(x.r[k]);
   });
   $('pfRkTable').addEventListener('click',e=>{
     if(!canEdit()) return;
