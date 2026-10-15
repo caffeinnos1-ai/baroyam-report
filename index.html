@@ -4935,6 +4935,7 @@ window.BAROYAM_FONT=(function(){
   .tb-res-empty{padding:16px 12px;text-align:center;font-size:12.5px;font-weight:500;color:var(--mute)}
   @media(max-width:620px){.tb-search{width:190px}}
 
+
   /* 오른쪽 아래 떠 있는 로고 버튼(상담 콘솔) · 위에 있던 연필(프로젝트 추가) 버튼은 2026-10-01 뺐다
      (프로젝트는 보드 칸의 + 나 캘린더 날짜 칸의 + 로 더한다) */
   /* 바로얌 로고 버튼 · 노트보다 한 치수 크고 색은 같은 계열 */
@@ -6921,6 +6922,74 @@ window.BAROYAM_FONT=(function(){
   .bs-fv-head .ui-btn.icon{width:22px;height:22px;color:var(--mute);font-size:10.5px}
   .bs-fv-head .ui-btn.icon:hover{color:var(--neg);border-color:transparent;background:var(--neg-soft)}
   #bsLabelEditor .mg-items>.mg-row .mg-move,#bsLabelEditor .mg-items>.mg-row .mg-del{margin-top:3px}
+  /* ===== 휴대폰·태블릿 반응형 (2026-10-15) =====
+     900px 이하에서는 사이드바를 왼쪽 서랍으로 빼고(☰ 단추), 본문이 화면 폭을 다 쓴다 ·
+     중분류 사이드탭(.sb-subnav)이 열린 화면에서는 서랍이 아이콘 줄(64px) + 중분류 칸으로 함께 나온다 */
+  .topbar .tb-nav-toggle{display:none}
+  .sb-scrim{display:none}
+  @media (max-width:900px){
+    .app{flex-direction:column}
+    .sidebar,.sidebar.is-collapsed{position:fixed;left:0;top:0;bottom:0;height:100dvh;width:248px;z-index:120;
+      transform:translateX(-102%);transition:transform .22s ease;box-shadow:none}
+    .sidebar.is-compact{width:64px}
+    html.nav-open .sidebar{transform:none;box-shadow:12px 0 40px -12px rgba(40,20,10,.45)}
+    .sb-scrim{display:block;position:fixed;inset:0;z-index:119;background:rgba(20,14,10,.38);opacity:0;pointer-events:none;transition:opacity .2s}
+    html.nav-open .sb-scrim{opacity:1;pointer-events:auto}
+    html.nav-open body{overflow:hidden}
+    .sidebar .sb-collapse{display:none}
+    .sb-subnav{position:fixed;left:64px;top:0;bottom:0;height:100dvh;width:min(260px,calc(100vw - 64px));z-index:120;
+      transform:translateX(calc(-100% - 70px));transition:transform .22s ease}
+    html.nav-open .sb-subnav{transform:none;box-shadow:12px 0 40px -12px rgba(40,20,10,.45)}
+    .hero-view-tabs{padding:16px 22px 10px;flex-wrap:wrap}
+    .topbar .tb-nav-toggle{display:inline-grid;flex:none;margin-right:10px}
+    .tb-nav-toggle svg{width:20px;height:20px}
+    .topbar{padding:0 14px}
+    .tb-search{flex:1 1 auto;width:auto;min-width:0;max-width:none}
+    .tb-mail{margin-left:10px;gap:6px}
+    .wrap{padding:16px 16px 48px}
+    .hero{padding:26px 22px 24px}
+    .section{padding:26px 22px}
+    .logo-fab{width:56px;height:56px;right:16px;bottom:16px}
+  }
+  @media (max-width:560px){
+    .tb-mail{display:none}
+    .tb-profile{margin-left:10px;padding-left:10px}
+    .wrap{padding:10px 10px 40px}
+    .paper{border-radius:18px}
+    .hero{padding:22px 16px 20px;border-radius:18px 18px 0 0}
+    .section{padding:22px 16px}
+    .shead{gap:10px;margin-bottom:16px}
+    .hero-view-tabs{padding:14px 16px 8px}
+  }
+  /* 화면별 보정 · 폭이 좁으면 배너 여백을 줄이고, 3칸·2칸 카드를 한 칸으로 내리고, 넓은 표는 상자 안에서 옆으로 민다 */
+  @media (max-width:900px){
+    .plan-hero{padding:26px 22px 24px}
+    .section > .plan-hero{margin:0 -22px;padding-left:22px;padding-right:22px}
+    .settings-overlay{padding:10px}
+    .settings-panel,.settings-panel.admin-panel{height:min(94dvh,780px)}
+  }
+  @media (max-width:760px){
+    .main :is(div,section):has(> table){overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .panel{padding:20px 18px 18px}
+    .insights,.diagnose{grid-template-columns:1fr}
+    .goalach-grid{grid-template-columns:1fr}
+    .admin-panel .mini-sidebar{width:auto}
+  }
+  @media (max-width:560px){
+    .plan-hero{padding:22px 16px 20px;border-radius:16px}
+    .section > .plan-hero{margin:0 -16px;padding-left:16px;padding-right:16px}
+    .panel{padding:18px 14px 16px;border-radius:14px}
+    .ach-stats{grid-template-columns:1fr;gap:8px}
+    .ach-stats .astat{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+    .kpis{grid-template-columns:1fr 1fr;gap:10px}
+    .kpis>:last-child:nth-child(odd){grid-column:1 / -1}
+    .kpi{padding:16px 16px}
+    .tx span{font-size:11.5px;white-space:nowrap}
+    .drv-bar{flex-wrap:wrap}
+    .drv-bar>label.ui-field{flex:1 1 100%}
+    .settings-overlay{padding:6px}
+    .settings-panel,.settings-panel.admin-panel{height:min(96dvh,780px);border-radius:16px}
+  }
 </style>
 <script>
 /* ===== 표준 UI 동작 (window.UI) · 위 ui-* 부품과 짝 · 새 화면은 여기 것만 쓴다 =====
@@ -7949,9 +8018,14 @@ window.BAROYAM_FONT=(function(){
       </div>
     </div>
 
+    <div class="sb-scrim" id="sbScrim" aria-hidden="true"></div>
     <div class="main">
     <!-- 최상단 바 · 왼쪽 검색만 있다 -->
     <div class="topbar">
+      <!-- 휴대폰·태블릿(900px 이하)에서만 보이는 메뉴 단추 · 누르면 사이드바가 서랍처럼 왼쪽에서 나온다 -->
+      <button class="ui-btn ghost icon tb-nav-toggle" type="button" id="tbNavToggle" aria-label="메뉴 열기" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
       <div class="tb-search" id="tbSearch">
         <div class="tb-search-box">
           <svg class="tb-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
@@ -12575,8 +12649,10 @@ window.CsGuide=(function(){
     if(label&&!item.title) item.title=label.textContent.trim();
   });
 
+  /* 900px 이하에서는 사이드바가 서랍이라 늘 펼친 모양으로 둔다(접기·자동 줄이기 안 함) */
+  const mob=window.matchMedia('(max-width:900px)');
   function apply(on){
-    sb.classList.toggle('is-collapsed',on);
+    sb.classList.toggle('is-collapsed',on&&!mob.matches);
     const tip=on?'사이드바 펼치기 (Q)':'사이드바 접기 (Q)';
     btn.title=tip;
     btn.setAttribute('aria-label',tip);
@@ -12593,6 +12669,7 @@ window.CsGuide=(function(){
     const open=subnavs.some(n=>!n.hidden);
     sb.classList.toggle('is-compact',open&&window.innerWidth<1360);
   }
+  mob.addEventListener('change',()=>{ apply(on); syncCompact(); });
   subnavs.forEach(n=>new MutationObserver(syncCompact).observe(n,{attributes:true,attributeFilter:['hidden']}));
   window.addEventListener('resize',syncCompact);
   syncCompact();
@@ -12602,6 +12679,40 @@ window.CsGuide=(function(){
     apply(on);
     try{ localStorage.setItem(KEY,on?'1':'0'); }catch(e){}
   });
+})();
+
+/* 휴대폰·태블릿 서랍 메뉴 · ☰ 로 열고, 메뉴를 고르거나 바깥·Esc 를 누르면 닫는다 */
+(function(){
+  const root=document.documentElement;
+  const tg=document.getElementById('tbNavToggle');
+  const scrim=document.getElementById('sbScrim');
+  const sb=document.querySelector('.sidebar');
+  if(!tg||!sb) return;
+  const mob=window.matchMedia('(max-width:900px)');
+  function set(open){
+    root.classList.toggle('nav-open',open);
+    tg.setAttribute('aria-expanded',open?'true':'false');
+    tg.setAttribute('aria-label',open?'메뉴 닫기':'메뉴 열기');
+  }
+  tg.addEventListener('click',()=>set(!root.classList.contains('nav-open')));
+  if(scrim) scrim.addEventListener('click',()=>set(false));
+  /* 화면으로 가는 메뉴(링크 포함)를 누르면 닫는다 · 판매채널처럼 목록을 펴고 접는 머리는 그대로 둔다 */
+  /* 하위 메뉴가 있는 화면(메뉴얼가이드 등)은 서랍 안에 중분류 칸이 함께 열리므로 닫지 않고 거기서 고르게 한다 */
+  const subOpen=()=>!!document.querySelector('.sb-subnav:not([hidden])');
+  sb.addEventListener('click',e=>{
+    const it=e.target.closest('.sb-item,.sb-subitem,a');
+    if(!it||!mob.matches||it.classList.contains('sb-group-head')||it.classList.contains('sb-theme')) return;
+    setTimeout(()=>{ if(!subOpen()) set(false); },80);
+  });
+  /* 중분류 칸 · 화면으로 가는 항목을 누르면 닫고, 묶음을 펴고 접는 머리는 그대로 둔다 */
+  document.querySelectorAll('.sb-subnav').forEach(n=>n.addEventListener('click',e=>{
+    const it=e.target.closest('.sb-subnav-item,.sb-subnav-home,a');
+    if(it&&mob.matches) setTimeout(()=>set(false),80);
+  }));
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&root.classList.contains('nav-open')) set(false); });
+  mob.addEventListener('change',()=>{ if(!mob.matches) set(false); });
+  /* 다른 곳에서 화면이 바뀌어도(검색·뒤로가기) 열린 서랍은 닫는다 */
+  window.addEventListener('hashchange',()=>set(false));
 })();
 
 /* 키보드 단축키 · Q 사이드바 접기/펼치기, W/S 지금 칸에서 위·아래 메뉴로 이동(바로 그 화면으로 전환),
