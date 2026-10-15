@@ -10280,7 +10280,7 @@ window.BAROYAM_FONT=(function(){
                 <div class="pf-books" id="pfRkTable"></div>
               </div>
               <div class="pf-foot">
-                <span class="pf-note">공급률 = 공급가 ÷ 판매가 · 장려금 = 공급가 × 장려금율 · 부가세 = (공급가 − 원가 − 입고 물류비 − 장려금) ÷ 11 · 마진 = 공급가 − 원가 − 입고 물류비 − 장려금 − 부가세 · 마진률 = 마진 ÷ 공급가 · 최소 ROAS = 판매가 ÷ 마진 · 공급가는 부가세 포함 금액으로 적습니다 · 원가는 품목별 원가표의 상품을 고릅니다</span>
+                <span class="pf-note">공급가는 금액으로 적거나 쿠팡 몫(%)으로 적습니다 · 쿠팡 몫을 적으면 공급가 = 판매가 × (1 − 쿠팡 몫) · 장려금 = 공급가 × 장려금율 · 부가세 = (공급가 − 원가 − 입고 물류비 − 장려금) ÷ 11 · 마진 = 공급가 − 원가 − 입고 물류비 − 장려금 − 부가세 · 마진률 = 마진 ÷ 공급가 · 최소 ROAS = 판매가 ÷ 마진 · 공급가는 부가세 포함 금액으로 적습니다 · 원가는 품목별 원가표의 상품을 고릅니다</span>
               </div>
             </div>
           </div>
@@ -18766,14 +18766,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      마진표와 같은 모양(상품 상자 + 옵션 줄 · 원가는 원가표 상품 고르기) · 쿠팡이 공급가로 사 가므로 판매처 탭·수수료·배송비·프라임 대신
      공급가(부가세 포함) · 입고 물류비(개당 아닌 옵션 한 개 기준 금액) · 판매장려금율(공급가의 %) ·
      장려금 = 공급가 × 장려금율 · 부가세 = (공급가 − 원가 − 물류비 − 장려금) ÷ 11 · 마진 = 그 금액 − 부가세 ·
-     마진률 = 마진 ÷ 공급가 · 공급률 = 공급가 ÷ 판매가 · 최소 ROAS = 판매가 ÷ 마진(쿠팡 광고 매출은 판매가 기준) */
+     마진률 = 마진 ÷ 공급가 · 최소 ROAS = 판매가 ÷ 마진(쿠팡 광고 매출은 판매가 기준) */
   let rkBrand='', rkQ='';
   const RK=()=>ROCKET.data;
   function rkCalc(r){
     const base=calc({mix:obj(r.mix)}), ov=obj(r.ov);
     const cost=num(ov.cost)!=null?num(ov.cost):base.cost;
-    const sale=num(r.sale), supply=num(r.supply), logi=num(r.logi)||0, rebR=num(r.reb)||0;
-    const o={units:base.units,cost,sale,supply,rate:sale&&supply!=null?supply/sale:null};
+    /* 공급가는 금액(supply) 또는 쿠팡 몫 %(take) 중 하나로 적는다 · 적은 쪽이 원본이고 다른 쪽은 계산해서 보인다
+       (10-15 사용자: "로켓프레시가 공급가 40% 가져간다 · 공급가나 퍼센트나 입력 가능하게") */
+    const sale=num(r.sale), take=num(r.take), logi=num(r.logi)||0, rebR=num(r.reb)||0;
+    const supply=num(r.supply)!=null?num(r.supply):(sale&&take!=null?sale*(1-take/100):null);
+    const o={units:base.units,cost,sale,supply,take:sale&&supply!=null?(1-supply/sale)*100:null};
     if(supply==null) return o;
     const reb=supply*rebR/100, pre=supply-cost-logi-reb, vat=pre/11, margin=pre-vat;
     return Object.assign(o,{logi,reb,vat,margin,mrate:supply?margin/supply:null,roas:margin>0&&sale?sale/margin:null});
@@ -18799,14 +18802,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] */
   const RK_COLS=[
     ['label','옵션',14.5,1],['qty','수량',6],['cost','원가',9],
-    ['sale','판매가',8,1],['supply','공급가',8],['rate','공급률',6,0,1],
+    ['sale','판매가',8,1],['take','쿠팡 몫',6],['supply','공급가',8],
     ['logi','입고 물류비',7,1],['reb','장려금율',6],['rebv','장려금',7,0,1],
     ['margin','마진',8,1,1],['mrate','마진률',6,0,1],['roas','최소 ROAS',6,0,1],['vat','부가세',6,0,1],
     ['act','',2.5,1]];
   function rkOut(tr,r){
     const v=rkCalc(r);
     const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(!td) return; td.textContent=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); };
-    put('rate',pct(v.rate,0)); put('rebv',won(v.reb)); put('vat',won(v.vat));
+    put('rebv',won(v.reb)); put('vat',won(v.vat));
     put('margin',won(v.margin),' key hi'+(v.margin<0?' neg':''));
     put('mrate',pct(v.mrate),' key hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
     put('roas',v.margin==null||!v.sale?'–':(v.roas==null?'적자':pct(v.roas,0)),' key hi'+(v.margin!=null&&v.sale&&v.roas==null?' neg':''));
@@ -18818,6 +18821,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     const qx=tr.querySelector('.pf-qty-x'); if(qx) qx.textContent=v.units?v.units+'개':'–';
     const li=tr.querySelector('[data-k="label"]'); if(li) li.placeholder=rkAuto(r)||'옵션';
+    /* 적지 않은 쪽(공급가 또는 쿠팡 몫)은 계산한 값을 흐린 글자로 보인다 */
+    const si=tr.querySelector('[data-k="supply"]'); if(si) si.placeholder=num(r.supply)==null&&v.supply!=null?comma(Math.round(v.supply)):'공급가';
+    const ti=tr.querySelector('[data-k="take"]'); if(ti) ti.placeholder=num(r.take)==null&&v.take!=null?comma(+v.take.toFixed(1))+'%':'%';
   }
   function rkQty(r){
     const id=rkSolo(r);
@@ -18843,8 +18849,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +td('qty',rkQty(r),'pf-key')
       +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix title="원가표 상품 고르기(여러 상품을 섞어도 됨)"></button>')
       +td('sale',inp('sale',r,'판매가','쿠팡이 고객에게 파는 값'))
-      +td('supply',inp('supply',r,'공급가','쿠팡에 넘기는 값(부가세 포함)'),'pf-key')
-      +td('rate','','out')
+      +td('take',inp('take',r,'%','쿠팡이 판매가에서 가져가는 몫(%) · 적으면 공급가 = 판매가 × (1 − 몫)','decimal'),'pf-key')
+      +td('supply',inp('supply',r,'공급가','쿠팡에 넘기는 값(부가세 포함) · 적으면 쿠팡 몫은 계산해서 보임'),'pf-key')
       +td('logi',inp('logi',r,'0','쿠팡 센터까지 보내는 물류비 · 옵션 한 개 기준'))
       +td('reb',inp('reb',r,'%','판매장려금 · 공급가의 %','decimal'))
       +td('rebv','','out')
@@ -18879,7 +18885,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function rkAddRow(g){
     const prev=rkRows().filter(r=>r.g===g.id).slice(-1)[0], id=uid();
     /* 입고 물류비·장려금율은 같은 상품의 바로 위 옵션을 따른다 */
-    RK().rows[id]={id,g:g.id,ord:Date.now(),label:'',item:null,mix:{},logi:prev?prev.logi:null,reb:prev?prev.reb:null};
+    RK().rows[id]={id,g:g.id,ord:Date.now(),label:'',item:null,mix:{},logi:prev?prev.logi:null,reb:prev?prev.reb:null,
+      take:prev?(num(prev.supply)==null?prev.take:null):40};
     rkQ=''; $('pfRkQ').value='';
     ROCKET.mark(); paintRocket();
     const tr=rkFocus('tr[data-row]',id), cb=tr&&tr.querySelector('.pf-cost');
@@ -18899,10 +18906,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     const k=e.target.dataset.k; if(!k) return;
     x.r[k]=k==='label'?e.target.value:num(e.target.value);
+    /* 공급가와 쿠팡 몫은 둘 중 하나만 원본 · 하나를 적으면 다른 쪽 칸을 비워 계산 값으로 */
+    const other=k==='supply'?'take':k==='take'?'supply':'';
+    if(other&&x.r[k]!=null){ x.r[other]=null; const oi=x.tr.querySelector('[data-k="'+other+'"]'); if(oi) oi.value=''; }
     rkOut(x.tr,x.r); ROCKET.mark();
   });
   $('pfRkTable').addEventListener('focusout',e=>{
-    const k=e.target.dataset.k; if(!k||k==='label'||k==='reb') return;
+    const k=e.target.dataset.k; if(!k||k==='label'||k==='reb'||k==='take') return;
     const x=rkRowOf(e.target); if(x&&x.r) e.target.value=comma(x.r[k]);
   });
   $('pfRkTable').addEventListener('click',e=>{
