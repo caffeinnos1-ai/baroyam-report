@@ -18808,15 +18808,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] */
   const RK_COLS=[
-    ['label','옵션',14.5,1],['qty','수량',6],['cost','원가',9],
-    ['sale','판매가',8,1],['take','쿠팡 몫',6],['supply','공급가',8],
-    ['logi','입고 물류비',7,1],['reb','장려금율',6],['rebv','장려금',7,0,1],
-    ['margin','마진',8,1,1],['mrate','마진률',6,0,1],['roas','최소 ROAS',6,0,1],['vat','부가세',6,0,1],
+    ['label','옵션',12,1],['qty','수량',6],['cost','원가',8],
+    ['sale','판매가',7.5,1],['take','쿠팡 몫',6],['supply','공급가',7.5],
+    ['logi','입고 물류비',6.5,1],['reb','장려금율',6],['rebv','장려금',7,0,1],['unit','개당판매가',6,0,1],
+    ['margin','마진',7,1,1],['mrate','마진률',6,0,1],['roas','최소 ROAS',6,0,1],['vat','부가세',6,0,1],
     ['act','',2.5,1]];
   function rkOut(tr,r){
     const v=rkCalc(r);
     const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(!td) return; td.textContent=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); };
     put('rebv',won(v.reb)); put('vat',won(v.vat));
+    /* 개당판매가 = 판매가 ÷ 수량(원가에서 고른 상품 개수 합) · 10-15 사용자 요청으로 장려금 오른쪽 */
+    put('unit',v.sale&&v.units?won(v.sale/v.units):'–');
     put('margin',won(v.margin),' key hi'+(v.margin<0?' neg':''));
     put('mrate',pct(v.mrate),' key hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
     put('roas',v.margin==null||!v.sale?'–':(v.roas==null?'적자':pct(v.roas,0)),' key hi'+(v.margin!=null&&v.sale&&v.roas==null?' neg':''));
@@ -18862,7 +18864,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +td('supply',inp('supply',r,'공급가','쿠팡에 넘기는 값(부가세 포함) · 적으면 쿠팡 몫은 계산해서 보임'),'pf-key')
       +td('logi',inp('logi',r,'0','쿠팡 센터까지 보내는 물류비 · 옵션 한 개 기준'))
       +td('reb',inp('reb',r,'%','판매장려금 · 공급가의 %','decimal'))
-      +td('rebv','','out')
+      +td('rebv','','out')+td('unit','','out')
       +td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('vat','','out')
       +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
       +'</tr>';
