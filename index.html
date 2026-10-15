@@ -3388,7 +3388,7 @@ window.BAROYAM_FONT=(function(){
   .pf-pane[data-pf-pane="rocket"]>.pf-card{border:0;padding:0;background:none}
   #view-profit:has([data-pf-pane="rocket"]:not([hidden])) .plan-hero{--hero-accent:var(--coupang);
     background:color-mix(in srgb,var(--coupang) 6%,var(--paper));border-color:color-mix(in srgb,var(--coupang) 16%,var(--line))}
-  #view-profit.pf-ro #pfRkAdd{display:none}
+  #view-profit.pf-ro :is(#pfRkAdd,#pfRkCols){display:none}
   :is(#view-profit,.pf-pane)[data-tone="naver"]{--tone:var(--naver)}
   :is(#view-profit,.pf-pane)[data-tone="coupang"]{--tone:var(--coupang)}
   :is(#view-profit,.pf-pane)[data-tone="talk"]{--tone:var(--talk)}
@@ -10273,6 +10273,7 @@ window.BAROYAM_FONT=(function(){
               <button type="button" class="ui-field sm" id="pfRkBrandF" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
               <input class="ui-field sm" id="pfRkQ" placeholder="상품·옵션 검색" aria-label="상품·옵션 검색">
               <span class="pf-grow"></span>
+              <button type="button" class="ui-btn sm ghost" id="pfRkCols" aria-haspopup="listbox" title="표에 보일 칸 고르기">칸 설정</button>
               <button type="button" class="ui-btn sm primary" id="pfRkAdd">+ 상품 등록</button>
             </div>
             <div class="pf-card">
@@ -18315,7 +18316,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     chans:{'ch-cafe':{id:'ch-cafe',name:'카페이노스',rate:3.85,ord:1}}}));
   const CALC=store('profit_calc_v1',normCalc,()=>normCalc({}));
   /* 로켓프레시 · profit_rocket_v1 = {prods:{id:{name,ord,del}}, rows:{id:{g,ord,label,item,mix,sale(판매가),supply(공급가),logi(입고 물류비),reb(장려금율 %),ov,del}}} */
-  const normRocket=v=>{ v=obj(v); return Object.assign({},v,{prods:obj(v.prods),rows:obj(v.rows)}); };
+  const normRocket=v=>{ v=obj(v); return Object.assign({},v,{prods:obj(v.prods),rows:obj(v.rows),hide:obj(v.hide)}); };
   const ROCKET=store('profit_rocket_v1',normRocket,()=>normRocket({}));
 
   let pane='summary', brandF='', itemQ='';
@@ -18769,6 +18770,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      마진률 = 마진 ÷ 공급가 · 최소 ROAS = 판매가 ÷ 마진(쿠팡 광고 매출은 판매가 기준) */
   let rkBrand='', rkQ='';
   const RK=()=>ROCKET.data;
+  const rkHidden=k=>!!obj(RK()&&RK().hide)[k];
   function rkCalc(r){
     const base=calc({mix:obj(r.mix)}), ov=obj(r.ov);
     const cost=num(ov.cost)!=null?num(ov.cost):base.cost;
@@ -18838,10 +18840,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(rkBrand&&all.indexOf(rkBrand)<0) rkBrand='';
     $('pfRkBrandF').querySelector('.t').textContent=rkBrand||'전체 브랜드';
     const list=rkView();
-    const cg='<colgroup>'+RK_COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
-    const headRow='<tr class="pf-head">'+RK_COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
+    /* 칸 설정에서 숨긴 칸(hide)은 머리글·줄 모두에서 뺀다 · 남은 칸이 폭을 나눠 갖는다 */
+    const COLS_=RK_COLS.filter(cl=>!rkHidden(cl[0]));
+    const cg='<colgroup>'+COLS_.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
+    const headRow='<tr class="pf-head">'+COLS_.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
     const H={}; RK_COLS.forEach(cl=>{ H[cl[0]]=cl; });
-    const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!=='label';
+    const td=(k,inner,cls)=>{ if(rkHidden(k)) return ''; const cl=H[k], g=cl[3]&&k!=='label';
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
     const inp=(k,r,ph,tt,mode)=>'<input class="ui-field sm pf-num" data-k="'+k+'" inputmode="'+(mode||'numeric')+'" value="'+esc(mode?(r[k]==null?'':r[k]):comma(r[k]))+'" placeholder="'+ph+'"'+(tt?' title="'+tt+'"':'')+'>';
     const row=r=>'<tr data-row="'+esc(r.id)+'">'
@@ -18965,6 +18969,20 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     window.UI.menu($('pfRkBrandF'),opts,rkBrand,v=>{ rkBrand=v; paintRocket(); });
   });
   $('pfRkQ').addEventListener('input',e=>{ rkQ=e.target.value; paintRocket(); });
+  /* 칸 설정 · 옵션·⋯ 말고는 모두 숨길 수 있다(10-15 사용자: "최소 ROAS 는 보고 싶지 않은데 보여서 피로") ·
+     profit_rocket_v1.hide = {칸 열쇠:true} · 모든 회원에게 같이 보인다 · 누를 때마다 보임/숨김을 바꾸고 목록은 열린 채 둔다 */
+  function rkColsMenu(){
+    const btn=$('pfRkCols');
+    const opts=RK_COLS.filter(cl=>cl[0]!=='label'&&cl[0]!=='act').map(cl=>({value:cl[0],label:cl[1],sub:rkHidden(cl[0])?'숨김':'보임 ✓'}));
+    window.UI.menu(btn,opts,null,k=>{
+      if(!canEdit()) return;
+      const h=RK().hide=Object.assign({},obj(RK().hide));
+      h[k]=!rkHidden(k);
+      ROCKET.mark(); paintRocket();
+      setTimeout(rkColsMenu,0);
+    });
+  }
+  $('pfRkCols').addEventListener('click',e=>{ e.stopPropagation(); if(ROCKET.loaded) rkColsMenu(); });
 
   /* ---------- 원가 고르기 창 ---------- */
   let mixFor=null, mixDraft={}, mixBrand='', mixQ='', mixFirst=null;
