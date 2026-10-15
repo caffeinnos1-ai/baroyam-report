@@ -1030,7 +1030,10 @@ window.BAROYAM_AUTH={
   lead:{salt:'baroyam-settings-v1',iterations:200000,hash:'c9c998abd596d4815b548f074090c4416ddd3c2fe07be8523d5fc45c717b7750'},
   /* 관리자 설정 비밀번호 · 팀장이 아닌 회원이 관리자 설정을 열 때 묻는다 (팀장은 묻지 않는다) ·
      같은 소금·횟수로 만든 해시라 baroyamLeadHash 로 확인한다 */
-  settingsHash:'87e4ebdd8f864937981a8ecfd063c2fcc8e8fce24b9303b5290a1631ece8ede3'
+  settingsHash:'87e4ebdd8f864937981a8ecfd063c2fcc8e8fce24b9303b5290a1631ece8ede3',
+  /* 역할별 들어가기 비밀번호 · 이 역할인 회원을 고르면 비밀번호를 묻는다(팀장 권한은 주지 않음 · 들어가기만 막음) ·
+     같은 소금·횟수로 만든 해시라 baroyamLeadHash 로 확인한다 · 이사는 2026-10-15 사용자 요청 */
+  roleLocks:{'이사':'b794df5547e9fc9bcc3310e67fe7f5c625b7028a9cb15d52f4a41bcddb099239'}
 };
 /* ===== 구글 드라이브·매출 시트 권한(access token) 하나로 =====
    로그인은 모두 같은 회사 구글 계정 하나로 하므로, 드라이브 화면·업로드·매출 시트·브랜드전략실 받기가
@@ -7436,7 +7439,7 @@ window.BAROYAM_FONT=(function(){
     <h1 class="mp-title" id="mpTitle">프로필 선택</h1>
     <div class="mp-list" id="mpList"></div>
     <form class="mp-pw" id="mpPwForm" hidden autocomplete="off">
-      <p class="mp-pw-who"><b id="mpPwName"></b>님은 팀장이에요.<br>팀장 비밀번호를 입력해 주세요.</p>
+      <p class="mp-pw-who"><b id="mpPwName"></b>님은 <span id="mpPwRole">팀장이에요</span>.<br><span id="mpPwRole2">팀장</span> 비밀번호를 입력해 주세요.</p>
       <input class="mp-pw-input pw-mask" id="mpPwInput" type="text" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="비밀번호" aria-label="팀장 비밀번호" aria-describedby="mpPwError">
       <p class="mp-pw-error" id="mpPwError" role="alert"></p>
       <div class="mp-pw-actions">
@@ -7493,9 +7496,17 @@ window.BAROYAM_FONT=(function(){
   const pwForm=document.getElementById('mpPwForm'), pwInput=document.getElementById('mpPwInput'),
         pwName=document.getElementById('mpPwName'), pwError=document.getElementById('mpPwError'),
         pwSubmit=document.getElementById('mpPwSubmit');
-  let pending='', pwBusy=false;
-  function askPw(m){
-    pending=m.id; pwName.textContent=m.name; pwInput.value=''; pwError.textContent='';
+  let pending='', pendingRole='', pwBusy=false;
+  /* 팀장 말고도 비밀번호를 거는 역할(이사 등) · 맞히면 들어가기만 하고 팀장 권한은 켜지 않는다 */
+  const ROLE_LOCKS=window.BAROYAM_AUTH.roleLocks||{};
+  const lockRole=id=>{ const r=P.get(id).role; return (r&&ROLE_LOCKS[r])?r:''; };
+  function askPw(m,role){
+    pending=m.id; pendingRole=role||LEAD.ROLE; pwName.textContent=m.name; pwInput.value=''; pwError.textContent='';
+    /* 받침이 있으면 '팀장이에요', 없으면 '이사예요' */
+    const last=pendingRole.charCodeAt(pendingRole.length-1)-0xAC00;
+    document.getElementById('mpPwRole').textContent=pendingRole+((last>=0&&last<11172&&last%28)?'이에요':'예요');
+    document.getElementById('mpPwRole2').textContent=pendingRole;
+    pwInput.setAttribute('aria-label',pendingRole+' 비밀번호');
     card.classList.add('is-pw'); pwForm.hidden=false; pwInput.focus();
   }
   function cancelPw(){
@@ -7579,9 +7590,10 @@ window.BAROYAM_FONT=(function(){
     /* 드라이브·매출 시트 권한을 이 클릭에서 미리 받아 둔다 · 들어간 뒤 새로고침·업로드 때 다시 묻지 않도록 */
     if(window.baroyamGoogleToken) window.baroyamGoogleToken.warm();
     const id=item.dataset.id;
-    if(!LEAD.isLeadRole(id)){ LEAD.clear(); enterWithMotion(item,id); return; }
+    const lr=LEAD.isLeadRole(id)?'':lockRole(id);
+    if(!LEAD.isLeadRole(id)&&!lr){ LEAD.clear(); enterWithMotion(item,id); return; }
     const m=MEM.load().find(x=>x.id===id);
-    if(m) askPw(m);
+    if(m) askPw(m,lr||LEAD.ROLE);
   });
   document.getElementById('mpPwCancel').addEventListener('click',cancelPw);
   pwForm.addEventListener('submit',e=>{
@@ -7592,8 +7604,10 @@ window.BAROYAM_FONT=(function(){
     if(!(window.crypto&&crypto.subtle)){ pwError.textContent='이 주소에서는 비밀번호를 확인할 수 없어요. https 주소로 접속해 주세요.'; return; }
     pwBusy=true; pwSubmit.disabled=true; pwError.textContent='';
     window.baroyamLeadHash(v).then(h=>{
-      if(h!==window.BAROYAM_AUTH.lead.hash){ pwError.textContent='비밀번호가 맞지 않아요.'; pwInput.select(); return; }
-      LEAD.grant(pending);
+      const isLead=pendingRole===LEAD.ROLE;
+      const want=isLead?window.BAROYAM_AUTH.lead.hash:ROLE_LOCKS[pendingRole];
+      if(h!==want){ pwError.textContent='비밀번호가 맞지 않아요.'; pwInput.select(); return; }
+      if(isLead) LEAD.grant(pending); else LEAD.clear();
       enter(pending);
     }).catch(err=>{ console.error(err); pwError.textContent='확인 중 오류가 났어요. 다시 시도해 주세요.'; })
       .finally(()=>{ pwBusy=false; pwSubmit.disabled=false; });
