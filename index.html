@@ -17512,16 +17512,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   /* ---------- 숫자 ---------- */
   const acc=()=>data&&data.accounts&&(data.accounts.find(a=>a.id===accId)||data.accounts[0]);
+  /* format 2 부터 서버가 금액을 모두 원화로 저장한다 · 달러 계정은 광고비가 나간 날의 환율로 하루씩 바꿔 더함
+     (사용자 결정: 회사 숫자와 맞추고·직원이 읽기 쉽고·실제로 나간 돈으로 보기 · 원래 달러는 성과의 o:{spend,rev}) */
+  const inKrw=()=>!!(data&&data.format>=2);
   function money(v,cur){
     v=v||0;
-    if(cur==='KRW'||!cur) return Math.round(v).toLocaleString('ko-KR')+'원';
+    if(inKrw()||cur==='KRW'||!cur) return Math.round(v).toLocaleString('ko-KR')+'원';
     const d=Math.abs(v)>=1000?0:2;
     const t=Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
     return (v<0?'-':'')+(cur==='USD'?'$'+t:t+' '+cur);
   }
   /* 큰 숫자 칸·막대 끝 · 원화는 만 단위로 짧게(정확한 금액은 표·말풍선) */
   function short(v,cur){
-    if(cur&&cur!=='KRW') return money(v,cur);
+    if(!inKrw()&&cur&&cur!=='KRW') return money(v,cur);
     v=Math.round(v||0);
     if(Math.abs(v)>=1e8) return (Math.round(v/1e7)/10)+'억';
     if(Math.abs(v)>=1e4) return Math.round(v/1e4).toLocaleString('ko-KR')+'만';
@@ -17583,7 +17586,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const nm=String(a.name||a.id).replace(/\s*광고\s*계정$/,'');
     $('maAcctName').textContent=nm; $('maAvatar').textContent=nm.slice(0,1).toUpperCase()||'M';
     $('maState').innerHTML='<span class="ip-live'+(stale?' is-off':'')+'"></span>메타 연결됨 · '+whenTxt(data.updatedAt)+' 기준'
-      +(stale?' · 12시간 넘게 새 값이 없습니다':'')+'<span class="ma-cur" title="이 광고계정의 통화">'+esc(a.currency)+'</span>';
+      +(stale?' · 12시간 넘게 새 값이 없습니다':'')
+      +(a.currency!=='KRW'&&inKrw()?'<span class="ma-cur" title="광고비가 나간 날의 환율(유럽중앙은행 기준환율 · 주말·휴일은 앞 영업일)로 하루씩 원화로 바꿔 보여 줍니다. 카드 청구 금액과는 카드사 환율·수수료만큼 조금 다를 수 있습니다.">'+esc(a.currency)+' 계정 · 그날 환율로 원화 환산</span>'
+        :'<span class="ma-cur" title="이 광고계정의 통화">'+esc(a.currency)+'</span>');
     /* 이번 달 누적(1일~오늘) · 게재 중 캠페인 */
     const t=kst(), mo=+t.slice(5,7), ds=[]; for(let d=t.slice(0,8)+'01';d<=t;d=dayAdd(d,1)) ds.push(d);
     const m=derive(addUp(ds.map(d=>dayVal(a,d))));
@@ -17655,7 +17660,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         const i=+el.dataset.i, o=days[i];
         box.classList.add('is-hover');
         box.querySelectorAll('.bars path').forEach(p=>p.classList.toggle('is-on',+p.dataset.i===i));
-        tip.innerHTML='<b>'+dayTxt(o.d)+'</b><br>지출 '+money(o.x.spend,cur)+' · 구매 전환값 '+money(o.x.rev,cur)
+        const raw=(a.daily||{})[o.d], ou=raw&&raw.o&&raw.o.spend?' ($'+raw.o.spend.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' · 1'+cur+' '+Math.round(raw.spend/raw.o.spend).toLocaleString('ko-KR')+'원)':'';
+        tip.innerHTML='<b>'+dayTxt(o.d)+'</b><br>지출 '+money(o.x.spend,cur)+ou+' · 구매 전환값 '+money(o.x.rev,cur)
           +'<br>ROAS '+pct(o.x.roas)+' · 구매 '+int(o.x.buy)+'건';
         const cx=(L+step*i+step/2)/W*box.clientWidth;
         tip.style.left=Math.min(Math.max(0,cx-110),Math.max(0,box.clientWidth-240))+'px'; tip.style.top='-12px';
