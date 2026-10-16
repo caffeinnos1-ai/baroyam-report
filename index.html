@@ -2505,6 +2505,8 @@ window.BAROYAM_FONT=(function(){
   .ma-empty{font-size:13.5px;color:var(--body);line-height:1.7}
   .ma-table td.ma-fx{color:color-mix(in srgb,var(--coupang) 72%,var(--paper))}   /* 날짜별 기록 환율 · 하늘색 */
   .ma-table td.ma-fx.is-borrow{opacity:.6}
+  .ma-datebar{display:flex;justify-content:flex-end;margin-bottom:-4px}
+  .ma-datebar .ip-acct-end{margin-left:auto}
   .ma-cur{padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;background:var(--chip-flat);color:var(--mute)}
   .ma-key{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .ma-key.is-bar{background:color-mix(in srgb,var(--coupang) 35%,transparent)}
@@ -10164,13 +10166,16 @@ window.BAROYAM_FONT=(function(){
             <div class="ptag">퍼포먼스마케팅 · 메타광고</div>
             <div class="ptitle" id="perfViewTitle">데일리 성과</div>
             <div class="psub" id="perfViewSub">하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.</div>
-          </div>
-          <div class="ip ma" id="maRoot">
-            <!-- 계정 줄 · 인스타 계정 줄과 같은 모양 -->
-            <div class="ip-card ip-acct" id="maAcctBar">
+            <!-- 배너 오른쪽 계정 카드 · 인스타콘텐츠 성과 배너와 같은 모양(사용자 요청) -->
+            <div class="ip-acct ip-hero-acct" id="maHeroAcct">
               <div class="ip-avatar ma-avatar"><span id="maAvatar">M</span></div>
               <div class="ip-who"><b id="maAcctName">메타광고</b><small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small></div>
               <div class="ip-nums" id="maNums"></div>
+            </div>
+          </div>
+          <div class="ip ma" id="maRoot">
+            <!-- 날짜 고르기 줄 · 데일리 = 기간 달력, 정밀성과 = 오늘/어제/7일/30일 -->
+            <div class="ma-datebar" id="maAcctBar">
               <div class="ip-acct-end">
                 <div class="ui-tabs" id="maAcct" hidden></div>
                 <div class="ui-tabs" id="maRange" hidden>
