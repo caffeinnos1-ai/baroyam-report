@@ -2614,6 +2614,20 @@ window.BAROYAM_FONT=(function(){
   .ma-table td.is-under,.ma-link-roas b.is-under,.ma-big b.is-under{color:var(--neg)}
   .ma-table td.is-over,.ma-link-roas b.is-over,.ma-big b.is-over{color:var(--coupang)}
   .ma-link-tabs{margin-bottom:12px}
+  /* 대표 ROAS 탭 · 이름 | 상품 두 칸 · 세트는 들여 쓰고 왼쪽 선 */
+  .ma-pl-head{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:0 4px 8px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:500;color:var(--mute)}
+  .ma-pl-grp{padding:10px 4px 12px;border-bottom:1px solid var(--line)}
+  .ma-pl-row{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:center}
+  .ma-pl-row .ui-field{width:100%;justify-content:space-between;overflow:hidden}
+  .ma-pl-row .ui-field .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-pl-row .ui-field.is-on{border-color:var(--btn)}
+  .ma-pl-name{display:flex;align-items:center;gap:8px;min-width:0}
+  .ma-pl-name b{font-size:13.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-pl-name small{flex:none;font-size:11.5px;color:var(--mute)}
+  .ma-pl-name .nm{font-size:12.5px;color:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-pl-sets{margin:8px 0 0 3px;padding-left:16px;border-left:2px solid var(--line);display:flex;flex-direction:column;gap:6px}
+  .ma-pl-row.is-set .ui-field{height:var(--ui-h-sm)}
+  @media (max-width:760px){ .ma-pl-head{display:none} .ma-pl-row{grid-template-columns:1fr;gap:6px} }
   .ma-link-grp{border-bottom:1px solid var(--line);padding:4px 0}
   .ma-link-grp .ma-link-row{border-bottom:0}
   .ma-link-row.is-camp,.ma-link-row.is-set{grid-template-columns:52px minmax(0,1.8fr) 90px minmax(0,1.2fr)}
@@ -18461,7 +18475,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const own=(kind==='camp'?linkC:linkS)[id], P=own&&(profitList||[]).find(q=>q.id===own.prod);
     let t;
     if(own&&own.prod) t=esc((P&&P.name)||own.prodName||'상품')+(P&&P.roas!=null?' · '+Math.round(P.roas*100)+'%':'');
-    else if(kind==='set'&&linkC[c]&&linkC[c].prod){ const R=repFor(c,null); t='<span class="ph">캠페인 따름 · '+esc(R.name)+(R.roas!=null?' '+Math.round(R.roas)+'%':'')+'</span>'; }
+    else if(kind==='set'&&linkC[c]&&linkC[c].prod) t='<span class="ph">캠페인과 같음</span>';
     else t='<span class="ph">상품 연동</span>';
     return '<button type="button" class="ui-field sm'+(own&&own.prod?' is-on':'')+'" data-link="prod" data-kind="'+kind+'" data-id="'+esc(id)+'"><span class="t">'+t+'</span>'+CHEV+'</button>';
   }
@@ -18481,18 +18495,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       cs.sort((p,q)=>q.x.spend-p.x.spend);
       const n=cs.filter(o=>linkC[o.c.id]&&linkC[o.c.id].prod).length;
       linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 캠페인 '+cs.length+'개 · 상품 연동 '+n+'개';
-      linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">'+RANGE_TXT[range]+(brand?' · '+esc(brand):'')+' · 캠페인에 자사몰 마진표 상품을 이으면 안의 세트·소재가 그 대표 ROAS 를 따릅니다 · 상품·랜딩이 다른 세트만 따로 이으세요</span>'+chips(nOn,nAll);
-      linkBox.querySelector('.ma-link-list').innerHTML=cs.length?cs.map(o=>{
-        const Rc=repFor(o.c.id,null);
+      linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">캠페인에 상품을 이으면 안의 세트가 따라갑니다 · 상품·랜딩이 다른 세트만 따로 이으세요</span>'+chips(nOn,nAll);
+      linkBox.querySelector('.ma-link-list').innerHTML=cs.length?'<div class="ma-pl-head"><span>캠페인 · 세트</span><span>자사몰 마진표 상품 (대표 ROAS)</span></div>'+cs.map(o=>{
         let sets=(a.adsets||[]).filter(x=>x.c===o.c.id).map(x=>({x,m:derive((I.adset||{})[x.id])}));
         if(linkShow==='on') sets=sets.filter(z=>z.x.st==='ACTIVE');
         sets.sort((p,q)=>q.m.spend-p.m.spend);
-        return '<div class="ma-link-grp"><div class="ma-link-row is-camp">'
-          +'<span class="ma-lv">캠페인</span><div class="ma-link-name"><b title="'+esc(o.c.name)+'"><span class="ma-st'+stCls(o.c.st)+'"></span>'+esc(o.c.name)+'</b><small>세트 '+sets.length+'개</small></div>'
-          +roasB(o.x,Rc)+'<div class="ma-link-cell"><small>마진표 상품 (대표 ROAS)</small>'+prodBtn('camp',o.c.id,o.c.id)+'</div></div>'
-          +sets.map(z=>{ const R=repFor(o.c.id,z.x.id);
-            return '<div class="ma-link-row is-set"><span class="ma-lv">세트</span><div class="ma-link-name"><b title="'+esc(z.x.name)+'"><span class="ma-st'+stCls(z.x.st)+'"></span>'+esc(z.x.name)+'</b></div>'
-              +roasB(z.m,R)+'<div class="ma-link-cell">'+prodBtn('set',z.x.id,o.c.id)+'</div></div>'; }).join('')
+        return '<div class="ma-pl-grp"><div class="ma-pl-row is-camp"><div class="ma-pl-name"><span class="ma-st'+stCls(o.c.st)+'"></span><b title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</b><small>세트 '+sets.length+'</small></div>'+prodBtn('camp',o.c.id,o.c.id)+'</div>'
+          +(sets.length?'<div class="ma-pl-sets">'+sets.map(z=>'<div class="ma-pl-row is-set"><div class="ma-pl-name"><span class="ma-st'+stCls(z.x.st)+'"></span><span class="nm" title="'+esc(z.x.name)+'">'+esc(z.x.name)+'</span></div>'+prodBtn('set',z.x.id,o.c.id)+'</div>').join('')+'</div>':'')
           +'</div>';
       }).join(''):'<div class="ma-empty">보여 줄 캠페인이 없습니다.</div>';
       return;
