@@ -18288,11 +18288,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     /* 이번 달 누적(1일~오늘) · 게재 중 캠페인 */
     const t=kst(), mo=+t.slice(5,7), ds=[]; for(let d=t.slice(0,8)+'01';d<=t;d=dayAdd(d,1)) ds.push(d);
     const m=derive(addUp(ds.map(d=>dayVal(a,d))));
-    const on=(a.campaigns||[]).filter(c=>c.st==='ACTIVE').length;
+    /* 게재 중 캠페인 수는 사용자 요청으로 뺌 */
     $('maNums').innerHTML='<div><b>'+short(m.spend,a.currency)+'</b><small>'+mo+'월 지출</small></div>'
       +'<div><b>'+pct(m.roas)+'</b><small>'+mo+'월 ROAS</small></div>'
-      +'<div><b>'+int(m.buy)+'</b><small>'+mo+'월 구매</small></div>'
-      +'<div><b>'+on+'</b><small>게재 중 캠페인</small></div>';
+      +'<div><b>'+int(m.buy)+'</b><small>'+mo+'월 구매</small></div>';
   }
   /* UI.tabs 는 부를 때마다 누름 처리를 더 거므로 상자마다 한 번만 만든다 */
   const TABS={};
