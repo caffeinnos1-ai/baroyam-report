@@ -1307,7 +1307,7 @@ window.BAROYAM_ACCESS=(function(){
     {k:'sales',     name:'매출데이터',   sel:'#sbSalesToggle',                         views:['week','month']},
     {k:'goal',      name:'목표설정',     sel:'.sidebar .sb-item[data-view="goal"]',    views:['goal']},
     {k:'ops',       name:'판매·재고',     sel:'.sidebar .sb-item[data-view="ops"]',     views:['ops']},
-    {k:'profit',    name:'손익·마진 관리', sel:'.sidebar .sb-item[data-view="profit"]', views:['profit']},
+    {k:'profit',    name:'마진관리', sel:'.sidebar .sb-item[data-view="profit"]', views:['profit']},
     {k:'quote',     name:'견적서',       sel:'.sidebar .sb-item[data-view="quote"]',   views:['quote']},
     {k:'agenda',    name:'회의안건',     sel:'.sidebar .sb-item[data-view="agenda"]',  views:['agenda']},
     {k:'trend',     name:'트렌드분석',   sel:'.sidebar .sb-item[data-view="trend"]',   views:['trend']},
@@ -1390,7 +1390,7 @@ window.BAROYAM_ACCESS=(function(){
    화면을 가리는 수준의 잠금이다(서버는 로그인 여부만 본다) */
 window.BAROYAM_EDIT_ACCESS=(function(){
   const KEY='editAccess', LS='baroyam_edit_access_v1';
-  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'손익·마진 관리 수정',menu:'profit'}];
+  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'마진관리 수정',menu:'profit'}];
   let map={};
   try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&o.map&&typeof o.map==='object') map=o.map; }catch(e){}
   const pending={};   /* 서버에 아직 못 올린 회원별 값 · 서버본을 받아도 이 값이 이긴다 */
@@ -2168,10 +2168,10 @@ window.BAROYAM_FONT=(function(){
   #view-month .tbar .seg.talk{background:linear-gradient(180deg,color-mix(in srgb,var(--talk) 55%,var(--paper)),color-mix(in srgb,var(--talk) 78%,var(--paper)))}
   /* 판매처 색 묶음 · --ca 위(밝은 쪽) · --cb 아래(진한 쪽) · --cl 지난달처럼 한참 옅은 색 ·
      02 비교 막대·03 ROAS 막대·도넛·누적 비중 막대가 모두 01 막대와 같은 그라데이션을 쓴다 */
-  :is(#view-month,#view-week,#view-profit) .ch-coupang{--ca:color-mix(in srgb,var(--coupang) 55%,var(--paper));--cb:color-mix(in srgb,var(--coupang) 78%,var(--paper));--cl:color-mix(in srgb,var(--coupang) 22%,var(--paper))}
-  :is(#view-month,#view-week,#view-profit) .ch-naver{--ca:color-mix(in srgb,var(--naver) 55%,var(--paper));--cb:color-mix(in srgb,var(--naver) 78%,var(--paper));--cl:color-mix(in srgb,var(--naver) 22%,var(--paper))}
-  :is(#view-month,#view-week,#view-profit) .ch-self{--ca:color-mix(in srgb,var(--self) 55%,var(--paper));--cb:color-mix(in srgb,var(--self) 78%,var(--paper));--cl:color-mix(in srgb,var(--self) 22%,var(--paper))}
-  :is(#view-month,#view-week,#view-profit) .ch-talk{--ca:color-mix(in srgb,var(--talk) 55%,var(--paper));--cb:color-mix(in srgb,var(--talk) 78%,var(--paper));--cl:color-mix(in srgb,var(--talk) 22%,var(--paper))}
+  :is(#view-month,#view-week,#view-profit,#view-ops) .ch-coupang{--ca:color-mix(in srgb,var(--coupang) 55%,var(--paper));--cb:color-mix(in srgb,var(--coupang) 78%,var(--paper));--cl:color-mix(in srgb,var(--coupang) 22%,var(--paper))}
+  :is(#view-month,#view-week,#view-profit,#view-ops) .ch-naver{--ca:color-mix(in srgb,var(--naver) 55%,var(--paper));--cb:color-mix(in srgb,var(--naver) 78%,var(--paper));--cl:color-mix(in srgb,var(--naver) 22%,var(--paper))}
+  :is(#view-month,#view-week,#view-profit,#view-ops) .ch-self{--ca:color-mix(in srgb,var(--self) 55%,var(--paper));--cb:color-mix(in srgb,var(--self) 78%,var(--paper));--cl:color-mix(in srgb,var(--self) 22%,var(--paper))}
+  :is(#view-month,#view-week,#view-profit,#view-ops) .ch-talk{--ca:color-mix(in srgb,var(--talk) 55%,var(--paper));--cb:color-mix(in srgb,var(--talk) 78%,var(--paper));--cl:color-mix(in srgb,var(--talk) 22%,var(--paper))}
   /* 범례·말풍선·목록 점도 막대와 같은 연한 그라데이션 */
   :is(#view-month,#view-week) :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--coupang"]{background:linear-gradient(160deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 78%,var(--paper)))!important}
   :is(#view-month,#view-week) :is(.legend i,.ttip .tr i,.drow .sw,.mr-head i,.tcell .l span)[style*="--naver"]{background:linear-gradient(160deg,color-mix(in srgb,var(--naver) 55%,var(--paper)),color-mix(in srgb,var(--naver) 78%,var(--paper)))!important}
@@ -3248,9 +3248,9 @@ window.BAROYAM_FONT=(function(){
   .pf-grow{flex:1}
   /* 순수익 요약 (ps-*) */
   /* 순수익 요약 위 한 줄 · 왼쪽 대시보드/목록 탭(36px · 둥글기 12px)과 같은 높이·둥글기로 맞춘다 */
-  [data-pf-pane="summary"]>.pf-bar{gap:10px}
+  [data-ops-pane="summary"]>.pf-bar{gap:10px}
   #psMonth{height:var(--ui-h);min-width:0;padding:0 14px;border-radius:12px;font-size:13px;font-weight:600}
-  [data-pf-pane="summary"]>.pf-bar [data-ps-add]{height:var(--ui-h);border-radius:12px}
+  [data-ops-pane="summary"]>.pf-bar [data-ps-add]{height:var(--ui-h);border-radius:12px}
   .ps-temp{display:inline-flex;align-items:center;gap:6px;height:var(--ui-h);padding:0 14px;border-radius:12px;font-size:12.5px;font-weight:500;white-space:nowrap;cursor:help;
     color:var(--warn);background:var(--warn-soft)}
   .ps-temp:empty{display:none}
@@ -3266,8 +3266,8 @@ window.BAROYAM_FONT=(function(){
   .ps-kpi .neg,.ps-table .neg,.ps-row .neg,.ps-col .neg{color:var(--neg)!important}
   .ps-kpi .up{color:var(--pos)} .ps-kpi .down{color:var(--neg)}
   .ps-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}
-  #view-profit [data-pf-pane="summary"] .pf-card-tt h3{margin:0}
-  #view-profit [data-pf-pane="summary"] .pf-card-tt p{margin:3px 0 0;font-size:12px;font-weight:400;color:var(--mute)}
+  [data-ops-pane="summary"] .pf-card-tt h3{margin:0}
+  [data-ops-pane="summary"] .pf-card-tt p{margin:3px 0 0;font-size:12px;font-weight:400;color:var(--mute)}
   .ps-fall{display:flex;flex-direction:column;gap:6px}
   .ps-row{display:grid;grid-template-columns:120px minmax(0,1fr) 150px;align-items:center;gap:12px;min-height:34px}
   .ps-row .l{font-size:13px;font-weight:500;color:var(--body);display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -7880,7 +7880,7 @@ window.BAROYAM_FONT=(function(){
         <!-- 손익·마진 관리 · 순수익 요약 / 마진 계산기 / 품목별 원가표(자리만 만들어 두었다) -->
         <button class="sb-item" type="button" data-view="profit" id="sbProfitBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"/><path d="M14.6 9.2c-.5-.8-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 1.9 0 2.6 5.3 1.4 5.3 4.2 0 1.1-1.2 2-2.7 2-1.2 0-2.2-.5-2.7-1.4M12 6.4v1.5M12 16v1.6"/></svg>
-          <span>손익·마진 관리</span>
+          <span>마진관리</span>
         </button>
         <!-- 견적서 · 자리만 만들어 두었다(내용은 아직 비어 있다) -->
         <button class="sb-item" type="button" data-view="quote">
@@ -10528,21 +10528,20 @@ window.BAROYAM_FONT=(function(){
       <!-- 손익·마진 관리 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-profit" style="display:none">
         <!-- 마진 계산기 / 품목별 원가표 / 순수익 요약(맨 오른쪽) · 트렌드분석처럼 배너 위 알약 단추로 고른다(예전 사이드바 중간 탭은 화면을 가려 뺐다) -->
-        <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="손익·마진 관리 화면">
+        <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="마진관리 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-profit="calc" data-sub="아래에서 판매처(자사몰·쿠팡·스마트스토어 …)를 고르고, 상품마다 옵션의 원가·판매가를 넣으면 마진·마진률·최소 ROAS가 바로 나옵니다.">마진표</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="rocket" data-sub="쿠팡 로켓프레시로 넣는 상품의 공급가·입고 물류비·판매장려금을 넣으면 옵션별 마진·마진률·최소 ROAS가 바로 나옵니다.">로켓프레시</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진표가 이 값을 씁니다.">품목별 원가표</button>
-          <button type="button" class="hero-view-tab" role="tab" data-profit="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
         </div>
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
-            <div class="ptag">손익·마진 관리</div>
-            <div class="ptitle" id="profitViewTitle">순수익 요약</div>
-            <div class="psub" id="profitViewSub">채널별·기간별 최종 순이익을 모니터링합니다.</div>
+            <div class="ptag">마진관리</div>
+            <div class="ptitle" id="profitViewTitle">마진표</div>
+            <div class="psub" id="profitViewSub"></div>
           </div>
           <!-- 보기 전용 안내 · 수정 권한이 없을 때만 -->
-          <div class="pf-ro-note" id="pfRoNote" hidden>보기 전용이에요 · 손익·마진 관리 수정은 팀장 또는 관리자 설정 › 권한설정에서 '손익·마진 관리 수정'을 받은 회원만 할 수 있어요.</div>
+          <div class="pf-ro-note" id="pfRoNote" hidden>보기 전용이에요 · 마진관리 수정은 팀장 또는 관리자 설정 › 권한설정에서 '마진관리 수정'을 받은 회원만 할 수 있어요.</div>
           <!-- 마진 계산기 · 계산표(예: 홀떡피자 메타광고)마다 구성 줄을 두고, 원가는 원가표의 상품을 골라 개수만 넣는다 -->
           <div class="pf-pane" data-pf-pane="calc" hidden>
             <!-- 거르기 줄 · 브랜드 · 검색 · 광고 중만 (판매처는 화면 아래 탭) → 걸러진 상품의 옵션별 마진이 바로 아래에 -->
@@ -10634,62 +10633,6 @@ window.BAROYAM_FONT=(function(){
               </div>
             </div>
           </div>
-          <!-- 순수익 요약 · 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 직접 적는 비용(외부 광고비·요금제·인건비·기타) ·
-               보기 두 가지: 대시보드(그래프) / 목록(직접 적는 비용 + 손익 목록) · 원가·배송비는 실제 판매 수량이 쌓이기 전까지 임시 가상 값 -->
-          <div class="pf-pane" data-pf-pane="summary" hidden>
-            <div class="pf-bar">
-              <div class="ui-tabs" id="psMode" aria-label="보기"><button class="ui-tab" data-value="dash">대시보드</button><button class="ui-tab" data-value="list">목록</button></div>
-              <button type="button" class="ui-field" id="psMonth" aria-label="기간 선택"></button>
-              <span class="ps-temp" id="psTemp"></span>
-              <span class="pf-grow"></span>
-              <span class="pf-note" id="psSrc"></span>
-              <button type="button" class="ui-btn soft" data-ps-add>+ 비용 추가</button>
-            </div>
-            <div class="pf-empty" id="psEmpty" hidden>매출데이터를 아직 불러오지 못했습니다 · 사이드바 아래 <b>새로고침</b>을 눌러 주세요</div>
-            <div class="ps-body" id="psBody">
-              <div class="ps-kpis" id="psKpis"></div>
-              <!-- 대시보드 -->
-              <div class="ps-view" id="psDash">
-                <div class="ps-grid">
-                  <div class="pf-card">
-                    <div class="pf-card-head"><div class="pf-card-tt"><h3>매출에서 순수익까지</h3><p>매출에서 비용이 하나씩 빠지고 남는 금액입니다</p></div></div>
-                    <div class="ps-fall" id="psFall"></div>
-                  </div>
-                  <div class="pf-card">
-                    <div class="pf-card-head"><div class="pf-card-tt"><h3>월별 순수익</h3><p>막대를 누르면 그 달을 봅니다 · 옅은 막대는 진행 중인 달</p></div></div>
-                    <div class="ps-trend" id="psTrend"></div>
-                  </div>
-                </div>
-                <div class="pf-card">
-                  <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처별 순수익</h3><p id="psChanSub"></p></div></div>
-                  <div class="pf-scroll"><table class="ps-table" id="psChan"></table></div>
-                </div>
-              </div>
-              <!-- 목록 · 직접 적는 비용(달마다) + 손익 목록 -->
-              <div class="ps-view" id="psList" hidden>
-                <div class="pf-card ps-man">
-                  <div class="pf-card-head"><div class="pf-card-tt"><h3>직접 적는 비용</h3><p id="psManSub"></p></div><span class="pf-grow"></span>
-                    <button type="button" class="ui-btn sm ghost" id="psManPrev">지난달 항목 불러오기</button></div>
-                  <form class="ps-man-add" id="psManAdd" autocomplete="off">
-                    <label><span>분류</span><button type="button" class="ui-field" id="psManCat" aria-haspopup="listbox"><span class="t">외부 광고비</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-                      <input class="ui-field" id="psManCatNew" maxlength="20" placeholder="새 분류 이름 · Enter" aria-label="새 분류 이름" hidden></label>
-                    <label><span>항목 이름</span><input class="ui-field" name="name" maxlength="40" placeholder="예: 인플루언서 · 앞 글자만 쳐도 추천" autocomplete="off"></label>
-                    <label><span>한 달 금액</span><input class="ui-field ps-amt" name="amt" inputmode="numeric" placeholder="0원"></label>
-                    <label><span>반복</span><button type="button" class="ui-chip" id="psManRep" aria-pressed="false" title="켜면 다음 달부터도 저절로 들어갑니다(요금제·구독·고정 대행료)">매달 반복</button></label>
-                    <button type="submit" class="ui-btn primary">추가</button>
-                  </form>
-                  <datalist id="psManNames"></datalist>
-                  <div class="ps-man-note" id="psManNote" hidden></div>
-                  <div class="pf-scroll"><table class="ps-table ps-man-table" id="psManTable"></table></div>
-                </div>
-                <div class="pf-card">
-                  <div class="pf-card-head"><div class="pf-card-tt"><h3>손익 목록</h3><p id="psLedSub"></p></div></div>
-                  <div class="pf-scroll"><table class="ps-table ps-led" id="psLedger"></table></div>
-                </div>
-              </div>
-              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 직접 적는 비용 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다 · 직접 적는 비용(외부 광고비·요금제·인건비·기타)은 목록 보기에서 달마다 적고, "매달 반복"은 한 번 적으면 다음 달에도 들어갑니다 · 시트는 달 단위라 기간에 걸친 날 수만큼 나누고, 시트 값이 없는 날은 마지막 마감 달의 하루 평균으로 채운 가상 값입니다</span></div>
-            </div>
-          </div>
         </section>
         <!-- 원가 고르기 · 원가표의 상품을 브랜드별로 보고 개수(증정 따로)만 넣으면 원가·소비자가가 바로 나온다 -->
         <div class="settings-overlay" id="pfMixDlg" hidden>
@@ -10747,6 +10690,7 @@ window.BAROYAM_FONT=(function(){
         <div class="hero-view-tabs" id="opsTabs" role="tablist" aria-label="판매·재고 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 브랜드별 정상재고와 유통기한을 한눈에 봅니다.">재고현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="sales" data-sub="오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.">당일판매현황</button>
+          <button type="button" class="hero-view-tab" role="tab" data-ops="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
           <!-- 어드민 수집 · 맨 위 단추 줄 오른쪽 끝 · 누르면 지금 탭(당일판매/재고)의 것을 이지어드민에서 가져온다 -->
           <button type="button" class="ui-btn" id="ivFetch" title="이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다">
             <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
@@ -10776,6 +10720,62 @@ window.BAROYAM_FONT=(function(){
             <div class="iv-guide" id="dsGuide" hidden></div>
             <div class="ds-kpis" id="dsKpis"></div>
             <div id="dsGrid"></div>
+          </div>
+          <!-- 순수익 요약(2026-10-16 마진관리에서 옮김) · 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 직접 적는 비용(외부 광고비·요금제·인건비·기타) ·
+               보기 두 가지: 대시보드(그래프) / 목록(직접 적는 비용 + 손익 목록) · 원가·배송비는 실제 판매 수량이 쌓이기 전까지 임시 가상 값 -->
+          <div class="pf-pane" data-ops-pane="summary" hidden>
+            <div class="pf-bar">
+              <div class="ui-tabs" id="psMode" aria-label="보기"><button class="ui-tab" data-value="dash">대시보드</button><button class="ui-tab" data-value="list">목록</button></div>
+              <button type="button" class="ui-field" id="psMonth" aria-label="기간 선택"></button>
+              <span class="ps-temp" id="psTemp"></span>
+              <span class="pf-grow"></span>
+              <span class="pf-note" id="psSrc"></span>
+              <button type="button" class="ui-btn soft" data-ps-add>+ 비용 추가</button>
+            </div>
+            <div class="pf-empty" id="psEmpty" hidden>매출데이터를 아직 불러오지 못했습니다 · 사이드바 아래 <b>새로고침</b>을 눌러 주세요</div>
+            <div class="ps-body" id="psBody">
+              <div class="ps-kpis" id="psKpis"></div>
+              <!-- 대시보드 -->
+              <div class="ps-view" id="psDash">
+                <div class="ps-grid">
+                  <div class="pf-card">
+                    <div class="pf-card-head"><div class="pf-card-tt"><h3>매출에서 순수익까지</h3><p>매출에서 비용이 하나씩 빠지고 남는 금액입니다</p></div></div>
+                    <div class="ps-fall" id="psFall"></div>
+                  </div>
+                  <div class="pf-card">
+                    <div class="pf-card-head"><div class="pf-card-tt"><h3>월별 순수익</h3><p>막대를 누르면 그 달을 봅니다 · 옅은 막대는 진행 중인 달</p></div></div>
+                    <div class="ps-trend" id="psTrend"></div>
+                  </div>
+                </div>
+                <div class="pf-card">
+                  <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처별 순수익</h3><p id="psChanSub"></p></div></div>
+                  <div class="pf-scroll"><table class="ps-table" id="psChan"></table></div>
+                </div>
+              </div>
+              <!-- 목록 · 직접 적는 비용(달마다) + 손익 목록 -->
+              <div class="ps-view" id="psList" hidden>
+                <div class="pf-card ps-man">
+                  <div class="pf-card-head"><div class="pf-card-tt"><h3>직접 적는 비용</h3><p id="psManSub"></p></div><span class="pf-grow"></span>
+                    <button type="button" class="ui-btn sm ghost" id="psManPrev">지난달 항목 불러오기</button></div>
+                  <form class="ps-man-add" id="psManAdd" autocomplete="off">
+                    <label><span>분류</span><button type="button" class="ui-field" id="psManCat" aria-haspopup="listbox"><span class="t">외부 광고비</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                      <input class="ui-field" id="psManCatNew" maxlength="20" placeholder="새 분류 이름 · Enter" aria-label="새 분류 이름" hidden></label>
+                    <label><span>항목 이름</span><input class="ui-field" name="name" maxlength="40" placeholder="예: 인플루언서 · 앞 글자만 쳐도 추천" autocomplete="off"></label>
+                    <label><span>한 달 금액</span><input class="ui-field ps-amt" name="amt" inputmode="numeric" placeholder="0원"></label>
+                    <label><span>반복</span><button type="button" class="ui-chip" id="psManRep" aria-pressed="false" title="켜면 다음 달부터도 저절로 들어갑니다(요금제·구독·고정 대행료)">매달 반복</button></label>
+                    <button type="submit" class="ui-btn primary">추가</button>
+                  </form>
+                  <datalist id="psManNames"></datalist>
+                  <div class="ps-man-note" id="psManNote" hidden></div>
+                  <div class="pf-scroll"><table class="ps-table ps-man-table" id="psManTable"></table></div>
+                </div>
+                <div class="pf-card">
+                  <div class="pf-card-head"><div class="pf-card-tt"><h3>손익 목록</h3><p id="psLedSub"></p></div></div>
+                  <div class="pf-scroll"><table class="ps-table ps-led" id="psLedger"></table></div>
+                </div>
+              </div>
+              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 직접 적는 비용 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다 · 직접 적는 비용(외부 광고비·요금제·인건비·기타)은 목록 보기에서 달마다 적고, "매달 반복"은 한 번 적으면 다음 달에도 들어갑니다 · 시트는 달 단위라 기간에 걸친 날 수만큼 나누고, 시트 값이 없는 날은 마지막 마감 달의 하루 평균으로 채운 가상 값입니다</span></div>
+            </div>
           </div>
           <!-- 재고현황 · 이지어드민 재고(app_settings inventory_v1 · 서버가 채움)를 읽기만 한다 ·
                위 한 줄(기준 시각 · 확인할 것) + 목록 하나(브랜드 | 상품명 | 정상재고 | 유통기한) -->
@@ -13218,7 +13218,7 @@ window.CsGuide=(function(){
     ['sales',1,'매출데이터','주간 · 월간','구글시트의 매출을 로그인한 사람의 구글 권한으로만 읽습니다(페이지에는 숫자를 두지 않음). 쿠팡·네이버·자사몰·톡딜 4채널.'],
     ['goal',1,'목표설정','월별 목표 · 달성률','목표는 app_settings 에 월별로 저장하고, 달성률은 매출 시트로 계산합니다.'],
     ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
-    ['profit',1,'손익·마진 관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
+    ['profit',1,'마진관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
     ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','일정은 업로드 예정 캘린더(insta_schedule_v1 · 프로젝트와 따로) · 바꾼 일정만 얹어 저장하고 지우기는 del 표시만. 성과는 VPS 가 인스타그램 API 로 받아 채운 insta_insights_v1 을 읽기만 합니다(비어 있으면 예시 화면). 업로드는 파일을 brand-files 의 insta/up 에 올리고 insta_upload_v1 에 예약을 적으면, VPS(insta_publish.js · 2분마다)가 그 시각에 인스타그램에 올립니다.'],
     ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
@@ -14604,7 +14604,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }).join('');
     editNoteEl.textContent=lead
       ? '팀장은 비밀번호를 통과하면 모든 화면을 고칠 수 있어요.'
-      : '켜 두면 팀장이 아니어도 그 화면을 고칠 수 있어요. 메뉴얼가이드는 문서·상담가이드·조직도 수정이 포함되고, 목차 편집은 팀장만 해요. 손익·마진 관리는 마진 계산기·품목별 원가표 수정이에요(끄면 보기만).';
+      : '켜 두면 팀장이 아니어도 그 화면을 고칠 수 있어요. 메뉴얼가이드는 문서·상담가이드·조직도 수정이 포함되고, 목차 편집은 팀장만 해요. 마진관리는 마진 계산기·품목별 원가표 수정이에요(끄면 보기만).';
   }
   if(editsEl) editsEl.addEventListener('click',e=>{
     const b=e.target.closest('.ui-chip[data-ek]');
@@ -17618,7 +17618,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   paintForm();
 })();
 
-/* 판매·재고 · 배너 위 단추 두 개(당일판매현황 / 재고현황) · 고른 것은 이 브라우저에 기억한다 */
+/* 판매·재고 · 배너 위 단추 세 개(재고현황 / 당일판매현황 / 순수익 요약) · 고른 것은 이 브라우저에 기억한다 */
 (function(){
   const box=document.getElementById('opsTabs');
   if(!box) return;
@@ -17638,6 +17638,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(fetchBtn) fetchBtn.title=el.dataset.ops==='stock'?'이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다':'이지어드민 창에서 로그인만 하면 오늘 판매를 자동으로 받아 옵니다';
     if(el.dataset.ops==='stock'&&window.baroyamStock) (load?window.baroyamStock.show():window.baroyamStock.paint&&window.baroyamStock.paint());
     if(el.dataset.ops==='sales'&&window.baroyamSales) (load?window.baroyamSales.show():window.baroyamSales.paint());
+    /* 순수익 요약 · 이지어드민과 상관없어 어드민 수집 단추를 감추고, 마진관리처럼 흰 판을 넓게 쓴다 */
+    const sum=el.dataset.ops==='summary';
+    if(fetchBtn) fetchBtn.style.display=sum?'none':'';
+    if(window.baroyamCurrentView==='ops') document.body.classList.toggle('view-is-profit',sum);
+    if(sum&&load&&window.baroyamPsum) window.baroyamPsum.show();
   }
   pick(cur,false);
   items.forEach(el=>el.addEventListener('click',()=>{
@@ -18470,7 +18475,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         const l=links[id]||{};
         if(b.dataset.link==='prod'){
           const P=profitList||[];
-          if(!P.length){ window.baroyamAsk&&window.baroyamAsk('자사몰 마진표 상품이 없습니다','손익·마진 관리 › 마진표 아래 자사몰 탭에 상품을 먼저 등록하고, 광고상태를 켠 뒤 대표 ROAS 를 골라 주세요.'); return; }
+          if(!P.length){ window.baroyamAsk&&window.baroyamAsk('자사몰 마진표 상품이 없습니다','마진관리 › 마진표 아래 자사몰 탭에 상품을 먼저 등록하고, 광고상태를 켠 뒤 대표 ROAS 를 골라 주세요.'); return; }
           const fit=q=>x.brand&&(q.brand===x.brand||String(q.name).includes(x.brand));
           const opts=(l.prod?[{value:'__off',label:'연동 풀기'}]:[]).concat(P.slice().sort((p,q)=>(fit(q)-fit(p))||(q.ad-p.ad)).map(q=>({value:q.id,label:q.name,sub:(fit(q)?'추천 · ':'')+(q.ad?'광고 중 · ':'')+'대표 ROAS '+(q.roas!=null?Math.round(q.roas*100)+'%':'–')})));
           window.UI.menu(b,opts,l.prod||'',async v=>{ const q=P.find(z=>z.id===v); await saveLink(id,v==='__off'?{prod:null,prodName:null}:{prod:v,prodName:q&&q.name}); paintLinks(); });
@@ -19320,7 +19325,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   window.baroyamInstaPlan={open(){ paint(); load(); }};
 })();
 
-/* 손익·마진 관리 · 배너 위 단추 세 개(마진 계산기 / 품목별 원가표 / 순수익 요약) · 고른 것은 이 브라우저에 기억한다 */
+/* 마진관리 · 배너 위 단추(마진표 / 로켓프레시 / 품목별 원가표 · 순수익 요약은 판매·재고로 옮김) · 고른 것은 이 브라우저에 기억한다 */
 (function(){
   const box=document.getElementById('profitTabs');
   const title=document.getElementById('profitViewTitle');
@@ -19460,7 +19465,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const normRocket=v=>{ v=obj(v); return Object.assign({},v,{prods:obj(v.prods),rows:obj(v.rows),hide:obj(v.hide)}); };
   const ROCKET=store('profit_rocket_v1',normRocket,()=>normRocket({}));
 
-  let pane='summary', brandF='', itemQ='';
+  let pane='calc', brandF='', itemQ='';
   const $=id=>document.getElementById(id);
 
   /* ---------- 계산 ----------
@@ -21188,7 +21193,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const c=e.target.closest('.ps-col'), d=psData(); if(!c||!d) return;
     const m=psMonths(d).find(x=>String(x.i)===c.dataset.i); if(m) psPick({start:m.start,end:m.end});
   });
-  view.addEventListener('click',e=>{
+  /* 순수익 요약은 판매·재고 화면의 탭이다(2026-10-16 옮김) · 코드는 원가표·판매처 계산법을 같이 쓰려고 여기에 둔다 */
+  const sumPane=document.querySelector('[data-ops-pane="summary"]');
+  const sumVisible=()=>window.baroyamCurrentView==='ops'&&!!sumPane&&!sumPane.hidden;
+  sumPane.addEventListener('click',e=>{
     if(e.target.closest('[data-ps-add]')){ psGoAdd(); return; }
     const ac=e.target.closest('[data-ps-addcat]'); if(ac){ psGoAdd(ac.dataset.psAddcat); return; }
     if(e.target.closest('[data-ps-list]')){ psSetMode('list'); return; }
@@ -21469,20 +21477,20 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     fresh.forEach((x,i)=>{ const id=uid()+i; psSet(id,{id,cat:x.cat,name:x.name,amt:num(x.amt)||0,from:one.key,to:one.key,rep:false,ord:Date.now()+i}); });
     COST.mark(); paintSummary();
   });
-  document.addEventListener('baroyam:report',()=>{ if(view.style.display!=='none'&&pane==='summary') paintSummary(); });
+  document.addEventListener('baroyam:report',()=>{ if(sumVisible()) paintSummary(); });
 
   /* ---------- 열기·다시 받기 ---------- */
   /* 보기 전용 · 고치는 단추·추가 줄을 숨기고 칸을 읽기만 되게 · 위에 안내 한 줄 */
   function applyRO(){
     const ro=!canEdit();
     view.classList.toggle('pf-ro',ro);
-    const note=$('pfRoNote'); if(note) note.hidden=!(ro&&pane!=='summary');
+    const note=$('pfRoNote'); if(note) note.hidden=!ro;
     view.querySelectorAll('.pf-calc input,.pf-list input,.pf-book-name').forEach(i=>{ i.readOnly=ro; });
   }
-  function paint(){ if(pane==='calc') paintCalc(); else if(pane==='rocket') paintRocket(); else if(pane==='bom') paintBom(); else if(pane==='summary') paintSummary(); applyRO(); }
-  ['baroyam:editaccess','baroyam:profiles','baroyam:adminmode'].forEach(ev=>document.addEventListener(ev,()=>{ if(view.style.display!=='none') paint(); }));
+  function paint(){ if(pane==='calc') paintCalc(); else if(pane==='rocket') paintRocket(); else if(pane==='bom') paintBom(); applyRO(); }
+  ['baroyam:editaccess','baroyam:profiles','baroyam:adminmode'].forEach(ev=>document.addEventListener(ev,()=>{ if(view.style.display!=='none') paint(); if(sumVisible()) paintSummary(); }));
   /* 다른 PC 고침이 들어와도, 지금 이 화면에서 칸을 고치는 중이면 다시 그리지 않는다(입력 중인 글자가 날아가지 않게) */
-  function soft(){ const a=document.activeElement; if(a&&view.contains(a)&&a.matches('input')) return; if(!dlg.hidden) return; paint(); }
+  function soft(){ const a=document.activeElement; if(a&&(view.contains(a)||sumPane.contains(a))&&a.matches('input')) return; if(!dlg.hidden) return; paint(); if(sumVisible()) paintSummary(); }
   COST.onChange=soft; CALC.onChange=soft; ROCKET.onChange=soft;
   /* 새로고침 직후(#profit)에는 로그인 확인이 끝나기 전에 불릴 수 있다 · 못 읽었으면 3초 뒤 다시 받는다 */
   let retry=null;
@@ -21491,7 +21499,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if((COST.error||CALC.error||(pane==='rocket'&&ROCKET.error))&&!retry) retry=setTimeout(()=>{ retry=null; if(visible()) refresh(); },3000);
   }
   function visible(){ return view.style.display!=='none'; }
-  setInterval(()=>{ if(visible()&&!document.hidden) Promise.all([COST.load(),CALC.load(),ROCKET.load()]); },60000);
+  setInterval(()=>{ if(visible()&&!document.hidden) Promise.all([COST.load(),CALC.load(),ROCKET.load()]); else if(sumVisible()&&!document.hidden) COST.load(); },60000);
+  /* 순수익 요약 · 원가표(판매처 계산법·직접 적는 비용)만 받으면 된다 · 못 읽었으면 3초 뒤 다시 */
+  let sumRetry=null;
+  async function sumShow(){
+    paintSummary();
+    await COST.load(); paintSummary();
+    if(COST.error&&!sumRetry) sumRetry=setTimeout(()=>{ sumRetry=null; if(sumVisible()) sumShow(); },3000);
+  }
+  window.baroyamPsum={show:sumShow,paint:paintSummary};
+  if(sumVisible()) sumShow();
   /* 재고현황 · 판매·재고 화면의 재고 탭을 보고 있을 때만 받는다 · 5분마다 다시(서버가 하루 몇 번 채움) */
   const stockPane=document.querySelector('[data-ops-pane="stock"]');
   const stockVisible=()=>window.baroyamCurrentView==='ops'&&stockPane&&!stockPane.hidden;
@@ -21520,7 +21537,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&salesVisible()) DS.load().then(paintSales); });
   window.baroyamSales={show:salesShow,paint:paintSales};
   if(salesVisible()) salesShow();
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load(),ROCKET.load()]); });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&visible()) Promise.all([COST.load(),CALC.load(),ROCKET.load()]); else if(!document.hidden&&sumVisible()) COST.load(); });
   /* ---------- 엑셀처럼 식 넣기(마진표·로켓프레시·원가표 숫자 칸 모두) ----------
      숫자 칸에 = 를 적으면 식 모드 · 그 상태로 다른 숫자 칸(적는 칸·계산 칸·원가)을 누르면 그 칸의 값이 식에 들어가고(바로 앞이 숫자면 바꿔 넣음),
      + − * / ( ) 와 % 를 섞어 적은 뒤 Enter·칸 밖으로 나가면 계산한 값이 저장된다 · Esc 는 취소 ·
@@ -21577,7 +21594,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   document.addEventListener('click',e=>{ if(fxEat){ fxEat=false; e.preventDefault(); e.stopPropagation(); } },true);
 
   window.baroyamProfit={
-    show(p){ pane=p||'summary'; paint(); refresh(); },
+    show(p){ pane=p||'calc'; paint(); refresh(); },
     _calc:calc,
     /* 퍼포먼스마케팅 연동 리스트 · 마진표 상품과 대표 ROAS · 자사몰 판매처 상품만(사용자 요청 · 다른 판매처는 넣지 않음) · 광고 중인 상품이 앞 */
     async repList(){
