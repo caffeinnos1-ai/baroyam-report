@@ -2447,6 +2447,8 @@ window.BAROYAM_FONT=(function(){
   .ma [hidden],.ma-empty[hidden],.ma-crumb[hidden]{display:none}
   .ma-avatar{background:linear-gradient(45deg,var(--coupang),var(--talk))}
   .ma-empty{font-size:13.5px;color:var(--body);line-height:1.7}
+  .ma-table td.ma-fx{color:color-mix(in srgb,var(--coupang) 72%,var(--paper))}   /* 날짜별 기록 환율 · 하늘색 */
+  .ma-table td.ma-fx.is-borrow{opacity:.6}
   .ma-cur{padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;background:var(--chip-flat);color:var(--mute)}
   .ma-key{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .ma-key.is-bar{background:color-mix(in srgb,var(--coupang) 35%,transparent)}
@@ -17697,8 +17699,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const fxOn=d=>{ let k=null; for(const x of fxDays){ if(x<=d) k=x; else break; } return k; };
     const fxTd=d=>{
       const k=fxOn(d); if(!k) return '<td class="is-zero">-</td>';
-      const v=fx[k].toLocaleString('ko-KR',{minimumFractionDigits:2,maximumFractionDigits:2})+'원';
-      return k===d?'<td>'+v+'</td>':'<td class="is-zero" title="'+dayTxt(k)+' 환율(주말·휴일이거나 아직 오늘 환율이 나오지 않음)">'+v+'</td>';
+      const v=Math.round(fx[k]).toLocaleString('ko-KR')+'원';
+      return k===d?'<td class="ma-fx">'+v+'</td>':'<td class="ma-fx is-borrow" title="'+dayTxt(k)+' 환율(주말·휴일이거나 아직 오늘 환율이 나오지 않음)">'+v+'</td>';
     };
     $('maDays').innerHTML='<table class="ma-table ma-days"><thead><tr><th>날짜</th>'+(fx?'<th title="1'+esc(cur)+' = 원 · 유럽중앙은행 기준환율">환율(1'+(cur==='USD'?'달러':esc(cur))+')</th>':'')+C.map(c=>'<th>'+c[1]+'</th>').join('')+'</tr></thead><tbody>'
       +rows.map(r=>{ const w=dowOf(r.d); return '<tr data-d="'+r.d+'" class="'+(w===0||w===6?'is-we':'')+(r.d===day?' is-pick':'')+'"><td>'+dayTxt(r.d)+(r.d===t?' · 진행 중':'')+'</td>'+(fx?fxTd(r.d):'')+C.map(c=>td(c,r.x)).join('')+'</tr>'; }).join('')
