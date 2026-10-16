@@ -2558,9 +2558,12 @@ window.BAROYAM_FONT=(function(){
   .ma-list .ma-crumb{margin:0 0 10px}
   .ma-levels{margin:4px 0 6px}
   /* 크기 고정 · 고르거나 배지가 붙어도 폭이 늘지 않게(사용자 요청) */
-  .ma-levels .ui-tab{min-width:112px;justify-content:center}
-  .ma-levels .ma-selcount.is-empty{visibility:hidden}
-  .ma-levels .ma-selcount{min-width:30px}
+  .ma-levels .ui-tab{width:88px;padding:0 8px;justify-content:center;gap:5px}
+  .ma-levels .ma-selcount.is-empty{display:none}
+  .ma-levels .ma-selcount{min-width:18px;margin-left:0}
+  /* 줄 높이 · 캠페인 줄도 세트·소재 줄(이름 아래 작은 글)과 같은 높이로 */
+  .ma-list .ma-table tbody tr:not(.is-total) td{height:52px}
+  .ma-list .ma-table tr.is-total td{height:40px}
   .ma-list #maBrand,.ma-list #maSortPick{width:180px;justify-content:space-between}
   .ma-list #maBrand .t,.ma-list #maSortPick .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-list .ma-table{table-layout:fixed;min-width:1100px}
