@@ -2589,6 +2589,29 @@ window.BAROYAM_FONT=(function(){
   .ma-table tr.ma-asset-row{cursor:pointer}
   .ma-table tr.ma-asset-row.is-open td{background:color-mix(in srgb,var(--btn-soft) 60%,transparent)}
   .settings-panel.ma-dialog{max-width:860px;height:auto;max-height:90vh}
+  .settings-panel.ma-linkdlg{max-width:1180px;height:min(860px,90vh)}
+  .ma-linkbtn{color:var(--btn-soft-ink)}
+  .ma-link-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .ma-link-note{font-size:12px;color:var(--mute)}
+  .ma-link-list{display:flex;flex-direction:column}
+  .ma-link-row{display:grid;grid-template-columns:44px minmax(0,1.6fr) 90px minmax(0,1.1fr) minmax(0,1.3fr);gap:14px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
+  .ma-link-row img,.ma-link-row .ma-noimg{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--chip-flat);display:block}
+  .ma-link-name{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .ma-link-name b{font-size:13px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-link-name small,.ma-link-roas small,.ma-link-cell>small{font-size:11.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-link-roas{display:flex;flex-direction:column;gap:2px;text-align:right}
+  .ma-link-roas b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ma-link-roas b.is-low{color:var(--neg)}
+  .ma-link-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .ma-link-cell .ui-field{width:100%;justify-content:flex-start;overflow:hidden}
+  .ma-link-cell .ui-field .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-link-v{display:flex;gap:6px;align-items:center;min-width:0}
+  .ma-link-v .ui-field{flex:1;min-width:0}
+  .ma-cmp{align-self:flex-start;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--pos-soft);color:var(--pos)}
+  .ma-cmp.is-low{background:var(--neg-soft);color:var(--neg)}
+  .ma-card-link{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12.5px}
+  .ma-card-link a{color:inherit;font-weight:600}
+  @media (max-width:900px){ .ma-link-row{grid-template-columns:44px minmax(0,1fr) 80px} .ma-link-cell{grid-column:2 / -1} }
   .ma-dialog-body{flex:1;min-height:0;overflow-y:auto;padding:20px 22px}
   .ma-dialog #maCardT{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0;min-width:0}
   .ma-asset-mets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
@@ -3494,6 +3517,9 @@ window.BAROYAM_FONT=(function(){
   .pf-book-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:9px 12px 9px 14px;
     background:color-mix(in srgb,var(--btn-soft) 60%,var(--paper));border:1px solid color-mix(in srgb,var(--btn) 18%,var(--line));
     border-bottom:0;border-radius:12px 12px 0 0}
+  .pf-rep{width:auto;flex:none;gap:6px}
+  .pf-rep[hidden]{display:none}
+  .pf-rep small{font-size:11px;color:var(--mute);font-weight:400}
   .pf-book-head+table.pf-calc{border-top-left-radius:0;border-top-right-radius:0}
   .pf-book-head+.pf-book-empty{border-top-left-radius:0;border-top-right-radius:0}
   .pf-book-name.ui-field:hover{background:var(--paper)}
@@ -10099,7 +10125,8 @@ window.BAROYAM_FONT=(function(){
                   <button type="button" class="ui-field sm" id="maSortPick" aria-haspopup="listbox"><span class="t">지출 많은 순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <div class="ui-tabs" id="maMode" hidden><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
                 </div>
-                <div class="ui-chips" id="maShow"></div></div>
+                <div class="ma-listbar-end"><div class="ui-chips" id="maShow"></div>
+                  <button type="button" class="ui-btn sm soft icon ma-linkbtn" id="maLinkBtn" title="연동 리스트 · 소재를 마진표 상품(대표 ROAS)·드라이브 영상과 잇기" aria-label="연동 리스트"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></button></div></div>
               <div hidden><h3 id="maListT"></h3><small id="maListS"></small></div>
               <div class="ma-crumb" id="maCrumb" hidden></div>
               <!-- 단계 탭 · 메타 광고 관리자처럼 표 바로 위 · 캠페인을 체크하고 세트로 넘어가면 그 캠페인의 세트만 -->
@@ -18291,6 +18318,138 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('maRange').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
   }
   function go(t){ tab=t; keep('baroyam_perf_tab',t); limit=48; paint(); }
+  /* ---------- 연동 · 소재 ↔ 마진표 상품(대표 ROAS) · 소재 ↔ 바로얌 드라이브(메타광고) 영상 ----------
+     app_settings meta_links_v1 = {assets:{소재 열쇠(v:영상id · i:이미지 · c:크리에이티브):{prod,prodName,drive,driveName,at,by}}} ·
+     여럿이 같이 고치므로 saveMerged 로 바꾼 소재 한 줄만 서버 최신본에 얹는다(지울 때도 그 줄만 null) */
+  const LINK_KEY='meta_links_v1';
+  let links={}, linksLoaded=false, profitList=null, driveList=null;
+  async function loadLinks(){
+    const db=window.BAROYAM_DB; if(!db||!db.loadSetting) return;
+    try{ let v=await db.loadSetting(LINK_KEY,true); if(typeof v==='string') v=JSON.parse(v); links=(v&&v.assets)||{}; linksLoaded=true; }catch(e){ console.error(e); }
+  }
+  async function saveLink(id,val){
+    const db=window.BAROYAM_DB; if(!db||!db.saveMerged) return false;
+    const me=(window.BAROYAM_MEMBERS&&window.BAROYAM_MEMBERS.meMember&&(window.BAROYAM_MEMBERS.meMember()||{}).name)||'';
+    const one=val?Object.assign({},links[id]||{},val,{at:new Date().toISOString(),by:me}):null;
+    if(one){ Object.keys(one).forEach(k=>{ if(one[k]==null) delete one[k]; }); if(!one.prod&&!one.drive) return saveLink(id,null); }
+    const r=await db.saveMerged(LINK_KEY,server=>{
+      if(typeof server==='string'){ try{ server=JSON.parse(server); }catch(e){ server=null; } }
+      const sv=server&&typeof server==='object'?server:{}, as=Object.assign({},sv.assets||{});
+      if(one) as[id]=one; else delete as[id];
+      return Object.assign({},sv,{assets:as,updatedAt:Date.now()});
+    });
+    if(!r){ if(db.saveNotice) db.saveNotice(LINK_KEY,'failing'); return false; }
+    links=r.assets||{}; return true;
+  }
+  /* 모든 소재(같은 영상·이미지를 쓴 광고는 하나) · 이름 맞추기용으로 캠페인·세트·광고 이름을 모은다 */
+  function assetList(a){
+    const I=((a.insights&&a.insights[range])||{}).ad||{}, cN={}, sN={}, bOf=brandMap(a), g={};
+    (a.campaigns||[]).forEach(c=>{ cN[c.id]=c.name; }); (a.adsets||[]).forEach(x=>{ sN[x.id]=x.name; });
+    (a.ads||[]).forEach(x=>{
+      const k=x.asset||('ad:'+x.id);
+      const o=g[k]||(g[k]={id:k,kind:x.kind,thumb:x.thumb,ads:[],cs:new Set(),ss:new Set()});
+      o.ads.push(x); o.cs.add(x.c); o.ss.add(x.s); if(!o.thumb&&x.thumb) o.thumb=x.thumb;
+    });
+    return Object.values(g).map(o=>{
+      const m=addUp(o.ads.map(x=>I[x.id])), top=o.ads.slice().sort((p,r)=>((I[r.id]||{}).spend||0)-((I[p.id]||{}).spend||0))[0];
+      return {id:o.id,kind:o.kind,thumb:o.thumb,name:top.name,c:top.c,brand:bOf[top.c]||'',st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',x:derive(m),
+        camps:[...o.cs].map(id=>cN[id]).filter(Boolean),sets:[...o.ss].map(id=>sN[id]).filter(Boolean),adNames:o.ads.map(x=>x.name)};
+    });
+  }
+  /* 이름 맞추기 · 캠페인·세트·소재 이름을 낱말로 잘라 드라이브 파일 이름에 들어 있는 만큼 점수(긴 낱말일수록 큼 · 같은 브랜드면 더) */
+  const STOP=/^(phabo|phcbo|ph\d?cbo|cbo|abo|v\d*|i\d*|b\d+|h\d+|c\d+|yye|kjm|influencer)$/;
+  const toks=t=>String(t||'').toLowerCase().split(/[^0-9a-z가-힣]+/).filter(w=>w.length>=2&&!STOP.test(w));
+  const flat=t=>String(t||'').toLowerCase().replace(/[^0-9a-z가-힣]+/g,'');
+  function score(asset,file){
+    const fn=flat(file.name+' '+file.path);
+    const seen=new Set(); let sc=0;
+    const add=(list,w)=>list.forEach(name=>toks(name).forEach(t=>{ if(seen.has(t)) return; seen.add(t); if(fn.includes(t)) sc+=(/^\d{6}$/.test(t)?3:Math.min(t.length,8))*w; }));
+    add(asset.adNames,3); add(asset.sets,2); add(asset.camps,1);
+    if(asset.brand&&(file.brand===asset.brand||fn.includes(flat(asset.brand)))) sc+=6;
+    return sc;
+  }
+  const VIDEO=/^(mp4|mov|m4v|avi|mkv|webm|wmv)$/;
+  async function loadDrive(){
+    if(driveList||!window.baroyamDriveIndex) return driveList;
+    try{ const all=await window.baroyamDriveIndex(); driveList=(all||[]).filter(f=>(f.company==='메타광고'||/^메타광고/.test(f.path))&&(VIDEO.test(f.ext||'')||/영상/.test(f.kind||''))); }
+    catch(e){ console.error(e); driveList=null; }
+    return driveList;
+  }
+  let linkBox=null, linkShow='on';
+  function linkTxt(l){
+    const out=[];
+    if(l&&l.prod){ const P=(profitList||[]).find(x=>x.id===l.prod); out.push('상품 '+esc((P&&P.name)||l.prodName||'')+(P&&P.roas!=null?' · 대표 ROAS '+Math.round(P.roas*100)+'%':'')); }
+    if(l&&l.drive) out.push('영상 '+esc(l.driveName||''));
+    return out.join(' · ');
+  }
+  function paintLinks(){
+    if(!linkBox||linkBox.hidden) return;
+    const a=acc(); if(!a) return;
+    let list=assetList(a);
+    if(brand) list=list.filter(x=>x.brand===brand);
+    const nOn=list.filter(x=>x.st==='ACTIVE').length, nAll=list.length;
+    if(linkShow==='on') list=list.filter(x=>x.st==='ACTIVE');
+    list.sort((p,r)=>r.x.spend-p.x.spend);
+    const nLinked=list.filter(x=>links[x.id]).length;
+    linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+list.length+'개 · 연동 '+nLinked+'개';
+    const P=profitList||[];
+    linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">'+RANGE_TXT[range]+(brand?' · '+esc(brand):'')+' · 상품은 마진표 자사몰 상품의 대표 ROAS, 영상은 바로얌 드라이브 메타광고 영상</span>'
+      +'<div class="ui-chips"><button type="button" class="ui-chip" data-ls="on" aria-pressed="'+(linkShow==='on')+'">게재 중 <b>'+nOn+'</b></button><button type="button" class="ui-chip" data-ls="all" aria-pressed="'+(linkShow==='all')+'">전체 <b>'+nAll+'</b></button></div>';
+    const cur=a.currency;
+    linkBox.querySelector('.ma-link-list').innerHTML=list.length?list.map(x=>{
+      const l=links[x.id]||{}, pr=l.prod&&P.find(q=>q.id===l.prod);
+      let cmp='';
+      if(pr&&pr.roas!=null&&x.x.roas!=null){ const d=Math.round(x.x.roas-pr.roas*100); cmp='<span class="ma-cmp'+(d<0?' is-low':'')+'">'+(d>=0?'대표보다 +'+d+'%p':'대표보다 '+d+'%p')+'</span>'; }
+      return '<div class="ma-link-row" data-id="'+esc(x.id)+'">'
+        +(x.thumb?'<img src="'+esc(x.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>')
+        +'<div class="ma-link-name"><b title="'+esc(x.name)+'"><span class="ma-st'+stCls(x.st)+'"></span>'+esc(x.name)+'</b><small>'+esc((x.camps[0]||'')+(x.sets[0]?' › '+x.sets[0]:''))+'</small></div>'
+        +'<div class="ma-link-roas"><b'+(x.x.roas!=null&&x.x.roas<100&&x.x.spend>0?' class="is-low"':'')+'>'+pct(x.x.roas)+'</b><small>지출 '+short(x.x.spend,cur)+'</small></div>'
+        +'<div class="ma-link-cell"><small>마진표 상품</small><button type="button" class="ui-field sm" data-link="prod"><span class="t">'+(l.prod?esc((pr&&pr.name)||l.prodName||'상품')+(pr&&pr.roas!=null?' · '+Math.round(pr.roas*100)+'%':''):'<span class="ph">상품 연동</span>')+'</span></button>'+cmp+'</div>'
+        +'<div class="ma-link-cell"><small>드라이브 영상</small><div class="ma-link-v"><button type="button" class="ui-field sm" data-link="drive"><span class="t">'+(l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 연동</span>')+'</span></button>'
+          +(l.drive?'<a class="ui-btn sm ghost icon" href="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/view" target="_blank" rel="noopener" title="드라이브에서 영상 열기" aria-label="영상 열기">▶</a>':'')+'</div></div>'
+        +'</div>';
+    }).join(''):'<div class="ma-empty">보여 줄 소재가 없습니다.</div>';
+  }
+  async function openLinks(){
+    if(!linkBox){
+      linkBox=document.createElement('div');
+      linkBox.className='settings-overlay'; linkBox.hidden=true;
+      linkBox.innerHTML='<div class="settings-panel ma-dialog ma-linkdlg" role="dialog" aria-modal="true" aria-labelledby="maLinkT"><div class="settings-head"><h2 id="maLinkT">연동 리스트</h2>'
+        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="ma-dialog-body"><div class="ma-link-tools"></div><div class="ma-link-list"></div></div></div>';
+      document.body.appendChild(linkBox);
+      linkBox.addEventListener('click',async e=>{
+        if(e.target===linkBox||e.target.closest('.settings-close')){ linkBox.hidden=true; paintList(acc()); return; }
+        const ch=e.target.closest('[data-ls]'); if(ch){ linkShow=ch.dataset.ls; paintLinks(); return; }
+        const b=e.target.closest('[data-link]'); if(!b) return;
+        e.stopPropagation();
+        const row=b.closest('.ma-link-row'), id=row.dataset.id, x=assetList(acc()).find(q=>q.id===id); if(!x) return;
+        const l=links[id]||{};
+        if(b.dataset.link==='prod'){
+          const P=profitList||[];
+          if(!P.length){ window.baroyamAsk&&window.baroyamAsk('마진표 상품이 없습니다','손익·마진 관리 › 마진표(자사몰)에 상품을 먼저 등록하고, 광고상태를 켠 뒤 대표 ROAS 를 골라 주세요.'); return; }
+          const fit=q=>x.brand&&(q.brand===x.brand||String(q.name).includes(x.brand));
+          const opts=(l.prod?[{value:'__off',label:'연동 풀기'}]:[]).concat(P.slice().sort((p,q)=>(fit(q)-fit(p))||(q.ad-p.ad)).map(q=>({value:q.id,label:q.name,sub:(fit(q)?'추천 · ':'')+(q.ad?'광고 중 · ':'')+'대표 ROAS '+(q.roas!=null?Math.round(q.roas*100)+'%':'–')})));
+          window.UI.menu(b,opts,l.prod||'',async v=>{ const q=P.find(z=>z.id===v); await saveLink(id,v==='__off'?{prod:null,prodName:null}:{prod:v,prodName:q&&q.name}); paintLinks(); });
+        }else{
+          b.querySelector('.t').innerHTML='<span class="ph">드라이브 목록 읽는 중…</span>';
+          const D=await loadDrive();
+          b.querySelector('.t').innerHTML=l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 연동</span>';
+          if(!D||!D.length){ window.baroyamAsk&&window.baroyamAsk('드라이브 영상이 없습니다','바로얌 드라이브 › 메타광고 폴더의 영상 목록을 읽지 못했습니다. 드라이브 화면을 한 번 열어 새로고침한 뒤 다시 눌러 주세요.'); return; }
+          const ranked=D.map(f=>({f,sc:score(x,f)})).sort((p,q)=>q.sc-p.sc||String(q.f.date).localeCompare(String(p.f.date))).slice(0,15);
+          const opts=(l.drive?[{value:'__off',label:'연동 풀기'}]:[]).concat(ranked.map((o,i)=>({value:o.f.id,label:o.f.name,sub:(o.sc>0&&i<3?'추천 · ':'')+String(o.f.path).split(' / ').slice(-2).join(' / ')})));
+          window.UI.menu(b,opts,l.drive||'',async v=>{ const f=D.find(z=>z.id===v); await saveLink(id,v==='__off'?{drive:null,driveName:null}:{drive:v,driveName:f&&f.name}); paintLinks(); });
+        }
+      });
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&linkBox&&!linkBox.hidden){ linkBox.hidden=true; paintList(acc()); } });
+    }
+    linkBox.hidden=false;
+    linkBox.querySelector('.ma-link-list').innerHTML='<div class="ma-empty">불러오는 중…</div>';
+    const pl=window.baroyamProfit&&window.baroyamProfit.repList?window.baroyamProfit.repList().catch(e=>{ console.error(e); return null; }):Promise.resolve(null);
+    const [P]=await Promise.all([pl,loadLinks()]);
+    profitList=P||[];
+    paintLinks();
+  }
+
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
   let cardHtml=()=>'', cardBox=null;
   function openCard(r){
@@ -18304,7 +18463,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) cardBox.hidden=true; });
     }
     cardBox.querySelector('#maCardT').textContent=(r.kind==='video'?'영상':r.kind==='image'?'이미지':'')+' 소재 · '+r.name;
-    cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r);
+    const lt=linkTxt(links[r.id]);
+    cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r)+(lt?'<div class="ma-card-link">연동 · '+lt+(links[r.id].drive?' · <a href="https://drive.google.com/file/d/'+encodeURIComponent(links[r.id].drive)+'/view" target="_blank" rel="noopener">영상 열기</a>':'')+'</div>':'');
     cardBox.hidden=false;
   }
   /* 브랜드 · 캠페인 이름 '260825_홀떡피자_PHABO' 의 둘째 토막(날짜 뒤) · 모양이 다르면 '기타' */
@@ -18358,6 +18518,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const list=Object.keys(n).sort((x,y)=>sum[y]-sum[x]||x.localeCompare(y,'ko'));
     window.UI.menu($('maBrand'),[{value:'',label:'전체 브랜드',sub:'캠페인 '+(a.campaigns||[]).length}].concat(list.map(b=>({value:b,label:b,sub:(sum[b]?'지출 '+short(sum[b],a.currency)+' · ':'')+'캠페인 '+n[b]}))),brand,v=>{ brand=v; limit=48; paintList(acc()); });
   });
+  $('maLinkBtn').addEventListener('click',e=>{ e.stopPropagation(); openLinks(); });
   $('maSortPick').addEventListener('click',e=>{
     e.stopPropagation();
     if(!window.UI||!window.UI.menu) return;
@@ -18415,7 +18576,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     paintAccTabs(); paint();
   }
   paintTab();
-  window.baroyamMetaAds={open(){ load(); }};
+  window.baroyamMetaAds={open(){ load(); if(!linksLoaded) loadLinks(); }};
 })();
 
 /* ===== 인스타콘텐츠 › 성과 =====
@@ -19344,6 +19505,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(moved) CALC.mark();
   }
   function allRows(){ const d=B(); return live(d.rows).filter(r=>r.g&&d.prods[r.g]&&!d.prods[r.g].del); }
+  /* 대표 ROAS · 광고 중인 상품마다 옵션 하나의 최소 ROAS 를 대표로 정한다(prods[id].rep = 옵션 id · 없으면 최소 ROAS 가 나오는 첫 옵션) ·
+     퍼포먼스마케팅 › 정밀성과 › 연동 리스트에서 소재와 이어 실제 ROAS 와 견준다 */
+  function repOf(g){
+    const rows=allRows().filter(r=>r.g===g.id);
+    const pick=g.rep&&rows.find(r=>r.id===g.rep);
+    const row=pick||rows.find(r=>calc(r).roas!=null)||null;
+    return {row,auto:!pick,roas:row?calc(row).roas:null};
+  }
+  function repBtn(g){
+    const R=repOf(g);
+    return '<button type="button" class="ui-field sm pf-rep" data-act="rep"'+(g.ad?'':' hidden')+' aria-haspopup="listbox" title="광고 소재와 견줄 대표 ROAS · 옵션 하나의 최소 ROAS 를 고릅니다">'
+      +'<span class="t">대표 ROAS '+(R.roas!=null?pct(R.roas,0):'–')+(R.auto&&R.row?' <small>(자동)</small>':'')+'</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>';
+  }
   const gOf=r=>r.g&&B().prods[r.g]||null;
   const used=r=>Object.keys(obj(r.mix)).filter(k=>COST.data.items[k]&&((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0);
   /* 줄의 브랜드 = 원가에서 고른 상품의 브랜드 → 수량 칸 상품의 브랜드 → 예전 묶음의 브랜드 */
@@ -19530,6 +19704,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head">'
         +'<button type="button" class="pf-ad" data-act="pad" aria-pressed="'+(g.ad?'true':'false')+'" title="'+(g.ad?'광고 중 · 누르면 끄기':'광고 안 함 · 누르면 켜기')+'" aria-label="광고상태">광고상태</button>'
         +'<input class="ui-field pf-book-name" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품 이름 (예: 홀떡피자 메타광고)" aria-label="상품 이름">'
+        +repBtn(g)
         +'<span class="pf-grow"></span>'
         +'<button type="button" class="ui-btn sm" data-act="opt">+ 옵션 추가</button>'
         +'<button type="button" class="ui-btn sm ghost icon" data-act="prod" title="상품 삭제" aria-label="상품 삭제" aria-haspopup="true">⋯</button>'
@@ -19627,7 +19802,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(b.dataset.act==='pad'){
         p.g.ad=!p.g.ad; b.setAttribute('aria-pressed',p.g.ad?'true':'false'); b.title=p.g.ad?'광고 중 · 누르면 끄기':'광고 안 함 · 누르면 켜기';
         p.box.querySelectorAll('tr[data-row]').forEach(tr=>{ const r=B().rows[tr.dataset.row]; if(r) outCells(tr,r); });
+        const rb=p.box.querySelector('.pf-rep'); if(rb) rb.outerHTML=repBtn(p.g);
         CALC.mark(); return;
+      }
+      if(b.dataset.act==='rep'){
+        e.stopPropagation();
+        const rows=allRows().filter(r=>r.g===p.g.id);
+        const opts=[{value:'',label:'자동',sub:'최소 ROAS 가 나오는 첫 옵션'}].concat(rows.map(r=>{ const v=calc(r); return {value:r.id,label:(r.label&&!isAutoLabel(r.label)?r.label:autoName(r))||'옵션',sub:'최소 ROAS '+(v.margin==null?'–':v.roas==null?'적자':pct(v.roas,0))}; }));
+        window.UI.menu(b,opts,p.g.rep||'',v=>{ p.g.rep=v||null; const rb=p.box.querySelector('.pf-rep'); if(rb) rb.outerHTML=repBtn(p.g); CALC.mark(); });
+        return;
       }
       if(b.dataset.act==='prod'){
         e.stopPropagation();
@@ -21345,6 +21528,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   window.baroyamProfit={
     show(p){ pane=p||'summary'; paint(); refresh(); },
     _calc:calc,
+    /* 퍼포먼스마케팅 연동 리스트 · 마진표 상품과 대표 ROAS · 자사몰 판매처 상품만(없으면 전부) · 광고 중인 상품이 앞 */
+    async repList(){
+      if(!COST.loaded) await COST.load();
+      if(!CALC.loaded) await CALC.load();
+      if(!CALC.loaded||!COST.loaded) return null;
+      migrate();
+      const chans=COST.data.chans, prods=live(B().prods);
+      const self=prods.filter(g=>{ const r=allRows().find(x=>x.g===g.id); const ch=chans[g.chan||(r&&r.chan)]; return ch&&/자사몰/.test(ch.name||''); });
+      return (self.length?self:prods).map(g=>{ const R=repOf(g); return {id:g.id,name:g.name||'상품',brand:prodBrand(g),ad:!!g.ad,roas:R.roas,auto:R.auto}; })
+        .sort((a,b)=>(b.ad-a.ad)||String(a.name).localeCompare(String(b.name),'ko'));
+    },
   };
 })();
 
