@@ -17869,7 +17869,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(extend&&day){ const lo=dayFrom<d?dayFrom:d, hi=day>d?day:d; dayFrom=lo; day=hi; }
     else { dayFrom=d; day=d; }
   }
-  if(window.UI&&window.UI.datePicker) dayPick=window.UI.datePicker($('maDay'),{mode:'range',max:kst(),presets:['today','yesterday','last7','last30','month','prevMonth','custom'],
+  if(window.UI&&window.UI.datePicker) dayPick=window.UI.datePicker($('maDay'),{mode:'range',max:kst(),presets:['today','last7','month','custom'],
     onChange:v=>{ if(v&&v.start){ dayFrom=v.start; day=v.end||v.start; } else { dayFrom=day=kst(); } paint(); }});
   $('maDay').classList.add('raised');
   $('maShow').addEventListener('click',e=>{ const b=e.target.closest('[data-v]'); if(!b) return; show=b.dataset.v; limit=48; paintList(acc()); });
