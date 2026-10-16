@@ -6562,50 +6562,6 @@ window.BAROYAM_FONT=(function(){
     .settings-overlay{display:none}
   }
   /* ===== 브랜드전략실 · 버튼·칩·입력칸은 ui-* 만 쓰고, 여기는 배치(카드·진행 막대·체크리스트)만 둔다 ===== */
-  /* 영상분석 AI (퍼포먼스마케팅 > 레퍼런스) */
-  .va-wrap{padding:26px 48px 48px}
-  #vaSub[hidden],.va-wrap[hidden],.va-player[hidden],.va-msg[hidden],#vaResult[hidden],.va-empty[hidden]{display:none}
-  /* [영상 상자] (AI분석) [결과 상자] · 두 상자는 같은 높이(결과 상자가 영상 상자 높이를 따름), 버튼은 그 사이 한가운데 */
-  .va-grid{display:grid;grid-template-columns:minmax(260px,330px) auto minmax(0,1fr);gap:24px;align-items:stretch}
-  .va-card{display:flex;flex-direction:column;gap:14px;min-width:0;padding:20px;border:1px solid var(--line);
-    border-radius:18px;background:var(--paper);box-shadow:0 1px 2px rgba(0,0,0,.04),0 10px 26px -18px rgba(0,0,0,.18)}
-  .va-card-head{display:flex;align-items:center;gap:10px;min-height:30px}
-  .va-card-title{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.2px}
-  .va-mid{align-self:center;position:relative;display:flex;flex-direction:column;align-items:center}
-  .va-arrow{position:absolute;top:calc(100% + 12px);width:22px;height:22px;color:var(--mute)}   /* 버튼 자체가 정확히 가운데 오도록 화살표는 아래에 띄움 */
-  .va-right{position:relative;min-width:0}
-  .va-right-in{position:absolute;inset:0}
-  .va-scroll{flex:1;min-height:0;overflow:auto;margin:0 -8px -8px 0;padding:0 8px 8px 0}
-  .va-player{position:relative;width:100%;aspect-ratio:9/16;max-height:540px;border-radius:14px;overflow:hidden;
-    background:var(--chip-flat)}
-  .va-player.wide{aspect-ratio:16/9}
-  .va-player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  .va-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-    color:var(--mute);font-size:13px;font-weight:500;text-align:center;padding:20px}
-  .va-ph svg{width:40px;height:40px;opacity:.55}
-  .va-msg{font-size:12.5px;color:var(--mute);line-height:1.5;margin-top:-4px}
-  .va-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;
-    color:var(--mute);font-size:13.5px;line-height:1.6;border:1px dashed var(--line);border-radius:14px;padding:24px}
-  .va-empty svg{width:34px;height:34px;opacity:.55;margin-bottom:2px}
-  .va-empty b{font-size:15px;color:var(--ink)}
-  .va-stat{font-size:12.5px;color:var(--mute);font-weight:500;margin-right:auto}
-  .va-stat b{color:var(--ink)}
-  .va-part{border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:16px 18px 18px;
-    border-left:4px solid var(--line)}
-  .va-part.hook{border-left-color:var(--btn)}
-  .va-part.end{border-left-color:var(--ink)}
-  .va-part-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-  .va-part-name{font-size:15px;font-weight:600;color:var(--ink)}
-  .va-part.hook .va-part-name{color:var(--btn-soft-ink)}
-  .va-part-n{font-size:12px;color:var(--mute);font-weight:500;margin-right:auto}
-  .va-lines{display:flex;flex-direction:column;gap:14px}
-  .va-line{display:flex;gap:12px;align-items:baseline;font-size:17px;font-weight:500;color:var(--ink);line-height:1.45;letter-spacing:-.2px}
-  .va-line time{flex:none;width:34px;font-size:11.5px;font-weight:500;color:var(--mute);font-variant-numeric:tabular-nums}
-  .va-none{font-size:13px;color:var(--mute)}
-  .va-cut{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12px;color:var(--mute);font-weight:600}
-  .va-cut::before,.va-cut::after{content:"";flex:1;height:1px;background:var(--line)}
-  @media (max-width:860px){ .va-wrap{padding:20px 16px 32px} .va-grid{grid-template-columns:1fr} .va-player{max-height:420px}
-    .va-right-in{position:static} .va-scroll{overflow:visible} .va-empty{min-height:200px} .va-mid{gap:12px} .va-arrow{position:static;transform:rotate(90deg)} }
   .bs-wrap{padding:26px 48px 48px}
   @media (max-width:760px){ .bs-wrap{padding:20px 16px 32px} }
   /* 왼쪽 목록 + 오른쪽 상세 */
@@ -7664,7 +7620,7 @@ window.BAROYAM_FONT=(function(){
           </div>
         </div>
         <!-- 퍼포먼스마케팅 · 콘텐츠마케팅 · 자리만 만들어 두었다(대시보드는 아직 비어 있다) -->
-        <button class="sb-item" type="button" data-view="perf" id="sbPerfBtn" aria-haspopup="true" aria-expanded="false">
+        <button class="sb-item" type="button" data-view="perf" id="sbPerfBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11v2.5c0 .8.7 1.5 1.5 1.5H7l4.5 4V5L7 9H5.5C4.7 9 4 9.7 4 10.5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
           <span>퍼포먼스마케팅</span>
         </button>
@@ -7773,31 +7729,6 @@ window.BAROYAM_FONT=(function(){
         <button type="button" class="sb-subnav-item" data-platform="coupang"><i class="sb-subnav-dot is-coupang"></i>쿠팡리뷰</button>
         <button type="button" class="sb-subnav-item" data-platform="toss"><i class="sb-subnav-dot is-toss"></i>토스리뷰</button>
         <button type="button" class="sb-subnav-item" data-platform="alwayz"><i class="sb-subnav-dot is-alwayz"></i>올웨이즈리뷰</button>
-      </div>
-    </nav>
-
-    <!-- 퍼포먼스마케팅 사이드탭 · 퍼포먼스 매출과 광고 등록(메타·구글애즈·유튜브)을 고른다 -->
-    <nav class="sb-subnav" id="sbPerfSubnav" hidden aria-label="퍼포먼스마케팅 하위 메뉴">
-      <div class="sb-subnav-head">
-        <div class="sb-subnav-title">퍼포먼스마케팅</div>
-      </div>
-      <div class="sb-subnav-flat" id="sbPerfSubnavList">
-        <button type="button" class="sb-subnav-home active" data-perf="sales">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V10M9.3 19V5M14.7 19v-6M20 19v-9"/></svg>
-          <span>퍼포먼스 매출</span>
-        </button>
-      </div>
-      <div class="sb-subnav-sep"></div>
-      <div class="sb-subnav-caption">광고 등록</div>
-      <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item" data-perf="meta">메타광고 등록</button>
-        <button type="button" class="sb-subnav-item" data-perf="google">구글애즈 등록</button>
-        <button type="button" class="sb-subnav-item" data-perf="youtube">유튜브 등록</button>
-      </div>
-      <div class="sb-subnav-sep"></div>
-      <div class="sb-subnav-caption">레퍼런스</div>
-      <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item" data-perf="videoai">영상분석 AI</button>
       </div>
     </nav>
 
@@ -9922,51 +9853,12 @@ window.BAROYAM_FONT=(function(){
         </div>
       </div><!-- /view-drive -->
 
-      <!-- 퍼포먼스마케팅 · 콘텐츠마케팅 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
+      <!-- 퍼포먼스마케팅 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-perf" style="display:none">
         <section>
           <div class="plan-hero">
             <div class="ptag">마케팅</div>
-            <div class="ptitle" id="perfViewTitle">퍼포먼스 매출</div>
-            <div class="psub" id="vaSub" hidden>쇼츠 링크와 자막을 넣으면 후킹 · 내용 · 마무리로 나누고, 세로 화면에 맞게 한 줄씩 끊어 줍니다.</div>
-          </div>
-          <!-- 영상분석 AI · 레퍼런스 쇼츠의 자막을 후킹/내용/마무리로 나눈다 ·
-               브라우저는 유튜브 자막을 직접 못 받으므로(CORS) 김비서 VPS 가 대신 받는다(brand-files 버킷 ytcap/ 파일로 요청·결과) -->
-          <div class="va-wrap" id="vaPanel" hidden>
-            <div class="va-grid">
-              <div class="va-card va-left">
-                <div class="va-card-head"><span class="va-card-title">레퍼런스 영상</span></div>
-                <input class="ui-field block" id="vaUrl" type="url" placeholder="유튜브 링크 붙여넣기 · youtube.com/shorts/…" autocomplete="off" aria-label="유튜브 링크">
-                <div class="va-player" id="vaPlayer"></div>
-                <div class="va-msg" id="vaMsg" hidden></div>
-              </div>
-              <!-- 가운데 · 왼쪽(링크·영상) → 오른쪽(결과)으로 넘기는 둥근 버튼 -->
-              <div class="va-mid">
-                <button class="ui-btn orb" id="vaRun" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-                  <span>AI분석</span>
-                </button>
-                <svg class="va-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </div>
-              <!-- 결과 상자 높이는 왼쪽 영상 상자에 맞추고, 결과가 길면 상자 안에서 스크롤한다 -->
-              <div class="va-right">
-                <div class="va-card va-right-in">
-                  <div class="va-card-head">
-                    <span class="va-card-title">분석 결과</span>
-                    <span class="va-stat" id="vaStat"></span>
-                    <button class="ui-btn sm soft" id="vaCopyAll" type="button" hidden>전체 복사</button>
-                  </div>
-                  <div class="va-empty" id="vaEmpty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg>
-                    <b>후킹 · 내용 · 마무리</b>
-                    <span>왼쪽에 링크를 넣고 가운데 AI분석을 누르면<br>세로 화면처럼 한 줄씩 나눠 보여 드립니다.</span>
-                  </div>
-                  <div class="va-scroll" id="vaResult" hidden>
-                    <div id="vaParts"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div class="ptitle">퍼포먼스마케팅</div>
           </div>
         </section>
       </div><!-- /view-perf -->
@@ -12983,7 +12875,7 @@ window.CsGuide=(function(){
     ['review',1,'리뷰수집','채널별 인박스','회사 PC 리뷰 수집기(4317)와 이야기합니다. 수집기 화면 디자인은 대시보드가 보내 줍니다.'],
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
-    ['perf',1,'퍼포먼스마케팅','영상분석 AI','쇼츠 링크를 넣으면 brand-files 의 ytcap/req 에 요청을 올리고, VPS 가 자막(한국어)을 ytcap/res 에 답합니다.'],
+    ['perf',1,'퍼포먼스마케팅','자리만 있음','화면은 제목만 있고 아직 읽거나 저장하는 데이터가 없습니다.'],
     ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1.'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
@@ -13040,7 +12932,6 @@ window.CsGuide=(function(){
     ['manual','storage','문서 이미지 manual/'],
     ['agenda','agendaT','안건'],
     ['agenda','storage','메모 이미지 agenda/'],
-    ['perf','storage','자막 요청 ytcap/req → res'],
     ['content','storage','대본 주문 cmjob/req → res'],
     ['content','settings','content_jobs_v1'],
     ['account','settings','accounts_v1'],
@@ -13473,7 +13364,7 @@ window.CsGuide=(function(){
      desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. 서버에서 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd',
      cmds:['안녕 · 도움말 → 짧은 안내','예시 → 자세한 사용법','내 프로젝트','마감 (7일 안)','○○ 보내줘 → 미리보기 5개 → 번호로 원본','고객 문의 → 상담 가이드 추천 답변']},
     /* caffeinnos-automation/yt_captions.js · systemd yt-captions · 상태는 vps/bot_check.sh 가 10분마다 한 줄(run_id vps-yt-captions) */
-    {name:'영상분석 자막', cat:'live', where:'ERP 퍼포먼스마케팅 · 영상분석 AI', always:true,
+    {name:'영상분석 자막', cat:'live', where:'VPS · 지금 쓰는 화면 없음(영상분석 AI 삭제)', always:true,
      record:'영상분석 자막',
      desc:'영상분석 AI에서 AI분석을 누르면 서버가 유튜브 자막(CC)을 대신 받아 와요. 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd'},
     /* 받는 사람은 김태섭(팀장·개발자) 한 명 · caffeinnos-automation/run_watch.js */
@@ -16902,252 +16793,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 로컬 도구에서 #review 로 돌아오면 탭마다 주소 코드가 리뷰수집 버튼을 눌러 메뉴를 펼친다 */
 })();
 
-/* 퍼포먼스마케팅 사이드탭 · 아이콘을 누르면 리뷰수집처럼 사이드탭이 열리고,
-   퍼포먼스 매출 / 메타광고·구글애즈·유튜브 등록 중 하나를 고른다(화면 내용은 아직 제목만 있다) */
-(function(){
-  const btn=document.getElementById('sbPerfBtn');
-  const subnav=document.getElementById('sbPerfSubnav');
-  const title=document.getElementById('perfViewTitle');
-  if(!btn||!subnav) return;
-  const items=[...subnav.querySelectorAll('[data-perf]')];
-  function pick(el){
-    items.forEach(b=>b.classList.toggle('active',b===el));
-    if(title) title.textContent=el.textContent.trim();
-    const va=el.dataset.perf==='videoai';
-    ['vaPanel','vaSub'].forEach(id=>{ const n=document.getElementById(id); if(n) n.hidden=!va; });
-  }
-  btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
-  items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('perf'); pick(el); }));
-  function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
-  document.querySelectorAll('.sb-item[data-view],.sb-subitem').forEach(other=>{
-    if(other!==btn) other.addEventListener('click',close);
-  });
-  const salesToggleBtn=document.getElementById('sbSalesToggle');
-  if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
-})();
-
-/* 영상분석 AI · 쇼츠 자막을 후킹 / 내용 / 마무리로 나누고 세로 화면에 맞게 한 줄씩 끊는다 ·
-   나누기는 AI 없이 규칙(처음 3초 = 후킹, 끝의 구독·링크 같은 말 또는 마지막 두 줄 = 마무리) · 경계는 ▲▼ 로 고친다 */
-(function(){
-  /* 자막(CC)은 김비서 VPS(국내 IP)가 대신 받는다 · 브라우저는 CORS, Supabase 함수는 유튜브가 해외 IP 를 막아 못 받음 ·
-     DB 표 없이 파일 보관함(brand-files 버킷)의 작은 JSON 으로 주고받는다: 화면이 ytcap/req/<영상ID>.<임의>.json 을 올리면
-     VPS(caffeinnos-automation/yt_captions.js)가 2초마다 보고 ytcap/res/<같은 이름> 에 답을, ytcap/cache/<영상ID>.json 에 다시 쓸 자막을 적는다 ·
-     답 {ok, at, lang, auto, title, segments:[{t,text}]} 또는 {ok:false, message} */
-  const VA_REUSE_DAYS=7;    // 같은 영상은 이 기간 안에 받은 자막을 다시 쓴다(아무 PC 에서 받았든)
-  const MAX=16;              // 세로 화면 한 줄 글자 수(공백 포함)
-  const CTA=/구독|좋아요 (?:눌|부탁)|댓글|링크|프로필|구매|주문|팔로우|알림|저장|공유|지금 바로|확인해|눌러|클릭|더보기|할인|이벤트/;
-  const $=id=>document.getElementById(id);
-  const url=$('vaUrl'), player=$('vaPlayer'), msg=$('vaMsg');
-  const text={value:''};   // 불러온 자막 글 · 화면에 입력칸은 두지 않는다(사용자 요청)
-  if(!url||!text) return;
-  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const LS='baroyam_videoai_v1';
-  let lines=[], hookEnd=0, endStart=0, curId=null;
-
-  function videoId(u){
-    const m=String(u||'').match(/(?:youtu\.be\/|\/shorts\/|\/embed\/|\/live\/|[?&]v=)([\w-]{11})/);
-    return m?m[1]:'';
-  }
-  function showVideo(){
-    const id=videoId(url.value.trim());
-    if(id===curId) return;
-    curId=id;
-    if(!id){ player.classList.remove('wide');
-      player.innerHTML='<div class="va-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>링크를 넣으면 영상이 여기 나옵니다</div>';
-      return; }
-    player.classList.toggle('wide',!/\/shorts\//.test(url.value));
-    player.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'" title="유튜브 영상" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>';  }
-  function note(s){ msg.textContent=s||''; msg.hidden=!s; }
-
-  /* 붙여넣은 글 → [{t(초 또는 null), text}] · 유튜브 스크립트(시간 줄 + 글 줄, 또는 "0:00 글"), SRT/VTT, 시간 없는 글 모두 받는다 */
-  const toSec=s=>{ const p=s.split(':').map(Number); return p.reduce((a,b)=>a*60+b,0); };
-  function parse(raw){
-    const out=[]; let t=null;
-    String(raw).replace(/\r/g,'').split('\n').forEach(l=>{
-      l=l.trim();
-      if(!l||/^WEBVTT|^\d+$/.test(l)) return;
-      let m=l.match(/^(\d{1,2}(?::\d{2}){1,2})(?:[.,]\d+)?\s*-->/);              // SRT/VTT 시간 줄
-      if(m){ t=toSec(m[1]); return; }
-      m=l.match(/^(\d{1,2}(?::\d{2}){1,2})(?:\s+(.*))?$/);                       // 유튜브 스크립트 "0:00" / "0:00 글"
-      if(m){ t=toSec(m[1]); if(!m[2]) return; l=m[2]; }
-      l=l.replace(/\[[^\]]*\]|\([^)]*음악[^)]*\)|<[^>]+>/g,'').replace(/([.?!])(?=[가-힣A-Za-z])/g,'$1 ')
-         .replace(/(^|\s)>>+/g,'$1').replace(/\s+/g,' ').trim();   // [음악]·태그 지우기 · 자동 자막의 "요.이" 처럼 붙은 문장 띄우기
-      if(!l) return;
-      out.push({t,text:l}); t=null;
-    });
-    // 시간이 하나도 없으면 문장부호나 '…요 / …까 / …죠' 뒤에서 나눈다('다'는 '마다'처럼 문장 끝이 아닐 때가 많아 뺐다)
-    if(out.every(o=>o.t===null)){
-      const joined=[];
-      out.forEach(o=>o.text.split(/(?<=[.?!…~요까죠])\s+/).forEach(s=>{ s=s.trim(); if(s) joined.push({t:null,text:s}); }));
-      return joined;
-    }
-    return out;
-  }
-  /* 긴 줄은 띄어쓰기에서 나눈다 · 가운데에 가깝고 '…는데 / …고 / …서 / …요'처럼 말이 끊기는 자리를 고르며,
-     3자 이하 조각은 피한다 · MAX 이하가 될 때까지 되풀이 */
-  const JOINT=/(?:는데|지만|니까|고|서|면|요|죠|까|게|며|[,.?!…])$/;
-  const txt=ws=>ws.map(w=>w.w).join(' ');
-  // 낱말 배열 [{w,t}] 을 나눈다 · 각 줄의 시간은 그 줄 첫 낱말이 나온 자막 시각
-  function wrap(ws){
-    const s=txt(ws);
-    if(s.length<=MAX||ws.length<2) return [ws];
-    const mid=s.length/2; let best=1, bestScore=Infinity, pos=0;
-    for(let i=1;i<ws.length;i++){
-      pos+=ws[i-1].w.length+(i>1?1:0);
-      const L=pos, R=s.length-pos-1;
-      let sc=Math.abs(pos-mid);
-      if(JOINT.test(ws[i-1].w)) sc-=4;
-      if(L<=3||R<=3) sc+=8;
-      if(sc<bestScore){ bestScore=sc; best=i; }
-    }
-    return wrap(ws.slice(0,best)).concat(wrap(ws.slice(best)));
-  }
-  /* 유튜브 자막(특히 자동 자막)은 몇 초 단위로 문장 중간이 잘려 있다 → 낱말을 이어 붙여 문장(. ? ! 로 끝나는 곳, 너무 길면
-     '…요 / …는데' 같은 곳)으로 다시 묶는다 · 시간이 없는 글은 parse 가 이미 문장으로 나눴다 */
-  function reflow(segs){
-    const words=[];
-    segs.forEach(sg=>{ const ws=sg.text.split(' ').filter(Boolean);
-      ws.forEach((w,i)=>words.push({w,t:i===0?sg.t:null,end:i===ws.length-1})); });
-    // 한 자막 조각 안의 낱말도 그 조각 시각을 물려받게(줄 시간이 비지 않도록)
-    let last=null; words.forEach(w=>{ if(w.t===null) w.t=last; else last=w.t; });
-    const out=[]; let cur=[], len=0;
-    words.forEach(w=>{
-      cur.push(w); len+=w.w.length+1;
-      // 문장부호 · 자막 조각 끝이 '…요/…는데/…고'처럼 말이 끊기는 자리 · 너무 길어졌을 때의 끊김 자리
-      if(/[.?!…]$/.test(w.w)||((w.end||len>40)&&(JOINT.test(w.w)||/다$/.test(w.w)&&w.end))){ out.push(cur); cur=[]; len=0; }
-    });
-    if(cur.length) out.push(cur);
-    return out.map(ws=>({t:ws[0].t,text:txt(ws),words:ws}));
-  }
-  function split(segs){
-    // 조각의 절반 넘게가 말 중간(…유명한 / …워낙)에서 끝나면 자동 자막처럼 잘린 것 → 문장으로 다시 묶는다
-    const natural=s=>JOINT.test(s.text)||/다$/.test(s.text);
-    if(segs.some(s=>s.t!==null)&&segs.filter(natural).length<segs.length*0.5) segs=reflow(segs);
-    const out=[]; let prev;
-    segs.forEach(sg=>{
-      const ws=sg.words||sg.text.split(' ').filter(Boolean).map(w=>({w,t:null}));
-      wrap(ws).forEach((p,i)=>{
-        const t=i===0?sg.t:p[0].t;
-        out.push({t:t===prev?null:t,text:txt(p),seg:sg});   // 앞 줄과 같은 시각이면 시간은 비워 둔다
-        if(t!==null) prev=t;
-      });
-    });
-    return out;
-  }
-  /* 나누기는 자막 조각 단위로 해서, 한 조각을 두 줄로 끊은 것이 두 부분으로 갈라지지 않게 한다 */
-  function classify(){
-    const n=lines.length, hasT=lines.some(l=>l.t!==null);
-    const starts=lines.map((l,i)=>i).filter(i=>i===0||lines[i].seg!==lines[i-1].seg);   // 조각이 시작하는 줄
-    const ns=starts.length, segAt=k=>k<ns?starts[k]:n;
-    // 후킹 · 첫 조각 + 3초 전에 시작한 다음 조각(최대 2조각) · 시간이 없으면 첫 조각
-    let k=1;
-    if(hasT) while(k<Math.min(2,ns)&&(lines[starts[k]].seg.t??99)<3) k++;
-    hookEnd=segAt(k);
-    // 마무리 · 끝 30% 조각 안에서 구독·링크 같은 말이 처음 나온 조각부터 · 없으면 마지막 조각(조각이 6개 넘으면 두 개)
-    const from=Math.max(k,Math.floor(ns*0.7));
-    let e=-1;
-    for(let j=from;j<ns&&e<0;j++) if(CTA.test(lines[starts[j]].seg.text)) e=j;
-    if(e<0) e=ns-(ns>6?2:ns>=3?1:0);
-    endStart=Math.max(hookEnd,segAt(Math.max(k,e)));
-  }
-
-  const fmtT=t=>t===null||t===undefined?'':Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
-  const PARTS=[['hook','후킹'],['body','내용'],['end','마무리']];
-  function ranges(){ return [[0,hookEnd],[hookEnd,endStart],[endStart,lines.length]]; }
-  function render(){
-    const box=$('vaParts'), rs=ranges();
-    let h='';
-    PARTS.forEach(([k,name],pi)=>{
-      const [a,b]=rs[pi], ls=lines.slice(a,b);
-      h+='<div class="va-part '+k+'"><div class="va-part-head"><span class="va-part-name">'+name+'</span>'
-        +'<span class="va-part-n">'+ls.length+'줄</span>'
-        +(ls.length?'<button class="ui-btn sm ghost" type="button" data-copy="'+pi+'">복사</button>':'')+'</div>'
-        +(ls.length?'<div class="va-lines">'+ls.map(l=>'<div class="va-line"><time>'+fmtT(l.t)+'</time><span>'+esc(l.text)+'</span></div>').join('')+'</div>'
-                   :'<div class="va-none">없음 · 아래 ▲▼ 로 경계를 옮기세요</div>')
-        +'</div>';
-      if(pi<2) h+='<div class="va-cut">'+name+' / '+PARTS[pi+1][1]+' 경계'
-        +'<button class="ui-btn sm icon ghost" type="button" data-mv="'+pi+'" data-d="-1" aria-label="경계를 한 줄 위로">▲</button>'
-        +'<button class="ui-btn sm icon ghost" type="button" data-mv="'+pi+'" data-d="1" aria-label="경계를 한 줄 아래로">▼</button></div>';
-    });
-    box.innerHTML=h;
-    const last=[...lines].reverse().find(l=>l.t!==null);
-    $('vaStat').innerHTML='<b>'+lines.length+'</b>줄'+(last?' · 약 <b>'+fmtT(last.t)+'</b>까지':'')+' · 한 줄 '+MAX+'자 기준';
-  }
-  const partText=pi=>{ const [a,b]=ranges()[pi]; return lines.slice(a,b).map(l=>l.text).join('\n\n'); };
-  function copy(s,btn){
-    const done=()=>{ const o=btn.textContent; btn.textContent='복사됨'; setTimeout(()=>btn.textContent=o,1200); };
-    if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(s).then(done,()=>note('복사하지 못했습니다. 글을 직접 골라 복사하세요.'));
-    else { const ta=document.createElement('textarea'); ta.value=s; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} ta.remove(); }
-  }
-
-  function analyze(){
-    const segs=parse(text.value);
-    if(!segs.length){ note('자막이 비어 있습니다.'); return; }
-    lines=split(segs); classify(); render();
-    $('vaEmpty').hidden=true; $('vaResult').hidden=false; $('vaCopyAll').hidden=false; note('');
-    save();
-  }
-  /* AI분석 · 링크의 CC 자막을 불러와 나눈다(같은 영상을 이미 불러왔으면 다시 받지 않음) */
-  let loadedFor='';
-  async function run(){
-    const id=videoId(url.value.trim()), btn=$('vaRun');
-    if(!id){ note('유튜브 링크를 넣어 주세요.'); return; }
-    if(id===loadedFor){ analyze(); return; }
-    btn.disabled=true; note('자막(CC)을 불러오는 중…');
-    try{
-      const j=await fetchCaptions(id);
-      text.value=j.segments.map(s=>(s.t!=null?fmtT(s.t)+' ':'')+s.text).join('\n');
-      loadedFor=id;
-      analyze();
-      const LANG={en:'영어',ja:'일본어',zh:'중국어',es:'스페인어',de:'독일어',fr:'프랑스어',pt:'포르투갈어',vi:'베트남어',th:'태국어',id:'인도네시아어',ru:'러시아어'};
-      note(j.from
-        ?(LANG[String(j.from).split('-')[0]]||j.from)+' 자막을 한국어로 번역했습니다(번역기 · 어색한 문장이 있을 수 있음).'
-        :(j.auto?'유튜브 자동 생성 자막':'직접 올린 자막')+'을 불러왔습니다.');
-    }catch(e){
-      note('자막을 불러오지 못했습니다 · '+(e&&e.message||e));
-    }finally{ btn.disabled=false; }
-  }
-  /* VPS 에 자막을 부탁하고 결과를 기다린다 · 최근에 누가 받아 둔 같은 영상이 있으면 그것을 쓴다 */
-  async function fetchCaptions(id){
-    const DB=window.BAROYAM_DB;
-    if(!DB||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다. 새로고침한 뒤 다시 눌러 주세요.');
-    // 파일이 아직 없으면 서명 주소를 못 받는다 → null
-    async function read(path){
-      let u; try{ u=await DB.fileUrl('brand-files',path,60); }catch(e){ return null; }
-      const r=await fetch(u,{cache:'no-store'}).catch(()=>null);
-      return r&&r.ok?r.json().catch(()=>null):null;
-    }
-    const hit=await read('ytcap/cache/'+id+'.json');
-    if(hit&&hit.ok&&/^ko/.test(hit.lang||'')&&Date.now()-Date.parse(hit.at)<VA_REUSE_DAYS*864e5) return hit;
-    const name=id+'.'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.json';
-    await DB.fileUpload('brand-files','ytcap/req/'+name,new Blob([JSON.stringify({v:id,at:new Date().toISOString()})],{type:'application/json'}));
-    const t0=Date.now();
-    for(;;){
-      await new Promise(r=>setTimeout(r,1200));
-      const res=await read('ytcap/res/'+name);
-      if(res&&res.ok) return res;
-      if(res) throw new Error(res.message||'자막을 받지 못했습니다.');
-      const sec=Math.round((Date.now()-t0)/1000);
-      if(sec>=60) throw new Error('자막 서버(VPS)가 응답하지 않습니다. 잠시 뒤 다시 눌러 주세요.');
-      note('서버가 자막을 받는 중… ('+sec+'초)');
-    }
-  }
-  function save(){ try{ localStorage.setItem(LS,JSON.stringify({u:url.value,x:text.value,f:loadedFor,ko:1})); }catch(e){} }
-
-  $('vaParts').addEventListener('click',e=>{
-    const c=e.target.closest('[data-copy]'); if(c){ copy(partText(+c.dataset.copy),c); return; }
-    const m=e.target.closest('[data-mv]'); if(!m) return;
-    const d=+m.dataset.d;
-    if(m.dataset.mv==='0') hookEnd=Math.max(0,Math.min(endStart,hookEnd+d));
-    else endStart=Math.max(hookEnd,Math.min(lines.length,endStart+d));
-    render();
-  });
-  $('vaCopyAll').addEventListener('click',e=>copy(PARTS.map(([,n],i)=>'['+n+']\n\n'+(partText(i)||'(없음)')).join('\n\n\n'),e.currentTarget));
-  $('vaRun').addEventListener('click',run);
-  url.addEventListener('input',()=>{ showVideo(); save(); });
-  try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){ url.value=s.u||''; text.value=s.x||''; loadedFor=s.ko?(s.f||''):''; showVideo(); if(text.value.trim()) analyze(); } }catch(e){}
-  showVideo();   // 링크가 없으면 영상 자리에 안내를 띄운다
-})();
 
 /* 콘텐츠마케팅 사이드탭 · 퍼포먼스마케팅과 같은 방식 · 제작 / 영상(승인 요청·완성본 개수) / 채널(화면 내용은 아직 제목만 있다) */
 (function(){
