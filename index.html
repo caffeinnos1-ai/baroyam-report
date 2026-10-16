@@ -2532,6 +2532,12 @@ window.BAROYAM_FONT=(function(){
   .ma-crumb button:hover{background:var(--btn-soft)}
   .ma-crumb span{color:var(--mute)}
   .ma-crumb b{font-weight:500;color:var(--ink)}
+  .ma-crumb .ma-pick{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border-radius:99px;background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:500;max-width:420px}
+  .ma-crumb .ma-pick button{color:var(--btn-soft-ink);padding:0 6px;line-height:1.6}
+  .ma-ck{width:15px;height:15px;margin:0 2px 0 0;flex:none;accent-color:var(--btn);cursor:pointer;vertical-align:-2px}
+  .ma-table th .ma-ck{margin-right:10px}
+  .ma-table tr.is-sel td{background:color-mix(in srgb,var(--btn-soft) 60%,transparent)}
+  .ma-selcount{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 5px;margin-left:3px;border-radius:99px;background:var(--btn);color:var(--paper);font-size:10.5px;font-weight:600}
   .ma-table-wrap{overflow-x:auto}
   .ma-table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
   .ma-table th{font-size:12px;font-weight:500;color:var(--mute);text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
@@ -17849,7 +17855,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           insights:{today|yesterday|last_7d|last_30d:{campaign|adset|ad:{id:성과},total:성과}}, daily:{'YYYY-MM-DD':성과}}]}
    성과 = {spend,imp,reach,freq,clicks(링크 클릭),buy(구매),rev(구매 전환값)} · 계정마다 통화가 달라(원·달러) 섞어 더하지 않는다.
    화면: 배너 위 단추 둘 · 데일리 성과(하루 단위 · daily 로 그림) / 정밀성과(목록 머리의 캠페인·광고 세트·소재 · 기간 탭 · insights 로 그림) ·
-   캠페인 이름 → 그 캠페인의 광고 세트, 세트 이름 → 그 세트의 소재로 들어간다(drill). */
+   메타 광고 관리자처럼 캠페인·광고 세트 이름 왼쪽 체크로 고르면 다음 단계(광고 세트 · 소재)가 고른 것만 보인다(selC·selS) ·
+   이름을 누르면 그것 하나만 골라 바로 다음 단계로 들어간다. */
 (function(){
   const root=document.getElementById('maRoot');
   if(!root) return;
@@ -17870,7 +17877,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let data=null, loaded=false, loading=false, failed=false;
   let accId=store('baroyam_ma_acc')||'', range=store('baroyam_ma_range')||'last_7d', mode=store('baroyam_ma_mode')||'card';
   let tab=store('baroyam_perf_tab')||'daily', day=null, dayFrom=null;   /* 데일리 성과 · 고른 기간 dayFrom ~ day(하루면 둘이 같음) */
-  let show='spend', q='', sortKey='spend', sortDir=-1, drill={}, limit=48;
+  let show='spend', q='', sortKey='spend', sortDir=-1, limit=48;
+  const selC=new Set(), selS=new Set();   /* 고른 캠페인 · 광고 세트(체크) · 계정을 바꾸면 비운다 */
+  const clearSel=()=>{ selC.clear(); selS.clear(); };
   if(!RANGE_TXT[range]) range='last_7d';
   if(tab!=='daily'&&!LEVEL_TXT[tab]) tab='daily';
 
@@ -17972,7 +17981,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       box.dataset.ids=list.map(a=>a.id).join(',');
       box.innerHTML=list.map(a=>'<button class="ui-tab" data-value="'+esc(a.id)+'">'+esc(String(a.name||a.id).replace(/\s*광고\s*계정$/,''))+'</button>').join('');
     }
-    if(list.length) tabsOf('maAcct',v=>{ accId=v; keep('baroyam_ma_acc',v); drill={}; limit=48; paint(); }).set(acc().id);
+    if(list.length) tabsOf('maAcct',v=>{ accId=v; keep('baroyam_ma_acc',v); clearSel(); limit=48; paint(); }).set(acc().id);
   }
 
   /* ---------- 데일리 성과 ---------- */
@@ -18078,7 +18087,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function rowsOf(a){
     const I=(a.insights&&a.insights[range])||{};
     const cName=Object.fromEntries((a.campaigns||[]).map(c=>[c.id,c.name]));
-    const inC=x=>!drill.c||x.c===drill.c, inS=x=>!drill.s||x.s===drill.s;
+    const inC=x=>!selC.size||selC.has(x.c), inS=x=>!selS.size||selS.has(x.s);
     if(tab==='campaign') return (a.campaigns||[]).map(c=>({id:c.id,name:c.name,st:c.st,sub:'',m:(I.campaign||{})[c.id]}));
     if(tab==='adset') return (a.adsets||[]).filter(inC).map(x=>({id:x.id,name:x.name,st:x.st,sub:cName[x.c]||'',m:(I.adset||{})[x.id]}));
     const ads=(a.ads||[]).filter(x=>inC(x)&&inS(x)), IA=I.ad||{};
@@ -18093,7 +18102,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return Object.values(g).map(o=>{
       const top=o.ads.slice().sort((p,r)=>sp(r)-sp(p))[0];
       return {id:o.id,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,
-        sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(drill.s?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
+        sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
   const stCls=st=>st==='ACTIVE'?' is-on':/DISAPPROVED|WITH_ISSUES/.test(st||'')?' is-bad':'';
@@ -18111,8 +18120,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     {k:'imp',l:'노출',f:v=>int(v)},
   ];
   function paintLevelKpis(a){
-    const cur=a.currency, now=derive(a.insights&&a.insights[range]&&a.insights[range].total), p=prevOf(a), pv=p&&derive(p);
-    const c=(k,good,unit)=>pv?chip(now[k],pv[k],good,unit,PREV_TXT[range]):'<span class="ip-delta is-none">'+(range==='today'?'오늘은 아직 진행 중':'비교할 지난 기록 없음')+'</span>';
+    const I=(a.insights&&a.insights[range])||{};
+    /* 고른 광고 세트(없으면 고른 캠페인)만 더한다 · 지난 기간 비교는 계정 전체 하루 값으로만 할 수 있어 고른 것이 있으면 하지 않는다 */
+    const picked=selS.size?[...selS].map(id=>(I.adset||{})[id]):selC.size?[...selC].map(id=>(I.campaign||{})[id]):null;
+    const pickTxt=selS.size?'광고 세트 '+selS.size+'개':selC.size?'캠페인 '+selC.size+'개':'';
+    const cur=a.currency, now=derive(picked?addUp(picked):I.total), p=picked?null:prevOf(a), pv=p&&derive(p);
+    const c=(k,good,unit)=>pv?chip(now[k],pv[k],good,unit,PREV_TXT[range]):'<span class="ip-delta is-none">'+(picked?'고른 '+pickTxt+' 합계':range==='today'?'오늘은 아직 진행 중':'비교할 지난 기록 없음')+'</span>';
     const L=l=>l+' · '+RANGE_TXT[range];
     $('maKpis').innerHTML=[
       kpiCard(L('지출'),short(now.spend,cur),c('spend',true)),
@@ -18156,14 +18169,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     tabsOf('maSort',onSort).set(sortKey);
     tabsOf('maLevel',v=>{ if(v!==tab) go(v); }).set(tab);
     $('maMode').hidden=tab!=='asset';
-    /* 지금 위치(전체 › 캠페인 › 세트) */
+    /* 단계 탭에 고른 개수 · 고른 것 줄(이름 · ✕ 로 풀기) */
+    $('maLevel').querySelectorAll('[data-value]').forEach(b=>{
+      const n=b.dataset.value==='campaign'?selC.size:b.dataset.value==='adset'?selS.size:0;
+      b.innerHTML=LEVEL_TXT[b.dataset.value]+(n?' <b class="ma-selcount">'+n+'</b>':'');
+    });
     const crumb=$('maCrumb');
-    if(drill.c||drill.s){
-      const cN=((a.campaigns||[]).find(c=>c.id===drill.c)||{}).name, sN=((a.adsets||[]).find(x=>x.id===drill.s)||{}).name;
+    if(selC.size||selS.size){
+      const nm=(list,set)=>{ const ns=(list||[]).filter(x=>set.has(x.id)).map(x=>x.name); return ns.length===1?esc(ns[0]):ns.length+'개'; };
       crumb.hidden=false;
-      crumb.innerHTML='<button type="button" data-go="all">전체 캠페인</button>'
-        +(cN?'<span>›</span>'+(sN?'<button type="button" data-go="c">'+esc(cN)+'</button>':'<b>'+esc(cN)+'</b>'):'')
-        +(sN?'<span>›</span><b>'+esc(sN)+'</b>':'')+'<span>›</span><b>'+L+'</b>';
+      crumb.innerHTML='<span>고른 것</span>'
+        +(selC.size?'<span class="ma-pick">캠페인 · '+nm(a.campaigns,selC)+'<button type="button" data-clear="c" aria-label="캠페인 선택 풀기" title="캠페인 선택 풀기">✕</button></span>':'')
+        +(selS.size?'<span class="ma-pick">광고 세트 · '+nm(a.adsets,selS)+'<button type="button" data-clear="s" aria-label="광고 세트 선택 풀기" title="광고 세트 선택 풀기">✕</button></span>':'')
+        +'<button type="button" data-clear="all">모두 풀기</button>';
     }else crumb.hidden=true;
     if(!rows.length){ $('maTable').innerHTML='<div class="ma-empty">'+RANGE_TXT[range]+' 동안 보여 줄 '+L+'이(가) 없습니다.'+(show!=='all'?' 위 "전체"를 눌러 보세요.':'')+'</div>'; return; }
     const more=rows.length>limit?'<button type="button" class="ui-btn soft sm ma-more">'+(rows.length-limit)+'개 더 보기</button>':'';
@@ -18183,13 +18201,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const tot=derive(addUp(rows.map(r=>r.m)));
     const cell=(c,x)=>{ const v=x[c.k]; let cls=v==null||v===0?' class="is-zero"':''; if(c.k==='roas'&&v!=null&&v<100&&x.spend>0) cls=' class="is-low"'; return '<td'+cls+'>'+c.f(v,cur)+'</td>'; };
     const drillable=tab!=='asset';
-    const head='<thead><tr><th>'+L+'</th>'+COLS.map(c=>'<th data-k="'+c.k+'"'+(sortKey===c.k?' class="is-sort"':'')+'>'+c.l+(sortKey===c.k?(sortDir<0?' ↓':' ↑'):'')+'</th>').join('')+'</tr></thead>';
+    const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
+    const allOn=sel&&rows.slice(0,limit).length&&rows.slice(0,limit).every(r=>sel.has(r.id));
+    const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
+    const head='<thead><tr><th>'+(sel?'<input type="checkbox" class="ma-ck" data-ck="*"'+(allOn?' checked':'')+' aria-label="보이는 줄 모두 고르기">':'')+L+'</th>'+COLS.map(c=>'<th data-k="'+c.k+'"'+(sortKey===c.k?' class="is-sort"':'')+'>'+c.l+(sortKey===c.k?(sortDir<0?' ↓':' ↑'):'')+'</th>').join('')+'</tr></thead>';
     const totRow='<tr class="is-total"><td>합계</td>'+COLS.map(c=>cell(c,tot)).join('')+'</tr>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
       const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
-      return '<tr><td><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x)).join('')+'</tr>';
+      return '<tr'+(sel&&sel.has(r.id)?' class="is-sel"':'')+'><td><div class="ma-name">'+ck(r)+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x)).join('')+'</tr>';
     }).join('');
+    $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+totRow+body+'</tbody></table></div>'+more;
   }
 
@@ -18205,7 +18227,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     root.querySelector('[data-ma-pane="list"]').dataset.on=tab!=='daily'?'1':'';
     $('maRange').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
   }
-  function go(t,d){ tab=t; keep('baroyam_perf_tab',t); drill=d||{}; limit=48; q=''; $('maSearch').value=''; paint(); }
+  function go(t){ tab=t; keep('baroyam_perf_tab',t); limit=48; q=''; $('maSearch').value=''; paint(); }
   perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf; if(v==='detail'){ if(tab==='daily') go('campaign'); } else go(v); }));
 
   function paint(){
@@ -18242,14 +18264,26 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const th=e.target.closest('th[data-k]');
     if(th){ const k=th.dataset.k; if(sortKey===k) sortDir=-sortDir; else { sortKey=k; sortDir=-1; } paintList(acc()); return; }
     if(e.target.closest('.ma-more')){ limit+=48; paintList(acc()); return; }
+    const box=e.target.closest('.ma-ck');
+    if(box){
+      const set=tab==='campaign'?selC:selS, id=box.dataset.ck;
+      if(id==='*'){ const ids=($('maTable').dataset.ids||'').split(',').filter(Boolean); if(box.checked) ids.forEach(x=>set.add(x)); else ids.forEach(x=>set.delete(x)); }
+      else if(box.checked) set.add(id); else set.delete(id);
+      if(tab==='campaign') selS.clear();   /* 캠페인을 다시 고르면 그 아래 세트 고름은 풀린다 */
+      paintLevelKpis(acc()); paintList(acc()); return;
+    }
     const d=e.target.closest('.ma-drill');
     if(!d) return;
-    if(tab==='campaign') go('adset',{c:d.dataset.id});
-    else { const s=(acc().adsets||[]).find(x=>x.id===d.dataset.id); go('asset',{c:s&&s.c,s:d.dataset.id}); }
+    /* 이름 누르기 · 그것 하나만 골라 다음 단계로 */
+    if(tab==='campaign'){ selC.clear(); selC.add(d.dataset.id); selS.clear(); go('adset'); }
+    else { selS.clear(); selS.add(d.dataset.id); go('asset'); }
   });
   $('maCrumb').addEventListener('click',e=>{
-    const b=e.target.closest('[data-go]'); if(!b) return;
-    if(b.dataset.go==='all') go('campaign'); else go('adset',{c:drill.c});
+    const b=e.target.closest('[data-clear]'); if(!b) return;
+    if(b.dataset.clear==='c'){ selC.clear(); selS.clear(); }
+    else if(b.dataset.clear==='s') selS.clear();
+    else clearSel();
+    paintLevelKpis(acc()); paintList(acc());
   });
   let rz=0;
   window.addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{ const a=acc(); if(a&&tab==='daily'&&$('view-perf').style.display!=='none') paintChart(a); },150); });
