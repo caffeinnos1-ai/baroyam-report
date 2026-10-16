@@ -2746,6 +2746,9 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-col{flex:none;width:300px;display:flex;flex-direction:column;gap:8px}
   .ma-pv{position:relative;width:100%;aspect-ratio:9/16;max-height:62vh;border-radius:14px;overflow:hidden;background:var(--chip-flat)}
   .ma-pv img{width:100%;height:100%;object-fit:cover;display:block}
+  .ma-vload{position:absolute;left:12px;right:12px;bottom:12px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--paper) 90%,transparent);font-size:12px;color:var(--ink);display:flex;flex-direction:column;gap:6px}
+  .ma-vload i{display:block;height:4px;border-radius:99px;background:var(--line);overflow:hidden}
+  .ma-vload b{display:block;height:100%;width:0;background:var(--btn);transition:width .2s}
   .ma-pv iframe,.ma-pv video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
   .ma-pv .ty{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:color-mix(in srgb,var(--paper) 88%,transparent);color:var(--ink)}
   .ma-pv-src{font-size:12px;color:var(--btn);text-decoration:none;text-align:center}
@@ -18822,18 +18825,52 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
 
   /* 연동한 드라이브 영상을 팝업 안 <video> 로 바로 재생(소리 끈 자동 재생 · 사용자 요청 "들어가면 바로 자동재생") ·
-     드라이브 미리보기(iframe)는 자동 재생이 안 되고 느려서, 회사 구글 권한(baroyamGoogleToken · drive)으로 파일을 직접 흘려받는다 ·
-     권한이 없거나 못 읽으면 드라이브 미리보기로 바꾼다 */
+     주소 뒤에 권한 열쇠를 붙이는 방식(?access_token=)은 구글이 받지 않아 드라이브 미리보기로 넘어가 느렸다(10-16) →
+     열쇠를 머리글(Authorization)로 보내 파일을 받아 이 창 메모리에 담고(blob) 그 주소로 재생한다 ·
+     받은 영상은 최근 8개까지 기억해 다시 열면 바로 · 소재 줄에 마우스를 올리면 미리 받기 시작 · 못 받으면 드라이브 미리보기 */
+  const VID=new Map();   /* 드라이브 파일 id → {p:Promise<blob 주소>, at, pct} */
+  function fetchVideo(id,onPct){
+    const hit=VID.get(id);
+    if(hit){ hit.at=Date.now(); if(onPct) hit.cb.add(onPct); return hit.p; }
+    const ent={at:Date.now(),pct:0,cb:new Set(onPct?[onPct]:[])};
+    ent.p=(async()=>{
+      const G=window.baroyamGoogleToken;
+      let tok=(G&&G.saved&&G.saved())||'';
+      if(!tok&&G) tok=await G();
+      if(!tok) throw new Error('구글 권한 없음');
+      const url='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&supportsAllDrives=true';
+      let r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
+      if(r.status===401&&G){ try{ localStorage.removeItem('baroyam_gtoken_v1'); }catch(e){} tok=await G(); r=await fetch(url,{headers:{Authorization:'Bearer '+tok}}); }
+      if(!r.ok) throw new Error('드라이브 '+r.status);
+      const total=+r.headers.get('content-length')||0, type=r.headers.get('content-type')||'video/mp4';
+      let blob;
+      if(r.body&&total){
+        const rd=r.body.getReader(), parts=[]; let got=0;
+        for(;;){ const {done,value}=await rd.read(); if(done) break; parts.push(value); got+=value.length; ent.pct=Math.round(got/total*100); ent.cb.forEach(f=>f(ent.pct)); }
+        blob=new Blob(parts,{type});
+      }else blob=await r.blob();
+      /* 오래된 것부터 8개만 남긴다(메모리) */
+      if(VID.size>8){ const old=[...VID.entries()].filter(([k])=>k!==id).sort((x,y)=>x[1].at-y[1].at)[0]; if(old){ old[1].p.then(u=>URL.revokeObjectURL(u)).catch(()=>{}); VID.delete(old[0]); } }
+      return URL.createObjectURL(blob);
+    })();
+    ent.p.catch(()=>{ VID.delete(id); });
+    VID.set(id,ent);
+    return ent.p;
+  }
   async function playVideo(){
     const v=cardBox&&cardBox.querySelector('video.ma-vid'); if(!v) return;
-    const id=v.dataset.drive, G=window.baroyamGoogleToken;
-    const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); };
-    let tok='';
-    try{ tok=(G&&G.saved&&G.saved())||(G?await G():''); }catch(e){ tok=''; }
-    if(!tok||!v.isConnected){ fallback(); return; }
-    v.addEventListener('error',fallback,{once:true});
-    v.src='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&supportsAllDrives=true&access_token='+encodeURIComponent(tok);
-    const p=v.play(); if(p&&p.catch) p.catch(()=>{});
+    const id=v.dataset.drive, wrap=v.parentElement;
+    const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); const b=wrap.querySelector('.ma-vload'); if(b) b.remove(); };
+    let bar=wrap.querySelector('.ma-vload');
+    if(!bar){ bar=document.createElement('div'); bar.className='ma-vload'; bar.innerHTML='<span>영상 불러오는 중</span><i><b></b></i>'; wrap.appendChild(bar); }
+    const pct=n=>{ if(!bar.isConnected) return; bar.querySelector('span').textContent='영상 불러오는 중 '+n+'%'; bar.querySelector('b').style.width=n+'%'; };
+    const ent=VID.get(id); if(ent&&ent.pct) pct(ent.pct);
+    try{
+      const u=await fetchVideo(id,pct);
+      if(!v.isConnected) return;
+      v.src=u; bar.remove();
+      const p=v.play(); if(p&&p.catch) p.catch(()=>{});
+    }catch(e){ console.warn('[메타광고] 영상 직접 받기 실패 · 드라이브 미리보기로',e&&e.message); fallback(); }
   }
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
   let cardHtml=()=>'', cardBox=null;
@@ -18928,6 +18965,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     window.UI.menu($('maSortPick'),SORTS,sortKey,v=>{ sortKey=v; sortDir=-1; limit=48; paintList(acc()); });
   });
   $('maDays').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-d]'); if(!tr) return; pickDay(tr.dataset.d,e.shiftKey); paintDaily(acc()); window.scrollTo({top:root.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'}); });
+  /* 소재 줄에 마우스를 올리면 연동한 영상을 미리 받기 시작(누르는 순간 이미 받고 있게) */
+  $('maTable').addEventListener('mouseover',e=>{
+    const tr=e.target.closest('tr.ma-asset-row'); if(!tr) return;
+    const l=links[tr.dataset.asset]; if(!l||!l.drive||VID.has(l.drive)) return;
+    const G=window.baroyamGoogleToken; if(!(G&&G.saved&&G.saved())) return;   /* 권한 창은 누를 때만 */
+    fetchVideo(l.drive).catch(()=>{});
+  });
   $('maTable').addEventListener('click',e=>{
     const th=e.target.closest('th[data-k]');
     if(th){ const k=th.dataset.k; if(sortKey===k) sortDir=-sortDir; else { sortKey=k; sortDir=-1; } paintList(acc()); return; }
