@@ -18470,7 +18470,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         const l=links[id]||{};
         if(b.dataset.link==='prod'){
           const P=profitList||[];
-          if(!P.length){ window.baroyamAsk&&window.baroyamAsk('마진표 상품이 없습니다','손익·마진 관리 › 마진표(자사몰)에 상품을 먼저 등록하고, 광고상태를 켠 뒤 대표 ROAS 를 골라 주세요.'); return; }
+          if(!P.length){ window.baroyamAsk&&window.baroyamAsk('자사몰 마진표 상품이 없습니다','손익·마진 관리 › 마진표 아래 자사몰 탭에 상품을 먼저 등록하고, 광고상태를 켠 뒤 대표 ROAS 를 골라 주세요.'); return; }
           const fit=q=>x.brand&&(q.brand===x.brand||String(q.name).includes(x.brand));
           const opts=(l.prod?[{value:'__off',label:'연동 풀기'}]:[]).concat(P.slice().sort((p,q)=>(fit(q)-fit(p))||(q.ad-p.ad)).map(q=>({value:q.id,label:q.name,sub:(fit(q)?'추천 · ':'')+(q.ad?'광고 중 · ':'')+'대표 ROAS '+(q.roas!=null?Math.round(q.roas*100)+'%':'–')})));
           window.UI.menu(b,opts,l.prod||'',async v=>{ const q=P.find(z=>z.id===v); await saveLink(id,v==='__off'?{prod:null,prodName:null}:{prod:v,prodName:q&&q.name}); paintLinks(); });
@@ -21579,7 +21579,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   window.baroyamProfit={
     show(p){ pane=p||'summary'; paint(); refresh(); },
     _calc:calc,
-    /* 퍼포먼스마케팅 연동 리스트 · 마진표 상품과 대표 ROAS · 자사몰 판매처 상품만(없으면 전부) · 광고 중인 상품이 앞 */
+    /* 퍼포먼스마케팅 연동 리스트 · 마진표 상품과 대표 ROAS · 자사몰 판매처 상품만(사용자 요청 · 다른 판매처는 넣지 않음) · 광고 중인 상품이 앞 */
     async repList(){
       if(!COST.loaded) await COST.load();
       if(!CALC.loaded) await CALC.load();
@@ -21587,7 +21587,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       migrate();
       const chans=COST.data.chans, prods=live(B().prods);
       const self=prods.filter(g=>{ const r=allRows().find(x=>x.g===g.id); const ch=chans[g.chan||(r&&r.chan)]; return ch&&/자사몰/.test(ch.name||''); });
-      return (self.length?self:prods).map(g=>{ const R=repOf(g); return {id:g.id,name:g.name||'상품',brand:prodBrand(g),ad:!!g.ad,roas:R.roas,auto:R.auto}; })
+      return self.map(g=>{ const R=repOf(g); return {id:g.id,name:g.name||'상품',brand:prodBrand(g),ad:!!g.ad,roas:R.roas,auto:R.auto}; })
         .sort((a,b)=>(b.ad-a.ad)||String(a.name).localeCompare(String(b.name),'ko'));
     },
   };
