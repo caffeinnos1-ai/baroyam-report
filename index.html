@@ -18253,9 +18253,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 브랜드 · 캠페인 이름 '260825_홀떡피자_PHABO' 의 둘째 토막(날짜 뒤) · 모양이 다르면 '기타' */
   function brandMap(a){
     const m={};
-    (a.campaigns||[]).forEach(c=>{ const t=String(c.name||'').split('_'); m[c.id]=(/^\d{6}$/.test(t[0])&&t[1]?t[1]:t.length>1&&t[0]?t[0]:'기타').trim()||'기타'; });
+    (a.campaigns||[]).forEach(c=>{
+      const t=String(c.name||'').split('_');
+      let b=(/^\d{6}$/.test(t[0])&&t[1]?t[1]:t.length>1&&t[0]?t[0]:'기타').trim()||'기타';
+      /* 같은 브랜드를 두 번 이어 쓴 이름(아미아미 → 아미)과 따로 정한 별칭은 하나로 묶는다(사용자 요청) */
+      const h=b.length/2; if(b.length%2===0&&h>=1&&b.slice(0,h)===b.slice(h)) b=b.slice(0,h);
+      m[c.id]=BRAND_ALIAS[b]||b;
+    });
     return m;
   }
+  const BRAND_ALIAS={'아미아미':'아미'};   /* 이름 → 묶을 브랜드 · 더 생기면 한 줄씩 */
   const SORTS=[{value:'spend',label:'지출 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'구매 전환값 많은 순'}];
   perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf; if(v==='detail'){ if(tab==='daily') go('campaign'); } else go(v); }));
 
