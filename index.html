@@ -18282,7 +18282,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     const stale=Date.now()-Date.parse(data.updatedAt||0)>12*3600e3;
     const nm=String(a.name||a.id).replace(/\s*광고\s*계정$/,'');
-    $('maAcctName').textContent=nm; $('maAvatar').textContent=nm.slice(0,1).toUpperCase()||'M';
+    $('maAcctName').textContent=nm;
+    /* 아이콘 · 바로얌 로고(사이드바 .sb-logo 의 그림을 빌려 씀 · 큰 base64 를 두 번 넣지 않게) · 없으면 첫 글자 */
+    const logo=document.querySelector('.sb-logo'), av=$('maAvatar');
+    if(logo&&logo.src){ if(av.tagName!=='IMG') av.outerHTML='<img id="maAvatar" src="'+logo.src+'" alt="바로얌">'; }
+    else av.textContent=nm.slice(0,1).toUpperCase()||'M';
     $('maState').innerHTML='<span class="ip-live'+(stale?' is-off':'')+'"></span>메타 연결됨 · '+whenTxt(data.updatedAt)+' 기준'
       +(stale?' · 12시간 넘게 새 값이 없습니다':'');
     /* 통화·환산 알약은 사용자 요청으로 빼고, 달러 계정이면 아래 줄에 오늘 환율만(소수점 없이 · 서버가 받은 data.fx 의 오늘 또는 앞 영업일 값) */
