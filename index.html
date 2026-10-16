@@ -2588,7 +2588,14 @@ window.BAROYAM_FONT=(function(){
   /* 소재 목록 · 줄을 누르면 아래에 카드 */
   .ma-table tr.ma-asset-row{cursor:pointer}
   .ma-table tr.ma-asset-row.is-open td{background:color-mix(in srgb,var(--btn-soft) 60%,transparent)}
-  .ma-table td.ma-cardcell:first-child{max-width:none;min-width:0;padding:14px 12px 18px;background:color-mix(in srgb,var(--btn-soft) 25%,transparent);white-space:normal}
+  .settings-panel.ma-dialog{max-width:860px;height:auto;max-height:90vh}
+  .ma-dialog-body{flex:1;min-height:0;overflow-y:auto;padding:20px 22px}
+  .ma-dialog #maCardT{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0;min-width:0}
+  .ma-asset-mets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .ma-asset-mets div{display:flex;flex-direction:column;gap:2px}
+  .ma-asset-mets small{font-size:11.5px;color:var(--mute)}
+  .ma-asset-mets b{font-size:14px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  @media (max-width:640px){ .ma-one{grid-template-columns:1fr;flex:1} .ma-asset-mets{grid-template-columns:repeat(2,minmax(0,1fr))} }
   .ma-asset-open{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
   .ma-one{grid-template-columns:260px;flex:none}
   .ma-asset-ads{flex:1;min-width:240px}
@@ -17926,7 +17933,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let data=null, loaded=false, loading=false, failed=false;
   let accId=store('baroyam_ma_acc')||'', range=store('baroyam_ma_range')||'last_7d', mode=store('baroyam_ma_mode')||'card';
   let tab=store('baroyam_perf_tab')||'daily', day=null, dayFrom=null;   /* 데일리 성과 · 고른 기간 dayFrom ~ day(하루면 둘이 같음) */
-  let openAsset=null;   /* 소재 목록에서 눌러 카드를 펼친 줄 */
+  let shownRows={};   /* 지금 표에 그린 소재 줄(id → 줄) · 누르면 팝업창으로 */
   let show='on', brand='', sortKey='spend', sortDir=-1, limit=48;   /* brand = 캠페인 이름에서 뽑은 브랜드('' = 전체) */
   const selC=new Set(), selS=new Set();   /* 고른 캠페인 · 광고 세트(체크) · 계정을 바꾸면 비운다 */
   const clearSel=()=>{ selC.clear(); selS.clear(); };
@@ -18245,11 +18252,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           +'<div class="ip-mets"><div><b>'+int(r.x.buy)+'</b>구매</div><div><b>'+(r.x.cpa==null?'-':cur&&cur!=='KRW'||r.x.cpa>=1e4?short(r.x.cpa,cur):int(r.x.cpa))+'</b>CPA</div>'
           +'<div><b>'+(r.x.ctr==null?'-':r.x.ctr.toFixed(1)+'%')+'</b>CTR</div><div><b>'+int(r.x.clicks)+'</b>클릭</div></div></div></div>';
     };
-    /* 소재 줄을 누르면 바로 아래에 카드 + 이 소재를 쓴 광고 */
-    const openRow=r=>'<tr class="ma-card-row"><td class="ma-cardcell" colspan="'+(1+COLS.length)+'"><div class="ma-asset-open">'
-      +'<div class="ip-posts ma-posts ma-one">'+cardOf(r)+'</div>'
-      +'<div class="ma-asset-ads"><h4>이 소재를 쓴 광고 '+r.ads.length+'개</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul></div>'
-      +'</div></td></tr>';
+    /* 소재 줄을 누르면 팝업창(사용자 요청) · 카드 + 이 소재를 쓴 광고 */
+    shownRows={};
+    cardHtml=r=>'<div class="ma-asset-open"><div class="ip-posts ma-posts ma-one">'+cardOf(r)+'</div>'
+      +'<div class="ma-asset-ads"><h4>이 소재를 쓴 광고 '+r.ads.length+'개 · '+RANGE_TXT[range]+'</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul>'
+      +'<div class="ma-asset-mets">'+[['지출',money(r.x.spend,cur)],['구매 전환값',money(r.x.rev,cur)],['ROAS',pct(r.x.roas)],['구매',int(r.x.buy)+'건'],['CPA',r.x.cpa==null?'-':money(r.x.cpa,cur)],['CTR',r.x.ctr==null?'-':r.x.ctr.toFixed(2)+'%'],['CPM',r.x.cpm==null?'-':money(r.x.cpm,cur)],['노출',int(r.x.imp)]]
+        .map(m=>'<div><small>'+m[0]+'</small><b>'+m[1]+'</b></div>').join('')+'</div></div></div>';
     const tot=derive(addUp(rows.map(r=>r.m)));
     const cell=(c,x)=>{ const v=x[c.k]; let cls=v==null||v===0?' class="is-zero"':''; if(c.k==='roas'&&v!=null&&v<100&&x.spend>0) cls=' class="is-low"'; return '<td'+cls+'>'+c.f(v,cur)+'</td>'; };
     const drillable=tab!=='asset';
@@ -18261,9 +18269,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
       const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
-      const isA=tab==='asset', on=isA&&openAsset===r.id;
-      const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':'',on?'is-open':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 '+(on?'접기':'보기')+'"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x)).join('')+'</tr>'+(on?openRow(r):'');
+      const isA=tab==='asset';
+      if(isA) shownRows[r.id]=r;
+      const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x)).join('')+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+totRow+body+'</tbody></table></div>'+more;
@@ -18282,6 +18291,22 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('maRange').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
   }
   function go(t){ tab=t; keep('baroyam_perf_tab',t); limit=48; paint(); }
+  /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
+  let cardHtml=()=>'', cardBox=null;
+  function openCard(r){
+    if(!cardBox){
+      cardBox=document.createElement('div');
+      cardBox.className='settings-overlay'; cardBox.hidden=true;
+      cardBox.innerHTML='<div class="settings-panel ma-dialog" role="dialog" aria-modal="true" aria-labelledby="maCardT"><div class="settings-head"><h2 id="maCardT"></h2>'
+        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="ma-dialog-body"></div></div>';
+      document.body.appendChild(cardBox);
+      cardBox.addEventListener('click',e=>{ if(e.target===cardBox||e.target.closest('.settings-close')) cardBox.hidden=true; });
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) cardBox.hidden=true; });
+    }
+    cardBox.querySelector('#maCardT').textContent=(r.kind==='video'?'영상':r.kind==='image'?'이미지':'')+' 소재 · '+r.name;
+    cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r);
+    cardBox.hidden=false;
+  }
   /* 브랜드 · 캠페인 이름 '260825_홀떡피자_PHABO' 의 둘째 토막(날짜 뒤) · 모양이 다르면 '기타' */
   function brandMap(a){
     const m={};
@@ -18352,7 +18377,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       paintLevelKpis(acc()); paintList(acc()); return;
     }
     const ar=e.target.closest('tr.ma-asset-row');
-    if(ar){ openAsset=openAsset===ar.dataset.asset?null:ar.dataset.asset; paintList(acc()); return; }
+    if(ar){ const r=shownRows[ar.dataset.asset]; if(r) openCard(r); return; }
     const d=e.target.closest('.ma-drill');
     if(!d) return;
     /* 이름 누르기 · 그것 하나만 골라 다음 단계로 */
