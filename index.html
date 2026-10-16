@@ -18819,6 +18819,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&linkBox&&!linkBox.hidden&&(!scriptBox||scriptBox.hidden)) shut(); });
     }
     linkBox.hidden=false;
+    loadDrive();   /* 드라이브 영상 목록은 창을 열 때 미리 읽어 둔다(영상 고르기를 누를 때 기다리지 않게) */
     linkBox.querySelector('.ma-link-list').innerHTML='<div class="ma-empty">불러오는 중…</div>';
     await Promise.all([loadProfit(),loadLinks()]);
     paintLinks();
