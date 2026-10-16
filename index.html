@@ -10244,6 +10244,7 @@ window.BAROYAM_FONT=(function(){
                   <button class="ui-tab" data-value="last_7d">7일</button>
                   <button class="ui-tab" data-value="last_30d">30일</button>
                 </div>
+                <button type="button" id="maRangePick" hidden></button>
                 <button type="button" id="maDay" hidden></button>
               </div>
             </div>
@@ -18126,11 +18127,40 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let show='on', brand='', sortKey='spend', sortDir=-1, limit=48;   /* brand = 캠페인 이름에서 뽑은 브랜드('' = 전체) */
   const selC=new Set(), selS=new Set();   /* 고른 캠페인 · 광고 세트(체크) · 계정을 바꾸면 비운다 */
   const clearSel=()=>{ selC.clear(); selS.clear(); };
+  /* 범위 선택(정밀성과) · range='custom' + custom={start,end} · 서버가 저장한 광고×하루 값(adDaily · 최근 60일)을 더해 기간 성과를 만든다 */
+  const AD_DAYS=60;
+  let custom=null;
+  try{ const c=JSON.parse(store('baroyam_ma_custom')||'null'); if(c&&c.start&&c.end) custom=c; }catch(e){}
+  const mdTxt=d=>(+d.slice(5,7))+'.'+(+d.slice(8));
+  function setCustomText(){
+    if(!custom) return;
+    let n=0; for(let d=custom.start;d<=custom.end;d=dayAdd(d,1)) n++;
+    RANGE_TXT.custom=custom.start===custom.end?mdTxt(custom.start):mdTxt(custom.start)+'~'+mdTxt(custom.end);
+    PREV_TXT.custom=n===1?'전날보다':'직전 '+n+'일보다';
+  }
+  if(range==='custom'&&custom) setCustomText();
   if(!RANGE_TXT[range]) range='last_7d';
+  function ensureCustom(a){
+    if(!a||range!=='custom'||!custom) return;
+    const key=custom.start+'~'+custom.end+'@'+(data&&data.updatedAt);
+    if(a._customKey===key) return;
+    const D=a.adDaily||{}, map={}, o={campaign:{},adset:{},ad:{},total:{}};
+    (a.ads||[]).forEach(x=>{ map[x.id]=x; });
+    const add=(t,v)=>{ t.spend=(t.spend||0)+v[0]; t.rev=(t.rev||0)+v[1]; t.buy=(t.buy||0)+v[2]; t.clicks=(t.clicks||0)+v[3]; t.imp=(t.imp||0)+v[4]; };
+    for(let d=custom.start;d<=custom.end;d=dayAdd(d,1)){
+      const day=D[d]||{};
+      Object.keys(day).forEach(id=>{
+        const v=day[id], x=map[id];
+        add(o.ad[id]=o.ad[id]||{},v); add(o.total,v);
+        if(x){ add(o.campaign[x.c]=o.campaign[x.c]||{},v); add(o.adset[x.s]=o.adset[x.s]||{},v); }
+      });
+    }
+    a.insights=a.insights||{}; a.insights.custom=o; a._customKey=key;
+  }
   if(tab!=='daily'&&!LEVEL_TXT[tab]) tab='daily';
 
   /* ---------- 숫자 ---------- */
-  const acc=()=>data&&data.accounts&&(data.accounts.find(a=>a.id===accId)||data.accounts[0]);
+  const acc=()=>{ const a=data&&data.accounts&&(data.accounts.find(x=>x.id===accId)||data.accounts[0]); ensureCustom(a); return a; };
   /* format 2 부터 서버가 금액을 모두 원화로 저장한다 · 달러 계정은 광고비가 나간 날의 환율로 하루씩 바꿔 더함
      (사용자 결정: 회사 숫자와 맞추고·직원이 읽기 쉽고·실제로 나간 돈으로 보기 · 원래 달러는 성과의 o:{spend,rev}) */
   const inKrw=()=>!!(data&&data.format>=2);
@@ -18174,6 +18204,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function prevOf(a){
     if(range==='today'||!a.daily) return null;
     const t=kst(), D=a.daily;
+    if(range==='custom'){
+      if(!custom) return null;
+      const n=[]; for(let d=custom.start;d<=custom.end;d=dayAdd(d,1)) n.push(d);
+      return addUp(n.map(d=>D[dayAdd(d,-n.length)]));
+    }
     const span={yesterday:[2,2],last_7d:[14,8],last_30d:[60,31]}[range];
     const days=[]; for(let i=span[0];i>=span[1];i--) days.push(dayAdd(t,-i));
     return addUp(days.map(d=>D[d]));
@@ -18501,7 +18536,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     root.querySelector('[data-ma-pane="daily"]').dataset.on=tab==='daily'?'1':'';
     root.querySelector('[data-ma-pane="level"]').dataset.on=tab!=='daily'?'1':'';
     root.querySelector('[data-ma-pane="list"]').dataset.on=tab!=='daily'?'1':'';
-    $('maRange').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
+    $('maRange').hidden=tab==='daily'||!acc(); $('maRangePick').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
   }
   function go(t){ tab=t; keep('baroyam_perf_tab',t); limit=48; paint(); }
   const LINK_KEY='meta_links_v1';
@@ -18784,7 +18819,21 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
 
   /* ---------- 움직임 ---------- */
-  tabsOf('maRange',v=>{ range=v; keep('baroyam_ma_range',v); limit=48; paint(); }).set(range);
+  tabsOf('maRange',v=>{ range=v; keep('baroyam_ma_range',v); limit=48; if(rangePick) rangePick.set(null); paint(); }).set(range);
+  /* 범위 선택 · 오늘/어제/7일/30일 오른쪽 · 최근 60일 안에서 고른다 */
+  let rangePick=null;
+  if(window.UI&&window.UI.datePicker){
+    rangePick=window.UI.datePicker($('maRangePick'),{mode:'range',max:kst(),min:dayAdd(kst(),-(AD_DAYS-1)),placeholder:'범위 선택',presets:['month','custom'],
+      value:range==='custom'?custom:null,
+      onChange:v=>{
+        if(v&&v.start){ custom={start:v.start,end:v.end||v.start}; range='custom'; setCustomText(); keep('baroyam_ma_custom',JSON.stringify(custom)); }
+        else { range='last_7d'; }
+        keep('baroyam_ma_range',range);
+        $('maRange').querySelectorAll('.ui-tab').forEach(b=>{ const on=b.dataset.value===range; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
+        limit=48; paint();
+      }});
+    $('maRangePick').title='최근 60일 안에서 기간 고르기'; $('maRangePick').classList.add('raised');
+  }
   tabsOf('maMode',v=>{ mode=v; keep('baroyam_ma_mode',v); paintList(acc()); }).set(mode);
   /* 하루를 누르면 그날 · Shift 를 누른 채 누르면 지금 기간에서 그날까지 넓힌다 */
   function pickDay(d,extend){
