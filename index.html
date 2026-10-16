@@ -13869,10 +13869,10 @@ window.CsGuide=(function(){
     {name:'재고현황 수집', cat:'collect', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
     /* caffeinnos-automation/insta_insights.js · 토큰은 VPS instagram_token.json(7일마다 스스로 갱신) */
-    {name:'인스타 성과 수집', cat:'collect', where:'ERP 인스타콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['07:20','13:20','19:20'], record:'인스타 성과 수집',
+    {name:'인스타 성과 수집', cat:'collect', where:'ERP 인스타콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['00:05','07:20','13:20','19:20'], record:'인스타 성과 수집',
      desc:'인스타그램 API 로 계정·게시물 성과(도달·조회·참여·팔로워 증감·팔로워 구성)를 받아 인스타콘텐츠 성과 화면을 채워요. 스토리는 24시간 뒤 사라져서 매시 50분에 따로 받아 쌓아요.', task:'cron'},
     /* caffeinnos-automation/meta_ads.js · 토큰은 VPS .env META_ADS_TOKEN(시스템 사용자 baroyam-ads · ads_read · 만료 없음) */
-    {name:'메타광고 성과 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
+    {name:'메타광고 성과 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['00:00','08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
      desc:'메타 마케팅 API 로 광고계정의 캠페인·광고 세트·광고(소재) 성과(지출·구매·매출·ROAS)를 받아 퍼포먼스마케팅 화면을 채워요.', task:'cron'},
     /* GitHub Actions(baroyam-trend) · 예전 워크플로우 탭에 따로 있던 것 · 예약 실행이라 늦게 도는 일이 잦다 */
     {name:'구글트렌드 수집', cat:'collect', where:'ERP 트렌드분석 · GitHub Actions', days:[0,1,2,3,4,5,6], times:['09:00','12:00','15:00','18:00'], record:'구글트렌드 수집',
