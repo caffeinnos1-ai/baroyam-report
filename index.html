@@ -2390,6 +2390,48 @@ window.BAROYAM_FONT=(function(){
   .ig-cfg-grp p{margin:0;font-size:11.5px;color:var(--mute)}
   .ig-cfg-row{display:grid;grid-template-columns:110px minmax(0,1fr);align-items:center;gap:10px;font-size:12.5px;font-weight:500;color:var(--body)}
   .ig-cfg-row>span{display:flex;align-items:center;min-width:0}
+  /* 인스타콘텐츠 › 업로드 (iu-*) · 왼쪽 새 게시물 | 오른쪽 업로드 목록 */
+  .iu{margin-top:22px;display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:16px;align-items:start}
+  .iu[hidden]{display:none}
+  .iu-new{position:sticky;top:16px}
+  .iu-f{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .iu-f[hidden]{display:none}
+  .iu-f>label{font-size:13px;font-weight:600;color:var(--ink)}
+  .iu-f>label em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute);margin-left:6px}
+  .iu-f>label em.is-over{color:var(--neg)}
+  .iu-row{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:8px}
+  .iu-row[hidden]{display:none}
+  .iu-drop{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border:1.5px dashed var(--line);border-radius:14px;min-height:104px;transition:border-color .15s,background .15s}
+  .iu-drop.is-over{border-color:var(--btn);background:var(--btn-soft)}
+  .iu-files{display:contents}
+  .iu-file{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:var(--chip-flat);flex:none}
+  .iu-file img,.iu-file video{width:100%;height:100%;object-fit:cover;display:block}
+  .iu-file .n{position:absolute;left:5px;top:5px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--paper);color:var(--ink);font-size:11px;font-weight:600;display:grid;place-items:center}
+  .iu-file .k{position:absolute;left:5px;bottom:5px;padding:1px 6px;border-radius:99px;background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--paper);font-size:10.5px}
+  .iu-file .x,.iu-file .mv{position:absolute;top:4px;width:22px;height:22px;border:0;border-radius:99px;background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--paper);font-size:12px;cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .15s}
+  .iu-file .x{right:4px}
+  .iu-file .mv{right:30px}
+  .iu-file:hover .x,.iu-file:hover .mv,.iu-file:focus-within .x{opacity:1}
+  .iu-file.is-bad{outline:2px solid var(--neg);outline-offset:-2px}
+  .iu-file.is-up::after{content:'';position:absolute;inset:0;background:color-mix(in srgb,var(--paper) 55%,transparent)}
+  .iu-add{all:unset;box-sizing:border-box;width:84px;height:84px;border-radius:10px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--mute);font-size:11px;text-align:center;line-height:1.3}
+  .iu-add b{font-size:20px;font-weight:400;color:var(--btn)}
+  .iu-add:hover{border-color:var(--btn);color:var(--ink)}
+  .iu-add[hidden]{display:none}
+  /* 목록 */
+  #iuRows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .iu-item{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px}
+  .iu-item.is-edit{border-color:var(--btn)}
+  .iu-thumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;background:var(--chip-flat)}
+  .iu-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .iu-thumb .c{position:absolute;right:4px;top:4px;padding:0 5px;border-radius:99px;background:var(--paper);font-size:10.5px;font-weight:600;color:var(--ink)}
+  .iu-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .iu-body p{margin:0;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .iu-body small{font-size:11.5px;color:var(--mute);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .iu-body .err{color:var(--neg);white-space:normal}
+  .iu-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .iu-empty{padding:30px 10px;text-align:center;font-size:12.5px;color:var(--mute)}
+  @media (max-width:900px){ .iu{grid-template-columns:minmax(0,1fr)} .iu-new{position:static} }
   /* 인스타콘텐츠 › 성과 (ip-*) · 디자인 초안 · 계정 연결 전에는 예시 데이터로 그린다 */
   .ip{margin-top:22px;display:flex;flex-direction:column;gap:16px}
   .ip[hidden]{display:none}
@@ -10776,7 +10818,40 @@ window.BAROYAM_FONT=(function(){
             </div>
             <div class="pj-mcal" id="igCal"></div>
           </div>
-          <div class="profit-empty" data-insta-pane="upload" hidden>아직 준비 중인 화면입니다.</div>
+          <!-- 업로드 · 파일·캡션·시각을 정해 예약하면 VPS(caffeinnos-automation/insta_publish.js · 2분마다)가 그 시각에 인스타그램 API 로 올린다 ·
+               예약 목록은 app_settings insta_upload_v1, 파일은 brand-files 버킷 insta/up/<id>/ · 예약하면 일정 캘린더(insta_schedule_v1)에도 한 줄 생긴다 -->
+          <div class="iu" data-insta-pane="upload" hidden>
+            <section class="ip-card iu-new">
+              <div class="ip-card-head"><h3 id="iuTitle">새 게시물</h3><button type="button" class="ui-btn ghost sm" id="iuReset" hidden>새로 쓰기</button></div>
+              <div class="iu-f"><label>형식</label><div class="ui-chips" id="iuType"></div><p class="cm-hint" id="iuTypeHint"></p></div>
+              <div class="iu-f"><label>파일</label>
+                <div class="iu-drop" id="iuDrop" tabindex="0">
+                  <div class="iu-files" id="iuFiles"></div>
+                  <button type="button" class="iu-add" id="iuAdd"><b>＋</b><span>파일 고르기<br><small>또는 끌어다 놓기</small></span></button>
+                </div>
+                <input type="file" id="iuInput" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" multiple hidden>
+                <p class="cm-hint" id="iuFileHint"></p></div>
+              <div class="iu-f" id="iuCapBox"><label for="iuCaption">캡션 <em id="iuCapCount"></em></label>
+                <textarea class="ui-field block cm-ta" id="iuCaption" rows="6" maxlength="2200" placeholder="게시물 글 · 해시태그는 30개까지"></textarea></div>
+              <div class="iu-f" id="iuFeedBox"><label class="cm-check" style="margin:0"><input type="checkbox" id="iuShareFeed" checked> 피드에도 보이기(릴스)</label></div>
+              <div class="iu-f"><label>언제 올릴까요</label>
+                <div class="ui-chips" id="iuWhen"><button type="button" class="ui-chip" data-v="later" aria-pressed="true">예약</button><button type="button" class="ui-chip" data-v="now" aria-pressed="false">지금 올리기</button></div>
+                <div class="iu-row" id="iuAt"><button type="button" id="iuDate"></button><button type="button" class="ui-field" id="iuTime" aria-haspopup="listbox"></button></div>
+                <p class="cm-hint" id="iuWhenHint"></p></div>
+              <button type="button" class="ui-btn primary block" id="iuGo">예약하기</button>
+              <p class="cm-msg" id="iuMsg" hidden></p>
+            </section>
+            <section class="ip-card iu-list">
+              <div class="ip-card-head"><h3>업로드 목록</h3>
+                <div class="ui-tabs" id="iuTabs">
+                  <button type="button" class="ui-tab" data-value="wait" aria-selected="true">예약 <span class="n" id="iuNWait">0</span></button>
+                  <button type="button" class="ui-tab" data-value="done" aria-selected="false">올림 <span class="n" id="iuNDone">0</span></button>
+                  <button type="button" class="ui-tab" data-value="fail" aria-selected="false">실패 <span class="n" id="iuNFail">0</span></button>
+                </div></div>
+              <div id="iuRows"></div>
+              <p class="cm-hint">예약 시각이 되면 서버가 2분 안에 올립니다. 인스타그램은 하루 100개까지 올릴 수 있어요.</p>
+            </section>
+          </div>
         </section>
         <!-- 업로드 일정 창 · 새로 만들기·고치기 같이 쓴다 -->
         <div class="settings-overlay" id="igDlg" hidden>
@@ -13030,7 +13105,7 @@ window.CsGuide=(function(){
     ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
     ['profit',1,'손익·마진 관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
-    ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','일정은 업로드 예정 캘린더(insta_schedule_v1 · 프로젝트와 따로) · 바꾼 일정만 얹어 저장하고 지우기는 del 표시만. 성과는 VPS 가 인스타그램 API 로 받아 채운 insta_insights_v1 을 읽기만 합니다(비어 있으면 예시 화면). 업로드는 아직 자리만 있습니다.'],
+    ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','일정은 업로드 예정 캘린더(insta_schedule_v1 · 프로젝트와 따로) · 바꾼 일정만 얹어 저장하고 지우기는 del 표시만. 성과는 VPS 가 인스타그램 API 로 받아 채운 insta_insights_v1 을 읽기만 합니다(비어 있으면 예시 화면). 업로드는 파일을 brand-files 의 insta/up 에 올리고 insta_upload_v1 에 예약을 적으면, VPS(insta_publish.js · 2분마다)가 그 시각에 인스타그램에 올립니다.'],
     ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
     ['drive',1,'드라이브','자산 찾기 · 업로드','구글드라이브 색인(drive_assets_v1)을 브랜드·종류로 거릅니다. 업로드·삭제(휴지통)는 구글 권한으로 드라이브에 직접 합니다.'],
     ['trend',1,'트렌드분석','구글 · 네이버','GitHub Actions 가 모은 trend_google · trend_naver 표를 읽기만 합니다.'],
@@ -17481,6 +17556,289 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     pick(el);
   }));
   window.baroyamInstaOpen=function(){ pick(cur); };
+})();
+
+/* ===== 인스타콘텐츠 › 업로드 =====
+   파일·캡션·시각을 정해 예약하면 파일은 brand-files 버킷 insta/up/<id>/ 에 올리고, app_settings 한 칸
+   insta_upload_v1 = {posts:{id:{id,type,files:[{path,kind,w,h,size}],thumb,caption,shareFeed,when(ISO),state,error,mediaId,permalink,schedId,at,by,del}}} 에 적는다 ·
+   VPS(caffeinnos-automation/insta_publish.js · 2분마다)가 시각이 된 scheduled 를 publishing 으로 잡아 인스타그램 API 로 올리고 done/failed 를 적는다 ·
+   예약하면 일정 캘린더(insta_schedule_v1)에도 "업로드 준비"로 한 줄 만들고(schedId), 올라가면 VPS 가 "업로드 완료"로 바꾼다 ·
+   저장은 saveMerged 로 그 게시물 하나만 얹고, 취소·지우기는 del 만 단다 */
+(function(){
+  const root=document.querySelector('#view-insta .iu');
+  if(!root) return;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const KEY='insta_upload_v1', PLAN_KEY='insta_schedule_v1', BUCKET='brand-files', MAX_MB=50;
+  const DB=()=>window.BAROYAM_DB;
+  const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const me=()=>{ try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const kstDay=ms=>new Date(ms+9*3600e3).toISOString().slice(0,10);
+  const kstTime=ms=>new Date(ms+9*3600e3).toISOString().slice(11,16);
+  const fmt=iso=>{ const t=Date.parse(iso); if(isNaN(t)) return ''; const d=kstDay(t); return (+d.slice(5,7))+'/'+(+d.slice(8))+' '+kstTime(t); };
+  const TYPES=[
+    {k:'feed',l:'피드 사진',hint:'사진 1장 · 비율은 세로 4:5 ~ 가로 1.91:1'},
+    {k:'carousel',l:'캐러셀',hint:'사진·영상 2~10개 · 첫 장 비율로 모두 잘려요'},
+    {k:'reels',l:'릴스',hint:'세로 영상 1개(3초~15분) · 9:16 권장'},
+    {k:'story',l:'스토리',hint:'사진 또는 60초 이하 영상 1개 · 캡션은 붙지 않아요'},
+  ];
+  const TIMES=[]; for(let h=0;h<24;h++) ['00','30'].forEach(m=>TIMES.push({value:String(h).padStart(2,'0')+':'+m,label:(h<12?'오전 ':'오후 ')+((h+11)%12+1)+':'+m}));
+  const STATE={scheduled:['예약됨','is-wait'],publishing:['올리는 중','is-wait'],done:['올림','is-done'],failed:['실패','is-back']};
+
+  const st={posts:{},loaded:false,tab:'wait',edit:null,busy:false,note:null,lastLoad:0};
+  let form=blank();
+  function blank(){
+    const t=Date.now()+90*60e3, slot=Math.ceil(t/(30*60e3))*30*60e3;
+    return {type:'feed',files:[],caption:'',shareFeed:true,when:'later',date:kstDay(slot),time:kstTime(slot)};
+  }
+
+  /* ---------- 저장 ---------- */
+  function msg(t,ok){ const m=$('iuMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-ok',!!ok); }
+  async function patch(key,fn){
+    const db=DB(); if(!db||!db.saveMerged) return null;
+    return db.saveMerged(key,server=>{
+      let s=server; if(typeof s==='string'){ try{ s=JSON.parse(s); }catch(e){ s=null; } }
+      s=JSON.parse(JSON.stringify(s||{})); s.posts=s.posts||{}; fn(s); return s;
+    });
+  }
+  async function savePost(id,f){
+    const next=await patch(KEY,s=>{ const p=s.posts[id]||{id}; f(p); p.at=Date.now(); s.posts[id]=p; });
+    if(!next) throw new Error('저장하지 못했습니다 · 로그인이 풀렸으면 새로고침한 뒤 다시 눌러 주세요');
+    st.posts=next.posts||{}; return true;
+  }
+  // 일정 캘린더의 한 줄 · 일정 화면과 같은 모양({id,title,date,time,type,state,memo,ord,at})
+  async function savePlan(id,f){
+    try{ await patch(PLAN_KEY,s=>{ const p=s.posts[id]||{id}; f(p); p.id=id; p.at=Date.now(); s.posts[id]=p; s._rev=s._rev||1; s.updatedAt=Date.now(); }); }catch(e){ console.warn(e); }
+  }
+  async function load(){
+    const db=DB(); if(!db||!db.loadSetting) return;
+    st.lastLoad=Date.now();
+    try{
+      let v=await db.loadSetting(KEY,true);
+      if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      st.posts=(v&&v.posts)||{}; st.loaded=true; paintList();
+    }catch(e){ console.error(e); }
+  }
+
+  /* ---------- 파일 ---------- */
+  function readImage(file){
+    return new Promise((res,rej)=>{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>res({im,url:u}); im.onerror=()=>rej(new Error('사진을 읽지 못했습니다')); im.src=u; });
+  }
+  function readVideo(file){
+    return new Promise((res,rej)=>{
+      const u=URL.createObjectURL(file), v=document.createElement('video');
+      v.preload='auto'; v.muted=true; v.playsInline=true;
+      v.onloadedmetadata=()=>{ v.currentTime=Math.min(0.5,(v.duration||1)/2); };
+      v.onseeked=()=>res({v,url:u});
+      v.onerror=()=>rej(new Error('영상을 읽지 못했습니다(mp4·mov)'));
+      v.src=u;
+    });
+  }
+  // 인스타는 사진을 JPEG 로만 받는다 · 긴 변 max px 로 줄여 JPEG 로 바꾼다
+  function toJpeg(src,w,h,max,q){
+    const k=Math.min(1,max/Math.max(w,h)), c=document.createElement('canvas');
+    c.width=Math.round(w*k); c.height=Math.round(h*k);
+    const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(src,0,0,c.width,c.height);
+    return new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',q||0.9));
+  }
+  async function addFiles(list){
+    st.note=null;
+    for(const file of list){
+      const f={id:rid(),file,name:file.name,size:file.size};
+      try{
+        if(/^video\//.test(file.type)||/\.(mp4|mov)$/i.test(file.name)){
+          const {v,url}=await readVideo(file);
+          Object.assign(f,{kind:'video',url,w:v.videoWidth,h:v.videoHeight,dur:v.duration,thumb:await toJpeg(v,v.videoWidth,v.videoHeight,480,0.8)});
+        }else if(/^image\//.test(file.type)){
+          const {im,url}=await readImage(file);
+          Object.assign(f,{kind:'image',url,w:im.naturalWidth,h:im.naturalHeight,img:im});
+        }else{ st.note={t:file.name+' · 사진(jpg·png·webp)이나 영상(mp4·mov)만 올릴 수 있어요'}; continue; }
+      }catch(e){ st.note={t:file.name+' · '+e.message}; continue; }
+      form.files.push(f);
+    }
+    // 형식을 아직 안 정했으면 파일에 맞춘다
+    if(!st.edit){
+      const v=form.files.filter(x=>x.kind==='video').length, n=form.files.length;
+      if(n>1&&form.type!=='carousel') form.type='carousel';
+      else if(n===1&&v===1&&form.type==='feed') form.type='reels';
+    }
+    paintForm();
+  }
+  function problems(){
+    const p=[], fs=form.files, t=form.type;
+    const ratioOk=f=>f.kind!=='image'||(f.w/f.h>=0.79&&f.w/f.h<=1.92);
+    fs.forEach(f=>{ f.bad=''; });
+    if(!st.edit){
+      if(!fs.length) p.push('파일을 넣어 주세요');
+      if(t==='feed'){ if(fs.length>1) p.push('피드 사진은 1장만 · 여러 장이면 캐러셀'); if(fs.some(f=>f.kind==='video')) p.push('영상은 릴스로 올려 주세요'); }
+      if(t==='carousel'){ if(fs.length&&fs.length<2) p.push('캐러셀은 2개 이상'); if(fs.length>10) p.push('캐러셀은 10개까지'); }
+      if(t==='reels'){ if(fs.length>1||fs.some(f=>f.kind!=='video')) p.push('릴스는 영상 1개'); fs.forEach(f=>{ if(f.kind==='video'&&(f.dur<3||f.dur>900)){ f.bad='길이'; p.push('릴스는 3초~15분'); } }); }
+      if(t==='story'){ if(fs.length>1) p.push('스토리는 1개'); fs.forEach(f=>{ if(f.kind==='video'&&f.dur>60){ f.bad='길이'; p.push('스토리 영상은 60초 이하'); } }); }
+      if(t==='feed'||t==='carousel') fs.forEach(f=>{ if(!ratioOk(f)){ f.bad='비율'; p.push('사진 비율은 세로 4:5 ~ 가로 1.91:1 사이만 올라가요'); } });
+      fs.forEach(f=>{ if(f.kind==='video'&&f.size>MAX_MB*1048576){ f.bad='크기'; p.push('영상은 '+MAX_MB+'MB 이하만 올릴 수 있어요'); } });
+    }
+    const tags=(form.caption.match(/#[^\s#]+/g)||[]).length;
+    if(tags>30) p.push('해시태그는 30개까지');
+    if(form.when==='later'){ const t0=Date.parse(form.date+'T'+form.time+':00+09:00'); if(!(t0>Date.now()+60e3)) p.push('예약 시각이 지났어요'); }
+    return [...new Set(p)];
+  }
+
+  /* ---------- 그리기 · 새 게시물 ---------- */
+  const datePick=window.UI&&window.UI.datePicker?window.UI.datePicker($('iuDate'),{mode:'single',onChange:v=>{ form.date=v; paintForm(); }}):null;
+  function paintForm(){
+    const ed=st.edit&&st.posts[st.edit];
+    $('iuTitle').textContent=ed?'예약 고치기':'새 게시물';
+    $('iuReset').hidden=!ed&&!form.files.length&&!form.caption;
+    $('iuType').innerHTML=TYPES.map(t=>'<button type="button" class="ui-chip" data-v="'+t.k+'" aria-pressed="'+(form.type===t.k)+'"'+(ed?' disabled':'')+'>'+t.l+'</button>').join('');
+    $('iuTypeHint').textContent=(TYPES.find(t=>t.k===form.type)||{}).hint||'';
+    $('iuFiles').innerHTML=form.files.map((f,i)=>'<div class="iu-file'+(f.bad?' is-bad':'')+'" data-f="'+f.id+'" title="'+esc(f.name+(f.bad?' · '+f.bad+' 확인':''))+'">'+
+      (f.kind==='video'?'<video src="'+f.url+'" muted></video>':'<img src="'+(f.url||'')+'" alt="">')+
+      (form.files.length>1?'<span class="n">'+(i+1)+'</span>':'')+'<span class="k">'+(f.kind==='video'?(f.dur?Math.round(f.dur)+'초':'영상'):(f.w?f.w+'×'+f.h:'사진'))+'</span>'+
+      (ed?'':(i?'<button type="button" class="mv" data-mv="'+i+'" title="앞으로">◀</button>':'')+'<button type="button" class="x" data-x="'+i+'" title="빼기">✕</button>')+'</div>').join('');
+    const max=form.type==='carousel'?10:1;
+    $('iuAdd').hidden=!!ed||form.files.length>=max;
+    $('iuFileHint').textContent=ed?'올린 파일은 바꿀 수 없어요 · 바꾸려면 취소하고 새로 예약하세요':'사진은 JPEG 로 바꿔 올라가요 · 영상은 '+MAX_MB+'MB 이하(mp4·mov)';
+    $('iuCapBox').hidden=form.type==='story';
+    $('iuFeedBox').hidden=form.type!=='reels';
+    $('iuShareFeed').checked=form.shareFeed!==false;
+    if($('iuCaption').value!==form.caption) $('iuCaption').value=form.caption;
+    const tags=(form.caption.match(/#[^\s#]+/g)||[]).length, cc=$('iuCapCount');
+    cc.textContent=form.caption.length+' / 2200자 · 해시태그 '+tags+' / 30'; cc.classList.toggle('is-over',tags>30);
+    $('iuWhen').querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.v===form.when)));
+    $('iuAt').hidden=form.when!=='later';
+    if(datePick) datePick.set(form.date);
+    $('iuTime').innerHTML='<span class="t">'+esc((TIMES.find(x=>x.value===form.time)||{label:form.time}).label)+'</span>';
+    $('iuWhenHint').textContent=form.when==='now'?'누르면 2분 안에 인스타그램에 올라갑니다':'이 시각에 서버가 올리고 일정 캘린더에도 표시돼요';
+    $('iuGo').textContent=ed?'예약 고치기':form.when==='now'?'지금 올리기':'예약하기';
+    const p=problems();
+    $('iuGo').disabled=st.busy||!!p.length;
+    if(st.busy) return;
+    if(p.length&&(form.files.length||st.edit)) msg(p[0]);
+    else msg(st.note?st.note.t:'',st.note&&st.note.ok);
+  }
+
+  /* ---------- 그리기 · 목록 ---------- */
+  const thumbs={};
+  async function thumbUrl(path){
+    if(!path) return '';
+    if(thumbs[path]) return thumbs[path];
+    try{ thumbs[path]=await DB().fileUrl(BUCKET,path,3600); }catch(e){ thumbs[path]=''; }
+    return thumbs[path];
+  }
+  function paintList(){
+    const all=Object.values(st.posts).filter(p=>p&&!p.del);
+    const grp={wait:all.filter(p=>p.state==='scheduled'||p.state==='publishing'),done:all.filter(p=>p.state==='done'),fail:all.filter(p=>p.state==='failed')};
+    $('iuNWait').textContent=grp.wait.length; $('iuNDone').textContent=grp.done.length; $('iuNFail').textContent=grp.fail.length;
+    const rows=grp[st.tab].sort((a,b)=>st.tab==='wait'?Date.parse(a.when)-Date.parse(b.when):Date.parse(b.doneAt||b.when)-Date.parse(a.doneAt||a.when));
+    if(!rows.length){ $('iuRows').innerHTML='<div class="iu-empty">'+({wait:'예약한 게시물이 없어요',done:'아직 올린 게시물이 없어요',fail:'실패한 게시물이 없어요'})[st.tab]+'</div>'; return; }
+    $('iuRows').innerHTML=rows.map(p=>{
+      const s=STATE[p.state]||['',''], t=TYPES.find(x=>x.k===p.type)||TYPES[0], n=(p.files||[]).length;
+      const acts=p.state==='scheduled'?'<button type="button" class="ui-btn sm ghost" data-act="edit">고치기</button><button type="button" class="ui-btn sm ghost" data-act="cancel">취소</button>'
+        :p.state==='done'?(p.permalink?'<a class="ui-btn sm soft" href="'+esc(p.permalink)+'" target="_blank" rel="noopener">인스타에서 보기</a>':'')
+        :p.state==='failed'?'<button type="button" class="ui-btn sm soft" data-act="retry">다시 시도</button><button type="button" class="ui-btn sm ghost" data-act="edit">고치기</button><button type="button" class="ui-btn sm ghost" data-act="cancel">지우기</button>':'';
+      return '<div class="iu-item'+(st.edit===p.id?' is-edit':'')+'" data-id="'+esc(p.id)+'"><div class="iu-thumb"><img data-thumb="'+esc(p.thumb||'')+'" alt="">'+(n>1?'<span class="c">'+n+'</span>':'')+'</div>'+
+        '<div class="iu-body"><p>'+esc(String(p.caption||'').split('\n')[0]||'(캡션 없음)')+'</p>'+
+        '<small><span class="cm-tag '+s[1]+'">'+s[0]+'</span>'+t.l+' · '+(p.state==='done'?fmt(new Date(p.doneAt).toISOString())+' 올림':fmt(p.when)+(p.state==='scheduled'?' 예약':''))+(p.by?' · '+esc(p.by):'')+'</small>'+
+        (p.state==='failed'&&p.error?'<small class="err">'+esc(p.error)+'</small>':'')+'</div><div class="iu-acts">'+acts+'</div></div>';
+    }).join('');
+    $('iuRows').querySelectorAll('img[data-thumb]').forEach(async im=>{ const u=await thumbUrl(im.dataset.thumb); if(u) im.src=u; });
+  }
+
+  /* ---------- 보내기 ---------- */
+  async function submit(){
+    if(problems().length) return;
+    st.busy=true; paintForm();
+    const go=$('iuGo');
+    try{
+      const when=form.when==='now'?new Date().toISOString():new Date(Date.parse(form.date+'T'+form.time+':00+09:00')).toISOString();
+      const title=(form.caption.split('\n')[0]||'').trim().slice(0,40)||'인스타 '+(TYPES.find(t=>t.k===form.type)||{}).l;
+      if(st.edit){
+        const p=st.posts[st.edit]; if(!p) throw new Error('예약을 찾지 못했습니다');
+        if(p.state!=='scheduled'&&p.state!=='failed') throw new Error('이미 올리는 중이라 고칠 수 없어요');
+        const id=st.edit;
+        await savePost(id,x=>{ if(x.state!=='scheduled'&&x.state!=='failed') return; Object.assign(x,{caption:form.type==='story'?'':form.caption,shareFeed:form.shareFeed,when,state:'scheduled',error:''}); });
+        if(p.schedId) await savePlan(p.schedId,s=>Object.assign(s,{title,date:kstDay(Date.parse(when)),time:kstTime(Date.parse(when)),state:'ready',del:null}));
+        st.note={t:'예약을 고쳤어요 · '+fmt(when),ok:true};
+      }else{
+        const id='iu'+rid(), files=[];
+        for(let i=0;i<form.files.length;i++){
+          const f=form.files[i];
+          go.textContent='파일 올리는 중 '+(i+1)+' / '+form.files.length;
+          const blob=f.kind==='image'?await toJpeg(f.img,f.w,f.h,1440,0.9):f.file;
+          const ext=f.kind==='image'?'jpg':(/\.mov$/i.test(f.name)?'mov':'mp4');
+          const path='insta/up/'+id+'/'+(i+1)+'.'+ext;
+          await DB().fileUpload(BUCKET,path,new File([blob],(i+1)+'.'+ext,{type:f.kind==='image'?'image/jpeg':(f.file.type||'video/mp4')}));
+          files.push({path,kind:f.kind,w:f.w,h:f.h,size:blob.size,name:f.name});
+        }
+        const first=form.files[0];
+        const tb=first.kind==='image'?await toJpeg(first.img,first.w,first.h,320,0.8):first.thumb;
+        const thumb='insta/up/'+id+'/thumb.jpg';
+        if(tb) await DB().fileUpload(BUCKET,thumb,new File([tb],'thumb.jpg',{type:'image/jpeg'}));
+        const schedId='ig'+rid();
+        await savePlan(schedId,s=>Object.assign(s,{title,date:kstDay(Date.parse(when)),time:kstTime(Date.parse(when)),type:form.type,state:'ready',memo:'업로드 탭에서 예약 · 시각이 되면 자동으로 올라가요',ord:Date.now()}));
+        await savePost(id,p=>Object.assign(p,{id,type:form.type,files,thumb:tb?thumb:'',caption:form.type==='story'?'':form.caption,
+          shareFeed:form.shareFeed,when,state:'scheduled',schedId,by:me(),created:Date.now()}));
+        st.note={t:form.when==='now'?'2분 안에 인스타그램에 올라가요':'예약했어요 · '+fmt(when),ok:true};
+      }
+      form.files.forEach(f=>{ try{ URL.revokeObjectURL(f.url); }catch(e){} });
+      form=blank(); st.edit=null; st.tab='wait'; if(tabs) tabs.set('wait');
+      paintList();
+    }catch(e){ st.note={t:'올리지 못했습니다 · '+(e&&e.message||e),ok:false}; }
+    finally{ st.busy=false; paintForm(); }
+  }
+
+  /* ---------- 누르기 ---------- */
+  $('iuType').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c||c.disabled) return; form.type=c.dataset.v; st.note=null; paintForm(); });
+  $('iuWhen').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; form.when=c.dataset.v; paintForm(); });
+  $('iuTime').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('iuTime'),TIMES,form.time,v=>{ form.time=v; paintForm(); }); });
+  $('iuCaption').addEventListener('input',()=>{ form.caption=$('iuCaption').value; paintForm(); });
+  $('iuShareFeed').addEventListener('change',()=>{ form.shareFeed=$('iuShareFeed').checked; });
+  $('iuAdd').addEventListener('click',()=>$('iuInput').click());
+  $('iuInput').addEventListener('change',()=>{ addFiles([...$('iuInput').files]); $('iuInput').value=''; });
+  $('iuFiles').addEventListener('click',e=>{
+    const x=e.target.closest('[data-x]'), mv=e.target.closest('[data-mv]');
+    if(x){ const f=form.files.splice(+x.dataset.x,1)[0]; try{ URL.revokeObjectURL(f.url); }catch(err){} paintForm(); }
+    if(mv){ const i=+mv.dataset.mv; [form.files[i-1],form.files[i]]=[form.files[i],form.files[i-1]]; paintForm(); }
+  });
+  const drop=$('iuDrop');
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ if(st.edit) return; e.preventDefault(); drop.classList.add('is-over'); }));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('is-over')));
+  drop.addEventListener('drop',e=>{ if(st.edit) return; e.preventDefault(); addFiles([...e.dataTransfer.files]); });
+  $('iuReset').addEventListener('click',()=>{ form.files.forEach(f=>{ try{ URL.revokeObjectURL(f.url); }catch(e){} }); form=blank(); st.edit=null; st.note=null; paintForm(); paintList(); });
+  $('iuGo').addEventListener('click',submit);
+  let tabs=window.UI&&window.UI.tabs?window.UI.tabs($('iuTabs'),v=>{ st.tab=v; paintList(); }):null;
+  $('iuRows').addEventListener('click',e=>{ act(e).catch(err=>alert(err&&err.message||err)); });
+  async function act(e){
+    const b=e.target.closest('[data-act]'); if(!b) return;
+    const id=b.closest('[data-id]').dataset.id, p=st.posts[id]; if(!p) return;
+    if(b.dataset.act==='edit'){
+      const t=Date.parse(p.when), later=t>Date.now()+60e3, slot=later?t:Math.ceil((Date.now()+90*60e3)/(30*60e3))*30*60e3;
+      form={type:p.type,files:[],caption:p.caption||'',shareFeed:p.shareFeed!==false,when:'later',date:kstDay(slot),time:kstTime(slot)};
+      const u=await thumbUrl(p.thumb); form.files=[{id:'t',url:u,kind:'image',name:'올린 파일',w:0,h:0}];
+      st.edit=id; st.note=null; paintForm(); paintList(); $('iuCaption').focus(); return;
+    }
+    if(b.dataset.act==='cancel'){
+      const ok=await (window.baroyamAsk?window.baroyamAsk(p.state==='failed'?'이 게시물을 지울까요?':'이 예약을 취소할까요?','인스타그램에는 올라가지 않아요. 기록은 서버에 남아요.',p.state==='failed'?'지우기':'예약 취소'):Promise.resolve(confirm('취소할까요?')));
+      if(!ok) return;
+      await savePost(id,x=>{ if(x.state==='publishing'||x.state==='done') return; x.del=Date.now(); x.delBy=me(); });
+      if(p.schedId) await savePlan(p.schedId,s=>{ s.del=Date.now(); });
+      if(st.edit===id){ form=blank(); st.edit=null; paintForm(); }
+      paintList(); return;
+    }
+    if(b.dataset.act==='retry'){
+      await savePost(id,x=>{ if(x.state!=='failed') return; Object.assign(x,{state:'scheduled',when:new Date().toISOString(),error:''}); });
+      st.tab='wait'; if(tabs) tabs.set('wait'); paintList(); return;
+    }
+  }
+
+  /* 업로드 탭을 볼 때 읽고, 보는 동안 20초마다 다시 읽어 서버가 바꾼 상태(올리는 중·올림·실패)를 보인다 */
+  const visible=()=>!root.hidden&&document.getElementById('view-insta').style.display!=='none'&&!document.hidden;
+  setInterval(()=>{ if(visible()&&!st.busy) load(); },20000);
+  const tabBtn=document.querySelector('#instaTabs [data-insta="upload"]');
+  if(tabBtn) tabBtn.addEventListener('click',()=>{ load(); paintForm(); });
+  // 처음 볼 때 · 기억해 둔 탭으로 바로 열려도 읽도록(못 읽었으면 10초마다 다시)
+  setInterval(()=>{ if(!st.loaded&&visible()&&Date.now()-st.lastLoad>10000) load(); },1000);
+  paintForm();
 })();
 
 /* ===== 퍼포먼스마케팅 › 메타광고 성과 =====
