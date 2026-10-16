@@ -2614,6 +2614,30 @@ window.BAROYAM_FONT=(function(){
   .ma-table td.is-under,.ma-link-roas b.is-under,.ma-big b.is-under{color:var(--neg)}
   .ma-table td.is-over,.ma-link-roas b.is-over,.ma-big b.is-over{color:var(--coupang)}
   .ma-link-tabs{margin-bottom:12px}
+  /* 연동 리스트 한 목록 · 이름 | 상품 | 영상 | 대본 · 작게 */
+  .ma-ll-row{display:grid;grid-template-columns:minmax(0,1fr) 230px 230px 110px;gap:10px;align-items:center;min-height:32px}
+  .ma-ll-head{min-height:0;padding:0 4px 8px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:500;color:var(--mute)}
+  .ma-ll-grp{padding:8px 4px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+  .ma-ll-row .ui-field{width:100%;height:28px;font-size:12px;justify-content:space-between;overflow:hidden}
+  .ma-ll-row .ui-field .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-ll-row .ui-field.is-on{border-color:var(--btn)}
+  .ma-ll-name{display:flex;align-items:center;gap:7px;min-width:0}
+  .ma-ll-name b{font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-ll-name .nm{font-size:12px;color:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-ll-row.is-set .ma-ll-name{padding-left:16px}
+  .ma-ll-row.is-asset .ma-ll-name{padding-left:34px}
+  .ma-ll-row.is-asset .ma-ll-name .nm{color:var(--ink)}
+  .ma-ll-inh{font-size:11.5px;color:var(--mute);padding-left:10px}
+  .ma-ll-v{display:flex;align-items:center;gap:4px;min-width:0}
+  .ma-ll-v .ui-field{flex:1;min-width:0}
+  .ma-ll-play{flex:none;width:24px;text-align:center;color:var(--btn);text-decoration:none;font-size:12px}
+  .settings-panel.ma-scriptdlg{max-width:620px;height:min(640px,86vh)}
+  .ma-scriptdlg .ma-dialog-body{display:flex;flex-direction:column;gap:10px}
+  .ma-scriptdlg .ma-script-in{flex:1 1 auto;min-height:280px;height:auto!important;width:100%;padding:12px 14px;font:inherit;font-size:13.5px;line-height:1.7;resize:none;align-items:flex-start}
+  .ma-script-foot{display:flex;align-items:center;gap:8px}
+  .ma-script-foot small{flex:1;font-size:12px;color:var(--mute)}
+  .ma-pv-script{white-space:pre-wrap;font-size:12.5px;line-height:1.7;color:var(--body);max-height:200px;overflow-y:auto;display:block!important}
+  @media (max-width:900px){ .ma-ll-head{display:none} .ma-ll-row{grid-template-columns:1fr 1fr} .ma-ll-row>.ma-ll-name{grid-column:1 / -1} .ma-ll-row>span:empty{display:none} }
   /* 대표 ROAS 탭 · 이름 | 상품 두 칸 · 세트는 들여 쓰고 왼쪽 선 */
   .ma-pl-head{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;padding:0 4px 8px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:500;color:var(--mute)}
   .ma-pl-grp{padding:10px 4px 12px;border-bottom:1px solid var(--line)}
@@ -18358,6 +18382,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+' · '+RANGE_TXT[range]+'</small><b class="'+m[2]+'">'+m[1]+'</b></div>').join('')+'</div>'
         +'<div class="ma-asset-mets">'+small.map(m=>'<div><small>'+m[0]+'</small><b>'+m[1]+'</b></div>').join('')+'</div>'
         +'<div class="ma-pv-link"><small>마진표 상품</small><div>'+prod+'</div></div>'
+        +(l.script?'<div class="ma-pv-link"><small>대본</small><div class="ma-pv-script">'+esc(l.script)+'</div></div>':'')
         +(r.ads.length>1?'<div class="ma-asset-ads"><h4>같은 소재를 쓴 광고 '+r.ads.length+'개</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul></div>':'')
         +'</div></div>';
     };
@@ -18416,7 +18441,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const g=GROUP[kind], now=kind==='asset'?links:kind==='camp'?linkC:linkS;
     const me=(window.BAROYAM_MEMBERS&&window.BAROYAM_MEMBERS.meMember&&(window.BAROYAM_MEMBERS.meMember()||{}).name)||'';
     let one=val?Object.assign({},now[id]||{},val,{at:new Date().toISOString(),by:me}):null;
-    if(one){ Object.keys(one).forEach(k=>{ if(one[k]==null) delete one[k]; }); if(kind==='asset'?!one.drive:!one.prod) one=null; }
+    if(one){ Object.keys(one).forEach(k=>{ if(one[k]==null) delete one[k]; }); if(kind==='asset'?!one.drive&&!one.script:!one.prod) one=null; }
     const r=await db.saveMerged(LINK_KEY,server=>{
       if(typeof server==='string'){ try{ server=JSON.parse(server); }catch(e){ server=null; } }
       const sv=server&&typeof server==='object'?server:{}, part=Object.assign({},sv[g]||{});
@@ -18469,7 +18494,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     catch(e){ console.error(e); driveList=null; }
     return driveList;
   }
-  let linkBox=null, linkShow='on', linkTab='prod';
+  let linkBox=null, linkShow='on';
   const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
   function prodBtn(kind,id,c){
     const own=(kind==='camp'?linkC:linkS)[id], P=own&&(profitList||[]).find(q=>q.id===own.prod);
@@ -18479,51 +18504,76 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     else t='<span class="ph">상품 연동</span>';
     return '<button type="button" class="ui-field sm'+(own&&own.prod?' is-on':'')+'" data-link="prod" data-kind="'+kind+'" data-id="'+esc(id)+'"><span class="t">'+t+'</span>'+CHEV+'</button>';
   }
+  /* 연동 리스트 · 한 목록에서 캠페인 › 세트 › 소재 순으로 상품(대표 ROAS)·영상·대본을 잇는다(사용자 요청 · 탭·썸네일·ROAS 칸 없이 작게) ·
+     상품은 캠페인·세트 줄에서(소재는 세트를 따름) · 영상·대본은 소재 줄에서 */
   function paintLinks(){
     if(!linkBox||linkBox.hidden) return;
     const a=acc(); if(!a) return;
-    const cur=a.currency, I=(a.insights&&a.insights[range])||{}, bOf=brandMap(a);
-    linkBox.querySelectorAll('[data-lt]').forEach(b=>b.classList.toggle('active',b.dataset.lt===linkTab));
-    const chips=(nOn,nAll)=>'<div class="ui-chips"><button type="button" class="ui-chip" data-ls="on" aria-pressed="'+(linkShow==='on')+'">게재 중 <b>'+nOn+'</b></button><button type="button" class="ui-chip" data-ls="all" aria-pressed="'+(linkShow==='all')+'">전체 <b>'+nAll+'</b></button></div>';
-    const roasB=(x,R)=>'<div class="ma-link-roas"><b class="'+roasCls(x.roas,R).trim()+'">'+pct(x.roas)+'</b><small>지출 '+short(x.spend,cur)+'</small></div>';
-    if(linkTab==='prod'){
-      /* 캠페인 줄 + 그 안의 세트 줄 · 세트는 캠페인을 물려받고 따로 이으면 그것이 먼저 */
-      let cs=(a.campaigns||[]).map(c=>({c,x:derive((I.campaign||{})[c.id])}));
-      if(brand) cs=cs.filter(o=>bOf[o.c.id]===brand);
-      const nOn=cs.filter(o=>o.c.st==='ACTIVE').length, nAll=cs.length;
-      if(linkShow==='on') cs=cs.filter(o=>o.c.st==='ACTIVE');
-      cs.sort((p,q)=>q.x.spend-p.x.spend);
-      const n=cs.filter(o=>linkC[o.c.id]&&linkC[o.c.id].prod).length;
-      linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 캠페인 '+cs.length+'개 · 상품 연동 '+n+'개';
-      linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">캠페인에 상품을 이으면 안의 세트가 따라갑니다 · 상품·랜딩이 다른 세트만 따로 이으세요</span>'+chips(nOn,nAll);
-      linkBox.querySelector('.ma-link-list').innerHTML=cs.length?'<div class="ma-pl-head"><span>캠페인 · 세트</span><span>자사몰 마진표 상품 (대표 ROAS)</span></div>'+cs.map(o=>{
-        let sets=(a.adsets||[]).filter(x=>x.c===o.c.id).map(x=>({x,m:derive((I.adset||{})[x.id])}));
-        if(linkShow==='on') sets=sets.filter(z=>z.x.st==='ACTIVE');
-        sets.sort((p,q)=>q.m.spend-p.m.spend);
-        return '<div class="ma-pl-grp"><div class="ma-pl-row is-camp"><div class="ma-pl-name"><span class="ma-st'+stCls(o.c.st)+'"></span><b title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</b><small>세트 '+sets.length+'</small></div>'+prodBtn('camp',o.c.id,o.c.id)+'</div>'
-          +(sets.length?'<div class="ma-pl-sets">'+sets.map(z=>'<div class="ma-pl-row is-set"><div class="ma-pl-name"><span class="ma-st'+stCls(z.x.st)+'"></span><span class="nm" title="'+esc(z.x.name)+'">'+esc(z.x.name)+'</span></div>'+prodBtn('set',z.x.id,o.c.id)+'</div>').join('')+'</div>':'')
-          +'</div>';
-      }).join(''):'<div class="ma-empty">보여 줄 캠페인이 없습니다.</div>';
-      return;
-    }
-    /* 영상 · 소재마다 드라이브 메타광고 영상 */
-    let list=assetList(a);
-    if(brand) list=list.filter(x=>x.brand===brand);
-    const nOn=list.filter(x=>x.st==='ACTIVE').length, nAll=list.length;
-    if(linkShow==='on') list=list.filter(x=>x.st==='ACTIVE');
-    list.sort((p,r)=>r.x.spend-p.x.spend);
-    linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+list.length+'개 · 영상 연동 '+list.filter(x=>links[x.id]&&links[x.id].drive).length+'개';
-    linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">'+RANGE_TXT[range]+(brand?' · '+esc(brand):'')+' · 바로얌 드라이브 메타광고 영상 · 캠페인·세트·소재 이름이 가장 비슷한 영상을 추천합니다</span>'+chips(nOn,nAll);
-    linkBox.querySelector('.ma-link-list').innerHTML=list.length?list.map(x=>{
-      const l=links[x.id]||{}, R=repFor(x.c,x.s);
-      return '<div class="ma-link-row is-asset" data-id="'+esc(x.id)+'">'
-        +(x.thumb?'<img src="'+esc(x.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>')
-        +'<div class="ma-link-name"><b title="'+esc(x.name)+'"><span class="ma-st'+stCls(x.st)+'"></span>'+esc(x.name)+'</b><small>'+esc((x.camps[0]||'')+(x.sets[0]?' › '+x.sets[0]:''))+'</small></div>'
-        +roasB(x.x,R)
-        +'<div class="ma-link-cell"><small>드라이브 영상</small><div class="ma-link-v"><button type="button" class="ui-field sm" data-link="drive" data-id="'+esc(x.id)+'"><span class="t">'+(l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 연동</span>')+'</span>'+CHEV+'</button>'
-          +(l.drive?'<a class="ui-btn sm ghost icon" href="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/view" target="_blank" rel="noopener" title="드라이브에서 영상 열기" aria-label="영상 열기">▶</a>':'')+'</div></div>'
+    const I=(a.insights&&a.insights[range])||{}, bOf=brandMap(a);
+    let cs=(a.campaigns||[]).map(c=>({c,x:derive((I.campaign||{})[c.id])}));
+    if(brand) cs=cs.filter(o=>bOf[o.c.id]===brand);
+    const nOn=cs.filter(o=>o.c.st==='ACTIVE').length, nAll=cs.length;
+    if(linkShow==='on') cs=cs.filter(o=>o.c.st==='ACTIVE');
+    cs.sort((p,q)=>q.x.spend-p.x.spend);
+    /* 소재는 지출이 가장 큰 광고의 세트 아래에 둔다 */
+    const bySet={};
+    assetList(a).forEach(x=>{ if(linkShow==='on'&&x.st!=='ACTIVE') return; (bySet[x.s]=bySet[x.s]||[]).push(x); });
+    Object.values(bySet).forEach(l=>l.sort((p,q)=>q.x.spend-p.x.spend));
+    let nA=0, nV=0, nS=0;
+    const vBtn=x=>{ const l=links[x.id]||{};
+      return '<div class="ma-ll-v"><button type="button" class="ui-field sm'+(l.drive?' is-on':'')+'" data-link="drive" data-id="'+esc(x.id)+'" title="'+esc(l.driveName||'바로얌 드라이브 메타광고 영상 고르기')+'"><span class="t">'+(l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 연동</span>')+'</span>'+CHEV+'</button>'
+        +(l.drive?'<a class="ma-ll-play" href="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/view" target="_blank" rel="noopener" title="드라이브에서 영상 열기" aria-label="영상 열기">▶</a>':'')+'</div>'; };
+    const sBtn=x=>{ const t=(links[x.id]||{}).script||'';
+      return '<button type="button" class="ui-field sm'+(t?' is-on':'')+'" data-link="script" data-id="'+esc(x.id)+'" title="'+esc(t?t.slice(0,200):'대본 붙여넣기')+'"><span class="t">'+(t?'대본 '+t.length.toLocaleString('ko-KR')+'자':'<span class="ph">대본 넣기</span>')+'</span></button>'; };
+    const body=cs.map(o=>{
+      let sets=(a.adsets||[]).filter(x=>x.c===o.c.id).map(x=>({x,m:derive((I.adset||{})[x.id])}));
+      if(linkShow==='on') sets=sets.filter(z=>z.x.st==='ACTIVE');
+      sets.sort((p,q)=>q.m.spend-p.m.spend);
+      return '<div class="ma-ll-grp"><div class="ma-ll-row is-camp"><div class="ma-ll-name"><span class="ma-st'+stCls(o.c.st)+'"></span><b title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</b></div>'+prodBtn('camp',o.c.id,o.c.id)+'<span></span><span></span></div>'
+        +sets.map(z=>{
+          const as=bySet[z.x.id]||[];
+          return '<div class="ma-ll-row is-set"><div class="ma-ll-name"><span class="ma-st'+stCls(z.x.st)+'"></span><span class="nm" title="'+esc(z.x.name)+'">'+esc(z.x.name)+'</span></div>'+prodBtn('set',z.x.id,o.c.id)+'<span></span><span></span></div>'
+            +as.map(x=>{ nA++; if((links[x.id]||{}).drive) nV++; if((links[x.id]||{}).script) nS++;
+              return '<div class="ma-ll-row is-asset"><div class="ma-ll-name"><span class="ma-st'+stCls(x.st)+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span></div><span class="ma-ll-inh">세트를 따름</span>'+vBtn(x)+sBtn(x)+'</div>'; }).join('');
+        }).join('')
         +'</div>';
-    }).join(''):'<div class="ma-empty">보여 줄 소재가 없습니다.</div>';
+    }).join('');
+    linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+nA+'개 · 영상 '+nV+' · 대본 '+nS;
+    linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">'+(brand?esc(brand)+' · ':'')+'상품은 캠페인에 이으면 세트·소재가 따라갑니다(다른 세트만 따로) · 영상·대본은 소재마다</span>'
+      +'<div class="ui-chips"><button type="button" class="ui-chip" data-ls="on" aria-pressed="'+(linkShow==='on')+'">게재 중 <b>'+nOn+'</b></button><button type="button" class="ui-chip" data-ls="all" aria-pressed="'+(linkShow==='all')+'">전체 <b>'+nAll+'</b></button></div>';
+    linkBox.querySelector('.ma-link-list').innerHTML=cs.length
+      ?'<div class="ma-ll-row ma-ll-head"><span>캠페인 › 세트 › 소재</span><span>마진표 상품 (대표 ROAS)</span><span>드라이브 영상</span><span>대본</span></div>'+body
+      :'<div class="ma-empty">보여 줄 캠페인이 없습니다.</div>';
+  }
+  /* 대본 붙여넣기 창 · 연동 리스트 위에 하나 더 띄운다 */
+  let scriptBox=null;
+  function openScript(id,name){
+    if(!scriptBox){
+      scriptBox=document.createElement('div');
+      scriptBox.className='settings-overlay ma-script-ov'; scriptBox.hidden=true;
+      scriptBox.innerHTML='<div class="settings-panel ma-dialog ma-scriptdlg" role="dialog" aria-modal="true" aria-labelledby="maScriptT"><div class="settings-head"><h2 id="maScriptT">대본</h2>'
+        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="ma-dialog-body">'
+        +'<textarea class="ui-field ma-script-in" placeholder="이 소재 영상의 대본을 붙여넣으세요 (후킹 · 내용 · 마무리)"></textarea>'
+        +'<div class="ma-script-foot"><small></small><button type="button" class="ui-btn ghost sm" data-sc="clear">지우기</button><button type="button" class="ui-btn primary sm" data-sc="save">저장</button></div></div></div>';
+      document.body.appendChild(scriptBox);
+      const ta=scriptBox.querySelector('textarea'), cnt=()=>{ scriptBox.querySelector('.ma-script-foot small').textContent=ta.value.trim().length.toLocaleString('ko-KR')+'자'; };
+      ta.addEventListener('input',cnt);
+      scriptBox.addEventListener('click',async e=>{
+        if(e.target===scriptBox||e.target.closest('.settings-close')){ scriptBox.hidden=true; return; }
+        const b=e.target.closest('[data-sc]'); if(!b) return;
+        if(b.dataset.sc==='clear'){ ta.value=''; cnt(); ta.focus(); return; }
+        b.disabled=true;
+        const ok=await saveLinkAt('asset',scriptBox.dataset.id,{script:ta.value.trim()||null});
+        b.disabled=false;
+        if(ok){ scriptBox.hidden=true; paintLinks(); }
+      });
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&scriptBox&&!scriptBox.hidden){ e.stopImmediatePropagation(); scriptBox.hidden=true; } },true);
+    }
+    scriptBox.dataset.id=id;
+    scriptBox.querySelector('#maScriptT').textContent='대본 · '+name;
+    const ta=scriptBox.querySelector('textarea'); ta.value=(links[id]||{}).script||'';
+    scriptBox.querySelector('.ma-script-foot small').textContent=ta.value.length.toLocaleString('ko-KR')+'자';
+    scriptBox.hidden=false; ta.focus();
   }
   async function openLinks(){
     if(!linkBox){
@@ -18531,17 +18581,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       linkBox.className='settings-overlay'; linkBox.hidden=true;
       linkBox.innerHTML='<div class="settings-panel ma-dialog ma-linkdlg" role="dialog" aria-modal="true" aria-labelledby="maLinkT"><div class="settings-head"><h2 id="maLinkT">연동 리스트</h2>'
         +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="ma-dialog-body">'
-        +'<div class="ui-tabs ma-link-tabs"><button type="button" class="ui-tab" data-lt="prod">대표 ROAS · 캠페인·세트</button><button type="button" class="ui-tab" data-lt="video">영상 · 소재</button></div>'
         +'<div class="ma-link-tools"></div><div class="ma-link-list"></div></div></div>';
       document.body.appendChild(linkBox);
       const shut=()=>{ linkBox.hidden=true; paint(); };
       linkBox.addEventListener('click',async e=>{
         if(e.target===linkBox||e.target.closest('.settings-close')){ shut(); return; }
-        const lt=e.target.closest('[data-lt]'); if(lt){ linkTab=lt.dataset.lt; paintLinks(); return; }
         const ch=e.target.closest('[data-ls]'); if(ch){ linkShow=ch.dataset.ls; paintLinks(); return; }
         const b=e.target.closest('[data-link]'); if(!b) return;
         e.stopPropagation();
         const a=acc(); if(!a) return;
+        if(b.dataset.link==='script'){ const x=assetList(a).find(q=>q.id===b.dataset.id); openScript(b.dataset.id,x?x.name:''); return; }
         if(b.dataset.link==='prod'){
           const kind=b.dataset.kind, id=b.dataset.id, P=profitList||[];
           if(!P.length){ window.baroyamAsk&&window.baroyamAsk('자사몰 마진표 상품이 없습니다','손익·마진 관리 › 마진표 아래 자사몰 탭에 상품을 먼저 등록하고, 광고상태를 켠 뒤 대표 ROAS 를 골라 주세요.'); return; }
@@ -18563,7 +18612,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           window.UI.menu(b,opts,l.drive||'',async v=>{ const f=D.find(z=>z.id===v); await saveLinkAt('asset',id,v==='__off'?null:{drive:v,driveName:f&&f.name}); paintLinks(); });
         }
       });
-      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&linkBox&&!linkBox.hidden) shut(); });
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&linkBox&&!linkBox.hidden&&(!scriptBox||scriptBox.hidden)) shut(); });
     }
     linkBox.hidden=false;
     linkBox.querySelector('.ma-link-list').innerHTML='<div class="ma-empty">불러오는 중…</div>';
