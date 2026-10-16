@@ -18033,7 +18033,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function tabsOf(id,fn){ if(!TABS[id]&&window.UI&&window.UI.tabs) TABS[id]=window.UI.tabs($(id),fn); return TABS[id]||{set(){}}; }
   function paintAccTabs(){
     const box=$('maAcct'), list=(data&&data.accounts)||[];
-    box.hidden=list.length<2;
+    box.hidden=true;   /* 계정 탭은 사용자 요청으로 숨김 · 바로얌 공식몰만 본다(load 에서 고름) */
     if(box.dataset.ids!==list.map(a=>a.id).join(',')){
       box.dataset.ids=list.map(a=>a.id).join(',');
       box.innerHTML=list.map(a=>'<button class="ui-tab" data-value="'+esc(a.id)+'">'+esc(String(a.name||a.id).replace(/\s*광고\s*계정$/,''))+'</button>').join('');
@@ -18403,9 +18403,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         let v=await db.loadSetting(KEY,true);
         if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
         data=v&&Array.isArray(v.accounts)&&v.accounts.length?v:null; failed=false;
-        if(data&&!data.accounts.some(a=>a.id===accId)){
+        if(data){
+          /* 바로얌 공식몰 계정만 본다(사용자 요청) · 이름에 '바로얌'이 없으면 최근 7일 지출이 가장 큰 계정 */
           const sp=a=>(((a.insights||{}).last_7d||{}).total||{}).spend||0;
-          accId=data.accounts.slice().sort((p,r)=>sp(r)-sp(p))[0].id;   /* 처음엔 최근 7일 지출이 가장 큰 계정 */
+          const by=data.accounts.find(a=>/바로얌/.test(a.name||''));
+          accId=(by||data.accounts.slice().sort((p,r)=>sp(r)-sp(p))[0]).id;
         }
       }
     }catch(e){ console.error(e); failed=!data; }
