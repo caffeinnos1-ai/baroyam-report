@@ -2630,6 +2630,40 @@ window.BAROYAM_FONT=(function(){
   .ma-table td.is-under,.ma-link-roas b.is-under,.ma-big b.is-under{color:var(--neg)}
   .ma-table td.is-over,.ma-link-roas b.is-over,.ma-big b.is-over{color:var(--coupang)}
   .ma-link-tabs{margin-bottom:12px}
+  /* 연동 리스트 · 캠페인 접고 펴기 + 단계 */
+  .ma-acc{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;background:var(--paper)}
+  .ma-acc.is-open{border-color:color-mix(in srgb,var(--btn) 35%,var(--line))}
+  .ma-acc-head{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;flex-wrap:wrap}
+  .ma-acc-head:hover{background:color-mix(in srgb,var(--btn-soft) 40%,transparent)}
+  .ma-acc-head:focus-visible{box-shadow:var(--ui-ring)}
+  .ma-acc-chev{display:grid;place-items:center;width:18px;height:18px;color:var(--mute);transform:rotate(-90deg);transition:transform .15s}
+  .ma-acc-chev svg{width:16px;height:16px}
+  .ma-acc.is-open .ma-acc-chev{transform:none}
+  .ma-acc-head .nm{flex:1;min-width:160px;font-size:13.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-acc-pill{font-size:11.5px;padding:2px 9px;border-radius:99px;background:var(--chip-flat);color:var(--mute);white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+  .ma-acc-pill.is-ok{background:var(--pos-soft);color:var(--pos)}
+  .ma-acc-body{padding:4px 14px 14px 40px;display:flex;flex-direction:column;gap:14px}
+  .ma-step{display:flex;flex-direction:column;gap:8px}
+  .ma-step-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ma-step-h b{font-size:13px;font-weight:600;color:var(--ink)}
+  .ma-step-h small{font-size:11.5px;color:var(--mute)}
+  .ma-step-n{display:grid;place-items:center;width:20px;height:20px;border-radius:99px;font-size:11px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .ma-step-n.is-ok{background:var(--pos-soft);color:var(--pos)}
+  .ma-step-row{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;align-items:center;padding-left:28px}
+  .ma-step-row .lb{font-size:12.5px;color:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-step-row .ui-field,.ma-step-asset .ui-field{width:100%;height:30px;font-size:12px;justify-content:space-between;overflow:hidden}
+  .ma-step-row .ui-field .t,.ma-step-asset .ui-field .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-step-row .ui-field.is-on,.ma-step-asset .ui-field.is-on{border-color:var(--btn)}
+  .ma-step-tg{display:flex;align-items:center;gap:6px;padding-left:28px;font-size:12px;color:var(--body);cursor:pointer;width:max-content}
+  .ma-step-tg input{accent-color:var(--btn)}
+  .ma-step-sets{display:flex;flex-direction:column;gap:6px;margin-left:28px;padding-left:12px;border-left:2px solid var(--line)}
+  .ma-step-sets .ma-step-row{padding-left:0}
+  .ma-step-assets{display:flex;flex-direction:column;gap:6px;padding-left:28px}
+  .ma-step-asset{display:grid;grid-template-columns:minmax(0,1fr) 260px 110px;gap:10px;align-items:center}
+  .ma-step-asset .nm2{display:flex;flex-direction:column;min-width:0}
+  .ma-step-asset .nm2 .nm{font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-step-asset .nm2 small{font-size:11px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media (max-width:760px){ .ma-acc-body{padding-left:14px} .ma-step-row,.ma-step-asset{grid-template-columns:1fr;padding-left:0} .ma-step-assets,.ma-step-tg{padding-left:0} }
   /* 연동 리스트 한 목록 · 이름 | 상품 | 영상 | 대본 · 작게 */
   .ma-ll-row{display:grid;grid-template-columns:minmax(0,1fr) 230px 230px 110px;gap:10px;align-items:center;min-height:32px}
   .ma-ll-head{min-height:0;padding:0 4px 8px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:500;color:var(--mute)}
@@ -18526,46 +18560,61 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     else t='<span class="ph">상품 연동</span>';
     return '<button type="button" class="ui-field sm'+(own&&own.prod?' is-on':'')+'" data-link="prod" data-kind="'+kind+'" data-id="'+esc(id)+'"><span class="t">'+t+'</span>'+CHEV+'</button>';
   }
-  /* 연동 리스트 · 한 목록에서 캠페인 › 세트 › 소재 순으로 상품(대표 ROAS)·영상·대본을 잇는다(사용자 요청 · 탭·썸네일·ROAS 칸 없이 작게) ·
-     상품은 캠페인·세트 줄에서(소재는 세트를 따름) · 영상·대본은 소재 줄에서 */
+  /* 연동 리스트 · 캠페인마다 접고 펴는 칸(사용자 요청 "헷갈리지 않게 토글로 열어 단계별로") ·
+     접힌 줄 = 캠페인 이름 + 상품 + 영상 n/m · 대본 n/m · 펴면 ① 대표 ROAS 상품(캠페인 · "세트마다 다르게"를 켜면 세트별) ② 소재마다 영상·대본 */
+  const openCamps=new Set(), setMode=new Set();
+  let openInit=false;
   function paintLinks(){
     if(!linkBox||linkBox.hidden) return;
     const a=acc(); if(!a) return;
-    const I=(a.insights&&a.insights[range])||{}, bOf=brandMap(a);
+    const I=(a.insights&&a.insights[range])||{}, bOf=brandMap(a), sName={};
+    (a.adsets||[]).forEach(x=>{ sName[x.id]=x.name; });
     let cs=(a.campaigns||[]).map(c=>({c,x:derive((I.campaign||{})[c.id])}));
     if(brand) cs=cs.filter(o=>bOf[o.c.id]===brand);
     const nOn=cs.filter(o=>o.c.st==='ACTIVE').length, nAll=cs.length;
     if(linkShow==='on') cs=cs.filter(o=>o.c.st==='ACTIVE');
     cs.sort((p,q)=>q.x.spend-p.x.spend);
-    /* 소재는 지출이 가장 큰 광고의 세트 아래에 둔다 */
-    const bySet={};
-    assetList(a).forEach(x=>{ if(linkShow==='on'&&x.st!=='ACTIVE') return; (bySet[x.s]=bySet[x.s]||[]).push(x); });
-    Object.values(bySet).forEach(l=>l.sort((p,q)=>q.x.spend-p.x.spend));
-    let nA=0, nV=0, nS=0;
+    if(!openInit&&cs.length){ openCamps.add(cs[0].c.id); openInit=true; }
+    const assets=assetList(a).filter(x=>linkShow!=='on'||x.st==='ACTIVE');
+    let tA=0, tV=0, tS=0;
     const vBtn=x=>{ const l=links[x.id]||{};
-      return '<div class="ma-ll-v"><button type="button" class="ui-field sm'+(l.drive?' is-on':'')+'" data-link="drive" data-id="'+esc(x.id)+'" title="'+esc(l.driveName||'바로얌 드라이브 메타광고 영상 고르기')+'"><span class="t">'+(l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 연동</span>')+'</span>'+CHEV+'</button>'
-        +(l.drive?'<a class="ma-ll-play" href="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/view" target="_blank" rel="noopener" title="드라이브에서 영상 열기" aria-label="영상 열기">▶</a>':'')+'</div>'; };
+      return '<div class="ma-ll-v"><button type="button" class="ui-field sm'+(l.drive?' is-on':'')+'" data-link="drive" data-id="'+esc(x.id)+'" title="'+esc(l.driveName||'바로얌 드라이브 메타광고 영상 고르기')+'"><span class="t">'+(l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 고르기</span>')+'</span>'+CHEV+'</button>'
+        +(l.drive?'<a class="ma-ll-play" href="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/view" target="_blank" rel="noopener" title="드라이브에서 영상 열기" aria-label="영상 열기">▶</a>':'<span class="ma-ll-play"></span>')+'</div>'; };
     const sBtn=x=>{ const t=(links[x.id]||{}).script||'';
       return '<button type="button" class="ui-field sm'+(t?' is-on':'')+'" data-link="script" data-id="'+esc(x.id)+'" title="'+esc(t?t.slice(0,200):'대본 붙여넣기')+'"><span class="t">'+(t?'대본 '+t.length.toLocaleString('ko-KR')+'자':'<span class="ph">대본 넣기</span>')+'</span></button>'; };
     const body=cs.map(o=>{
-      let sets=(a.adsets||[]).filter(x=>x.c===o.c.id).map(x=>({x,m:derive((I.adset||{})[x.id])}));
-      if(linkShow==='on') sets=sets.filter(z=>z.x.st==='ACTIVE');
-      sets.sort((p,q)=>q.m.spend-p.m.spend);
-      return '<div class="ma-ll-grp"><div class="ma-ll-row is-camp"><div class="ma-ll-name"><span class="ma-st'+stCls(o.c.st)+'"></span><b title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</b></div>'+prodBtn('camp',o.c.id,o.c.id)+'<span></span><span></span></div>'
-        +sets.map(z=>{
-          const as=bySet[z.x.id]||[];
-          return '<div class="ma-ll-row is-set"><div class="ma-ll-name"><span class="ma-st'+stCls(z.x.st)+'"></span><span class="nm" title="'+esc(z.x.name)+'">'+esc(z.x.name)+'</span></div>'+prodBtn('set',z.x.id,o.c.id)+'<span></span><span></span></div>'
-            +as.map(x=>{ nA++; if((links[x.id]||{}).drive) nV++; if((links[x.id]||{}).script) nS++;
-              return '<div class="ma-ll-row is-asset"><div class="ma-ll-name"><span class="ma-st'+stCls(x.st)+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span></div><span class="ma-ll-inh">세트를 따름</span>'+vBtn(x)+sBtn(x)+'</div>'; }).join('');
-        }).join('')
-        +'</div>';
+      const cid=o.c.id;
+      let sets=(a.adsets||[]).filter(x=>x.c===cid);
+      if(linkShow==='on') sets=sets.filter(x=>x.st==='ACTIVE');
+      const mine=assets.filter(x=>x.c===cid).sort((p,q)=>q.x.spend-p.x.spend);
+      const nV=mine.filter(x=>(links[x.id]||{}).drive).length, nS=mine.filter(x=>(links[x.id]||{}).script).length;
+      tA+=mine.length; tV+=nV; tS+=nS;
+      const R=repFor(cid,null), hasOver=sets.some(x=>linkS[x.id]&&linkS[x.id].prod), split=setMode.has(cid)||hasOver, open=openCamps.has(cid);
+      const done1=!!R, done2=mine.length&&nV===mine.length;
+      const pill=(ok,t)=>'<span class="ma-acc-pill'+(ok?' is-ok':'')+'">'+t+'</span>';
+      let h='<div class="ma-acc'+(open?' is-open':'')+'"><button type="button" class="ma-acc-head" data-acc="'+esc(cid)+'" aria-expanded="'+open+'">'
+        +'<span class="ma-acc-chev">'+CHEV+'</span><span class="ma-st'+stCls(o.c.st)+'"></span><b class="nm" title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</b>'
+        +pill(done1,R?esc(R.name)+(R.roas!=null?' '+Math.round(R.roas)+'%':''):'상품 없음')+pill(done2,'영상 '+nV+'/'+mine.length)+pill(mine.length&&nS===mine.length,'대본 '+nS+'/'+mine.length)+'</button>';
+      if(open){
+        h+='<div class="ma-acc-body">'
+          /* ① 대표 ROAS */
+          +'<div class="ma-step"><div class="ma-step-h"><span class="ma-step-n'+(done1?' is-ok':'')+'">'+(done1?'✓':'1')+'</span><b>대표 ROAS 상품</b><small>자사몰 마진표 상품 · 이 캠페인의 ROAS 를 견줄 기준</small></div>'
+          +'<div class="ma-step-row"><span class="lb">캠페인 전체</span>'+prodBtn('camp',cid,cid)+'</div>'
+          +(sets.length>1||hasOver?'<label class="ma-step-tg"><input type="checkbox" data-split="'+esc(cid)+'"'+(split?' checked':'')+(hasOver?' disabled title="세트에 따로 이은 상품이 있어 켜져 있습니다"':'')+'> 세트마다 다른 상품(랜딩)이 있어요</label>':'')
+          +(split?'<div class="ma-step-sets">'+sets.map(x=>'<div class="ma-step-row is-set"><span class="lb" title="'+esc(x.name)+'">'+esc(x.name)+'</span>'+prodBtn('set',x.id,cid)+'</div>').join('')+'</div>':'')
+          +'</div>'
+          /* ② 소재 영상·대본 */
+          +'<div class="ma-step"><div class="ma-step-h"><span class="ma-step-n'+(done2?' is-ok':'')+'">'+(done2?'✓':'2')+'</span><b>소재 영상 · 대본</b><small>소재마다 바로얌 드라이브 영상과 대본을 잇습니다 · 이름이 비슷한 영상을 추천</small></div>'
+          +(mine.length?'<div class="ma-step-assets">'+mine.map(x=>'<div class="ma-step-asset"><div class="ma-ll-name"><span class="ma-st'+stCls(x.st)+'"></span><div class="nm2"><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><small>'+esc(sName[x.s]||'')+'</small></div></div>'+vBtn(x)+sBtn(x)+'</div>').join('')+'</div>'
+            :'<div class="ma-empty">'+(linkShow==='on'?'게재 중인 소재가 없습니다':'소재가 없습니다')+'</div>')
+          +'</div></div>';
+      }
+      return h+'</div>';
     }).join('');
-    linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+nA+'개 · 영상 '+nV+' · 대본 '+nS;
-    linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">'+(brand?esc(brand)+' · ':'')+'상품은 캠페인에 이으면 세트·소재가 따라갑니다(다른 세트만 따로) · 영상·대본은 소재마다</span>'
+    linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+tA+'개 · 영상 '+tV+' · 대본 '+tS;
+    linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">캠페인을 눌러 펴고 ① 대표 ROAS 상품 → ② 소재 영상·대본 순서로 잇습니다</span>'
       +'<div class="ui-chips"><button type="button" class="ui-chip" data-ls="on" aria-pressed="'+(linkShow==='on')+'">게재 중 <b>'+nOn+'</b></button><button type="button" class="ui-chip" data-ls="all" aria-pressed="'+(linkShow==='all')+'">전체 <b>'+nAll+'</b></button></div>';
-    linkBox.querySelector('.ma-link-list').innerHTML=cs.length
-      ?'<div class="ma-ll-row ma-ll-head"><span>캠페인 › 세트 › 소재</span><span>마진표 상품 (대표 ROAS)</span><span>드라이브 영상</span><span>대본</span></div>'+body
-      :'<div class="ma-empty">보여 줄 캠페인이 없습니다.</div>';
+    linkBox.querySelector('.ma-link-list').innerHTML=cs.length?body:'<div class="ma-empty">보여 줄 캠페인이 없습니다.</div>';
   }
   /* 대본 붙여넣기 창 · 연동 리스트 위에 하나 더 띄운다 */
   let scriptBox=null;
@@ -18609,6 +18658,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       linkBox.addEventListener('click',async e=>{
         if(e.target===linkBox||e.target.closest('.settings-close')){ shut(); return; }
         const ch=e.target.closest('[data-ls]'); if(ch){ linkShow=ch.dataset.ls; paintLinks(); return; }
+        const ac=e.target.closest('[data-acc]'); if(ac){ const id=ac.dataset.acc; if(openCamps.has(id)) openCamps.delete(id); else openCamps.add(id); paintLinks(); return; }
+        const sp=e.target.closest('[data-split]'); if(sp){ const id=sp.dataset.split; if(sp.checked) setMode.add(id); else setMode.delete(id); paintLinks(); return; }
         const b=e.target.closest('[data-link]'); if(!b) return;
         e.stopPropagation();
         const a=acc(); if(!a) return;
