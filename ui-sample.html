@@ -101,6 +101,7 @@
       <input class="ui-field sm" placeholder="작은 입력칸">
     </div>
     <div class="row"><button class="ui-field" id="menu1" style="width:200px"><span class="t">판매처 고르기</span></button><span class="out">UI.menu(버튼, 목록, 값, 함수) · &lt;select&gt; 대신 (마진 계산기 판매처·발송비 구간)</span></div>
+    <div class="row"><button class="ui-field" id="menu2" style="width:200px"><span class="t">검색해서 고르기</span></button><span class="out">UI.menu(…, {search:true, placeholder, limit}) · 목록이 길 때 맨 위 검색칸 (메타광고 연동 리스트 상품·영상)</span></div>
   </section>
 
   <section>
@@ -132,6 +133,9 @@
   const m1=document.getElementById('menu1'); let m1v='';
   const m1o=[{value:'a',label:'카페이노스',sub:'3.85%'},{value:'b',label:'쿠팡',sub:'10.8%'},{value:'c',label:'네이버',sub:'5.5%'}];
   m1.onclick=e=>{ e.stopPropagation(); UI.menu(m1,m1o,m1v,(v,o)=>{ m1v=v; m1.querySelector('.t').textContent=o.label; }); };
+  const m2=document.getElementById('menu2'); let m2v='';
+  const m2o=['홀떡피자','쫀득란빵','이응떡볶이','오꾸밥','방구석포차','잡채랑','밥카츠','아미','카레짜장밥'].map((b,i)=>({value:'b'+i,label:b+' 자사몰',sub:'대표 ROAS '+(250+i*12)+'%'}));
+  m2.onclick=e=>{ e.stopPropagation(); UI.menu(m2,m2o,m2v,(v,o)=>{ m2v=v; m2.querySelector('.t').textContent=o.label; },{search:true,placeholder:'이름으로 찾기',limit:5}); };
   const o1=document.getElementById('dp1Out'), o2=document.getElementById('dp2Out');
   UI.datePicker(document.getElementById('dp1'),{placeholder:'회의 날짜',onChange:v=>{ o1.textContent='값: '+JSON.stringify(v); }});
   UI.datePicker(document.getElementById('dp2'),{mode:'range',presets:['today','week','month','prevMonth','custom'],onChange:v=>{ o2.textContent='값: '+JSON.stringify(v); }});
