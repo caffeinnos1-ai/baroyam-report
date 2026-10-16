@@ -9997,21 +9997,6 @@ window.BAROYAM_FONT=(function(){
             <div class="psub" id="perfViewSub">하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.</div>
           </div>
           <div class="ip ma" id="maRoot">
-            <!-- 정밀성과 · 목록(캠페인 › 광고 세트 › 소재)을 맨 위에(사용자 요청 · 날짜 고르기 위) · 숫자 칸·지출 상위·효율은 아래 level 칸 -->
-            <div class="ip-view ma-need" data-ma-pane="list" hidden>
-            <div class="ip-card">
-              <div class="ip-card-head"><div><h3 id="maListT">캠페인</h3><small id="maListS"></small></div>
-                <div class="ip-acct-end">
-                  <div class="ui-tabs" id="maLevel"><button class="ui-tab" data-value="campaign">캠페인</button><button class="ui-tab" data-value="adset">광고 세트</button><button class="ui-tab" data-value="asset">소재</button></div>
-                  <input class="ui-field sm ma-search" id="maSearch" type="search" placeholder="이름 검색" autocomplete="off" aria-label="이름 검색">
-                  <div class="ui-tabs" id="maMode" hidden><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
-                </div></div>
-              <div class="ip-lib-bar"><div class="ui-chips" id="maShow"></div>
-                <div class="ui-tabs" id="maSort"><button class="ui-tab" data-value="spend">지출</button><button class="ui-tab" data-value="roas">ROAS</button><button class="ui-tab" data-value="buy">구매</button><button class="ui-tab" data-value="cpa">CPA</button><button class="ui-tab" data-value="ctr">CTR</button></div></div>
-              <div class="ma-crumb" id="maCrumb" hidden></div>
-              <div id="maTable"></div>
-            </div>
-            </div>
             <!-- 계정 줄 · 인스타 계정 줄과 같은 모양 -->
             <div class="ip-card ip-acct" id="maAcctBar">
               <div class="ip-avatar ma-avatar"><span id="maAvatar">M</span></div>
@@ -10051,6 +10036,21 @@ window.BAROYAM_FONT=(function(){
               </div>
             </div>
 
+            <!-- 정밀성과 · 목록(캠페인 › 광고 세트 › 소재)을 계정 줄 바로 아래(사용자 요청) · 숫자 칸·지출 상위·효율은 아래 level 칸 -->
+            <div class="ip-view ma-need" data-ma-pane="list" hidden>
+            <div class="ip-card">
+              <div class="ip-card-head"><div><h3 id="maListT">캠페인</h3><small id="maListS"></small></div>
+                <div class="ip-acct-end">
+                  <div class="ui-tabs" id="maLevel"><button class="ui-tab" data-value="campaign">캠페인</button><button class="ui-tab" data-value="adset">광고 세트</button><button class="ui-tab" data-value="asset">소재</button></div>
+                  <input class="ui-field sm ma-search" id="maSearch" type="search" placeholder="이름 검색" autocomplete="off" aria-label="이름 검색">
+                  <div class="ui-tabs" id="maMode" hidden><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
+                </div></div>
+              <div class="ip-lib-bar"><div class="ui-chips" id="maShow"></div>
+                <div class="ui-tabs" id="maSort"><button class="ui-tab" data-value="spend">지출</button><button class="ui-tab" data-value="roas">ROAS</button><button class="ui-tab" data-value="buy">구매</button><button class="ui-tab" data-value="cpa">CPA</button><button class="ui-tab" data-value="ctr">CTR</button></div></div>
+              <div class="ma-crumb" id="maCrumb" hidden></div>
+              <div id="maTable"></div>
+            </div>
+            </div>
             <!-- 캠페인 · 광고 세트 · 소재 · 같은 틀(기간 숫자 여섯 칸 → 지출 상위 | 효율 살펴볼 것 → 목록)에 줄 단위만 바꾼다 -->
             <div class="ip-view ma-need" data-ma-pane="level" hidden>
               <div class="ip-kpis" id="maKpis"></div>
