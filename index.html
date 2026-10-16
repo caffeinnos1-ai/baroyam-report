@@ -2505,6 +2505,9 @@ window.BAROYAM_FONT=(function(){
   .ma-empty{font-size:13.5px;color:var(--body);line-height:1.7}
   .ma-table td.ma-fx{color:color-mix(in srgb,var(--coupang) 72%,var(--paper))}   /* 날짜별 기록 환율 · 하늘색 */
   .ma-table td.ma-fx.is-borrow{opacity:.6}
+  .plan-hero .ma-hero-state{position:absolute;right:48px;top:50%;transform:translateY(-50%);padding:8px 14px;border-radius:99px;background:var(--paper);border:1px solid var(--line)}
+  .ma-hero-state small{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--body)}
+  @media (max-width:1100px){ .plan-hero .ma-hero-state{position:static;transform:none;margin-top:14px;width:max-content;max-width:100%} }
   .ma-datebar{display:flex;justify-content:flex-end;margin-bottom:-4px}
   .ma-datebar .ip-acct-end{margin-left:auto}
   .ma-cur{padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;background:var(--chip-flat);color:var(--mute)}
@@ -10268,11 +10271,10 @@ window.BAROYAM_FONT=(function(){
             <div class="ptag">퍼포먼스마케팅 · 메타광고</div>
             <div class="ptitle" id="perfViewTitle">데일리 성과</div>
             <div class="psub" id="perfViewSub">하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.</div>
-            <!-- 배너 오른쪽 계정 카드 · 인스타콘텐츠 성과 배너와 같은 모양(사용자 요청) -->
-            <div class="ip-acct ip-hero-acct" id="maHeroAcct">
-              <div class="ip-avatar ma-avatar"><span id="maAvatar">M</span></div>
-              <div class="ip-who"><b id="maAcctName">메타광고</b><small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small></div>
-              <div class="ip-nums" id="maNums"></div>
+            <!-- 배너 오른쪽 · 메타 연결 상태만(계정 카드·10월 숫자는 사용자 요청으로 뺌 · 코드가 쓰는 칸은 숨겨 둠) -->
+            <div class="ma-hero-state" id="maHeroAcct">
+              <small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small>
+              <div hidden><span id="maAvatar"></span><b id="maAcctName"></b><div id="maNums"></div></div>
             </div>
           </div>
           <div class="ip ma" id="maRoot">
@@ -18282,9 +18284,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const nm=String(a.name||a.id).replace(/\s*광고\s*계정$/,'');
     $('maAcctName').textContent=nm; $('maAvatar').textContent=nm.slice(0,1).toUpperCase()||'M';
     $('maState').innerHTML='<span class="ip-live'+(stale?' is-off':'')+'"></span>메타 연결됨 · '+whenTxt(data.updatedAt)+' 기준'
-      +(stale?' · 12시간 넘게 새 값이 없습니다':'')
-      +(a.currency!=='KRW'&&inKrw()?'<span class="ma-cur" title="광고비가 나간 날의 환율(유럽중앙은행 기준환율 · 주말·휴일은 앞 영업일)로 하루씩 원화로 바꿔 보여 줍니다. 카드 청구 금액과는 카드사 환율·수수료만큼 조금 다를 수 있습니다.">'+esc(a.currency)+' 계정 · 그날 환율로 원화 환산</span>'
-        :'<span class="ma-cur" title="이 광고계정의 통화">'+esc(a.currency)+'</span>');
+      +(stale?' · 12시간 넘게 새 값이 없습니다':'');   /* 통화·환산 표시는 사용자 요청으로 뺌(금액은 늘 원화 · 그래프 말풍선에 달러) */
     /* 이번 달 누적(1일~오늘) · 게재 중 캠페인 */
     const t=kst(), mo=+t.slice(5,7), ds=[]; for(let d=t.slice(0,8)+'01';d<=t;d=dayAdd(d,1)) ds.push(d);
     const m=derive(addUp(ds.map(d=>dayVal(a,d))));
