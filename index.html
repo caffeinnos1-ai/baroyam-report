@@ -2628,6 +2628,8 @@ window.BAROYAM_FONT=(function(){
   @media (max-width:1280px){ .ip-kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
   @media (max-width:1000px){ .ip-row,.ip-row.is-even,.ip-aud-cols{grid-template-columns:1fr} .ip-acct-end{margin-left:0} .ip-nums{margin-left:0} }
   @media (max-width:640px){ .ip-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  #maDayKpis{grid-template-columns:repeat(4,minmax(0,1fr))}   /* 데일리 성과 숫자 카드 넷(지출·구매 전환값·ROAS·구매) */
+  @media (max-width:640px){ #maDayKpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
   @media (max-width:760px){ .ig-tools #igQ{width:100%} .ig-tools .ig-end{margin-left:0;width:100%} .ig-form .ig-row2{grid-template-columns:1fr} }
   /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
   .cm-make{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
@@ -17630,9 +17632,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       kpiCard(lab('구매 전환값'),short(n.rev,cur),vs('rev',true),sp('rev')),
       kpiCard(lab('ROAS'),n.roas==null?'-':Math.round(n.roas)+'<span>%</span>',vs('roas',true,'p'),sp('roas')),
       kpiCard(lab('구매'),int(n.buy)+'<span>건</span>',vs('buy',true),sp('buy')),
-      kpiCard(lab('구매당 비용'),n.cpa==null?'-':short(n.cpa,cur),vs('cpa',false),sp('cpa')),
-      kpiCard(lab('클릭률(CTR)'),n.ctr==null?'-':n.ctr.toFixed(2)+'<span>%</span>',vs('ctr',true,'p'),sp('ctr')),
-    ].join('');
+    ].join('');   /* 구매당 비용·클릭률 카드는 사용자 요청으로 뺌(날짜별 기록 표에는 남음) */
     $('maChartSub').textContent='최근 30일 · 막대를 누르면 그날로 · 지난주 '+DOW[dowOf(day)]+'요일 ROAS '+pct(w.roas);
     paintChart(a); paintDow(a); paintDays(a);
   }
