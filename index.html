@@ -2441,6 +2441,12 @@ window.BAROYAM_FONT=(function(){
   .ip-card-head small{font-size:12px;color:var(--mute)}
   /* 계정 줄 */
   .ip-acct{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .ip-acct[hidden]{display:none}
+  /* 배너 오른쪽 가운데에 떠 있는 계정 카드 · 좁은 화면에서는 배너 글 아래로 */
+  .plan-hero .ip-hero-acct{position:absolute;right:48px;top:50%;transform:translateY(-50%);flex-wrap:nowrap;
+    padding:14px 22px 14px 16px;border-radius:20px;background:var(--paper);border:1px solid var(--line)}
+  @media (max-width:1280px){ .plan-hero .ip-hero-acct{right:32px} }
+  @media (max-width:1100px){ .plan-hero .ip-hero-acct{position:static;transform:none;margin-top:16px;width:max-content;max-width:100%;flex-wrap:wrap} }
   .ip-avatar{width:56px;height:56px;border-radius:99px;padding:3px;flex:none;background:linear-gradient(45deg,var(--self),var(--neg),var(--talk))}
   .ip-avatar span{display:grid;place-items:center;width:100%;height:100%;border-radius:99px;background:var(--paper);border:2px solid var(--paper);
     font-size:18px;font-weight:600;color:var(--ink)}
@@ -2751,7 +2757,7 @@ window.BAROYAM_FONT=(function(){
   .ip-mets b{font-size:12.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .ip-er{font-size:11.5px;font-weight:600;color:var(--pos)}
   /* 배너 아래 · 계정 성과 / 콘텐츠 성과(보관함) 나누기 */
-  .ip-switch{display:flex;align-items:center;gap:12px}
+  .ip-switch{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .ip-switch .ui-tab b{margin-left:4px;font-weight:600;color:var(--mute);font-variant-numeric:tabular-nums}
   .ip-view[hidden]{display:none}
   .ip-view{display:flex;flex-direction:column;gap:16px}
@@ -3317,6 +3323,8 @@ window.BAROYAM_FONT=(function(){
   .ps-kpi .neg,.ps-table .neg,.ps-row .neg,.ps-col .neg{color:var(--neg)!important}
   .ps-kpi .up{color:var(--pos)} .ps-kpi .down{color:var(--neg)}
   .ps-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}
+  /* 판매·재고 안에서는 당일판매현황처럼 세로형 · 카드를 위아래 한 줄씩 쌓는다 */
+  [data-ops-pane="summary"] .ps-grid{grid-template-columns:minmax(0,1fr)}
   [data-ops-pane="summary"] .pf-card-tt h3{margin:0}
   [data-ops-pane="summary"] .pf-card-tt p{margin:3px 0 0;font-size:12px;font-weight:400;color:var(--mute)}
   .ps-fall{display:flex;flex-direction:column;gap:6px}
@@ -10913,12 +10921,13 @@ window.BAROYAM_FONT=(function(){
             <div class="ptitle" id="instaViewTitle">성과</div>
             <div class="psub" id="instaViewSub">게시물·릴스의 조회·반응·팔로워 변화를 봅니다.</div>
             <button type="button" class="ui-btn soft sm ig-cfg" id="igCfg" hidden title="일정 화면의 형식·상태·필터 이름 바꾸기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>필터 이름 설정</button>
+            <!-- 성과 탭일 때만 · 배너 오른쪽에 계정 카드(사진·계정·게시물·팔로워·팔로잉) -->
+            <div class="ip-acct ip-hero-acct" id="ipAcct" hidden></div>
           </div>
           <!-- 성과 · 서버(VPS insta_insights.js)가 채운 insta_insights_v1 을 읽고, 비어 있으면 예시 데이터 · 계정 줄 → [계정 성과] 숫자 여섯 칸 → 팔로워 추이 | 형식별 → 올리기 좋은 시간 | 팔로워 구성 · [콘텐츠 성과] 게시물 보관함 -->
           <div class="ip" id="ipRoot" data-insta-pane="perf">
             <!-- 배너 바로 아래 · 계정 성과(요약) / 콘텐츠 성과(올린 게시물 전체 보관함 · 양이 많아 따로 둔다) -->
-            <div class="ip-switch"><div class="ui-tabs" id="ipView" aria-label="성과 보기"><button class="ui-tab" data-value="over">계정 성과</button><button class="ui-tab" data-value="lib">콘텐츠 성과<b id="ipLibN"></b></button></div></div>
-            <div class="ip-card ip-acct" id="ipAcct"></div>
+            <div class="ip-switch"><div class="ui-tabs" id="ipView" aria-label="성과 보기"><button class="ui-tab" data-value="over">계정 성과</button><button class="ui-tab" data-value="lib">콘텐츠 성과<b id="ipLibN"></b></button></div><div class="ip-acct-end" id="ipSwitchEnd"></div></div>
             <div class="ip-view" id="ipOver">
             <div class="ip-kpis" id="ipKpis"></div>
             <div class="ip-row">
@@ -17689,10 +17698,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(fetchBtn) fetchBtn.title=el.dataset.ops==='stock'?'이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다':'이지어드민 창에서 로그인만 하면 오늘 판매를 자동으로 받아 옵니다';
     if(el.dataset.ops==='stock'&&window.baroyamStock) (load?window.baroyamStock.show():window.baroyamStock.paint&&window.baroyamStock.paint());
     if(el.dataset.ops==='sales'&&window.baroyamSales) (load?window.baroyamSales.show():window.baroyamSales.paint());
-    /* 순수익 요약 · 이지어드민과 상관없어 어드민 수집 단추를 감추고, 마진관리처럼 흰 판을 넓게 쓴다 */
+    /* 순수익 요약 · 이지어드민과 상관없어 어드민 수집 단추를 감춘다 · 폭은 다른 두 탭과 같은 세로형(사용자 요청 · 넓게 쓰지 않음) */
     const sum=el.dataset.ops==='summary';
     if(fetchBtn) fetchBtn.style.display=sum?'none':'';
-    if(window.baroyamCurrentView==='ops') document.body.classList.toggle('view-is-profit',sum);
     if(sum&&load&&window.baroyamPsum) window.baroyamPsum.show();
   }
   pick(cur,false);
@@ -17718,6 +17726,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     title.textContent=el.textContent.trim(); sub.textContent=el.dataset.sub||'';
     panes.forEach(p=>{ p.hidden=p.dataset.instaPane!==el.dataset.insta; });
     const cfg=document.getElementById('igCfg'); if(cfg) cfg.hidden=el.dataset.insta!=='plan';
+    const acct=document.getElementById('ipAcct'); if(acct) acct.hidden=el.dataset.insta!=='perf';
     if(el.dataset.insta==='perf'&&window.baroyamInstaPerf&&document.getElementById('view-insta').style.display!=='none') window.baroyamInstaPerf.open();
     if(el.dataset.insta==='plan'&&window.baroyamInstaPlan&&document.getElementById('view-insta').style.display!=='none') window.baroyamInstaPlan.open();
   }
@@ -18838,9 +18847,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const pic=a.picture?'<img src="'+esc(a.picture)+'" alt="" referrerpolicy="no-referrer">':'<span>'+esc(((a.name||a.username||'B')[0]||'B').toUpperCase())+'</span>';
     $('ipAcct').innerHTML='<div class="ip-avatar">'+pic+'</div>'
       +'<div class="ip-who"><b>@'+esc(a.username||'')+'</b><small>'+state+'</small></div>'
-      +'<div class="ip-nums"><div><b>'+num(a.media||0)+'</b><small>게시물</small></div><div><b>'+num(f)+'</b><small>팔로워</small></div><div><b>'+num(a.follows||0)+'</b><small>팔로잉</small></div></div>'
-      +'<div class="ip-acct-end">'+(view==='over'?'<div class="ui-tabs" id="ipRange">'+[7,30,90].map(v=>'<button class="ui-tab" data-value="'+v+'">'+v+'일</button>').join('')+'</div>':'')
-      +(D.demo?'<button type="button" class="ui-btn primary" id="ipConnect">인스타그램 계정 연결</button>':'')+'</div>';
+      +'<div class="ip-nums"><div><b>'+num(a.media||0)+'</b><small>게시물</small></div><div><b>'+num(f)+'</b><small>팔로워</small></div><div><b>'+num(a.follows||0)+'</b><small>팔로잉</small></div></div>';
+    /* 기간 탭·계정 연결 단추는 배너 아래 보기 탭 줄 오른쪽에 */
+    $('ipSwitchEnd').innerHTML=(view==='over'?'<div class="ui-tabs" id="ipRange">'+[7,30,90].map(v=>'<button class="ui-tab" data-value="'+v+'">'+v+'일</button>').join('')+'</div>':'')
+      +(D.demo?'<button type="button" class="ui-btn primary" id="ipConnect">인스타그램 계정 연결</button>':'');
     if($('ipRange')&&window.UI&&window.UI.tabs) window.UI.tabs($('ipRange'),v=>{ range=+v||30; try{ localStorage.setItem('baroyam_ip_range',String(range)); }catch(e){} paint(); }).set(String(range));
     if($('ipConnect')) $('ipConnect').addEventListener('click',()=>{
       const msg='연결은 서버(김비서 VPS)가 맡습니다. 메타 앱에서 만든 인스타그램 토큰을 서버에 한 번 넣으면, 하루 세 번(07:20·13:20·19:20) 계정·게시물 성과를 받아 이 화면에 채웁니다. 토큰은 서버가 7일마다 스스로 갱신합니다.';
