@@ -18653,7 +18653,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     catch(e){ console.error(e); driveList=null; }
     return driveList;
   }
-  let linkBox=null, linkShow='on';
+  let linkBox=null, linkShow='', linkStick=null;   /* 'on-no' 집행 중·미연동 | 'on-ok' 집행 중·연동 | 'off-ok' | 'off-no' · 비면 처음에 정함 */
   const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
   function prodBtn(kind,id,c){
     const own=(kind==='camp'?linkC:linkS)[id], P=own&&(profitList||[]).find(q=>q.id===own.prod);
@@ -18672,13 +18672,23 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const a=acc(); if(!a) return;
     const I=(a.insights&&a.insights[range])||{}, bOf=brandMap(a), sName={};
     (a.adsets||[]).forEach(x=>{ sName[x.id]=x.name; });
+    /* 캠페인 상태 · 집행 중(게재 중) / 집행 종료 × 연동(대표 ROAS 상품 + 소재 영상 모두) / 미연동 (사용자 요청 · 대본은 따지지 않음) */
+    const allAssets=assetList(a);
+    const onOf=o=>o.c.st==='ACTIVE';
+    const assetsOf=(cid,on)=>allAssets.filter(x=>x.c===cid&&(!on||x.st==='ACTIVE'));
+    const okOf=o=>{ const m=assetsOf(o.c.id,onOf(o)); return !!repFor(o.c.id,null)&&m.every(x=>(links[x.id]||{}).drive); };
     let cs=(a.campaigns||[]).map(c=>({c,x:derive((I.campaign||{})[c.id])}));
     if(brand) cs=cs.filter(o=>bOf[o.c.id]===brand);
-    const nOn=cs.filter(o=>o.c.st==='ACTIVE').length, nAll=cs.length;
-    if(linkShow==='on') cs=cs.filter(o=>o.c.st==='ACTIVE');
+    cs.forEach(o=>{ o.on=onOf(o); o.ok=okOf(o); o.k=(o.on?'on':'off')+'-'+(o.ok?'ok':'no'); });
+    const cnt={'on-no':0,'on-ok':0,'off-ok':0,'off-no':0}; cs.forEach(o=>{ cnt[o.k]++; });
+    if(!(linkShow in cnt)) linkShow=cnt['on-no']?'on-no':'on-ok';
+    /* 보던 캠페인은 연동을 마쳐 다른 칸으로 옮겨져도 칩을 바꾸기 전까지 목록에 남긴다(작업 중에 사라지지 않게) */
+    cs=cs.filter(o=>o.k===linkShow||o.c.id===linkStick);
     cs.sort((p,q)=>q.x.spend-p.x.spend);
     if(cs.length&&!cs.some(o=>o.c.id===curCamp)) curCamp=cs[0].c.id;
-    const assets=assetList(a).filter(x=>linkShow!=='on'||x.st==='ACTIVE');
+    linkStick=curCamp;
+    const live=linkShow.startsWith('on');
+    const assets=allAssets.filter(x=>!live||x.st==='ACTIVE');
     let tA=0, tV=0, tS=0;
     const vBtn=x=>{ const l=links[x.id]||{};
       return '<div class="ma-ll-v"><button type="button" class="ui-field sm'+(l.drive?' is-on':'')+'" data-link="drive" data-id="'+esc(x.id)+'" title="'+esc(l.driveName||'바로얌 드라이브 메타광고 영상 고르기')+'"><span class="t">'+(l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 고르기</span>')+'</span>'+CHEV+'</button>'
@@ -18689,7 +18699,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     cs.forEach(o=>{
       const cid=o.c.id;
       let sets=(a.adsets||[]).filter(x=>x.c===cid);
-      if(linkShow==='on') sets=sets.filter(x=>x.st==='ACTIVE');
+      if(live) sets=sets.filter(x=>x.st==='ACTIVE');
       const mine=assets.filter(x=>x.c===cid).sort((p,q)=>q.x.spend-p.x.spend);
       const nV=mine.filter(x=>(links[x.id]||{}).drive).length, nS=mine.filter(x=>(links[x.id]||{}).script).length;
       tA+=mine.length; tV+=nV; tS+=nS;
@@ -18709,13 +18719,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           /* ② 소재 영상·대본 */
           +'<div class="ma-step"><div class="ma-step-h"><span class="ma-step-n'+(done2?' is-ok':'')+'">'+(done2?'✓':'2')+'</span><b>소재 영상 · 대본</b><small>소재마다 바로얌 드라이브 영상과 대본을 잇습니다 · 이름이 비슷한 영상을 추천</small></div>'
           +(mine.length?'<div class="ma-step-assets">'+mine.map(x=>'<div class="ma-step-asset"><div class="ma-ll-name"><span class="ma-st'+stCls(x.st)+'"></span><div class="nm2"><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><small>'+esc(sName[x.s]||'')+'</small></div></div>'+vBtn(x)+sBtn(x)+'</div>').join('')+'</div>'
-            :'<div class="ma-empty">'+(linkShow==='on'?'게재 중인 소재가 없습니다':'소재가 없습니다')+'</div>')
+            :'<div class="ma-empty">'+(live?'게재 중인 소재가 없습니다':'소재가 없습니다')+'</div>')
           +'</div></div>';
       }
     });
     linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+tA+'개 · 영상 '+tV+' · 대본 '+tS;
     linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">왼쪽에서 캠페인을 고르고 ① 대표 ROAS 상품 → ② 소재 영상·대본 순서로 잇습니다</span>'
-      +'<div class="ui-chips"><button type="button" class="ui-chip" data-ls="on" aria-pressed="'+(linkShow==='on')+'">게재 중 <b>'+nOn+'</b></button><button type="button" class="ui-chip" data-ls="all" aria-pressed="'+(linkShow==='all')+'">전체 <b>'+nAll+'</b></button></div>';
+      +'<div class="ui-chips">'+[['on-no','집행 중 · 미연동'],['on-ok','집행 중 · 연동'],['off-no','집행 종료 · 미연동'],['off-ok','집행 종료 · 연동']]
+        .map(c=>'<button type="button" class="ui-chip" data-ls="'+c[0]+'" aria-pressed="'+(linkShow===c[0])+'">'+c[1]+' <b>'+cnt[c[0]]+'</b></button>').join('')+'</div>';
     linkBox.querySelector('.ma-link-list').innerHTML=cs.length?'<div class="ma-toc"><nav class="ma-toc-nav">'+nav+'</nav><div class="ma-toc-main">'+detail+'</div></div>':'<div class="ma-empty">보여 줄 캠페인이 없습니다.</div>';
   }
   /* 대본 붙여넣기 창 · 연동 리스트 위에 하나 더 띄운다 */
@@ -18759,7 +18770,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const shut=()=>{ linkBox.hidden=true; paint(); };
       linkBox.addEventListener('click',async e=>{
         if(e.target===linkBox||e.target.closest('.settings-close')){ shut(); return; }
-        const ch=e.target.closest('[data-ls]'); if(ch){ linkShow=ch.dataset.ls; paintLinks(); return; }
+        const ch=e.target.closest('[data-ls]'); if(ch){ linkShow=ch.dataset.ls; linkStick=null; curCamp=null; paintLinks(); return; }
         const ac=e.target.closest('[data-acc]'); if(ac){ curCamp=ac.dataset.acc; paintLinks(); const m=linkBox.querySelector('.ma-toc-main'); if(m) m.scrollTop=0; return; }
         const sp=e.target.closest('[data-split]'); if(sp){ const id=sp.dataset.split; if(sp.checked) setMode.add(id); else setMode.delete(id); paintLinks(); return; }
         const b=e.target.closest('[data-link]'); if(!b) return;
