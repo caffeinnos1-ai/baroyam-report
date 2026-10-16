@@ -18218,15 +18218,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const badge=v==='campaign'?(selC.size?String(selC.size):''):v==='adset'?(under.adset?(selS.size||under.adset)+'/'+under.adset:selS.size?String(selS.size):''):(under.asset?String(under.asset):'');
       b.innerHTML=nm+(badge?' <b class="ma-selcount">'+badge+'</b>':'');
     });
-    const crumb=$('maCrumb');
-    if(selC.size||selS.size){
-      const nm=(list,set)=>{ const ns=(list||[]).filter(x=>set.has(x.id)).map(x=>x.name); return ns.length===1?esc(ns[0]):ns.length+'개'; };
-      crumb.hidden=false;
-      crumb.innerHTML='<span>고른 것</span>'
-        +(selC.size?'<span class="ma-pick">캠페인 · '+nm(a.campaigns,selC)+'<button type="button" data-clear="c" aria-label="캠페인 선택 풀기" title="캠페인 선택 풀기">✕</button></span>':'')
-        +(selS.size?'<span class="ma-pick">광고 세트 · '+nm(a.adsets,selS)+'<button type="button" data-clear="s" aria-label="광고 세트 선택 풀기" title="광고 세트 선택 풀기">✕</button></span>':'')
-        +'<button type="button" data-clear="all">모두 풀기</button>';
-    }else crumb.hidden=true;
+    $('maCrumb').hidden=true;   /* '고른 것' 줄은 사용자 요청으로 뺌 · 고름은 체크와 단계 탭 배지로만 보인다 */
     if(!rows.length){ $('maTable').innerHTML='<div class="ma-empty">'+RANGE_TXT[range]+' 동안 보여 줄 '+L+'이(가) 없습니다.'+(show!=='all'?' 위 "전체"를 눌러 보세요.':'')+'</div>'; return; }
     const more=rows.length>limit?'<button type="button" class="ui-btn soft sm ma-more">'+(rows.length-limit)+'개 더 보기</button>':'';
     if(tab==='asset'&&mode==='card'){
