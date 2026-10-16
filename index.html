@@ -2557,6 +2557,15 @@ window.BAROYAM_FONT=(function(){
   .ma-listbar-end{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .ma-list .ma-crumb{margin:0 0 10px}
   .ma-levels{margin:4px 0 6px}
+  /* 크기 고정 · 고르거나 배지가 붙어도 폭이 늘지 않게(사용자 요청) */
+  .ma-levels .ui-tab{min-width:112px;justify-content:center}
+  .ma-levels .ma-selcount.is-empty{visibility:hidden}
+  .ma-levels .ma-selcount{min-width:30px}
+  .ma-list #maBrand,.ma-list #maSortPick{width:180px;justify-content:space-between}
+  .ma-list #maBrand .t,.ma-list #maSortPick .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-list .ma-table{table-layout:fixed;min-width:1100px}
+  .ma-list .ma-table th.ma-namecol{width:30%}
+  .ma-list .ma-table th.ma-ckcol{width:40px}
   .ma-table th.ma-ckcol:first-child,.ma-table td.ma-ckcol:first-child{width:40px;min-width:40px;max-width:40px;padding:0 0 0 12px;text-align:left}
   .ma-table th.ma-namecol,.ma-table td.ma-namecol{text-align:left;padding-left:6px}
   .ma-table td.ma-namecol{white-space:normal;min-width:260px;max-width:460px}
@@ -18417,7 +18426,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('maLevel').querySelectorAll('[data-value]').forEach(b=>{
       const v=b.dataset.value, nm=v==='adset'?'세트':LEVEL_TXT[v];
       const badge=v==='campaign'?(selC.size?String(selC.size):''):v==='adset'?(under.adset?(selS.size||under.adset)+'/'+under.adset:selS.size?String(selS.size):''):(under.asset?String(under.asset):'');
-      b.innerHTML=nm+(badge?' <b class="ma-selcount">'+badge+'</b>':'');
+      b.innerHTML=nm+' <b class="ma-selcount'+(badge?'':' is-empty')+'">'+(badge||'0')+'</b>';   /* 배지 자리를 늘 남겨 탭 폭이 흔들리지 않게 */
     });
     $('maCrumb').hidden=true;   /* '고른 것' 줄은 사용자 요청으로 뺌 · 고름은 체크와 단계 탭 배지로만 보인다 */
     if(!rows.length){ $('maTable').innerHTML='<div class="ma-empty">'+RANGE_TXT[range]+' 동안 보여 줄 '+L+'이(가) 없습니다.'+(show!=='all'?' 위 "전체"를 눌러 보세요.':'')+'</div>'; return; }
