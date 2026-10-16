@@ -17914,7 +17914,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let data=null, loaded=false, loading=false, failed=false;
   let accId=store('baroyam_ma_acc')||'', range=store('baroyam_ma_range')||'last_7d', mode=store('baroyam_ma_mode')||'card';
   let tab=store('baroyam_perf_tab')||'daily', day=null, dayFrom=null;   /* 데일리 성과 · 고른 기간 dayFrom ~ day(하루면 둘이 같음) */
-  let show='all', brand='', sortKey='spend', sortDir=-1, limit=48;   /* brand = 캠페인 이름에서 뽑은 브랜드('' = 전체) */
+  let show='on', brand='', sortKey='spend', sortDir=-1, limit=48;   /* brand = 캠페인 이름에서 뽑은 브랜드('' = 전체) */
   const selC=new Set(), selS=new Set();   /* 고른 캠페인 · 광고 세트(체크) · 계정을 바꾸면 비운다 */
   const clearSel=()=>{ selC.clear(); selS.clear(); };
   if(!RANGE_TXT[range]) range='last_7d';
@@ -18286,7 +18286,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   const BRAND_ALIAS={'아미아미':'아미'};   /* 이름 → 묶을 브랜드 · 더 생기면 한 줄씩 */
   const SORTS=[{value:'spend',label:'지출 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'구매 전환값 많은 순'}];
-  perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf; if(v==='detail'){ if(tab==='daily') go('campaign'); } else go(v); }));
+  perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf; if(v==='detail'){ if(tab==='daily'){ show='on'; go('campaign'); } }   /* 정밀성과에 들어오면 늘 게재 중부터(사용자 요청) */ else go(v); }));
 
   function paint(){
     paintTab(); paintAcct();
