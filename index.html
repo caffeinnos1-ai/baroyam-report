@@ -3518,6 +3518,10 @@ window.BAROYAM_FONT=(function(){
     background:color-mix(in srgb,var(--btn-soft) 60%,var(--paper));border:1px solid color-mix(in srgb,var(--btn) 18%,var(--line));
     border-bottom:0;border-radius:12px 12px 0 0}
   .pf-rep{width:auto;flex:none;gap:6px}
+  /* 표가 있으면 대표 ROAS 를 마진·마진률·최소 ROAS 칸 바로 위에 둔다(좁은 카드 모양이면 원래 자리) */
+  .pf-book-head{position:relative}
+  .pf-book-head:has(+table.pf-calc) .pf-rep{position:absolute;top:50%;left:var(--pf-rep-l);width:var(--pf-rep-w);transform:translateY(-50%);justify-content:center}
+  @container (max-width:1300px){ .pf-book-head:has(+table.pf-calc) .pf-rep{position:static;width:auto;transform:none} }
   .pf-rep[hidden]{display:none}
   .pf-rep small{font-size:11px;color:var(--mute);font-weight:400}
   .pf-book-head+table.pf-calc{border-top-left-radius:0;border-top-right-radius:0}
@@ -19677,6 +19681,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const c=COST.data, list=view_();
     $('pfCalcEmpty').hidden=!!(live(c.items).length&&live(c.chans).length);
     const cg='<colgroup>'+COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
+    /* 대표 ROAS 단추 자리 · 마진·마진률·최소 ROAS 세 칸 바로 위(칸 폭 % 를 더해 왼쪽·폭을 정함) */
+    const kI=COLS.findIndex(cl=>cl[0]==='margin'), sumW=(i,j)=>COLS.slice(i,j).reduce((t,cl)=>t+cl[2],0);
+    const repPos='--pf-rep-l:'+sumW(0,kI)+'%;--pf-rep-w:'+sumW(kI,kI+3)+'%';
     const headRow='<tr class="pf-head">'+COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
     const H={}; COLS.forEach(cl=>{ H[cl[0]]=cl; });
     /* 칸 하나 · 묶음 첫 칸이면 진한 칼선(gs) · data-h 는 좁은 화면 카드에서 이름표로 쓴다 */
@@ -19701,7 +19708,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     };
     let h='';
     list.forEach(({g,opts})=>{
-      h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head">'
+      h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head" style="'+repPos+'">'
         +'<button type="button" class="pf-ad" data-act="pad" aria-pressed="'+(g.ad?'true':'false')+'" title="'+(g.ad?'광고 중 · 누르면 끄기':'광고 안 함 · 누르면 켜기')+'" aria-label="광고상태">광고상태</button>'
         +'<input class="ui-field pf-book-name" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품 이름 (예: 홀떡피자 메타광고)" aria-label="상품 이름">'
         +repBtn(g)
