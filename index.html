@@ -10057,12 +10057,14 @@ window.BAROYAM_FONT=(function(){
             <div class="ip-view ma-need" data-ma-pane="list" hidden>
             <div class="ip-card ma-list">
               <!-- 한 줄: 거르기 칩 | 검색·정렬 · 제목 줄은 사용자 요청으로 뺌(개수는 단계 탭 배지) -->
-              <div class="ma-listbar"><div class="ui-chips" id="maShow"></div>
+              <!-- 왼쪽: 브랜드 고르기(캠페인 이름 '날짜_브랜드_…' 의 브랜드) · 정렬 고르기 | 오른쪽: 게재 중 · 전체 (사용자 요청) -->
+              <div class="ma-listbar">
                 <div class="ma-listbar-end">
-                  <input class="ui-field sm ma-search" id="maSearch" type="search" placeholder="이름 검색" autocomplete="off" aria-label="이름 검색">
+                  <button type="button" class="ui-field sm" id="maBrand" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                  <button type="button" class="ui-field sm" id="maSortPick" aria-haspopup="listbox"><span class="t">지출 많은 순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <div class="ui-tabs" id="maMode" hidden><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
-                  <div class="ui-tabs" id="maSort"><button class="ui-tab" data-value="spend">지출</button><button class="ui-tab" data-value="roas">ROAS</button><button class="ui-tab" data-value="buy">구매</button><button class="ui-tab" data-value="cpa">CPA</button><button class="ui-tab" data-value="ctr">CTR</button></div>
-                </div></div>
+                </div>
+                <div class="ui-chips" id="maShow"></div></div>
               <div hidden><h3 id="maListT"></h3><small id="maListS"></small></div>
               <div class="ma-crumb" id="maCrumb" hidden></div>
               <!-- 단계 탭 · 메타 광고 관리자처럼 표 바로 위 · 캠페인을 체크하고 세트로 넘어가면 그 캠페인의 세트만 -->
@@ -17890,7 +17892,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let data=null, loaded=false, loading=false, failed=false;
   let accId=store('baroyam_ma_acc')||'', range=store('baroyam_ma_range')||'last_7d', mode=store('baroyam_ma_mode')||'card';
   let tab=store('baroyam_perf_tab')||'daily', day=null, dayFrom=null;   /* 데일리 성과 · 고른 기간 dayFrom ~ day(하루면 둘이 같음) */
-  let show='spend', q='', sortKey='spend', sortDir=-1, limit=48;
+  let show='all', brand='', sortKey='spend', sortDir=-1, limit=48;   /* brand = 캠페인 이름에서 뽑은 브랜드('' = 전체) */
   const selC=new Set(), selS=new Set();   /* 고른 캠페인 · 광고 세트(체크) · 계정을 바꾸면 비운다 */
   const clearSel=()=>{ selC.clear(); selS.clear(); };
   if(!RANGE_TXT[range]) range='last_7d';
@@ -18101,8 +18103,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const I=(a.insights&&a.insights[range])||{};
     const cName=Object.fromEntries((a.campaigns||[]).map(c=>[c.id,c.name]));
     const inC=x=>!selC.size||selC.has(x.c), inS=x=>!selS.size||selS.has(x.s);
-    if(tab==='campaign') return (a.campaigns||[]).map(c=>({id:c.id,name:c.name,st:c.st,sub:'',m:(I.campaign||{})[c.id]}));
-    if(tab==='adset') return (a.adsets||[]).filter(inC).map(x=>({id:x.id,name:x.name,st:x.st,sub:cName[x.c]||'',m:(I.adset||{})[x.id]}));
+    if(tab==='campaign') return (a.campaigns||[]).map(c=>({id:c.id,c:c.id,name:c.name,st:c.st,sub:'',m:(I.campaign||{})[c.id]}));
+    if(tab==='adset') return (a.adsets||[]).filter(inC).map(x=>({id:x.id,c:x.c,name:x.name,st:x.st,sub:cName[x.c]||'',m:(I.adset||{})[x.id]}));
     const ads=(a.ads||[]).filter(x=>inC(x)&&inS(x)), IA=I.ad||{};
     const g={};
     ads.forEach(x=>{
@@ -18114,7 +18116,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const sp=x=>(IA[x.id]||{}).spend||0;
     return Object.values(g).map(o=>{
       const top=o.ads.slice().sort((p,r)=>sp(r)-sp(p))[0];
-      return {id:o.id,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,
+      return {id:o.id,c:top.c,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -18169,17 +18171,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(!a) return;
     const cur=a.currency, L=LEVEL_TXT[tab];
     let rows=rowsOf(a).map(r=>Object.assign(r,{x:derive(r.m)}));
+    const bOf=brandMap(a);
+    if(brand) rows=rows.filter(r=>bOf[r.c]===brand);
+    $('maBrand').querySelector('.t').textContent=brand||'전체 브랜드';
+    $('maSortPick').querySelector('.t').textContent=(SORTS.find(o=>o.value===sortKey)||{label:'정렬'}).label+(sortDir>0?' (거꾸로)':'');
     paintTops(a,rows);
-    const nSpend=rows.filter(r=>r.x.spend>0).length, nOn=rows.filter(r=>r.st==='ACTIVE').length;
-    $('maShow').innerHTML=[['spend','지출 있음',nSpend],['on','게재 중',nOn],['all','전체',rows.length]]
+    const nOn=rows.filter(r=>r.st==='ACTIVE').length;
+    if(show!=='on') show='all';
+    $('maShow').innerHTML=[['on','게재 중',nOn],['all','전체',rows.length]]
       .map(c=>'<button type="button" class="ui-chip" data-v="'+c[0]+'" aria-pressed="'+(show===c[0])+'">'+c[1]+' <b>'+c[2]+'</b></button>').join('');
-    if(show==='spend') rows=rows.filter(r=>r.x.spend>0);
-    else if(show==='on') rows=rows.filter(r=>r.st==='ACTIVE');
-    if(q){ const w=q.toLowerCase(); rows=rows.filter(r=>(r.name+' '+r.sub).toLowerCase().includes(w)); }
+    if(show==='on') rows=rows.filter(r=>r.st==='ACTIVE');
     rows.sort((p,r)=>{ const A=p.x[sortKey], B=r.x[sortKey]; if(A==null&&B==null) return 0; if(A==null) return 1; if(B==null) return -1; return (A-B)*sortDir; });
     $('maListT').textContent=L+' '+rows.length+'개';
     $('maListS').textContent=RANGE_TXT[range]+(tab==='asset'?' · 같은 영상·이미지를 쓴 광고는 하나로 묶습니다':' · 이름을 누르면 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+'로');
-    tabsOf('maSort',onSort).set(sortKey);
     tabsOf('maLevel',v=>{ if(v!==tab) go(v); }).set(tab);
     $('maMode').hidden=tab!=='asset';
     /* 단계 탭에 고른 개수 · 고른 것 줄(이름 · ✕ 로 풀기) */
@@ -18245,7 +18249,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     root.querySelector('[data-ma-pane="list"]').dataset.on=tab!=='daily'?'1':'';
     $('maRange').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
   }
-  function go(t){ tab=t; keep('baroyam_perf_tab',t); limit=48; q=''; $('maSearch').value=''; paint(); }
+  function go(t){ tab=t; keep('baroyam_perf_tab',t); limit=48; paint(); }
+  /* 브랜드 · 캠페인 이름 '260825_홀떡피자_PHABO' 의 둘째 토막(날짜 뒤) · 모양이 다르면 '기타' */
+  function brandMap(a){
+    const m={};
+    (a.campaigns||[]).forEach(c=>{ const t=String(c.name||'').split('_'); m[c.id]=(/^\d{6}$/.test(t[0])&&t[1]?t[1]:t.length>1&&t[0]?t[0]:'기타').trim()||'기타'; });
+    return m;
+  }
+  const SORTS=[{value:'spend',label:'지출 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'구매 전환값 많은 순'}];
   perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf; if(v==='detail'){ if(tab==='daily') go('campaign'); } else go(v); }));
 
   function paint(){
@@ -18263,10 +18274,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
 
   /* ---------- 움직임 ---------- */
-  const onSort=v=>{ if(v===sortKey) return; sortKey=v; sortDir=-1; limit=48; paintList(acc()); };
   tabsOf('maRange',v=>{ range=v; keep('baroyam_ma_range',v); limit=48; paint(); }).set(range);
   tabsOf('maMode',v=>{ mode=v; keep('baroyam_ma_mode',v); paintList(acc()); }).set(mode);
-  tabsOf('maSort',onSort).set(sortKey);
   /* 하루를 누르면 그날 · Shift 를 누른 채 누르면 지금 기간에서 그날까지 넓힌다 */
   function pickDay(d,extend){
     if(extend&&day){ const lo=dayFrom<d?dayFrom:d, hi=day>d?day:d; dayFrom=lo; day=hi; }
@@ -18276,7 +18285,20 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     onChange:v=>{ if(v&&v.start){ dayFrom=v.start; day=v.end||v.start; } else { dayFrom=day=kst(); } paint(); }});
   $('maDay').classList.add('raised');
   $('maShow').addEventListener('click',e=>{ const b=e.target.closest('[data-v]'); if(!b) return; show=b.dataset.v; limit=48; paintList(acc()); });
-  $('maSearch').addEventListener('input',e=>{ q=e.target.value.trim(); limit=48; paintList(acc()); });
+  $('maBrand').addEventListener('click',e=>{
+    e.stopPropagation();
+    const a=acc(); if(!a||!window.UI||!window.UI.menu) return;
+    /* 브랜드마다 지금 기간 지출 합 · 지출 큰 순 */
+    const bOf=brandMap(a), I=(a.insights&&a.insights[range]&&a.insights[range].campaign)||{}, sum={}, n={};
+    (a.campaigns||[]).forEach(c=>{ const b=bOf[c.id]; n[b]=(n[b]||0)+1; sum[b]=(sum[b]||0)+((I[c.id]||{}).spend||0); });
+    const list=Object.keys(n).sort((x,y)=>sum[y]-sum[x]||x.localeCompare(y,'ko'));
+    window.UI.menu($('maBrand'),[{value:'',label:'전체 브랜드',sub:'캠페인 '+(a.campaigns||[]).length}].concat(list.map(b=>({value:b,label:b,sub:(sum[b]?'지출 '+short(sum[b],a.currency)+' · ':'')+'캠페인 '+n[b]}))),brand,v=>{ brand=v; limit=48; paintList(acc()); });
+  });
+  $('maSortPick').addEventListener('click',e=>{
+    e.stopPropagation();
+    if(!window.UI||!window.UI.menu) return;
+    window.UI.menu($('maSortPick'),SORTS,sortKey,v=>{ sortKey=v; sortDir=-1; limit=48; paintList(acc()); });
+  });
   $('maDays').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-d]'); if(!tr) return; pickDay(tr.dataset.d,e.shiftKey); paintDaily(acc()); window.scrollTo({top:root.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'}); });
   $('maTable').addEventListener('click',e=>{
     const th=e.target.closest('th[data-k]');
