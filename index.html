@@ -6878,6 +6878,7 @@ window.BAROYAM_FONT=(function(){
   .ui-menu-q{flex:none;padding:8px;border-bottom:1px solid var(--line)}
   .ui-menu-q .ui-field{width:100%}
   .ui-menu-list{flex:1;min-height:0;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:1px}
+  .ui-opt-tag{font-style:normal;font-size:11px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft);padding:1px 7px;border-radius:99px;margin-right:8px;white-space:nowrap}
   .ui-opt.is-kb{background:var(--chip-flat);box-shadow:inset 0 0 0 1px var(--line)}
   /* 날짜선택 달력 · UI.datePicker() 가 만든다 · 모양은 프로젝트 대시보드 마감일 고르기(.pj-dpick)를 표준으로 삼았다 ·
      기간(range)은 빠른 선택 칩 → 시작일~종료일 칸 → 달력 → 초기화/적용, 한 날짜(single)는 누르면 바로 정해진다 */
@@ -7535,7 +7536,7 @@ window.BAROYAM_FONT=(function(){
   }
 
   /* 목록에서 하나 고르기 · <select> 대신 쓴다(브라우저마다 모양이 달라서) · 누를 때마다 부르면 버튼 아래에 목록이 뜬다 ·
-     UI.menu(버튼, [{value,label,sub}], 지금 값, 고르면 부를 함수, {search:true, placeholder, limit}) · 떠 있는 창은 하나를 같이 쓴다(표 칸마다 만들지 않게) ·
+     UI.menu(버튼, [{value,label,sub,tag}], 지금 값, 고르면 부를 함수, {search:true, placeholder, limit}) · tag = 이름 왼쪽 작은 꼬리표(폴더 등) · 떠 있는 창은 하나를 같이 쓴다(표 칸마다 만들지 않게) ·
      search 를 켜면 맨 위 검색칸 · 띄어 쓴 낱말이 이름·덧붙임에 모두 들어 있는 줄만 · limit = 검색어가 없을 때 보일 줄 수(나머지는 검색으로) ·
      ↑↓ 로 옮기고 Enter 로 고름 */
   let menuPop=null;
@@ -7552,12 +7553,12 @@ window.BAROYAM_FONT=(function(){
     cfg=cfg||{};
     options=options||[];
     const optHtml=(o,i)=>'<button type="button" class="ui-opt" role="option" data-i="'+i+'" aria-selected="'+(String(o.value)===String(cur)?'true':'false')+'">'
-      +'<span>'+esc(o.label)+'</span>'+(o.sub!=null&&o.sub!==''?'<small>'+esc(o.sub)+'</small>':'')+'</button>';
+      +'<span>'+(o.tag?'<em class="ui-opt-tag">'+esc(o.tag)+'</em>':'')+esc(o.label)+'</span>'+(o.sub!=null&&o.sub!==''?'<small>'+esc(o.sub)+'</small>':'')+'</button>';
     function fill(q){
       const box=cfg.search?pop.querySelector('.ui-menu-list'):pop;
       const ws=String(q||'').toLowerCase().split(/\s+/).filter(Boolean);
       let idx=options.map((o,i)=>i);
-      if(ws.length) idx=idx.filter(i=>{ const t=(options[i].label+' '+(options[i].sub||'')).toLowerCase(); return ws.every(w=>t.includes(w)); });
+      if(ws.length) idx=idx.filter(i=>{ const t=((options[i].tag||'')+' '+options[i].label+' '+(options[i].sub||'')).toLowerCase(); return ws.every(w=>t.includes(w)); });
       const lim=ws.length?200:(cfg.limit||idx.length);
       const more=idx.length-lim;
       box.innerHTML=idx.slice(0,lim).map(i=>optHtml(options[i],i)).join('')
@@ -18782,7 +18783,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           b.querySelector('.t').innerHTML=l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 연동</span>';
           if(!D||!D.length){ window.baroyamAsk&&window.baroyamAsk('드라이브 영상이 없습니다','바로얌 드라이브 › 메타광고 폴더의 영상 목록을 읽지 못했습니다. 드라이브 화면을 한 번 열어 새로고침한 뒤 다시 눌러 주세요.'); return; }
           const ranked=D.map(f=>({f,sc:score(x,f)})).sort((p,q)=>q.sc-p.sc||String(q.f.date).localeCompare(String(p.f.date)));
-          const opts=(l.drive?[{value:'__off',label:'연동 풀기'}]:[]).concat(ranked.map((o,i)=>({value:o.f.id,label:o.f.name,sub:(o.sc>0&&i<3?'추천 · ':'')+String(o.f.path).split(' / ').slice(-2).join(' / ')})));
+          /* 폴더는 이름 왼쪽 작은 꼬리표로 · 뿌리(메타광고)는 빼고 깊은 폴더부터(11_홀떡피자/영상 → 홀떡피자 / 영상) · 앞 번호는 뺀다(사용자 요청) */
+          const folder=f=>{
+            let g=String(f.path||'').split(' / ').slice(1).map(x=>x.replace(/^\d+[_.\s-]*/,'').trim()).filter(Boolean).reverse();
+            const bi=f.brand?g.findIndex(x=>x.includes(f.brand)):-1;   /* 브랜드 폴더를 맨 앞으로 */
+            if(bi>0) g=[g[bi]].concat(g.filter((x,i)=>i!==bi));
+            return g.slice(0,2).join(' / ');
+          };
+          const opts=(l.drive?[{value:'__off',label:'연동 풀기'}]:[]).concat(ranked.map((o,i)=>({value:o.f.id,tag:folder(o.f),label:o.f.name,sub:o.sc>0&&i<3?'추천':''})));
           window.UI.menu(b,opts,l.drive||'',async v=>{ const f=D.find(z=>z.id===v); await saveLinkAt('asset',id,v==='__off'?null:{drive:v,driveName:f&&f.name}); paintLinks(); },{search:true,placeholder:'영상 이름·폴더로 찾기',limit:16});
         }
       });
