@@ -17692,8 +17692,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const C=[['spend','지출',v=>money(v,cur)],['rev','구매 전환값',v=>money(v,cur)],['roas','ROAS',pct],['buy','구매',int],['cpa','CPA',v=>v==null?'-':money(v,cur)],
       ['clicks','링크 클릭',int],['ctr','CTR',v=>v==null?'-':v.toFixed(2)+'%'],['cpm','CPM',v=>v==null?'-':money(v,cur)],['imp','노출',int]];
     const td=(c,x)=>{ const v=x[c[0]]; let cls=v==null||v===0?' class="is-zero"':''; if(c[0]==='roas'&&v!=null&&v<100&&x.spend>0) cls=' class="is-low"'; return '<td'+cls+'>'+c[2](v)+'</td>'; };
-    $('maDays').innerHTML='<table class="ma-table ma-days"><thead><tr><th>날짜</th>'+C.map(c=>'<th>'+c[1]+'</th>').join('')+'</tr></thead><tbody>'
-      +rows.map(r=>{ const w=dowOf(r.d); return '<tr data-d="'+r.d+'" class="'+(w===0||w===6?'is-we':'')+(r.d===day?' is-pick':'')+'"><td>'+dayTxt(r.d)+(r.d===t?' · 진행 중':'')+'</td>'+C.map(c=>td(c,r.x)).join('')+'</tr>'; }).join('')
+    /* 달러 계정 · 지출 왼쪽에 그날 환율(서버가 원화로 바꿀 때 쓴 값 data.fx · 주말·휴일·아직 안 나온 날은 앞 영업일 값) */
+    const fx=cur&&cur!=='KRW'&&inKrw()&&data.fx&&data.fx[cur], fxDays=fx?Object.keys(fx).sort():[];
+    const fxOn=d=>{ let k=null; for(const x of fxDays){ if(x<=d) k=x; else break; } return k; };
+    const fxTd=d=>{
+      const k=fxOn(d); if(!k) return '<td class="is-zero">-</td>';
+      const v=fx[k].toLocaleString('ko-KR',{minimumFractionDigits:2,maximumFractionDigits:2})+'원';
+      return k===d?'<td>'+v+'</td>':'<td class="is-zero" title="'+dayTxt(k)+' 환율(주말·휴일이거나 아직 오늘 환율이 나오지 않음)">'+v+'</td>';
+    };
+    $('maDays').innerHTML='<table class="ma-table ma-days"><thead><tr><th>날짜</th>'+(fx?'<th title="1'+esc(cur)+' = 원 · 유럽중앙은행 기준환율">환율(1'+(cur==='USD'?'달러':esc(cur))+')</th>':'')+C.map(c=>'<th>'+c[1]+'</th>').join('')+'</tr></thead><tbody>'
+      +rows.map(r=>{ const w=dowOf(r.d); return '<tr data-d="'+r.d+'" class="'+(w===0||w===6?'is-we':'')+(r.d===day?' is-pick':'')+'"><td>'+dayTxt(r.d)+(r.d===t?' · 진행 중':'')+'</td>'+(fx?fxTd(r.d):'')+C.map(c=>td(c,r.x)).join('')+'</tr>'; }).join('')
       +'</tbody></table>';
   }
 
