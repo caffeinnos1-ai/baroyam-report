@@ -185,7 +185,7 @@ window.BAROYAM_DB=(function(){
       /* 드라이브 색인·사전과 계정관리 목록은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 ·
          계정관리(accounts_v1)는 아이디·비밀번호와 올린 로고 그림이 들어 있어, 첫 화면에서 받으면
          느려지고 계정관리 비밀번호를 통과하기 전에 브라우저에 와 버린다 */
-      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1)');
+      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,meta_ads_v1)');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
@@ -2443,6 +2443,57 @@ window.BAROYAM_FONT=(function(){
     transform:translate(-50%,-110%);opacity:0;transition:opacity .12s;z-index:2}
   .ip-tip.is-on{opacity:1}
   .ip-tip b{font-weight:600}
+  /* ===== 퍼포먼스마케팅 › 메타광고 성과 (ip-card·ip-kpi 를 같이 씀) */
+  .ma-bar{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap}
+  .ma-state{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--body);flex-wrap:wrap}
+  .ma-bar-tabs{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+  .ma-bar-tabs .ui-tabs[hidden]{display:none}
+  .ma-empty{font-size:13.5px;color:var(--body);line-height:1.7}
+  .ma-empty[hidden],.ma-crumb[hidden],.ma-need[hidden]{display:none}
+  .ma-cur{padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;background:var(--chip-flat);color:var(--mute)}
+  .ma-key{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:-1px}
+  .ma-key.is-bar{background:color-mix(in srgb,var(--btn) 35%,transparent)}
+  .ma-key.is-line{height:3px;border-radius:2px;background:var(--btn);vertical-align:2px}
+  .ma-chart{position:relative;height:220px}
+  .ma-chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .ma-chart .grid line{stroke:var(--line);stroke-width:1}
+  .ma-chart .axis{font-size:11px;fill:var(--mute);font-family:var(--app-font)}
+  .ma-chart .bars path{fill:color-mix(in srgb,var(--btn) 35%,transparent);transition:opacity .15s}
+  .ma-chart.is-hover .bars path{opacity:.4}
+  .ma-chart .bars path.is-on{opacity:1;fill:color-mix(in srgb,var(--btn) 55%,transparent)}
+  .ma-chart .roas{fill:none;stroke:var(--btn);stroke-width:2;stroke-linejoin:round}
+  .ma-chart .hit rect{fill:transparent}
+  .ma-tools{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:12px}
+  .ma-search{margin-left:auto;width:220px;max-width:100%}
+  .ma-crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--body);margin:-2px 0 12px}
+  .ma-crumb button{border:0;background:none;padding:2px 4px;font:inherit;color:var(--btn);cursor:pointer;border-radius:6px}
+  .ma-crumb button:hover{background:var(--btn-soft)}
+  .ma-crumb span{color:var(--mute)}
+  .ma-crumb b{font-weight:500;color:var(--ink)}
+  .ma-table-wrap{overflow-x:auto}
+  .ma-table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+  .ma-table th{background:var(--paper);font-size:12px;font-weight:500;color:var(--mute);text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+  .ma-table th:first-child{text-align:left;cursor:default}
+  .ma-table th.is-sort{color:var(--ink)}
+  .ma-table td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;color:var(--ink)}
+  .ma-table td:first-child{text-align:left;white-space:normal;min-width:260px;max-width:440px}
+  .ma-table tr.is-total td{background:var(--chip-flat);font-weight:600}
+  .ma-table tbody tr:not(.is-total):hover td{background:color-mix(in srgb,var(--btn-soft) 50%,transparent)}
+  .ma-table td.is-low{color:var(--neg)}
+  .ma-table td.is-zero{color:var(--mute)}
+  .ma-name{display:flex;align-items:center;gap:10px;min-width:0}
+  .ma-name img,.ma-name .ma-noimg{width:38px;height:38px;border-radius:8px;object-fit:cover;flex:none;background:var(--chip-flat)}
+  .ma-name > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .ma-name b{font-weight:500;overflow-wrap:anywhere}
+  .ma-name .ma-drill{border:0;background:none;padding:0;font:inherit;font-weight:500;color:var(--ink);text-align:left;cursor:pointer;overflow-wrap:anywhere}
+  .ma-name .ma-drill:hover{color:var(--btn);text-decoration:underline}
+  .ma-name small{font-size:11.5px;color:var(--mute);overflow-wrap:anywhere}
+  .ma-st{display:inline-block;width:7px;height:7px;border-radius:99px;background:var(--mute);opacity:.5;flex:none}
+  .ma-st.is-on{background:var(--pos);opacity:1}
+  .ma-st.is-bad{background:var(--neg);opacity:1}
+  .ma-more{display:block;margin:12px auto 0}
+  @media (max-width:1100px){ .ma-kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:560px){ .ma-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .ma-search{margin-left:0;width:100%} .ma-bar-tabs{margin-left:0} }
   .ip-dot{position:absolute;width:9px;height:9px;border-radius:99px;background:var(--paper);border:2px solid var(--self);transform:translate(-50%,-50%);opacity:0;pointer-events:none}
   .ip-dot.is-on{opacity:1}
   .ip-legend{display:flex;gap:14px;font-size:11.5px;color:var(--mute)}
@@ -9853,12 +9904,48 @@ window.BAROYAM_FONT=(function(){
         </div>
       </div><!-- /view-drive -->
 
-      <!-- 퍼포먼스마케팅 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
+      <!-- 퍼포먼스마케팅 › 메타광고 성과 · VPS(caffeinnos-automation/meta_ads.js · 08~22시 2시간마다)가 채운 app_settings meta_ads_v1 을 읽기만 한다 ·
+           광고계정 탭(통화가 달라 섞어 더하지 않음) · 기간 탭 → 숫자 여섯 칸 → 하루 추이 → 캠페인 › 세트 › 광고 · 소재 표 -->
       <div id="view-perf" style="display:none">
         <section>
           <div class="plan-hero">
-            <div class="ptag">마케팅</div>
-            <div class="ptitle">퍼포먼스마케팅</div>
+            <div class="ptag">마케팅 · 메타광고</div>
+            <div class="ptitle">메타광고 성과</div>
+            <div class="psub">캠페인 → 광고 세트 → 광고(소재) 순서로 지출·구매·ROAS 를 봅니다. 김비서 서버가 2시간마다 메타에서 받아 옵니다.</div>
+          </div>
+          <div class="ip ma" id="maRoot">
+            <div class="ip-card ma-bar">
+              <div class="ma-state" id="maState"><span class="ip-live is-off"></span>불러오는 중…</div>
+              <div class="ma-bar-tabs">
+                <div class="ui-tabs" id="maAcct"></div>
+                <div class="ui-tabs" id="maRange">
+                  <button class="ui-tab" data-value="today">오늘</button>
+                  <button class="ui-tab" data-value="yesterday">어제</button>
+                  <button class="ui-tab" data-value="last_7d">최근 7일</button>
+                  <button class="ui-tab" data-value="last_30d">최근 30일</button>
+                </div>
+              </div>
+            </div>
+            <div class="ma-empty ip-card" id="maEmpty" hidden></div>
+            <div class="ip-kpis ma-kpis ma-need" id="maKpis"></div>
+            <div class="ip-card ma-need">
+              <div class="ip-card-head"><h3>하루 추이 · 최근 30일</h3><small><i class="ma-key is-bar"></i>지출 <i class="ma-key is-line"></i>ROAS</small></div>
+              <div class="ma-chart" id="maChart"></div>
+            </div>
+            <div class="ip-card ma-need">
+              <div class="ma-tools">
+                <div class="ui-tabs" id="maLevel">
+                  <button class="ui-tab" data-value="campaign">캠페인</button>
+                  <button class="ui-tab" data-value="adset">광고 세트</button>
+                  <button class="ui-tab" data-value="ad">광고</button>
+                  <button class="ui-tab" data-value="asset">소재</button>
+                </div>
+                <div class="ui-chips" id="maShow"></div>
+                <input class="ui-field ma-search" id="maSearch" type="search" placeholder="이름 검색">
+              </div>
+              <div class="ma-crumb" id="maCrumb" hidden></div>
+              <div class="ma-table-wrap" id="maTable"></div>
+            </div>
           </div>
         </section>
       </div><!-- /view-perf -->
@@ -12875,7 +12962,7 @@ window.CsGuide=(function(){
     ['review',1,'리뷰수집','채널별 인박스','회사 PC 리뷰 수집기(4317)와 이야기합니다. 수집기 화면 디자인은 대시보드가 보내 줍니다.'],
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
-    ['perf',1,'퍼포먼스마케팅','자리만 있음','화면은 제목만 있고 아직 읽거나 저장하는 데이터가 없습니다.'],
+    ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 광고계정마다 통화(원·달러)를 따로 보입니다.'],
     ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1.'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
@@ -12934,6 +13021,7 @@ window.CsGuide=(function(){
     ['agenda','storage','메모 이미지 agenda/'],
     ['content','storage','대본 주문 cmjob/req → res'],
     ['content','settings','content_jobs_v1'],
+    ['perf','settings','meta_ads_v1 읽기','r'],
     ['account','settings','accounts_v1'],
     ['admin','settings','회원·권한·순서·글꼴·틀'],
     ['admin','runs','워크플로우 상태','r'],
@@ -12942,7 +13030,7 @@ window.CsGuide=(function(){
     ['settings','mirror','열 때 덩어리를 행으로 펼쳐 둠'],
     ['ext','ezadmin','이지어드민 창에서 표 읽기','r'],
     ['vps','ezadmin','재고 07:00·16:30 · 당일판매','r'],
-    ['vps','settings','inventory_v1 · daily_sales_v1 채움'],
+    ['vps','settings','inventory_v1 · daily_sales_v1 · meta_ads_v1 채움'],
     ['vps','runs','실행마다 정상·실패'],
     ['vps','kim','대화 봇 늘 켜 둠'],
     ['vps','slack','당일판매 보고 16:15'],
@@ -13336,6 +13424,9 @@ window.CsGuide=(function(){
     /* caffeinnos-automation/insta_insights.js · 토큰은 VPS instagram_token.json(7일마다 스스로 갱신) */
     {name:'인스타 성과 수집', cat:'collect', where:'ERP 인스타콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['07:20','13:20','19:20'], record:'인스타 성과 수집',
      desc:'인스타그램 API 로 계정·게시물 성과(도달·조회·참여·팔로워 증감·팔로워 구성)를 받아 인스타콘텐츠 성과 화면을 채워요.', task:'cron'},
+    /* caffeinnos-automation/meta_ads.js · 토큰은 VPS .env META_ADS_TOKEN(시스템 사용자 baroyam-ads · ads_read · 만료 없음) */
+    {name:'메타광고 성과 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
+     desc:'메타 마케팅 API 로 광고계정의 캠페인·광고 세트·광고(소재) 성과(지출·구매·매출·ROAS)를 받아 퍼포먼스마케팅 화면을 채워요.', task:'cron'},
     /* GitHub Actions(baroyam-trend) · 예전 워크플로우 탭에 따로 있던 것 · 예약 실행이라 늦게 도는 일이 잦다 */
     {name:'구글트렌드 수집', cat:'collect', where:'ERP 트렌드분석 · GitHub Actions', days:[0,1,2,3,4,5,6], times:['09:00','12:00','15:00','18:00'], record:'구글트렌드 수집',
      desc:'구글트렌드 검색 관심도를 받아 트렌드분석 화면을 채워요.', host:'GitHub Actions'},
@@ -14421,7 +14512,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account'||v==='content');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
-    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta');   /* 인스타콘텐츠도 손익처럼 흰 판을 넓게 */
+    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta'||v==='perf');   /* 인스타콘텐츠·퍼포먼스마케팅도 손익처럼 흰 판을 넓게 */
+    if(v==='perf'&&window.baroyamMetaAds) window.baroyamMetaAds.open();
     if(v==='profit'&&window.baroyamProfitOpen) window.baroyamProfitOpen();
     if(v==='ops'&&window.baroyamOpsOpen) window.baroyamOpsOpen();
     if(v==='insta'&&window.baroyamInstaOpen) window.baroyamInstaOpen();
@@ -17314,6 +17406,263 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     pick(el);
   }));
   window.baroyamInstaOpen=function(){ pick(cur); };
+})();
+
+/* ===== 퍼포먼스마케팅 › 메타광고 성과 =====
+   서버(VPS caffeinnos-automation/meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받은 값을 app_settings 한 칸 meta_ads_v1 에 채우고 화면은 읽기만 한다.
+   모양: {updatedAt, accounts:[{id,name,currency,campaigns:[{id,name,st,budget}],adsets:[{id,name,c,st}],ads:[{id,name,c,s,st,asset,kind,thumb}],
+          insights:{today|yesterday|last_7d|last_30d:{campaign|adset|ad:{id:성과},total:성과}}, daily:{'YYYY-MM-DD':성과}}]}
+   성과 = {spend,imp,reach,freq,clicks(링크 클릭),buy(구매),rev(구매 전환값)} · 계정마다 통화가 달라(원·달러) 섞어 더하지 않는다. */
+(function(){
+  const root=document.getElementById('maRoot');
+  if(!root) return;
+  const KEY='meta_ads_v1';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const kst=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+  function dayAdd(d,n){ const [y,m,dd]=d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); }
+  const RANGE_TXT={today:'오늘',yesterday:'어제',last_7d:'최근 7일',last_30d:'최근 30일'};
+  const PREV_TXT={today:'어제보다',yesterday:'그제보다',last_7d:'지난 7일보다',last_30d:'지난 30일보다'};
+  const LEVEL_TXT={campaign:'캠페인',adset:'광고 세트',ad:'광고',asset:'소재'};
+  const store=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  const keep=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
+
+  let data=null, loaded=false, loading=false, failed=false;
+  let accId=store('baroyam_ma_acc')||'', range=store('baroyam_ma_range')||'last_7d', level=store('baroyam_ma_level')||'campaign';
+  let show='spend', q='', sortKey='spend', sortDir=-1, drill={}, limit=60;
+  if(!RANGE_TXT[range]) range='last_7d';
+  if(!LEVEL_TXT[level]) level='campaign';
+
+  /* ---------- 숫자 ---------- */
+  const acc=()=>data&&data.accounts&&(data.accounts.find(a=>a.id===accId)||data.accounts[0]);
+  function money(v,cur){
+    v=v||0;
+    if(cur==='KRW'||!cur) return Math.round(v).toLocaleString('ko-KR')+'원';
+    const d=Math.abs(v)>=1000?0:2;
+    const t=Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+    return (v<0?'-':'')+(cur==='USD'?'$'+t:t+' '+cur);
+  }
+  const int=v=>Math.round(v||0).toLocaleString('ko-KR');
+  const derive=x=>{
+    x=x||{};
+    const o={spend:x.spend||0,rev:x.rev||0,buy:x.buy||0,clicks:x.clicks||0,imp:x.imp||0};
+    o.roas=o.spend?o.rev/o.spend*100:null; o.cpa=o.buy?o.spend/o.buy:null; o.ctr=o.imp?o.clicks/o.imp*100:null; o.cpm=o.imp?o.spend/o.imp*1000:null;
+    return o;
+  };
+  function addUp(list){
+    const o={spend:0,rev:0,buy:0,clicks:0,imp:0};
+    list.forEach(x=>{ if(!x) return; for(const k in o) o[k]+=x[k]||0; });
+    return o;
+  }
+  /* 지난 같은 기간 · 하루 값(daily)으로 더한다(최근 7일·30일은 오늘을 뺀 기간) · 메타는 지출 없는 날을 보내지 않아 빈 날은 0 ·
+     서버가 처음에 90일을 받아 두므로 60일 전까지는 빈 날 = 지출 없음 · 오늘은 하루가 끝나지 않아 견주지 않는다 */
+  function prevOf(a){
+    if(range==='today'||!a.daily) return null;
+    const t=kst(), D=a.daily;
+    const span={yesterday:[2,2],last_7d:[14,8],last_30d:[60,31]}[range];
+    const days=[]; for(let i=span[0];i>=span[1];i--) days.push(dayAdd(t,-i));
+    return addUp(days.map(d=>D[d]));
+  }
+
+  /* ---------- 그리기 ---------- */
+  const whenTxt=iso=>{ const t=new Date(Date.parse(iso)+9*3600e3); return (t.getUTCMonth()+1)+'월 '+t.getUTCDate()+'일 '+String(t.getUTCHours()).padStart(2,'0')+':'+String(t.getUTCMinutes()).padStart(2,'0'); };
+  function paintState(){
+    const a=acc();
+    if(!data){
+      $('maState').innerHTML='<span class="ip-live is-off"></span>'+(failed?'불러오지 못했습니다 · 새로고침해 주세요':loaded?'아직 메타광고 데이터가 없습니다':'불러오는 중…');
+      return;
+    }
+    const stale=Date.now()-Date.parse(data.updatedAt||0)>12*3600e3;
+    $('maState').innerHTML='<span class="ip-live'+(stale?' is-off':'')+'"></span>메타 연결됨 · '+whenTxt(data.updatedAt)+' 기준'
+      +(stale?' · 12시간 넘게 새 값이 없습니다':'')+(a?'<span class="ma-cur" title="이 광고계정의 통화">'+esc(a.currency)+'</span>':'');
+  }
+  function setTabs(id,val,fn){ if(window.UI&&window.UI.tabs) window.UI.tabs($(id),fn).set(val); }
+  const onLevel=v=>{ level=v; keep('baroyam_ma_level',v); limit=60; paint(); };
+  function paintAccTabs(){
+    const box=$('maAcct'), list=(data&&data.accounts)||[];
+    box.hidden=list.length<2;
+    box.innerHTML=list.map(a=>'<button class="ui-tab" data-value="'+esc(a.id)+'">'+esc(String(a.name||a.id).replace(/\s*광고\s*계정$/,''))+'</button>').join('');
+    if(list.length) setTabs('maAcct',acc().id,v=>{ accId=v; keep('baroyam_ma_acc',v); drill={}; limit=60; paint(); });
+  }
+  function paintKpis(a){
+    const cur=a.currency, now=derive(a.insights&&a.insights[range]&&a.insights[range].total), p=prevOf(a), pv=p&&derive(p);
+    const chip=(n,o,good,unit)=>{
+      if(!pv) return '<span class="ip-delta is-none">'+(range==='today'?'오늘은 아직 진행 중':'비교할 지난 기록 없음')+'</span>';
+      if(o==null||n==null||(!o&&!n)) return '<span class="ip-delta is-none">비교할 값 없음</span>';
+      if(!o&&unit!=='p') return '<span class="ip-delta is-none">'+PREV_TXT[range].replace('보다','')+' 0</span>';
+      const d=unit==='p'?Math.round((n-o)*10)/10:(o?Math.round((n-o)/o*1000)/10:0);
+      const up=d>=0, ok=good?up:!up;
+      return '<span class="ip-delta'+(ok?'':' is-down')+'">'+(up?'▲ ':'▼ ')+Math.abs(d)+(unit==='p'?'%p':'%')+'<i>'+PREV_TXT[range]+'</i></span>';
+    };
+    const K=[
+      {l:'지출',v:money(now.spend,cur),d:chip(now.spend,pv&&pv.spend,true)},
+      {l:'구매 전환값',v:money(now.rev,cur),d:chip(now.rev,pv&&pv.rev,true)},
+      {l:'ROAS',v:now.roas==null?'-':Math.round(now.roas)+'<span>%</span>',d:chip(now.roas,pv&&pv.roas,true,'p')},
+      {l:'구매',v:int(now.buy)+'<span>건</span>',d:chip(now.buy,pv&&pv.buy,true)},
+      {l:'구매당 비용(CPA)',v:now.cpa==null?'-':money(now.cpa,cur),d:chip(now.cpa,pv&&pv.cpa,false)},
+      {l:'링크 클릭률(CTR)',v:now.ctr==null?'-':now.ctr.toFixed(2)+'<span>%</span>',d:chip(now.ctr,pv&&pv.ctr,true,'p')},
+    ];
+    $('maKpis').innerHTML=K.map(k=>'<div class="ip-card ip-kpi"><small>'+k.l+' · '+RANGE_TXT[range]+'</small><b>'+k.v+'</b>'+k.d+'</div>').join('');
+  }
+  function paintChart(a){
+    const box=$('maChart'), D=a.daily||{}, cur=a.currency, t=kst();
+    const days=[]; for(let i=29;i>=0;i--){ const d=dayAdd(t,-i); days.push({d,x:derive(D[d])}); }
+    const W=Math.max(320,box.clientWidth||900), H=220, L=8, R=44, T=10, B=24;
+    const pw=W-L-R, ph=H-T-B, n=days.length, step=pw/n, bw=Math.min(44,step*.62), base=T+ph;
+    const maxS=Math.max(1e-9,...days.map(o=>o.x.spend)), maxR=Math.max(100,...days.map(o=>o.x.roas||0));
+    const yr=v=>base-v/maxR*ph;
+    let g='<g class="grid">'; for(let i=0;i<=3;i++){ const yy=T+ph*i/3; g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'"/>'; } g+='</g>';
+    let ax='<g class="axis">'+[0,1,2,3].map(i=>'<text x="'+(W-R+6)+'" y="'+(T+ph*i/3+4)+'">'+Math.round(maxR*(3-i)/3)+'%</text>').join('');
+    days.forEach((o,i)=>{ if(i%5===4||i===n-1) ax+='<text x="'+(L+step*i+step/2)+'" y="'+(H-6)+'" text-anchor="middle">'+(+o.d.slice(5,7))+'.'+(+o.d.slice(8))+'</text>'; });
+    ax+='</g>';
+    let bars='<g class="bars">', hit='<g class="hit">'; const pts=[];
+    days.forEach((o,i)=>{
+      const cx=L+step*i+step/2, x0=cx-bw/2, x1=cx+bw/2, h=o.x.spend/maxS*ph, r=Math.min(4,bw/2,h), top=base-h;
+      if(h>0.5) bars+='<path data-i="'+i+'" d="M'+x0+','+base+'V'+(top+r)+'Q'+x0+','+top+' '+(x0+r)+','+top+'H'+(x1-r)+'Q'+x1+','+top+' '+x1+','+(top+r)+'V'+base+'Z"/>';
+      hit+='<rect data-i="'+i+'" x="'+(L+step*i)+'" y="'+T+'" width="'+step+'" height="'+ph+'"/>';
+      if(o.x.roas!=null) pts.push(cx.toFixed(1)+','+yr(o.x.roas).toFixed(1));
+    });
+    bars+='</g>'; hit+='</g>';
+    box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'">'+g+ax+bars+'<polyline class="roas" points="'+pts.join(' ')+'"/>'+hit+'</svg><div class="ip-tip"></div>';
+    const tip=box.querySelector('.ip-tip');
+    box.querySelectorAll('.hit rect').forEach(el=>el.addEventListener('mouseenter',()=>{
+      const i=+el.dataset.i, o=days[i];
+      box.classList.add('is-hover');
+      box.querySelectorAll('.bars path').forEach(p=>p.classList.toggle('is-on',+p.dataset.i===i));
+      tip.innerHTML='<b>'+(+o.d.slice(5,7))+'월 '+(+o.d.slice(8))+'일</b><br>지출 '+money(o.x.spend,cur)+' · 구매 전환값 '+money(o.x.rev,cur)
+        +'<br>ROAS '+(o.x.roas==null?'-':Math.round(o.x.roas)+'%')+' · 구매 '+int(o.x.buy)+'건';
+      const cx=(L+step*i+step/2)/W*box.clientWidth;
+      tip.style.left=Math.min(Math.max(0,cx-100),Math.max(0,box.clientWidth-220))+'px'; tip.style.top='-8px';
+      tip.classList.add('is-on');
+    }));
+    box.querySelector('svg').addEventListener('mouseleave',()=>{ box.classList.remove('is-hover'); tip.classList.remove('is-on'); box.querySelectorAll('.bars path').forEach(p=>p.classList.remove('is-on')); });
+  }
+
+  /* 표 줄 만들기 · 소재는 같은 영상·이미지(asset)를 쓴 광고를 하나로 묶는다 */
+  function rowsOf(a){
+    const I=(a.insights&&a.insights[range])||{};
+    const cName=Object.fromEntries((a.campaigns||[]).map(c=>[c.id,c.name]));
+    const sName=Object.fromEntries((a.adsets||[]).map(x=>[x.id,x.name]));
+    const inC=x=>!drill.c||x.c===drill.c, inS=x=>!drill.s||x.s===drill.s;
+    if(level==='campaign') return (a.campaigns||[]).filter(c=>!drill.c||c.id===drill.c).map(c=>({id:c.id,name:c.name,st:c.st,sub:'',m:(I.campaign||{})[c.id]}));
+    if(level==='adset') return (a.adsets||[]).filter(x=>inC(x)&&(!drill.s||x.id===drill.s)).map(x=>({id:x.id,name:x.name,st:x.st,sub:cName[x.c]||'',m:(I.adset||{})[x.id]}));
+    const ads=(a.ads||[]).filter(x=>inC(x)&&inS(x)), IA=I.ad||{};
+    if(level==='ad') return ads.map(x=>({id:x.id,name:x.name,st:x.st,thumb:x.thumb,sub:(cName[x.c]||'')+' › '+(sName[x.s]||''),m:IA[x.id]}));
+    const g={};
+    ads.forEach(x=>{
+      const k=x.asset||('ad:'+x.id);
+      const o=g[k]||(g[k]={id:k,kind:x.kind,thumb:x.thumb,ads:[]});
+      o.ads.push(x);
+      if(!o.thumb&&x.thumb) o.thumb=x.thumb;
+    });
+    const sp=x=>(IA[x.id]||{}).spend||0;
+    return Object.values(g).map(o=>{
+      const top=o.ads.slice().sort((p,r)=>sp(r)-sp(p))[0];
+      return {id:o.id,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,
+        sub:(o.kind==='video'?'영상 소재':o.kind==='image'?'이미지 소재':'소재')+' · 광고 '+o.ads.length+'개',m:addUp(o.ads.map(x=>IA[x.id]))};
+    });
+  }
+  const stCls=st=>st==='ACTIVE'?' is-on':/DISAPPROVED|WITH_ISSUES/.test(st||'')?' is-bad':'';
+  const stTxt=st=>({ACTIVE:'게재 중',PAUSED:'꺼짐',CAMPAIGN_PAUSED:'캠페인 꺼짐',ADSET_PAUSED:'세트 꺼짐',ARCHIVED:'보관됨',DELETED:'삭제됨',DISAPPROVED:'승인 거부',WITH_ISSUES:'문제 있음',IN_PROCESS:'처리 중',PENDING_REVIEW:'검토 중'}[st]||st||'');
+  const COLS=[
+    {k:'spend',l:'지출',f:(v,c)=>money(v,c)},
+    {k:'rev',l:'구매 전환값',f:(v,c)=>money(v,c)},
+    {k:'roas',l:'ROAS',f:v=>v==null?'-':Math.round(v)+'%'},
+    {k:'buy',l:'구매',f:v=>int(v)},
+    {k:'cpa',l:'CPA',f:(v,c)=>v==null?'-':money(v,c)},
+    {k:'clicks',l:'링크 클릭',f:v=>int(v)},
+    {k:'ctr',l:'CTR',f:v=>v==null?'-':v.toFixed(2)+'%'},
+    {k:'cpm',l:'CPM',f:(v,c)=>v==null?'-':money(v,c)},
+    {k:'imp',l:'노출',f:v=>int(v)},
+  ];
+  function paintTable(a){
+    const cur=a.currency;
+    let rows=rowsOf(a).map(r=>Object.assign(r,{x:derive(r.m)}));
+    const nSpend=rows.filter(r=>r.x.spend>0).length, nOn=rows.filter(r=>r.st==='ACTIVE').length;
+    $('maShow').innerHTML=[['spend','지출 있음',nSpend],['on','게재 중',nOn],['all','전체',rows.length]]
+      .map(c=>'<button type="button" class="ui-chip" data-v="'+c[0]+'" aria-pressed="'+(show===c[0])+'">'+c[1]+' <b>'+c[2]+'</b></button>').join('');
+    if(show==='spend') rows=rows.filter(r=>r.x.spend>0);
+    else if(show==='on') rows=rows.filter(r=>r.st==='ACTIVE');
+    if(q){ const w=q.toLowerCase(); rows=rows.filter(r=>(r.name+' '+r.sub).toLowerCase().includes(w)); }
+    rows.sort((p,r)=>{ const A=p.x[sortKey], B=r.x[sortKey]; if(A==null&&B==null) return 0; if(A==null) return 1; if(B==null) return -1; return (A-B)*sortDir; });
+    /* 지금 위치(전체 › 캠페인 › 세트) */
+    const crumb=$('maCrumb');
+    if(drill.c||drill.s){
+      const cN=((a.campaigns||[]).find(c=>c.id===drill.c)||{}).name, sN=((a.adsets||[]).find(x=>x.id===drill.s)||{}).name;
+      crumb.hidden=false;
+      crumb.innerHTML='<button type="button" data-go="all">전체 캠페인</button>'
+        +(cN?'<span>›</span>'+(sN?'<button type="button" data-go="c">'+esc(cN)+'</button>':'<b>'+esc(cN)+'</b>'):'')
+        +(sN?'<span>›</span><b>'+esc(sN)+'</b>':'');
+    }else crumb.hidden=true;
+    if(!rows.length){ $('maTable').innerHTML='<div class="ma-empty">'+RANGE_TXT[range]+' 동안 보여 줄 '+LEVEL_TXT[level]+' 줄이 없습니다.'+(show!=='all'?' 위 "전체"를 눌러 보세요.':'')+'</div>'; return; }
+    const tot=derive(addUp(rows.map(r=>r.m)));
+    const cell=(c,x)=>{ const v=x[c.k]; let cls=v==null||v===0?' class="is-zero"':''; if(c.k==='roas'&&v!=null&&v<100&&x.spend>0) cls=' class="is-low"'; return '<td'+cls+'>'+c.f(v,cur)+'</td>'; };
+    const drillable=level==='campaign'||level==='adset';
+    const head='<thead><tr><th>'+LEVEL_TXT[level]+' '+rows.length+'개</th>'+COLS.map(c=>'<th data-k="'+c.k+'"'+(sortKey===c.k?' class="is-sort"':'')+'>'+c.l+(sortKey===c.k?(sortDir<0?' ↓':' ↑'):'')+'</th>').join('')+'</tr></thead>';
+    const totRow='<tr class="is-total"><td>합계</td>'+COLS.map(c=>cell(c,tot)).join('')+'</tr>';
+    const body=rows.slice(0,limit).map(r=>{
+      const img=level==='ad'||level==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
+      const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(level==='campaign'?'광고 세트':'광고')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
+      return '<tr><td><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x)).join('')+'</tr>';
+    }).join('');
+    $('maTable').innerHTML='<table class="ma-table">'+head+'<tbody>'+totRow+body+'</tbody></table>'
+      +(rows.length>limit?'<button type="button" class="ui-btn soft sm ma-more">'+(rows.length-limit)+'개 더 보기</button>':'');
+  }
+  function paint(){
+    paintState();
+    const a=acc();
+    $('maEmpty').hidden=!!a;
+    root.querySelectorAll('.ma-need').forEach(el=>{ el.hidden=!a; });
+    if(!a){
+      $('maEmpty').textContent=failed?'메타광고 데이터를 불러오지 못했습니다. 로그인 상태를 확인하고 새로고침해 주세요.'
+        :loaded?'아직 수집된 메타광고 데이터가 없습니다. 김비서 서버가 08~22시 2시간마다 메타에서 받아 옵니다.':'불러오는 중…';
+      return;
+    }
+    paintKpis(a); paintChart(a); paintTable(a);
+  }
+
+  /* ---------- 움직임 ---------- */
+  setTabs('maRange',range,v=>{ range=v; keep('baroyam_ma_range',v); limit=60; paint(); });
+  setTabs('maLevel',level,onLevel);
+  $('maShow').addEventListener('click',e=>{ const b=e.target.closest('[data-v]'); if(!b) return; show=b.dataset.v; limit=60; paintTable(acc()); });
+  $('maSearch').addEventListener('input',e=>{ q=e.target.value.trim(); limit=60; const a=acc(); if(a) paintTable(a); });
+  $('maTable').addEventListener('click',e=>{
+    const th=e.target.closest('th[data-k]');
+    if(th){ const k=th.dataset.k; if(sortKey===k) sortDir=-sortDir; else { sortKey=k; sortDir=-1; } paintTable(acc()); return; }
+    if(e.target.closest('.ma-more')){ limit+=60; paintTable(acc()); return; }
+    const d=e.target.closest('.ma-drill');
+    if(!d) return;
+    if(level==='campaign'){ drill={c:d.dataset.id}; level='adset'; }
+    else { const s=(acc().adsets||[]).find(x=>x.id===d.dataset.id); drill={c:s&&s.c,s:d.dataset.id}; level='ad'; }
+    limit=60; setTabs('maLevel',level,onLevel); paint();
+  });
+  $('maCrumb').addEventListener('click',e=>{
+    const b=e.target.closest('[data-go]'); if(!b) return;
+    if(b.dataset.go==='all'){ drill={}; level='campaign'; } else { drill={c:drill.c}; level='adset'; }
+    limit=60; setTabs('maLevel',level,onLevel); paint();
+  });
+  let rz=0;
+  window.addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{ const a=acc(); if(a&&$('view-perf').style.display!=='none') paintChart(a); },150); });
+
+  async function load(){
+    if(loading) return;
+    loading=true; paint();
+    try{
+      const db=window.BAROYAM_DB;
+      if(db&&db.loadSetting){
+        let v=await db.loadSetting(KEY,true);
+        if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+        data=v&&Array.isArray(v.accounts)&&v.accounts.length?v:null; failed=false;
+        if(data&&!data.accounts.some(a=>a.id===accId)){
+          const sp=a=>(((a.insights||{}).last_7d||{}).total||{}).spend||0;
+          accId=data.accounts.slice().sort((p,r)=>sp(r)-sp(p))[0].id;   /* 처음엔 최근 7일 지출이 가장 큰 계정 */
+        }
+      }
+    }catch(e){ console.error(e); failed=!data; }
+    loading=false; loaded=true;
+    paintAccTabs(); paint();
+  }
+  window.baroyamMetaAds={open(){ load(); }};
 })();
 
 /* ===== 인스타콘텐츠 › 성과 =====
