@@ -18571,7 +18571,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 형식 · 판매처 색 변수를 빌려 다크 모드에서도 맞는 색 */
   const TYPES=named('type',[{k:'feed',d:'피드',c:'var(--self)'},{k:'reels',d:'릴스',c:'var(--talk)'},{k:'carousel',d:'캐러셀',c:'var(--coupang)'},{k:'story',d:'스토리',c:'var(--naver)'}]);
   const STATES=named('state',[{k:'plan',d:'기획'},{k:'make',d:'제작 중'},{k:'ready',d:'업로드 준비'},{k:'done',d:'업로드 완료'}]);
-  const FILTERS=named('filter',[{k:'todo',d:'업로드 예정'},{k:'done',d:'업로드 완료'},{k:'late',d:'지난 예정'}]);
+  const FILTERS=named('filter',[{k:'todo',d:'예약'},{k:'done',d:'업로드 완료'},{k:'late',d:'지난 예정'}]);
   const GROUPS=named('group',[{k:'type',d:'형식'},{k:'state',d:'상태'}]);
   const typeOf=k=>TYPES.find(t=>t.k===k)||TYPES[0];
   const stateOf=k=>STATES.find(t=>t.k===k)||STATES[0];
