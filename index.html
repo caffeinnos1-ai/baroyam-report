@@ -2680,7 +2680,7 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-col{flex:none;width:300px;display:flex;flex-direction:column;gap:8px}
   .ma-pv{position:relative;width:100%;aspect-ratio:9/16;max-height:62vh;border-radius:14px;overflow:hidden;background:var(--chip-flat)}
   .ma-pv img{width:100%;height:100%;object-fit:cover;display:block}
-  .ma-pv iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+  .ma-pv iframe,.ma-pv video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
   .ma-pv .ty{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:color-mix(in srgb,var(--paper) 88%,transparent);color:var(--ink)}
   .ma-pv-src{font-size:12px;color:var(--btn);text-decoration:none;text-align:center}
   .ma-pv-src:hover{text-decoration:underline}
@@ -18387,7 +18387,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const l=links[r.id]||{}, R=repFor(r.c,r.s), low=r.x.roas!=null&&r.x.roas<100&&r.x.spend>0;
       /* 왼쪽 · 연동한 드라이브 영상은 드라이브 미리보기로 바로 재생, 없으면 썸네일 */
       const media=l.drive
-        ?'<div class="ma-pv is-video"><iframe src="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/preview" allow="autoplay; fullscreen" allowfullscreen title="소재 영상"></iframe></div>'
+        ?'<div class="ma-pv is-video"><video class="ma-vid" data-drive="'+esc(l.drive)+'" muted autoplay playsinline loop controls preload="auto"'+(r.thumb?' poster="'+esc(r.thumb)+'"':'')+'></video></div>'
           +'<a class="ma-pv-src" href="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/view" target="_blank" rel="noopener" title="'+esc(l.driveName||'')+'">드라이브에서 열기 ↗</a>'
         :'<div class="ma-pv">'+(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>')
           +'<span class="ty">'+kindTxt(r.kind)+'</span></div>'
@@ -18642,6 +18642,20 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     paintLinks();
   }
 
+  /* 연동한 드라이브 영상을 팝업 안 <video> 로 바로 재생(소리 끈 자동 재생 · 사용자 요청 "들어가면 바로 자동재생") ·
+     드라이브 미리보기(iframe)는 자동 재생이 안 되고 느려서, 회사 구글 권한(baroyamGoogleToken · drive)으로 파일을 직접 흘려받는다 ·
+     권한이 없거나 못 읽으면 드라이브 미리보기로 바꾼다 */
+  async function playVideo(){
+    const v=cardBox&&cardBox.querySelector('video.ma-vid'); if(!v) return;
+    const id=v.dataset.drive, G=window.baroyamGoogleToken;
+    const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); };
+    let tok='';
+    try{ tok=(G&&G.saved&&G.saved())||(G?await G():''); }catch(e){ tok=''; }
+    if(!tok||!v.isConnected){ fallback(); return; }
+    v.addEventListener('error',fallback,{once:true});
+    v.src='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&supportsAllDrives=true&access_token='+encodeURIComponent(tok);
+    const p=v.play(); if(p&&p.catch) p.catch(()=>{});
+  }
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
   let cardHtml=()=>'', cardBox=null;
   function openCard(r){
@@ -18659,6 +18673,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     cardBox.querySelector('#maCardT').textContent=r.name;
     cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r);
     cardBox.hidden=false;
+    playVideo();
     /* 상품이 이어졌는데 마진표 목록을 아직 안 읽었으면 읽고 다시 그린다(대표 ROAS) */
     if(!profitList&&(linkC[r.c]||linkS[r.s])) loadProfit().then(()=>{ if(!cardBox.hidden) cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r); });
   }
