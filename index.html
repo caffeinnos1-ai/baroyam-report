@@ -2600,6 +2600,22 @@ window.BAROYAM_FONT=(function(){
   .ip-type .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--bar) 55%,var(--paper)),color-mix(in srgb,var(--bar) 78%,var(--paper)))}
   .ip-type>b{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .ip-type small{grid-column:2/4;margin-top:-8px;font-size:11px;color:var(--mute)}
+  /* 스토리 시청 */
+  .ip-st-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
+  .ip-st-kpis>div{padding:10px 12px;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;gap:3px}
+  .ip-st-kpis small{font-size:11.5px;color:var(--mute)}
+  .ip-st-kpis b{font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ip-st-kpis b span{font-size:11.5px;font-weight:400;color:var(--mute);margin-left:2px}
+  .ip-st-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+  .ip-st{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none;min-width:0}
+  .ip-st-th{position:relative;aspect-ratio:9/16;max-height:200px;background:linear-gradient(160deg,color-mix(in srgb,var(--naver) 22%,var(--paper)),color-mix(in srgb,var(--naver) 50%,var(--paper)))}
+  .ip-st-th img{width:100%;height:100%;object-fit:cover;display:block}
+  .ip-st-th .tm{position:absolute;left:6px;top:6px;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--paper) 88%,transparent);font-size:10.5px;font-weight:500;color:var(--ink)}
+  .ip-st-th .lv{position:absolute;right:6px;top:6px;padding:1px 7px;border-radius:99px;background:var(--neg);color:#fff;font-size:10.5px;font-weight:600}
+  .ip-st-m{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;padding:8px 10px;font-size:11px;color:var(--mute)}
+  .ip-st-m b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;margin-left:3px}
+  .ip-st-empty{grid-column:1/-1;padding:24px 8px;text-align:center;font-size:12.5px;color:var(--mute)}
+  @media (max-width:900px){ .ip-st-kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
   .ip-note{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12.5px;line-height:1.5}
   /* 콘텐츠 */
   .ip-posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
@@ -10797,6 +10813,12 @@ window.BAROYAM_FONT=(function(){
                 <div class="ip-note" id="ipTypeNote"></div>
               </div>
             </div>
+            <!-- 스토리 시청 · 서버가 매시 지금 올라와 있는 스토리 성과를 받아 쌓은 insta_insights_v1.stories (24시간 뒤에는 마지막 값) -->
+            <div class="ip-card">
+              <div class="ip-card-head"><div><h3>스토리 시청</h3><small id="ipStorySub"></small></div></div>
+              <div class="ip-st-kpis" id="ipStoryKpis"></div>
+              <div class="ip-st-list" id="ipStories"></div>
+            </div>
             <div class="ip-row is-even">
               <div class="ip-card">
                 <div class="ip-card-head"><div><h3>올리기 좋은 시간</h3><small>요일·시간대별 팔로워 접속</small></div></div>
@@ -13596,7 +13618,7 @@ window.CsGuide=(function(){
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
     /* caffeinnos-automation/insta_insights.js · 토큰은 VPS instagram_token.json(7일마다 스스로 갱신) */
     {name:'인스타 성과 수집', cat:'collect', where:'ERP 인스타콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['07:20','13:20','19:20'], record:'인스타 성과 수집',
-     desc:'인스타그램 API 로 계정·게시물 성과(도달·조회·참여·팔로워 증감·팔로워 구성)를 받아 인스타콘텐츠 성과 화면을 채워요.', task:'cron'},
+     desc:'인스타그램 API 로 계정·게시물 성과(도달·조회·참여·팔로워 증감·팔로워 구성)를 받아 인스타콘텐츠 성과 화면을 채워요. 스토리는 24시간 뒤 사라져서 매시 50분에 따로 받아 쌓아요.', task:'cron'},
     /* caffeinnos-automation/meta_ads.js · 토큰은 VPS .env META_ADS_TOKEN(시스템 사용자 baroyam-ads · ads_read · 만료 없음) */
     {name:'메타광고 성과 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
      desc:'메타 마케팅 API 로 광고계정의 캠페인·광고 세트·광고(소재) 성과(지출·구매·매출·ROAS)를 받아 퍼포먼스마케팅 화면을 채워요.', task:'cron'},
@@ -18374,6 +18396,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const num=n=>Math.abs(n)>=10000?(Math.round(n/1000)/10).toLocaleString('ko-KR')+'만':Math.round(n).toLocaleString('ko-KR');
   const pct=(a,b)=>b?Math.round((a-b)/b*1000)/10:0;
   const TYPES={feed:{l:'피드',c:'var(--self)'},reels:{l:'릴스',c:'var(--talk)'},carousel:{l:'캐러셀',c:'var(--coupang)'}};
+  const STORY={l:'스토리',c:'var(--naver)'};   // 스토리는 게시물 보관함과 따로 쌓인다(D.stories)
   const DOW=['월','화','수','목','금','토','일'];
 
   /* ---------- 예시 데이터 · 늘 같은 모양이 나오도록 씨앗 고정 ---------- */
@@ -18403,7 +18426,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const day=r===1||r===3?1.12:r>=5?.88:1;
       return Math.min(1,Math.max(.04,ev*day*(.85+rnd()*.3)));
     }));
-    return {demo:true,account:{username:'baroyam_official',name:'바로얌',media:412,follows:186,followers:fol},daily,posts,
+    const stories=[];
+    for(let i=0;i<46;i++){
+      const at=dayAdd(end,-Math.round(i*1.9)), reach=Math.round(900+rnd()*900), views=Math.round(reach*(1.1+rnd()*.3));
+      stories.push({id:'s'+i,at,time:at+'T'+String(9+(i*5)%12).padStart(2,'0')+':00:00+0900',reach,views,replies:Math.round(rnd()*6),shares:Math.round(rnd()*4),
+        follows:Math.round(rnd()*2),visits:Math.round(reach*(.01+rnd()*.02)),fwd:Math.round(views*(.55+rnd()*.15)),back:Math.round(views*.03),exit:Math.round(views*(.06+rnd()*.06)),next:Math.round(views*(.08+rnd()*.05))});
+    }
+    return {demo:true,stories,account:{username:'baroyam_official',name:'바로얌',media:412,follows:186,followers:fol},daily,posts,
       audience:{gender:{f:64,m:36},ages:[['13-17',3],['18-24',17],['25-34',38],['35-44',26],['45-54',11],['55+',5]],cities:[['서울',34],['경기',27],['인천',7],['부산',6],['대구',4]]},online};
   }
   /* 서버 값 → 그리는 모양 · 하루 값은 첫 날부터 오늘까지 빈 날 없이 잇는다(팔로워 수는 앞 날을 이어 씀) */
@@ -18417,7 +18446,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       daily.push({d,followers:fol==null?(v.account&&v.account.followers)||0:fol,net:x.net||0,reach:x.reach||0,views:x.views||0,engaged:x.engaged||0,saves:x.saves||0});
     }
     const posts=(Array.isArray(v.posts)?v.posts:[]).filter(p=>p&&p.at).map(p=>Object.assign({reach:0,views:0,likes:0,comments:0,saves:0,shares:0},p,{type:TYPES[p.type]?p.type:'feed'}));
-    return {demo:false,updatedAt:v.updatedAt,account:v.account||{},daily,posts,audience:v.audience||null,online:Array.isArray(v.online)?v.online:null};
+    const stories=(Array.isArray(v.stories)?v.stories:[]).filter(x=>x&&x.at).map(x=>Object.assign({reach:0,views:0,replies:0,shares:0,follows:0,visits:0},x));
+    return {demo:false,updatedAt:v.updatedAt,account:v.account||{},daily,posts,stories,audience:v.audience||null,online:Array.isArray(v.online)?v.online:null};
   }
   let D=sample(), loaded=false;
 
@@ -18496,16 +18526,40 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     host.onmouseleave=()=>{ $('ipDot').classList.remove('is-on'); $('ipTip').classList.remove('is-on'); host.querySelectorAll('.net rect.is-on').forEach(b=>b.classList.remove('is-on')); };
   }
 
-  function paintTypes(curP){
+  const ster=x=>x.reach?((x.replies||0)+(x.shares||0))/x.reach*100:0;   // 스토리 반응률 = (답장+공유) ÷ 도달
+  function paintTypes(curP,curS){
     const rows=Object.keys(TYPES).map(k=>{ const a=curP.filter(p=>p.type===k); const reach=a.length?a.reduce((s,p)=>s+p.reach,0)/a.length:0;
       return {k,n:a.length,reach,er:a.length?a.reduce((s,p)=>s+er(p),0)/a.length:0}; });
-    const mx=Math.max(1,...rows.map(r=>r.reach));
+    const sr=curS.length?curS.reduce((s,x)=>s+x.reach,0)/curS.length:0;
+    const mx=Math.max(1,sr,...rows.map(r=>r.reach));
     $('ipTypes').innerHTML=rows.map(r=>'<div class="ip-type" style="--bar:'+TYPES[r.k].c+'"><span><i class="ig-dot"></i>'+TYPES[r.k].l+'</span><div class="bar"><i style="width:'+(r.reach/mx*100).toFixed(1)+'%"></i></div><b>'+num(r.reach)+'</b>'
-      +'<small>게시물 '+r.n+'개 · 참여율 '+r.er.toFixed(1)+'%</small></div>').join('');
+      +'<small>게시물 '+r.n+'개 · 참여율 '+r.er.toFixed(1)+'%</small></div>').join('')
+      +'<div class="ip-type" style="--bar:'+STORY.c+'"><span><i class="ig-dot"></i>'+STORY.l+'</span><div class="bar"><i style="width:'+(sr/mx*100).toFixed(1)+'%"></i></div><b>'+num(sr)+'</b>'
+      +'<small>스토리 '+curS.length+'개 · 반응률 '+(curS.length?curS.reduce((s,x)=>s+ster(x),0)/curS.length:0).toFixed(1)+'%</small></div>';
     const has=rows.filter(r=>r.n&&r.reach).sort((a,b)=>b.reach-a.reach);
     const sv=curP.filter(p=>p.reach).sort((a,b)=>b.saves/b.reach-a.saves/a.reach)[0];
     $('ipTypeNote').innerHTML=has.length>1?'<b>'+TYPES[has[0].k].l+'</b>가 '+TYPES[has[has.length-1].k].l+'보다 게시물당 도달이 <b>'+(has[0].reach/has[has.length-1].reach).toFixed(1)+'배</b> 높습니다.'
       +(sv?' 저장은 '+TYPES[sv.type].l+'에서 가장 많이 일어납니다.':''):'이 기간에 올린 게시물이 적어 형식끼리 견주기 어렵습니다.';
+  }
+
+  /* 스토리 시청 · 기간 안 스토리의 평균 도달·조회와 넘김·나감 비율(조회 대비) · 최근 스토리 카드 */
+  function paintStories(curS){
+    const n=curS.length, sum=k=>curS.reduce((s,x)=>s+(x[k]||0),0), nav=curS.filter(x=>typeof x.fwd==='number');
+    const views=nav.reduce((s,x)=>s+(x.views||0),0);
+    const rate=k=>views?Math.round(nav.reduce((s,x)=>s+(x[k]||0),0)/views*1000)/10+'<span>%</span>':'–';
+    $('ipStorySub').textContent=D.demo?'예시':(D.stories.length?'매시 지금 올라와 있는 스토리를 받아 쌓아요 · 24시간이 지나면 마지막 값':'아직 받은 스토리가 없어요 · 스토리를 올리면 1시간 안에 쌓여요');
+    $('ipStoryKpis').innerHTML=[
+      ['올린 스토리',n+'<span>개</span>'],['평균 도달',n?num(sum('reach')/n):'–'],['평균 조회',n?num(sum('views')/n):'–'],
+      ['답장 · 공유',num(sum('replies'))+' · '+num(sum('shares'))],['다음으로 넘김',rate('fwd')],['나감',rate('exit')],
+    ].map(([k,v])=>'<div><small>'+k+'</small><b>'+v+'</b></div>').join('');
+    const list=curS.slice().sort((a,b)=>String(b.time||b.at).localeCompare(String(a.time||a.at))).slice(0,18);
+    const live=x=>!D.demo&&Date.now()-Date.parse(x.time)<864e5;
+    const tm=x=>{ const t=Date.parse(x.time); if(isNaN(t)) return md(x.at); const k=new Date(t+9*3600e3).toISOString(); return md(k.slice(0,10))+' '+k.slice(11,16); };
+    $('ipStories').innerHTML=list.length?list.map(x=>'<'+(x.link?'a href="'+esc(x.link)+'" target="_blank" rel="noopener"':'div')+' class="ip-st"><div class="ip-st-th">'+
+      (x.thumb?'<img src="'+esc(x.thumb)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'<span class="tm">'+tm(x)+'</span>'+(live(x)?'<span class="lv">게시 중</span>':'')+'</div>'+
+      '<div class="ip-st-m"><span>도달<b>'+num(x.reach)+'</b></span><span>조회<b>'+num(x.views)+'</b></span><span>답장<b>'+(x.replies||0)+'</b></span>'+
+      '<span>나감<b>'+(typeof x.exit==='number'?x.exit:'–')+'</b></span></div></'+(x.link?'a':'div')+'>').join('')
+      :'<div class="ip-st-empty">이 기간에 올린 스토리가 없어요</div>';
   }
 
   /* ---------- 콘텐츠 성과(보관함) · 올린 게시물 전체 · 기간·형식·설명으로 거르고 카드/목록으로 본다 · 24개씩 더 보기 ---------- */
@@ -18590,7 +18644,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('ipLibN').textContent=D.posts.length?D.posts.length.toLocaleString('ko-KR'):'';
     paintAcct(cur);
     if(view==='lib'){ paintLib(); return; }
-    paintKpis(cur,prev,curP,prevP); paintFollow(cur); paintTypes(curP); paintHeat(); paintAud();
+    const curS=(D.stories||[]).filter(x=>x.at>=from);
+    paintKpis(cur,prev,curP,prevP); paintFollow(cur); paintTypes(curP,curS); paintStories(curS); paintHeat(); paintAud();
     $('ipFollowSub').textContent=cur.length?md(from)+' ~ '+md(cur[cur.length-1].d)+' · 아래 막대는 하루 순증':'';
   }
   async function load(){
