@@ -2508,6 +2508,9 @@ window.BAROYAM_FONT=(function(){
   .ma-table td.ma-fx.is-borrow{opacity:.6}
   .ip-who small.ma-fx-line{color:color-mix(in srgb,var(--coupang) 72%,var(--paper));font-size:12px}
   .ip-who small.ma-fx-line[hidden]{display:none}
+  .ma-daycamp{width:300px;max-width:100%;justify-content:space-between}
+  .ma-daycamp .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-daycamp.is-on{border-color:var(--btn)}
   .ma-datebar{display:flex;justify-content:flex-end;margin-bottom:-4px}
   .ma-datebar .ip-acct-end{margin-left:auto}
   .ma-cur{padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;background:var(--chip-flat);color:var(--mute)}
@@ -10315,7 +10318,8 @@ window.BAROYAM_FONT=(function(){
                 </div>
               </div>
               <div class="ip-card">
-                <div class="ip-card-head"><div><h3>날짜별 기록</h3><small>최근 30일 · 줄을 누르면 그날 숫자를 위에 보여 줍니다</small></div></div>
+                <div class="ip-card-head"><div><h3>날짜별 기록</h3><small id="maDaysSub">최근 30일 · 줄을 누르면 그날 숫자를 위에 보여 줍니다</small></div>
+                  <button type="button" class="ui-field sm ma-daycamp" id="maDayCamp" aria-haspopup="listbox" title="캠페인 하나의 날짜별 기록 보기"><span class="t">전체 캠페인</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div>
                 <div class="ma-table-wrap" id="maDays"></div>
               </div>
             </div>
@@ -18398,9 +18402,23 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('maDowNote').innerHTML=best&&worst&&best.k!==worst.k?'ROAS 가 가장 높은 요일은 <b>'+DOW[best.k]+'요일('+pct(best.roas)+')</b>, 가장 낮은 요일은 '+DOW[worst.k]+'요일('+pct(worst.roas)+')입니다.'
       :'요일별로 견줄 만큼 기록이 쌓이지 않았습니다.';
   }
+  /* 날짜별 기록 · 캠페인 하나만 보기(사용자 요청) · 서버가 저장한 광고×하루 값(adDaily · 최근 60일)에서 그 캠페인 광고만 더한다 */
+  let dayCamp=store('baroyam_ma_daycamp')||'';
+  function campDay(a,cid,d){
+    const day=(a.adDaily||{})[d]; if(!day) return null;
+    const ads=a._adCamp||(a._adCamp=Object.fromEntries((a.ads||[]).map(x=>[x.id,x.c])));
+    const o={spend:0,rev:0,buy:0,clicks:0,imp:0}; let any=false;
+    Object.keys(day).forEach(id=>{ if(ads[id]!==cid) return; const v=day[id]; any=true; o.spend+=v[0]; o.rev+=v[1]; o.buy+=v[2]; o.clicks+=v[3]; o.imp+=v[4]; });
+    return any?o:null;
+  }
   function paintDays(a){
     const cur=a.currency, t=kst();
-    const rows=[]; for(let i=0;i<30;i++){ const d=dayAdd(t,-i); rows.push({d,x:derive(dayVal(a,d))}); }
+    const camp=dayCamp&&(a.campaigns||[]).find(c=>c.id===dayCamp);
+    if(dayCamp&&!camp) dayCamp='';
+    $('maDayCamp').querySelector('.t').textContent=camp?camp.name:'전체 캠페인';
+    $('maDayCamp').classList.toggle('is-on',!!camp);
+    $('maDaysSub').textContent=camp?'최근 30일 · '+(brandMap(a)[camp.id]||'캠페인')+' 캠페인만 · 줄을 누르면 그날 숫자(계정 전체)를 위에 보여 줍니다':'최근 30일 · 줄을 누르면 그날 숫자를 위에 보여 줍니다';
+    const rows=[]; for(let i=0;i<30;i++){ const d=dayAdd(t,-i); rows.push({d,x:derive(camp?campDay(a,camp.id,d):dayVal(a,d))}); }
     const C=[['spend','지출',v=>money(v,cur)],['rev','구매 전환값',v=>money(v,cur)],['roas','ROAS',pct],['buy','구매',int],['cpa','CPA',v=>v==null?'-':money(v,cur)],
       ['clicks','링크 클릭',int],['ctr','CTR',v=>v==null?'-':v.toFixed(2)+'%'],['cpm','CPM',v=>v==null?'-':money(v,cur)],['imp','노출',int]];
     const td=(c,x)=>{ const v=x[c[0]]; let cls=v==null||v===0?' class="is-zero"':''; if(c[0]==='roas'&&v!=null&&v<100&&x.spend>0) cls=' class="is-low"'; return '<td'+cls+'>'+c[2](v)+'</td>'; };
@@ -18965,6 +18983,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     e.stopPropagation();
     if(!window.UI||!window.UI.menu) return;
     window.UI.menu($('maSortPick'),SORTS,sortKey,v=>{ sortKey=v; sortDir=-1; limit=48; paintList(acc()); });
+  });
+  $('maDayCamp').addEventListener('click',e=>{
+    e.stopPropagation();
+    const a=acc(); if(!a||!window.UI||!window.UI.menu) return;
+    /* 최근 30일 지출이 있는 캠페인 · 지출 큰 순 */
+    const t=kst(), sp={}, bOf=brandMap(a);
+    for(let i=0;i<30;i++){ const d=dayAdd(t,-i); (a.campaigns||[]).forEach(c=>{ const v=campDay(a,c.id,d); if(v) sp[c.id]=(sp[c.id]||0)+v.spend; }); }
+    const list=(a.campaigns||[]).filter(c=>sp[c.id]).sort((x,y)=>sp[y.id]-sp[x.id]);
+    const opts=[{value:'',label:'전체 캠페인',sub:'계정 합계'}].concat(list.map(c=>({value:c.id,tag:bOf[c.id]||'',label:c.name,sub:'30일 지출 '+short(sp[c.id],a.currency)})));
+    window.UI.menu($('maDayCamp'),opts,dayCamp,v=>{ dayCamp=v; keep('baroyam_ma_daycamp',v); paintDays(acc()); },{search:list.length>8,placeholder:'캠페인 찾기'});
   });
   $('maDays').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-d]'); if(!tr) return; pickDay(tr.dataset.d,e.shiftKey); paintDaily(acc()); window.scrollTo({top:root.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'}); });
   /* 소재 줄에 마우스를 올리면 연동한 영상을 미리 받기 시작(누르는 순간 이미 받고 있게) */
