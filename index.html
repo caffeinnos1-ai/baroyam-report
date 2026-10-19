@@ -2749,9 +2749,6 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-col{flex:none;width:300px;display:flex;flex-direction:column;gap:8px}
   .ma-pv{position:relative;width:100%;aspect-ratio:9/16;max-height:62vh;border-radius:14px;overflow:hidden;background:var(--chip-flat)}
   .ma-pv img{width:100%;height:100%;object-fit:cover;display:block}
-  .ma-vload{position:absolute;left:12px;right:12px;bottom:12px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--paper) 90%,transparent);font-size:12px;color:var(--ink);display:flex;flex-direction:column;gap:6px}
-  .ma-vload i{display:block;height:4px;border-radius:99px;background:var(--line);overflow:hidden}
-  .ma-vload b{display:block;height:100%;width:0;background:var(--btn);transition:width .2s}
   .ma-pv iframe,.ma-pv video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
   .ma-pv .ty{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:color-mix(in srgb,var(--paper) 88%,transparent);color:var(--ink)}
   .ma-pv-src{font-size:12px;color:var(--btn);text-decoration:none;text-align:center}
@@ -10270,13 +10267,13 @@ window.BAROYAM_FONT=(function(){
            광고계정 탭(통화가 달라 섞어 더하지 않음) -->
       <div id="view-perf" style="display:none">
         <div class="hero-view-tabs" id="perfTabs" role="tablist" aria-label="퍼포먼스마케팅 화면">
-          <button type="button" class="hero-view-tab active" role="tab" data-perf="daily" data-sub="하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.">데일리 성과</button>
+          <button type="button" class="hero-view-tab active" role="tab" data-perf="daily" data-sub="하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.">데일리성과</button>
           <button type="button" class="hero-view-tab" role="tab" data-perf="detail" data-sub="캠페인 → 광고 세트 → 소재를 한 표에서 봅니다. 이름을 누르면 안쪽으로 들어갑니다.">정밀성과</button>
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
             <div class="ptag">퍼포먼스마케팅 · 메타광고</div>
-            <div class="ptitle" id="perfViewTitle">데일리 성과</div>
+            <div class="ptitle" id="perfViewTitle">데일리성과</div>
             <div class="psub" id="perfViewSub">하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.</div>
             <!-- 배너 오른쪽 계정 카드 · 인스타콘텐츠 성과 배너와 같은 모양(사용자 요청) -->
             <div class="ip-acct ip-hero-acct" id="maHeroAcct">
@@ -18855,12 +18852,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const ent={at:Date.now(),pct:0,cb:new Set(onPct?[onPct]:[])};
     ent.p=(async()=>{
       const G=window.baroyamGoogleToken;
-      let tok=(G&&G.saved&&G.saved())||'';
-      if(!tok&&G) tok=await G();
+      /* 권한이 없거나 만료됐으면 새로 받지 않는다 · 받으려면 구글 권한 창이 따로 떠서(사용자 지적 10-19) 드라이브 미리보기로 넘긴다 */
+      const tok=(G&&G.saved&&G.saved())||'';
       if(!tok) throw new Error('구글 권한 없음');
       const url='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&supportsAllDrives=true';
-      let r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
-      if(r.status===401&&G){ try{ localStorage.removeItem('baroyam_gtoken_v1'); }catch(e){} tok=await G(); r=await fetch(url,{headers:{Authorization:'Bearer '+tok}}); }
+      const r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
+      if(r.status===401&&G) G.clear();
       if(!r.ok) throw new Error('드라이브 '+r.status);
       const total=+r.headers.get('content-length')||0, type=r.headers.get('content-type')||'video/mp4';
       let blob;
@@ -18880,15 +18877,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   async function playVideo(){
     const v=cardBox&&cardBox.querySelector('video.ma-vid'); if(!v) return;
     const id=v.dataset.drive, wrap=v.parentElement;
-    const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); const b=wrap.querySelector('.ma-vload'); if(b) b.remove(); };
-    let bar=wrap.querySelector('.ma-vload');
-    if(!bar){ bar=document.createElement('div'); bar.className='ma-vload'; bar.innerHTML='<span>영상 불러오는 중</span><i><b></b></i>'; wrap.appendChild(bar); }
-    const pct=n=>{ if(!bar.isConnected) return; bar.querySelector('span').textContent='영상 불러오는 중 '+n+'%'; bar.querySelector('b').style.width=n+'%'; };
-    const ent=VID.get(id); if(ent&&ent.pct) pct(ent.pct);
+    const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); };
+    /* 받는 동안 "불러오는 중" 표시는 띄우지 않는다(사용자 요청 10-19) */
     try{
-      const u=await fetchVideo(id,pct);
+      const u=await fetchVideo(id);
       if(!v.isConnected) return;
-      v.src=u; bar.remove();
+      v.src=u;
       const p=v.play(); if(p&&p.catch) p.catch(()=>{});
     }catch(e){ console.warn('[메타광고] 영상 직접 받기 실패 · 드라이브 미리보기로',e&&e.message); fallback(); }
   }
