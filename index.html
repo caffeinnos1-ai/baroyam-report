@@ -6395,6 +6395,27 @@ window.BAROYAM_FONT=(function(){
   .drv-lanes.l .drv-strip.open{grid-template-columns:repeat(auto-fill,minmax(212px,1fr))}
   .drv-lane-acts{margin-left:auto;display:flex;align-items:center;gap:6px}
   .drv-lane-acts .ui-btn{margin-left:0}
+  /* 폴더 보기 · 왼쪽 브랜드 줄 없이 한 칸 · 위에 경로, 아래에 폴더 카드(안의 그림 4장 미리보기)와 이 폴더의 파일 */
+  .drv-body.folder{grid-template-columns:minmax(0,1fr)}
+  .drv-fold-crumb{margin:-2px 0 2px;font-size:14px}
+  .drv-folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:12px}
+  .drv-lanes.s .drv-folders{grid-template-columns:repeat(auto-fill,minmax(138px,1fr))}
+  .drv-lanes.l .drv-folders{grid-template-columns:repeat(auto-fill,minmax(232px,1fr))}
+  .drv-folder{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:7px;padding:8px;border-radius:13px;
+    border:1px solid var(--line);background:var(--paper);cursor:pointer;transition:var(--ui-ease),transform .15s;min-width:0}
+  .drv-folder:hover{border-color:var(--btn);transform:translateY(-2px)}
+  .drv-folder:focus-visible{box-shadow:var(--ui-ring)}
+  .drv-folder-pics{width:100%;aspect-ratio:4/3;border-radius:9px;overflow:hidden;background:var(--chip-flat);
+    display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px}
+  .drv-folder-pics.one{grid-template-columns:1fr;grid-template-rows:1fr}
+  .drv-folder-pics.none{display:grid;place-items:center;grid-template-columns:1fr;grid-template-rows:1fr;color:var(--mute)}
+  .drv-folder-pics.none svg{width:40px;height:40px}
+  .drv-folder-pics span{position:relative;background:var(--chip-flat);overflow:hidden}
+  .drv-folder-pics img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .drv-folder-name{display:flex;align-items:center;gap:6px;min-width:0;font-size:13px;font-weight:600;color:var(--ink)}
+  .drv-folder-name svg{flex:none;width:16px;height:16px;color:var(--btn)}
+  .drv-folder-name b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .drv-folder-sub{font-size:11px;font-weight:600;color:var(--mute)}
   /* 크게 보기 · 두 번 클릭하면 화면 위에 드라이브 미리보기를 크게 띄우고 ← → 로 넘긴다 */
   .drv-lb{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;background:rgba(8,10,14,.88)}
   .drv-lb[hidden]{display:none}
@@ -10248,6 +10269,11 @@ window.BAROYAM_FONT=(function(){
           <div class="drv-row" id="drvRow">
             <div class="ui-chips drv-types" id="drvTypes"></div>
             <div class="drv-tools">
+              <!-- 보기 방식 · 분류(브랜드·종류 줄) / 폴더(구글드라이브 폴더 그대로 들어가 보기) -->
+              <div class="ui-tabs" id="drvMode" aria-label="보기 방식">
+                <button type="button" class="ui-tab" data-value="kind" aria-selected="true">분류</button>
+                <button type="button" class="ui-tab" data-value="folder" aria-selected="false">폴더</button>
+              </div>
               <!-- 파일 형식 · 확장자로 이미지·GIF·영상·PSD·일러스트·PDF·문서·압축·기타를 가른다 -->
               <button type="button" class="ui-field drv-fmt-btn" id="drvFmt" aria-haspopup="listbox" aria-expanded="false" title="파일 형식으로 거르기">
                 <span class="cap">형식</span><b id="drvFmtLabel">전체</b>
@@ -26229,10 +26255,10 @@ window.baroyamAsk=function(title,body,okText){
   const 보기열쇠='baroyam_drive_view';  /* 정렬·카드 크기 · 이 브라우저에만 기억한다 */
   let 줄들=null, 줄표={}, 레인목록={}, 읽는중=false, 갱신시각='';
   const 상태={회사:'바로얌', 브랜드:'', 종류:new Set(), 형식:new Set(), 검색:'', 펼침:new Set(), 선택:new Set(), 기준:'',
-             정렬:'new', 크기:'m'};
+             정렬:'new', 크기:'m', 보기:'kind', 폴더:[]};
   try{ const 기억=JSON.parse(localStorage.getItem(보기열쇠)||'{}');
-       if(기억.정렬) 상태.정렬=기억.정렬; if(기억.크기) 상태.크기=기억.크기; }catch(e){}
-  function 보기기억(){ try{ localStorage.setItem(보기열쇠,JSON.stringify({정렬:상태.정렬,크기:상태.크기})); }catch(e){} }
+       if(기억.정렬) 상태.정렬=기억.정렬; if(기억.크기) 상태.크기=기억.크기; if(기억.보기==='folder') 상태.보기='folder'; }catch(e){}
+  function 보기기억(){ try{ localStorage.setItem(보기열쇠,JSON.stringify({정렬:상태.정렬,크기:상태.크기,보기:상태.보기})); }catch(e){} }
   const $=function(id){ return document.getElementById(id); };
   function 안전(v){ return String(v==null?'':v)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -26410,7 +26436,81 @@ window.baroyamAsk=function(title,body,okText){
     $('drvRail').innerHTML=h;
   }
 
+  /* ---------- 폴더 보기 ----------
+     색인 줄마다 들어 있는 경로(뿌리폴더 / … / 폴더)를 나무로 엮어, 구글드라이브처럼 폴더를 눌러 들어간다 ·
+     이름이 다 '상세페이지_01.jpg' 처럼 비슷해 분류 보기로는 어느 제품 것인지 가리기 어려울 때 쓴다(사용자 요청) ·
+     종류 칩·형식·검색은 그대로 걸리고, 왼쪽 브랜드 줄은 쓰지 않는다 · 폴더 카드에는 안의 그림 4장을 미리 보인다 */
+  function 칸들(r){ return String(r.경로||'').split(' / '); }
+  /* 이 회사 파일이 모두 지나는 앞 칸(★바로얌 / ★제품별_자산 처럼 갈래가 하나뿐인 칸)은 건너뛰고 그 아래부터 보인다 */
+  function 폴더바탕(){
+    let 앞=null;
+    (줄들||[]).forEach(function(r){
+      if(회사(r)!==상태.회사) return;
+      const c=칸들(r);
+      if(!앞){ 앞=c.slice(); return; }
+      let i=0; while(i<앞.length&&i<c.length&&앞[i]===c[i]) i++;
+      앞.length=i;
+    });
+    return 앞||[];
+  }
+  function 안에있나(c, 길){ for(let i=0;i<길.length;i++) if(c[i]!==길[i]) return false; return c.length>=길.length; }
+  function 폴더보기그리기(){
+    const 바탕=폴더바탕();
+    /* 새로고침으로 폴더가 없어졌으면 있는 데까지 올라간다(거르개 때문에 빈 것은 그대로 둔다) */
+    const 회사줄=(줄들||[]).filter(function(r){ return 회사(r)===상태.회사; });
+    while(상태.폴더.length&&!회사줄.some(function(r){ return 안에있나(칸들(r),바탕.concat(상태.폴더)); })) 상태.폴더.pop();
+    const 지금=바탕.concat(상태.폴더), 깊이=지금.length;
+    const 하위={}, 여기=[];
+    거른줄('브랜드').forEach(function(r){
+      const c=칸들(r);
+      if(!안에있나(c,지금)) return;
+      if(c.length===깊이) 여기.push(r);
+      else (하위[c[깊이]]=하위[c[깊이]]||[]).push(r);
+    });
+    const 이름순=function(a,b){ return a.localeCompare(b,'ko',{numeric:true}); };
+    let h='<div class="drv-up-crumb drv-fold-crumb"><button type="button" data-crumb="0">'+안전(바탕.length?바탕[바탕.length-1]:탭이름(상태.회사))+'</button>';
+    상태.폴더.forEach(function(이름,i){ h+='<i>›</i><button type="button" data-crumb="'+(i+1)+'">'+안전(이름)+'</button>'; });
+    h+='</div>';
+    const 폴더이름=Object.keys(하위).sort(이름순);
+    if(폴더이름.length){
+      h+='<div class="drv-lane"><div class="drv-lane-head"><span class="drv-lane-name">폴더</span><span class="drv-lane-n">'+폴더이름.length+'개</span></div>'
+        + '<div class="drv-folders">'+폴더이름.map(function(k){ return 폴더카드(k,하위[k],깊이); }).join('')+'</div></div>';
+    }
+    레인목록={};
+    if(여기.length){
+      const 것들=정렬하기(여기.slice());
+      레인목록['이 폴더']=것들.map(function(r){ return r.아이디; });
+      h+='<div class="drv-lane"><div class="drv-lane-head"><span class="drv-lane-name">이 폴더의 파일</span><span class="drv-lane-n">'+것들.length+'개</span>'
+        + '<span class="drv-lane-acts"><button type="button" class="ui-btn sm ghost" data-pickall="이 폴더">'+줄선택글('이 폴더')+'</button></span></div>'
+        + '<div class="drv-strip open">'+것들.map(카드).join('')+'</div></div>';
+    }
+    if(!폴더이름.length&&!여기.length){
+      h+='<div class="drive-empty"><b>이 폴더에 해당하는 자산이 없어요</b><span>검색어나 걸러 둔 조건을 바꾸거나 위 경로를 눌러 올라가 보세요</span></div>';
+    }
+    $('drvLanes').className='drv-lanes '+상태.크기;
+    $('drvLanes').innerHTML=h;
+  }
+  function 폴더카드(이름, 것들, 깊이){
+    const 속폴더={};
+    것들.forEach(function(r){ const c=칸들(r); if(c.length>깊이+1) 속폴더[c[깊이+1]]=1; });
+    const 폴더수=Object.keys(속폴더).length;
+    /* 미리보기 · 안에서 그림이 나오는 파일 중 최근 것 4장 */
+    const 그림=것들.filter(function(r){ return 미리보기가능[확장자(r.이름)]; })
+      .sort(function(a,b){ return String(b.날짜||'').localeCompare(String(a.날짜||'')); }).slice(0,4);
+    const 판=그림.length?(그림.length<4?' one':''):' none';
+    const 칸=그림.length
+      ? (그림.length<4?그림.slice(0,1):그림).map(function(r){
+          return '<span><img loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()" src="https://drive.google.com/thumbnail?id='+안전(r.아이디)+'&amp;sz=w'+(그림.length<4?'320':'160')+'"></span>';
+        }).join('')
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2.2h8a1.5 1.5 0 0 1 1.5 1.5v9.3a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5Z"/></svg>';
+    return '<button type="button" class="drv-folder" data-folder="'+안전(이름)+'" title="'+안전(이름)+'&#10;누르면 폴더로 들어갑니다">'
+      + '<span class="drv-folder-pics'+판+'">'+칸+'</span>'
+      + '<span class="drv-folder-name"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2.2h8a1.5 1.5 0 0 1 1.5 1.5v9.3a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5Z"/></svg><b>'+안전(이름)+'</b></span>'
+      + '<span class="drv-folder-sub">파일 '+것들.length+'개'+(폴더수?' · 폴더 '+폴더수+'개':'')+'</span></button>';
+  }
+
   function 레인들(){
+    if(상태.보기==='folder'){ 폴더보기그리기(); return; }
     const 보임=거른줄('');
     const 묶음={};
     보임.forEach(function(r){ const k=갈래(r); (묶음[k]=묶음[k]||[]).push(r); });
@@ -26455,7 +26555,10 @@ window.baroyamAsk=function(title,body,okText){
       return;
     }
     $('drvEmpty').hidden=true; $('drvBody').hidden=false;
-    형식단추(); 칩줄(); 레일(); 레인들();
+    const 폴더보기=상태.보기==='folder';
+    $('drvBody').classList.toggle('folder',폴더보기);
+    $('drvRail').hidden=폴더보기;
+    형식단추(); 칩줄(); if(!폴더보기) 레일(); 레인들();
   }
 
   function 눌림(e){
@@ -26475,6 +26578,10 @@ window.baroyamAsk=function(title,body,okText){
       상태.브랜드=(상태.브랜드===브.dataset.brand)?'':브.dataset.brand;
       상태.펼침.clear(); 그리기(); return;
     }
+    const 폴=e.target.closest('#drvLanes [data-folder]');
+    if(폴){ 상태.폴더.push(폴.dataset.folder); 레인들(); $('drvLanes').scrollIntoView({block:'nearest'}); return; }
+    const 경=e.target.closest('#drvLanes [data-crumb]');
+    if(경){ 상태.폴더.length=Number(경.dataset.crumb)||0; 레인들(); return; }
     const 더=e.target.closest('[data-open]');
     if(더){
       const k=더.dataset.open;
@@ -27281,6 +27388,11 @@ window.baroyamAsk=function(title,body,okText){
     const 찾기=$('drvSearch'); if(찾기) 찾기.value='';
     상태.선택.clear(); 상태.기준='';
     새줄.forEach(function(r){ if(줄표[r.아이디]){ 상태.선택.add(r.아이디); 상태.기준=r.아이디; } });
+    /* 폴더 보기면 올린 폴더로 들어가 보인다 */
+    if(상태.보기==='folder'&&새줄[0]&&줄표[새줄[0].아이디]){
+      const 바탕=폴더바탕(), c=칸들(줄표[새줄[0].아이디]);
+      상태.폴더=안에있나(c,바탕)?c.slice(바탕.length):[];
+    }
     if(줄들){ $('drvEmpty').hidden=true; $('drvBody').hidden=false; 그리기(); }
     선택표시();
     const 메타=$('drvMeta'), 원래=메타.textContent;
@@ -27411,6 +27523,10 @@ window.baroyamAsk=function(title,body,okText){
     if(window.UI&&window.UI.tabs){
       window.UI.tabs(정렬탭,function(값){ 상태.정렬=값; 보기기억(); if(줄들) 레인들(); }).set(상태.정렬);
       window.UI.tabs(크기탭,function(값){ 상태.크기=값; 보기기억(); if(줄들) 레인들(); }).set(상태.크기);
+      /* 분류 ↔ 폴더 · 폴더 보기는 왼쪽 브랜드 줄을 쓰지 않으므로 고른 브랜드를 풀어 둔다 */
+      window.UI.tabs($('drvMode'),function(값){
+        상태.보기=값; 상태.브랜드=''; 상태.펼침.clear(); 보기기억(); if(줄들) 그리기();
+      }).set(상태.보기);
     }
     $('drvPickClear').addEventListener('click',function(e){ e.stopPropagation(); 선택해제(); });
     $('drvDelete').addEventListener('click',function(e){ e.stopPropagation(); 삭제하기(); });
@@ -27452,7 +27568,7 @@ window.baroyamAsk=function(title,body,okText){
     });
     const 회사탭=$('drvOwner');
     if(회사탭&&window.UI&&window.UI.tabs) 회사탭손=window.UI.tabs(회사탭,function(값){
-      상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.형식.clear(); 상태.펼침.clear();
+      상태.회사=값; 상태.브랜드=''; 상태.종류.clear(); 상태.형식.clear(); 상태.펼침.clear(); 상태.폴더=[];
       상태.선택.clear(); 상태.기준=''; 저장창(false); 업고르기창(false);
       if(줄들) 그리기();
       선택표시();
