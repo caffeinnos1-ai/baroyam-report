@@ -2582,6 +2582,8 @@ window.BAROYAM_FONT=(function(){
   .ma-list .ma-table th.ma-brandcol{width:88px}
   .ma-list .ma-table th.ma-atcol{width:96px}
   .ma-list .ma-table th.ma-budcol{width:120px}
+  .ma-name .ma-winrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .ma-winner{flex:none;padding:1px 7px;border-radius:99px;font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--btn-soft-ink);background:var(--btn-soft);border:1px solid color-mix(in srgb,var(--btn) 35%,transparent)}
   .ma-table th.ma-atcol,.ma-table td.ma-atcol{text-align:center}
   .ma-table td.ma-budcol small{display:block;font-size:11px;color:var(--mute);margin-top:2px}
   .ma-table td.ma-atcol .ma-days-pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:500;color:var(--pos);
@@ -18535,7 +18537,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 게재일 · 같은 소재를 쓴 광고 중 가장 먼저 만든 광고의 날(서버 ads[].at = 메타 created_time) */
       const at=o.ads.map(x=>Date.parse(x.at||'')).filter(n=>n>0).sort((p,r)=>p-r)[0]||null;
       return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,at,
-        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x)})).sort((p,r)=>r.sp-p.sp),
+        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x)})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -18667,6 +18669,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(c.k==='roas'&&v!=null&&x.spend>0){ const rc=roasCls(v,R); if(rc) cls=' class="'+rc.trim()+'" title="대표 ROAS '+Math.round(R.roas)+'% · '+esc(R.name)+' ('+R.src+')"'; else if(v<100) cls=' class="is-low"'; }
       return '<td'+cls+'>'+c.f(v,cur)+'</td>'; };
     const drillable=tab!=='asset';
+    /* WINNER · 하루 ROAS 가 손익분기점(이은 상품의 대표 ROAS)을 14일 연달아 넘은 적이 있는 소재(사용자 요청 10-20) ·
+       광고×하루 값(adDaily · 최근 60일)으로 보고, 지출이 없는 날은 연속이 끊긴다 · 상품을 잇지 않은 소재는 기준이 없어 보지 않는다 */
+    const D=a.adDaily||{}, dKeys=Object.keys(D).sort();
+    const isWinner=r=>{
+      const R=repFor(r.c,r.s); if(!R||R.roas==null||!r.adIds) return false;
+      let run=0;
+      for(const d of dKeys){
+        let sp=0, rv=0; r.adIds.forEach(id=>{ const v=D[d][id]; if(v){ sp+=v[0]; rv+=v[1]; } });
+        if(sp>0&&rv/sp*100>=R.roas){ if(++run>=14) return true; } else run=0;
+      }
+      return false;
+    };
     const budTd=r=>r.bud==null?'<td class="ma-budcol is-zero">-</td>'
       :'<td class="ma-budcol"'+(r.budCbo?' title="캠페인 예산(세트·소재가 나눠 씀)"':tab==='asset'?' title="이 소재가 든 광고 세트의 예산"':'')+'>'+money(r.bud,cur)+(r.budCbo?'<small>캠페인</small>':'')+'</td>';
     /* 소재 게재 칸 · n일째만 연두 알약으로(오늘 = 1일째 · 한국 시각 · 날짜는 올리면 보임) */
@@ -18683,7 +18697,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const isA=tab==='asset';
       if(isA) shownRows[r.id]=r;
       const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+(isA&&isWinner(r)?'<span class="ma-winrow">'+nm+'<span class="ma-winner" title="14일 연달아 손익분기점(대표 ROAS)을 넘은 적이 있는 소재">WINNER</span></span>':nm)+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+body+'</tbody></table></div>'+more;
