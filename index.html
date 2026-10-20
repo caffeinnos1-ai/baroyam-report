@@ -2581,7 +2581,8 @@ window.BAROYAM_FONT=(function(){
   .ma-list .ma-table th.is-sort .ma-sorti{color:var(--btn);opacity:1}
   .ma-list .ma-table th.ma-brandcol{width:88px}
   .ma-list .ma-table th.ma-atcol{width:84px}
-  .ma-table td.ma-atcol small{display:block;font-size:11px;color:var(--mute);margin-top:2px}
+  .ma-table td.ma-atcol .ma-days-pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:500;color:var(--pos);
+    border:1px solid color-mix(in srgb,var(--pos) 45%,transparent);background:color-mix(in srgb,var(--pos) 10%,var(--paper))}
   .ma-table th.ma-brandcol,.ma-table td.ma-brandcol{text-align:left;padding-left:8px}
   .ma-table td.ma-brandcol{color:var(--mute);font-size:12px;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-list .ma-table tr.is-total td{background:none;color:var(--mute);font-weight:500}
@@ -18657,13 +18658,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(c.k==='roas'&&v!=null&&x.spend>0){ const rc=roasCls(v,R); if(rc) cls=' class="'+rc.trim()+'" title="대표 ROAS '+Math.round(R.roas)+'% · '+esc(R.name)+' ('+R.src+')"'; else if(v<100) cls=' class="is-low"'; }
       return '<td'+cls+'>'+c.f(v,cur)+'</td>'; };
     const drillable=tab!=='asset';
-    /* 소재 게재일 칸 · 10.19 아래 n일째(오늘 = 1일째 · 한국 시각) */
+    /* 소재 게재 칸 · n일째만 연두 알약으로(오늘 = 1일째 · 한국 시각 · 날짜는 올리면 보임) */
     const today=Date.parse(kst()), atTd=at=>{ if(!at) return '<td class="ma-atcol is-zero">-</td>';
       const d=new Date(at+9*3600e3).toISOString().slice(0,10), n=Math.round((today-Date.parse(d))/864e5)+1;
-      return '<td class="ma-atcol" title="'+d+' 게재 시작">'+(+d.slice(5,7))+'.'+(+d.slice(8,10))+'<small>'+n+'일째</small></td>'; };
+      return '<td class="ma-atcol" title="'+d+' 게재 시작"><span class="ma-days-pill">'+n+'일째</span></td>'; };
     const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
-    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재일',cls:'ma-atcol'}]:[],COLS).map(c=>{ const on=sortKey===c.k;
+    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재',cls:'ma-atcol'}]:[],COLS).map(c=>{ const on=sortKey===c.k;
       return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+'</tr></thead>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
