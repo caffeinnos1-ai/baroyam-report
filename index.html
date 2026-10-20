@@ -18670,14 +18670,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return '<td'+cls+'>'+c.f(v,cur)+'</td>'; };
     const drillable=tab!=='asset';
     /* WINNER · 하루 ROAS 가 손익분기점(이은 상품의 대표 ROAS)을 7일 연달아 넘은 적이 있는 소재(사용자 요청 10-20 · 처음 14일 → 너무 길어 7일) ·
-       광고×하루 값(adDaily · 최근 60일)으로 보고, 지출이 없는 날은 연속이 끊긴다 · 상품을 잇지 않은 소재는 기준이 없어 보지 않는다 */
+       광고×하루 값(adDaily · 최근 60일)으로 보고, 지출이 없는 날은 세지 않고 건너뛴다 · 상품을 잇지 않은 소재는 기준이 없어 보지 않는다 */
     const D=a.adDaily||{}, dKeys=Object.keys(D).sort();
     const isWinner=r=>{
       const R=repFor(r.c,r.s); if(!R||R.roas==null||!r.adIds) return false;
       let run=0;
       for(const d of dKeys){
         let sp=0, rv=0; r.adIds.forEach(id=>{ const v=D[d][id]; if(v){ sp+=v[0]; rv+=v[1]; } });
-        if(sp>0&&rv/sp*100>=R.roas){ if(++run>=7) return true; } else run=0;
+        if(!(sp>0)) continue;   /* 광고비 없는 날은 건너뛴다(연속이 끊기지 않음 · 사용자 요청) */
+        if(rv/sp*100>=R.roas){ if(++run>=7) return true; } else run=0;
       }
       return false;
     };
