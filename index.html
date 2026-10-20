@@ -6398,9 +6398,9 @@ window.BAROYAM_FONT=(function(){
   /* 폴더 보기 · 왼쪽 브랜드 줄 없이 한 칸 · 위에 경로, 아래에 폴더 카드(안의 그림 4장 미리보기)와 이 폴더의 파일 */
   .drv-body.folder{grid-template-columns:minmax(0,1fr)}
   .drv-fold-crumb{margin:-2px 0 2px;font-size:14px}
-  /* 폴더 카드 · 연한 아이보리~노랑 그라데이션의 폴더 모양(뒤판 + 왼쪽 위 탭 + 앞판) ·
-     안의 그림이 뒤판과 앞판 사이에 꽂힌 종이처럼 보이고, 폴더 이름은 폴더 아래에 연한 글자로 둔다(개수는 말풍선에만) ·
-     올리면 앞판이 살짝 앞으로 젖혀지며 그림이 더 드러난다 · 색은 폴더 전용 변수로 두고 다크 모드에서 어두운 황토로 바꾼다 */
+  /* 폴더 카드 · 연한 아이보리~노랑 그라데이션의 폴더 모양(왼쪽 위 탭이 달린 판 하나 · 앞판은 사용자 요청으로 뺌) ·
+     안의 그림이 판 위에 놓인 종이처럼 보이고, 폴더 이름은 폴더 아래에 연한 글자로 둔다(개수는 말풍선에만) ·
+     올리면 그림이 살짝 떠오른다 · 색은 폴더 전용 변수로 두고 다크 모드에서 어두운 황토로 바꾼다 */
   .drv-view{--fold-a:#fffdf6;--fold-b:#fcf3d9;--fold-c:#fffbef;--fold-d:#f9eecb;--fold-edge:rgba(206,178,104,.24);
     --fold-shade:rgba(150,112,30,.11)}
   html[data-theme="dark"] .drv-view{--fold-a:#38332a;--fold-b:#2d2920;--fold-c:#433d31;--fold-d:#363026;
@@ -6421,7 +6421,7 @@ window.BAROYAM_FONT=(function(){
     border:1px solid var(--fold-edge);border-bottom:0;border-radius:10px 14px 0 0;background:var(--fold-a);
     clip-path:polygon(0 0,82% 0,100% 100%,0 100%)}
   /* 꽂힌 그림 · 흰 테두리를 두른 사진 종이 */
-  .drv-folder-pics{position:absolute;left:9%;right:9%;top:8%;bottom:15%;display:grid;grid-template-columns:1fr 1fr;
+  .drv-folder-pics{position:absolute;left:9%;right:9%;top:9%;bottom:9%;display:grid;grid-template-columns:1fr 1fr;
     grid-template-rows:1fr 1fr;gap:4px;padding:4px;border-radius:9px;background:var(--paper);
     box-shadow:0 3px 10px -3px var(--fold-shade);transition:transform .22s}
   .drv-folder-pics.one{grid-template-columns:1fr;grid-template-rows:1fr}
@@ -6429,14 +6429,6 @@ window.BAROYAM_FONT=(function(){
   .drv-folder-pics span{position:relative;border-radius:6px;background:var(--chip-flat);overflow:hidden}
   .drv-folder-pics img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .drv-folder:hover .drv-folder-pics{transform:translateY(-6px)}
-  /* 앞판 · 그림 아래쪽만 살짝 덮는다 */
-  .drv-fold-front{position:absolute;left:0;right:0;bottom:0;height:24%;box-sizing:border-box;
-    border-radius:12px 12px 16px 16px;border:1px solid var(--fold-edge);
-    background:linear-gradient(180deg,var(--fold-c),var(--fold-d));
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 -6px 14px -8px var(--fold-shade);
-    transform-origin:50% 100%;transition:transform .22s}
-  html[data-theme="dark"] .drv-fold-front{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 -6px 14px -8px var(--fold-shade)}
-  .drv-folder:hover .drv-fold-front{transform:perspective(600px) rotateX(-12deg)}
   /* 폴더 이름 · 폴더 아래에 연한 글자로 */
   .drv-folder-name{display:block;margin-top:9px;padding:0 4px;font-size:13.5px;font-weight:500;color:var(--body);
     letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -26529,7 +26521,7 @@ window.baroyamAsk=function(title,body,okText){
     return '<button type="button" class="drv-folder" data-folder="'+안전(이름)+'" title="'+안전(이름)+'&#10;파일 '+것들.length+'개'+(폴더수?' · 폴더 '+폴더수+'개':'')+' · 누르면 폴더로 들어갑니다">'
       + '<span class="drv-fold"><span class="drv-fold-back"></span>'
       + '<span class="drv-folder-pics'+판+'">'+칸+'</span>'
-      + '<span class="drv-fold-front"></span></span>'
+      + '</span>'
       + '<span class="drv-folder-name">'+안전(이름)+'</span></button>';
   }
 
