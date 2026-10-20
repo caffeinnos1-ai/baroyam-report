@@ -19052,11 +19052,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('maDayCamp').addEventListener('click',e=>{
     e.stopPropagation();
     const a=acc(); if(!a||!window.UI||!window.UI.menu) return;
-    /* 최근 30일 지출이 있는 캠페인 · 지출 큰 순 */
+    /* 지금 집행 중(ACTIVE)인 캠페인만(사용자 요청 10-20) · 최근 30일 지출 큰 순 */
     const t=kst(), sp={}, bOf=brandMap(a);
     for(let i=0;i<30;i++){ const d=dayAdd(t,-i); (a.campaigns||[]).forEach(c=>{ const v=campDay(a,c.id,d); if(v) sp[c.id]=(sp[c.id]||0)+v.spend; }); }
-    const list=(a.campaigns||[]).filter(c=>sp[c.id]).sort((x,y)=>sp[y.id]-sp[x.id]);
-    const opts=[{value:'',label:'전체 캠페인',sub:'계정 합계'}].concat(list.map(c=>({value:c.id,tag:bOf[c.id]||'',label:c.name,sub:'30일 지출 '+short(sp[c.id],a.currency)})));
+    const list=(a.campaigns||[]).filter(c=>c.st==='ACTIVE').sort((x,y)=>(sp[y.id]||0)-(sp[x.id]||0));
+    const opts=[{value:'',label:'전체 캠페인',sub:'계정 합계'}].concat(list.map(c=>({value:c.id,tag:bOf[c.id]||'',label:c.name,sub:'30일 지출 '+short(sp[c.id]||0,a.currency)})));
     window.UI.menu($('maDayCamp'),opts,dayCamp,v=>{ dayCamp=v; keep('baroyam_ma_daycamp',v); paintDays(acc()); },{search:list.length>8,placeholder:'캠페인 찾기'});
   });
   $('maDays').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-d]'); if(!tr) return; pickDay(tr.dataset.d,e.shiftKey); paintDaily(acc()); window.scrollTo({top:root.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'}); });
