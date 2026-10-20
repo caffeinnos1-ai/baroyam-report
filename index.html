@@ -6274,7 +6274,8 @@ window.BAROYAM_FONT=(function(){
   /* 프로젝트 화면(.pj)과 같은 폭을 쓴다 · .section 의 좌우 48px 가 없어 바깥 칸을 꽉 채운다 */
   .drv-view{padding:0 0 16px}
   /* 회사 전환 줄 · 배너 위에 자리를 두고 왼쪽부터 바로얌 · 카페이노스 */
-  .drv-owner{margin:2px 0 14px}
+  .drv-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 14px}
+  .drv-owner{margin:0}
   /* 검색칸부터 카드 줄까지를 한 상자에 담는다 · 넓게 보기에서는 뒤 배경이 없어 상자가 경계를 만든다 */
   .drv-box{margin-top:16px;padding:18px 18px 20px;border:1px solid var(--line);
     border-radius:18px;background:var(--paper);min-height:420px}
@@ -10244,11 +10245,18 @@ window.BAROYAM_FONT=(function(){
       <div id="view-drive" style="display:none">
         <div class="drv-view">
           <!-- 회사 전환 · 경로 맨 앞 칸으로 가른다(★바로얌 → 바로얌, 메타광고·유튜브 → 같은 이름, 그 밖 → 카페이노스) -->
+          <div class="drv-top">
           <div class="ui-tabs drv-owner" id="drvOwner">
             <button type="button" class="ui-tab" data-value="바로얌" aria-selected="true">디자인</button>
             <button type="button" class="ui-tab" data-value="카페이노스" aria-selected="false">매장</button>
             <button type="button" class="ui-tab" data-value="메타광고" aria-selected="false">메타광고</button>
             <button type="button" class="ui-tab" data-value="유튜브" aria-selected="false">유튜브</button>
+          </div>
+          <!-- 보기 방식 · 분류(브랜드·종류 줄) / 폴더(구글드라이브 폴더 그대로 들어가 보기) -->
+          <div class="ui-tabs" id="drvMode" aria-label="보기 방식">
+            <button type="button" class="ui-tab" data-value="kind" aria-selected="true">분류</button>
+            <button type="button" class="ui-tab" data-value="folder" aria-selected="false">폴더</button>
+          </div>
           </div>
           <div class="plan-hero">
             <div class="ptag">업무 도구</div>
@@ -10291,11 +10299,6 @@ window.BAROYAM_FONT=(function(){
           <div class="drv-row" id="drvRow">
             <div class="ui-chips drv-types" id="drvTypes"></div>
             <div class="drv-tools">
-              <!-- 보기 방식 · 분류(브랜드·종류 줄) / 폴더(구글드라이브 폴더 그대로 들어가 보기) -->
-              <div class="ui-tabs" id="drvMode" aria-label="보기 방식">
-                <button type="button" class="ui-tab" data-value="kind" aria-selected="true">분류</button>
-                <button type="button" class="ui-tab" data-value="folder" aria-selected="false">폴더</button>
-              </div>
               <!-- 파일 형식 · 확장자로 이미지·GIF·영상·PSD·일러스트·PDF·문서·압축·기타를 가른다 -->
               <button type="button" class="ui-field drv-fmt-btn" id="drvFmt" aria-haspopup="listbox" aria-expanded="false" title="파일 형식으로 거르기">
                 <span class="cap">형식</span><b id="drvFmtLabel">전체</b>
