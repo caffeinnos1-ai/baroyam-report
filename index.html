@@ -10371,9 +10371,9 @@ window.BAROYAM_FONT=(function(){
                 <div class="ui-tabs" id="maAcct" hidden></div>
                 <div class="ui-tabs" id="maRange" hidden>
                   <button class="ui-tab" data-value="today">오늘</button>
-                  <button class="ui-tab" data-value="yesterday">어제</button>
-                  <button class="ui-tab" data-value="last_7d">7일</button>
-                  <button class="ui-tab" data-value="last_30d">30일</button>
+                  <button class="ui-tab" data-value="d3">3일</button>
+                  <button class="ui-tab" data-value="d7">7일</button>
+                  <button class="ui-tab" data-value="month">이번달</button>
                 </div>
                 <button type="button" id="maRangePick" hidden></button>
                 <button type="button" id="maDay" hidden></button>
@@ -18253,14 +18253,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const DOW=['일','월','화','수','목','금','토'];
   const dowOf=d=>new Date(d+'T00:00:00Z').getUTCDay();
   const dayTxt=d=>(+d.slice(5,7))+'월 '+(+d.slice(8))+'일 ('+DOW[dowOf(d)]+')';
-  const RANGE_TXT={today:'오늘',yesterday:'어제',last_7d:'최근 7일',last_30d:'최근 30일'};
-  const PREV_TXT={today:'어제보다',yesterday:'그제보다',last_7d:'지난 7일보다',last_30d:'지난 30일보다'};
+  /* 기간 탭 · 오늘 / 3일·7일(오늘 포함 최근 n일) / 이번달(1일~오늘) · 사용자 요청 10-21 (예전 어제·7일·30일은 메타가 오늘을 뺀 기간이었음) */
+  const RANGE_TXT={today:'오늘',d3:'최근 3일',d7:'최근 7일',month:'이번달'};
+  const PREV_TXT={today:'어제보다',d3:'직전 3일보다',d7:'직전 7일보다',month:'지난달 같은 기간보다'};
   const LEVEL_TXT={campaign:'캠페인',adset:'광고 세트',asset:'소재'};
   const store=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
   const keep=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
 
   let data=null, loaded=false, loading=false, failed=false;
-  let accId=store('baroyam_ma_acc')||'', range=store('baroyam_ma_range')||'last_7d', mode=store('baroyam_ma_mode')||'card';
+  let accId=store('baroyam_ma_acc')||'', range=store('baroyam_ma_range')||'d7', mode=store('baroyam_ma_mode')||'card';
   let tab=store('baroyam_perf_tab')||'daily', day=null, dayFrom=null;   /* 데일리 성과 · 고른 기간 dayFrom ~ day(하루면 둘이 같음) */
   let shownRows={};   /* 지금 표에 그린 소재 줄(id → 줄) · 누르면 팝업창으로 */
   let show='on', brand='', sortKey='spend', sortDir=-1, limit=48;   /* brand = 캠페인 이름에서 뽑은 브랜드('' = 전체) */
@@ -18278,23 +18279,45 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     PREV_TXT.custom=n===1?'전날보다':'직전 '+n+'일보다';
   }
   if(range==='custom'&&custom) setCustomText();
-  if(!RANGE_TXT[range]) range='last_7d';
+  if(!RANGE_TXT[range]) range='d7';
+  /* 기간 → 날짜 범위(오늘 하나는 서버 값 그대로 · null) */
+  function spanOf(r){
+    const t=kst();
+    if(r==='d3') return {start:dayAdd(t,-2),end:t};
+    if(r==='d7') return {start:dayAdd(t,-6),end:t};
+    if(r==='month') return {start:t.slice(0,8)+'01',end:t};
+    if(r==='custom') return custom;
+    return null;
+  }
+  /* 지난 같은 기간 · 이번달은 지난달 1일부터 같은 날 수(지난달 말일을 넘지 않음), 나머지는 바로 앞 같은 길이 */
+  function prevSpanOf(r){
+    const sp=spanOf(r); if(!sp) return null;
+    let n=0; for(let d=sp.start;d<=sp.end;d=dayAdd(d,1)) n++;
+    if(r==='month'){
+      const ps=dayAdd(sp.start,-1).slice(0,8)+'01', pe=dayAdd(sp.start,-1), e=dayAdd(ps,n-1);
+      return {start:ps,end:e<pe?e:pe};
+    }
+    return {start:dayAdd(sp.start,-n),end:dayAdd(sp.start,-1)};
+  }
+  /* 고른 기간의 성과 · 광고×하루 값(adDaily)을 더해 a.insights[range] 에 둔다 · 오늘 값이 adDaily 에 아직 없으면 서버의 오늘 성과로 채운다 */
   function ensureCustom(a){
-    if(!a||range!=='custom'||!custom) return;
-    const key=custom.start+'~'+custom.end+'@'+(data&&data.updatedAt);
+    const sp=a&&spanOf(range); if(!sp) return;
+    const key=range+':'+sp.start+'~'+sp.end+'@'+(data&&data.updatedAt);
     if(a._customKey===key) return;
     const D=a.adDaily||{}, map={}, o={campaign:{},adset:{},ad:{},total:{}};
     (a.ads||[]).forEach(x=>{ map[x.id]=x; });
     const add=(t,v)=>{ t.spend=(t.spend||0)+v[0]; t.rev=(t.rev||0)+v[1]; t.buy=(t.buy||0)+v[2]; t.clicks=(t.clicks||0)+v[3]; t.imp=(t.imp||0)+v[4]; };
-    for(let d=custom.start;d<=custom.end;d=dayAdd(d,1)){
-      const day=D[d]||{};
+    const tI=((a.insights||{}).today||{}).ad||{}, tDay={};
+    Object.keys(tI).forEach(id=>{ const x=tI[id]; tDay[id]=[x.spend||0,x.rev||0,x.buy||0,x.clicks||0,x.imp||0]; });
+    for(let d=sp.start;d<=sp.end;d=dayAdd(d,1)){
+      const day=D[d]||(d===kst()?tDay:{});
       Object.keys(day).forEach(id=>{
         const v=day[id], x=map[id];
         add(o.ad[id]=o.ad[id]||{},v); add(o.total,v);
         if(x){ add(o.campaign[x.c]=o.campaign[x.c]||{},v); add(o.adset[x.s]=o.adset[x.s]||{},v); }
       });
     }
-    a.insights=a.insights||{}; a.insights.custom=o; a._customKey=key;
+    a.insights=a.insights||{}; a.insights[range]=o; a._customKey=key;
   }
   if(tab!=='daily'&&!LEVEL_TXT[tab]) tab='daily';
 
@@ -18338,18 +18361,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(d===kst()) return (a.insights&&a.insights.today&&a.insights.today.total)||null;
     return null;
   }
-  /* 지난 같은 기간 · 하루 값(daily)으로 더한다(최근 7일·30일은 오늘을 뺀 기간) · 메타는 지출 없는 날을 보내지 않아 빈 날은 0 ·
+  /* 지난 같은 기간 · 하루 값(daily)으로 더한다(prevSpanOf) · 메타는 지출 없는 날을 보내지 않아 빈 날은 0 ·
      서버가 처음에 90일을 받아 두므로 60일 전까지는 빈 날 = 지출 없음 · 오늘은 하루가 끝나지 않아 견주지 않는다 */
   function prevOf(a){
     if(range==='today'||!a.daily) return null;
-    const t=kst(), D=a.daily;
-    if(range==='custom'){
-      if(!custom) return null;
-      const n=[]; for(let d=custom.start;d<=custom.end;d=dayAdd(d,1)) n.push(d);
-      return addUp(n.map(d=>D[dayAdd(d,-n.length)]));
-    }
-    const span={yesterday:[2,2],last_7d:[14,8],last_30d:[60,31]}[range];
-    const days=[]; for(let i=span[0];i>=span[1];i--) days.push(dayAdd(t,-i));
+    const D=a.daily;
+    const ps=prevSpanOf(range); if(!ps) return null;
+    const days=[]; for(let d=ps.start;d<=ps.end;d=dayAdd(d,1)) days.push(d);
     return addUp(days.map(d=>D[d]));
   }
   /* 증감 칩 · unit 'p' = %p 차이 · good = 오르면 좋은 숫자인지 */
@@ -19068,7 +19086,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       value:range==='custom'?custom:null,
       onChange:v=>{
         if(v&&v.start){ custom={start:v.start,end:v.end||v.start}; range='custom'; setCustomText(); keep('baroyam_ma_custom',JSON.stringify(custom)); }
-        else { range='last_7d'; }
+        else { range='d7'; }
         keep('baroyam_ma_range',range);
         $('maRange').querySelectorAll('.ui-tab').forEach(b=>{ const on=b.dataset.value===range; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
         limit=48; paint();
