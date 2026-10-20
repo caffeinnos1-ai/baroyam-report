@@ -18651,9 +18651,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return '<td'+cls+'>'+c.f(v,cur)+'</td>'; };
     const drillable=tab!=='asset';
     const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
-    const allOn=sel&&rows.slice(0,limit).length&&rows.slice(0,limit).every(r=>sel.has(r.id));
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
-    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"><input type="checkbox" class="ma-ck" data-ck="*"'+(allOn?' checked':'')+' aria-label="보이는 줄 모두 고르기"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(COLS).map(c=>{ const on=sortKey===c.k;
+    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(COLS).map(c=>{ const on=sortKey===c.k;
       return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+'</tr></thead>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
