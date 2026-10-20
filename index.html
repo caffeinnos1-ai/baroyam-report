@@ -3789,7 +3789,9 @@ window.BAROYAM_FONT=(function(){
   #view-profit.pf-ro :is(#pfRkAdd,#pfRkCols){display:none}
   /* 배너 제목 왼쪽 판매처 로고 · 그 탭이 보일 때만(마진표는 로고를 아는 판매처일 때만 src 가 있음) */
   .plan-hero .pf-title{display:flex;align-items:center;gap:10px}
-  .pf-chan-logo{display:none;width:30px;height:30px;flex:none;border-radius:8px;object-fit:contain;background:var(--paper);border:1px solid var(--line);padding:3px}
+  .pf-chan-logo{display:none;width:30px;height:30px;flex:none;border-radius:8px;object-fit:cover}
+  /* 쿠팡 그림은 파일에 흰 바탕이 들어 있어 가장자리를 잘라 빨간 원만 채운다 */
+  .pf-chan-logo[src$="coupang.png"]{border-radius:50%;object-view-box:inset(13%)}
   #view-profit:has([data-pf-pane="calc"]:not([hidden])) .pf-chan-logo[data-for="calc"][src],
   #view-profit:has([data-pf-pane="rocket"]:not([hidden])) .pf-chan-logo[data-for="rocket"]{display:block}
   :is(#view-profit,.pf-pane)[data-tone="naver"]{--tone:var(--naver)}
