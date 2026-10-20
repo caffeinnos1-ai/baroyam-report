@@ -3223,7 +3223,7 @@ window.BAROYAM_FONT=(function(){
   /* 손익·마진 관리 보기 전용(수정 권한 없음) · 고치는 단추·추가 줄을 숨기고 칸을 누를 수 없게 */
   .pf-ro-note{margin-top:22px;padding:10px 14px;border-radius:12px;background:var(--chip-flat);color:var(--body);font-size:12.5px;font-weight:500}
   .pf-ro-note[hidden]{display:none}
-  #view-profit.pf-ro #pfRowAdd,#view-profit.pf-ro [data-act="opt"],#view-profit.pf-ro [data-act="prod"],#view-profit.pf-ro [data-act="more"],
+  #view-profit.pf-ro #pfRowAdd,#view-profit.pf-ro [data-act="opt"],#view-profit.pf-ro [data-act="prod"],#view-profit.pf-ro [data-act="up"],#view-profit.pf-ro [data-act="down"],#view-profit.pf-ro [data-act="more"],
   #view-profit.pf-ro .pf-add,#view-profit.pf-ro [data-del]{display:none}
   #view-profit.pf-ro .pf-calc tbody .ui-field,#view-profit.pf-ro .pf-list .ui-field,#view-profit.pf-ro .pf-book-name,#view-profit.pf-ro .pf-ad,
   #view-profit.pf-ro .pf-calc td.out{pointer-events:none}
@@ -20192,13 +20192,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'</tr>';
     };
     let h='';
-    list.forEach(({g,opts})=>{
+    list.forEach(({g,opts},i)=>{
       h+='<section class="pf-book" data-prod="'+esc(g.id)+'"><div class="pf-book-head" style="'+repPos+'">'
         +'<button type="button" class="pf-ad" data-act="pad" aria-pressed="'+(g.ad?'true':'false')+'" title="'+(g.ad?'광고 중 · 누르면 끄기':'광고 안 함 · 누르면 켜기')+'" aria-label="광고상태">광고상태</button>'
         +'<input class="ui-field pf-book-name" data-gk="name" maxlength="60" value="'+esc(g.name||'')+'" placeholder="상품 이름 (예: 홀떡피자 메타광고)" aria-label="상품 이름">'
         +repBtn(g)
         +'<span class="pf-grow"></span>'
         +'<button type="button" class="ui-btn sm" data-act="opt">+ 옵션 추가</button>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-act="up" title="위로" aria-label="상품 위로"'+(i?'':' disabled')+'>▲</button>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-act="down" title="아래로" aria-label="상품 아래로"'+(i<list.length-1?'':' disabled')+'>▼</button>'
         +'<button type="button" class="ui-btn sm ghost icon" data-act="prod" title="상품 삭제" aria-label="상품 삭제" aria-haspopup="true">⋯</button>'
         +'</div>'
         +(opts.length?'<table class="pf-calc">'+cg+'<tbody>'+headRow+opts.map(row).join('')+'</tbody></table>'
@@ -20290,6 +20292,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const p=prodOf(b); if(!p||!p.g) return;
       /* 옵션 추가 · 고르는 목록 없이 바로 빈 옵션 줄을 만든다(원가는 줄의 원가 칸에서 고름) */
       if(b.dataset.act==='opt'){ e.stopPropagation(); addRow(p.g,null,true); return; }
+      /* 상품 순서 · 지금 보이는 목록에서 바로 위·아래 상품과 ord 만 맞바꾼다(두 상품만 바뀌어 다른 PC 고침과 합쳐짐) */
+      if(b.dataset.act==='up'||b.dataset.act==='down'){
+        const L=view_(), i=L.findIndex(o=>o.g.id===p.g.id), j=i+(b.dataset.act==='up'?-1:1);
+        if(i<0||j<0||j>=L.length) return;
+        const a=p.g, o=L[j].g, ao=a.ord||0, oo=o.ord||0;
+        a.ord=ao===oo?ao+(j<i?-0.001:0.001):oo; o.ord=ao;
+        CALC.mark(); paintCalc();
+        const box=$('pfCalcTable').querySelector('[data-prod="'+a.id+'"]'), nb=box&&box.querySelector('[data-act="'+b.dataset.act+'"]');
+        if(box) box.scrollIntoView({block:'nearest'});
+        if(nb&&!nb.disabled) nb.focus();
+        return;
+      }
       /* 광고 중 · 다시 그리지 않고 단추와 그 상품 옵션들의 ROAS 칸만 바꾼다 */
       if(b.dataset.act==='pad'){
         p.g.ad=!p.g.ad; b.setAttribute('aria-pressed',p.g.ad?'true':'false'); b.title=p.g.ad?'광고 중 · 누르면 끄기':'광고 안 함 · 누르면 켜기';
