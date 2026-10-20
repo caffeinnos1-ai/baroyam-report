@@ -3787,6 +3787,11 @@ window.BAROYAM_FONT=(function(){
   #view-profit:has([data-pf-pane="rocket"]:not([hidden])) .plan-hero{--hero-accent:var(--coupang);
     background:color-mix(in srgb,var(--coupang) 6%,var(--paper));border-color:color-mix(in srgb,var(--coupang) 16%,var(--line))}
   #view-profit.pf-ro :is(#pfRkAdd,#pfRkCols){display:none}
+  /* 배너 제목 왼쪽 판매처 로고 · 그 탭이 보일 때만(마진표는 로고를 아는 판매처일 때만 src 가 있음) */
+  .plan-hero .pf-title{display:flex;align-items:center;gap:10px}
+  .pf-chan-logo{display:none;width:30px;height:30px;flex:none;border-radius:8px;object-fit:contain;background:var(--paper);border:1px solid var(--line);padding:3px}
+  #view-profit:has([data-pf-pane="calc"]:not([hidden])) .pf-chan-logo[data-for="calc"][src],
+  #view-profit:has([data-pf-pane="rocket"]:not([hidden])) .pf-chan-logo[data-for="rocket"]{display:block}
   :is(#view-profit,.pf-pane)[data-tone="naver"]{--tone:var(--naver)}
   :is(#view-profit,.pf-pane)[data-tone="coupang"]{--tone:var(--coupang)}
   :is(#view-profit,.pf-pane)[data-tone="talk"]{--tone:var(--talk)}
@@ -10779,7 +10784,8 @@ window.BAROYAM_FONT=(function(){
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
             <div class="ptag">마진관리</div>
-            <div class="ptitle" id="profitViewTitle">마진표</div>
+            <!-- 제목 왼쪽 판매처 로고(10-20 사용자) · 마진표는 고른 판매처(paintTone 이 src 를 정함) · 로켓프레시는 쿠팡 -->
+            <div class="ptitle pf-title"><img class="pf-chan-logo" id="pfChanLogo" data-for="calc" alt=""><img class="pf-chan-logo" data-for="rocket" src="logos/coupang.png" alt="쿠팡"><span id="profitViewTitle">마진표</span></div>
             <div class="psub" id="profitViewSub"></div>
           </div>
           <!-- 보기 전용 안내 · 수정 권한이 없을 때만 -->
@@ -20117,6 +20123,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const tone=/네이버|스마트스토어|naver|smartstore/.test(nm)?'naver':/쿠팡|coupang/.test(nm)?'coupang'
       :/톡딜|카카오|talk|kakao/.test(nm)?'talk':/11번가|11st/.test(nm)?'st11':'';
     [pane,view].forEach(el=>{ if(tone) el.dataset.tone=tone; else delete el.dataset.tone; });
+    /* 배너 제목 왼쪽 로고 · 그림은 퀵링크 로고(logos/*.png) · 자사몰은 사이드바 바로얌 로고 · 모르는 판매처는 로고 없음 */
+    const logo=$('pfChanLogo'); if(!logo) return;
+    const own=document.querySelector('.sb-logo');
+    const key=tone==='naver'?'naver':tone==='coupang'?'coupang':tone==='talk'?'kakao':tone==='st11'?'11st'
+      :/g마켓|지마켓|gmarket/.test(nm)?'gmarket':/옥션|auction/.test(nm)?'auction':/ssg|쓱/.test(nm)?'ssg'
+      :/롯데온|lotteon/.test(nm)?'lotteon':/오늘의집|ohou/.test(nm)?'ohou':/무신사|musinsa/.test(nm)?'musinsa':'';
+    const src=key?'logos/'+key+'.png':(/자사몰|바로얌|baroyam/.test(nm)&&own&&own.getAttribute('src'))||'';
+    if(src){ if(logo.getAttribute('src')!==src) logo.src=src; logo.alt=(c&&c.name)||''; } else logo.removeAttribute('src');
   }
   /* 아래 탭 줄은 fixed 라(.paper 가 overflow:hidden 이라 sticky 가 안 먹음) 사이드바 오른쪽 끝(.main 왼쪽)부터 붙이고,
      첫 단추를 대시보드 안 맨 위 단추와 같은 세로줄에 맞춘다 */
