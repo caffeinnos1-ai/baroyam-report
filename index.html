@@ -10933,6 +10933,7 @@ window.BAROYAM_FONT=(function(){
           <button type="button" class="hero-view-tab active" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 브랜드별 정상재고와 유통기한을 한눈에 봅니다.">재고현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="sales" data-sub="오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.">당일판매현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
+          <button type="button" class="hero-view-tab" role="tab" data-ops="channel" data-sub="판매처별 매출을 한눈에 봅니다.">판매처매출</button>
           <!-- 어드민 수집 · 맨 위 단추 줄 오른쪽 끝 · 누르면 지금 탭(당일판매/재고)의 것을 이지어드민에서 가져온다 -->
           <button type="button" class="ui-btn" id="ivFetch" title="이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다">
             <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
@@ -10965,6 +10966,10 @@ window.BAROYAM_FONT=(function(){
           </div>
           <!-- 순수익 요약(2026-10-16 마진관리에서 옮김) · 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 직접 적는 비용(외부 광고비·요금제·인건비·기타) ·
                보기 두 가지: 대시보드(그래프) / 목록(직접 적는 비용 + 손익 목록) · 원가·배송비는 실제 판매 수량이 쌓이기 전까지 임시 가상 값 -->
+          <!-- 판매처매출(10-20 사용자 요청 · 자리만) · 내용은 사용자와 정한 뒤 채운다 -->
+          <div class="pf-pane" data-ops-pane="channel" hidden>
+            <div class="pf-empty">판매처매출 화면은 준비 중입니다</div>
+          </div>
           <div class="pf-pane" data-ops-pane="summary" hidden>
             <div class="pf-bar">
               <div class="ui-tabs" id="psMode" aria-label="보기"><button class="ui-tab" data-value="dash">대시보드</button><button class="ui-tab" data-value="list">목록</button></div>
@@ -17861,7 +17866,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   paintForm();
 })();
 
-/* 판매·재고 · 배너 위 단추 세 개(재고현황 / 당일판매현황 / 순수익 요약) · 고른 것은 이 브라우저에 기억한다 */
+/* 판매·재고 · 배너 위 단추 네 개(재고현황 / 당일판매현황 / 순수익 요약 / 판매처매출) · 고른 것은 이 브라우저에 기억한다 */
 (function(){
   const box=document.getElementById('opsTabs');
   if(!box) return;
@@ -17883,7 +17888,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(el.dataset.ops==='sales'&&window.baroyamSales) (load?window.baroyamSales.show():window.baroyamSales.paint());
     /* 순수익 요약 · 이지어드민과 상관없어 어드민 수집 단추를 감춘다 · 폭은 다른 두 탭과 같은 세로형(사용자 요청 · 넓게 쓰지 않음) */
     const sum=el.dataset.ops==='summary';
-    if(fetchBtn) fetchBtn.style.display=sum?'none':'';
+    if(fetchBtn) fetchBtn.style.display=(sum||el.dataset.ops==='channel')?'none':'';
     if(sum&&load&&window.baroyamPsum) window.baroyamPsum.show();
   }
   pick(cur,false);
