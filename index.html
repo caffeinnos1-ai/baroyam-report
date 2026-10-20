@@ -3837,6 +3837,12 @@ window.BAROYAM_FONT=(function(){
   .pf-mix-sum b{font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;margin-left:4px}
   .pf-mix-foot{flex:none;display:flex;align-items:center;gap:8px;padding:14px 22px 18px}
   @media (max-width:640px){ .pf-mix-row{grid-template-columns:1fr} }
+  /* 판매처 계산법 · 마진표 배너 오른쪽 단추(지금 판매처 · 아래 요약 한 줄) */
+  .pf-rule-open{display:none;position:absolute;right:48px;top:50%;transform:translateY(-50%);flex-direction:column;align-items:flex-end;gap:6px;max-width:300px}
+  #view-profit:has([data-pf-pane="calc"]:not([hidden])) .pf-rule-open{display:flex}
+  .pf-rule-open small{font-size:12px;color:var(--mute);text-align:right;line-height:1.4}
+  @media (max-width:900px){ .pf-rule-open{position:static;transform:none;align-items:flex-start;margin-top:14px;max-width:none}
+    .pf-rule-open small{text-align:left} }
   /* 판매처 계산법 · 판매처 이름 아래 요약 한 줄(누르면 창) */
   .pf-rule-sum{display:block;width:100%;margin-top:2px;padding:2px 4px;border:0;border-radius:6px;background:none;cursor:pointer;
     font:inherit;font-size:11px;font-weight:500;color:var(--mute);text-align:center;white-space:normal;line-height:1.35}
@@ -10790,7 +10796,7 @@ window.BAROYAM_FONT=(function(){
         <div class="hero-view-tabs" id="profitTabs" role="tablist" aria-label="마진관리 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-profit="calc" data-sub="아래에서 판매처(자사몰·쿠팡·스마트스토어 …)를 고르고, 상품마다 옵션의 원가·판매가를 넣으면 마진·마진률·최소 ROAS가 바로 나옵니다.">마진표</button>
           <button type="button" class="hero-view-tab" role="tab" data-profit="rocket" data-sub="쿠팡 로켓프레시로 넣는 상품의 공급가·입고 물류비·판매장려금을 넣으면 옵션별 마진·마진률·최소 ROAS가 바로 나옵니다.">로켓프레시</button>
-          <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 수수료를 정리합니다. 마진표가 이 값을 씁니다.">품목별 원가표</button>
+          <button type="button" class="hero-view-tab" role="tab" data-profit="bom" data-sub="상품 원가·프라임 발송비 구간·판매처 목록을 정리합니다. 마진표가 이 값을 씁니다. 판매처 수수료·계산법은 마진표 배너에서 판매처마다 정합니다.">품목별 원가표</button>
         </div>
         <!-- 배너는 매출데이터처럼 대시보드 좌우 끝까지 이어지고, 아래 빈 자리는 내용이 들어올 곳이다 -->
         <section class="section" style="padding-top:0">
@@ -10799,6 +10805,8 @@ window.BAROYAM_FONT=(function(){
             <!-- 제목 왼쪽 판매처 로고(10-20 사용자) · 마진표는 고른 판매처(paintTone 이 src 를 정함) · 로켓프레시는 쿠팡 -->
             <div class="ptitle pf-title"><img class="pf-chan-logo" id="pfChanLogo" data-for="calc" alt=""><img class="pf-chan-logo" data-for="rocket" src="logos/coupang-sq.png" alt="쿠팡"><span id="profitViewTitle">마진표</span></div>
             <div class="psub" id="profitViewSub"></div>
+            <!-- 판매처 계산법 설정(10-20 사용자: 판매처마다 계산법이 달라 원가표가 아니라 마진표 판매처 배너에서 정함) · 마진표 탭일 때만 보임 -->
+            <div class="pf-rule-open"><button type="button" class="ui-btn sm soft" id="pfRuleOpen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span id="pfRuleOpenT">계산법 설정</span></button><small id="pfRuleOpenSub"></small></div>
           </div>
           <!-- 보기 전용 안내 · 수정 권한이 없을 때만 -->
           <div class="pf-ro-note" id="pfRoNote" hidden>보기 전용이에요 · 마진관리 수정은 팀장 또는 관리자 설정 › 권한설정에서 '마진관리 수정'을 받은 회원만 할 수 있어요.</div>
@@ -10818,7 +10826,7 @@ window.BAROYAM_FONT=(function(){
                 <div class="pf-books" id="pfCalcTable"></div>
               </div>
               <div class="pf-foot">
-                <span class="pf-note">자동 값 칸은 두 번 눌러 직접 고칠 수 있습니다(비우면 다시 자동 · 고친 칸은 점선 밑줄) · 수수료 = 판매가 × 수수료율 (+ 배송비 × 배송비 수수료율) · 부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진 = 판매가+배송비 − 원가 − 프라임 − 수수료 − 부가세 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 (× 보정) · 정산예정금 = 판매가+배송비 − 수수료 · 수수료·부가세·ROAS 보정은 판매처마다 품목별 원가표 › 판매처 계산법을 따릅니다</span>
+                <span class="pf-note">자동 값 칸은 두 번 눌러 직접 고칠 수 있습니다(비우면 다시 자동 · 고친 칸은 점선 밑줄) · 수수료 = 판매가 × 수수료율 (+ 배송비 × 배송비 수수료율) · 부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진 = 판매가+배송비 − 원가 − 프라임 − 수수료 − 부가세 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 (× 보정) · 정산예정금 = 판매가+배송비 − 수수료 · 수수료·부가세·ROAS 보정은 판매처마다 배너 오른쪽 계산법 설정을 따릅니다</span>
               </div>
             </div>
             <!-- 판매처 · 맨 위 단추 줄(순수익 요약/마진 계산기/품목별 원가표)과 같은 모양의 맨 아래 단추 줄 ·
@@ -10883,11 +10891,10 @@ window.BAROYAM_FONT=(function(){
                 </form>
               </div>
               <div class="pf-card">
-                <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처 수수료</h3><p>마진표 아래 판매처 탭이 됩니다</p></div></div>
+                <div class="pf-card-head"><div class="pf-card-tt"><h3>판매처</h3><p>마진표 아래 판매처 탭이 됩니다 · 수수료·계산법은 마진표 배너의 계산법 설정에서</p></div></div>
                 <table class="pf-list" id="pfChanTable"></table>
                 <form class="pf-add" id="pfChanAdd" autocomplete="off">
                   <input class="ui-field sm" name="name" maxlength="30" placeholder="판매처 (예: 쿠팡)" required>
-                  <input class="ui-field sm pf-num" name="rate" inputmode="decimal" placeholder="수수료 %" required>
                   <button type="submit" class="ui-btn sm soft">+ 추가</button>
                 </form>
               </div>
@@ -11039,7 +11046,7 @@ window.BAROYAM_FONT=(function(){
                   <div class="pf-scroll"><table class="ps-table ps-led" id="psLedger"></table></div>
                 </div>
               </div>
-              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 직접 적는 비용 · 수수료·부가세는 품목별 원가표 › 판매처 수수료의 판매처 계산법을 마진 계산기와 똑같이 따릅니다 · 직접 적는 비용(외부 광고비·요금제·인건비·기타)은 목록 보기에서 달마다 적고, "매달 반복"은 한 번 적으면 다음 달에도 들어갑니다 · 시트는 달 단위라 기간에 걸친 날 수만큼 나누고, 시트 값이 없는 날은 마지막 마감 달의 하루 평균으로 채운 가상 값입니다</span></div>
+              <div class="pf-foot"><span class="pf-note">순수익 = 매출 − 판매처 수수료 − 광고비 − 상품 원가 − 배송비 − 부가세 − 직접 적는 비용 · 수수료·부가세는 마진표 판매처마다 정한 계산법을 마진 계산기와 똑같이 따릅니다 · 직접 적는 비용(외부 광고비·요금제·인건비·기타)은 목록 보기에서 달마다 적고, "매달 반복"은 한 번 적으면 다음 달에도 들어갑니다 · 시트는 달 단위라 기간에 걸친 날 수만큼 나누고, 시트 값이 없는 날은 마지막 마감 달의 하루 평균으로 채운 가상 값입니다</span></div>
             </div>
           </div>
           <!-- 재고현황 · 이지어드민 재고(app_settings inventory_v1 · 서버가 채움)를 읽기만 한다 ·
@@ -20039,7 +20046,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(O('cost')!=null) cost=O('cost');
     const o={units,paid,cost,auto,price,rate,prime,chRate:ch?num(ch.rate):null};
     if(sale==null) return o;
-    /* 판매처 계산법(품목별 원가표 › 판매처 수수료 › 계산법) · shipRate 배송비 수수료율 · feeVat 'inc' 수수료에 부가세 10% · vatMode 'sale'|'none' */
+    /* 판매처 계산법(마진표 배너 › 계산법 설정) · shipRate 배송비 수수료율 · feeVat 'inc' 수수료에 부가세 10% · vatMode 'sale'|'none' */
     const R=ruleOf(ch), feeAuto=(sale*(rate||0)/100+ship*R.shipRate/100)*(R.feeVat==='inc'?1.1:1);
     const rev=sale+ship, fee=O('fee')!=null?O('fee'):feeAuto;
     const pre=rev-cost-prime-fee, vatAuto=R.vatMode==='none'?0:(R.vatMode==='sale'?rev/11:pre/11);
@@ -20169,6 +20176,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const tone=/네이버|스마트스토어|naver|smartstore/.test(nm)?'naver':/쿠팡|coupang/.test(nm)?'coupang'
       :/톡딜|카카오|talk|kakao/.test(nm)?'talk':/11번가|11st/.test(nm)?'st11':'';
     [pane,view].forEach(el=>{ if(tone) el.dataset.tone=tone; else delete el.dataset.tone; });
+    /* 배너 오른쪽 계산법 설정 단추 · 지금 판매처 이름과 계산법 요약 */
+    $('pfRuleOpenT').textContent=c?(c.name||'판매처')+' 계산법 설정':'계산법 설정';
+    $('pfRuleOpenSub').textContent=c?ruleText(c):'';
+    $('pfRuleOpen').disabled=!c;
     /* 배너 제목 왼쪽 로고 · 그림은 퀵링크 로고(logos/*.png) · 자사몰은 사이드바 바로얌 로고 · 모르는 판매처는 로고 없음 */
     const logo=$('pfChanLogo'); if(!logo) return;
     const own=document.querySelector('.sb-logo');
@@ -20191,6 +20202,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     tabs.style.paddingLeft=Math.max(16,x-m.left)+'px';
   }
   addEventListener('resize',placeBar);
+  $('pfRuleOpen').addEventListener('click',()=>{ const id=curChan(); if(id) openRule(id); });
   if(window.ResizeObserver){ const ro=new ResizeObserver(placeBar); ro.observe(view.closest('.main')||view); }
   $('pfChanTabs').addEventListener('click',e=>{
     const t=e.target.closest('.hero-view-tab'); if(!t) return;
@@ -20315,7 +20327,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'</section>';
     });
     const filtered=brandP||qP.trim()||adOnly, cn=(COST.data.chans[curChan()]||{}).name||'';
-    if(!curChan()) h=msg('품목별 원가표 › 판매처 수수료에 판매처(자사몰·쿠팡·스마트스토어 …)를 먼저 넣어 주세요');
+    if(!curChan()) h=msg('품목별 원가표 › 판매처에 판매처(자사몰·쿠팡·스마트스토어 …)를 먼저 넣어 주세요');
     else if(!list.length) h=msg(filtered?'조건에 맞는 상품이 없습니다':esc(cn)+'에 등록한 상품이 없습니다 · "+ 상품 등록" 으로 상품 이름을 정하고, 그 안에 옵션을 추가하세요');
     $('pfCalcTable').innerHTML=h;
     $('pfCalcTable').querySelectorAll('tr[data-row]').forEach(tr=>outCells(tr,B().rows[tr.dataset.row]));
@@ -20764,7 +20776,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 바뀐 칸만 고친다 · 다른 PC가 그사이 고친 다른 칸과 합쳐진다 */
       const d=ruleDraft();
       Object.keys(d).forEach(k=>{ const old=k==='rate'?(num(ch.rate)||0):ruleOf(ch)[k]; if(old!==d[k]) ch[k]=d[k]; });
-      COST.mark(); paintBom();
+      COST.mark(); paintBom(); paintCalc();
     }
     closeRule();
   });
@@ -20852,20 +20864,20 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<td class="c-num"><input class="ui-field sm pf-num" data-k="price" data-n inputmode="numeric" value="'+esc(comma(i.price))+'"></td>'
         +'<td class="act"><button type="button" class="ui-btn sm ghost icon" data-del aria-label="삭제">✕</button></td></tr>').join('')
         ||'<tr class="pf-none"><td colspan="5">'+(all.length?'찾는 상품이 없습니다':'아래에서 상품을 넣어 주세요 (예: 홀떡 · 홀떡피자 1팩 · 1,300 · 4,300)')+'</td></tr>')+'</tbody>';
-    /* move · 판매처 수수료는 ▲▼ 로 순서를 바꾼다(마진 계산기 아래 판매처 탭 순서가 된다) */
+    /* move · 판매처는 ▲▼ 로 순서를 바꾼다(마진 계산기 아래 판매처 탭 순서가 된다) */
     const small=(id,arr,k,lbl,unit,move)=>{
-      $(id).innerHTML='<thead><tr><th>'+lbl+'</th><th class="c-num r">'+unit+'</th><th></th></tr></thead><tbody>'
-        +(arr.map((o,i)=>'<tr data-id="'+esc(o.id)+'"><td><input class="ui-field sm" data-k="name" maxlength="30" value="'+esc(o.name||'')+'">'
-          +(move?'<button type="button" class="pf-rule-sum" data-rule title="계산법 바꾸기">'+esc(ruleText(o))+'</button>':'')+'</td>'
-          +'<td class="c-num"><input class="ui-field sm pf-num" data-k="'+k+'" data-n inputmode="decimal" value="'+esc(comma(o[k]))+'"></td>'
+      $(id).innerHTML='<thead><tr><th>'+lbl+'</th>'+(k?'<th class="c-num r">'+unit+'</th>':'')+'<th></th></tr></thead><tbody>'
+        +(arr.map((o,i)=>'<tr data-id="'+esc(o.id)+'"><td><input class="ui-field sm" data-k="name" maxlength="30" value="'+esc(o.name||'')+'"></td>'
+          +(k?'<td class="c-num"><input class="ui-field sm pf-num" data-k="'+k+'" data-n inputmode="decimal" value="'+esc(comma(o[k]))+'"></td>':'')
           +'<td class="act'+(move?' pf-move':'')+'">'
           +(move?'<button type="button" class="ui-btn sm ghost icon" data-mv="-1" aria-label="위로"'+(i?'':' disabled')+'>▲</button>'
             +'<button type="button" class="ui-btn sm ghost icon" data-mv="1" aria-label="아래로"'+(i<arr.length-1?'':' disabled')+'>▼</button>':'')
           +'<button type="button" class="ui-btn sm ghost icon" data-del aria-label="삭제">✕</button></td></tr>').join('')
-          ||'<tr class="pf-none"><td colspan="3">아직 없습니다</td></tr>')+'</tbody>';
+          ||'<tr class="pf-none"><td colspan="'+(k?3:2)+'">아직 없습니다</td></tr>')+'</tbody>';
     };
     small('pfShipTable',live(c.ship),'fee','구간','발송비(원)');
-    small('pfChanTable',live(c.chans),'rate','판매처','수수료(%)',true);
+    /* 수수료·계산법은 마진표 판매처 배너의 계산법 설정에서 정한다(10-20) · 여기서는 이름·순서만 */
+    small('pfChanTable',live(c.chans),null,'판매처','',true);
     applyRO();
   }
   function wireList(tableId,field){
@@ -20919,7 +20931,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   wireAdd('pfItemAdd','items',f=>{ const cost=num(f.elements.cost.value); if(cost==null) return null; return {brand:f.elements.brand.value.trim(),name:f.elements.name.value.trim(),cost,price:num(f.elements.price.value)}; });
   wireAdd('pfShipAdd','ship',f=>{ const fee=num(f.elements.fee.value); if(fee==null) return null; return {name:f.elements.name.value.trim(),fee}; });
-  wireAdd('pfChanAdd','chans',f=>{ const rate=num(f.elements.rate.value); if(rate==null) return null; return {name:f.elements.name.value.trim(),rate}; });
+  wireAdd('pfChanAdd','chans',f=>({name:f.elements.name.value.trim(),rate:0}));
   /* 브랜드 고르기 · 브랜드가 많아 칩 대신 목록을 연다(상품 수를 오른쪽에) */
   function brandOpts(){
     const all=live(COST.data.items);
@@ -21557,7 +21569,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const S=i=>+(d.monthlySales[c]||[])[i]||0, A=i=>{ const a=(d.monthlyAd[c]||[])[i]; return a&&+a.cost||0; };
       parts.forEach(({m,f})=>{ sales+=S(m.i)*f; ad+=A(m.i)*f; });
       if(virt&&base){ sales+=S(base.i)/base.dataDays*virt; ad+=A(base.i)/base.dataDays*virt; }
-      /* 판매처 계산법(품목별 원가표 › 판매처 수수료)을 마진 계산기와 똑같이 따른다 · 수수료 부가세 10% 더함 · 부가세 남는 돈÷11 / 매출÷11 / 없음 */
+      /* 판매처 계산법(마진표 배너 › 계산법 설정)을 마진 계산기와 똑같이 따른다 · 수수료 부가세 10% 더함 · 부가세 남는 돈÷11 / 매출÷11 / 없음 */
       const rt=psRate(c), fee=sales*((rt?rt.rate:0)/100)*(rt&&rt.feeVat==='inc'?1.1:1), cost=psCost(c,sales), ship=psShip(c,sales);
       const vat=!rt||!rt.vatMode?Math.max(0,(sales-fee-cost-ship)/11):(rt.vatMode==='sale'?sales/11:0);
       return {c,sales,ad,fee,cost,ship,vat,rate:rt,profit:sales-fee-ad-cost-ship-vat};
@@ -21710,7 +21722,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +'<thead><tr><th>항목</th><th class="l">어디서</th><th class="r">금액(원)</th><th class="r">매출 대비</th></tr></thead><tbody>';
     led+=rows.map(x=>L('<span class="ch ch-'+PS_KEY[x.c]+'"><i></i>'+x.c+' 매출</span>','매출 시트'+(t.virt?' · 가상 '+t.virt+'일':''),x.sales,{cls:'sub',pct:false})).join('');
     led+=L('매출 합계','',t.sales,{cls:'grp',pct:false});
-    led+=L('판매처 수수료','품목별 원가표 계산법',t.fee,{minus:1});
+    led+=L('판매처 수수료','마진표 판매처 계산법',t.fee,{minus:1});
     led+=L('광고비','매출 시트 · 판매처 광고',t.ad,{minus:1});
     led+=L('상품 원가 <em>임시</em>','매출의 '+Math.round(PS_TEMP.costRate*100)+'%',t.cost,{minus:1,cls:'tmp'});
     led+=L('배송비 <em>임시</em>','주문 '+(PS_TEMP.aov/10000)+'만원당 '+psShipFee().toLocaleString('ko-KR')+'원',t.ship,{minus:1,cls:'tmp'});
