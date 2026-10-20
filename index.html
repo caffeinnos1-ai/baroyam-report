@@ -26485,7 +26485,8 @@ window.baroyamAsk=function(title,body,okText){
       else (하위[c[깊이]]=하위[c[깊이]]||[]).push(r);
     });
     const 이름순=function(a,b){ return a.localeCompare(b,'ko',{numeric:true}); };
-    let h='<div class="drv-up-crumb drv-fold-crumb"><button type="button" data-crumb="0">'+안전(바탕.length?바탕[바탕.length-1]:탭이름(상태.회사))+'</button>';
+    /* 맨 앞 칸은 드라이브 폴더 이름(★제품별_자산 등) 대신 "전체" 로 보인다(사용자 요청 · 드라이브 속 이름을 드러내지 않음) */
+    let h='<div class="drv-up-crumb drv-fold-crumb"><button type="button" data-crumb="0">전체</button>';
     상태.폴더.forEach(function(이름,i){ h+='<i>›</i><button type="button" data-crumb="'+(i+1)+'">'+안전(이름)+'</button>'; });
     h+='</div>';
     const 폴더이름=Object.keys(하위).sort(이름순);
