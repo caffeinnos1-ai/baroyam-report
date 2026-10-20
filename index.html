@@ -18588,7 +18588,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +(r.ads.length>1?'<div class="ma-asset-ads"><h4>같은 소재를 쓴 광고 '+r.ads.length+'개</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul></div>':'')
         +'</div></div>';
     };
-    const tot=derive(addUp(rows.map(r=>r.m)));
     /* ROAS 칸 · 대표 ROAS 가 이어졌으면 그 아래 빨강·이상 파랑, 아니면 예전처럼 100% 아래만 빨강 */
     const cell=(c,x,R)=>{ const v=x[c.k]; let cls=v==null||v===0?' class="is-zero"':'';
       if(c.k==='roas'&&v!=null&&x.spend>0){ const rc=roasCls(v,R); if(rc) cls=' class="'+rc.trim()+'" title="대표 ROAS '+Math.round(R.roas)+'% · '+esc(R.name)+' ('+R.src+')"'; else if(v<100) cls=' class="is-low"'; }
@@ -18599,7 +18598,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
     const head='<thead><tr>'+(sel?'<th class="ma-ckcol"><input type="checkbox" class="ma-ck" data-ck="*"'+(allOn?' checked':'')+' aria-label="보이는 줄 모두 고르기"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(COLS).map(c=>{ const on=sortKey===c.k;
       return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+'</tr></thead>';
-    const totRow='<tr class="is-total">'+(sel?'<td class="ma-ckcol"></td>':'')+'<td class="ma-brandcol"></td><td class="ma-namecol">합계</td>'+COLS.map(c=>cell(c,tot)).join('')+'</tr>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
       const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
@@ -18609,7 +18607,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
-    $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+totRow+body+'</tbody></table></div>'+more;
+    $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+body+'</tbody></table></div>'+more;
   }
 
   /* ---------- 배너 위 단추 · 화면 고르기 ---------- */
