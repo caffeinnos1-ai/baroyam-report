@@ -2570,6 +2570,22 @@ window.BAROYAM_FONT=(function(){
   /* 줄 높이 · 캠페인 줄도 세트·소재 줄(이름 아래 작은 글)과 같은 높이로 */
   .ma-list .ma-table tbody tr:not(.is-total) td{height:52px}
   .ma-list .ma-table tr.is-total td{height:40px}
+  /* 정밀성과 목록 · 참고 그림처럼 가볍게(10-20 사용자 요청) · 밑줄 탭 · 제품 칸 · 모든 머리에 정렬 표시 · 합계 줄은 바탕 없이 */
+  .ma-list .ma-levels{background:none;padding:0 0 8px;border-bottom:1px solid var(--line);border-radius:0;gap:4px;display:inline-flex}
+  .ma-list .ma-levels .ui-tab{background:none;box-shadow:none;color:var(--mute);font-weight:500}
+  .ma-list .ma-levels .ui-tab.active,.ma-list .ma-levels .ui-tab[aria-selected="true"]{background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:600}
+  .ma-list .ma-levels .ui-tab .ma-selcount{background:var(--chip-flat);color:var(--mute)}
+  .ma-list .ma-levels .ui-tab.active .ma-selcount,.ma-list .ma-levels .ui-tab[aria-selected="true"] .ma-selcount{background:color-mix(in srgb,var(--btn) 18%,var(--paper));color:var(--btn-soft-ink)}
+  .ma-list .ma-table th{color:var(--ink);font-weight:500;padding:12px 10px}
+  .ma-list .ma-table th .ma-sorti{font-style:normal;margin-left:4px;color:var(--mute);opacity:.6;font-size:11px}
+  .ma-list .ma-table th.is-sort .ma-sorti{color:var(--btn);opacity:1}
+  .ma-list .ma-table th.ma-brandcol{width:88px}
+  .ma-table th.ma-brandcol,.ma-table td.ma-brandcol{text-align:left;padding-left:8px}
+  .ma-table td.ma-brandcol{color:var(--mute);font-size:12px;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-list .ma-table tr.is-total td{background:none;color:var(--mute);font-weight:500}
+  .ma-list .ma-table td.is-under,.ma-list .ma-table td.is-over,.ma-list .ma-table td:last-child{font-weight:600}
+  .ma-list .ma-table td.is-under{color:var(--neg)}
+  .ma-list .ma-table td.is-over{color:var(--coupang)}
   .ma-list #maBrand,.ma-list #maSortPick{width:180px;justify-content:space-between}
   .ma-list #maBrand .t,.ma-list #maSortPick .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-list .ma-table{table-layout:fixed;min-width:1100px}
@@ -18515,7 +18531,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('maShow').innerHTML=[['on','게재 중',nOn],['all','전체',rows.length]]
       .map(c=>'<button type="button" class="ui-chip" data-v="'+c[0]+'" aria-pressed="'+(show===c[0])+'">'+c[1]+' <b>'+c[2]+'</b></button>').join('');
     if(show==='on') rows=rows.filter(r=>r.st==='ACTIVE');
-    rows.sort((p,r)=>{ const A=p.x[sortKey], B=r.x[sortKey]; if(A==null&&B==null) return 0; if(A==null) return 1; if(B==null) return -1; return (A-B)*sortDir; });
+    rows.forEach(r=>{ r.brand=bOf[r.c]||''; });
+    if(sortKey==='brand'||sortKey==='name') rows.sort((p,r)=>String(p[sortKey]).localeCompare(String(r[sortKey]),'ko')*-sortDir);
+    else rows.sort((p,r)=>{ const A=p.x[sortKey], B=r.x[sortKey]; if(A==null&&B==null) return 0; if(A==null) return 1; if(B==null) return -1; return (A-B)*sortDir; });
     $('maListT').textContent=L+' '+rows.length+'개';
     $('maListS').textContent=RANGE_TXT[range]+(tab==='asset'?' · 같은 영상·이미지를 쓴 광고는 하나로 묶습니다':' · 이름을 누르면 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+'로');
     tabsOf('maLevel',v=>{ if(v!==tab) go(v); }).set(tab);
@@ -18579,15 +18597,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
     const allOn=sel&&rows.slice(0,limit).length&&rows.slice(0,limit).every(r=>sel.has(r.id));
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
-    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"><input type="checkbox" class="ma-ck" data-ck="*"'+(allOn?' checked':'')+' aria-label="보이는 줄 모두 고르기"></th>':'')+'<th class="ma-namecol">'+(tab==='adset'?'세트':L)+'</th>'+COLS.map(c=>'<th data-k="'+c.k+'"'+(sortKey===c.k?' class="is-sort"':'')+'>'+c.l+(sortKey===c.k?(sortDir<0?' ↓':' ↑'):'')+'</th>').join('')+'</tr></thead>';
-    const totRow='<tr class="is-total">'+(sel?'<td class="ma-ckcol"></td>':'')+'<td class="ma-namecol">합계</td>'+COLS.map(c=>cell(c,tot)).join('')+'</tr>';
+    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"><input type="checkbox" class="ma-ck" data-ck="*"'+(allOn?' checked':'')+' aria-label="보이는 줄 모두 고르기"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(COLS).map(c=>{ const on=sortKey===c.k;
+      return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+'</tr></thead>';
+    const totRow='<tr class="is-total">'+(sel?'<td class="ma-ckcol"></td>':'')+'<td class="ma-brandcol"></td><td class="ma-namecol">합계</td>'+COLS.map(c=>cell(c,tot)).join('')+'</tr>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
       const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
       const isA=tab==='asset';
       if(isA) shownRows[r.id]=r;
       const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+nm+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+totRow+body+'</tbody></table></div>'+more;
