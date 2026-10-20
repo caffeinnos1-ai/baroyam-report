@@ -2779,6 +2779,8 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-src{font-size:12px;color:var(--btn);text-decoration:none;text-align:center}
   .ma-pv-src:hover{text-decoration:underline}
   .ma-pv-src.is-none{color:var(--mute);line-height:1.5}
+  .ma-lp{display:flex;flex-direction:column;gap:6px}
+  .ma-lp .ui-btn{text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-pv-info{flex:1;min-width:260px;display:flex;flex-direction:column;gap:16px}
   .ma-big{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .ma-big div{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--line);border-radius:12px}
@@ -18561,7 +18563,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 게재일 · 같은 소재를 쓴 광고 중 가장 먼저 만든 광고의 날(서버 ads[].at = 메타 created_time) */
       const at=o.ads.map(x=>Date.parse(x.at||'')).filter(n=>n>0).sort((p,r)=>p-r)[0]||null;
       return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,at,
-        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x)})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
+        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x),link:x.link||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -18672,6 +18674,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         :'<div class="ma-pv">'+(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>')
           +'<span class="ty">'+kindTxt(r.kind)+'</span></div>'
           +'<span class="ma-pv-src is-none">영상이 연동되지 않았습니다 · 연동 리스트에서 이으면 여기서 재생됩니다</span>';
+      /* 상세페이지(랜딩페이지) · 서버가 광고마다 받아 둔 주소(ads[].link · 10-21) · 지출 큰 광고 순, 추적용 utm_ 만 다른 주소는 하나로 */
+      const lps=[], lpSeen=new Set();
+      r.ads.forEach(x=>{ if(!x.link) return; const k=x.link.replace(/([?&])utm_[^&]*/g,'$1').replace(/[?&]+$/,''); if(!lpSeen.has(k)){ lpSeen.add(k); lps.push(x.link); } });
+      const lpTxt=u=>{ try{ const q=new URL(u), no=q.searchParams.get('product_no'); return q.hostname.replace(/^www\./,'')+(no?' · 상품 '+no:''); }catch(e){ return u; } };
+      const lp=lps.length?'<div class="ma-lp">'+lps.map((u,i)=>'<a class="ui-btn soft sm block" href="'+esc(u)+'" target="_blank" rel="noopener" title="'+esc(u)+'">'
+          +(lps.length>1?'상세페이지 '+(i+1)+' · '+esc(lpTxt(u)):'상세페이지 열기')+' ↗</a>').join('')+'</div>'
+        :'<span class="ma-pv-src is-none">메타에 상세페이지 주소가 없는 소재입니다</span>';
       const big=[['ROAS',pct(r.x.roas),roasCls(r.x.roas,R)||(low?' is-low':'')],['지출',money(r.x.spend,cur),''],['구매 전환값',money(r.x.rev,cur),''],['구매',int(r.x.buy)+'건','']];
       const small=[['CPA',r.x.cpa==null?'-':money(r.x.cpa,cur)],['CTR',r.x.ctr==null?'-':r.x.ctr.toFixed(2)+'%'],['CPM',r.x.cpm==null?'-':money(r.x.cpm,cur)],['클릭',int(r.x.clicks)],['노출',int(r.x.imp)]];
       let prod='<span class="ma-pv-none">연동 안 됨 · 연동 리스트에서 이 소재의 캠페인·세트에 상품을 이으세요</span>';
@@ -18680,7 +18689,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         prod='<b>'+esc(R.name)+'</b><span>대표 ROAS '+(R.roas!=null?Math.round(R.roas)+'%':'–')+' · '+R.src+'에서</span>'
           +(d==null?'':'<span class="ma-cmp'+(d<0?' is-low':' is-up')+'">'+(d>=0?'+':'')+d+'%p</span>');
       }
-      return '<div class="ma-asset-open"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-info">'
+      return '<div class="ma-asset-open"><div class="ma-pv-col">'+media+lp+'</div><div class="ma-pv-info">'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+' · '+RANGE_TXT[range]+'</small><b class="'+m[2]+'">'+m[1]+'</b></div>').join('')+'</div>'
         +'<div class="ma-asset-mets">'+small.map(m=>'<div><small>'+m[0]+'</small><b>'+m[1]+'</b></div>').join('')+'</div>'
         +'<div class="ma-pv-link"><small>마진표 상품</small><div>'+prod+'</div></div>'
