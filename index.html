@@ -18459,16 +18459,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const stCls=st=>st==='ACTIVE'?' is-on':/DISAPPROVED|WITH_ISSUES/.test(st||'')?' is-bad':'';
   const stTxt=st=>({ACTIVE:'게재 중',PAUSED:'꺼짐',CAMPAIGN_PAUSED:'캠페인 꺼짐',ADSET_PAUSED:'세트 꺼짐',ARCHIVED:'보관됨',DELETED:'삭제됨',DISAPPROVED:'승인 거부',WITH_ISSUES:'문제 있음',IN_PROCESS:'처리 중',PENDING_REVIEW:'검토 중'}[st]||st||'');
   const kindTxt=k=>k==='video'?'영상':k==='image'?'이미지':'소재';
+  /* 정밀성과 목록 칸 · 광고비·구매·매출·CTR·CPA·ROAS 여섯 칸만(사용자 요청 10-20 · 링크 클릭·CPM·노출은 소재 팝업에서 봄) */
   const COLS=[
-    {k:'spend',l:'지출',f:(v,c)=>money(v,c)},
-    {k:'rev',l:'구매 전환값',f:(v,c)=>money(v,c)},
-    {k:'roas',l:'ROAS',f:pct},
+    {k:'spend',l:'광고비',f:(v,c)=>money(v,c)},
     {k:'buy',l:'구매',f:v=>int(v)},
-    {k:'cpa',l:'CPA',f:(v,c)=>v==null?'-':money(v,c)},
-    {k:'clicks',l:'링크 클릭',f:v=>int(v)},
+    {k:'rev',l:'매출',f:(v,c)=>money(v,c)},
     {k:'ctr',l:'CTR',f:v=>v==null?'-':v.toFixed(2)+'%'},
-    {k:'cpm',l:'CPM',f:(v,c)=>v==null?'-':money(v,c)},
-    {k:'imp',l:'노출',f:v=>int(v)},
+    {k:'cpa',l:'CPA',f:(v,c)=>v==null?'-':money(v,c)},
+    {k:'roas',l:'ROAS',f:pct},
   ];
   function paintLevelKpis(a){
     const I=(a.insights&&a.insights[range])||{};
@@ -18920,7 +18918,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return m;
   }
   const BRAND_ALIAS={'아미아미':'아미'};   /* 이름 → 묶을 브랜드 · 더 생기면 한 줄씩 */
-  const SORTS=[{value:'spend',label:'지출 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'구매 전환값 많은 순'}];
+  const SORTS=[{value:'spend',label:'광고비 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'매출 많은 순'}];
   perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf; if(v==='detail'){ if(tab==='daily'){ show='on'; go('campaign'); } }   /* 정밀성과에 들어오면 늘 게재 중부터(사용자 요청) */ else go(v); }));
 
   function paint(){
