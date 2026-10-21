@@ -2506,6 +2506,13 @@ window.BAROYAM_FONT=(function(){
   .ma-empty{font-size:13.5px;color:var(--body);line-height:1.7}
   .ma-table td.ma-fx{color:color-mix(in srgb,var(--coupang) 72%,var(--paper))}   /* 날짜별 기록 환율 · 하늘색 */
   .ma-table td.ma-fx.is-borrow{opacity:.6}
+  .ip-hero-acct .ma-pull{margin-left:6px}
+  .ma-pull[aria-busy="true"]{cursor:progress}
+  .ip-who small.ma-pull-msg{color:var(--body)}
+  .ip-who small.ma-pull-msg.is-bad{color:var(--neg)}
+  .ip-who small[hidden]{display:none}
+  .ma-pull[aria-busy="true"] svg{animation:sbspin .9s linear infinite}
+  @media (prefers-reduced-motion:reduce){ .ma-pull[aria-busy="true"] svg{animation-duration:3s} }
   .ip-who small.ma-fx-line{color:color-mix(in srgb,var(--coupang) 72%,var(--paper));font-size:12px}
   .ip-who small.ma-fx-line[hidden]{display:none}
   .ma-daycamp{width:300px;max-width:100%;justify-content:space-between}
@@ -10362,8 +10369,10 @@ window.BAROYAM_FONT=(function(){
             <!-- 배너 오른쪽 계정 카드 · 인스타콘텐츠 성과 배너와 같은 모양(사용자 요청) -->
             <div class="ip-acct ip-hero-acct" id="maHeroAcct">
               <div class="ip-avatar ma-avatar"><span id="maAvatar">M</span></div>
-              <div class="ip-who"><b id="maAcctName">메타광고</b><small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small><small class="ma-fx-line" id="maFx" hidden></small></div>
+              <div class="ip-who"><b id="maAcctName">메타광고</b><small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small><small class="ma-fx-line" id="maFx" hidden></small><small class="ma-pull-msg" id="maPullMsg" hidden></small></div>
               <div class="ip-nums" id="maNums" hidden></div><!-- 10월 지출·ROAS·구매는 사용자 요청으로 숨김 -->
+              <!-- 지금 가져오기 · 누르면 VPS 가 메타 API 에서 바로 다시 받는다(사용자 요청 10-21 · brand-files 의 metaads/req 에 요청 파일) -->
+              <button type="button" class="ui-btn soft sm ma-pull" id="maPull" title="메타에서 지금 성과를 다시 받아 옵니다(1분 안팎)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>지금 가져오기</span></button>
             </div>
           </div>
           <div class="ip ma" id="maRoot">
@@ -13504,7 +13513,7 @@ window.CsGuide=(function(){
     ['review',1,'리뷰수집','채널별 인박스','회사 PC 리뷰 수집기(4317)와 이야기합니다. 수집기 화면 디자인은 대시보드가 보내 줍니다.'],
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
-    ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 광고계정마다 통화(원·달러)를 따로 보입니다.'],
+    ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너의 지금 가져오기는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
     ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1.'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
@@ -19197,6 +19206,54 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     loading=false; loaded=true;
     paintAccTabs(); paint();
   }
+  /* ---------- 지금 가져오기 (사용자 요청 10-21) ----------
+     화면은 메타 토큰이 없어서(VPS .env 에만 있음) 직접 못 받는다 · 영상 자막·대본과 같은 방식으로 brand-files 버킷에
+     metaads/req/<임의>.json 을 올리면 VPS(meta_ads_request.js · 1분마다)가 meta_ads.js 를 돌리고 metaads/res/<같은 이름> 에
+     {state:'running'|'done'|'failed', message} 를 적는다 · 끝나면 meta_ads_v1 을 다시 읽어 그린다 */
+  let pulling=null;
+  function pullPaint(txt){
+    const b=$('maPull'); if(!b) return;
+    b.setAttribute('aria-busy',pulling?'true':'false');
+    b.querySelector('span').textContent=txt||(pulling?'가져오는 중…':'지금 가져오기');
+  }
+  async function pullRes(name){
+    const DB=window.BAROYAM_DB;
+    let u; try{ u=await DB.fileUrl('brand-files','metaads/res/'+name,60); }catch(e){ return null; }
+    const r=await fetch(u,{cache:'no-store'}).catch(()=>null);
+    return r&&r.ok?r.json().catch(()=>null):null;
+  }
+  async function pull(){
+    if(pulling) return;
+    const DB=window.BAROYAM_DB, msg=$('maPullMsg');
+    const T=(m,bad)=>{ msg.textContent=m; msg.classList.toggle('is-bad',!!bad); msg.hidden=false; clearTimeout(T.t); if(!bad) T.t=setTimeout(()=>{ msg.hidden=true; },8000); };
+    msg.hidden=true;
+    try{
+      if(!DB||!DB.fileUpload||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다. 새로고침한 뒤 다시 눌러 주세요.');
+      const name=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json';
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      pulling={name,at:Date.now()}; pullPaint('요청 보내는 중…');
+      await DB.fileUpload('brand-files','metaads/req/'+name,new Blob([JSON.stringify({v:1,at:new Date().toISOString(),by})],{type:'application/json'}));
+      const before=data&&data.updatedAt;
+      for(;;){
+        await new Promise(r=>setTimeout(r,4000));
+        const sec=Math.round((Date.now()-pulling.at)/1000);
+        const res=await pullRes(name);
+        if(res&&res.state==='failed') throw new Error(res.message||'메타에서 받지 못했습니다.');
+        if(res&&res.state==='done') break;
+        if(!res&&sec>150) throw new Error('서버가 요청을 받지 않았습니다. 잠시 뒤 다시 눌러 주세요.');
+        if(sec>300) throw new Error('5분이 지나도 끝나지 않았습니다. 잠시 뒤 새로고침해 주세요.');
+        pullPaint(res&&res.state==='running'?'메타에서 받는 중… '+sec+'초':'서버 대기 중… '+sec+'초');
+      }
+      pulling=null; pullPaint();
+      await load();
+      T(data&&data.updatedAt!==before?'방금 새로 가져왔습니다':'다시 읽었습니다');
+    }catch(e){
+      pulling=null; pullPaint();
+      T('가져오기 실패 · '+(e&&e.message||e),true);
+    }
+  }
+  $('maPull').addEventListener('click',pull);
+
   paintTab();
   window.baroyamMetaAds={open(){ load(); if(!linksLoaded) Promise.all([loadLinks(),loadProfit()]).then(()=>{ if(acc()&&tab!=='daily') paintList(acc()); }); }};
 })();
