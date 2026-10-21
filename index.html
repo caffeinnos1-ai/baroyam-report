@@ -2818,6 +2818,13 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-info .ma-asset-mets{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:0}
   /* 소재 팝업 · 연령×성별 · 게재지면 · 타깃 (10-21) */
   .ma-bd{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+  .ma-tx-row{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .ma-tx-row:first-of-type{border-top:0;padding-top:0}
+  .ma-tx-row .k{font-size:12px;color:var(--mute);padding-top:2px}
+  .ma-tx-row>div{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .ma-tx-row p{margin:0;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.65;color:var(--body)}
+  .ma-tx-row p.ma-tx-t{font-weight:600;color:var(--ink)}
+  .ma-tx-row p i{font-style:normal;display:inline-block;min-width:18px;margin-right:6px;padding:0 5px;border-radius:5px;background:var(--chip-flat);font-size:11px;color:var(--mute);text-align:center}
   .ma-ag{display:grid;grid-template-columns:44px 1fr 1fr;gap:5px;align-items:center}
   .ma-ag .h{font-size:11.5px;color:var(--mute);text-align:center}
   .ma-ag .y{font-size:12px;color:var(--body)}
@@ -18633,7 +18640,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 게재일 · 같은 소재를 쓴 광고 중 가장 먼저 만든 광고의 날(서버 ads[].at = 메타 created_time) */
       const at=o.ads.map(x=>Date.parse(x.at||'')).filter(n=>n>0).sort((p,r)=>p-r)[0]||null;
       return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,at,
-        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x),link:x.link||null,s:x.s})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
+        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x),link:x.link||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -18783,6 +18790,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +(tg.ex&&tg.ex.length?'<dt>제외</dt><dd>'+tg.ex.map(tag).join('')+'</dd>':'')
         +'<dt>지면</dt><dd>'+(tg.pl&&tg.pl.length?[...new Set(tg.pl.map(k=>{ const [p,q]=k.split('.'); return (PLAT[p]||p)+(q?' '+(POS[q]||q):''); }))].map(tag).join(''):tag('어드밴티지+ 자동'))+'</dd>'
         +'</dl></div>':'';
+      /* 광고 문구 · 서버가 광고마다 받은 제목·본문·설명(ads[].tx = a.texts 번호 · 10-21) · 같은 소재를 쓴 광고들의 글을 겹치지 않게 모음 ·
+         다이내믹 소재처럼 글이 여럿이면 번호를 붙여 모두 보인다 */
+      const TX=a.texts||[], txs={t:[],b:[],d:[]};
+      r.ads.forEach(x=>{ if(x.tx) for(const k in txs) (x.tx[k]||[]).forEach(i=>{ const t=TX[i]; if(t&&!txs[k].includes(t)) txs[k].push(t); }); });
+      const txRow=(k,nm)=>txs[k].length?'<div class="ma-tx-row"><span class="k">'+nm+'</span><div>'
+        +txs[k].map((t,i)=>'<p class="ma-tx-'+k+'">'+(txs[k].length>1?'<i>'+(i+1)+'</i>':'')+esc(t)+'</p>').join('')+'</div></div>':'';
+      const txBox=txs.t.length+txs.b.length+txs.d.length?'<div class="ma-sec ma-tx"><h4>광고 문구 <small>메타에 입력한 그대로</small></h4>'
+        +txRow('t','제목')+txRow('b','본문')+txRow('d','설명')+'</div>':'';
       /* 색 기준은 문구 줄 대신 말풍선으로(사용자 요청 · 줄이 길어짐) */
       const bdHtml=agBox||plBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+'</div>':'';
       return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+lp+'</div><div class="ma-pv-info">'
@@ -18792,6 +18807,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +bdHtml+tgBox
         +(l.script?'<div class="ma-sec"><h4>대본</h4><div class="ma-pv-script">'+esc(l.script)+'</div></div>':'')
         +(r.ads.length>1?'<div class="ma-sec ma-asset-ads"><h4>같은 소재를 쓴 광고 '+r.ads.length+'개</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul></div>':'')
+        +txBox
         +'</div></div>';
     };
     /* ROAS 칸 · 대표 ROAS 가 이어졌으면 그 아래 빨강·이상 파랑, 아니면 예전처럼 100% 아래만 빨강 */
