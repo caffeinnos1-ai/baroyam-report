@@ -2506,13 +2506,20 @@ window.BAROYAM_FONT=(function(){
   .ma-empty{font-size:13.5px;color:var(--body);line-height:1.7}
   .ma-table td.ma-fx{color:color-mix(in srgb,var(--coupang) 72%,var(--paper))}   /* 날짜별 기록 환율 · 하늘색 */
   .ma-table td.ma-fx.is-borrow{opacity:.6}
-  .ip-hero-acct .ma-pull{margin-left:6px}
-  .ma-pull[aria-busy="true"]{cursor:progress}
+  /* 로고 = 지금 가져오기 단추 · 받는 동안 파란 테두리가 초록 고리로 바뀌어 로고 둘레를 돈다 */
+  .ma-avatar{position:relative;border:0;cursor:pointer;font:inherit;transition:transform .16s}
+  .ma-avatar:hover{transform:scale(1.05)}
+  .ma-avatar:focus-visible{outline:none;box-shadow:var(--ui-ring)}
+  .ma-avatar>*{position:relative;z-index:1}
+  .ma-avatar::before{content:"";position:absolute;inset:0;border-radius:99px;opacity:0;transition:opacity .2s;
+    background:conic-gradient(from 0deg,var(--pos),color-mix(in srgb,var(--pos) 15%,transparent) 60%,var(--pos))}
+  .ma-avatar[aria-busy="true"]{background:color-mix(in srgb,var(--pos) 18%,var(--paper));cursor:progress}
+  .ma-avatar[aria-busy="true"]:hover{transform:none}
+  .ma-avatar[aria-busy="true"]::before{opacity:1;animation:sbspin .9s linear infinite}
   .ip-who small.ma-pull-msg{color:var(--body)}
   .ip-who small.ma-pull-msg.is-bad{color:var(--neg)}
   .ip-who small[hidden]{display:none}
-  .ma-pull[aria-busy="true"] svg{animation:sbspin .9s linear infinite}
-  @media (prefers-reduced-motion:reduce){ .ma-pull[aria-busy="true"] svg{animation-duration:3s} }
+  @media (prefers-reduced-motion:reduce){ .ma-avatar[aria-busy="true"]::before{animation-duration:3s} }
   .ip-who small.ma-fx-line{color:color-mix(in srgb,var(--coupang) 72%,var(--paper));font-size:12px}
   .ip-who small.ma-fx-line[hidden]{display:none}
   .ma-daycamp{width:300px;max-width:100%;justify-content:space-between}
@@ -10368,11 +10375,10 @@ window.BAROYAM_FONT=(function(){
             <div class="psub" id="perfViewSub">하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.</div>
             <!-- 배너 오른쪽 계정 카드 · 인스타콘텐츠 성과 배너와 같은 모양(사용자 요청) -->
             <div class="ip-acct ip-hero-acct" id="maHeroAcct">
-              <div class="ip-avatar ma-avatar"><span id="maAvatar">M</span></div>
+              <!-- 로고를 누르면 지금 가져오기(사용자 요청 10-21 · 오늘 숫자만) · 받는 동안 테두리가 초록으로 바뀌어 로고를 돈다 -->
+              <button type="button" class="ip-avatar ma-avatar" id="maPull" title="누르면 메타에서 오늘 성과를 지금 다시 받아 옵니다" aria-label="메타광고 오늘 성과 지금 가져오기"><span id="maAvatar">M</span></button>
               <div class="ip-who"><b id="maAcctName">메타광고</b><small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small><small class="ma-fx-line" id="maFx" hidden></small><small class="ma-pull-msg" id="maPullMsg" hidden></small></div>
               <div class="ip-nums" id="maNums" hidden></div><!-- 10월 지출·ROAS·구매는 사용자 요청으로 숨김 -->
-              <!-- 지금 가져오기 · 누르면 VPS 가 메타 API 에서 바로 다시 받는다(사용자 요청 10-21 · brand-files 의 metaads/req 에 요청 파일) -->
-              <button type="button" class="ui-btn soft sm ma-pull" id="maPull" title="메타에서 지금 성과를 다시 받아 옵니다(1분 안팎)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>지금 가져오기</span></button>
             </div>
           </div>
           <div class="ip ma" id="maRoot">
@@ -13513,7 +13519,7 @@ window.CsGuide=(function(){
     ['review',1,'리뷰수집','채널별 인박스','회사 PC 리뷰 수집기(4317)와 이야기합니다. 수집기 화면 디자인은 대시보드가 보내 줍니다.'],
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
-    ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너의 지금 가져오기는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
+    ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너 로고(지금 가져오기 · 오늘 숫자만)는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
     ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1.'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
@@ -19206,15 +19212,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     loading=false; loaded=true;
     paintAccTabs(); paint();
   }
-  /* ---------- 지금 가져오기 (사용자 요청 10-21) ----------
+  /* ---------- 지금 가져오기 (사용자 요청 10-21 · 배너 계정 카드의 로고를 누름) ----------
      화면은 메타 토큰이 없어서(VPS .env 에만 있음) 직접 못 받는다 · 영상 자막·대본과 같은 방식으로 brand-files 버킷에
-     metaads/req/<임의>.json 을 올리면 VPS(meta_ads_request.js · 1분마다)가 meta_ads.js 를 돌리고 metaads/res/<같은 이름> 에
+     metaads/req/<임의>.json 을 올리면 VPS(meta_ads_request.js · 1분마다)가 meta_ads.js --today(오늘 숫자만 · 몇 초)를 돌리고 metaads/res/<같은 이름> 에
      {state:'running'|'done'|'failed', message} 를 적는다 · 끝나면 meta_ads_v1 을 다시 읽어 그린다 */
   let pulling=null;
   function pullPaint(txt){
-    const b=$('maPull'); if(!b) return;
+    const b=$('maPull'), m=$('maPullMsg'); if(!b) return;
     b.setAttribute('aria-busy',pulling?'true':'false');
-    b.querySelector('span').textContent=txt||(pulling?'가져오는 중…':'지금 가져오기');
+    if(pulling){ m.textContent=txt||'가져오는 중…'; m.classList.remove('is-bad'); m.hidden=false; }
   }
   async function pullRes(name){
     const DB=window.BAROYAM_DB;
@@ -19235,7 +19241,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       await DB.fileUpload('brand-files','metaads/req/'+name,new Blob([JSON.stringify({v:1,at:new Date().toISOString(),by})],{type:'application/json'}));
       const before=data&&data.updatedAt;
       for(;;){
-        await new Promise(r=>setTimeout(r,4000));
+        await new Promise(r=>setTimeout(r,2000));
         const sec=Math.round((Date.now()-pulling.at)/1000);
         const res=await pullRes(name);
         if(res&&res.state==='failed') throw new Error(res.message||'메타에서 받지 못했습니다.');
