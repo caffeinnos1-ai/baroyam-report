@@ -2792,6 +2792,21 @@ window.BAROYAM_FONT=(function(){
   .ma-pv.is-still{aspect-ratio:auto;min-height:160px;display:flex;align-items:center;justify-content:center}
   .ma-pv.is-still img{height:auto;max-height:70vh;object-fit:contain}
   .ma-pv.is-video{background:#000}
+  .ma-pv.is-video video{cursor:pointer}
+  /* 영상 아래 조작 줄 · 영상 위 가운데에는 아무것도 띄우지 않는다 */
+  .ma-vc{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;gap:6px;padding:22px 8px 7px;background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff;font-size:11px;font-variant-numeric:tabular-nums;opacity:.85;transition:opacity .2s}
+  .ma-pv.is-video:hover .ma-vc{opacity:1}
+  .ma-vc button{flex:none;width:28px;height:28px;display:grid;place-items:center;padding:0;border:0;border-radius:7px;background:none;color:inherit;cursor:pointer}
+  .ma-vc button:hover{background:rgba(255,255,255,.16)}
+  .ma-vc button:focus-visible{outline:2px solid rgba(255,255,255,.8)}
+  .ma-vc svg{width:17px;height:17px}
+  .ma-vc .bar{position:relative;flex:1;height:14px;cursor:pointer}
+  .ma-vc .bar::before,.ma-vc .bar i{content:"";position:absolute;left:0;top:5px;height:4px;border-radius:2px}
+  .ma-vc .bar::before{right:0;background:rgba(255,255,255,.25)}
+  .ma-vc .bar .buf{width:0;background:rgba(255,255,255,.35)}
+  .ma-vc .bar .now{width:0;background:#fff}
+  .ma-vc .t{flex:none;min-width:30px;text-align:right;opacity:.9}
+  .ma-pv.is-video:fullscreen{aspect-ratio:auto!important;max-height:none;border-radius:0}
   .ma-pv iframe,.ma-pv video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
   .ma-pv .ty{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:color-mix(in srgb,var(--paper) 88%,transparent);color:var(--ink)}
   .ma-pv-src{font-size:12px;color:var(--btn);text-decoration:none;text-align:center}
@@ -18708,6 +18723,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('maWatch').innerHTML='<div><h4>잘 팔고 있어요</h4>'+(hi.length?'<ol>'+hi.map(li).join('')+'</ol>':'<div class="none">아직 없습니다</div>')+'</div>'
       +'<div class="is-low"><h4>살펴보세요</h4>'+(lo.length?'<ol>'+lo.map(li).join('')+'</ol>':'<div class="none">아직 없습니다</div>')+'</div>';
   }
+  const VC_ICON={
+    play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+    pause:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>',
+    on:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+    off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/></svg>',
+    full:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  };
   function paintList(a){
     if(!a) return;
     const cur=a.currency, L=LEVEL_TXT[tab];
@@ -18766,7 +18788,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 왼쪽 · 연동한 드라이브 영상은 드라이브 미리보기로 바로 재생, 없으면 썸네일 */
       /* 상자 비율은 그림·영상의 원래 비율을 따른다(이미지 소재가 세로 9:16 틀에 잘리던 것 · 10-21) · 영상은 받은 뒤 playVideo 가 맞춤 */
       const media=l.drive
-        ?'<div class="ma-pv is-video"><video class="ma-vid" data-drive="'+esc(l.drive)+'" muted autoplay playsinline loop controls preload="auto"'+(r.img||r.thumb?' poster="'+esc(r.img||r.thumb)+'"':'')+'></video></div>'
+        /* 브라우저 기본 조작 단추(가운데 큰 재생 단추 등)는 영상을 가려서 끄고, 재생·진행·소리·전체화면을 영상 맨 아래 한 줄에 둔다(사용자 요청 10-21) */
+        ?'<div class="ma-pv is-video"><video class="ma-vid" data-drive="'+esc(l.drive)+'" muted autoplay playsinline loop preload="auto"'+(r.img||r.thumb?' poster="'+esc(r.img||r.thumb)+'"':'')+'></video>'
+          +'<div class="ma-vc"><button type="button" data-vc="play" aria-label="재생"></button><div class="bar" data-vc="seek"><i class="buf"></i><i class="now"></i></div>'
+          +'<span class="t">0:00</span><button type="button" data-vc="mute" aria-label="소리"></button><button type="button" data-vc="full" aria-label="전체 화면">'+VC_ICON.full+'</button></div></div>'
         /* 원본 그림(ads[].img · 원래 비율)을 먼저 · 썸네일(thumb)은 400×400 으로 잘려 와서 원본이 없거나 못 열 때만 */
         :'<div class="ma-pv is-still">'+(r.img||r.thumb?'<img src="'+esc(r.img||r.thumb)+'" alt="" referrerpolicy="no-referrer"'+(r.img&&r.thumb?' data-fb="'+esc(r.thumb)+'" onerror="var f=this.dataset.fb;if(f){delete this.dataset.fb;this.src=f}"':'')+'>':'<span class="ma-noimg"></span>')
           +'<span class="ty">'+kindTxt(r.kind)+'</span></div>';
@@ -19167,14 +19192,49 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     VID.set(id,ent);
     return ent.p;
   }
-  async function playVideo(){
+  /* 팝업 영상 · 구글 권한이 있으면 드라이브에서 바로 받아 재생 · 없으면 표지만 두고 아래 재생 단추를 누를 때 권한을 받는다
+     (권한 창은 누른 순간에만 뜰 수 있음 · 저절로 띄우지 않음 10-19) · 그래도 못 받으면 드라이브 미리보기(iframe)로 */
+  async function playVideo(ask){
     const v=cardBox&&cardBox.querySelector('video.ma-vid'); if(!v) return;
-    const id=v.dataset.drive, wrap=v.parentElement;
-    const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); };
-    /* 받는 동안 "불러오는 중" 표시는 띄우지 않는다(사용자 요청 10-19) */
+    const id=v.dataset.drive, wrap=v.parentElement, vc=wrap.querySelector('.ma-vc');
+    const vb=k=>vc&&vc.querySelector('[data-vc="'+k+'"]');
+    const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); if(vc) vc.remove(); };
+    const fmt=t=>{ t=Math.max(0,Math.floor(t||0)); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); };
+    const paint=()=>{
+      if(!vc) return;
+      vb('play').innerHTML=v.paused?VC_ICON.play:VC_ICON.pause; vb('play').setAttribute('aria-label',v.paused?'재생':'일시정지');
+      vb('mute').innerHTML=v.muted?VC_ICON.off:VC_ICON.on; vb('mute').setAttribute('aria-label',v.muted?'소리 켜기':'소리 끄기');
+      vc.querySelector('.now').style.width=(v.duration?v.currentTime/v.duration*100:0)+'%';
+      vc.querySelector('.t').textContent=fmt(v.currentTime)+(v.duration?' / '+fmt(v.duration):'');
+    };
+    if(vc&&!vc.dataset.on){
+      vc.dataset.on='1';
+      ['play','pause','timeupdate','volumechange','loadedmetadata'].forEach(e=>v.addEventListener(e,paint));
+      v.addEventListener('click',()=>{ if(!v.src) return playVideo(true); if(v.paused) v.play(); else v.pause(); });
+      vc.addEventListener('click',e=>{
+        const b=e.target.closest('[data-vc]'); if(!b) return;
+        const k=b.dataset.vc;
+        if(k==='play'){ if(!v.src) return playVideo(true); if(v.paused) v.play(); else v.pause(); }
+        else if(k==='mute'){ v.muted=!v.muted; }
+        else if(k==='full'){
+          if(document.fullscreenElement) document.exitFullscreen();
+          else if(wrap.requestFullscreen) wrap.requestFullscreen();
+          else if(v.webkitEnterFullscreen) v.webkitEnterFullscreen();   /* 아이폰은 영상만 전체 화면 */
+        }
+        else if(k==='seek'&&v.duration){ const rc=b.getBoundingClientRect(); v.currentTime=Math.min(1,Math.max(0,(e.clientX-rc.left)/rc.width))*v.duration; }
+      });
+      paint();
+    }
+    const G=window.baroyamGoogleToken;
+    if(!(G&&G.saved&&G.saved())){
+      if(!ask) return;   /* 권한이 없으면 표지 + 아래 재생 단추만 · 누르면 다시 들어온다 */
+      try{ await G(); }catch(e){ console.warn('[메타광고] 구글 권한 못 받음 · 드라이브 미리보기로',e&&e.message); return fallback(); }
+    }
+    /* 받는 동안 "불러오는 중" 표시는 띄우지 않는다(사용자 요청 10-19) · 진행 줄에 받은 만큼만 옅게 */
     try{
-      const u=await fetchVideo(id);
+      const u=await fetchVideo(id,pc=>{ const b=vc&&vc.querySelector('.buf'); if(b) b.style.width=pc+'%'; });
       if(!v.isConnected) return;
+      if(vc) vc.querySelector('.buf').style.width='100%';
       v.src=u;
       v.addEventListener('loadedmetadata',()=>{ if(v.videoWidth&&v.videoHeight) wrap.style.aspectRatio=v.videoWidth+'/'+v.videoHeight; },{once:true});
       const p=v.play(); if(p&&p.catch) p.catch(()=>{});
