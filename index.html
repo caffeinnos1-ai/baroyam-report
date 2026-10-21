@@ -18639,7 +18639,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const top=o.ads.slice().sort((p,r)=>sp(r)-sp(p))[0];
       /* 게재일 · 같은 소재를 쓴 광고 중 가장 먼저 만든 광고의 날(서버 ads[].at = 메타 created_time) */
       const at=o.ads.map(x=>Date.parse(x.at||'')).filter(n=>n>0).sort((p,r)=>p-r)[0]||null;
-      return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,at,
+      return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,img:top.img||(o.ads.find(x=>x.img)||{}).img||null,kind:o.kind,n:o.ads.length,at,
         ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x),link:x.link||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
@@ -18747,8 +18747,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 왼쪽 · 연동한 드라이브 영상은 드라이브 미리보기로 바로 재생, 없으면 썸네일 */
       /* 상자 비율은 그림·영상의 원래 비율을 따른다(이미지 소재가 세로 9:16 틀에 잘리던 것 · 10-21) · 영상은 받은 뒤 playVideo 가 맞춤 */
       const media=l.drive
-        ?'<div class="ma-pv is-video"><video class="ma-vid" data-drive="'+esc(l.drive)+'" muted autoplay playsinline loop controls preload="auto"'+(r.thumb?' poster="'+esc(r.thumb)+'"':'')+'></video></div>'
-        :'<div class="ma-pv is-still">'+(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>')
+        ?'<div class="ma-pv is-video"><video class="ma-vid" data-drive="'+esc(l.drive)+'" muted autoplay playsinline loop controls preload="auto"'+(r.img||r.thumb?' poster="'+esc(r.img||r.thumb)+'"':'')+'></video></div>'
+        /* 원본 그림(ads[].img · 원래 비율)을 먼저 · 썸네일(thumb)은 400×400 으로 잘려 와서 원본이 없거나 못 열 때만 */
+        :'<div class="ma-pv is-still">'+(r.img||r.thumb?'<img src="'+esc(r.img||r.thumb)+'" alt="" referrerpolicy="no-referrer"'+(r.img&&r.thumb?' data-fb="'+esc(r.thumb)+'" onerror="var f=this.dataset.fb;if(f){delete this.dataset.fb;this.src=f}"':'')+'>':'<span class="ma-noimg"></span>')
           +'<span class="ty">'+kindTxt(r.kind)+'</span></div>';
       /* 상세페이지(랜딩페이지) · 서버가 광고마다 받아 둔 주소(ads[].link · 10-21) · 지출 큰 광고 순, 추적용 utm_ 만 다른 주소는 하나로 */
       const lps=[], lpSeen=new Set();
