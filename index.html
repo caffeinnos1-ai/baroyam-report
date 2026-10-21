@@ -2810,7 +2810,17 @@ window.BAROYAM_FONT=(function(){
   .ma-sec{padding:14px 16px;border:1px solid var(--line);border-radius:12px;min-width:0}
   .ma-sec>h4{margin:0 0 10px;font-size:12.5px;font-weight:600;color:var(--ink)}
   .ma-sec>h4 small{font-weight:400;font-size:11.5px;color:var(--mute);margin-left:4px}
-  .ma-pv-info .ma-asset-mets{padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+  /* 노출 → 클릭 → 장바구니 → 구매 · 칸 사이 › 표시 */
+  .ma-funnel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .ma-funnel>div{position:relative;display:flex;flex-direction:column;gap:3px;padding:12px 14px 12px 18px;min-width:0}
+  .ma-funnel>div+div{border-left:1px solid var(--line)}
+  .ma-funnel>div+div::before{content:"";position:absolute;left:-6px;top:50%;width:10px;height:10px;margin-top:-5px;background:var(--paper);border-top:1px solid var(--line);border-right:1px solid var(--line);transform:rotate(45deg)}
+  .ma-funnel small{font-size:11.5px;color:var(--mute)}
+  .ma-funnel b{font-size:17px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ma-funnel dl{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:6px 0 0;padding-top:7px;border-top:1px dashed var(--line);font-size:11.5px}
+  .ma-funnel dt{color:var(--mute)}
+  .ma-funnel dd{margin:0;text-align:right;color:var(--body);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media (max-width:640px){ .ma-funnel{grid-template-columns:repeat(2,minmax(0,1fr))} .ma-funnel>div:nth-child(3){border-left:0;border-top:1px solid var(--line)} .ma-funnel>div:nth-child(4){border-top:1px solid var(--line)} .ma-funnel>div:nth-child(3)::before{display:none} }
   .ma-pv-info .ma-asset-ads{flex:none;min-width:0}
   .ma-big small{font-size:11.5px;color:var(--mute)}
   .ma-big b{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -18760,7 +18770,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         :'';
       const big=[['ROAS',pct(r.x.roas),roasCls(r.x.roas,R)||(low?' is-low':'')],['지출',money(r.x.spend,cur),''],['구매 전환값',money(r.x.rev,cur),''],['구매',int(r.x.buy)+'건','']];
       /* 장바구니 · 메타 장바구니 담기(10-21 사용자 요청) · 서버가 이 값을 받기 전 기록은 0 */
-      const small=[['CPA',r.x.cpa==null?'-':money(r.x.cpa,cur)],['장바구니',int(r.x.cart)+'건'],['CTR',r.x.ctr==null?'-':r.x.ctr.toFixed(2)+'%'],['CPM',r.x.cpm==null?'-':money(r.x.cpm,cur)],['클릭',int(r.x.clicks)],['노출',int(r.x.imp)]];
+      /* 노출 → 클릭 → 장바구니 → 구매 네 단계(10-21 사용자 요청 · CPC 더함) · 단계마다 수 + 비율(담기율 = 장바구니÷클릭 · 전환율 = 구매÷클릭) · 한 번에 드는 돈 */
+      const X=r.x, rate=(a1,b1)=>b1?(a1/b1*100).toFixed(a1/b1<.1?2:1)+'%':'-', per=(v,n)=>n?money(v/n,cur):'-';
+      const funnel=[
+        ['노출',int(X.imp),[['CPM',X.cpm==null?'-':money(X.cpm,cur)]]],
+        ['클릭',int(X.clicks),[['CTR',X.ctr==null?'-':X.ctr.toFixed(2)+'%'],['CPC',per(X.spend,X.clicks)]]],
+        ['장바구니',int(X.cart)+'건',[['담기율',rate(X.cart,X.clicks)],['건당',per(X.spend,X.cart)]]],
+        ['구매',int(X.buy)+'건',[['전환율',rate(X.buy,X.clicks)],['CPA',X.cpa==null?'-':money(X.cpa,cur)]]],
+      ];
       /* 연령 × 성별 · 게재지면 · 타깃(10-21 사용자 요청 · 마진표 상품 줄은 뺌) · 서버 a.bd = 광고마다 최근 60일 [지출,구매 전환값,구매] ·
          a.adsets[].tg = 세트 타깃 · 기준 ROAS 는 이은 상품의 대표 ROAS(없으면 100%) */
       const bd=a.bd||{}, base=R&&R.roas!=null?R.roas:100;
@@ -18805,7 +18822,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+lp+'</div><div class="ma-pv-info">'
         +'<p class="ma-pv-range">'+RANGE_TXT[range]+'</p>'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b></div>').join('')+'</div>'
-        +'<div class="ma-asset-mets">'+small.map(m=>'<div><small>'+m[0]+'</small><b>'+m[1]+'</b></div>').join('')+'</div>'
+        +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
         +bdHtml+tgBox
         +(l.script?'<div class="ma-sec"><h4>대본</h4><div class="ma-pv-script">'+esc(l.script)+'</div></div>':'')
         +(r.ads.length>1?'<div class="ma-sec ma-asset-ads"><h4>같은 소재를 쓴 광고 '+r.ads.length+'개</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul></div>':'')
