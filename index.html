@@ -2516,8 +2516,7 @@ window.BAROYAM_FONT=(function(){
   .ma-avatar[aria-busy="true"]{background:color-mix(in srgb,var(--pos) 18%,var(--paper));cursor:progress}
   .ma-avatar[aria-busy="true"]:hover{transform:none}
   .ma-avatar[aria-busy="true"]::before{opacity:1;animation:sbspin .9s linear infinite}
-  .ip-who small.ma-pull-msg{color:var(--body)}
-  .ip-who small.ma-pull-msg.is-bad{color:var(--neg)}
+  .ma-avatar.is-fail{background:var(--neg)}
   .ip-who small[hidden]{display:none}
   @media (prefers-reduced-motion:reduce){ .ma-avatar[aria-busy="true"]::before{animation-duration:3s} }
   .ip-who small.ma-fx-line{color:color-mix(in srgb,var(--coupang) 72%,var(--paper));font-size:12px}
@@ -10377,7 +10376,7 @@ window.BAROYAM_FONT=(function(){
             <div class="ip-acct ip-hero-acct" id="maHeroAcct">
               <!-- 로고를 누르면 지금 가져오기(사용자 요청 10-21 · 오늘 숫자만) · 받는 동안 테두리가 초록으로 바뀌어 로고를 돈다 -->
               <button type="button" class="ip-avatar ma-avatar" id="maPull" title="누르면 메타에서 오늘 성과를 지금 다시 받아 옵니다" aria-label="메타광고 오늘 성과 지금 가져오기"><span id="maAvatar">M</span></button>
-              <div class="ip-who"><b id="maAcctName">메타광고</b><small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small><small class="ma-fx-line" id="maFx" hidden></small><small class="ma-pull-msg" id="maPullMsg" hidden></small></div>
+              <div class="ip-who"><b id="maAcctName">메타광고</b><small id="maState"><span class="ip-live is-off"></span>불러오는 중…</small><small class="ma-fx-line" id="maFx" hidden></small></div>
               <div class="ip-nums" id="maNums" hidden></div><!-- 10월 지출·ROAS·구매는 사용자 요청으로 숨김 -->
             </div>
           </div>
@@ -19217,10 +19216,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      metaads/req/<임의>.json 을 올리면 VPS(meta_ads_request.js · 1분마다)가 meta_ads.js --today(오늘 숫자만 · 몇 초)를 돌리고 metaads/res/<같은 이름> 에
      {state:'running'|'done'|'failed', message} 를 적는다 · 끝나면 meta_ads_v1 을 다시 읽어 그린다 */
   let pulling=null;
-  function pullPaint(txt){
-    const b=$('maPull'), m=$('maPullMsg'); if(!b) return;
+  /* 진행·결과 글은 띄우지 않는다(사용자 요청 · 카드가 길어짐) · 받는 중 = 초록 고리, 실패 = 잠깐 빨간 테두리 + 로고 말풍선에 이유 */
+  const PULL_TIP='누르면 메타에서 오늘 성과를 지금 다시 받아 옵니다';
+  function pullPaint(){
+    const b=$('maPull'); if(!b) return;
     b.setAttribute('aria-busy',pulling?'true':'false');
-    if(pulling){ m.textContent=txt||'가져오는 중…'; m.classList.remove('is-bad'); m.hidden=false; }
   }
   async function pullRes(name){
     const DB=window.BAROYAM_DB;
@@ -19230,16 +19230,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   async function pull(){
     if(pulling) return;
-    const DB=window.BAROYAM_DB, msg=$('maPullMsg');
-    const T=(m,bad)=>{ msg.textContent=m; msg.classList.toggle('is-bad',!!bad); msg.hidden=false; clearTimeout(T.t); if(!bad) T.t=setTimeout(()=>{ msg.hidden=true; },8000); };
-    msg.hidden=true;
+    const DB=window.BAROYAM_DB, btn=$('maPull');
+    btn.classList.remove('is-fail'); btn.title=PULL_TIP;
     try{
       if(!DB||!DB.fileUpload||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다. 새로고침한 뒤 다시 눌러 주세요.');
       const name=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json';
       let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
-      pulling={name,at:Date.now()}; pullPaint('요청 보내는 중…');
+      pulling={name,at:Date.now()}; pullPaint();
       await DB.fileUpload('brand-files','metaads/req/'+name,new Blob([JSON.stringify({v:1,at:new Date().toISOString(),by})],{type:'application/json'}));
-      const before=data&&data.updatedAt;
       for(;;){
         await new Promise(r=>setTimeout(r,2000));
         const sec=Math.round((Date.now()-pulling.at)/1000);
@@ -19248,14 +19246,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         if(res&&res.state==='done') break;
         if(!res&&sec>150) throw new Error('서버가 요청을 받지 않았습니다. 잠시 뒤 다시 눌러 주세요.');
         if(sec>300) throw new Error('5분이 지나도 끝나지 않았습니다. 잠시 뒤 새로고침해 주세요.');
-        pullPaint(res&&res.state==='running'?'메타에서 받는 중… '+sec+'초':'서버 대기 중… '+sec+'초');
       }
       pulling=null; pullPaint();
       await load();
-      T(data&&data.updatedAt!==before?'방금 새로 가져왔습니다':'다시 읽었습니다');
     }catch(e){
       pulling=null; pullPaint();
-      T('가져오기 실패 · '+(e&&e.message||e),true);
+      btn.title='가져오기 실패 · '+(e&&e.message||e)+' · 다시 누르면 또 시도합니다';
+      btn.classList.add('is-fail'); setTimeout(()=>btn.classList.remove('is-fail'),6000);
     }
   }
   $('maPull').addEventListener('click',pull);
