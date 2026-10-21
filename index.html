@@ -2815,7 +2815,7 @@ window.BAROYAM_FONT=(function(){
   .ma-big small{font-size:11.5px;color:var(--mute)}
   .ma-big b{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .ma-big b.is-low{color:var(--neg)}
-  .ma-pv-info .ma-asset-mets{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:0}
+  .ma-pv-info .ma-asset-mets{grid-template-columns:repeat(6,minmax(0,1fr));margin-top:0}
   /* 소재 팝업 · 연령×성별 · 게재지면 · 타깃 (10-21) */
   .ma-bd{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
   .ma-tx-row{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
@@ -18385,9 +18385,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(a._customKey===key) return;
     const D=a.adDaily||{}, map={}, o={campaign:{},adset:{},ad:{},total:{}};
     (a.ads||[]).forEach(x=>{ map[x.id]=x; });
-    const add=(t,v)=>{ t.spend=(t.spend||0)+v[0]; t.rev=(t.rev||0)+v[1]; t.buy=(t.buy||0)+v[2]; t.clicks=(t.clicks||0)+v[3]; t.imp=(t.imp||0)+v[4]; };
+    const add=(t,v)=>{ t.spend=(t.spend||0)+v[0]; t.rev=(t.rev||0)+v[1]; t.buy=(t.buy||0)+v[2]; t.clicks=(t.clicks||0)+v[3]; t.imp=(t.imp||0)+v[4]; t.cart=(t.cart||0)+(v[5]||0); };
     const tI=((a.insights||{}).today||{}).ad||{}, tDay={};
-    Object.keys(tI).forEach(id=>{ const x=tI[id]; tDay[id]=[x.spend||0,x.rev||0,x.buy||0,x.clicks||0,x.imp||0]; });
+    Object.keys(tI).forEach(id=>{ const x=tI[id]; tDay[id]=[x.spend||0,x.rev||0,x.buy||0,x.clicks||0,x.imp||0,x.cart||0]; });
     for(let d=sp.start;d<=sp.end;d=dayAdd(d,1)){
       const day=D[d]||(d===kst()?tDay:{});
       Object.keys(day).forEach(id=>{
@@ -18424,12 +18424,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const pct=v=>v==null?'-':Math.round(v)+'%';
   const derive=x=>{
     x=x||{};
-    const o={spend:x.spend||0,rev:x.rev||0,buy:x.buy||0,clicks:x.clicks||0,imp:x.imp||0};
+    const o={spend:x.spend||0,rev:x.rev||0,buy:x.buy||0,clicks:x.clicks||0,imp:x.imp||0,cart:x.cart||0};
     o.roas=o.spend?o.rev/o.spend*100:null; o.cpa=o.buy?o.spend/o.buy:null; o.ctr=o.imp?o.clicks/o.imp*100:null; o.cpm=o.imp?o.spend/o.imp*1000:null;
     return o;
   };
   function addUp(list){
-    const o={spend:0,rev:0,buy:0,clicks:0,imp:0};
+    const o={spend:0,rev:0,buy:0,clicks:0,imp:0,cart:0};
     list.forEach(x=>{ if(!x) return; for(const k in o) o[k]+=x[k]||0; });
     return o;
   }
@@ -18590,8 +18590,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function campDay(a,cid,d){
     const day=(a.adDaily||{})[d]; if(!day) return null;
     const ads=a._adCamp||(a._adCamp=Object.fromEntries((a.ads||[]).map(x=>[x.id,x.c])));
-    const o={spend:0,rev:0,buy:0,clicks:0,imp:0}; let any=false;
-    Object.keys(day).forEach(id=>{ if(ads[id]!==cid) return; const v=day[id]; any=true; o.spend+=v[0]; o.rev+=v[1]; o.buy+=v[2]; o.clicks+=v[3]; o.imp+=v[4]; });
+    const o={spend:0,rev:0,buy:0,clicks:0,imp:0,cart:0}; let any=false;
+    Object.keys(day).forEach(id=>{ if(ads[id]!==cid) return; const v=day[id]; any=true; o.spend+=v[0]; o.rev+=v[1]; o.buy+=v[2]; o.clicks+=v[3]; o.imp+=v[4]; o.cart+=v[5]||0; });
     return any?o:null;
   }
   function paintDays(a){
@@ -18759,7 +18759,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           +(lps.length>1?'상세페이지 '+(i+1)+' · '+esc(lpTxt(u)):'상세페이지 열기')+' ↗</a>').join('')+'</div>'
         :'';
       const big=[['ROAS',pct(r.x.roas),roasCls(r.x.roas,R)||(low?' is-low':'')],['지출',money(r.x.spend,cur),''],['구매 전환값',money(r.x.rev,cur),''],['구매',int(r.x.buy)+'건','']];
-      const small=[['CPA',r.x.cpa==null?'-':money(r.x.cpa,cur)],['CTR',r.x.ctr==null?'-':r.x.ctr.toFixed(2)+'%'],['CPM',r.x.cpm==null?'-':money(r.x.cpm,cur)],['클릭',int(r.x.clicks)],['노출',int(r.x.imp)]];
+      /* 장바구니 · 메타 장바구니 담기(10-21 사용자 요청) · 서버가 이 값을 받기 전 기록은 0 */
+      const small=[['CPA',r.x.cpa==null?'-':money(r.x.cpa,cur)],['장바구니',int(r.x.cart)+'건'],['CTR',r.x.ctr==null?'-':r.x.ctr.toFixed(2)+'%'],['CPM',r.x.cpm==null?'-':money(r.x.cpm,cur)],['클릭',int(r.x.clicks)],['노출',int(r.x.imp)]];
       /* 연령 × 성별 · 게재지면 · 타깃(10-21 사용자 요청 · 마진표 상품 줄은 뺌) · 서버 a.bd = 광고마다 최근 60일 [지출,구매 전환값,구매] ·
          a.adsets[].tg = 세트 타깃 · 기준 ROAS 는 이은 상품의 대표 ROAS(없으면 100%) */
       const bd=a.bd||{}, base=R&&R.roas!=null?R.roas:100;
