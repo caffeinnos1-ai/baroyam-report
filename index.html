@@ -5680,6 +5680,7 @@ window.BAROYAM_FONT=(function(){
      바깥 사이드바 → 설정창 탭 → 본문(paper) 순으로 밝아지게 맞췄다 */
   .mini-sidebar{flex:none;width:186px;background:var(--sn-bg);border-right:1px solid var(--sn-line);padding:14px;
     display:flex;flex-direction:column;gap:4px}
+  .mini-sb-item[hidden]{display:none!important}
   .mini-sb-item{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:9px;width:100%;padding:10px 11px;
     border-radius:11px;color:var(--sb-ink);font-size:13px;font-weight:600;letter-spacing:-.2px;cursor:pointer;
     transition:background .15s,color .15s,box-shadow .15s}
@@ -13384,7 +13385,19 @@ window.CsGuide=(function(){
   const overlay=document.getElementById('settingsOverlay');
   const panel=overlay.querySelector('.settings-panel');
 
+  /* 권한설정은 팀장만 · 관리자 설정 비밀번호로 들어온 다른 회원에게는 탭을 숨기고, 열려 있었으면 회원설정으로 돌린다 */
+  function leadOnlyTabs(){
+    const tab=document.getElementById('accSettingsTab');
+    if(!tab) return;
+    const lead=window.BAROYAM_LEAD.isOn();
+    tab.hidden=!lead;
+    if(!lead && tab.classList.contains('active')){
+      const first=document.querySelector('.mini-sb-item[data-settings-view="members"]');
+      if(first) first.click();
+    }
+  }
   function openSettings(){
+    leadOnlyTabs();
     overlay.hidden=false;
     closeBtn.focus();
     document.addEventListener('keydown',onKeydown);
