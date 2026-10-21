@@ -10944,6 +10944,8 @@ window.BAROYAM_FONT=(function(){
               <div class="pf-rule-row"><div><b>최소 ROAS 보정</b><small>(판매가+배송비) ÷ 마진에 이 비율만큼 더함 · 1.5 → × 1.015 · 없으면 비워 두기</small></div>
                 <div class="pf-rule-in2"><label class="pf-rule-in"><input class="ui-field sm pf-num" id="pfRuleRoas" inputmode="decimal" placeholder="0" aria-label="최소 ROAS 보정">%</label>
                 <div class="ui-tabs" id="pfRuleRoasAd"><button class="ui-tab" data-value="">광고 중일 때만</button><button class="ui-tab" data-value="all">늘</button></div></div></div>
+              <div class="pf-rule-row"><div><b>광고비 부가세</b><small>판매처가 광고비를 부가세 빼고 보여 주면(쿠팡) "별도 × 1.1" · 최소 ROAS 에 1.1 을 곱함</small></div>
+                <div class="ui-tabs" id="pfRuleAdVat"><button class="ui-tab" data-value="">포함</button><button class="ui-tab" data-value="ex">별도 × 1.1</button></div></div>
               <div class="pf-rule-ex" id="pfRuleEx"></div>
             </div>
             <div class="pf-mix-foot">
@@ -20044,15 +20046,17 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 판매처 계산법 · 값이 없으면 예전 그대로(판매가 × 수수료율 · 남는 돈 ÷ 11) */
   const VAT_MODES=[{value:'',label:'남는 돈 ÷ 11',sub:'(판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11'},
     {value:'sale',label:'매출 ÷ 11',sub:'(판매가+배송비) ÷ 11'},{value:'none',label:'없음',sub:'부가세를 빼지 않음'}];
-  /* roasAdj 최소 ROAS 보정 % (예: 1.5 → × 1.015) · roasAd '' = 광고 중인 상품만, 'all' = 늘 */
+  /* roasAdj 최소 ROAS 보정 % (예: 1.5 → × 1.015) · roasAd '' = 광고 중인 상품만, 'all' = 늘 ·
+     adVat 'ex' = 판매처가 광고비를 부가세 빼고 보여 줌(쿠팡) → 최소 ROAS × 1.1 (모든 상품 · 보정 % 와 곱함) */
   function ruleOf(ch){ ch=ch||{}; return {shipRate:num(ch.shipRate)||0,feeVat:ch.feeVat==='inc'?'inc':'',vatMode:ch.vatMode==='sale'||ch.vatMode==='none'?ch.vatMode:'',
-    roasAdj:num(ch.roasAdj)||0,roasAd:ch.roasAd==='all'?'all':''}; }
+    roasAdj:num(ch.roasAdj)||0,roasAd:ch.roasAd==='all'?'all':'',adVat:ch.adVat==='ex'?'ex':''}; }
   function ruleText(ch){
     const R=ruleOf(ch), t=['판매가 '+comma(num(ch&&ch.rate)||0)+'%'];
     if(R.shipRate) t.push('배송비 '+comma(R.shipRate)+'%');
     if(R.feeVat) t.push('수수료 부가세 +10%');
     t.push('부가세 '+VAT_MODES.find(m=>m.value===R.vatMode).label);
     if(R.roasAdj) t.push('ROAS +'+comma(R.roasAdj)+'%'+(R.roasAd?'':'(광고 중)'));
+    if(R.adVat) t.push('광고비 부가세 별도 ROAS × 1.1');
     return t.join(' · ');
   }
   function calc(r){
@@ -20079,7 +20083,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const pre=rev-cost-prime-fee, vatAuto=R.vatMode==='none'?0:(R.vatMode==='sale'?rev/11:pre/11);
     const vat=O('vat')!=null?O('vat'):vatAuto, margin=O('margin')!=null?O('margin'):pre-vat;
     /* 최소 ROAS 보정 · 판매처 계산법에 적은 % 만큼 높인다(사용자 엑셀 자사몰 광고 중: (판매가+배송비) ÷ 마진 × 1.015) */
-    const roasK=R.roasAdj&&(R.roasAd==='all'||isAd(r))?1+R.roasAdj/100:1;
+    const roasK=(R.roasAdj&&(R.roasAd==='all'||isAd(r))?1+R.roasAdj/100:1)*(R.adVat?1.1:1);
     return Object.assign(o,{sale,rev,fee,vat,margin,
       disc:O('disc')!=null?O('disc')/100:(price?1-sale/price:null), unit:O('unit')!=null?O('unit'):(units?sale/units:null),
       mrate:O('mrate')!=null?O('mrate')/100:(rev?margin/rev:null), roas:O('roas')!=null?O('roas')/100:(margin>0?rev/margin*roasK:null),
@@ -20281,7 +20285,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const R=ruleOf(ch), fT=tr.querySelector('[data-o="fee"]'), vT=tr.querySelector('[data-o="vat"]');
       if(fT&&num(man.fee)==null) fT.title='판매가 × 수수료율'+(R.shipRate?' + 배송비 × '+comma(R.shipRate)+'%':'')+(R.feeVat?' · 부가세 10% 더함':'')+' · 두 번 눌러 직접 고치기';
       const rT=tr.querySelector('[data-o="roas"]');
-      if(rT&&num(man.roas)==null&&R.roasAdj) rT.title='(판매가+배송비) ÷ 마진'+(R.roasAd==='all'||isAd(r)?' × '+(1+R.roasAdj/100).toFixed(4).replace(/0+$/,''):'')+' · '+(R.roasAd?'늘':'광고 중일 때만')+' '+comma(R.roasAdj)+'% 보정 · 두 번 눌러 직접 고치기';
+      if(rT&&num(man.roas)==null&&(R.roasAdj||R.adVat)) rT.title='(판매가+배송비) ÷ 마진'+(R.roasAdj&&(R.roasAd==='all'||isAd(r))?' × '+(1+R.roasAdj/100).toFixed(4).replace(/0+$/,''):'')+(R.adVat?' × 1.1':'')
+        +(R.roasAdj?' · '+(R.roasAd?'늘':'광고 중일 때만')+' '+comma(R.roasAdj)+'% 보정':'')+(R.adVat?' · 광고비 부가세 별도':'')+' · 두 번 눌러 직접 고치기';
       if(vT&&num(man.vat)==null) vT.title='부가세 '+VAT_MODES.find(m=>m.value===R.vatMode).sub+' · 두 번 눌러 직접 고치기'; }
     const cb=tr.querySelector('.pf-cost');
     if(cb){
@@ -20774,15 +20779,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   /* ---------- 판매처 계산법 창 · 판매가 수수료율 · 배송비 수수료율 · 수수료 부가세 · 부가세 계산 ---------- */
   const rdlg=$('pfRuleDlg'); let ruleFor=null;
-  const rFeeVat=window.UI.tabs($('pfRuleFeeVat'),()=>ruleEx()), rVat=window.UI.tabs($('pfRuleVat'),()=>ruleEx()), rRoasAd=window.UI.tabs($('pfRuleRoasAd'),()=>ruleEx());
+  const rFeeVat=window.UI.tabs($('pfRuleFeeVat'),()=>ruleEx()), rVat=window.UI.tabs($('pfRuleVat'),()=>ruleEx()), rRoasAd=window.UI.tabs($('pfRuleRoasAd'),()=>ruleEx()), rAdVat=window.UI.tabs($('pfRuleAdVat'),()=>ruleEx());
   function ruleDraft(){ return {rate:num($('pfRuleRate').value)||0,shipRate:num($('pfRuleShip').value)||0,feeVat:rFeeVat.value||'',vatMode:rVat.value||'',
-    roasAdj:num($('pfRuleRoas').value)||0,roasAd:rRoasAd.value||''}; }
+    roasAdj:num($('pfRuleRoas').value)||0,roasAd:rRoasAd.value||'',adVat:rAdVat.value||''}; }
   function ruleEx(){
     /* 예시 한 줄 · 판매가 10,000 · 배송비 3,000 일 때 */
     const d=ruleDraft(), fee=(10000*d.rate/100+3000*d.shipRate/100)*(d.feeVat==='inc'?1.1:1);
     $('pfRuleEx').innerHTML='예시 · 판매가 10,000원 · 배송비 3,000원이면 수수료 <b>'+comma(Math.round(fee))+'원</b>'
       +' · 부가세는 '+esc(VAT_MODES.find(m=>m.value===d.vatMode).sub)
-      +(d.roasAdj?' · 최소 ROAS는 '+(d.roasAd?'늘':'광고 중인 상품만')+' × '+esc((1+d.roasAdj/100).toFixed(4).replace(/0+$/,'')):'');
+      +(d.roasAdj?' · 최소 ROAS는 '+(d.roasAd?'늘':'광고 중인 상품만')+' × '+esc((1+d.roasAdj/100).toFixed(4).replace(/0+$/,'')):'')
+      +(d.adVat?' · 광고비 부가세 별도라 최소 ROAS × 1.1':'');
   }
   function openRule(id){
     const ch=COST.data.chans[id]; if(!ch) return;
@@ -20790,7 +20796,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('pfRuleTitle').textContent=(ch.name||'판매처')+' 계산법';
     $('pfRuleRate').value=comma(num(ch.rate)); $('pfRuleShip').value=R.shipRate?comma(R.shipRate):'';
     rFeeVat.set(R.feeVat); rVat.set(R.vatMode);
-    $('pfRuleRoas').value=R.roasAdj?comma(R.roasAdj):''; rRoasAd.set(R.roasAd);
+    $('pfRuleRoas').value=R.roasAdj?comma(R.roasAdj):''; rRoasAd.set(R.roasAd); rAdVat.set(R.adVat);
     rdlg.querySelectorAll('input,.ui-tab').forEach(x=>{ x.disabled=ro; });
     $('pfRuleOk').hidden=ro;
     ruleEx(); rdlg.hidden=false; if(!ro) $('pfRuleRate').focus();
