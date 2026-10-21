@@ -2801,6 +2801,35 @@ window.BAROYAM_FONT=(function(){
   .ma-big b{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .ma-big b.is-low{color:var(--neg)}
   .ma-pv-info .ma-asset-mets{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:0}
+  /* 소재 팝업 · 연령×성별 · 게재지면 · 타깃 (10-21) */
+  .ma-bd{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 22px;padding-top:14px;border-top:1px solid var(--line)}
+  .ma-bd-note{grid-column:1/-1;margin:0;font-size:11.5px;color:var(--mute)}
+  .ma-bd h4,.ma-tg h4{margin:0 0 8px;font-size:12px;font-weight:500;color:var(--body)}
+  .ma-bd h4 small,.ma-tg h4 small{font-weight:400;color:var(--mute);margin-left:4px}
+  .ma-ag{display:grid;grid-template-columns:44px 1fr 1fr;gap:5px;align-items:center}
+  .ma-ag .h{font-size:11.5px;color:var(--mute);text-align:center}
+  .ma-ag .y{font-size:12px;color:var(--body)}
+  .ma-ag .c{display:flex;flex-direction:column;align-items:center;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+  .ma-ag .c b{font-size:14px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ma-ag .c small{font-size:10.5px;color:var(--mute)}
+  .ma-ag .c.is-zero b{color:var(--mute)}
+  .ma-ag .c.is-good{background:var(--pos-soft);border-color:color-mix(in srgb,var(--pos) 25%,transparent)}
+  .ma-ag .c.is-good b{color:var(--pos)}
+  .ma-ag .c.is-bad b{color:var(--neg)}
+  .ma-pl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+  .ma-pl li{display:grid;grid-template-columns:78px 1fr 58px;gap:8px;align-items:center;font-size:12px}
+  .ma-pl .nm{color:var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ma-pl .bar{height:14px;border-radius:5px;background:var(--bg);overflow:hidden}
+  .ma-pl .bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 85%,var(--paper)))}
+  .ma-pl b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .ma-pl b.is-zero{color:var(--mute)} .ma-pl b.is-good{color:var(--pos)} .ma-pl b.is-bad{color:var(--neg)}
+  .ma-tg{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+  .ma-tg dl{display:grid;grid-template-columns:64px 1fr;gap:8px 10px;margin:0;align-items:start}
+  .ma-tg dt{font-size:12px;color:var(--mute);padding-top:4px}
+  .ma-tg dd{margin:0;display:flex;flex-wrap:wrap;gap:5px}
+  .ma-tg dd span{font-size:12px;font-weight:500;color:var(--ink);padding:3px 9px;border:1px solid var(--line);border-radius:7px;background:var(--paper)}
+  .ma-tg dd em{font-style:normal;font-size:12px;color:var(--mute);padding-top:4px}
+  @media (max-width:640px){ .ma-bd{grid-template-columns:1fr} }
   .ma-pv-link{display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:1px solid var(--line)}
   .ma-pv-link small{font-size:11.5px;color:var(--mute)}
   .ma-pv-link>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--body)}
@@ -18592,7 +18621,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 게재일 · 같은 소재를 쓴 광고 중 가장 먼저 만든 광고의 날(서버 ads[].at = 메타 created_time) */
       const at=o.ads.map(x=>Date.parse(x.at||'')).filter(n=>n>0).sort((p,r)=>p-r)[0]||null;
       return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,kind:o.kind,n:o.ads.length,at,
-        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x),link:x.link||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
+        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x),link:x.link||null,s:x.s})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -18712,16 +18741,42 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         :'<span class="ma-pv-src is-none">메타에 상세페이지 주소가 없는 소재입니다</span>';
       const big=[['ROAS',pct(r.x.roas),roasCls(r.x.roas,R)||(low?' is-low':'')],['지출',money(r.x.spend,cur),''],['구매 전환값',money(r.x.rev,cur),''],['구매',int(r.x.buy)+'건','']];
       const small=[['CPA',r.x.cpa==null?'-':money(r.x.cpa,cur)],['CTR',r.x.ctr==null?'-':r.x.ctr.toFixed(2)+'%'],['CPM',r.x.cpm==null?'-':money(r.x.cpm,cur)],['클릭',int(r.x.clicks)],['노출',int(r.x.imp)]];
-      let prod='<span class="ma-pv-none">연동 안 됨 · 연동 리스트에서 이 소재의 캠페인·세트에 상품을 이으세요</span>';
-      if(R){
-        const d=R.roas!=null&&r.x.roas!=null?Math.round(r.x.roas-R.roas):null;
-        prod='<b>'+esc(R.name)+'</b><span>대표 ROAS '+(R.roas!=null?Math.round(R.roas)+'%':'–')+' · '+R.src+'에서</span>'
-          +(d==null?'':'<span class="ma-cmp'+(d<0?' is-low':' is-up')+'">'+(d>=0?'+':'')+d+'%p</span>');
-      }
+      /* 연령 × 성별 · 게재지면 · 타깃(10-21 사용자 요청 · 마진표 상품 줄은 뺌) · 서버 a.bd = 광고마다 최근 60일 [지출,구매 전환값,구매] ·
+         a.adsets[].tg = 세트 타깃 · 기준 ROAS 는 이은 상품의 대표 ROAS(없으면 100%) */
+      const bd=a.bd||{}, base=R&&R.roas!=null?R.roas:100;
+      const sum3=box=>{ const o={}; (r.adIds||[]).forEach(id=>{ const m=box&&box[id]; if(m) for(const k in m){ const t=o[k]||(o[k]=[0,0,0]); t[0]+=m[k][0]; t[1]+=m[k][1]; t[2]+=m[k][2]; } }); return o; };
+      const rCls=v=>!v||!v[2]?' is-zero':v[1]/v[0]*100>=base?' is-good':' is-bad';
+      const rTxt=v=>v&&v[0]>0?Math.round(v[1]/v[0]*100).toLocaleString()+'%':'0%';
+      const AG=sum3(bd.ag), ages=['13-17','18-24','25-34','35-44','45-54','55-64','65+'].filter(g=>(AG[g+'|f']||[0])[0]+(AG[g+'|m']||[0])[0]>0);
+      const agBox=ages.length?'<div class="ma-bd-ag"><h4>연령 × 성별 <small>ROAS · 구매</small></h4><div class="ma-ag"><span></span><span class="h">여성</span><span class="h">남성</span>'
+        +ages.map(g=>'<span class="y">'+g+'</span>'+['f','m'].map(x=>{ const v=AG[g+'|'+x];
+          return '<div class="c'+rCls(v)+'" title="지출 '+money(v?v[0]:0,cur)+'"><b>'+rTxt(v)+'</b><small>'+int(v?v[2]:0)+'건</small></div>'; }).join('')).join('')+'</div></div>':'';
+      const PL_TXT={'instagram|feed':'인스타 피드','instagram|instagram_reels':'인스타 릴스','instagram|instagram_stories':'인스타 스토리','instagram|instagram_explore':'인스타 탐색','instagram|instagram_explore_grid_home':'인스타 탐색',
+        'instagram|instagram_profile_feed':'인스타 프로필','facebook|feed':'페북 피드','facebook|facebook_reels':'페북 릴스','facebook|facebook_reels_overlay':'페북 릴스','facebook|facebook_stories':'페북 스토리',
+        'facebook|instream_video':'페북 인스트림','facebook|marketplace':'페북 마켓','facebook|video_feeds':'페북 동영상','facebook|facebook_profile_feed':'페북 피드'};
+      const plName=k=>PL_TXT[k]||{audience_network:'오디언스넷',messenger:'메신저',threads:'스레드'}[k.split('|')[0]]||'기타';
+      const PL={}; Object.entries(sum3(bd.pl)).forEach(([k,v])=>{ const n=plName(k), t=PL[n]||(PL[n]=[0,0,0]); t[0]+=v[0]; t[1]+=v[1]; t[2]+=v[2]; });
+      const plAll=Object.entries(PL).filter(e=>e[1][0]>0).sort((p,q)=>q[1][0]-p[1][0]), plTot=plAll.reduce((n,e)=>n+e[1][0],0);
+      const plRows=plAll.filter(e=>e[0]!=='기타'&&e[1][0]>=plTot*.01), etc=plAll.filter(e=>!plRows.includes(e)).reduce((t,e)=>[t[0]+e[1][0],t[1]+e[1][1],t[2]+e[1][2]],[0,0,0]);
+      if(etc[0]>0) plRows.push(['기타',etc]);
+      const plMax=Math.max(1,...plRows.map(e=>e[1][0]));
+      const plBox=plRows.length?'<div class="ma-bd-pl"><h4>게재지면 <small>ROAS · 지출</small></h4><ul class="ma-pl">'+plRows.map(([n,v])=>'<li title="지출 '+money(v[0],cur)+' · 구매 '+int(v[2])+'건"><span class="nm">'+esc(n)+'</span>'
+        +'<span class="bar"><i style="width:'+Math.max(3,Math.round(v[0]/plMax*100))+'%"></i></span><b class="'+rCls(v).trim()+'">'+rTxt(v)+'</b></li>').join('')+'</ul></div>':'';
+      const sets=[...new Set(r.ads.map(x=>x.s).filter(Boolean))], S=(a.adsets||[]).find(x=>x.id===r.s), tg=S&&S.tg;
+      const POS={stream:'피드',feed:'피드',story:'스토리',reels:'릴스',facebook_reels:'릴스',explore:'탐색',explore_home:'탐색 홈',profile_feed:'프로필',marketplace:'마켓',video_feeds:'동영상',right_hand_column:'오른쪽 칼럼',search:'검색',instream_video:'인스트림',notification:'알림'};
+      const PLAT={instagram:'인스타',facebook:'페북',audience_network:'오디언스넷',messenger:'메신저',threads:'스레드'};
+      const tag=t=>'<span>'+esc(t)+'</span>';
+      const tgBox=tg?'<div class="ma-tg"><h4>타깃 <small>'+esc(S.name)+(sets.length>1?' · 세트 '+sets.length+'개 중 지출이 가장 큰 세트':'')+'</small></h4><dl>'
+        +'<dt>성별·연령</dt><dd>'+tag(tg.g===1?'남성':tg.g===2?'여성':'전 성별')+(tg.a&&(tg.a[0]||tg.a[1])?tag((tg.a[0]||18)+'–'+(tg.a[1]===65||!tg.a[1]?'65+':tg.a[1])+'세'):'')+(tg.adv?tag('어드밴티지+ 타깃'):'')+'</dd>'
+        +'<dt>관심사</dt><dd>'+((tg.int||[]).concat((tg.ca||[]).map(n=>'맞춤 · '+n)).map(tag).join('')||'<em>넓은 타깃 · 관심사 없음</em>')+'</dd>'
+        +(tg.ex&&tg.ex.length?'<dt>제외</dt><dd>'+tg.ex.map(tag).join('')+'</dd>':'')
+        +'<dt>지면</dt><dd>'+(tg.pl&&tg.pl.length?[...new Set(tg.pl.map(k=>{ const [p,q]=k.split('.'); return (PLAT[p]||p)+(q?' '+(POS[q]||q):''); }))].map(tag).join(''):tag('어드밴티지+ 자동'))+'</dd>'
+        +'</dl></div>':'';
+      const bdHtml=agBox||plBox?'<div class="ma-bd"><p class="ma-bd-note">최근 60일 · 기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?'(대표 ROAS)':'')+' 이상 초록 · 아래 빨강</p>'+agBox+plBox+'</div>':'';
       return '<div class="ma-asset-open"><div class="ma-pv-col">'+media+lp+'</div><div class="ma-pv-info">'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+' · '+RANGE_TXT[range]+'</small><b class="'+m[2]+'">'+m[1]+'</b></div>').join('')+'</div>'
         +'<div class="ma-asset-mets">'+small.map(m=>'<div><small>'+m[0]+'</small><b>'+m[1]+'</b></div>').join('')+'</div>'
-        +'<div class="ma-pv-link"><small>마진표 상품</small><div>'+prod+'</div></div>'
+        +bdHtml+tgBox
         +(l.script?'<div class="ma-pv-link"><small>대본</small><div class="ma-pv-script">'+esc(l.script)+'</div></div>':'')
         +(r.ads.length>1?'<div class="ma-asset-ads"><h4>같은 소재를 쓴 광고 '+r.ads.length+'개</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul></div>':'')
         +'</div></div>';
