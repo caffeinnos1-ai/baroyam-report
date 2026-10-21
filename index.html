@@ -2813,6 +2813,20 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-src:hover{text-decoration:underline}
   .ma-pv-src.is-none{color:var(--mute);line-height:1.5}
   .ma-lp{display:flex;flex-direction:column;gap:6px}
+  /* 영상 체류 · 왼쪽 영상 아래 · 3초 시청·평균 시청 두 숫자 + 구간별 시청 곡선 */
+  .ma-vd{padding:12px 14px}
+  .ma-vd-k{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+  .ma-vd-k div{display:flex;flex-direction:column;gap:2px}
+  .ma-vd-k small{font-size:11.5px;color:var(--mute)}
+  .ma-vd-k b{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ma-vd-k em{font-style:normal;font-size:11px;color:var(--mute)}
+  .ma-vd-g{display:block;width:100%;height:auto;overflow:visible}
+  .ma-vd-g .ar{fill:color-mix(in srgb,var(--coupang) 12%,transparent)}
+  .ma-vd-g .ln{fill:none;stroke:var(--coupang);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  .ma-vd-g circle{fill:var(--paper);stroke:var(--coupang);stroke-width:1.6}
+  .ma-vd-g text{font-family:var(--app-font);text-anchor:middle;font-variant-numeric:tabular-nums}
+  .ma-vd-g .v{font-size:9.5px;font-weight:500;fill:var(--body)}
+  .ma-vd-g .x{font-size:9.5px;fill:var(--mute)}
   .ma-lp .ui-btn{text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-pv-info{flex:1;min-width:300px;display:flex;flex-direction:column;gap:12px}
   .ma-pv-range{margin:0 0 -4px;font-size:12px;color:var(--mute)}
@@ -18802,6 +18816,26 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const lp=lps.length?'<div class="ma-lp">'+lps.map((u,i)=>'<a class="ui-btn soft sm block" href="'+esc(u)+'" target="_blank" rel="noopener" title="'+esc(u)+'">'
           +(lps.length>1?'상세페이지 '+(i+1)+' · '+esc(lpTxt(u)):'상세페이지 열기')+' ↗</a>').join('')+'</div>'
         :'';
+      /* 영상 체류(10-22 사용자 요청) · 서버 a.bd.vd = 광고마다 최근 60일 [노출,재생,3초,평균 시청(초),25%,50%,75%,95%,100%,ThruPlay] ·
+         곡선은 재생 수를 100% 로 두고 3초·25~100% 지점까지 본 비율 · 평균 시청은 광고마다 재생 수로 가중 평균 */
+      const VD=(a.bd||{}).vd||{}, vs=[0,0,0,0,0,0,0,0,0,0];
+      (r.adIds||[]).forEach(id=>{ const m=VD[id]; if(!m) return; m.forEach((x,i)=>{ vs[i]+=i===3?x*m[1]:x; }); });
+      let vdBox='';
+      if(vs[1]>0){
+        const P=vs[1], avg=vs[3]/P, pt=[['재생',P],['3초',vs[2]],['25%',vs[4]],['50%',vs[5]],['75%',vs[6]],['95%',vs[7]],['끝',vs[8]]].map(x=>[x[0],Math.min(100,x[1]/P*100)]);
+        const W=280, H=96, T=16, xs=i=>8+i*(W-16)/(pt.length-1), ys=v=>T+(H-T)*(1-v/100);
+        const line=pt.map((q,i)=>(i?'L':'M')+xs(i).toFixed(1)+' '+ys(q[1]).toFixed(1)).join(' ');
+        const f1=v=>v>=10?Math.round(v)+'%':v.toFixed(1)+'%';
+        vdBox='<div class="ma-sec ma-vd"><h4>영상 체류 <small>최근 60일 · 재생 '+int(P)+'회</small></h4>'
+          +'<div class="ma-vd-k"><div><small>3초 시청</small><b>'+f1(vs[2]/P*100)+'</b><em>'+int(vs[2])+'회</em></div>'
+          +'<div><small>평균 시청</small><b>'+(avg<10?avg.toFixed(1):Math.round(avg))+'초</b><em>끝까지 '+f1(vs[8]/P*100)+'</em></div></div>'
+          +'<svg viewBox="0 0 '+W+' '+(H+18)+'" class="ma-vd-g" role="img" aria-label="구간별 시청 비율">'
+          +'<path class="ar" d="'+line+' L'+xs(pt.length-1).toFixed(1)+' '+H+' L'+xs(0).toFixed(1)+' '+H+' Z"/><path class="ln" d="'+line+'"/>'
+          +pt.map((q,i)=>'<circle cx="'+xs(i).toFixed(1)+'" cy="'+ys(q[1]).toFixed(1)+'" r="2.6"><title>'+q[0]+' · '+f1(q[1])+'</title></circle>'
+            +(i?'<text class="v" x="'+xs(i).toFixed(1)+'" y="'+(ys(q[1])-6).toFixed(1)+'">'+f1(q[1])+'</text>':'')
+            +'<text class="x" x="'+xs(i).toFixed(1)+'" y="'+(H+14)+'">'+q[0]+'</text>').join('')
+          +'</svg></div>';
+      }
       /* 위 숫자 · 구매는 아래 단계 상자에 있어 뺌(사용자 지적 10-21 · 두 번 보임) · ROAS 아래에 대표 ROAS 와의 차이 */
       const gap=R&&R.roas!=null&&r.x.roas!=null?Math.round(r.x.roas-R.roas):null;
       const big=[['ROAS',pct(r.x.roas),roasCls(r.x.roas,R)||(low?' is-low':''),R&&R.roas!=null?'기준 '+Math.round(R.roas)+'%'+(gap==null?'':' · <em class="'+(gap<0?'is-low':'is-up')+'">'+(gap>=0?'+':'')+gap+'%p</em>'):'']
@@ -18856,7 +18890,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +txRow('t','제목')+txRow('b','본문')+txRow('d','설명')+'</div>':'';
       /* 색 기준은 문구 줄 대신 말풍선으로(사용자 요청 · 줄이 길어짐) */
       const bdHtml=agBox||plBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+'</div>':'';
-      return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+lp+'</div><div class="ma-pv-info">'
+      return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+lp+'</div><div class="ma-pv-info">'
         +'<p class="ma-pv-range">'+RANGE_TXT[range]+'</p>'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b>'+(m[3]?'<span class="sub">'+m[3]+'</span>':'')+'</div>').join('')+'</div>'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
