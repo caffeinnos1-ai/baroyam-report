@@ -2900,6 +2900,17 @@ window.BAROYAM_FONT=(function(){
   .ma-pl .bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,color-mix(in srgb,var(--coupang) 55%,var(--paper)),color-mix(in srgb,var(--coupang) 85%,var(--paper)))}
   .ma-pl b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
   .ma-pl b.is-zero{color:var(--mute)} .ma-pl b.is-good{color:var(--pos)} .ma-pl b.is-bad{color:var(--neg)}
+  .ma-hr{grid-column:1/-1}
+  .ma-hr-bars{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;height:96px;align-items:end;border-bottom:1px solid var(--line)}
+  .ma-hr-bars>div{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+  .ma-hr-bars i{display:block;width:100%;max-width:18px;border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--coupang) 35%,var(--paper))}
+  .ma-hr-bars .is-top i{background:linear-gradient(180deg,color-mix(in srgb,var(--coupang) 85%,var(--paper)),color-mix(in srgb,var(--coupang) 55%,var(--paper)))}
+  .ma-hr-bars em{font-style:normal;font-size:10px;color:var(--mute);font-variant-numeric:tabular-nums;margin-bottom:2px;white-space:nowrap}
+  .ma-hr-bars .is-top em{color:var(--ink);font-weight:600}
+  .ma-hr-bars:hover>div:not(:hover){opacity:.45}
+  .ma-hr-x{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:4px}
+  .ma-hr-x span{font-size:10.5px;color:var(--mute);text-align:center}
+  @media (max-width:640px){ .ma-hr-bars em{display:none} }
   .ma-tg h4 small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:70%;vertical-align:bottom}
   .ma-tg dl{display:grid;grid-template-columns:64px 1fr;gap:8px 10px;margin:0;align-items:start}
   .ma-tg dt{font-size:12px;color:var(--mute);padding-top:4px}
@@ -18898,6 +18909,16 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const plMax=Math.max(1,...plRows.map(e=>e[1][0]));
       const plBox=plRows.length?'<div class="ma-sec"><h4>게재지면 <small>ROAS · 지출 · 최근 60일</small></h4><ul class="ma-pl">'+plRows.map(([n,v])=>'<li title="지출 '+money(v[0],cur)+' · 구매 '+int(v[2])+'건"><span class="nm">'+esc(n)+'</span>'
         +'<span class="bar"><i style="width:'+Math.max(3,Math.round(v[0]/plMax*100))+'%"></i></span><b class="'+rCls(v).trim()+'">'+rTxt(v)+'</b></li>').join('')+'</ul></div>':'';
+      /* 시간대별 구매(10-22 사용자 요청) · 서버 a.bd.hr = 광고마다 0~23시 [지출,구매 전환값,구매] · 메타는 구매를 광고를 본 시각에 붙인다 */
+      const HR=sum3(bd.hr), hv=Array.from({length:24},(_,h)=>HR[h]||[0,0,0]), hBuy=hv.reduce((n,v)=>n+v[2],0);
+      let hrBox='';
+      if(hBuy>0){
+        const hMax=Math.max(1,...hv.map(v=>v[2])), top=hv.map((v,h)=>[h,v[2]]).sort((p,q)=>q[1]-p[1]).slice(0,3).filter(e=>e[1]>0).map(e=>e[0]);
+        hrBox='<div class="ma-sec ma-hr"><h4>시간대별 구매 <small>광고를 본 시각 · 최근 60일 · 많은 시간 '+top.map(h=>h+'시').join('·')+'</small></h4><div class="ma-hr-bars">'
+          +hv.map((v,h)=>'<div class="'+(top.includes(h)?'is-top':'')+'" title="'+h+'시 · 구매 '+int(v[2])+'건 · 지출 '+money(v[0],cur)+' · ROAS '+rTxt(v)+'">'
+            +'<em>'+(v[2]?int(v[2]):'')+'</em><i style="height:calc((100% - 15px) * '+(v[2]?Math.max(.03,v[2]/hMax).toFixed(3):0)+')"></i></div>').join('')+'</div>'
+          +'<div class="ma-hr-x">'+hv.map((_,h)=>'<span>'+(h%3?'':h)+'</span>').join('')+'</div></div>';
+      }
       const sets=[...new Set(r.ads.map(x=>x.s).filter(Boolean))], S=(a.adsets||[]).find(x=>x.id===r.s), tg=S&&S.tg;
       const POS={stream:'피드',feed:'피드',story:'스토리',reels:'릴스',facebook_reels:'릴스',explore:'탐색',explore_home:'탐색 홈',profile_feed:'프로필',marketplace:'마켓',video_feeds:'동영상',right_hand_column:'오른쪽 칼럼',search:'검색',instream_video:'인스트림',notification:'알림'};
       const PLAT={instagram:'인스타',facebook:'페북',audience_network:'오디언스넷',messenger:'메신저',threads:'스레드'};
@@ -18917,7 +18938,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const txBox=txs.t.length+txs.b.length+txs.d.length?'<div class="ma-sec ma-tx"><h4>광고 문구 <small>메타에 입력한 그대로</small></h4>'
         +txRow('t','제목')+txRow('b','본문')+txRow('d','설명')+'</div>':'';
       /* 색 기준은 문구 줄 대신 말풍선으로(사용자 요청 · 줄이 길어짐) */
-      const bdHtml=agBox||plBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+'</div>':'';
+      const bdHtml=agBox||plBox||hrBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+hrBox+'</div>':'';
       return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+cvBox+lp+'</div><div class="ma-pv-info">'
         +'<p class="ma-pv-range">'+RANGE_TXT[range]+'</p>'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b>'+(m[3]?'<span class="sub">'+m[3]+'</span>':'')+'</div>').join('')+'</div>'
