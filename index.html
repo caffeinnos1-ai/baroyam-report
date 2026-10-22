@@ -18849,12 +18849,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           +'</svg></div>';
       }
       /* 상세페이지 체류(10-22 사용자 요청) · VPS 가 Microsoft Clarity 에서 메타광고 방문을 광고 이름(utm_content)으로 묶어 날마다 쌓은 값
-         (app_settings clarity_v1 · days[날짜][광고 이름] = [방문, 스크롤%×방문, 활동 초×방문, 머문 초×방문, 빠른 이탈, 헛클릭, 연타]) · 모아 둔 날 전체 합계 */
+         (app_settings clarity_v1 format 2 · days[날짜][광고 이름] = [방문, 스크롤%×방문, 스크롤 잰 방문, 활동 초×방문, 머문 초×방문, 시간 잰 방문, 빠른 이탈, 헛클릭, 연타]) ·
+         모아 둔 날 전체 합계 · 평균은 그 값을 잰 방문으로만 나눈다(Clarity 응답이 지표마다 1,000줄까지라 들어온 주소가 조금씩 다름) */
       let cvBox='';
-      { const CD=(CLARITY&&CLARITY.days)||{}, names=[...new Set(r.ads.map(x=>x.name))], cs=[0,0,0,0,0,0,0], dset=Object.keys(CD).sort();
+      { const CD=(CLARITY&&CLARITY.format===2&&CLARITY.days)||{}, names=[...new Set(r.ads.map(x=>x.name))], cs=[0,0,0,0,0,0,0,0,0], dset=Object.keys(CD).sort();
         let nd=0; dset.forEach(d=>{ let hit=0; names.forEach(n=>{ const m=CD[d][n]; if(m){ hit=1; m.forEach((x,i)=>cs[i]+=x); } }); nd+=hit; });
         if(cs[0]>0){
-          const sc=cs[1]/cs[0], ac=cs[2]/cs[0], qb=cs[4]/cs[0]*100, sec=v=>v<60?Math.round(v)+'초':Math.floor(v/60)+'분 '+Math.round(v%60)+'초';
+          const sc=cs[2]?cs[1]/cs[2]:0, ac=cs[5]?cs[3]/cs[5]:0, qb=cs[6]/cs[0]*100, sec=v=>v<60?Math.round(v)+'초':Math.floor(v/60)+'분 '+Math.round(v%60)+'초';
           const curl='https://clarity.microsoft.com/projects/view/'+encodeURIComponent(CLARITY.project||'')+'/dashboard';
           cvBox='<div class="ma-sec ma-cv"><h4>상세페이지 체류 <small>Clarity · 메타광고 방문 '+int(cs[0])+'회 · '+nd+'일</small></h4>'
             +'<div class="ma-cv-k"><div><small>평균 스크롤</small><b>'+Math.round(sc)+'%</b></div>'
