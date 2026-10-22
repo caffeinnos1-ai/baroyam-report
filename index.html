@@ -2813,6 +2813,16 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-src:hover{text-decoration:underline}
   .ma-pv-src.is-none{color:var(--mute);line-height:1.5}
   .ma-lp{display:flex;flex-direction:column;gap:6px}
+  /* 상세페이지 체류(Clarity) · 세 숫자 + 평균 스크롤 막대 */
+  .ma-cv{padding:12px 14px}
+  .ma-cv-k{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .ma-cv-k div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .ma-cv-k small{font-size:11.5px;color:var(--mute)}
+  .ma-cv-k b{font-size:17px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ma-cv-bar{position:relative;height:6px;margin:10px 0 8px;border-radius:3px;background:var(--chip-flat);overflow:hidden}
+  .ma-cv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,color-mix(in srgb,var(--coupang) 45%,var(--paper)),var(--coupang))}
+  .ma-cv-go{font-size:12px;color:var(--mute);text-decoration:none}
+  .ma-cv-go:hover{color:var(--ink);text-decoration:underline}
   /* 영상 체류 · 왼쪽 영상 아래 · 3초 시청·평균 시청 두 숫자 + 구간별 시청 곡선 */
   .ma-vd{padding:12px 14px}
   .ma-vd-k{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
@@ -14092,6 +14102,8 @@ window.CsGuide=(function(){
     /* caffeinnos-automation/meta_ads.js · 토큰은 VPS .env META_ADS_TOKEN(시스템 사용자 baroyam-ads · ads_read · 만료 없음) */
     {name:'메타광고 성과 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['00:00','08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
      desc:'메타 마케팅 API 로 광고계정의 캠페인·광고 세트·광고(소재) 성과(지출·구매·매출·ROAS)를 받아 퍼포먼스마케팅 화면을 채워요.', task:'cron'},
+    {name:'Clarity 상세페이지 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 소재 팝업', days:[0,1,2,3,4,5,6], times:['00:20'], record:'Clarity 상세페이지 수집',
+     desc:'Microsoft Clarity 에서 메타광고로 들어온 자사몰 방문을 광고별로 묶어(스크롤 깊이·머문 시간·빠른 이탈) 소재 팝업에 보여요. API 가 하루 10번이라 하루 한 번 받아요.', task:'cron'},
     /* GitHub Actions(baroyam-trend) · 예전 워크플로우 탭에 따로 있던 것 · 예약 실행이라 늦게 도는 일이 잦다 */
     {name:'구글트렌드 수집', cat:'collect', where:'ERP 트렌드분석 · GitHub Actions', days:[0,1,2,3,4,5,6], times:['09:00','12:00','15:00','18:00'], record:'구글트렌드 수집',
      desc:'구글트렌드 검색 관심도를 받아 트렌드분석 화면을 채워요.', host:'GitHub Actions'},
@@ -18836,6 +18848,21 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
             +'<text class="x" x="'+xs(i).toFixed(1)+'" y="'+(H+14)+'">'+q[0]+'</text>').join('')
           +'</svg></div>';
       }
+      /* 상세페이지 체류(10-22 사용자 요청) · VPS 가 Microsoft Clarity 에서 메타광고 방문을 광고 이름(utm_content)으로 묶어 날마다 쌓은 값
+         (app_settings clarity_v1 · days[날짜][광고 이름] = [방문, 스크롤%×방문, 활동 초×방문, 머문 초×방문, 빠른 이탈, 헛클릭, 연타]) · 모아 둔 날 전체 합계 */
+      let cvBox='';
+      { const CD=(CLARITY&&CLARITY.days)||{}, names=[...new Set(r.ads.map(x=>x.name))], cs=[0,0,0,0,0,0,0], dset=Object.keys(CD).sort();
+        let nd=0; dset.forEach(d=>{ let hit=0; names.forEach(n=>{ const m=CD[d][n]; if(m){ hit=1; m.forEach((x,i)=>cs[i]+=x); } }); nd+=hit; });
+        if(cs[0]>0){
+          const sc=cs[1]/cs[0], ac=cs[2]/cs[0], qb=cs[4]/cs[0]*100, sec=v=>v<60?Math.round(v)+'초':Math.floor(v/60)+'분 '+Math.round(v%60)+'초';
+          const curl='https://clarity.microsoft.com/projects/view/'+encodeURIComponent(CLARITY.project||'')+'/dashboard';
+          cvBox='<div class="ma-sec ma-cv"><h4>상세페이지 체류 <small>Clarity · 메타광고 방문 '+int(cs[0])+'회 · '+nd+'일</small></h4>'
+            +'<div class="ma-cv-k"><div><small>평균 스크롤</small><b>'+Math.round(sc)+'%</b></div>'
+            +'<div><small>머문 시간</small><b>'+sec(ac)+'</b></div>'
+            +'<div title="상세페이지에 들어왔다가 곧바로 뒤로 간 방문"><small>빠른 이탈</small><b>'+(qb<10?qb.toFixed(1):Math.round(qb))+'%</b></div></div>'
+            +'<div class="ma-cv-bar" title="방문자가 평균 '+Math.round(sc)+'% 까지 내려 봄"><i style="width:'+Math.min(100,sc).toFixed(1)+'%"></i></div>'
+            +'<a class="ma-cv-go" href="'+esc(curl)+'" target="_blank" rel="noopener" title="Clarity 필터 › UTM content 에 광고 이름을 넣으면 이 소재 방문만 보입니다">녹화·히트맵 보기 ↗</a></div>';
+        } }
       /* 위 숫자 · 구매는 아래 단계 상자에 있어 뺌(사용자 지적 10-21 · 두 번 보임) · ROAS 아래에 대표 ROAS 와의 차이 */
       const gap=R&&R.roas!=null&&r.x.roas!=null?Math.round(r.x.roas-R.roas):null;
       const big=[['ROAS',pct(r.x.roas),roasCls(r.x.roas,R)||(low?' is-low':''),R&&R.roas!=null?'기준 '+Math.round(R.roas)+'%'+(gap==null?'':' · <em class="'+(gap<0?'is-low':'is-up')+'">'+(gap>=0?'+':'')+gap+'%p</em>'):'']
@@ -18890,7 +18917,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +txRow('t','제목')+txRow('b','본문')+txRow('d','설명')+'</div>':'';
       /* 색 기준은 문구 줄 대신 말풍선으로(사용자 요청 · 줄이 길어짐) */
       const bdHtml=agBox||plBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+'</div>':'';
-      return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+lp+'</div><div class="ma-pv-info">'
+      return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+cvBox+lp+'</div><div class="ma-pv-info">'
         +'<p class="ma-pv-range">'+RANGE_TXT[range]+'</p>'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b>'+(m[3]?'<span class="sub">'+m[3]+'</span>':'')+'</div>').join('')+'</div>'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
@@ -18964,10 +18991,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* 연동 · app_settings meta_links_v1 = {camps:{캠페인 id:{prod,prodName,at,by}}, sets:{세트 id:{…}}, assets:{소재 열쇠:{drive,driveName,at,by}}} ·
      대표 ROAS(마진표 자사몰 상품)는 캠페인에 이으면 그 안 세트·소재가 물려받고, 랜딩·상품이 다른 세트만 따로 잇는다(세트가 우선 · 사용자 결정) ·
      소재는 자기 세트(여럿이면 지출이 가장 큰 광고의 세트)를 따른다 · 영상은 소재마다 · 저장은 saveMerged 로 바꾼 한 줄만 */
-  let links={}, linkC={}, linkS={}, linksLoaded=false, profitList=null, driveList=null;
+  let links={}, linkC={}, linkS={}, linksLoaded=false, profitList=null, driveList=null, CLARITY=null;
   async function loadLinks(){
     const db=window.BAROYAM_DB; if(!db||!db.loadSetting) return;
     try{ let v=await db.loadSetting(LINK_KEY,true); if(typeof v==='string') v=JSON.parse(v); v=v||{}; links=v.assets||{}; linkC=v.camps||{}; linkS=v.sets||{}; linksLoaded=true; }catch(e){ console.error(e); }
+    /* Clarity 상세페이지 체류(VPS clarity_insights.js · 하루 한 번) · 작은 칸이라 연동과 같이 읽는다 */
+    try{ let c=await db.loadSetting('clarity_v1',true); if(typeof c==='string') c=JSON.parse(c); CLARITY=c&&c.days?c:null; }catch(e){ console.error(e); }
   }
   async function loadProfit(){
     if(!window.baroyamProfit||!window.baroyamProfit.repList) return;
