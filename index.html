@@ -2412,6 +2412,10 @@ window.BAROYAM_FONT=(function(){
   .iu-drop{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border:1.5px dashed var(--line);border-radius:14px;min-height:104px;transition:border-color .15s,background .15s}
   .iu-drop.is-over{border-color:var(--btn);background:var(--btn-soft)}
   .iu-files{display:contents}
+  .iu-add.iu-add-drv{color:var(--btn-soft-ink);background:var(--btn-soft);border-color:transparent}
+  .iu-add-drv svg{width:20px;height:20px}
+  .iu-add.iu-add-drv:hover{border-color:var(--btn)}
+  .iu-add[hidden]{display:none}
   .iu-file{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:var(--chip-flat);flex:none}
   .iu-file img,.iu-file video{width:100%;height:100%;object-fit:cover;display:block}
   .iu-file .n{position:absolute;left:5px;top:5px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--paper);color:var(--ink);font-size:11px;font-weight:600;display:grid;place-items:center}
@@ -11352,6 +11356,8 @@ window.BAROYAM_FONT=(function(){
                 <div class="iu-drop" id="iuDrop" tabindex="0">
                   <div class="iu-files" id="iuFiles"></div>
                   <button type="button" class="iu-add" id="iuAdd"><b>＋</b><span>파일 고르기<br><small>또는 끌어다 놓기</small></span></button>
+                  <!-- 바로얌 드라이브에서 등록하기 · 브랜드전략실 "드라이브 연동하기"와 같은 창(window.baroyamDrivePick)으로 고르면 드라이브에서 받아 위 파일 칸에 넣는다 -->
+                  <button type="button" class="iu-add iu-add-drv" id="iuDrive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 3.8h6.8l6 10.4-3.4 5.9H6l-3.4-5.9Z"/><path d="m8.6 3.8 6 10.4h6.8M15.4 3.8 9.3 14.2 6 20.1"/></svg><span>바로얌 드라이브<br><small>에서 등록하기</small></span></button>
                 </div>
                 <input type="file" id="iuInput" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" multiple hidden>
                 <p class="cm-hint" id="iuFileHint"></p></div>
@@ -18239,7 +18245,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       (form.files.length>1?'<span class="n">'+(i+1)+'</span>':'')+'<span class="k">'+(f.kind==='video'?(f.dur?Math.round(f.dur)+'초':'영상'):(f.w?f.w+'×'+f.h:'사진'))+'</span>'+
       (ed?'':(i?'<button type="button" class="mv" data-mv="'+i+'" title="앞으로">◀</button>':'')+'<button type="button" class="x" data-x="'+i+'" title="빼기">✕</button>')+'</div>').join('');
     const max=form.type==='carousel'?10:1;
-    $('iuAdd').hidden=!!ed||form.files.length>=max;
+    $('iuAdd').hidden=$('iuDrive').hidden=!!ed||form.files.length>=max;
     $('iuFileHint').textContent=ed?'올린 파일은 바꿀 수 없어요 · 바꾸려면 취소하고 새로 예약하세요':'사진은 JPEG 로 바꿔 올라가요 · 영상은 '+MAX_MB+'MB 이하(mp4·mov)';
     $('iuCapBox').hidden=form.type==='story';
     $('iuFeedBox').hidden=form.type!=='reels';
@@ -18337,6 +18343,29 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('iuCaption').addEventListener('input',()=>{ form.caption=$('iuCaption').value; paintForm(); });
   $('iuShareFeed').addEventListener('change',()=>{ form.shareFeed=$('iuShareFeed').checked; });
   $('iuAdd').addEventListener('click',()=>$('iuInput').click());
+  /* 바로얌 드라이브에서 등록하기 · 고른 파일을 이 창 구글 권한으로 받아(alt=media) 내 컴퓨터 파일처럼 넣는다 */
+  const DRV_OK=/^(jpe?g|png|webp|mp4|mov)$/i;
+  $('iuDrive').addEventListener('click',()=>{
+    if(!window.baroyamDrivePick){ st.note={t:'드라이브 창을 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요'}; paintForm(); return; }
+    window.baroyamDrivePick({title:'바로얌 드라이브에서 등록하기',add:'넣기',accept:r=>DRV_OK.test(r.ext||'')},rows=>{
+      const G=window.baroyamGoogleToken, tokP=G?G():Promise.reject(new Error('구글 권한이 없어요'));   // 누른 순간에 받아야 허락 창이 막히지 않는다
+      tokP.catch(()=>{});
+      (async()=>{
+        const tok=await tokP, got=[];
+        for(let i=0;i<rows.length;i++){
+          const r=rows[i];
+          msg('드라이브에서 받는 중 '+(i+1)+' / '+rows.length+' · '+r.name);
+          const res=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.id)+'?alt=media&supportsAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
+          if(res.status===401&&G) G.clear();
+          if(!res.ok) throw new Error(r.name+' · 드라이브 '+res.status);
+          const b=await res.blob(), ext=(String(r.name).split('.').pop()||'').toLowerCase();
+          const type=b.type&&b.type!=='application/octet-stream'?b.type:({jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',mp4:'video/mp4',mov:'video/quicktime'})[ext]||'';
+          got.push(new File([b],r.name,{type}));
+        }
+        await addFiles(got);
+      })().catch(e=>{ st.note={t:'드라이브 파일을 받지 못했어요 · '+(e&&e.message||e)}; paintForm(); });
+    });
+  });
   $('iuInput').addEventListener('change',()=>{ addFiles([...$('iuInput').files]); $('iuInput').value=''; });
   $('iuFiles').addEventListener('click',e=>{
     const x=e.target.closest('[data-x]'), mv=e.target.closest('[data-mv]');
@@ -29900,6 +29929,8 @@ window.baroyamAsk=function(title,body,okText){
   /* 드라이브 찾기 · 드라이브 화면의 색인을 빌려 검색한다 · 고른 파일은 그 항목의 링크(드라이브 표시)로 붙는다 */
   const DRV_PAGE=60;
   const drv={rows:null,q:'',owner:'바로얌',kind:'',picked:new Map(),limit:DRV_PAGE,loading:false};
+  /* 고르기 모드 · 다른 화면(인스타 업로드)이 같은 창을 빌릴 때 {cb,accept} · 붙이기 대신 고른 줄을 cb 로 넘긴다 */
+  let drvPick=null;
   const drvOwnerTabs=window.UI?UI.tabs($('bsDrvOwner'),function(v){ drv.owner=v; drv.kind=''; drv.limit=DRV_PAGE; drvPaint(); }):null;
   function drvUrl(id){ return 'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view'; }
   function drvTerms(){ return drv.q.trim().toLowerCase().split(/\s+/).filter(Boolean); }
@@ -29916,7 +29947,7 @@ window.baroyamAsk=function(title,body,okText){
     return terms.every(function(t){ return hay.indexOf(t)>=0; });
   }
   function drvAttached(){
-    const t=fileTarget, b=t&&find(t.bid), st=b&&b.steps&&b.steps[t.sid];
+    const t=fileTarget, b=!drvPick&&t&&find(t.bid), st=b&&b.steps&&b.steps[t.sid];
     const ids=new Set(); ((st&&st.links)||[]).forEach(function(l){ if(l.drive) ids.add(l.drive); });
     return ids;
   }
@@ -29940,7 +29971,7 @@ window.baroyamAsk=function(title,body,okText){
       $('bsDrvKinds').innerHTML=''; $('bsDrvN').textContent=''; return;
     }
     const terms=drvTerms();
-    const base=drv.rows.filter(function(r){ return r.company===drv.owner&&drvMatch(r,terms); });
+    const base=drv.rows.filter(function(r){ return r.company===drv.owner&&(!drvPick||!drvPick.accept||drvPick.accept(r))&&drvMatch(r,terms); });
     const cnt={}; base.forEach(function(r){ cnt[r.kind]=(cnt[r.kind]||0)+1; });
     const kinds=Object.keys(cnt).sort(function(a,b){ return cnt[b]-cnt[a]; });
     if(drv.kind&&!cnt[drv.kind]) drv.kind='';
@@ -29961,10 +29992,12 @@ window.baroyamAsk=function(title,body,okText){
     const n=drv.picked.size;
     $('bsDrvPicked').textContent=n?n+'개 고름':'';
     $('bsDrvAdd').disabled=!n;
-    $('bsDrvAdd').textContent=n?n+'개 붙이기':'붙이기';
+    const w=(drvPick&&drvPick.add)||'붙이기';
+    $('bsDrvAdd').textContent=n?n+'개 '+w:w;
   }
   async function drvOpen(){
-    if(!fileTarget) return;
+    if(!fileTarget&&!drvPick) return;
+    $('bsDrvTitle').textContent=(drvPick&&drvPick.title)||'바로얌 드라이브 연동하기';
     drv.picked.clear(); drv.limit=DRV_PAGE; drvPicked();
     $('bsDrvDlg').hidden=false;
     if(drvOwnerTabs) drvOwnerTabs.set(drv.owner);
@@ -29976,7 +30009,13 @@ window.baroyamAsk=function(title,body,okText){
     }
     drvPaint();
   }
-  function drvClose(){ $('bsDrvDlg').hidden=true; }
+  function drvClose(){ $('bsDrvDlg').hidden=true; drvPick=null; }
+  /* 다른 화면이 이 창으로 드라이브 파일을 고른다 · 창은 브랜드전략실 안에 있어 다른 화면에서도 보이도록 body 로 옮긴다 ·
+     opts {title, add(단추 글), accept(줄 → 보일지)} · cb(줄들 [{id,name,ext,…}]) 는 "넣기"를 누른 클릭 안에서 불린다 */
+  window.baroyamDrivePick=function(opts,cb){
+    const dlg=$('bsDrvDlg'); if(dlg.parentNode!==document.body) document.body.appendChild(dlg);
+    fileTarget=null; drvPick=Object.assign({},opts||{},{cb:cb}); drvOpen();
+  };
   let drvTimer=null;
   $('bsDrvQ').addEventListener('input',function(){
     const v=this.value; clearTimeout(drvTimer);
@@ -29996,6 +30035,7 @@ window.baroyamAsk=function(title,body,okText){
     drvPicked();
   });
   $('bsDrvAdd').addEventListener('click',function(){
+    if(drvPick&&drv.picked.size){ const cb=drvPick.cb, rows=Array.from(drv.picked.values()); drvClose(); cb(rows); return; }
     const t=fileTarget, b=t&&find(t.bid); if(!b||!drv.picked.size) return;
     const add=Array.from(drv.picked.values());
     stepSet(b,t.sid,function(st){
@@ -30012,6 +30052,11 @@ window.baroyamAsk=function(title,body,okText){
   });
   /* 업로드 · 드라이브 화면의 업로드 창을 빌려 쓴다(지금 고른 회사 드라이브) · 올라간 파일은 이 항목에 연동 카드로 붙는다 */
   function drvUpload(files){
+    if(drvPick&&window.baroyamDriveUpload){
+      const cb=drvPick.cb;
+      window.baroyamDriveUpload(drv.owner,function(rows){ if(!rows.length) return; drv.rows=null; drvClose(); cb(rows); },files);
+      return;
+    }
     const t=fileTarget; if(!t||!window.baroyamDriveUpload) return;
     window.baroyamDriveUpload(drv.owner,function(rows){
       const b=find(t.bid); if(!b||!rows.length) return;
