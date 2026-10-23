@@ -3397,7 +3397,7 @@ window.BAROYAM_FONT=(function(){
   /* 손익·마진 관리 보기 전용(수정 권한 없음) · 고치는 단추·추가 줄을 숨기고 칸을 누를 수 없게 */
   .pf-ro-note{margin-top:22px;padding:10px 14px;border-radius:12px;background:var(--chip-flat);color:var(--body);font-size:12.5px;font-weight:500}
   .pf-ro-note[hidden]{display:none}
-  #view-profit.pf-ro #pfRowAdd,#view-profit.pf-ro [data-act="opt"],#view-profit.pf-ro [data-act="prod"],#view-profit.pf-ro [data-act="up"],#view-profit.pf-ro [data-act="down"],#view-profit.pf-ro [data-act="more"],
+  #view-profit.pf-ro #pfRowAdd,#view-profit.pf-ro [data-act="opt"],#view-profit.pf-ro [data-act="prod"],#view-profit.pf-ro [data-act="up"],#view-profit.pf-ro [data-act="down"],#view-profit.pf-ro [data-act="more"],#view-profit.pf-ro .pf-omv,
   #view-profit.pf-ro .pf-add,#view-profit.pf-ro [data-del]{display:none}
   #view-profit.pf-ro .pf-calc tbody .ui-field,#view-profit.pf-ro .pf-list .ui-field,#view-profit.pf-ro .pf-book-name,#view-profit.pf-ro .pf-ad,
   #view-profit.pf-ro .pf-calc td.out{pointer-events:none}
@@ -3795,6 +3795,11 @@ window.BAROYAM_FONT=(function(){
   .pf-calc .pf-cost small{font-size:10px;font-weight:600;color:var(--mute)}
   .pf-calc td.act{text-align:center;padding:4px 0}
   .pf-calc td.act .ui-btn.icon{width:24px}
+  /* 옵션 순서 ▲▼ · ⋯ 왼쪽에 위아래로 작게 쌓는다 */
+  .pf-calc td.act{white-space:nowrap}
+  .pf-omv{display:inline-flex;flex-direction:column;vertical-align:middle;margin-right:1px}
+  .pf-calc td.act .pf-omv .ui-btn.icon{width:16px;height:13px;min-height:0;padding:0;font-size:8px;line-height:1;border-radius:4px}
+  .pf-calc td.act .pf-omv .ui-btn:disabled{opacity:.25}
   .pf-calc .pf-prime .t,.pf-calc [data-menu="prime"] .t{text-align:right}
   /* 10-07 사용자 요청 · 표 안 글은 가운데 정렬 · 원가는 "고르는 칸"(흰 바탕+테두리+▾), 최종판매가는 "적는 칸"(옅은 회색+굵게) ·
      결과 세 칸(마진·마진률·최소 ROAS)은 연한 강조색 바탕에 크고 굵게 · 판매처는 판매처마다 연한 색 알약 */
@@ -20459,6 +20464,25 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const comma=n=>n==null||n===''?'':Number(n).toLocaleString('ko-KR',{maximumFractionDigits:2});
   const pct=(n,d)=>n==null||!isFinite(n)?'–':(n*100).toFixed(d==null?1:d)+'%';
   const live=o=>Object.values(obj(o)).filter(x=>x&&!x.del).sort((a,b)=>(a.ord||0)-(b.ord||0));
+  /* 옵션 순서 단추(▲▼) · i = 상자 안 보이는 옵션 중 몇 번째, n = 보이는 옵션 수 */
+  const optMove=(i,n)=>'<span class="pf-omv"><button type="button" class="ui-btn sm ghost icon" data-act="oup" title="위로" aria-label="옵션 위로"'+(i?'':' disabled')+'>▲</button>'
+    +'<button type="button" class="ui-btn sm ghost icon" data-act="odn" title="아래로" aria-label="옵션 아래로"'+(i<n-1?'':' disabled')+'>▼</button></span>';
+  /* 같은 상자에 보이는 바로 위·아래 옵션과 ord 만 맞바꾼다(두 줄만 바뀌어 다른 PC 고침과 합쳐짐) · 옮겼으면 true */
+  function swapOpt(tr,rows,up){
+    const ids=[...tr.closest('tbody').querySelectorAll('tr[data-row]')].map(x=>x.dataset.row);
+    const i=ids.indexOf(tr.dataset.row), j=i+(up?-1:1);
+    if(i<0||j<0||j>=ids.length) return false;
+    const a=rows[ids[i]], o=rows[ids[j]]; if(!a||!o) return false;
+    const ao=a.ord||0, oo=o.ord||0;
+    a.ord=ao===oo?ao+(up?-0.001:0.001):oo; o.ord=ao;
+    return true;
+  }
+  /* 다시 그린 뒤 옮긴 줄의 같은 단추에 초점을 둔다(연달아 누르기 쉽게) */
+  function refocusOpt(T,id,act){
+    const tr=[...T.querySelectorAll('tr[data-row]')].find(x=>x.dataset.row===id); if(!tr) return;
+    tr.scrollIntoView({block:'nearest'});
+    const nb=tr.querySelector('[data-act="'+act+'"]'); if(nb&&!nb.disabled) nb.focus();
+  }
 
   /* ---------- 한 칸 저장 도우미 ---------- */
   function store(KEY,norm,make){
@@ -20574,7 +20598,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const q=Math.max(0,num(m.q)||0), f=Math.max(0,num(m.f)||0);
       units+=q+f; paid+=q; cost+=(q+f)*(num(it.cost)||0); auto+=q*(num(it.price)||0);
     });
-    const ch=c&&r.chan?c.chans[r.chan]:null, pr=c&&r.prime?c.ship[r.prime]:null;
+    /* 판매처는 보이는 탭과 같게(chanOf) · 판매처가 빈 옛 줄·지운 판매처 줄은 첫 판매처 탭에 보이므로 그 판매처 수수료·계산법으로 계산 */
+    const chId=r.g?chanOf(r):r.chan, ch=c&&chId?c.chans[chId]:null, pr=c&&r.prime?c.ship[r.prime]:null;
     const price=num(r.price)!=null?num(r.price):(auto||null);
     const sale=num(r.sale), ship=num(r.ship)||0;
     const rate=num(r.rate)!=null?num(r.rate):(ch?num(ch.rate):null);
@@ -20771,11 +20796,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   $('pfAdOnly').addEventListener('click',()=>{ adOnly=!adOnly; paintCalc(); });
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 광고·판매처·옵션·수량·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
-    ['label','옵션',15.5,1],['qty','수량',5.5],['cost','원가',8.5],
+    ['label','옵션',14,1],['qty','수량',5.5],['cost','원가',8.5],
     ['price','소비자가',6,1],['sale','최종판매가',7.5],['disc','할인률',4,0,1],['unit','개당단가',5,0,1],
     ['ship','배송비',5,1],['prime','프라임',6.5],['rate','수수료율',4],
     ['margin','마진',5.5,1,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6.5,0,1],['fee','수수료',4.5,0,1],['vat','부가세',4.5,0,1],
-    ['act','',2.5,1]];
+    ['act','',4,1]];
   function outCells(tr,r){
     const v=calc(r);
     const man=obj(r.ov);
@@ -20788,7 +20813,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     put('mrate',pct(v.mrate),' key hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
     put('roas',v.margin==null?'–':(v.roas==null?'적자':pct(v.roas,0)),' key hi'+(v.margin!=null&&v.roas==null?' neg':''));
     put('settle',won(v.settle));
-    const ch=COST.data.chans[r.chan]; if(ch){
+    const ch=COST.data.chans[chanOf(r)]; if(ch){
       const R=ruleOf(ch), fT=tr.querySelector('[data-o="fee"]'), vT=tr.querySelector('[data-o="vat"]');
       if(fT&&num(man.fee)==null) fT.title='판매가 × 수수료율'+(R.shipRate?' + 배송비 × '+comma(R.shipRate)+'%':'')+(R.feeVat?' · 부가세 10% 더함':'')+' · 두 번 눌러 직접 고치기';
       const rT=tr.querySelector('[data-o="roas"]');
@@ -20832,7 +20857,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     /* 칸 하나 · 묶음 첫 칸이면 진한 칼선(gs) · data-h 는 좁은 화면 카드에서 이름표로 쓴다 */
     const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!==COLS[0][0];
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
-    const row=r=>{
+    const row=(r,i,arr)=>{
       const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
       const custom=r.label&&!isAutoLabel(r.label)?r.label:'';
       return '<tr data-row="'+esc(r.id)+'">'
@@ -20846,7 +20871,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +td('prime','<button type="button" class="ui-field sm" data-menu="prime" title="'+prT+'"><span class="t">'+(pr?comma(pr.fee):'<span class="ph">없음</span>')+'</span></button>')
         +td('rate','<input class="ui-field sm pf-num" data-k="rate" inputmode="decimal" value="'+esc(r.rate==null?'':r.rate)+'" title="비우면 판매처 수수료">')
         +td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('settle','','out')+td('fee','','out')+td('vat','','out')
-        +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
+        +td('act',optMove(i,arr.length)+'<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
         +'</tr>';
     };
     let h='';
@@ -21001,6 +21026,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return;
     }
     if(b.hasAttribute('data-mix')){ openMix(x.r); return; }
+    if(b.dataset.act==='oup'||b.dataset.act==='odn'){
+      if(swapOpt(x.tr,B().rows,b.dataset.act==='oup')){ CALC.mark(); paintCalc(); refocusOpt($('pfCalcTable'),x.r.id,b.dataset.act); }
+      return;
+    }
     if(b.dataset.act==='more'){
       e.stopPropagation();
       window.UI.menu(b,[{value:'dup',label:'복제'},{value:'del',label:'삭제'}],'',v=>{
@@ -21084,11 +21113,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] */
   const RK_COLS=[
-    ['label','옵션',12,1],['qty','수량',6],['cost','원가',8],
+    ['label','옵션',10.5,1],['qty','수량',6],['cost','원가',8],
     ['sale','최종판매가',7.5,1],['take','쿠팡 몫',6],['supply','공급가',7.5],
     ['logi','입고 물류비',6.5,1],['reb','장려금율',6],['rebv','장려금',7,0,1],['unit','개당판매가',6,0,1],
     ['margin','마진',7,1,1],['mrate','마진률',6,0,1],['roas','최소 ROAS',6,0,1],['vat','부가세',6,0,1],
-    ['act','',2.5,1]];
+    ['act','',4,1]];
   function rkOut(tr,r){
     const v=rkCalc(r);
     const put=(k,t,cls)=>{ const td=tr.querySelector('[data-o="'+k+'"]'); if(!td) return; td.textContent=t; td.className='out'+(td.dataset.g?' gs':'')+(cls||''); };
@@ -21131,7 +21160,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const td=(k,inner,cls)=>{ if(rkHidden(k)) return ''; const cl=H[k], g=cl[3]&&k!=='label';
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
     const inp=(k,r,ph,tt,mode)=>'<input class="ui-field sm pf-num" data-k="'+k+'" inputmode="'+(mode||'numeric')+'" value="'+esc(mode?rkPct(r[k]):comma(r[k]))+'" placeholder="'+ph+'"'+(tt?' title="'+tt+'"':'')+'>';
-    const row=r=>'<tr data-row="'+esc(r.id)+'">'
+    const row=(r,i,arr)=>'<tr data-row="'+esc(r.id)+'">'
       +td('label','<input class="ui-field sm pf-lbl" data-k="label" maxlength="40" value="'+esc(r.label||'')+'" placeholder="'+esc(rkAuto(r)||'옵션')+'">')
       +td('qty',rkQty(r),'pf-key')
       +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix title="원가표 상품 고르기(여러 상품을 섞어도 됨)"></button>')
@@ -21142,7 +21171,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +td('reb',inp('reb',r,'%','판매장려금 · 공급가의 %','decimal'))
       +td('rebv','','out')+td('unit','','out')
       +td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('vat','','out')
-      +td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
+      +td('act',optMove(i,arr.length)+'<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
       +'</tr>';
     let h='';
     list.forEach(({g,opts})=>{
@@ -21229,6 +21258,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     if(!x.r) return;
     if(b.hasAttribute('data-mix')){ openMix(x.r,ROCKET); return; }
+    if(b.dataset.act==='oup'||b.dataset.act==='odn'){
+      if(swapOpt(x.tr,RK().rows,b.dataset.act==='oup')){ ROCKET.mark(); paintRocket(); refocusOpt($('pfRkTable'),x.r.id,b.dataset.act); }
+      return;
+    }
     if(b.dataset.act==='more'){
       e.stopPropagation();
       window.UI.menu(b,[{value:'dup',label:'복제'},{value:'del',label:'삭제'}],'',v=>{
