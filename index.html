@@ -19407,7 +19407,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
      실제 처리는 VPS(meta_ads_toggle.js)가 한다(gvSend) · 메타 토큰에 광고 관리 권한(ads_management)이 있어야 한다 ·
      켜고 끄기는 팀장·권한설정 "메타광고 켜기·끄기"(editAccess meta)를 받은 회원만 · 캠페인·세트가 꺼진 광고는 여기서 켜지 않는다 */
   const GV_PEND={};   /* 광고 id → {to,at} · 보낸 뒤 서버가 처리할 때까지 */
-  function gvCan(){ try{ return window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){ return false; } }
+  /* 권한 + 이 광고계정을 켜고 끌 수 있는지(서버가 메타 권한을 읽어 accounts[].manage 로 적음 · 카페이노스처럼 성과 보기만 준 계정은 false → 스위치 숨김) */
+  function gvCan(){ try{ const a=acc(); return !!(a&&a.manage)&&window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){ return false; } }
   const GV_LV={campaign:'캠페인',adset:'광고 세트',asset:'소재',ad:'광고'};
   const gvOk=st=>st==='ACTIVE'||st==='PAUSED';   /* 여기서 바꿀 수 있는 상태 · 승인 거부·보관 등은 메타 광고관리자에서 */
   /* 스위치 하나 · 권한이 없으면 null(부르는 쪽이 상태 점만 보임) */
