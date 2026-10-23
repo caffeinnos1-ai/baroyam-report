@@ -19404,7 +19404,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
   /* 게재 관리 · 광고(소재) 하나씩 켜고 끄기(10-23 사용자 요청 · 신중해야 해서 목록이 아니라 팝업 안에만 · 확인 창을 거침) ·
      10-23 같은 날 사용자 요청으로 정밀성과 캠페인·광고 세트·소재 목록에도 켜기 칸(스위치)을 달았다(같은 확인 창) ·
-     지금은 화면만: 메타 토큰이 성과 보기(ads_read)뿐이라 실제로 바꾸지 않는다 → 권한(ads_management)·VPS 처리를 붙이면 gvSend 만 바꾼다 ·
+     실제 처리는 VPS(meta_ads_toggle.js)가 한다(gvSend) · 메타 토큰에 광고 관리 권한(ads_management)이 있어야 한다 ·
      켜고 끄기는 팀장·권한설정 "메타광고 켜기·끄기"(editAccess meta)를 받은 회원만 · 캠페인·세트가 꺼진 광고는 여기서 켜지 않는다 */
   const GV_PEND={};   /* 광고 id → {to,at} · 보낸 뒤 서버가 처리할 때까지 */
   function gvCan(){ try{ return window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){ return false; } }
@@ -19501,11 +19501,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent=label;
         pw.value=''; pw.classList.add('is-err'); pw.focus(); ready(); return;
       }
-      go.textContent='보내는 중…';
-      const res=await gvSend(t,off?'PAUSED':'ACTIVE');
-      pw.value='';
-      if(res.ok){ GV_PEND[t.id]={to:off?'PAUSED':'ACTIVE',at:Date.now()}; close(); gvRepaint(); return; }
-      msg.hidden=false; msg.className='ma-gv-msg'; msg.textContent=res.msg; go.textContent=label; ready();
+      go.textContent='보내는 중…'; ok.disabled=pw.disabled=true;
+      msg.hidden=false; msg.className='ma-gv-msg'; msg.textContent='메타에 보내는 중입니다 · 서버가 받기까지 1분 안쪽이 걸릴 수 있습니다.';
+      const res=await gvSend(t,off?'PAUSED':'ACTIVE',pw.value.trim());
+      pw.value=''; ok.disabled=pw.disabled=false;
+      if(res.ok){ close(); return; }
+      msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent=res.msg; go.textContent=label; ready();
     });
   }
   /* 켜기·끄기 비밀번호(사용자 요청 10-23) · 공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적는다(보안로그 잠금과 같은 방식, 소금만 다름) ·
@@ -19517,9 +19518,44 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(GV_LOCK.salt),iterations:GV_LOCK.iterations,hash:'SHA-256'},key,256);
     return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
   }
-  /* 실제로 보내는 곳 · 아직 연결 전(메타 권한 ads_management 를 받으면 brand-files metaads/req 에 {lv,id,to,by} 를 올려 VPS 가 처리) */
-  async function gvSend(t,to){
-    return {ok:false,msg:'아직 메타와 연결되지 않아 실제로 바뀌지 않았습니다(화면 시험). 메타 광고 권한을 받은 뒤 연결합니다.'};
+  /* 실제로 보내는 곳(10-23 연동) · 화면에는 메타 토큰이 없어 "지금 가져오기"와 같은 방식으로 brand-files 의 metaads/gv/req/<이름>.json 에
+     {lv,id,ids,to,acct,name,by,pw} 를 올리면 VPS(meta_ads_toggle.js · 3초마다 확인)가 비밀번호를 다시 확인하고 메타에 status 를 보낸 뒤
+     metaads/gv/res/<같은 이름> 에 {state:'running'|'done'|'failed', message, st:{id:바뀐 뒤 상태}} 를 적는다 · 요청 파일은 VPS 가 바로 지운다(비밀번호가 남지 않게) ·
+     답의 상태로 지금 들고 있는 목록(acc())을 고쳐 다시 그린다(VPS 도 meta_ads_v1 의 상태 칸을 고쳐 둠) */
+  async function gvRes(name){
+    const DB=window.BAROYAM_DB;
+    let u; try{ u=await DB.fileUrl('brand-files','metaads/gv/res/'+name,60); }catch(e){ return null; }
+    const r=await fetch(u,{cache:'no-store'}).catch(()=>null);
+    return r&&r.ok?r.json().catch(()=>null):null;
+  }
+  function gvApply(stMap){
+    const a=acc(); if(!a||!stMap) return;
+    ['campaigns','adsets','ads'].forEach(k=>(a[k]||[]).forEach(x=>{ if(stMap[x.id]) x.st=stMap[x.id]; }));
+  }
+  async function gvSend(t,to,pw){
+    const DB=window.BAROYAM_DB, a=acc();
+    try{
+      if(!DB||!DB.fileUpload||!(await DB.ensureSession())) return {ok:false,msg:'로그인이 풀렸습니다. 새로고침한 뒤 다시 해 주세요.'};
+      const name=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json';
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      const q={v:1,at:new Date().toISOString(),lv:t.lv,id:t.lv==='asset'?'':t.id,ids:t.lv==='asset'?t.ids:[],to,acct:a&&a.id,name:t.name,by,pw};
+      GV_PEND[t.id]={to,at:Date.now()};
+      await DB.fileUpload('brand-files','metaads/gv/req/'+name,new Blob([JSON.stringify(q)],{type:'application/json'}));
+      const t0=Date.now();
+      for(;;){
+        await new Promise(r=>setTimeout(r,2000));
+        const res=await gvRes(name), sec=(Date.now()-t0)/1000;
+        if(res&&(res.state==='done'||res.state==='failed')){
+          delete GV_PEND[t.id]; gvApply(res.st); gvRepaint();
+          return res.state==='done'?{ok:true}:{ok:false,msg:res.message||'바꾸지 못했습니다.'};
+        }
+        if(!res&&sec>120){ delete GV_PEND[t.id]; gvRepaint(); return {ok:false,msg:'서버가 요청을 받지 않았습니다. 잠시 뒤 다시 해 주세요.'}; }
+        if(sec>240){ delete GV_PEND[t.id]; gvRepaint(); return {ok:false,msg:'4분이 지나도 답이 없습니다. 잠시 뒤 새로고침해 확인해 주세요.'}; }
+      }
+    }catch(e){
+      delete GV_PEND[t.id]; gvRepaint();
+      return {ok:false,msg:'보내지 못했습니다: '+(e&&e.message||e)};
+    }
   }
   function openCard(r){
     if(!cardBox){
