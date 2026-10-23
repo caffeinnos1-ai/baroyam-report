@@ -2954,23 +2954,44 @@ window.BAROYAM_FONT=(function(){
   .ma-list .ma-table th.ma-swcol{width:58px}
   .ma-gv-warn{margin:0;padding:10px 12px;border-radius:8px;background:var(--neg-soft);color:var(--neg);font-size:12.5px;font-weight:500}
   .ma-gv-ov{z-index:1300}
-  .settings-panel.ma-gv-dlg{max-width:440px;height:auto}
-  .ma-gv-body{padding:4px 22px 20px;display:flex;flex-direction:column;gap:12px}
-  .ma-gv-body .nm{margin:0;font-size:14px;font-weight:600;color:var(--ink);word-break:break-all}
-  .ma-gv-body .set{margin:-8px 0 0;font-size:12px;color:var(--mute);word-break:break-all}
-  .ma-gv-k{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px;border-radius:10px;background:var(--bg)}
-  .ma-gv-k div{display:flex;flex-direction:column;gap:2px}
+  .settings-panel.ma-gv-dlg{max-width:460px;height:auto;overflow:hidden;--gv:var(--neg);--gv-soft:var(--neg-soft)}
+  .settings-panel.ma-gv-dlg.is-on{--gv:var(--btn);--gv-soft:var(--btn-soft)}
+  .ma-gv-top{display:flex;align-items:flex-start;gap:14px;padding:20px 20px 14px 22px}
+  .ma-gv-ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--gv-soft);color:var(--gv)}
+  .ma-gv-ic svg{width:20px;height:20px}
+  .ma-gv-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .ma-gv-who small{font-size:12px;font-weight:500;color:var(--gv)}
+  .ma-gv-who h2{margin:0;font-size:16px;font-weight:600;color:var(--ink);line-height:1.35;word-break:break-all}
+  .ma-gv-who p{margin:0;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ma-gv-top .settings-close{flex:none;margin:-4px -6px 0 0}
+  .ma-gv-body{padding:0 22px 18px;display:flex;flex-direction:column;gap:12px}
+  .ma-gv-warn{margin:0;padding:10px 12px;border-radius:10px;background:var(--neg-soft);color:var(--neg);font-size:12.5px;font-weight:500;line-height:1.5}
+  .ma-gv-k{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:26px 14px 12px;border:1px solid var(--line);border-radius:12px}
+  .ma-gv-k .cap{position:absolute;top:9px;left:14px;font-size:11px;font-weight:500;color:var(--mute)}
+  .ma-gv-k div{display:flex;flex-direction:column;gap:2px;min-width:0}
   .ma-gv-k small{font-size:11.5px;color:var(--mute)}
-  .ma-gv-k b{font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
-  .ma-gv-note{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;line-height:1.55;color:var(--body)}
+  .ma-gv-k b{font-size:17px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ma-gv-imp{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px}
+  .ma-gv-imp div{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:12px;background:var(--bg)}
+  .ma-gv-imp b{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ma-gv-imp b i{font-style:normal;font-size:12px;font-weight:500;margin-left:2px;color:var(--mute)}
+  .ma-gv-imp small{font-size:11.5px;color:var(--mute)}
+  .ma-gv-imp div.is-hot{background:var(--gv-soft)}
+  .ma-gv-imp div.is-hot b{color:var(--gv)}
+  .ma-gv-note{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.55;color:var(--mute)}
   .ma-gv-note b{font-weight:600;color:var(--ink)}
-  .ma-gv-ok{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer}
-  .ma-gv-pw{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink)}
-  .ma-gv-pw span{flex:none;color:var(--mute);font-size:12.5px}
-  .ma-gv-pw .ui-field{flex:1;min-width:0}
-  .ma-gv-pw .ui-field.is-err{border-color:var(--neg)}
-  .ma-gv-msg{margin:0;padding:10px 12px;border-radius:8px;background:var(--bg);font-size:12.5px;line-height:1.55;color:var(--body)}
-  .ma-gv-foot{display:flex;justify-content:flex-end;gap:8px}
+  .ma-gv-confirm{display:flex;flex-direction:column;gap:10px;padding:16px 22px 18px;border-top:1px solid var(--line);background:var(--bg)}
+  .ma-gv-ok{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer;user-select:none}
+  .ma-gv-ok input{width:16px;height:16px;margin:0;accent-color:var(--gv)}
+  .ma-gv-confirm .ui-field.ma-gv-secret{width:100%;background:var(--paper);-webkit-text-security:disc;text-security:disc;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+  .ma-gv-confirm .ma-gv-secret::placeholder{letter-spacing:0}
+  .ma-gv-confirm .ma-gv-secret.is-err{border-color:var(--neg)}
+  .ma-gv-msg{margin:-2px 0 0;font-size:12.5px;line-height:1.55;color:var(--body)}
+  .ma-gv-msg.is-err{color:var(--neg)}
+  .ma-gv-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:2px}
+  .ma-gv-foot .ui-btn[data-go]{min-width:120px}
+  .ma-gv-foot .ui-btn.danger[data-go]:not(:disabled){background:var(--neg);color:var(--paper)}
+  .ma-gv-foot .ui-btn[data-go]:disabled{opacity:.5}
   @media (max-width:640px){ .ma-gv li{grid-template-columns:auto minmax(0,1fr) auto} .ma-gv li b,.ma-gv li .st{display:none} }
   .ma-asset-ads h4{margin:2px 0 10px;font-size:13px;font-weight:600;color:var(--ink)}
   .ma-asset-ads ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
@@ -19442,55 +19463,69 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const box=cardBox&&!cardBox.hidden&&cardBox.querySelector('[data-gvbox]'); if(box&&curCard) box.outerHTML=gvHtml(curCard);
     paintList(acc());
   }
-  /* 확인 창 · 최근 7일 숫자 + 무엇이 함께 멈추는지(캠페인 → 세트·광고, 세트 → 광고, 같은 세트에 남는 광고) + 학습 안내 ·
-     확인 칸을 체크해야 실행 단추가 켜진다 · 캠페인 끄기는 영향이 커서 빨간 띠로 한 번 더 알린다 */
+  /* 확인 창(10-23 · 같은 날 사용자 요청으로 다시 다듬음) · 위: 무엇을 켜고 끄는지(단계·이름·속한 곳) → 최근 7일 숫자 →
+     함께 멈추는 것(숫자 칸) → 안내 → 아래 확인 칸(체크 + 비밀번호 + 실행) · 캠페인 끄기는 빨간 띠로 한 번 더 알린다 ·
+     비밀번호 칸은 브라우저가 "비밀번호를 저장할까요?"를 띄우지 않도록 type=password 대신 글자를 점으로 가리는 일반 칸으로 둔다 */
+  const GV_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.4 6.6a8 8 0 1 0 11.2 0"/></svg>';
   function gvAsk(t){
     if(!t||!gvCan()||!gvOk(t.st)) return;
     const a=acc(), cur=a&&a.currency, off=t.st==='ACTIVE', D=a.adDaily||{}, days=Object.keys(D).sort().slice(-7), m=[0,0,0];
     days.forEach(d=>t.ids.forEach(id=>{ const v=D[d][id]; if(v){ m[0]+=v[0]; m[1]+=v[1]; m[2]+=v[2]; } }));
     const ads=a.ads||[], sets=a.adsets||[], camps=a.campaigns||[], ON='ACTIVE';
     const C=camps.find(y=>y.id===t.c), S=sets.find(y=>y.id===t.s), nm=GV_LV[t.lv];
-    const notes=[];
+    const cells=[], notes=[];   /* cells = [이름, 숫자, 강조] · 함께 멈추는 것 */
     if(off){
       if(t.lv==='campaign'){ const ns=sets.filter(y=>y.c===t.id&&y.st===ON).length, na=ads.filter(y=>y.c===t.id&&y.st===ON).length;
-        notes.push('<b>이 캠페인 안의 게재 중 세트 '+ns+'개 · 광고 '+na+'개가 모두 멈춥니다.</b>'); }
+        if(ns||na){ cells.push(['함께 멈추는 세트',ns,1],['함께 멈추는 광고',na,1]); }
+        else notes.push('이 캠페인 안에 지금 게재 중인 세트·광고가 없습니다. 캠페인 스위치만 꺼집니다.'); }
       if(t.lv==='adset'){ const na=ads.filter(y=>y.s===t.id&&y.st===ON).length, left=sets.filter(y=>y.c===t.c&&y.id!==t.id&&y.st===ON).length;
-        notes.push('이 세트의 게재 중 광고 <b>'+na+'개</b>가 멈춥니다.');
-        notes.push(left?'같은 캠페인에 게재 중인 세트 <b>'+left+'개</b>가 남습니다.':'<b>같은 캠페인에 게재 중인 세트가 더 없습니다.</b>'); }
+        cells.push(['함께 멈추는 광고',na,1],['캠페인에 남는 세트',left,left?0:1]);
+        if(!left) notes.push('<b>같은 캠페인에 게재 중인 세트가 더 없습니다.</b> 캠페인 전체가 멈춥니다.'); }
       if(t.lv==='asset'){ const na=ads.filter(y=>t.ids.includes(y.id)&&y.st===ON).length;
-        notes.push('이 소재를 쓴 게재 중 광고 <b>'+na+'개</b>를 모두 끕니다. 광고 하나만 끄려면 소재를 눌러 팝업의 게재 관리에서 끕니다.'); }
+        cells.push(['함께 끄는 광고',na,1]);
+        notes.push('이 소재를 쓴 광고를 모두 끕니다. 광고 하나만 끄려면 소재를 눌러 팝업의 게재 관리에서 끕니다.'); }
       if(t.lv==='ad'){ const left=ads.filter(y=>y.s===t.s&&y.id!==t.id&&y.st===ON).length;
-        notes.push(left?'같은 세트에 게재 중인 광고 <b>'+left+'개</b>가 남습니다.':'<b>같은 세트에 게재 중인 광고가 더 없습니다.</b> 이 세트는 광고가 모두 멈춥니다.'); }
+        cells.push(['세트에 남는 광고',left,left?0:1]);
+        if(!left) notes.push('<b>같은 세트에 게재 중인 광고가 더 없습니다.</b> 이 세트는 광고가 모두 멈춥니다.'); }
     }else{
       if(t.lv==='campaign') notes.push('캠페인만 켭니다. 안에서 따로 꺼 둔 세트·광고는 꺼진 채로 있습니다.');
       if(t.lv==='adset'&&C&&C.st!==ON) notes.push('<b>캠페인이 꺼져 있어</b> 세트를 켜도 게재되지 않습니다.');
       if(t.lv==='ad'&&S&&S.st!==ON) notes.push('<b>광고 세트가 꺼져 있어</b> 광고를 켜도 게재되지 않습니다.');
-      if(t.lv==='asset'){ const na=ads.filter(y=>t.ids.includes(y.id)&&y.st==='PAUSED').length; notes.push('이 소재를 쓴 꺼진 광고 <b>'+na+'개</b>를 켭니다.'); }
+      if(t.lv==='asset'){ const na=ads.filter(y=>t.ids.includes(y.id)&&y.st==='PAUSED').length; cells.push(['함께 켜는 광고',na,0]); }
     }
     notes.push('껐다 켜기를 자주 하면 메타가 성과를 다시 배우느라 한동안 효율이 흔들릴 수 있습니다.');
-    notes.push('누르고 1분 안팎 뒤에 메타에 반영됩니다. 누가 언제 바꿨는지 기록이 남습니다.');
+    notes.push('누르고 1분 안팎 뒤에 메타에 반영되고, 누가 언제 바꿨는지 기록이 남습니다.');
     const where=t.lv==='campaign'?'':t.lv==='adset'?(C?'캠페인 · '+C.name:''):(S?'세트 · '+S.name:'');
+    const roas=m[0]?Math.round(m[1]/m[0]*100):null;
     const dlg=document.createElement('div');
     dlg.className='settings-overlay ma-gv-ov';
-    dlg.innerHTML='<div class="settings-panel ma-gv-dlg" role="alertdialog" aria-modal="true" aria-labelledby="maGvT"><div class="settings-head"><h2 id="maGvT">'+nm+'을(를) '+(off?'끕니다':'켭니다')+'</h2>'
-      +'<button class="settings-close" type="button" aria-label="닫기">✕</button></div><div class="ma-gv-body">'
+    dlg.innerHTML='<div class="settings-panel ma-gv-dlg '+(off?'is-off':'is-on')+'" role="alertdialog" aria-modal="true" aria-labelledby="maGvT">'
+      +'<div class="ma-gv-top"><span class="ma-gv-ic">'+GV_ICON+'</span><div class="ma-gv-who"><small>'+nm+' '+(off?'끄기':'켜기')+'</small>'
+      +'<h2 id="maGvT" title="'+esc(t.name)+'">'+esc(t.name)+'</h2>'+(where?'<p title="'+esc(where)+'">'+esc(where)+'</p>':'')+'</div>'
+      +'<button class="settings-close" type="button" aria-label="닫기">✕</button></div>'
+      +'<div class="ma-gv-body">'
       +(off&&t.lv==='campaign'?'<p class="ma-gv-warn">캠페인 전체를 끕니다. 안의 세트와 광고가 한꺼번에 멈춥니다.</p>':'')
-      +'<p class="nm">'+esc(t.name)+'</p>'+(where?'<p class="set">'+esc(where)+'</p>':'')
-      +'<div class="ma-gv-k"><div><small>최근 7일 광고비</small><b>'+money(m[0],cur)+'</b></div><div><small>ROAS</small><b>'+(m[0]?Math.round(m[1]/m[0]*100)+'%':'-')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
+      +'<div class="ma-gv-k"><span class="cap">최근 7일</span><div><small>광고비</small><b>'+money(m[0],cur)+'</b></div><div><small>ROAS</small><b>'+(roas==null?'-':roas+'%')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
+      +(cells.length?'<div class="ma-gv-imp">'+cells.map(c=>'<div class="'+(c[2]?'is-hot':'')+'"><b>'+int(c[1])+'<i>개</i></b><small>'+c[0]+'</small></div>').join('')+'</div>':'')
       +'<ul class="ma-gv-note">'+notes.map(n=>'<li>'+n+'</li>').join('')+'</ul>'
-      +'<label class="ma-gv-ok"><input type="checkbox"> 위 내용을 확인했습니다</label>'
-      +'<label class="ma-gv-pw"><span>비밀번호</span><input type="password" class="ui-field" inputmode="numeric" autocomplete="off" placeholder="광고 켜기·끄기 비밀번호"></label>'
+      +'</div>'
+      +'<div class="ma-gv-confirm">'
+      +'<label class="ma-gv-ok"><input type="checkbox"><span>위 내용을 확인했습니다</span></label>'
+      +'<input type="text" class="ui-field ma-gv-secret" name="gv-'+Math.random().toString(36).slice(2,8)+'" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="numeric"'
+      +' data-lpignore="true" data-1p-ignore data-form-type="other" aria-label="켜기·끄기 비밀번호" placeholder="켜기·끄기 비밀번호">'
       +'<p class="ma-gv-msg" hidden></p>'
-      +'<div class="ma-gv-foot"><button type="button" class="ui-btn ghost" data-x>취소</button><button type="button" class="ui-btn '+(off?'danger':'primary')+'" data-go disabled>'+nm+' '+(off?'끄기':'켜기')+'</button></div></div></div>';
+      +'<div class="ma-gv-foot"><button type="button" class="ui-btn ghost" data-x>취소</button><button type="button" class="ui-btn '+(off?'danger':'primary')+'" data-go disabled>'+nm+' '+(off?'끄기':'켜기')+'</button></div>'
+      +'</div></div>';
     document.body.appendChild(dlg);
     /* Esc 는 이 확인 창만 닫는다(뒤의 소재 팝업은 그대로) */
     const onKey=e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } };
     const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
     document.addEventListener('keydown',onKey,true);
     const go=dlg.querySelector('[data-go]'), msg=dlg.querySelector('.ma-gv-msg'), label=go.textContent,
-          ok=dlg.querySelector('.ma-gv-ok input'), pw=dlg.querySelector('.ma-gv-pw input');
+          ok=dlg.querySelector('.ma-gv-ok input'), pw=dlg.querySelector('.ma-gv-secret');
     const ready=()=>{ go.disabled=!(ok.checked&&pw.value.trim()); };
-    ok.addEventListener('change',ready); pw.addEventListener('input',()=>{ pw.classList.remove('is-err'); ready(); });
+    ok.addEventListener('change',()=>{ ready(); if(ok.checked) pw.focus(); });
+    pw.addEventListener('input',()=>{ pw.classList.remove('is-err'); msg.hidden=true; ready(); });
     pw.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!go.disabled){ e.preventDefault(); go.click(); } });
     dlg.addEventListener('click',async e=>{
       if(e.target===dlg||e.target.closest('.settings-close')||e.target.closest('[data-x]')) return close();
@@ -19498,13 +19533,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       go.disabled=true; go.textContent='확인 중…';
       let right=false; try{ right=(await gvHash(pw.value.trim()))===GV_LOCK.hash; }catch(err){ console.error(err); }
       if(!right){
-        msg.hidden=false; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent=label;
+        msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent=label;
         pw.value=''; pw.classList.add('is-err'); pw.focus(); ready(); return;
       }
       go.textContent='보내는 중…';
       const res=await gvSend(t,off?'PAUSED':'ACTIVE');
+      pw.value='';
       if(res.ok){ GV_PEND[t.id]={to:off?'PAUSED':'ACTIVE',at:Date.now()}; close(); gvRepaint(); return; }
-      msg.hidden=false; msg.textContent=res.msg; go.textContent=label;
+      msg.hidden=false; msg.className='ma-gv-msg'; msg.textContent=res.msg; go.textContent=label; ready();
     });
   }
   /* 켜기·끄기 비밀번호(사용자 요청 10-23) · 공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적는다(보안로그 잠금과 같은 방식, 소금만 다름) ·
