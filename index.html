@@ -2939,15 +2939,6 @@ window.BAROYAM_FONT=(function(){
   .ma-asset-open{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
   .ma-one{grid-template-columns:260px;flex:none}
   .ma-asset-ads{flex:1;min-width:240px}
-  /* 소재 팝업 · 게재 관리(광고 켜기·끄기 · 10-23) */
-  .ma-gv ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-  .ma-gv li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto 44px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--body)}
-  .ma-gv li:first-child{border-top:0;padding-top:2px}
-  .ma-gv .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ma-gv .st{font-size:11.5px;color:var(--mute);white-space:nowrap}
-  .ma-gv li.is-on .st{color:var(--pos)}
-  .ma-gv b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .ma-gv .sw{justify-self:end;display:flex}
   .ma-sw-pend{font-size:11px;color:var(--btn);white-space:nowrap}
   .ma-sw-no{color:var(--mute)}
   .ma-table th.ma-swcol,.ma-table td.ma-swcol{width:58px;text-align:center;padding-left:4px;padding-right:4px;cursor:default}
@@ -2992,7 +2983,6 @@ window.BAROYAM_FONT=(function(){
   .ma-gv-foot .ui-btn[data-go]{min-width:120px}
   .ma-gv-foot .ui-btn.danger[data-go]:not(:disabled){background:var(--neg);color:var(--paper)}
   .ma-gv-foot .ui-btn[data-go]:disabled{opacity:.5}
-  @media (max-width:640px){ .ma-gv li{grid-template-columns:auto minmax(0,1fr) auto} .ma-gv li b,.ma-gv li .st{display:none} }
   .ma-asset-ads h4{margin:2px 0 10px;font-size:13px;font-weight:600;color:var(--ink)}
   .ma-asset-ads ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .ma-asset-ads li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--body)}
@@ -19028,7 +19018,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
         +bdHtml+tgBox
         +(l.script?'<div class="ma-sec"><h4>대본</h4><div class="ma-pv-script">'+esc(l.script)+'</div></div>':'')
-        +gvHtml(r)
         +txBox
         +'</div></div>';
     };
@@ -19436,17 +19425,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const ids=lv==='campaign'?ads.filter(y=>y.c===o.id).map(y=>y.id):lv==='adset'?ads.filter(y=>y.s===o.id).map(y=>y.id):lv==='asset'?(o.adIds||[]):[o.id];
     return {lv,id:o.id,name:o.name,st:o.st,c:o.c,s:o.s,ids};
   }
-  function gvHtml(r){
-    const a=acc(), cur=a&&a.currency, can=gvCan();
-    return '<div class="ma-sec ma-gv" data-gvbox><h4>게재 관리 <small>광고 '+r.ads.length+'개'+(can?' · 광고마다 켜고 끕니다':' · 보기 전용(켜고 끄기는 팀장·권한 받은 회원)')+'</small></h4><ul>'
-      +r.ads.map((x,i)=>{
-        const on=x.st==='ACTIVE', sw=gvSwitch('ad',x.id,x.st,x.name);
-        return '<li class="'+(on?'is-on':'')+'"><span class="ma-st'+stCls(x.st)+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span>'
-          +'<span class="st">'+esc(GV_PEND[x.id]?'처리 중':stTxt(x.st))+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b>'+(sw==null?'':'<span class="sw">'+sw+'</span>')+'</li>';
-      }).join('')+'</ul></div>';
-  }
   function gvRepaint(){
-    const box=cardBox&&!cardBox.hidden&&cardBox.querySelector('[data-gvbox]'); if(box&&curCard) box.outerHTML=gvHtml(curCard);
     paintList(acc());
   }
   /* 확인 창(10-23 · 같은 날 사용자 요청으로 다시 다듬음) · 위: 무엇을 켜고 끄는지(단계·이름·속한 곳) → 최근 7일 숫자 →
@@ -19552,7 +19531,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 닫을 때 재생 중인 영상을 멈추려고 내용을 비운다 */
       const shut=()=>{ cardBox.hidden=true; cardBox.querySelector('.ma-dialog-body').innerHTML=''; };
       cardBox.addEventListener('click',e=>{ if(e.target===cardBox||e.target.closest('.settings-close')) shut(); });
-      cardBox.addEventListener('click',e=>{ const b=e.target.closest('[data-sw]'); if(!b||!curCard) return; const x=curCard.ads.find(y=>y.id===b.dataset.sw.split('|')[1]); if(x) gvAsk(gvTarget('ad',x)); });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
     }
     curCard=r;
