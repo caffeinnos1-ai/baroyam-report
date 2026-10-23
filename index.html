@@ -1390,7 +1390,7 @@ window.BAROYAM_ACCESS=(function(){
    화면을 가리는 수준의 잠금이다(서버는 로그인 여부만 본다) */
 window.BAROYAM_EDIT_ACCESS=(function(){
   const KEY='editAccess', LS='baroyam_edit_access_v1';
-  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'마진관리 수정',menu:'profit'}];
+  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'마진관리 수정',menu:'profit'},{k:'meta',name:'메타광고 켜기·끄기',menu:'perf'}];
   let map={};
   try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&o.map&&typeof o.map==='object') map=o.map; }catch(e){}
   const pending={};   /* 서버에 아직 못 올린 회원별 값 · 서버본을 받아도 이 값이 이긴다 */
@@ -2939,6 +2939,31 @@ window.BAROYAM_FONT=(function(){
   .ma-asset-open{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
   .ma-one{grid-template-columns:260px;flex:none}
   .ma-asset-ads{flex:1;min-width:240px}
+  /* 소재 팝업 · 게재 관리(광고 켜기·끄기 · 10-23) */
+  .ma-gv ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+  .ma-gv li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto 64px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--body)}
+  .ma-gv li:first-child{border-top:0;padding-top:2px}
+  .ma-gv .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-gv .st{font-size:11.5px;color:var(--mute);white-space:nowrap}
+  .ma-gv li.is-on .st{color:var(--pos)}
+  .ma-gv b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ma-gv .ui-btn{justify-self:end}
+  .ma-gv .no{font-size:11px;color:var(--mute);text-align:right;white-space:nowrap}
+  .ma-gv-ov{z-index:1300}
+  .settings-panel.ma-gv-dlg{max-width:440px;height:auto}
+  .ma-gv-body{padding:4px 22px 20px;display:flex;flex-direction:column;gap:12px}
+  .ma-gv-body .nm{margin:0;font-size:14px;font-weight:600;color:var(--ink);word-break:break-all}
+  .ma-gv-body .set{margin:-8px 0 0;font-size:12px;color:var(--mute);word-break:break-all}
+  .ma-gv-k{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:12px;border-radius:10px;background:var(--bg)}
+  .ma-gv-k div{display:flex;flex-direction:column;gap:2px}
+  .ma-gv-k small{font-size:11.5px;color:var(--mute)}
+  .ma-gv-k b{font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .ma-gv-note{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;line-height:1.55;color:var(--body)}
+  .ma-gv-note b{font-weight:600;color:var(--ink)}
+  .ma-gv-ok{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer}
+  .ma-gv-msg{margin:0;padding:10px 12px;border-radius:8px;background:var(--bg);font-size:12.5px;line-height:1.55;color:var(--body)}
+  .ma-gv-foot{display:flex;justify-content:flex-end;gap:8px}
+  @media (max-width:640px){ .ma-gv li{grid-template-columns:auto minmax(0,1fr) auto} .ma-gv li b,.ma-gv li .st{display:none} }
   .ma-asset-ads h4{margin:2px 0 10px;font-size:13px;font-weight:600;color:var(--ink)}
   .ma-asset-ads ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .ma-asset-ads li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--body)}
@@ -18740,7 +18765,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 게재일 · 같은 소재를 쓴 광고 중 가장 먼저 만든 광고의 날(서버 ads[].at = 메타 created_time) */
       const at=o.ads.map(x=>Date.parse(x.at||'')).filter(n=>n>0).sort((p,r)=>p-r)[0]||null;
       return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,img:top.img||(o.ads.find(x=>x.img)||{}).img||null,kind:o.kind,n:o.ads.length,at,
-        ads:o.ads.map(x=>({name:x.name,st:x.st,sp:sp(x),link:x.link||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
+        ads:o.ads.map(x=>({id:x.id,name:x.name,st:x.st,sp:sp(x),link:x.link||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -18974,7 +18999,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
         +bdHtml+tgBox
         +(l.script?'<div class="ma-sec"><h4>대본</h4><div class="ma-pv-script">'+esc(l.script)+'</div></div>':'')
-        +(r.ads.length>1?'<div class="ma-sec ma-asset-ads"><h4>같은 소재를 쓴 광고 '+r.ads.length+'개</h4><ul>'+r.ads.map(x=>'<li><span class="ma-st'+stCls(x.st)+'" title="'+esc(stTxt(x.st))+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b></li>').join('')+'</ul></div>':'')
+        +gvHtml(r)
         +txBox
         +'</div></div>';
     };
@@ -19355,7 +19380,64 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }catch(e){ console.warn('[메타광고] 영상 직접 받기 실패 · 드라이브 미리보기로',e&&e.message); fallback(); }
   }
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
-  let cardHtml=()=>'', cardBox=null;
+  let cardHtml=()=>'', cardBox=null, curCard=null;
+  /* 게재 관리 · 광고(소재) 하나씩 켜고 끄기(10-23 사용자 요청 · 신중해야 해서 목록이 아니라 팝업 안에만 · 확인 창을 거침) ·
+     지금은 화면만: 메타 토큰이 성과 보기(ads_read)뿐이라 실제로 바꾸지 않는다 → 권한(ads_management)·VPS 처리를 붙이면 gvSend 만 바꾼다 ·
+     켜고 끄기는 팀장·권한설정 "메타광고 켜기·끄기"(editAccess meta)를 받은 회원만 · 캠페인·세트가 꺼진 광고는 여기서 켜지 않는다 */
+  const GV_PEND={};   /* 광고 id → {to,at} · 보낸 뒤 서버가 처리할 때까지 */
+  const gvCan=()=>{ try{ return window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){ return false; } };
+  function gvHtml(r){
+    const a=acc(), cur=a&&a.currency, can=gvCan();
+    return '<div class="ma-sec ma-gv" data-gvbox><h4>게재 관리 <small>광고 '+r.ads.length+'개'+(can?' · 광고마다 켜고 끕니다':' · 보기 전용(켜고 끄기는 팀장·권한 받은 회원)')+'</small></h4><ul>'
+      +r.ads.map((x,i)=>{
+        const pend=GV_PEND[x.id], sw=x.st==='ACTIVE'||x.st==='PAUSED', on=x.st==='ACTIVE';
+        const btn=!can?'':pend?'<button type="button" class="ui-btn sm ghost" disabled>'+(pend.to==='PAUSED'?'끄는 중…':'켜는 중…')+'</button>'
+          :sw?'<button type="button" class="ui-btn sm '+(on?'danger':'soft')+'" data-gv="'+i+'">'+(on?'끄기':'켜기')+'</button>'
+          :'<span class="no" title="캠페인·세트가 꺼져 있거나 승인 문제가 있는 광고는 메타 광고관리자에서 다룹니다">여기서 못 바꿈</span>';
+        return '<li class="'+(on?'is-on':'')+'"><span class="ma-st'+stCls(x.st)+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span>'
+          +'<span class="st">'+esc(pend?'처리 중':stTxt(x.st))+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b>'+btn+'</li>';
+      }).join('')+'</ul></div>';
+  }
+  function gvRepaint(){ const box=cardBox&&cardBox.querySelector('[data-gvbox]'); if(box&&curCard) box.outerHTML=gvHtml(curCard); }
+  /* 확인 창 · 최근 7일 이 광고 숫자 + 같은 세트에 남는 게재 중 광고 수 + 학습 안내 · 확인 칸을 체크해야 실행 단추가 켜진다 */
+  function gvAsk(x){
+    if(!x||!gvCan()) return;
+    const a=acc(), cur=a&&a.currency, off=x.st==='ACTIVE', D=a.adDaily||{}, days=Object.keys(D).sort().slice(-7), m=[0,0,0];
+    days.forEach(d=>{ const v=D[d][x.id]; if(v){ m[0]+=v[0]; m[1]+=v[1]; m[2]+=v[2]; } });
+    const left=(a.ads||[]).filter(y=>y.s===x.s&&y.id!==x.id&&y.st==='ACTIVE').length, S=(a.adsets||[]).find(y=>y.id===x.s);
+    const dlg=document.createElement('div');
+    dlg.className='settings-overlay ma-gv-ov';
+    dlg.innerHTML='<div class="settings-panel ma-gv-dlg" role="alertdialog" aria-modal="true" aria-labelledby="maGvT"><div class="settings-head"><h2 id="maGvT">이 광고를 '+(off?'끕니다':'켭니다')+'</h2>'
+      +'<button class="settings-close" type="button" aria-label="닫기">✕</button></div><div class="ma-gv-body">'
+      +'<p class="nm">'+esc(x.name)+'</p>'+(S?'<p class="set">세트 · '+esc(S.name)+'</p>':'')
+      +'<div class="ma-gv-k"><div><small>최근 7일 광고비</small><b>'+money(m[0],cur)+'</b></div><div><small>ROAS</small><b>'+(m[0]?Math.round(m[1]/m[0]*100)+'%':'-')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
+      +'<ul class="ma-gv-note">'
+      +(off?'<li>'+(left?'같은 세트에 게재 중인 광고 <b>'+left+'개</b>가 남습니다.':'<b>같은 세트에 게재 중인 광고가 더 없습니다.</b> 이 세트는 광고가 모두 멈춥니다.')+'</li>':'')
+      +'<li>껐다 켜기를 자주 하면 메타가 성과를 다시 배우느라 한동안 효율이 흔들릴 수 있습니다.</li>'
+      +'<li>누르고 1분 안팎 뒤에 메타에 반영됩니다. 누가 언제 바꿨는지 기록이 남습니다.</li></ul>'
+      +'<label class="ma-gv-ok"><input type="checkbox"> 위 내용을 확인했습니다</label>'
+      +'<p class="ma-gv-msg" hidden></p>'
+      +'<div class="ma-gv-foot"><button type="button" class="ui-btn ghost" data-x>취소</button><button type="button" class="ui-btn '+(off?'danger':'primary')+'" data-go disabled>'+(off?'광고 끄기':'광고 켜기')+'</button></div></div></div>';
+    document.body.appendChild(dlg);
+    /* Esc 는 이 확인 창만 닫는다(뒤의 소재 팝업은 그대로) */
+    const onKey=e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } };
+    const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
+    document.addEventListener('keydown',onKey,true);
+    const go=dlg.querySelector('[data-go]'), msg=dlg.querySelector('.ma-gv-msg');
+    dlg.querySelector('input').addEventListener('change',e=>{ go.disabled=!e.target.checked; });
+    dlg.addEventListener('click',async e=>{
+      if(e.target===dlg||e.target.closest('.settings-close')||e.target.closest('[data-x]')) return close();
+      if(!e.target.closest('[data-go]')||go.disabled) return;
+      go.disabled=true; go.textContent='보내는 중…';
+      const res=await gvSend(x,off?'PAUSED':'ACTIVE');
+      if(res.ok){ GV_PEND[x.id]={to:off?'PAUSED':'ACTIVE',at:Date.now()}; gvRepaint(); close(); return; }
+      msg.hidden=false; msg.textContent=res.msg; go.textContent=off?'광고 끄기':'광고 켜기';
+    });
+  }
+  /* 실제로 보내는 곳 · 아직 연결 전(메타 권한 ads_management 를 받으면 brand-files metaads/req 에 {ad,to,by} 를 올려 VPS 가 처리) */
+  async function gvSend(x,to){
+    return {ok:false,msg:'아직 메타와 연결되지 않아 실제로 바뀌지 않았습니다(화면 시험). 메타 광고 권한을 받은 뒤 연결합니다.'};
+  }
   function openCard(r){
     if(!cardBox){
       cardBox=document.createElement('div');
@@ -19366,8 +19448,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 닫을 때 재생 중인 영상을 멈추려고 내용을 비운다 */
       const shut=()=>{ cardBox.hidden=true; cardBox.querySelector('.ma-dialog-body').innerHTML=''; };
       cardBox.addEventListener('click',e=>{ if(e.target===cardBox||e.target.closest('.settings-close')) shut(); });
+      cardBox.addEventListener('click',e=>{ const b=e.target.closest('[data-gv]'); if(b&&curCard) gvAsk(curCard.ads[+b.dataset.gv]); });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
     }
+    curCard=r;
     cardBox.querySelector('#maCardT').textContent=r.name;
     cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r);
     cardBox.hidden=false;
