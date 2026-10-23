@@ -3969,7 +3969,7 @@ window.BAROYAM_FONT=(function(){
   .pf-pane[data-pf-pane="rocket"]>.pf-card{border:0;padding:0;background:none}
   #view-profit:has([data-pf-pane="rocket"]:not([hidden])) .plan-hero{--hero-accent:var(--coupang);
     background:color-mix(in srgb,var(--coupang) 6%,var(--paper));border-color:color-mix(in srgb,var(--coupang) 16%,var(--line))}
-  #view-profit.pf-ro :is(#pfRkAdd,#pfRkCols){display:none}
+  #view-profit.pf-ro :is(#pfRkAdd,#pfRkCols,#pfCalcCols){display:none}
   /* 배너 제목 왼쪽 판매처 로고 · 그 탭이 보일 때만(마진표는 로고를 아는 판매처일 때만 src 가 있음) */
   .plan-hero .pf-title{display:flex;align-items:center;gap:10px}
   .pf-chan-logo{display:none;width:30px;height:30px;flex:none;border-radius:8px;object-fit:cover}
@@ -11002,6 +11002,7 @@ window.BAROYAM_FONT=(function(){
               <input class="ui-field sm" id="pfCalcQ" placeholder="상품·옵션 검색" aria-label="상품·옵션 검색">
               <button type="button" class="ui-chip" id="pfAdOnly" aria-pressed="false">광고 중만</button>
               <span class="pf-grow"></span>
+              <button type="button" class="ui-btn sm ghost" id="pfCalcCols" aria-haspopup="listbox" title="이 판매처 표에 보일 칸 고르기">칸 설정</button>
               <button type="button" class="ui-btn sm primary" id="pfRowAdd">+ 상품 등록</button>
               <datalist id="pfCalcBrandList"></datalist>
             </div>
@@ -20579,7 +20580,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     return st;
   }
   const normCost=v=>{ v=obj(v); return Object.assign({},v,{items:obj(v.items),ship:obj(v.ship),chans:obj(v.chans),labor:obj(v.labor),extAd:obj(v.extAd),cats:obj(v.cats),manual:obj(v.manual)}); };
-  const normCalc=v=>{ v=obj(v); return Object.assign({},v,{sheets:obj(v.sheets),prods:obj(v.prods),rows:obj(v.rows)}); };
+  const normCalc=v=>{ v=obj(v); return Object.assign({},v,{sheets:obj(v.sheets),prods:obj(v.prods),rows:obj(v.rows),hide:obj(v.hide)}); };
   /* 처음 한 번 · 붙여 준 계산표(홀떡피자 메타광고)에 있던 판매처 수수료·프라임 발송비로 시작한다 · id 를 고정해 두 PC가 동시에 만들어도 겹치지 않는다 */
   const COST=store('profit_cost_v1',normCost,()=>normCost({
     ship:{'ship-a':{id:'ship-a',name:'구간 1',fee:3600,ord:1},'ship-b':{id:'ship-b',name:'구간 2',fee:4070,ord:2}},
@@ -20817,6 +20818,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   $('pfCalcQ').addEventListener('input',e=>{ qP=e.target.value; paintCalc(); });
   $('pfAdOnly').addEventListener('click',()=>{ adOnly=!adOnly; paintCalc(); });
+  /* 칸 설정 · 옵션·⋯ 말고는 모두 숨길 수 있다 · 지금 판매처에만 적용 · 누를 때마다 보임/숨김을 바꾸고 목록은 열린 채 둔다 */
+  function calcColsMenu(){
+    const btn=$('pfCalcCols'), ch=curChan(); if(!ch) return;
+    const opts=COLS.filter(cl=>cl[0]!=='label'&&cl[0]!=='act').map(cl=>({value:cl[0],label:cl[1],sub:calcHidden(cl[0])?'숨김':'보임 ✓'}));
+    window.UI.menu(btn,opts,null,k=>{
+      if(!canEdit()) return;
+      const all=B().hide=Object.assign({},obj(B().hide)), h=all[ch]=Object.assign({},obj(all[ch]));
+      h[k]=!calcHidden(k);
+      CALC.mark(); paintCalc();
+      setTimeout(calcColsMenu,0);
+    });
+  }
+  $('pfCalcCols').addEventListener('click',e=>{ e.stopPropagation(); if(CALC.loaded&&COST.loaded) calcColsMenu(); });
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] · 비율 합 100 · 묶음 = 광고·판매처·옵션·수량·원가 / 가격 / 비용 / 계산 결과 */
   const COLS=[
     ['label','옵션',14,1],['qty','수량',5.5],['cost','원가',8.5],
@@ -20824,6 +20838,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     ['ship','배송비',5,1],['prime','프라임',6.5],['rate','수수료율',4],
     ['margin','마진',5.5,1,1],['mrate','마진률',4.5,0,1],['roas','최소 ROAS',4.5,0,1],['settle','정산예정금',6.5,0,1],['fee','수수료',4.5,0,1],['vat','부가세',4.5,0,1],
     ['act','',4,1]];
+  /* 칸 설정 · 판매처마다 숨길 칸(10-23 사용자 요청) · profit_calc_v1.hide = {판매처 id:{칸 열쇠:true}} · 숨겨도 계산에는 그대로 들어간다 */
+  const calcHidden=k=>!!obj(obj(B()&&B().hide)[curChan()])[k];
   function outCells(tr,r){
     const v=calc(r);
     const man=obj(r.ov);
@@ -20871,14 +20887,19 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     paintFilters(); paintChanTabs();
     const c=COST.data, list=view_();
     $('pfCalcEmpty').hidden=!!(live(c.items).length&&live(c.chans).length);
-    const cg='<colgroup>'+COLS.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
-    /* 대표 ROAS 단추 자리 · 마진·마진률·최소 ROAS 세 칸 바로 위(칸 폭 % 를 더해 왼쪽·폭을 정함) */
-    const kI=COLS.findIndex(cl=>cl[0]==='margin'), sumW=(i,j)=>COLS.slice(i,j).reduce((t,cl)=>t+cl[2],0);
-    const repPos='--pf-rep-l:'+sumW(0,kI)+'%;--pf-rep-w:'+sumW(kI,kI+3)+'%';
-    const headRow='<tr class="pf-head">'+COLS.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
+    /* 칸 설정에서 숨긴 칸은 머리글·줄 모두에서 뺀다 · 남은 칸이 폭을 나눠 갖는다 */
+    const COLS_=COLS.filter(cl=>!calcHidden(cl[0]));
+    const cg='<colgroup>'+COLS_.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
+    /* 대표 ROAS 단추 자리 · 보이는 마진·마진률·최소 ROAS 칸 바로 위(보이는 칸 폭 합에 대한 % · 셋 다 숨기면 그 자리 근처에 기본 폭) */
+    const KEY=/^(margin|mrate|roas)$/, totW=COLS_.reduce((t,cl)=>t+cl[2],0);
+    const kI=COLS_.findIndex(cl=>KEY.test(cl[0])||cl[0]==='settle'||cl[0]==='fee'||cl[0]==='vat'||cl[0]==='act');
+    const repL=COLS_.slice(0,kI).reduce((t,cl)=>t+cl[2],0)/totW*100, repW0=COLS_.filter(cl=>KEY.test(cl[0])).reduce((t,cl)=>t+cl[2],0)/totW*100;
+    const repW=repW0||14;
+    const repPos='--pf-rep-l:'+Math.min(repL,100-repW)+'%;--pf-rep-w:'+repW+'%';
+    const headRow='<tr class="pf-head">'+COLS_.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
     const H={}; COLS.forEach(cl=>{ H[cl[0]]=cl; });
     /* 칸 하나 · 묶음 첫 칸이면 진한 칼선(gs) · data-h 는 좁은 화면 카드에서 이름표로 쓴다 */
-    const td=(k,inner,cls)=>{ const cl=H[k], g=cl[3]&&k!==COLS[0][0];
+    const td=(k,inner,cls)=>{ if(calcHidden(k)) return ''; const cl=H[k], g=cl[3]&&k!==COLS[0][0];
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
     const row=(r,i,arr)=>{
       const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
