@@ -2965,6 +2965,10 @@ window.BAROYAM_FONT=(function(){
   .ma-gv-note{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;line-height:1.55;color:var(--body)}
   .ma-gv-note b{font-weight:600;color:var(--ink)}
   .ma-gv-ok{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);cursor:pointer}
+  .ma-gv-pw{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink)}
+  .ma-gv-pw span{flex:none;color:var(--mute);font-size:12.5px}
+  .ma-gv-pw .ui-field{flex:1;min-width:0}
+  .ma-gv-pw .ui-field.is-err{border-color:var(--neg)}
   .ma-gv-msg{margin:0;padding:10px 12px;border-radius:8px;background:var(--bg);font-size:12.5px;line-height:1.55;color:var(--body)}
   .ma-gv-foot{display:flex;justify-content:flex-end;gap:8px}
   @media (max-width:640px){ .ma-gv li{grid-template-columns:auto minmax(0,1fr) auto} .ma-gv li b,.ma-gv li .st{display:none} }
@@ -19053,18 +19057,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return '<td class="ma-atcol" title="'+d+' 게재 시작"><span class="ma-days-pill">'+n+'일째</span></td>'; };
     const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
-    /* 켜기·끄기 칸(10-23) · 팀장·권한 받은 회원만 · 누르면 확인 창(gvAsk) */
+    /* 켜기·끄기 칸(10-23) · 맨 오른쪽(사용자 요청) · 팀장·권한 받은 회원만 · 누르면 확인 창(gvAsk) · 실행은 비밀번호를 맞혀야 */
     const swOn=gvCan(), swLv=tab==='asset'?'asset':tab;
     shownSw={};
-    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+(swOn?'<th class="ma-swcol" title="게재 켜기·끄기">켜기</th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재',cls:'ma-atcol'}]:[],[{k:'bud',l:'일예산',cls:'ma-budcol'}],COLS).map(c=>{ const on=sortKey===c.k;
-      return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+'</tr></thead>';
+    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재',cls:'ma-atcol'}]:[],[{k:'bud',l:'일예산',cls:'ma-budcol'}],COLS).map(c=>{ const on=sortKey===c.k;
+      return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+(swOn?'<th class="ma-swcol" title="게재 켜기·끄기 · 누르면 확인 창과 비밀번호">ON/OFF</th>':'')+'</tr></thead>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
       const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
       const isA=tab==='asset';
       if(isA) shownRows[r.id]=r;
       const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.st,r.name)+'</td>'):'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.st,r.name)+'</td>'):'')+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+body+'</tbody></table></div>'+more;
@@ -19474,6 +19478,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +'<div class="ma-gv-k"><div><small>최근 7일 광고비</small><b>'+money(m[0],cur)+'</b></div><div><small>ROAS</small><b>'+(m[0]?Math.round(m[1]/m[0]*100)+'%':'-')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
       +'<ul class="ma-gv-note">'+notes.map(n=>'<li>'+n+'</li>').join('')+'</ul>'
       +'<label class="ma-gv-ok"><input type="checkbox"> 위 내용을 확인했습니다</label>'
+      +'<label class="ma-gv-pw"><span>비밀번호</span><input type="password" class="ui-field" inputmode="numeric" autocomplete="off" placeholder="광고 켜기·끄기 비밀번호"></label>'
       +'<p class="ma-gv-msg" hidden></p>'
       +'<div class="ma-gv-foot"><button type="button" class="ui-btn ghost" data-x>취소</button><button type="button" class="ui-btn '+(off?'danger':'primary')+'" data-go disabled>'+nm+' '+(off?'끄기':'켜기')+'</button></div></div></div>';
     document.body.appendChild(dlg);
@@ -19481,16 +19486,34 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const onKey=e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } };
     const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
     document.addEventListener('keydown',onKey,true);
-    const go=dlg.querySelector('[data-go]'), msg=dlg.querySelector('.ma-gv-msg'), label=go.textContent;
-    dlg.querySelector('input').addEventListener('change',e=>{ go.disabled=!e.target.checked; });
+    const go=dlg.querySelector('[data-go]'), msg=dlg.querySelector('.ma-gv-msg'), label=go.textContent,
+          ok=dlg.querySelector('.ma-gv-ok input'), pw=dlg.querySelector('.ma-gv-pw input');
+    const ready=()=>{ go.disabled=!(ok.checked&&pw.value.trim()); };
+    ok.addEventListener('change',ready); pw.addEventListener('input',()=>{ pw.classList.remove('is-err'); ready(); });
+    pw.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!go.disabled){ e.preventDefault(); go.click(); } });
     dlg.addEventListener('click',async e=>{
       if(e.target===dlg||e.target.closest('.settings-close')||e.target.closest('[data-x]')) return close();
       if(!e.target.closest('[data-go]')||go.disabled) return;
-      go.disabled=true; go.textContent='보내는 중…';
+      go.disabled=true; go.textContent='확인 중…';
+      let right=false; try{ right=(await gvHash(pw.value.trim()))===GV_LOCK.hash; }catch(err){ console.error(err); }
+      if(!right){
+        msg.hidden=false; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent=label;
+        pw.value=''; pw.classList.add('is-err'); pw.focus(); ready(); return;
+      }
+      go.textContent='보내는 중…';
       const res=await gvSend(t,off?'PAUSED':'ACTIVE');
       if(res.ok){ GV_PEND[t.id]={to:off?'PAUSED':'ACTIVE',at:Date.now()}; close(); gvRepaint(); return; }
       msg.hidden=false; msg.textContent=res.msg; go.textContent=label;
     });
+  }
+  /* 켜기·끄기 비밀번호(사용자 요청 10-23) · 공개 저장소라 원문 대신 PBKDF2-SHA256(200000회) 결과만 적는다(보안로그 잠금과 같은 방식, 소금만 다름) ·
+     화면에서 막는 잠금이라 서버 쪽 처리(VPS)를 붙일 때는 그쪽에서도 권한을 다시 본다 */
+  const GV_LOCK={salt:'baroyam-metagv-v1',iterations:200000,hash:'ada047aa49bde37c64ecd88bb288ecdfe07b48bce5272d969e9e8f7dfc4d56cb'};
+  async function gvHash(v){
+    const enc=new TextEncoder();
+    const key=await crypto.subtle.importKey('raw',enc.encode(String(v)),'PBKDF2',false,['deriveBits']);
+    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(GV_LOCK.salt),iterations:GV_LOCK.iterations,hash:'SHA-256'},key,256);
+    return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
   }
   /* 실제로 보내는 곳 · 아직 연결 전(메타 권한 ads_management 를 받으면 brand-files metaads/req 에 {lv,id,to,by} 를 올려 VPS 가 처리) */
   async function gvSend(t,to){
