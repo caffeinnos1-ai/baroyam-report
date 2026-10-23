@@ -2941,14 +2941,18 @@ window.BAROYAM_FONT=(function(){
   .ma-asset-ads{flex:1;min-width:240px}
   /* 소재 팝업 · 게재 관리(광고 켜기·끄기 · 10-23) */
   .ma-gv ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-  .ma-gv li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto 64px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--body)}
+  .ma-gv li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto 44px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--body)}
   .ma-gv li:first-child{border-top:0;padding-top:2px}
   .ma-gv .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-gv .st{font-size:11.5px;color:var(--mute);white-space:nowrap}
   .ma-gv li.is-on .st{color:var(--pos)}
   .ma-gv b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .ma-gv .ui-btn{justify-self:end}
-  .ma-gv .no{font-size:11px;color:var(--mute);text-align:right;white-space:nowrap}
+  .ma-gv .sw{justify-self:end;display:flex}
+  .ma-sw-pend{font-size:11px;color:var(--btn);white-space:nowrap}
+  .ma-sw-no{color:var(--mute)}
+  .ma-table th.ma-swcol,.ma-table td.ma-swcol{width:58px;text-align:center;padding-left:4px;padding-right:4px;cursor:default}
+  .ma-list .ma-table th.ma-swcol{width:58px}
+  .ma-gv-warn{margin:0;padding:10px 12px;border-radius:8px;background:var(--neg-soft);color:var(--neg);font-size:12.5px;font-weight:500}
   .ma-gv-ov{z-index:1300}
   .settings-panel.ma-gv-dlg{max-width:440px;height:auto}
   .ma-gv-body{padding:4px 22px 20px;display:flex;flex-direction:column;gap:12px}
@@ -7048,6 +7052,14 @@ window.BAROYAM_FONT=(function(){
   .ui-tab[aria-selected="true"] .n,.ui-tab.active .n{color:var(--btn-soft-ink)}
   /* 칩 · 필터처럼 여러 개를 켰다 껐다 하는 알약 버튼 · 켜짐은 aria-pressed="true" 또는 .on */
   .ui-chips{display:flex;flex-wrap:wrap;gap:6px}
+  /* 켜기·끄기 스위치 · <button class="ui-switch" role="switch" aria-checked="true|false"> · 누를 때 바로 바꾸지 말고 확인이 필요하면 부르는 쪽이 묻는다 */
+  .ui-switch{all:unset;box-sizing:border-box;position:relative;display:inline-block;width:34px;height:20px;border-radius:99px;background:var(--line);cursor:pointer;transition:background .15s;flex:none;vertical-align:middle}
+  .ui-switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--paper);box-shadow:0 1px 2px rgba(0,0,0,.22);transition:transform .15s}
+  .ui-switch[aria-checked="true"]{background:var(--btn)}
+  .ui-switch[aria-checked="true"]::after{transform:translateX(14px)}
+  .ui-switch:hover{filter:brightness(.95)}
+  .ui-switch:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+  .ui-switch:disabled{opacity:.45;cursor:default}
   .ui-chips[hidden]{display:none}
   .ui-chip{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;
     border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--body);font-family:inherit;
@@ -19036,7 +19048,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return '<td class="ma-atcol" title="'+d+' 게재 시작"><span class="ma-days-pill">'+n+'일째</span></td>'; };
     const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
-    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재',cls:'ma-atcol'}]:[],[{k:'bud',l:'일예산',cls:'ma-budcol'}],COLS).map(c=>{ const on=sortKey===c.k;
+    /* 켜기·끄기 칸(10-23) · 팀장·권한 받은 회원만 · 누르면 확인 창(gvAsk) */
+    const swOn=gvCan(), swLv=tab==='asset'?'asset':tab;
+    shownSw={};
+    const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+(swOn?'<th class="ma-swcol" title="게재 켜기·끄기">켜기</th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재',cls:'ma-atcol'}]:[],[{k:'bud',l:'일예산',cls:'ma-budcol'}],COLS).map(c=>{ const on=sortKey===c.k;
       return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+'</tr></thead>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
@@ -19044,7 +19059,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const isA=tab==='asset';
       if(isA) shownRows[r.id]=r;
       const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.st,r.name)+'</td>'):'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+body+'</tbody></table></div>'+more;
@@ -19380,62 +19395,100 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }catch(e){ console.warn('[메타광고] 영상 직접 받기 실패 · 드라이브 미리보기로',e&&e.message); fallback(); }
   }
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
-  let cardHtml=()=>'', cardBox=null, curCard=null;
+  let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
   /* 게재 관리 · 광고(소재) 하나씩 켜고 끄기(10-23 사용자 요청 · 신중해야 해서 목록이 아니라 팝업 안에만 · 확인 창을 거침) ·
+     10-23 같은 날 사용자 요청으로 정밀성과 캠페인·광고 세트·소재 목록에도 켜기 칸(스위치)을 달았다(같은 확인 창) ·
      지금은 화면만: 메타 토큰이 성과 보기(ads_read)뿐이라 실제로 바꾸지 않는다 → 권한(ads_management)·VPS 처리를 붙이면 gvSend 만 바꾼다 ·
      켜고 끄기는 팀장·권한설정 "메타광고 켜기·끄기"(editAccess meta)를 받은 회원만 · 캠페인·세트가 꺼진 광고는 여기서 켜지 않는다 */
   const GV_PEND={};   /* 광고 id → {to,at} · 보낸 뒤 서버가 처리할 때까지 */
-  const gvCan=()=>{ try{ return window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){ return false; } };
+  function gvCan(){ try{ return window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){ return false; } }
+  const GV_LV={campaign:'캠페인',adset:'광고 세트',asset:'소재',ad:'광고'};
+  const gvOk=st=>st==='ACTIVE'||st==='PAUSED';   /* 여기서 바꿀 수 있는 상태 · 승인 거부·보관 등은 메타 광고관리자에서 */
+  /* 스위치 하나 · 권한이 없으면 null(부르는 쪽이 상태 점만 보임) */
+  function gvSwitch(lv,id,st,name){
+    if(!gvCan()) return null;
+    const pend=GV_PEND[id];
+    if(pend) return '<span class="ma-sw-pend">'+(pend.to==='PAUSED'?'끄는 중':'켜는 중')+'</span>';
+    if(!gvOk(st)) return '<span class="ma-sw-no" title="'+esc(stTxt(st))+' · 메타 광고관리자에서 다룹니다">–</span>';
+    const on=st==='ACTIVE';
+    return '<button type="button" class="ui-switch" role="switch" aria-checked="'+on+'" data-sw="'+lv+'|'+esc(id)+'" aria-label="'+esc(name)+' '+(on?'끄기':'켜기')+'" title="'+GV_LV[lv]+' '+(on?'끄기':'켜기')+'"></button>';
+  }
+  /* 끄고 켤 대상 · ids = 숫자를 더할 광고들 */
+  function gvTarget(lv,o){
+    const ads=(acc().ads||[]);
+    const ids=lv==='campaign'?ads.filter(y=>y.c===o.id).map(y=>y.id):lv==='adset'?ads.filter(y=>y.s===o.id).map(y=>y.id):lv==='asset'?(o.adIds||[]):[o.id];
+    return {lv,id:o.id,name:o.name,st:o.st,c:o.c,s:o.s,ids};
+  }
   function gvHtml(r){
     const a=acc(), cur=a&&a.currency, can=gvCan();
     return '<div class="ma-sec ma-gv" data-gvbox><h4>게재 관리 <small>광고 '+r.ads.length+'개'+(can?' · 광고마다 켜고 끕니다':' · 보기 전용(켜고 끄기는 팀장·권한 받은 회원)')+'</small></h4><ul>'
       +r.ads.map((x,i)=>{
-        const pend=GV_PEND[x.id], sw=x.st==='ACTIVE'||x.st==='PAUSED', on=x.st==='ACTIVE';
-        const btn=!can?'':pend?'<button type="button" class="ui-btn sm ghost" disabled>'+(pend.to==='PAUSED'?'끄는 중…':'켜는 중…')+'</button>'
-          :sw?'<button type="button" class="ui-btn sm '+(on?'danger':'soft')+'" data-gv="'+i+'">'+(on?'끄기':'켜기')+'</button>'
-          :'<span class="no" title="캠페인·세트가 꺼져 있거나 승인 문제가 있는 광고는 메타 광고관리자에서 다룹니다">여기서 못 바꿈</span>';
+        const on=x.st==='ACTIVE', sw=gvSwitch('ad',x.id,x.st,x.name);
         return '<li class="'+(on?'is-on':'')+'"><span class="ma-st'+stCls(x.st)+'"></span><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span>'
-          +'<span class="st">'+esc(pend?'처리 중':stTxt(x.st))+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b>'+btn+'</li>';
+          +'<span class="st">'+esc(GV_PEND[x.id]?'처리 중':stTxt(x.st))+'</span><b>'+(x.sp?money(x.sp,cur):'-')+'</b>'+(sw==null?'':'<span class="sw">'+sw+'</span>')+'</li>';
       }).join('')+'</ul></div>';
   }
-  function gvRepaint(){ const box=cardBox&&cardBox.querySelector('[data-gvbox]'); if(box&&curCard) box.outerHTML=gvHtml(curCard); }
-  /* 확인 창 · 최근 7일 이 광고 숫자 + 같은 세트에 남는 게재 중 광고 수 + 학습 안내 · 확인 칸을 체크해야 실행 단추가 켜진다 */
-  function gvAsk(x){
-    if(!x||!gvCan()) return;
-    const a=acc(), cur=a&&a.currency, off=x.st==='ACTIVE', D=a.adDaily||{}, days=Object.keys(D).sort().slice(-7), m=[0,0,0];
-    days.forEach(d=>{ const v=D[d][x.id]; if(v){ m[0]+=v[0]; m[1]+=v[1]; m[2]+=v[2]; } });
-    const left=(a.ads||[]).filter(y=>y.s===x.s&&y.id!==x.id&&y.st==='ACTIVE').length, S=(a.adsets||[]).find(y=>y.id===x.s);
+  function gvRepaint(){
+    const box=cardBox&&!cardBox.hidden&&cardBox.querySelector('[data-gvbox]'); if(box&&curCard) box.outerHTML=gvHtml(curCard);
+    paintList(acc());
+  }
+  /* 확인 창 · 최근 7일 숫자 + 무엇이 함께 멈추는지(캠페인 → 세트·광고, 세트 → 광고, 같은 세트에 남는 광고) + 학습 안내 ·
+     확인 칸을 체크해야 실행 단추가 켜진다 · 캠페인 끄기는 영향이 커서 빨간 띠로 한 번 더 알린다 */
+  function gvAsk(t){
+    if(!t||!gvCan()||!gvOk(t.st)) return;
+    const a=acc(), cur=a&&a.currency, off=t.st==='ACTIVE', D=a.adDaily||{}, days=Object.keys(D).sort().slice(-7), m=[0,0,0];
+    days.forEach(d=>t.ids.forEach(id=>{ const v=D[d][id]; if(v){ m[0]+=v[0]; m[1]+=v[1]; m[2]+=v[2]; } }));
+    const ads=a.ads||[], sets=a.adsets||[], camps=a.campaigns||[], ON='ACTIVE';
+    const C=camps.find(y=>y.id===t.c), S=sets.find(y=>y.id===t.s), nm=GV_LV[t.lv];
+    const notes=[];
+    if(off){
+      if(t.lv==='campaign'){ const ns=sets.filter(y=>y.c===t.id&&y.st===ON).length, na=ads.filter(y=>y.c===t.id&&y.st===ON).length;
+        notes.push('<b>이 캠페인 안의 게재 중 세트 '+ns+'개 · 광고 '+na+'개가 모두 멈춥니다.</b>'); }
+      if(t.lv==='adset'){ const na=ads.filter(y=>y.s===t.id&&y.st===ON).length, left=sets.filter(y=>y.c===t.c&&y.id!==t.id&&y.st===ON).length;
+        notes.push('이 세트의 게재 중 광고 <b>'+na+'개</b>가 멈춥니다.');
+        notes.push(left?'같은 캠페인에 게재 중인 세트 <b>'+left+'개</b>가 남습니다.':'<b>같은 캠페인에 게재 중인 세트가 더 없습니다.</b>'); }
+      if(t.lv==='asset'){ const na=ads.filter(y=>t.ids.includes(y.id)&&y.st===ON).length;
+        notes.push('이 소재를 쓴 게재 중 광고 <b>'+na+'개</b>를 모두 끕니다. 광고 하나만 끄려면 소재를 눌러 팝업의 게재 관리에서 끕니다.'); }
+      if(t.lv==='ad'){ const left=ads.filter(y=>y.s===t.s&&y.id!==t.id&&y.st===ON).length;
+        notes.push(left?'같은 세트에 게재 중인 광고 <b>'+left+'개</b>가 남습니다.':'<b>같은 세트에 게재 중인 광고가 더 없습니다.</b> 이 세트는 광고가 모두 멈춥니다.'); }
+    }else{
+      if(t.lv==='campaign') notes.push('캠페인만 켭니다. 안에서 따로 꺼 둔 세트·광고는 꺼진 채로 있습니다.');
+      if(t.lv==='adset'&&C&&C.st!==ON) notes.push('<b>캠페인이 꺼져 있어</b> 세트를 켜도 게재되지 않습니다.');
+      if(t.lv==='ad'&&S&&S.st!==ON) notes.push('<b>광고 세트가 꺼져 있어</b> 광고를 켜도 게재되지 않습니다.');
+      if(t.lv==='asset'){ const na=ads.filter(y=>t.ids.includes(y.id)&&y.st==='PAUSED').length; notes.push('이 소재를 쓴 꺼진 광고 <b>'+na+'개</b>를 켭니다.'); }
+    }
+    notes.push('껐다 켜기를 자주 하면 메타가 성과를 다시 배우느라 한동안 효율이 흔들릴 수 있습니다.');
+    notes.push('누르고 1분 안팎 뒤에 메타에 반영됩니다. 누가 언제 바꿨는지 기록이 남습니다.');
+    const where=t.lv==='campaign'?'':t.lv==='adset'?(C?'캠페인 · '+C.name:''):(S?'세트 · '+S.name:'');
     const dlg=document.createElement('div');
     dlg.className='settings-overlay ma-gv-ov';
-    dlg.innerHTML='<div class="settings-panel ma-gv-dlg" role="alertdialog" aria-modal="true" aria-labelledby="maGvT"><div class="settings-head"><h2 id="maGvT">이 광고를 '+(off?'끕니다':'켭니다')+'</h2>'
+    dlg.innerHTML='<div class="settings-panel ma-gv-dlg" role="alertdialog" aria-modal="true" aria-labelledby="maGvT"><div class="settings-head"><h2 id="maGvT">'+nm+'을(를) '+(off?'끕니다':'켭니다')+'</h2>'
       +'<button class="settings-close" type="button" aria-label="닫기">✕</button></div><div class="ma-gv-body">'
-      +'<p class="nm">'+esc(x.name)+'</p>'+(S?'<p class="set">세트 · '+esc(S.name)+'</p>':'')
+      +(off&&t.lv==='campaign'?'<p class="ma-gv-warn">캠페인 전체를 끕니다. 안의 세트와 광고가 한꺼번에 멈춥니다.</p>':'')
+      +'<p class="nm">'+esc(t.name)+'</p>'+(where?'<p class="set">'+esc(where)+'</p>':'')
       +'<div class="ma-gv-k"><div><small>최근 7일 광고비</small><b>'+money(m[0],cur)+'</b></div><div><small>ROAS</small><b>'+(m[0]?Math.round(m[1]/m[0]*100)+'%':'-')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
-      +'<ul class="ma-gv-note">'
-      +(off?'<li>'+(left?'같은 세트에 게재 중인 광고 <b>'+left+'개</b>가 남습니다.':'<b>같은 세트에 게재 중인 광고가 더 없습니다.</b> 이 세트는 광고가 모두 멈춥니다.')+'</li>':'')
-      +'<li>껐다 켜기를 자주 하면 메타가 성과를 다시 배우느라 한동안 효율이 흔들릴 수 있습니다.</li>'
-      +'<li>누르고 1분 안팎 뒤에 메타에 반영됩니다. 누가 언제 바꿨는지 기록이 남습니다.</li></ul>'
+      +'<ul class="ma-gv-note">'+notes.map(n=>'<li>'+n+'</li>').join('')+'</ul>'
       +'<label class="ma-gv-ok"><input type="checkbox"> 위 내용을 확인했습니다</label>'
       +'<p class="ma-gv-msg" hidden></p>'
-      +'<div class="ma-gv-foot"><button type="button" class="ui-btn ghost" data-x>취소</button><button type="button" class="ui-btn '+(off?'danger':'primary')+'" data-go disabled>'+(off?'광고 끄기':'광고 켜기')+'</button></div></div></div>';
+      +'<div class="ma-gv-foot"><button type="button" class="ui-btn ghost" data-x>취소</button><button type="button" class="ui-btn '+(off?'danger':'primary')+'" data-go disabled>'+nm+' '+(off?'끄기':'켜기')+'</button></div></div></div>';
     document.body.appendChild(dlg);
     /* Esc 는 이 확인 창만 닫는다(뒤의 소재 팝업은 그대로) */
     const onKey=e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } };
     const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
     document.addEventListener('keydown',onKey,true);
-    const go=dlg.querySelector('[data-go]'), msg=dlg.querySelector('.ma-gv-msg');
+    const go=dlg.querySelector('[data-go]'), msg=dlg.querySelector('.ma-gv-msg'), label=go.textContent;
     dlg.querySelector('input').addEventListener('change',e=>{ go.disabled=!e.target.checked; });
     dlg.addEventListener('click',async e=>{
       if(e.target===dlg||e.target.closest('.settings-close')||e.target.closest('[data-x]')) return close();
       if(!e.target.closest('[data-go]')||go.disabled) return;
       go.disabled=true; go.textContent='보내는 중…';
-      const res=await gvSend(x,off?'PAUSED':'ACTIVE');
-      if(res.ok){ GV_PEND[x.id]={to:off?'PAUSED':'ACTIVE',at:Date.now()}; gvRepaint(); close(); return; }
-      msg.hidden=false; msg.textContent=res.msg; go.textContent=off?'광고 끄기':'광고 켜기';
+      const res=await gvSend(t,off?'PAUSED':'ACTIVE');
+      if(res.ok){ GV_PEND[t.id]={to:off?'PAUSED':'ACTIVE',at:Date.now()}; close(); gvRepaint(); return; }
+      msg.hidden=false; msg.textContent=res.msg; go.textContent=label;
     });
   }
-  /* 실제로 보내는 곳 · 아직 연결 전(메타 권한 ads_management 를 받으면 brand-files metaads/req 에 {ad,to,by} 를 올려 VPS 가 처리) */
-  async function gvSend(x,to){
+  /* 실제로 보내는 곳 · 아직 연결 전(메타 권한 ads_management 를 받으면 brand-files metaads/req 에 {lv,id,to,by} 를 올려 VPS 가 처리) */
+  async function gvSend(t,to){
     return {ok:false,msg:'아직 메타와 연결되지 않아 실제로 바뀌지 않았습니다(화면 시험). 메타 광고 권한을 받은 뒤 연결합니다.'};
   }
   function openCard(r){
@@ -19448,7 +19501,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       /* 닫을 때 재생 중인 영상을 멈추려고 내용을 비운다 */
       const shut=()=>{ cardBox.hidden=true; cardBox.querySelector('.ma-dialog-body').innerHTML=''; };
       cardBox.addEventListener('click',e=>{ if(e.target===cardBox||e.target.closest('.settings-close')) shut(); });
-      cardBox.addEventListener('click',e=>{ const b=e.target.closest('[data-gv]'); if(b&&curCard) gvAsk(curCard.ads[+b.dataset.gv]); });
+      cardBox.addEventListener('click',e=>{ const b=e.target.closest('[data-sw]'); if(!b||!curCard) return; const x=curCard.ads.find(y=>y.id===b.dataset.sw.split('|')[1]); if(x) gvAsk(gvTarget('ad',x)); });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
     }
     curCard=r;
@@ -19548,6 +19601,13 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const G=window.baroyamGoogleToken; if(!(G&&G.saved&&G.saved())) return;   /* 권한 창은 누를 때만 */
     fetchVideo(l.drive).catch(()=>{});
   });
+  /* 켜기·끄기 스위치 · 줄 누르기(소재 팝업)보다 먼저 잡는다 */
+  $('maTable').addEventListener('click',e=>{
+    const sw=e.target.closest('[data-sw]'); if(!sw) return;
+    e.stopPropagation(); e.preventDefault();
+    const [lv,id]=sw.dataset.sw.split('|'), r=shownSw[id];
+    if(r) gvAsk(gvTarget(lv,r));
+  },true);
   $('maTable').addEventListener('click',e=>{
     const th=e.target.closest('th[data-k]');
     if(th){ const k=th.dataset.k; if(sortKey===k) sortDir=-sortDir; else { sortKey=k; sortDir=-1; } paintList(acc()); return; }
