@@ -19076,8 +19076,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const I=(a.insights&&a.insights[range])||{};
     const cName=Object.fromEntries((a.campaigns||[]).map(c=>[c.id,c.name]));
     const inC=x=>!selC.size||selC.has(x.c), inS=x=>!selS.size||selS.has(x.s);
-    if(tab==='campaign') return (a.campaigns||[]).map(c=>({id:c.id,c:c.id,name:c.name,st:c.st,sub:'',m:(I.campaign||{})[c.id]}));
-    if(tab==='adset') return (a.adsets||[]).filter(inC).map(x=>({id:x.id,c:x.c,s:x.id,name:x.name,st:x.st,sub:cName[x.c]||'',m:(I.adset||{})[x.id]}));
+    if(tab==='campaign') return (a.campaigns||[]).map(c=>({id:c.id,c:c.id,name:c.name,st:c.st,sw:c.sw,sub:'',m:(I.campaign||{})[c.id]}));
+    if(tab==='adset') return (a.adsets||[]).filter(inC).map(x=>({id:x.id,c:x.c,s:x.id,name:x.name,st:x.st,sw:x.sw,sub:cName[x.c]||'',m:(I.adset||{})[x.id]}));
     const ads=(a.ads||[]).filter(x=>inC(x)&&inS(x)), IA=I.ad||{};
     const g={};
     ads.forEach(x=>{
@@ -19091,8 +19091,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const top=o.ads.slice().sort((p,r)=>sp(r)-sp(p))[0];
       /* 게재일 · 같은 소재를 쓴 광고 중 가장 먼저 만든 광고의 날(서버 ads[].at = 메타 created_time) */
       const at=o.ads.map(x=>Date.parse(x.at||'')).filter(n=>n>0).sort((p,r)=>p-r)[0]||null;
-      return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',thumb:o.thumb,img:top.img||(o.ads.find(x=>x.img)||{}).img||null,kind:o.kind,n:o.ads.length,at,
-        ads:o.ads.map(x=>({id:x.id,name:x.name,st:x.st,sp:sp(x),link:x.link||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
+      /* sw = 광고관리자 스위치 · 하나라도 켜져 있으면 켬 · 저장값에 sw 가 없던 예전 값은 st 로 */
+      const swA=o.ads.map(x=>x.sw||x.st);
+      return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',sw:swA.includes('ACTIVE')?'ACTIVE':swA.includes('PAUSED')?'PAUSED':swA[0],thumb:o.thumb,img:top.img||(o.ads.find(x=>x.img)||{}).img||null,kind:o.kind,n:o.ads.length,at,
+        ads:o.ads.map(x=>({id:x.id,name:x.name,st:x.st,sw:x.sw,sp:sp(x),link:x.link||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -19373,7 +19375,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const isA=tab==='asset';
       if(isA) shownRows[r.id]=r;
       const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.st,r.name)+'</td>'):'')+'</tr>';
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.sw||r.st,r.name)+'</td>'):'')+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+body+'</tbody></table></div>'+more;
@@ -19719,7 +19721,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function gvCan(){ try{ const a=acc(); return !!(a&&a.manage)&&window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){ return false; } }
   const GV_LV={campaign:'캠페인',adset:'광고 세트',asset:'소재',ad:'광고'};
   const gvOk=st=>st==='ACTIVE'||st==='PAUSED';   /* 여기서 바꿀 수 있는 상태 · 승인 거부·보관 등은 메타 광고관리자에서 */
-  /* 스위치 하나 · 권한이 없으면 null(부르는 쪽이 상태 점만 보임) */
+  /* 스위치 하나 · 권한이 없으면 null(부르는 쪽이 상태 점만 보임) ·
+     st 는 광고관리자 스위치 값(sw · ACTIVE/PAUSED)을 넘긴다 · 게재 상태(effective_status)로 그리면 처리 중·검토 중인 켜진 광고가 꺼짐으로 보인다(10-26) */
   function gvSwitch(lv,id,st,name){
     if(!gvCan()) return null;
     const pend=GV_PEND[id];
@@ -19732,7 +19735,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   function gvTarget(lv,o){
     const ads=(acc().ads||[]);
     const ids=lv==='campaign'?ads.filter(y=>y.c===o.id).map(y=>y.id):lv==='adset'?ads.filter(y=>y.s===o.id).map(y=>y.id):lv==='asset'?(o.adIds||[]):[o.id];
-    return {lv,id:o.id,name:o.name,st:o.st,c:o.c,s:o.s,ids};
+    return {lv,id:o.id,name:o.name,st:o.sw||o.st,c:o.c,s:o.s,ids};
   }
   function gvRepaint(){
     paintList(acc());
@@ -19765,7 +19768,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       if(t.lv==='campaign') notes.push('캠페인만 켭니다. 안에서 따로 꺼 둔 세트·광고는 꺼진 채로 있습니다.');
       if(t.lv==='adset'&&C&&C.st!==ON) notes.push('<b>캠페인이 꺼져 있어</b> 세트를 켜도 게재되지 않습니다.');
       if(t.lv==='ad'&&S&&S.st!==ON) notes.push('<b>광고 세트가 꺼져 있어</b> 광고를 켜도 게재되지 않습니다.');
-      if(t.lv==='asset'){ const na=ads.filter(y=>t.ids.includes(y.id)&&y.st==='PAUSED').length; cells.push(['함께 켜는 광고',na,0]); }
+      if(t.lv==='asset'){ const na=ads.filter(y=>t.ids.includes(y.id)&&(y.sw||y.st)==='PAUSED').length; cells.push(['함께 켜는 광고',na,0]); }
     }
     notes.push('껐다 켜기를 자주 하면 메타가 성과를 다시 배우느라 한동안 효율이 흔들릴 수 있습니다.');
     notes.push('누르고 1분 안팎 뒤에 메타에 반영되고, 누가 언제 바꿨는지 기록이 남습니다.');
@@ -19837,9 +19840,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const r=await fetch(u,{cache:'no-store'}).catch(()=>null);
     return r&&r.ok?r.json().catch(()=>null):null;
   }
-  function gvApply(stMap){
+  function gvApply(stMap,swMap){
     const a=acc(); if(!a||!stMap) return;
-    ['campaigns','adsets','ads'].forEach(k=>(a[k]||[]).forEach(x=>{ if(stMap[x.id]) x.st=stMap[x.id]; }));
+    ['campaigns','adsets','ads'].forEach(k=>(a[k]||[]).forEach(x=>{ if(stMap[x.id]) x.st=stMap[x.id]; if(swMap&&swMap[x.id]) x.sw=swMap[x.id]; }));
   }
   async function gvSend(t,to,pw){
     const DB=window.BAROYAM_DB, a=acc();
@@ -19855,7 +19858,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         await new Promise(r=>setTimeout(r,2000));
         const res=await gvRes(name), sec=(Date.now()-t0)/1000;
         if(res&&(res.state==='done'||res.state==='failed')){
-          delete GV_PEND[t.id]; gvApply(res.st); gvRepaint();
+          delete GV_PEND[t.id]; gvApply(res.st,res.sw); gvRepaint();
           return res.state==='done'?{ok:true}:{ok:false,msg:res.message||'바꾸지 못했습니다.'};
         }
         if(!res&&sec>120){ delete GV_PEND[t.id]; gvRepaint(); return {ok:false,msg:'서버가 요청을 받지 않았습니다. 잠시 뒤 다시 해 주세요.'}; }
