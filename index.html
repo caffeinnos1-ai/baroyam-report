@@ -13777,7 +13777,7 @@ window.CsGuide=(function(){
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
     ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너 로고(지금 가져오기 · 오늘 숫자만)는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
-    ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1. 채널 관리에서 구글 계정의 유튜브 채널을 여러 개 연결합니다(content_channels_v1).'],
+    ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, 대본 서비스(VPS·PC)가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1. 채널 관리에서 구글 계정의 유튜브 채널을 여러 개 연결합니다(content_channels_v1).'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
 
@@ -13798,7 +13798,7 @@ window.CsGuide=(function(){
     ['slack',3,'슬랙','#공지사항 · 개인 메시지','김비서와 당일판매 보고가 나가는 곳입니다.'],
     ['ezadmin',3,'이지어드민','재고 · 당일판매','현 재고조회(I100)·당일판매분요약표를 읽습니다. VPS 는 자동 로그인, 크롬 확장은 사람이 로그인.'],
     ['ytcap',3,'영상 자막 서비스','VPS yt-captions','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아(한국어가 아니면 번역) ytcap/res 에 답합니다.'],
-    ['cwriter',3,'대본 서비스','PC content_writer.js','토큰 없이 그 PC 에 로그인된 Claude Code(구독)를 부릅니다. brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자를 돌려 cmjob/res 에 답합니다. PC 가 켜져 있어야 움직입니다(로그인하면 자동 실행).'],
+    ['cwriter',3,'대본 서비스','VPS · PC content_writer.js','Claude 구독으로 Claude Code 를 부릅니다(VPS 는 구독 토큰 · PC 는 로그인된 Claude). brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자를 돌려 cmjob/res 에 답합니다. VPS 가 늘 켜 두고, PC 도 켜져 있으면 먼저 잡은 쪽이 씁니다.'],
     ['claude',3,'Claude','PC 의 구독 로그인','대본 서비스가 Claude Code 로 부릅니다(API 키·토큰 없음 · 그 PC 에 로그인된 계정).'],
     ['youtube',3,'유튜브','자막 원본 · Data API','자막은 국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘). 채널 관리는 연결할 채널을 고를 때 Data API 로 채널 이름·사진·구독자를 읽습니다(youtube.readonly).'],
     ['gha',3,'GitHub Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 Supabase 트렌드 표에 쌓습니다.'],
@@ -17910,7 +17910,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
 /* 유튜브콘텐츠 › 새 영상 만들기 · 대본 만들기(직접 기획)
    대본 만들기 → brand-files 버킷 cmjob/req/<작업id>.<회차>.<임의>.json 에 주문(지침·지난 회차 피드백 포함)을 올리면
-   PC 의 대본 서비스(caffeinnos-automation/content_writer.js · 로그인하면 자동 실행)가 그 PC 에 로그인된 Claude(구독 · 도구 없음)로 기획자 → 검수자를 돌려
+   대본 서비스(caffeinnos-automation/content_writer.js · VPS systemd content-writer + PC 시작프로그램)가 Claude 구독(도구 없음)으로 기획자 → 검수자를 돌려
    cmjob/res/<같은 이름> 에 진행 상황과 결과를 적는다 · 화면은 그 결과를 작업 기록에 옮겨 담는다(대본 서비스가 7일 뒤 res 를 지움).
    저장: 작업 content_jobs_v1 = {jobs:{id:{id,at,by,input,rounds:{n:{…}},cur,pick,del}}}
    saveMerged 로 서버 최신본 위에 "그 작업 하나"만 고쳐 얹는다(남이 만든 작업을 덮지 않음) */
