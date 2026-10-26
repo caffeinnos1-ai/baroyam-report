@@ -5319,6 +5319,9 @@ window.BAROYAM_FONT=(function(){
     padding:9px 19px;border-radius:999px;color:var(--body);background:var(--bg);
     border:1.5px solid var(--line);letter-spacing:-.2px;transition:background .15s,color .15s,border-color .15s}
   .hero-view-tab:hover{border-color:var(--indigo);color:var(--indigo)}
+  #contentTabs .hero-view-tab .n{margin-left:6px;font-weight:600;opacity:.7}
+  #contentTabs .hero-view-tab .n.is-todo{opacity:1;color:var(--btn)}
+  #contentTabs .hero-view-tab.active .n{color:inherit}
   .hero-view-tab.active{background:var(--indigo-lite);color:#fff;border-color:var(--indigo-lite);
     box-shadow:0 8px 18px -8px rgba(194,106,65,.3)}
   /* 전환 탭이 없는 대시보드도 매출·트렌드처럼 배너 위에 탭 줄 높이만큼 여백을 둔다 ·
@@ -8302,7 +8305,7 @@ window.BAROYAM_FONT=(function(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11v2.5c0 .8.7 1.5 1.5 1.5H7l4.5 4V5L7 9H5.5C4.7 9 4 9.7 4 10.5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
           <span>퍼포먼스마케팅</span>
         </button>
-        <button class="sb-item" type="button" data-view="content" id="sbContentBtn" aria-haspopup="true" aria-expanded="false">
+        <button class="sb-item" type="button" data-view="content" id="sbContentBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M10 9.2v5.6l4.8-2.8Z"/></svg>
           <span>유튜브콘텐츠</span>
         </button>
@@ -8410,25 +8413,6 @@ window.BAROYAM_FONT=(function(){
       </div>
     </nav>
 
-    <nav class="sb-subnav" id="sbContentSubnav" hidden aria-label="유튜브콘텐츠 하위 메뉴">
-      <div class="sb-subnav-head">
-        <div class="sb-subnav-title">유튜브콘텐츠</div>
-      </div>
-      <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item" data-content="channels">채널 관리</button>
-      </div>
-      <div class="sb-subnav-sep"></div>
-      <div class="sb-subnav-caption">제작</div>
-      <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item active" data-content="make" title="대본 고르기를 기다리는 영상"><span class="sb-subnav-label">새 영상 만들기</span><b class="sb-subnav-count is-todo">1</b></button>
-      </div>
-      <div class="sb-subnav-sep"></div>
-      <div class="sb-subnav-caption">영상</div>
-      <div class="sb-subnav-flat">
-        <button type="button" class="sb-subnav-item" data-content="approve" title="승인을 기다리는 영상"><span class="sb-subnav-label">승인 요청</span><b class="sb-subnav-count is-todo" id="contentApproveCount">5</b></button>
-        <button type="button" class="sb-subnav-item" data-content="done"><span class="sb-subnav-label">완성본</span><b class="sb-subnav-count" id="contentDoneCount">3</b></button>
-      </div>
-    </nav>
 
 
     <nav class="sb-subnav" id="sbManualSubnav" hidden aria-label="메뉴얼가이드 중분류">
@@ -10632,6 +10616,19 @@ window.BAROYAM_FONT=(function(){
         </section>
       </div><!-- /view-perf -->
       <div id="view-content" style="display:none">
+        <!-- 유튜브콘텐츠 · 인스타콘텐츠처럼 배너 위 단추 줄(채널 관리 / 새 영상 만들기 / 승인 요청 / 완성본) + 흰 판 넓게 · 고른 단추는 baroyam_content_tab 으로 기억 -->
+        <div class="hero-view-tabs" id="contentTabs" role="tablist" aria-label="유튜브콘텐츠 화면">
+          <button type="button" class="hero-view-tab" role="tab" data-content="channels" data-sub="채널마다 타깃·업로드 시각·편집 스타일을 정합니다.">채널 관리</button>
+          <button type="button" class="hero-view-tab active" role="tab" data-content="make" data-sub="기획을 적고 대본 후보를 받아 고릅니다." title="대본 고르기를 기다리는 영상">새 영상 만들기<b class="n is-todo">1</b></button>
+          <button type="button" class="hero-view-tab" role="tab" data-content="approve" data-sub="편집이 끝난 영상을 보고 승인하거나 반려합니다." title="승인을 기다리는 영상">승인 요청<b class="n is-todo" id="contentApproveCount">5</b></button>
+          <button type="button" class="hero-view-tab" role="tab" data-content="done" data-sub="승인한 영상의 제목·설명을 다듬고 업로드를 준비합니다.">완성본<b class="n" id="contentDoneCount">3</b></button>
+        </div>
+        <section class="section" style="padding-top:0">
+          <div class="plan-hero">
+            <div class="ptag">유튜브콘텐츠</div>
+            <div class="ptitle" id="contentViewTitle">새 영상 만들기</div>
+            <div class="psub" id="contentViewSub">기획을 적고 대본 후보를 받아 고릅니다.</div>
+          </div>
         <!-- 새 영상 만들기 · 직접 기획 → 대본 만들기를 누르면 PC 의 대본 서비스가 Claude 로 기획자(대본 후보) → 검수자(점수·순위)를 돌려 돌려준다 ·
              주고받기는 brand-files 버킷 cmjob/req·res, 작업 기록은 app_settings content_jobs_v1 ·
              편집·승인·예약은 아직 없다(단계 줄에 "준비 중") -->
@@ -10980,6 +10977,7 @@ window.BAROYAM_FONT=(function(){
           </div>
         </div>
         <div class="profit-empty" data-content-pane="other" hidden>준비 중입니다</div>
+        </section>
       </div><!-- /view-content -->
       <!-- 손익·마진 관리 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-profit" style="display:none">
@@ -15247,14 +15245,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
     /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브·계정관리)은 1720px 를 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account'||v==='content');
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
-    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta'||v==='perf');   /* 인스타콘텐츠·퍼포먼스마케팅도 손익처럼 흰 판을 넓게 */
+    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta'||v==='perf'||v==='content');   /* 인스타콘텐츠·퍼포먼스마케팅·유튜브콘텐츠도 손익처럼 흰 판을 넓게 */
     if(v==='perf'&&window.baroyamMetaAds) window.baroyamMetaAds.open();
     if(v==='profit'&&window.baroyamProfitOpen) window.baroyamProfitOpen();
     if(v==='ops'&&window.baroyamOpsOpen) window.baroyamOpsOpen();
     if(v==='insta'&&window.baroyamInstaOpen) window.baroyamInstaOpen();
+    if(v==='content'&&window.baroyamContentOpen) window.baroyamContentOpen();
     /* 숨어 있을 때는 높이를 잴 수 없으니, 프로젝트 화면으로 들어올 때 상세 필터 높이를 다시 잰다 */
     if(v==='project'&&window.pjSyncBoardHeight) window.pjSyncBoardHeight();
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
@@ -17624,29 +17623,27 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 })();
 
 
-/* 콘텐츠마케팅 사이드탭 · 퍼포먼스마케팅과 같은 방식 · 제작 / 영상(승인 요청·완성본 개수) / 채널(화면 내용은 아직 제목만 있다) */
+/* 유튜브콘텐츠 · 배너 위 단추 네 개(채널 관리 / 새 영상 만들기 / 승인 요청 / 완성본) · 인스타콘텐츠와 같은 방식 · 고른 것은 이 브라우저에 기억한다 */
 (function(){
-  const btn=document.getElementById('sbContentBtn');
-  const subnav=document.getElementById('sbContentSubnav');
-  const title=document.getElementById('contentViewTitle');
-  if(!btn||!subnav) return;
-  const items=[...subnav.querySelectorAll('[data-content]')];
+  const box=document.getElementById('contentTabs');
+  if(!box) return;
+  const title=document.getElementById('contentViewTitle'), sub=document.getElementById('contentViewSub');
+  const items=[...box.querySelectorAll('[data-content]')];
+  let cur=items.find(b=>b.dataset.content==='make')||items[0];
+  try{ const k=localStorage.getItem('baroyam_content_tab'); cur=items.find(b=>b.dataset.content===k)||cur; }catch(e){}
   function pick(el){
-    items.forEach(b=>b.classList.toggle('active',b===el));
-    if(title) title.textContent=(el.querySelector('.sb-subnav-label')||el).textContent.trim();
-    document.querySelectorAll('#view-content [data-content-pane]').forEach(p=>{
-      const has=!!document.querySelector('#view-content [data-content-pane="'+el.dataset.content+'"]');
-      p.hidden=p.dataset.contentPane!==(has?el.dataset.content:'other');
-    });
+    cur=el;
+    items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
+    title.textContent=el.childNodes[0].textContent.trim(); sub.textContent=el.dataset.sub||'';
+    const has=!!document.querySelector('#view-content [data-content-pane="'+el.dataset.content+'"]');
+    document.querySelectorAll('#view-content [data-content-pane]').forEach(p=>{ p.hidden=p.dataset.contentPane!==(has?el.dataset.content:'other'); });
   }
-  btn.addEventListener('click',()=>{ subnav.hidden=false; btn.setAttribute('aria-expanded','true'); });
-  items.forEach(el=>el.addEventListener('click',()=>{ window.activateView('content'); pick(el); }));
-  function close(){ subnav.hidden=true; btn.setAttribute('aria-expanded','false'); }
-  document.querySelectorAll('.sb-item[data-view],.sb-subitem').forEach(other=>{
-    if(other!==btn) other.addEventListener('click',close);
-  });
-  const salesToggleBtn=document.getElementById('sbSalesToggle');
-  if(salesToggleBtn) salesToggleBtn.addEventListener('click',close);
+  pick(cur);
+  items.forEach(el=>el.addEventListener('click',()=>{
+    try{ localStorage.setItem('baroyam_content_tab',el.dataset.content); }catch(e){}
+    pick(el);
+  }));
+  window.baroyamContentOpen=function(){ pick(cur); };
 })();
 
 /* 콘텐츠마케팅 › 채널 관리 · 설정 판 펼치기/접기와 칩 한 개 고르기만(모양 확인용 · 저장하지 않음) */
@@ -17798,7 +17795,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const h=b.closest('.cm-ch').querySelector('h3');
     if(h) st.form.channel=h.childNodes[0].textContent.trim();
     keepForm();
-    const it=document.querySelector('#sbContentSubnav [data-content="make"]'); if(it) it.click();
+    const it=document.querySelector('#contentTabs [data-content="make"]'); if(it){ window.activateView('content'); it.click(); }
     paintForm(); $('cwProduct').focus();
   });
   $('cwModes').addEventListener('click',e=>{
@@ -17931,7 +17928,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const open=all.filter(j=>!j.pick), picked=all.filter(j=>j.pick);
     $('cwNOpen').textContent=open.length; $('cwNPicked').textContent=picked.length;
     const todo=open.filter(j=>{ const r=lastRound(j); return r&&r.state==='done'; }).length;
-    const cnt=document.querySelector('#sbContentSubnav [data-content="make"] .sb-subnav-count');
+    const cnt=document.querySelector('#contentTabs [data-content="make"] .n');
     if(cnt){ cnt.textContent=todo; cnt.style.display=todo?'':'none'; }
     const list=st.tab==='picked'?picked:open;
     if(!list.find(j=>j.id===st.sel)) st.sel=list[0]?list[0].id:null;
@@ -18083,7 +18080,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
 
   /* 화면을 열 때 읽는다 · 다른 PC가 만든 작업도 보이게 탭으로 돌아오면 다시 읽는다 */
-  const sbItem=document.querySelector('#sbContentSubnav [data-content="make"]');
+  const sbItem=document.querySelector('#contentTabs [data-content="make"]');
   if(sbItem) sbItem.addEventListener('click',()=>load(true));
   const sbBtn=$('sbContentBtn'); if(sbBtn) sbBtn.addEventListener('click',()=>load());
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&st.loaded&&!pane.hidden&&!st.editing&&!pending.length) load(true); });
