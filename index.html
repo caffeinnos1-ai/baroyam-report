@@ -3328,6 +3328,26 @@ window.BAROYAM_FONT=(function(){
   .cm-ch-styles .cm-thumb{width:100%;aspect-ratio:4/5}
   .cm-ch-styles figcaption{margin-top:3px;font-size:11px;color:var(--mute)}
   .cm-ch-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cm-ch[hidden]{display:none}
+  /* 연결한 유튜브 채널 카드 · 채널 사진·이름·구독자 */
+  .cm-yt-who{display:flex;align-items:center;gap:12px;margin:-4px 0 14px;min-width:0}
+  .cm-yt-av{width:44px;height:44px;border-radius:99px;flex:none;object-fit:cover;background:var(--bg);border:1px solid var(--line);
+    display:grid;place-items:center;font-size:16px;font-weight:600;color:var(--body)}
+  .cm-yt-who div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .cm-yt-who b{font-size:14px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cm-yt-who small{font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cm-yt-who a{color:inherit;text-decoration:none}
+  .cm-yt-who a:hover{text-decoration:underline}
+  .cm-ch .cm-unset{color:var(--mute)}
+  .cm-yt-body{flex:1;min-height:0;overflow-y:auto;padding:16px 22px 8px;display:flex;flex-direction:column;gap:14px}
+  .cm-yt-body [hidden]{display:none}
+  .cm-yt-pick .ui-btn svg{width:18px;height:18px;margin-right:6px}
+  .cm-yt-pick .cm-lead{margin-bottom:12px}
+  .cm-yt-found{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:var(--ui-r);background:var(--bg)}
+  .cm-yt-found .cm-yt-who{margin:0;flex:1}
+  .cm-yt-found .ui-btn{flex:none}
+  .cm-yt-dlg .cm-msg.is-warn{color:var(--neg)}
+  .cm-yt-dlg .ui-btn[hidden]{display:none}
   .cm-ch-styles .cm-frame{width:100%;aspect-ratio:4/5;border-radius:8px}
   .cm-ch-styles .cm-hook b{font-size:11px;white-space:nowrap}
   .cm-ch-styles .cm-hook small{font-size:7px}
@@ -10871,11 +10891,11 @@ window.BAROYAM_FONT=(function(){
         </div>
         <!-- 채널 관리 · 지금은 모양만(눌러도 동작하지 않음) · 채널 카드 격자 + 채널 추가 -->
         <div class="cm-channels" data-content-pane="channels" hidden>
-          <p class="cm-box cm-note">임시 화면이에요. 유튜브 API 연동 전이라 <b>채널 연결과 업로드는 모의로</b> 동작해요. 실제 유튜브에는 아무것도 올라가지 않아요.<br>
+          <p class="cm-box cm-note"><b>+ 유튜브 채널 연결</b>을 누르면 구글 계정에서 채널을 골라 등록해요(채널마다 한 번씩 · 여러 개 가능). 업로드는 아직 모의라 실제 유튜브에는 아무것도 올라가지 않아요.<br>
             흐름: 새 영상 만들기에서 주문 → (직접 기획이면 대본 고르기) → 편집 → 승인 요청에서 승인·반려 → 승인하면 이 채널의 다음 빈 업로드 시각에 자동 예약 → 업로드.</p>
           <div class="cm-ch-grid">
-            <div class="cm-card cm-ch">
-              <h3>주부채널 <span class="cm-tag is-done">유튜브 연결됨 · 모의</span></h3>
+            <div class="cm-card cm-ch cm-demo">
+              <h3>주부채널 <span class="cm-tag is-done">예시 · 모의</span></h3>
               <dl class="cm-brief">
                 <div><dt>타깃</dt><dd>직장인 · 주부</dd></div>
                 <div><dt>업로드</dt><dd>매일 12:00 · 19:00</dd></div>
@@ -10900,8 +10920,8 @@ window.BAROYAM_FONT=(function(){
                 <button type="button" class="ui-btn primary" data-cw-new>이 채널로 새 영상</button>
               </div>
             </div>
-            <div class="cm-card cm-ch">
-              <h3>간편식덕후 <span class="cm-tag is-done">유튜브 연결됨 · 모의</span></h3>
+            <div class="cm-card cm-ch cm-demo">
+              <h3>간편식덕후 <span class="cm-tag is-done">예시 · 모의</span></h3>
               <dl class="cm-brief">
                 <div><dt>타깃</dt><dd>자취생 · 1인 가구</dd></div>
                 <div><dt>업로드</dt><dd>매일 18:00</dd></div>
@@ -10924,7 +10944,7 @@ window.BAROYAM_FONT=(function(){
                 <button type="button" class="ui-btn primary" data-cw-new>이 채널로 새 영상</button>
               </div>
             </div>
-            <button type="button" class="ui-btn soft cm-ch-add">+ 채널 추가</button>
+            <button type="button" class="ui-btn soft cm-ch-add" id="cmYtAdd">+ 유튜브 채널 연결</button>
           </div>
           <!-- 채널 설정 · 설정을 누르면 펼쳐진다(모양만 · 저장하지 않음) · 편집 스타일은 이 채널 영상을 늘 같은 모양으로 만들기 위한 값 -->
           <div class="cm-card cm-ch-set" id="cmChSet" hidden>
@@ -10999,6 +11019,35 @@ window.BAROYAM_FONT=(function(){
         </div>
         <div class="profit-empty" data-content-pane="other" hidden>준비 중입니다</div>
         </section>
+        <!-- 유튜브 채널 연결 창 · 구글 계정(브랜드 계정 포함)에서 채널을 하나 고르면 그 채널 정보를 보여 주고, 이름·타깃·업로드 시간을 적어 등록 ·
+             등록한 채널을 다시 열면(설정) 같은 창에서 고치거나 연결을 해제한다 -->
+        <div class="settings-overlay" id="cmYtDlg" hidden>
+          <div class="settings-panel ig-dlg cm-yt-dlg" role="dialog" aria-modal="true" aria-labelledby="cmYtTitle">
+            <div class="settings-head">
+              <h2 id="cmYtTitle">유튜브 채널 연결</h2>
+              <button type="button" class="settings-close" data-yt-close aria-label="닫기">✕</button>
+            </div>
+            <div class="cm-yt-body">
+              <div class="cm-yt-pick" id="cmYtPick">
+                <p class="cm-lead">구글 계정 고르기 창에서 <b>연결할 채널</b>(브랜드 계정 채널 포함)을 고르세요. 채널을 여러 개 연결하려면 채널마다 한 번씩 고르면 돼요.</p>
+                <button type="button" class="ui-btn primary block" id="cmYtGoogle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3.5"/><path d="M10.2 9.4v5.2l4.4-2.6Z" fill="currentColor"/></svg>구글 계정에서 채널 고르기</button>
+              </div>
+              <div class="cm-yt-found" id="cmYtFound" hidden></div>
+              <div class="cm-yt-form" id="cmYtForm" hidden>
+                <div class="cm-field"><label for="cmYtName">보일 이름 <em>새 영상 만들기의 채널 단추에 이 이름이 보여요</em></label><input class="ui-field block" id="cmYtName" maxlength="40" autocomplete="off"></div>
+                <div class="cm-field"><label for="cmYtTarget">타깃 <em>대본을 쓸 때 함께 넘겨요</em></label><input class="ui-field block" id="cmYtTarget" maxlength="60" autocomplete="off" placeholder="예: 직장인 · 주부"></div>
+                <div class="cm-field"><label for="cmYtTimes">업로드 시간 <em>쉼표로 구분</em></label><input class="ui-field block" id="cmYtTimes" maxlength="60" autocomplete="off" placeholder="예: 12:00, 19:00"></div>
+              </div>
+              <p class="cm-msg" id="cmYtMsg" hidden></p>
+            </div>
+            <div class="pf-mix-foot">
+              <button type="button" class="ui-btn danger sm" id="cmYtOff" hidden>연결 해제</button>
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn ghost" data-yt-close>취소</button>
+              <button type="button" class="ui-btn primary" id="cmYtOk" hidden>등록</button>
+            </div>
+          </div>
+        </div>
       </div><!-- /view-content -->
       <!-- 손익·마진 관리 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-profit" style="display:none">
@@ -13728,7 +13777,7 @@ window.CsGuide=(function(){
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
     ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너 로고(지금 가져오기 · 오늘 숫자만)는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
-    ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1.'],
+    ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, PC 의 대본 서비스가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1. 채널 관리에서 구글 계정의 유튜브 채널을 여러 개 연결합니다(content_channels_v1).'],
     ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
 
@@ -13751,7 +13800,7 @@ window.CsGuide=(function(){
     ['ytcap',3,'영상 자막 서비스','VPS yt-captions','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아(한국어가 아니면 번역) ytcap/res 에 답합니다.'],
     ['cwriter',3,'대본 서비스','PC content_writer.js','토큰 없이 그 PC 에 로그인된 Claude Code(구독)를 부릅니다. brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자를 돌려 cmjob/res 에 답합니다. PC 가 켜져 있어야 움직입니다(로그인하면 자동 실행).'],
     ['claude',3,'Claude','PC 의 구독 로그인','대본 서비스가 Claude Code 로 부릅니다(API 키·토큰 없음 · 그 PC 에 로그인된 계정).'],
-    ['youtube',3,'유튜브','자막 원본','국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘).'],
+    ['youtube',3,'유튜브','자막 원본 · Data API','자막은 국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘). 채널 관리는 연결할 채널을 고를 때 Data API 로 채널 이름·사진·구독자를 읽습니다(youtube.readonly).'],
     ['gha',3,'GitHub Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 Supabase 트렌드 표에 쌓습니다.'],
     ['apps',3,'앱스크립트','09-29 공개 배포 폐기','예전 데이터 API 입니다. 지금은 쓰지 않지만 index.html 의 AGENDA_API_URL 줄은 지우면 저장이 멈추므로 그대로 둡니다.',true]
   ];
@@ -13785,7 +13834,8 @@ window.CsGuide=(function(){
     ['agenda','agendaT','안건'],
     ['agenda','storage','메모 이미지 agenda/'],
     ['content','storage','대본 주문 cmjob/req → res'],
-    ['content','settings','content_jobs_v1'],
+    ['content','settings','content_jobs_v1 · content_channels_v1'],
+    ['content','youtube','채널 정보 읽기','r'],
     ['perf','settings','meta_ads_v1 읽기','r'],
     ['account','settings','accounts_v1'],
     ['admin','settings','회원·권한·순서·글꼴·틀'],
@@ -17667,7 +17717,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const v=n(k); el.textContent=v; el.parentElement.classList.toggle('is-todo',!!(todo&&v));
     });
     const ch=document.getElementById('cmHeroCh');
-    if(ch) ch.textContent='채널 '+document.querySelectorAll('#view-content .cm-ch').length+'개';
+    if(ch) ch.textContent='채널 '+document.querySelectorAll('#view-content .cm-ch:not([hidden])').length+'개';
   }
   window.baroyamContentHero=hero;
   const heroBox=document.getElementById('cmHero');
@@ -17677,7 +17727,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     try{ localStorage.setItem('baroyam_content_tab',el.dataset.content); }catch(e){}
     pick(el);
   }));
-  window.baroyamContentOpen=function(){ pick(cur); hero(); };
+  window.baroyamContentOpen=function(){ pick(cur); hero(); if(window.baroyamYtChannels) window.baroyamYtChannels.load(); };
+  document.addEventListener('baroyam:cm-channels',hero);
 })();
 
 /* 콘텐츠마케팅 › 채널 관리 · 설정 판 펼치기/접기와 칩 한 개 고르기만(모양 확인용 · 저장하지 않음) */
@@ -17691,6 +17742,170 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const chip=e.target.closest('[data-one] .ui-chip'); if(!chip) return;
     chip.parentElement.querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',c===chip?'true':'false'));
   });
+})();
+
+/* 유튜브콘텐츠 › 채널 관리 · 유튜브 채널 연결(여러 개)
+   + 유튜브 채널 연결 → 구글 고르기 창(prompt select_account)에서 채널(브랜드 계정 포함)을 하나 고르면 youtube.readonly 권한으로
+   channels.list?mine=true 를 읽어 그 채널을 보여 준다 → 이름·타깃·업로드 시간을 적어 등록 · 채널마다 한 번씩 고르면 여러 개가 된다 ·
+   권한은 드라이브 권한(baroyamGoogleToken)과 따로, 고를 때만 받고 저장하지 않는다(채널 정보만 남김) ·
+   저장: app_settings content_channels_v1 = {channels:{<유튜브 채널 id>:{id,title,handle,thumb,subs,videos,name,target,times,ord,at,by,del}}} ·
+   saveMerged 로 그 채널 한 줄만 얹고, 연결 해제는 del 만 단다 · 실제 채널이 하나라도 있으면 예시 카드(.cm-demo)를 숨긴다 ·
+   실제 업로드에는 서버(VPS)가 채널마다 오래 쓰는 권한(refresh token)을 따로 받아야 한다(아직 없음) */
+(function(){
+  const $=id=>document.getElementById(id);
+  const grid=document.querySelector('#view-content .cm-ch-grid'), dlg=$('cmYtDlg');
+  if(!grid||!dlg) return;
+  const KEY='content_channels_v1', SCOPE='https://www.googleapis.com/auth/youtube.readonly';
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clone=o=>JSON.parse(JSON.stringify(o||{}));
+  const me=()=>{ try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const num=n=>{ n=Number(n)||0; return n>=10000?(Math.round(n/1000)/10)+'만':n.toLocaleString('ko-KR'); };
+  const st={chs:{},loaded:false,loading:null,found:null,edit:null};
+  const live=()=>Object.values(st.chs||{}).filter(c=>c&&!c.del).sort((a,b)=>(a.ord||0)-(b.ord||0)||String(a.at).localeCompare(b.at));
+
+  function who(c){
+    const av=c.thumb?'<img class="cm-yt-av" src="'+esc(c.thumb)+'" alt="" referrerpolicy="no-referrer">':'<span class="cm-yt-av">'+esc((c.title||'?').slice(0,1))+'</span>';
+    const meta=[c.handle,c.subs!=null&&'구독자 '+num(c.subs),c.videos!=null&&'영상 '+num(c.videos)].filter(Boolean).join(' · ');
+    return '<div class="cm-yt-who">'+av+'<div><b><a href="https://www.youtube.com/channel/'+encodeURIComponent(c.id)+'" target="_blank" rel="noopener">'+esc(c.title)+'</a></b><small>'+esc(meta)+'</small></div></div>';
+  }
+  function paint(){
+    grid.querySelectorAll('.cm-yt').forEach(x=>x.remove());
+    const list=live(), add=$('cmYtAdd');
+    list.forEach(c=>{
+      const d=document.createElement('div');
+      d.className='cm-card cm-ch cm-yt'; d.dataset.yt=c.id;
+      // h3 의 첫 글자 마디 = 채널 이름(새 영상 만들기가 읽음) · dd 의 글 마디 = 타깃(비어 있으면 글 마디 없이 회색 안내만)
+      d.innerHTML='<h3>'+esc(c.name||c.title)+' <span class="cm-tag is-done">유튜브 연결됨</span></h3>'+who(c)+
+        '<dl class="cm-brief"><div><dt>타깃</dt><dd>'+(c.target?esc(c.target):'<span class="cm-unset">정하지 않음</span>')+'</dd></div>'+
+        '<div><dt>업로드</dt><dd>'+(c.times?esc(c.times):'<span class="cm-unset">정하지 않음</span>')+'</dd></div></dl>'+
+        '<div class="cm-ch-acts"><button type="button" class="ui-btn" data-yt-edit>설정</button><button type="button" class="ui-btn primary" data-cw-new>이 채널로 새 영상</button></div>';
+      grid.insertBefore(d,add);
+    });
+    grid.querySelectorAll('.cm-demo').forEach(x=>{ x.hidden=list.length>0; });
+    const set=$('cmChSet'); if(set&&list.length) set.hidden=true;   // 예시 채널 설정 판도 접는다
+    document.dispatchEvent(new CustomEvent('baroyam:cm-channels'));
+  }
+  async function load(force){
+    if(st.loading) return st.loading;
+    if(st.loaded&&!force) return;
+    st.loading=(async()=>{
+      try{ const v=window.BAROYAM_DB&&await window.BAROYAM_DB.loadSetting(KEY,true); st.chs=(v&&v.channels)||{}; st.loaded=true; paint(); }
+      catch(e){ console.warn('[바로얌] 유튜브 채널 목록을 읽지 못함',e); }
+      st.loading=null;
+    })();
+    return st.loading;
+  }
+  async function save(id,patch){
+    const DB=window.BAROYAM_DB;
+    const next=DB&&await DB.saveMerged(KEY,server=>{
+      const s=clone(server); s.channels=s.channels||{};
+      s.channels[id]=Object.assign(s.channels[id]||{id},patch);
+      return s;
+    });
+    if(!next) return false;
+    st.chs=next.channels||{}; st.loaded=true; paint();
+    return true;
+  }
+
+  /* ---------- 창 ---------- */
+  function msg(t,warn){ const m=$('cmYtMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-warn',!!warn); }
+  function fill(c){
+    $('cmYtName').value=c?(c.name||c.title||''):''; $('cmYtTarget').value=c?(c.target||''):''; $('cmYtTimes').value=c?(c.times||''):'';
+  }
+  function open(id){
+    const c=id?st.chs[id]:null;
+    st.edit=c&&!c.del?id:null; st.found=null;
+    $('cmYtTitle').textContent=st.edit?'채널 설정':'유튜브 채널 연결';
+    $('cmYtPick').hidden=!!st.edit;
+    $('cmYtFound').hidden=!st.edit; $('cmYtFound').innerHTML=st.edit?who(c):'';
+    $('cmYtForm').hidden=!st.edit; fill(st.edit?c:null);
+    $('cmYtOff').hidden=!st.edit;
+    $('cmYtOk').textContent=st.edit?'저장':'등록'; $('cmYtOk').disabled=false; $('cmYtOk').hidden=!st.edit;   // 고르기 전에는 등록 단추를 숨긴다(주황 단추는 한 영역에 하나)
+    msg('');
+    dlg.hidden=false;
+    (st.edit?$('cmYtName'):$('cmYtGoogle')).focus();
+  }
+  const close=()=>{ dlg.hidden=true; st.found=null; st.edit=null; };
+  function showFound(c){
+    st.found=c;
+    const had=st.chs[c.id]&&!st.chs[c.id].del;
+    $('cmYtFound').innerHTML=who(c)+'<button type="button" class="ui-btn ghost sm" id="cmYtAgain">다른 채널 고르기</button>';
+    $('cmYtFound').hidden=false; $('cmYtPick').hidden=true; $('cmYtForm').hidden=false;
+    fill(had?st.chs[c.id]:{title:c.title});
+    $('cmYtOk').disabled=false; $('cmYtOk').hidden=false; $('cmYtOk').textContent=had?'저장':'등록';
+    msg(had?'이미 등록한 채널이에요 · 저장하면 채널 정보(사진·구독자)를 새로 고쳐요':'');
+    $('cmYtName').focus();
+  }
+
+  /* 구글 고르기 창은 누른 순간에 열어야 막히지 않는다 · 그래서 첫 await 전에 requestAccessToken 을 부른다 */
+  function pickChannel(){
+    const g=window.google&&google.accounts&&google.accounts.oauth2;
+    if(!g){ msg('구글 로그인 도구를 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요',true); return; }
+    msg('구글 창에서 채널을 고르세요…');
+    g.initTokenClient({
+      client_id:window.BAROYAM_AUTH.clientId, scope:SCOPE,
+      callback:res=>{
+        if(!res||res.error||!res.access_token){ msg('유튜브 권한을 받지 못했어요'+(res&&res.error?' ('+res.error+')':''),true); return; }
+        readChannel(res.access_token);
+      },
+      error_callback:err=>msg((err&&err.type)==='popup_closed'?'고르기 창이 닫혔어요':'유튜브 권한을 받지 못했어요',true)
+    }).requestAccessToken({prompt:'select_account'});
+  }
+  async function readChannel(tok){
+    msg('채널 정보를 읽는 중…');
+    try{
+      const r=await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true',{headers:{Authorization:'Bearer '+tok}});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok){
+        const why=(((j.error||{}).errors||[])[0]||{}).reason||'';
+        if(why==='accessNotConfigured'||/has not been used|is disabled/.test((j.error||{}).message||'')) throw new Error('구글 클라우드에서 YouTube Data API v3 를 켜야 해요(관리자 작업)');
+        throw new Error('채널을 읽지 못했어요 ('+(why||r.status)+')');
+      }
+      const it=(j.items||[])[0];
+      if(!it){ msg('고른 계정에 유튜브 채널이 없어요 · 브랜드 계정 채널이면 고르기 창에서 그 채널을 고르세요',true); return; }
+      const sn=it.snippet||{}, sx=it.statistics||{}, th=sn.thumbnails||{};
+      showFound({id:it.id,title:sn.title||'',handle:sn.customUrl||'',thumb:(th.medium||th.default||{}).url||'',
+        subs:sx.hiddenSubscriberCount?null:Number(sx.subscriberCount||0),videos:Number(sx.videoCount||0)});
+    }catch(e){ msg(e.message||'채널을 읽지 못했어요',true); }
+  }
+  async function ok(){
+    const id=st.edit||(st.found&&st.found.id); if(!id) return;
+    const patch={name:$('cmYtName').value.trim(),target:$('cmYtTarget').value.trim(),times:$('cmYtTimes').value.trim()};
+    if(st.found){
+      const f=st.found;
+      Object.assign(patch,{id:f.id,title:f.title,handle:f.handle,thumb:f.thumb,subs:f.subs,videos:f.videos,del:false});
+      if(!st.chs[id]||st.chs[id].del) Object.assign(patch,{at:new Date().toISOString(),by:me(),ord:live().length});
+    }
+    if(!patch.name) patch.name=(st.chs[id]&&st.chs[id].title)||(st.found&&st.found.title)||'';
+    $('cmYtOk').disabled=true; msg('저장 중…');
+    const done=await save(id,patch);
+    $('cmYtOk').disabled=false;
+    if(!done){ msg('저장하지 못했어요 · 로그인이 풀렸으면 새로고침 뒤 다시 해 주세요',true); return; }
+    close();
+  }
+  async function off(){
+    const c=st.chs[st.edit]; if(!c) return;
+    if(!confirm('"'+(c.name||c.title)+'" 채널 연결을 해제할까요?\n유튜브 채널 자체는 그대로이고, 언제든 다시 연결할 수 있어요.')) return;
+    const done=await save(st.edit,{del:true,offAt:new Date().toISOString(),offBy:me()});
+    if(!done){ msg('해제하지 못했어요 · 새로고침 뒤 다시 해 주세요',true); return; }
+    close();
+  }
+
+  $('cmYtAdd').addEventListener('click',()=>open(null));
+  $('cmYtGoogle').addEventListener('click',pickChannel);
+  dlg.addEventListener('click',e=>{
+    if(e.target===dlg||e.target.closest('[data-yt-close]')) return close();
+    if(e.target.closest('#cmYtAgain')) pickChannel();
+  });
+  dlg.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ e.stopPropagation(); close(); }
+    if(e.key==='Enter'&&e.target.matches('input')&&!$('cmYtOk').disabled&&!$('cmYtOk').hidden) ok();
+  });
+  $('cmYtOk').addEventListener('click',ok);
+  $('cmYtOff').addEventListener('click',off);
+  grid.addEventListener('click',e=>{ const b=e.target.closest('[data-yt-edit]'); if(b) open(b.closest('.cm-yt').dataset.yt); });
+  window.baroyamYtChannels={load:()=>load(true)};
+  if(location.hash==='#content') setTimeout(()=>load(),1500);
 })();
 
 /* 유튜브콘텐츠 › 새 영상 만들기 · 대본 만들기(직접 기획)
@@ -17810,7 +18025,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* 채널 관리 화면(.cm-ch 카드)에서 채널 이름·타깃·편집 스타일을 읽는다 · 채널 관리가 저장을 갖게 되면 여기만 바꾼다 */
   function channels(){
-    return [...document.querySelectorAll('#view-content .cm-ch')].map(c=>{
+    return [...document.querySelectorAll('#view-content .cm-ch:not([hidden])')].map(c=>{
       const h=c.querySelector('h3'), dd=t=>{ const d=[...c.querySelectorAll('.cm-brief > div')].find(x=>(x.querySelector('dt')||{}).textContent===t); return d?[...d.querySelector('dd').childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join(' ').replace(/\s+/g,' ').trim():''; };   // 글만(그림 카드 글자는 빼고)
       return {name:h?h.childNodes[0].textContent.trim():'',target:dd('타깃'),style:dd('편집 스타일')};
     }).filter(c=>c.name);
@@ -18120,6 +18335,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const sbBtn=$('sbContentBtn'); if(sbBtn) sbBtn.addEventListener('click',()=>load());
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&st.loaded&&!pane.hidden&&!st.editing&&!pending.length) load(true); });
   if(location.hash==='#content') setTimeout(()=>load(),1500);
+  document.addEventListener('baroyam:cm-channels',()=>paintForm());
   paintForm();
 })();
 
