@@ -10809,7 +10809,10 @@ window.BAROYAM_FONT=(function(){
                   </div>
 
                   <div class="mu-sub"><h4>타깃 <label class="mu-sw"><button type="button" class="ui-switch" role="switch" id="muAdv" aria-checked="false"></button>어드밴티지+ 타깃 <em>메타가 넓혀서 찾음 · 아래 값은 제안으로 씀</em></label></h4>
-                    <div class="mu-f"><label>위치</label><div class="mu-tagbox" data-tags="geo"><div class="mu-tags" id="muGeoTags"></div><input class="ui-field sm" data-add="geo" placeholder="지역 입력 후 Enter (예: 서울)"></div></div>
+                    <div class="mu-row">
+                      <div class="mu-f"><label>위치</label><div class="mu-tagbox" data-tags="geo"><div class="mu-tags" id="muGeoTags"></div><input class="ui-field sm" data-add="geo" placeholder="지역 입력 후 Enter (예: 서울)"></div></div>
+                      <div class="mu-f"><label>언어 <em>비우면 모든 언어</em></label><div class="mu-tagbox" data-tags="lang"><div class="mu-tags" id="muLangTags"></div><button type="button" class="ui-btn ghost sm" data-pick="lang">+ 추가</button></div></div>
+                    </div>
                     <div class="mu-row">
                       <div class="mu-f"><label>연령</label><div class="mu-inline">
                         <button type="button" class="ui-field" id="muAgeMin" aria-haspopup="listbox"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><span class="mu-dash">–</span>
@@ -20142,8 +20145,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     {value:'LOWEST_COST_WITH_MIN_ROAS',label:'최소 ROAS',sub:'이 ROAS 아래로는 쓰지 않음'},{value:'LOWEST_COST_WITH_BID_CAP',label:'입찰가 한도',sub:'경매 입찰 상한'}];
   const UP_PLATS=[{v:'facebook',l:'페이스북'},{v:'instagram',l:'인스타그램'},{v:'audience_network',l:'오디언스 네트워크'},{v:'messenger',l:'메신저'},{v:'threads',l:'스레드'}];
   const UP_POSS=[{v:'feed',l:'피드'},{v:'story',l:'스토리'},{v:'reels',l:'릴스'},{v:'explore',l:'탐색'},{v:'search',l:'검색'},{v:'instream_video',l:'인스트림 동영상'},{v:'marketplace',l:'마켓플레이스'}];
+  /* 언어 · 메타 locale 번호(k) · 바로얌 세트는 모두 12(한국어) · 번호를 모르는 언어는 연동할 때 메타 언어 검색으로 찾는다 */
+  const UP_LANGS=[{k:12,l:'한국어'},{k:6,l:'영어(미국)'},{k:24,l:'영어(영국)'},{l:'영어(전체)'},{l:'일본어'},{l:'중국어(간체)'},{l:'중국어(번체)'},{l:'베트남어'},{l:'태국어'},{l:'러시아어'}];
+  const UP_GEO={KR:'대한민국',US:'미국',JP:'일본',CN:'중국',TW:'대만',VN:'베트남',TH:'태국'};
   const UP_AGES=Array.from({length:48},(_,i)=>i+18);
-  const upSetNew=()=>({goal:'OFFSITE_CONVERSIONS',event:'PURCHASE',budType:'d',bid:'LOWEST_COST_WITHOUT_CAP',bidAmt:'',end:null,adv:true,geo:['대한민국'],ageMin:18,ageMax:65,g:0,int:[],inc:[],exc:[],plMode:'adv',plats:['facebook','instagram'],pos:['feed','story','reels']});
+  const upSetNew=()=>({goal:'OFFSITE_CONVERSIONS',event:'PURCHASE',budType:'d',bid:'LOWEST_COST_WITHOUT_CAP',bidAmt:'',end:null,adv:true,geo:['대한민국'],lang:['한국어'],ageMin:18,ageMax:65,g:0,int:[],inc:[],exc:[],plMode:'adv',plats:['facebook','instagram'],pos:['feed','story','reels']});
   const up={camp:'',tpl:'',name:'',nameAuto:true,budget:'',start:kst(),set:upSetNew(),files:[],pv:0,body:'',title:'',desc:'',cta:'SHOP_NOW',link:'',status:'PAUSED',pvTab:'feed',acc:''};
   const upAcc=()=>{ const L=(data&&data.accounts)||[]; return L.find(x=>x.manage)||null; };
   const yymmdd=d=>d.slice(2,4)+d.slice(5,7)+d.slice(8,10);
@@ -20186,6 +20192,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(t.budget&&t.budget.l&&!t.budget.d) S.budType='l';
     S.adv=!!tg.adv; S.ageMin=tg.a&&tg.a[0]||18; S.ageMax=tg.a&&tg.a[1]||65; S.g=tg.g||0;
     S.int=(tg.int||[]).slice(); S.inc=(tg.ca||[]).slice(); S.exc=(tg.ex||[]).slice();
+    if(tg.lang) S.lang=tg.lang.map(k=>(UP_LANGS.find(x=>x.k===+k)||{l:'언어 '+k}).l);
+    if(tg.geo) S.geo=tg.geo.map(c=>UP_GEO[c]||c);
     if(tg.pl&&tg.pl.length){
       S.plMode='manual';
       S.plats=[...new Set(tg.pl.map(k=>k.split('.')[0]))];
@@ -20217,7 +20225,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('muAgeMax').querySelector('.t').textContent=S.ageMax>=65?'65세 이상':S.ageMax+'세';
     press('muGender',v=>+v===S.g);
     const tags=(k,id)=>{ $(id).innerHTML=S[k].map((x,i)=>'<span>'+esc(x)+'<button type="button" data-del="'+k+'|'+i+'" aria-label="'+esc(x)+' 빼기">×</button></span>').join(''); };
-    tags('geo','muGeoTags'); tags('int','muIntTags'); tags('inc','muIncTags'); tags('exc','muExcTags');
+    tags('geo','muGeoTags'); tags('lang','muLangTags'); tags('int','muIntTags'); tags('inc','muIncTags'); tags('exc','muExcTags');
     press('muPlMode',v=>v===S.plMode);
     $('muPlBox').hidden=S.plMode!=='manual';
     $('muPlats').innerHTML=UP_PLATS.map(x=>'<button type="button" class="ui-chip" data-v="'+x.v+'" aria-pressed="'+S.plats.includes(x.v)+'">'+x.l+'</button>').join('');
@@ -20226,6 +20234,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   }
   /* 다른 세트에서 쓴 관심사·맞춤 타깃 모음(고르기 목록) */
   function upKnown(a,k){
+    if(k==='lang') return UP_LANGS.filter(x=>!up.set.lang.includes(x.l)).map(x=>({value:x.l,label:x.l}));
     const m={};
     (a.adsets||[]).forEach(x=>{ const tg=x.tg||{}; (k==='int'?tg.int||[]:[...(tg.ca||[]),...(tg.ex||[])]).forEach(n=>{ if(n) m[n]=(m[n]||0)+1; }); });
     return Object.keys(m).filter(n=>!up.set[k].includes(n)).sort((p,q)=>m[q]-m[p]||p.localeCompare(q,'ko')).map(n=>({value:n,label:n,sub:'세트 '+m[n]+'곳에서 씀'}));
@@ -20349,7 +20358,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const d=e.target.closest('[data-del]'), pk=e.target.closest('[data-pick]');
     if(d){ const [k,i]=d.dataset.del.split('|'); upS()[k].splice(+i,1); paintUpSet(); }
     else if(pk){ e.stopPropagation(); const a=upAcc(), k=pk.dataset.pick, L=a?upKnown(a,k):[];
-      if(!L.length){ $('muMsg').textContent='다른 세트에서 쓴 '+(k==='int'?'관심사':'맞춤 타깃')+'가 없습니다'; return; }
+      if(!L.length){ $('muMsg').textContent=k==='lang'?'더 고를 언어가 없습니다':'다른 세트에서 쓴 '+(k==='int'?'관심사':'맞춤 타깃')+'가 없습니다'; return; }
       window.UI.menu(pk,L,null,v=>{ if(!upS()[k].includes(v)) upS()[k].push(v); paintUpSet(); }); }
   });
   $('muRoot').addEventListener('keydown',e=>{
