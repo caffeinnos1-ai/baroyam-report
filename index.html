@@ -3115,6 +3115,17 @@ window.BAROYAM_FONT=(function(){
   .cm-make[hidden]{display:none}
   .cm-col{display:flex;flex-direction:column;gap:12px;min-width:0}
   .cm-card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
+  /* 유튜브콘텐츠 배너형 · 배너와 내용 사이를 인스타콘텐츠(.ip)와 같게 띄우고, 비어 있는 상세 상자는 숨긴다 */
+  #view-content [data-content-pane]{margin-top:22px}
+  .cm-job:empty{display:none}
+  .cm-hero-av{background:linear-gradient(45deg,var(--neg),var(--btn))}
+  .cm-hero-av span{color:var(--neg)}
+  .cm-hero-av svg{width:24px;height:24px}
+  .cm-hero-nums button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+    padding:4px 8px;margin:-4px -8px;border-radius:10px;transition:background .15s}
+  .cm-hero-nums button:hover{background:var(--btn-soft)}
+  .cm-hero-nums button:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
+  .cm-hero-nums button.is-todo b{color:var(--btn)}
   .cm-card h3{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
   .cm-lead{margin:0 0 16px;font-size:12.5px;line-height:1.6;color:var(--body);word-break:keep-all}
   .cm-field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
@@ -10628,6 +10639,16 @@ window.BAROYAM_FONT=(function(){
             <div class="ptag">유튜브콘텐츠</div>
             <div class="ptitle" id="contentViewTitle">새 영상 만들기</div>
             <div class="psub" id="contentViewSub">기획을 적고 대본 후보를 받아 고릅니다.</div>
+            <!-- 배너 오른쪽 · 인스타콘텐츠 계정 카드와 같은 자리 · 사람이 할 일 숫자(누르면 그 화면으로) -->
+            <div class="ip-acct ip-hero-acct cm-hero" id="cmHero">
+              <div class="ip-avatar cm-hero-av"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3.5"/><path d="M10.2 9.4v5.2l4.4-2.6Z" fill="currentColor"/></svg></span></div>
+              <div class="ip-who"><b>유튜브 쇼츠</b><small id="cmHeroCh">채널 0개</small></div>
+              <div class="ip-nums cm-hero-nums">
+                <button type="button" data-go="make"><b id="cmHeroMake">0</b><small>대본 고르기</small></button>
+                <button type="button" data-go="approve"><b id="cmHeroApprove">0</b><small>승인 대기</small></button>
+                <button type="button" data-go="done"><b id="cmHeroDone">0</b><small>완성본</small></button>
+              </div>
+            </div>
           </div>
         <!-- 새 영상 만들기 · 직접 기획 → 대본 만들기를 누르면 PC 의 대본 서비스가 Claude 로 기획자(대본 후보) → 검수자(점수·순위)를 돌려 돌려준다 ·
              주고받기는 brand-files 버킷 cmjob/req·res, 작업 기록은 app_settings content_jobs_v1 ·
@@ -17638,12 +17659,25 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const has=!!document.querySelector('#view-content [data-content-pane="'+el.dataset.content+'"]');
     document.querySelectorAll('#view-content [data-content-pane]').forEach(p=>{ p.hidden=p.dataset.contentPane!==(has?el.dataset.content:'other'); });
   }
-  pick(cur);
+  /* 배너 오른쪽 숫자 · 단추 줄 숫자(.n)와 채널 카드 수를 옮겨 적는다 · 할 일이 있으면 강조색 */
+  function hero(){
+    const n=k=>{ const b=box.querySelector('[data-content="'+k+'"] .n'); return b&&b.style.display!=='none'?(parseInt(b.textContent,10)||0):0; };
+    [['make','cmHeroMake',1],['approve','cmHeroApprove',1],['done','cmHeroDone',0]].forEach(([k,id,todo])=>{
+      const el=document.getElementById(id); if(!el) return;
+      const v=n(k); el.textContent=v; el.parentElement.classList.toggle('is-todo',!!(todo&&v));
+    });
+    const ch=document.getElementById('cmHeroCh');
+    if(ch) ch.textContent='채널 '+document.querySelectorAll('#view-content .cm-ch').length+'개';
+  }
+  window.baroyamContentHero=hero;
+  const heroBox=document.getElementById('cmHero');
+  if(heroBox) heroBox.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; const t=items.find(x=>x.dataset.content===b.dataset.go); if(t) t.click(); });
+  pick(cur); hero();
   items.forEach(el=>el.addEventListener('click',()=>{
     try{ localStorage.setItem('baroyam_content_tab',el.dataset.content); }catch(e){}
     pick(el);
   }));
-  window.baroyamContentOpen=function(){ pick(cur); };
+  window.baroyamContentOpen=function(){ pick(cur); hero(); };
 })();
 
 /* 콘텐츠마케팅 › 채널 관리 · 설정 판 펼치기/접기와 칩 한 개 고르기만(모양 확인용 · 저장하지 않음) */
@@ -17930,6 +17964,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const todo=open.filter(j=>{ const r=lastRound(j); return r&&r.state==='done'; }).length;
     const cnt=document.querySelector('#contentTabs [data-content="make"] .n');
     if(cnt){ cnt.textContent=todo; cnt.style.display=todo?'':'none'; }
+    if(window.baroyamContentHero) window.baroyamContentHero();
     const list=st.tab==='picked'?picked:open;
     if(!list.find(j=>j.id===st.sel)) st.sel=list[0]?list[0].id:null;
     $('cwJobs').innerHTML=list.map(j=>{
