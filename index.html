@@ -3200,14 +3200,6 @@ window.BAROYAM_FONT=(function(){
   .cm-script .cm-script-why{margin-top:4px;font-size:12px;color:var(--btn-soft-ink);line-height:1.5}
   .cm-script .cm-angle{display:inline-block;align-self:flex-start;width:fit-content;margin-top:6px;padding:2px 8px;border-radius:99px;background:var(--chip-flat);font-size:11px;color:var(--body)}
   .cm-script .cm-similar{margin-top:6px;font-size:11.5px;color:var(--warn)}
-  /* 에이전트 학습 노트 */
-  .cm-lab{margin-top:14px}
-  .cm-lab-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .cm-lab-head h3{margin:0}
-  .cm-lab .ui-tabs{margin:10px 0 8px}
-  .cm-lab-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;line-height:1.55;color:var(--body)}
-  .cm-lab-list li small{display:block;color:var(--mute);font-size:11px}
-  .cm-lab-list:empty::before{content:'아직 배운 것이 없어요. 대본에 👍👎·피드백을 남기거나 대본을 고르면 코치가 정리해요.';display:block;margin-left:-18px;color:var(--mute)}
   /* 편집 지시서 */
   .cm-edit{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
   .cm-edit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -10722,17 +10714,6 @@ window.BAROYAM_FONT=(function(){
               <label class="cm-check"><input type="checkbox" id="cwReview" checked> 검수자 점수·추천 순서까지 받기</label>
               <p class="cm-msg" id="cwFormMsg" hidden></p>
             </div>
-            <!-- 에이전트 학습 노트 · 코치가 사용자 반응(👍👎·피드백·고른 대본·고쳐 쓴 부분·편집 지시서 피드백)을 모아 역할별로 정리한 규칙 · 읽기만(brand-files cmlab/memory.json) -->
-            <div class="cm-card cm-lab" id="cwLab">
-              <div class="cm-lab-head"><h3>에이전트 학습 노트</h3><button type="button" class="ui-btn sm ghost" id="cwLabNow">지금 배우기</button></div>
-              <p class="cm-hint" id="cwLabSub">불러오는 중…</p>
-              <div class="ui-tabs" id="cwLabTabs">
-                <button type="button" class="ui-tab" data-value="writer" aria-selected="true">기획자 <span class="n">0</span></button>
-                <button type="button" class="ui-tab" data-value="reviewer" aria-selected="false">검수자 <span class="n">0</span></button>
-                <button type="button" class="ui-tab" data-value="editor" aria-selected="false">편집자 <span class="n">0</span></button>
-              </div>
-              <ol class="cm-lab-list" id="cwLabList"></ol>
-            </div>
           </aside>
 
           <main class="cm-col">
@@ -13831,7 +13812,7 @@ window.CsGuide=(function(){
     ['slack',3,'슬랙','#공지사항 · 개인 메시지','김비서와 당일판매 보고가 나가는 곳입니다.'],
     ['ezadmin',3,'이지어드민','재고 · 당일판매','현 재고조회(I100)·당일판매분요약표를 읽습니다. VPS 는 자동 로그인, 크롬 확장은 사람이 로그인.'],
     ['ytcap',3,'영상 자막 서비스','VPS yt-captions','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아(한국어가 아니면 번역) ytcap/res 에 답합니다.'],
-    ['cwriter',3,'대본 서비스','VPS · PC content_writer.js','Claude 구독으로 Claude Code 를 부릅니다(VPS 는 구독 토큰 · PC 는 로그인된 Claude). brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자(대본 결정 뒤 편집자 · 편집 지시서)를 돌려 cmjob/res 에 답합니다. 역할 지침은 prompts/*.md, 사용자 반응으로 코치가 정리한 배운 규칙은 cmlab/memory.json(VPS 만 정리). VPS 가 늘 켜 두고, PC 도 켜져 있으면 먼저 잡은 쪽이 씁니다.'],
+    ['cwriter',3,'대본 서비스','VPS · PC content_writer.js','Claude 구독으로 Claude Code 를 부릅니다(VPS 는 구독 토큰 · PC 는 로그인된 Claude). brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자(대본 결정 뒤 편집자 · 편집 지시서)를 돌려 cmjob/res 에 답합니다. 역할 지침은 prompts/*.md(사람이 결과를 보고 고침). VPS 가 늘 켜 두고, PC 도 켜져 있으면 먼저 잡은 쪽이 씁니다.'],
     ['claude',3,'Claude','PC 의 구독 로그인','대본 서비스가 Claude Code 로 부릅니다(API 키·토큰 없음 · 그 PC 에 로그인된 계정).'],
     ['youtube',3,'유튜브','자막 원본 · Data API','자막은 국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘). 채널 관리는 연결할 채널을 고를 때 Data API 로 채널 이름·사진·구독자를 읽습니다(youtube.readonly).'],
     ['gha',3,'GitHub Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 Supabase 트렌드 표에 쌓습니다.'],
@@ -17959,7 +17940,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const LENGTHS=[15,30,45,60], COUNTS=[3,6];
   const SC=[['hook','훅'],['info','정보'],['empathy','공감'],['cta','행동유도'],['tempo','템포'],['fact','사실'],['fresh','신선함']];
   const CPS=7.5;   // 말하는 빠르기 · 1초에 7~8글자(공백 포함)
-  // 기획자·검수자·편집자·코치 지침은 서버의 caffeinnos-automation/prompts/*.md 에 있다(대본 서비스가 주문마다 읽음 · 2026-10-26 옮김)
+  // 기획자·검수자·편집자 지침은 서버의 caffeinnos-automation/prompts/*.md 에 있다(대본 서비스가 주문마다 읽음 · 2026-10-26 옮김)
 
   const st={jobs:{}, lab:{}, loaded:false, loading:null, sel:null, tab:'open', editing:null, form:null};
   const now=()=>new Date().toISOString();
@@ -18009,7 +17990,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         st.jobs=(j&&j.jobs)||{}; st.loaded=true;
       }catch(e){ msg('작업 기록을 읽지 못했습니다 · 새로고침해 주세요'); }
       st.loading=null;
-      paint(); poll(); labLoad();
+      paint(); poll();
     })();
     return st.loading;
   }
@@ -18339,28 +18320,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       '<div class="cm-script-foot"><button type="button" class="ui-btn" data-act="edit-again">피드백 반영해 다시 쓰기</button><button type="button" class="ui-btn soft" data-act="edit-copy">지시서 복사</button></div></div>';
     return h;
   }
-
-  /* ---------- 에이전트 학습 노트 · 서버 코치가 정리한 규칙을 읽기만 ---------- */
-  const lab={mem:null,role:'writer',at:0};
-  async function labLoad(force){
-    if(!force&&Date.now()-lab.at<60e3) return;
-    lab.at=Date.now();
-    try{ const u=await window.BAROYAM_DB.fileUrl(BUCKET,'cmlab/memory.json',60); const r=await fetch(u,{cache:'no-store'}); lab.mem=r.ok?await r.json():{roles:{}}; }
-    catch(e){ lab.mem=lab.mem||{roles:{}}; }
-    labPaint();
-  }
-  function labPaint(){
-    const m=lab.mem||{roles:{}}, roles=m.roles||{}, last=(m.log||[]).slice(-1)[0];
-    $('cwLabSub').textContent=m.n?'코치가 '+m.n+'번 정리했어요 · 마지막 '+fmtAt(m.at)+(last&&last.summary?' · '+last.summary:''):'대본에 남긴 👍👎·피드백, 고른 대본, 고쳐 쓴 부분을 코치가 모아 다음 대본에 반영해요.';
-    $('cwLabTabs').querySelectorAll('.ui-tab').forEach(t=>{ t.querySelector('.n').textContent=(roles[t.dataset.value]||[]).length; });
-    $('cwLabList').innerHTML=(roles[lab.role]||[]).map(r=>'<li>'+esc(r.t)+'<small>'+fmtAt(r.at)+'</small></li>').join('');
-  }
-  if(window.UI&&window.UI.tabs) window.UI.tabs($('cwLabTabs'),v=>{ lab.role=v; labPaint(); });
-  $('cwLabNow').addEventListener('click',async()=>{
-    const b=$('cwLabNow'); b.disabled=true; b.textContent='배우는 중…';
-    try{ await window.BAROYAM_DB.fileUpload(BUCKET,'cmlab/coach-now',new Blob([now()],{type:'text/plain'})); }catch(e){}
-    setTimeout(()=>labLoad(true),60e3); setTimeout(()=>{ b.disabled=false; b.textContent='지금 배우기'; labLoad(true); },120e3);
-  });
 
   /* ---------- 누르기 ---------- */
   $('cwJobs').addEventListener('click',e=>{ const c=e.target.closest('[data-job]'); if(!c) return; st.sel=c.dataset.job; st.editing=null; paint(); });
