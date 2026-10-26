@@ -25630,7 +25630,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const [y,m]=calMonth.split('-').map(Number);
     const firstDow=new Date(Date.UTC(y,m-1,1)).getUTCDay();          /* 일요일부터 시작 */
     const days=new Date(Date.UTC(y,m,0)).getUTCDate();
-    const weeks=Math.ceil((firstDow+days)/7);
+    const weeks=Math.ceil((firstDow+days+7)/7);                      /* 다음 달 첫 주(1~7일)까지 · 달을 넘어 이어지는 일정을 보려고 */
     const gridStart=dayAdd(calMonth+'-01',-firstDow), gridEnd=dayAdd(gridStart,weeks*7-1);
     const monthStart=calMonth+'-01', monthEnd=dayAdd(monthStart,days-1);
     const items=state.projects.filter(p=>pjMatch(p)).map(p=>({p:p,sp:pjSpan(p)}))
