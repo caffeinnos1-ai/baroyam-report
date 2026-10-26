@@ -3198,6 +3198,28 @@ window.BAROYAM_FONT=(function(){
   .cm-script p{margin:0}
   .cm-script-tag{font-size:12px;font-weight:600;color:var(--btn-soft-ink)}
   .cm-script .cm-script-why{margin-top:4px;font-size:12px;color:var(--btn-soft-ink);line-height:1.5}
+  .cm-script .cm-angle{display:inline-block;align-self:flex-start;width:fit-content;margin-top:6px;padding:2px 8px;border-radius:99px;background:var(--chip-flat);font-size:11px;color:var(--body)}
+  .cm-script .cm-similar{margin-top:6px;font-size:11.5px;color:var(--warn)}
+  /* 에이전트 학습 노트 */
+  .cm-lab{margin-top:14px}
+  .cm-lab-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .cm-lab-head h3{margin:0}
+  .cm-lab .ui-tabs{margin:10px 0 8px}
+  .cm-lab-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;line-height:1.55;color:var(--body)}
+  .cm-lab-list li small{display:block;color:var(--mute);font-size:11px}
+  .cm-lab-list:empty::before{content:'아직 배운 것이 없어요. 대본에 👍👎·피드백을 남기거나 대본을 고르면 코치가 정리해요.';display:block;margin-left:-18px;color:var(--mute)}
+  /* 편집 지시서 */
+  .cm-edit{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .cm-edit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .cm-edit-head h4{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
+  .cm-edit-meta{margin:8px 0 10px;font-size:12px;color:var(--body);line-height:1.6}
+  .cm-cuts{width:100%;border-collapse:collapse;font-size:12.5px}
+  .cm-cuts th{font-weight:500;color:var(--mute);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .cm-cuts th,.cm-cuts td{text-align:left;font-size:12.5px}
+  .cm-cuts td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--body);line-height:1.5}
+  .cm-cuts td:first-child,.cm-cuts td:nth-child(2){white-space:nowrap;color:var(--mute);font-variant-numeric:tabular-nums}
+  .cm-cuts td b{color:var(--btn-soft-ink);font-weight:600}
+  .cm-edit-wrap{overflow-x:auto}
   .cm-script .cm-script-flow{margin-top:10px;font-size:11.5px;color:var(--body);line-height:1.55}
   .cm-script h4{margin:14px 0 8px;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.3px}
   .cm-script-hook{font-size:12px;color:var(--body)}
@@ -10700,6 +10722,17 @@ window.BAROYAM_FONT=(function(){
               <label class="cm-check"><input type="checkbox" id="cwReview" checked> 검수자 점수·추천 순서까지 받기</label>
               <p class="cm-msg" id="cwFormMsg" hidden></p>
             </div>
+            <!-- 에이전트 학습 노트 · 코치가 사용자 반응(👍👎·피드백·고른 대본·고쳐 쓴 부분·편집 지시서 피드백)을 모아 역할별로 정리한 규칙 · 읽기만(brand-files cmlab/memory.json) -->
+            <div class="cm-card cm-lab" id="cwLab">
+              <div class="cm-lab-head"><h3>에이전트 학습 노트</h3><button type="button" class="ui-btn sm ghost" id="cwLabNow">지금 배우기</button></div>
+              <p class="cm-hint" id="cwLabSub">불러오는 중…</p>
+              <div class="ui-tabs" id="cwLabTabs">
+                <button type="button" class="ui-tab" data-value="writer" aria-selected="true">기획자 <span class="n">0</span></button>
+                <button type="button" class="ui-tab" data-value="reviewer" aria-selected="false">검수자 <span class="n">0</span></button>
+                <button type="button" class="ui-tab" data-value="editor" aria-selected="false">편집자 <span class="n">0</span></button>
+              </div>
+              <ol class="cm-lab-list" id="cwLabList"></ol>
+            </div>
           </aside>
 
           <main class="cm-col">
@@ -13798,7 +13831,7 @@ window.CsGuide=(function(){
     ['slack',3,'슬랙','#공지사항 · 개인 메시지','김비서와 당일판매 보고가 나가는 곳입니다.'],
     ['ezadmin',3,'이지어드민','재고 · 당일판매','현 재고조회(I100)·당일판매분요약표를 읽습니다. VPS 는 자동 로그인, 크롬 확장은 사람이 로그인.'],
     ['ytcap',3,'영상 자막 서비스','VPS yt-captions','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아(한국어가 아니면 번역) ytcap/res 에 답합니다.'],
-    ['cwriter',3,'대본 서비스','VPS · PC content_writer.js','Claude 구독으로 Claude Code 를 부릅니다(VPS 는 구독 토큰 · PC 는 로그인된 Claude). brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자를 돌려 cmjob/res 에 답합니다. VPS 가 늘 켜 두고, PC 도 켜져 있으면 먼저 잡은 쪽이 씁니다.'],
+    ['cwriter',3,'대본 서비스','VPS · PC content_writer.js','Claude 구독으로 Claude Code 를 부릅니다(VPS 는 구독 토큰 · PC 는 로그인된 Claude). brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자(대본 결정 뒤 편집자 · 편집 지시서)를 돌려 cmjob/res 에 답합니다. 역할 지침은 prompts/*.md, 사용자 반응으로 코치가 정리한 배운 규칙은 cmlab/memory.json(VPS 만 정리). VPS 가 늘 켜 두고, PC 도 켜져 있으면 먼저 잡은 쪽이 씁니다.'],
     ['claude',3,'Claude','PC 의 구독 로그인','대본 서비스가 Claude Code 로 부릅니다(API 키·토큰 없음 · 그 PC 에 로그인된 계정).'],
     ['youtube',3,'유튜브','자막 원본 · Data API','자막은 국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘). 채널 관리는 연결할 채널을 고를 때 Data API 로 채널 이름·사진·구독자를 읽습니다(youtube.readonly).'],
     ['gha',3,'GitHub Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 Supabase 트렌드 표에 쌓습니다.'],
@@ -17924,30 +17957,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const TARGETS=['직장인','자취생','주부','워킹맘','학생','부모님'];
   const FORMATS=[['꿀팁형','번호 붙인 해결팁 3–5개'],['후기형','써 본 사람의 솔직한 첫인상·장단점'],['공감 상황극형',"'이거 완전 나' 순간 → 해결"],['비교형','전·후, 이것 vs 저것']];
   const LENGTHS=[15,30,45,60], COUNTS=[3,6];
-  const SC=[['hook','훅'],['info','정보'],['empathy','공감'],['cta','행동유도'],['tempo','템포'],['fact','사실']];
+  const SC=[['hook','훅'],['info','정보'],['empathy','공감'],['cta','행동유도'],['tempo','템포'],['fact','사실'],['fresh','신선함']];
   const CPS=7.5;   // 말하는 빠르기 · 1초에 7~8글자(공백 포함)
-  const DEFAULT_WRITER=[
-    '너는 식품 브랜드(바로얌·카페이노스)의 유튜브 쇼츠(세로 영상) 대본 작가다.',
-    '- 첫 줄(0~2초)이 전부다. 숫자·반전·공감 질문·결과 먼저 중 하나로 시작하고, 인사나 브랜드 이름으로 시작하지 않는다.',
-    '- 한 줄 = 화면 자막 한 줄 = 16자 안팎. 말하듯 짧게 끊는다. 1초에 7~8글자(공백 포함)로 길이를 맞춘다(30초 ≈ 220~240자).',
-    '- 타깃 한 명의 구체적인 순간(시간·장소·행동)을 그린다.',
-    "- 제품 장점은 '그래서 나한테 뭐가 좋은지'로 바꿔 말한다.",
-    '- 확인된 사실 밖의 효능·수치·가격·수상 이력은 지어내지 않는다. 최고·1등·무조건 같은 과장 표현은 쓰지 않는다.',
-    '- 마지막 줄은 억지스럽지 않은 행동 유도(저장·댓글·프로필 링크 등)로 끝낸다.',
-    '- 장면(scene)은 편집자가 소스 영상에서 고를 수 있게 구체적으로 적는다(손·클로즈업·조리 과정·먹는 모습·표정).',
-    '- 말투는 해요체.',
-  ].join('\n');
-  const DEFAULT_REVIEWER=[
-    '너는 쇼츠 대본 검수자다. 편집에 넘기기 전에 대본 후보를 냉정하게 평가한다.',
-    '점수는 1~10이고 7이 보통이다. 후하게 주지 않는다.',
-    '- 훅(hook): 첫 2초에 손가락을 멈추게 하는가.',
-    '- 정보(info): 제품 포인트가 분명하고 기억에 남는가.',
-    '- 공감(empathy): 타깃의 구체적인 순간이 보이는가.',
-    '- 행동유도(cta): 마지막에 할 행동이 자연스럽게 분명한가.',
-    '- 템포(tempo): 줄 길이·호흡이 짧고, 요청한 영상 길이에 맞는가.',
-    '- 사실(fact): 확인된 사실 밖의 주장·과장이 없는가. 5 이하이면 pass 는 false.',
-    '추천 순서는 훅과 사실을 가장 무겁게 본다. 고칠 점은 바로 고칠 수 있게 구체적으로 한 줄로 쓴다.',
-  ].join('\n');
+  // 기획자·검수자·편집자·코치 지침은 서버의 caffeinnos-automation/prompts/*.md 에 있다(대본 서비스가 주문마다 읽음 · 2026-10-26 옮김)
 
   const st={jobs:{}, lab:{}, loaded:false, loading:null, sel:null, tab:'open', editing:null, form:null};
   const now=()=>new Date().toISOString();
@@ -17997,7 +18009,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         st.jobs=(j&&j.jobs)||{}; st.loaded=true;
       }catch(e){ msg('작업 기록을 읽지 못했습니다 · 새로고침해 주세요'); }
       st.loading=null;
-      paint(); poll();
+      paint(); poll(); labLoad();
     })();
     return st.loading;
   }
@@ -18071,9 +18083,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         return {top:k===1,t:'「'+(j.pick.title||s.title||'')+'」(검수자 '+(k||'?')+'위'+(j.pick.edited?' · 사용자가 고쳐 씀':'')+')'}; });
       calib='최근 사용자가 고른 대본 '+picks.length+'개 중 검수자 1위였던 것은 '+desc.filter(d=>d.top).length+'개. 고른 대본: '+desc.map(d=>d.t).join(', ');
     }
-    return {
-      writerGuide:DEFAULT_WRITER, reviewerGuide:DEFAULT_REVIEWER, feedback, reviewerNote, calib,
-    };
+    return {feedback, reviewerNote, calib};
   }
 
   /* ---------- 요청 보내기 · 결과 기다리기 ---------- */
@@ -18085,6 +18095,24 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     await DB.fileUpload(BUCKET,'cmjob/req/'+name,new Blob([JSON.stringify(body)],{type:'application/json'}));
     return name;
   }
+  // 편집자 · 결정한 대본으로 편집 지시서를 부탁한다(kind:'edit') · 다시 쓰기면 그동안 남긴 편집 피드백을 함께
+  async function sendEdit(job,pick){
+    const DB=window.BAROYAM_DB;
+    if(!DB||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다. 새로고침한 뒤 다시 눌러 주세요.');
+    const name=job.id+'.e.'+rid()+'.json';
+    const fbs=((job.edit||{}).fbs||[]).filter(f=>f.v||f.t).map(f=>(f.v>0?'좋아요':f.v<0?'아쉬워요':'')+(f.t?' · '+f.t:''));
+    const body={v:1,kind:'edit',job:job.id,round:pick.round,at:now(),by:me(),input:job.input,pick:{hookTitle:pick.hookTitle,lines:pick.lines},learn:{editFb:fbs.join('\n')}};
+    await DB.fileUpload(BUCKET,'cmjob/req/'+name,new Blob([JSON.stringify(body)],{type:'application/json'}));
+    return name;
+  }
+  async function editStart(id,pick){
+    const j=st.jobs[id]; if(!j) return;
+    try{
+      const req=await sendEdit(j,pick);
+      await jobPatch(id,x=>{ x.edit=Object.assign({},x.edit,{req,state:'sent',at:now(),by:me(),pickAt:pick.at,sheet:null,message:''}); });
+    }catch(e){ await jobPatch(id,x=>{ x.edit=Object.assign({},x.edit,{state:'failed',message:'편집 지시서를 부탁하지 못했습니다 · '+(e&&e.message||e)}); }); }
+    paint(); poll();
+  }
   async function readRes(name){
     const DB=window.BAROYAM_DB;
     let u; try{ u=await DB.fileUrl(BUCKET,'cmjob/res/'+name,60); }catch(e){ return null; }
@@ -18095,13 +18123,23 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let pollT=null, ticking=false;
   function poll(){
     clearTimeout(pollT);
-    const open=Object.values(st.jobs).some(j=>!j.del&&Object.values(j.rounds||{}).some(busy));
+    const open=Object.values(st.jobs).some(j=>!j.del&&(Object.values(j.rounds||{}).some(busy)||busy(j.edit)));
     if(!open) return;
     pollT=setTimeout(async()=>{
       if(ticking) return; ticking=true;
       try{
         for(const j of Object.values(st.jobs)){
           if(j.del) continue;
+          const e=j.edit;
+          if(busy(e)&&e.req){
+            const res=await readRes(e.req);
+            if(res&&(res.state==='done'||res.state==='failed')){
+              await jobPatch(j.id,x=>{ const y=x.edit; if(!y||!busy(y)||y.req!==e.req) return;
+                Object.assign(y,{state:res.ok?'done':'failed',done:res.at,ms:res.ms||0,message:res.message||'',sheet:res.edit||null}); });
+            }else if(res&&res.state!==e.state) e.state=res.state;
+            else if(!res&&Date.now()-Date.parse(e.at)>15*60e3)
+              await jobPatch(j.id,x=>{ const y=x.edit; if(y&&busy(y)) Object.assign(y,{state:'failed',message:'15분 넘게 답이 없습니다 · 다시 쓰기를 눌러 주세요.'}); });
+          }
           for(const r of Object.values(j.rounds||{})){
             if(!busy(r)||!r.req) continue;
             const res=await readRes(r.req);
@@ -18200,7 +18238,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const i=j.input||{}, r=lastRound(j)||{}, rs=Object.values(j.rounds||{}).sort((a,b)=>a.n-b.n);
     const stepNow=j.pick?2:1;
     const flow=[['주문',fmtAt(j.at)],['대본',j.pick?'결정 '+fmtAt(j.pick.at):busy(r)?(r.state==='reviewing'?'검수자 점수 매기는 중':'기획자 쓰는 중'):r.state==='failed'?'실패':'고르기 · 내 차례'],
-      ['편집','준비 중'],['승인','준비 중'],['예약','준비 중'],['업로드','준비 중']];
+      ['편집',!j.edit?'준비 중':busy(j.edit)?'지시서 쓰는 중':j.edit.sheet?'지시서 나옴':'다시 받기'],['승인','준비 중'],['예약','준비 중'],['업로드','준비 중']];
     let h='<div class="cm-job-head"><div class="cm-job-title"><span class="cm-tag">직접 기획</span><h3>'+esc(i.product)+'</h3>'+
       '<p>'+esc([i.channel,i.target&&'대상 '+i.target,i.format,i.length&&i.length+'초',fmtAt(j.at)+' 주문'+(j.by?' · '+j.by:'')].filter(Boolean).join(' · '))+'</p></div>'+
       '<button type="button" class="ui-btn sm ghost" data-act="del">삭제</button></div>'+
@@ -18244,9 +18282,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       '<h4>“'+esc(s.title)+'”</h4>'+
       '<p class="cm-script-flow">후보 '+esc(s.key)+' · '+esc(s.flow)+'</p>'+
       (s.why?'<p class="cm-script-why">'+esc(s.why)+'</p>':'')+
+      (s.angle?'<span class="cm-angle">'+esc(s.angle)+'</span>':'')+
+      (s.similar?'<p class="cm-similar">최근 대본 「'+esc(s.similar.to)+'」와 첫 줄이 닮았어요</p>':'')+
       '<p class="cm-script-hook" style="margin-top:6px">훅 타이틀 <b>'+esc(s.hookTitle)+'</b></p>';
     if(rv){
-      h+='<div class="cm-scores">'+SC.map(([c,l])=>{ const v=+(rv.scores||{})[c]||0; return '<div>'+l+'<span class="cm-bar"><i class="'+(v<=5?'is-low':'')+'" style="width:'+v*10+'%"></i></span><b>'+v+'</b></div>'; }).join('')+'</div>'+
+      h+='<div class="cm-scores">'+SC.filter(([c])=>(rv.scores||{})[c]!=null).map(([c,l])=>{ const v=+(rv.scores||{})[c]||0; return '<div>'+l+'<span class="cm-bar"><i class="'+(v<=5?'is-low':'')+'" style="width:'+v*10+'%"></i></span><b>'+v+'</b></div>'; }).join('')+'</div>'+
         '<div class="cm-rv">'+(rv.good?'<span class="g">'+esc(rv.good)+'</span>':'')+(rv.fix?'<span class="f">'+esc(rv.fix)+'</span>':'')+'</div>';
     }
     if(ed){
@@ -18277,12 +18317,58 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       '<ol class="cm-script-lines">'+p.lines.map(l=>'<li>'+esc(l.say)+(l.scene?'<small>'+esc(l.scene)+'</small>':'')+'</li>').join('')+'</ol>'+
       '<div class="cm-script-foot">'+
       '<button type="button" class="ui-btn" data-act="unpick">다른 대본으로 바꾸기</button><button type="button" class="ui-btn soft" data-act="copy">대본 복사</button></div></div>'+
-      '<div class="cm-next"><b>다음 단계 · 편집</b><br>편집 자동화를 붙이면 이 대본이 그대로 편집자에게 넘어가요. 지금은 대본 복사로 써 주세요.</div>';
+      editHtml(j);
   }
+  function editHtml(j){
+    const e=j.edit||{}, x=e.sheet;
+    let h='<div class="cm-edit"><div class="cm-edit-head"><h4>편집 지시서 <span class="cm-hint">편집자</span></h4>';
+    if(busy(e)) return h+'</div><div class="cm-wait"><b>편집자가 컷을 나누고 있어요</b><span class="cm-bar"><i></i></span><span><span data-cw-sec="'+esc(e.at)+'">0초</span> 지남 · 보통 30초~1분</span></div></div>';
+    if(e.state==='failed') return h+'<button type="button" class="ui-btn sm soft" data-act="edit-again">다시 쓰기</button></div><p class="cm-msg">'+esc(e.message||'편집 지시서를 받지 못했어요')+'</p></div>';
+    if(!x) return h+'<button type="button" class="ui-btn sm soft" data-act="edit-again">편집 지시서 받기</button></div><p class="cm-hint">결정한 대본을 컷·화면·자막 강조·효과음으로 나눠 드려요.</p></div>';
+    const sec=Math.round(x.cuts.reduce((a,c)=>a+(+c.sec||0),0)), f=((e.fbs||[]).find(z=>z.for===e.done&&z.by===me()))||{};
+    h+='<span class="cm-hint">'+x.cuts.length+'컷 · 약 '+sec+'초'+(e.done?' · '+fmtAt(e.done):'')+'</span></div>'+
+      '<p class="cm-edit-meta">배경음 · '+esc(x.bgm)+(x.hookStyle?'<br>훅 타이틀 · '+esc(x.hookStyle):'')+(x.notes?'<br>주의 · '+esc(x.notes):'')+'</p>'+
+      '<div class="cm-edit-wrap"><table class="cm-cuts"><thead><tr><th>#</th><th>초</th><th>자막</th><th>화면</th><th>효과음</th></tr></thead><tbody>'+
+      x.cuts.map((c,k)=>'<tr><td>'+(k+1)+'</td><td>'+c.sec+'</td><td>'+esc(c.say)+(c.emphasis?'<br><b>강조 '+esc(c.emphasis)+'</b>':'')+'</td><td>'+esc(c.shot)+'</td><td>'+esc(c.sfx)+'</td></tr>').join('')+
+      '</tbody></table></div>'+
+      '<div class="cm-fb" style="margin-top:12px"><button type="button" class="ui-btn sm icon ghost" data-act="edit-up" aria-pressed="'+(f.v>0)+'" title="좋아요">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4v-9zM7 11l4-7a2 2 0 0 1 3 2l-1 4h6a2 2 0 0 1 2 2.3l-1.2 6A2 2 0 0 1 17.8 20H7"/></svg></button>'+
+      '<button type="button" class="ui-btn sm icon ghost" data-act="edit-down" aria-pressed="'+(f.v<0)+'" title="아쉬워요">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13V4h3v9zM17 13l-4 7a2 2 0 0 1-3-2l1-4H5a2 2 0 0 1-2-2.3l1.2-6A2 2 0 0 1 6.2 4H17"/></svg></button>'+
+      '<input class="ui-field sm" data-efb maxlength="300" value="'+esc(f.t||'')+'" placeholder="편집자에게 한 줄 (예: 첫 컷은 한입 베어 무는 장면부터)"></div>'+
+      '<div class="cm-script-foot"><button type="button" class="ui-btn" data-act="edit-again">피드백 반영해 다시 쓰기</button><button type="button" class="ui-btn soft" data-act="edit-copy">지시서 복사</button></div></div>';
+    return h;
+  }
+
+  /* ---------- 에이전트 학습 노트 · 서버 코치가 정리한 규칙을 읽기만 ---------- */
+  const lab={mem:null,role:'writer',at:0};
+  async function labLoad(force){
+    if(!force&&Date.now()-lab.at<60e3) return;
+    lab.at=Date.now();
+    try{ const u=await window.BAROYAM_DB.fileUrl(BUCKET,'cmlab/memory.json',60); const r=await fetch(u,{cache:'no-store'}); lab.mem=r.ok?await r.json():{roles:{}}; }
+    catch(e){ lab.mem=lab.mem||{roles:{}}; }
+    labPaint();
+  }
+  function labPaint(){
+    const m=lab.mem||{roles:{}}, roles=m.roles||{}, last=(m.log||[]).slice(-1)[0];
+    $('cwLabSub').textContent=m.n?'코치가 '+m.n+'번 정리했어요 · 마지막 '+fmtAt(m.at)+(last&&last.summary?' · '+last.summary:''):'대본에 남긴 👍👎·피드백, 고른 대본, 고쳐 쓴 부분을 코치가 모아 다음 대본에 반영해요.';
+    $('cwLabTabs').querySelectorAll('.ui-tab').forEach(t=>{ t.querySelector('.n').textContent=(roles[t.dataset.value]||[]).length; });
+    $('cwLabList').innerHTML=(roles[lab.role]||[]).map(r=>'<li>'+esc(r.t)+'<small>'+fmtAt(r.at)+'</small></li>').join('');
+  }
+  if(window.UI&&window.UI.tabs) window.UI.tabs($('cwLabTabs'),v=>{ lab.role=v; labPaint(); });
+  $('cwLabNow').addEventListener('click',async()=>{
+    const b=$('cwLabNow'); b.disabled=true; b.textContent='배우는 중…';
+    try{ await window.BAROYAM_DB.fileUpload(BUCKET,'cmlab/coach-now',new Blob([now()],{type:'text/plain'})); }catch(e){}
+    setTimeout(()=>labLoad(true),60e3); setTimeout(()=>{ b.disabled=false; b.textContent='지금 배우기'; labLoad(true); },120e3);
+  });
 
   /* ---------- 누르기 ---------- */
   $('cwJobs').addEventListener('click',e=>{ const c=e.target.closest('[data-job]'); if(!c) return; st.sel=c.dataset.job; st.editing=null; paint(); });
   $('cwJob').addEventListener('change',e=>{
+    const ef=e.target.closest('[data-efb]');
+    if(ef){ const j=st.jobs[st.sel]; if(!j) return; const t=ef.value.trim(), at=(j.edit||{}).done||'';
+      jobPatch(j.id,x=>{ const y=x.edit=x.edit||{}; y.fbs=y.fbs||[]; let f=y.fbs.find(z=>z.for===at&&z.by===me());
+        if(!f){ f={for:at,by:me(),v:0}; y.fbs.push(f); } f.t=t; f.at=now(); }); return; }
     const inp=e.target.closest('[data-fb]'); if(!inp) return;
     const a=inp.closest('.cm-script'), j=st.jobs[st.sel]; if(!j) return;
     const n=+a.dataset.round, key=a.dataset.key, t=inp.value.trim();
@@ -18319,9 +18405,24 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       }
       const pick={round:r.n,key:s.key,title:lines[0].say,hookTitle:hook,lines,edited,at:now(),by:me()};
       await jobPatch(j.id,x=>{ x.pick=pick; });
-      st.editing=null; st.tab='picked'; if(tabs) tabs.set('picked'); paint(); return;
+      st.editing=null; st.tab='picked'; if(tabs) tabs.set('picked'); paint();
+      editStart(j.id,pick); return;
     }
     if(act==='unpick'){ await jobPatch(j.id,x=>{ x.unpicked=(x.unpicked||[]).concat([x.pick]); delete x.pick; }); st.tab='open'; if(tabs) tabs.set('open'); paint(); return; }
+    if(act==='edit-again'){ b.disabled=true; await editStart(j.id,j.pick); return; }
+    if(act==='edit-up'||act==='edit-down'){
+      const v=act==='edit-up'?1:-1, at=(j.edit||{}).done||'';
+      await jobPatch(j.id,x=>{ const y=x.edit=x.edit||{}; y.fbs=y.fbs||[]; let f=y.fbs.find(z=>z.for===at&&z.by===me());
+        if(!f){ f={for:at,by:me(),t:''}; y.fbs.push(f); } f.v=f.v===v?0:v; f.at=now(); });
+      paint(); return;
+    }
+    if(act==='edit-copy'){
+      const e=(j.edit||{}).sheet; if(!e) return;
+      const txt='[훅 타이틀] '+j.pick.hookTitle+(e.hookStyle?' ('+e.hookStyle+')':'')+'\n[배경음] '+e.bgm+'\n\n'+
+        e.cuts.map((c,k)=>(k+1)+'. '+c.sec+'초 · '+c.say+'\n   화면: '+c.shot+(c.emphasis?'\n   강조: '+c.emphasis:'')+(c.sfx?'\n   효과음: '+c.sfx:'')).join('\n')+(e.notes?'\n\n[주의] '+e.notes:'');
+      try{ await navigator.clipboard.writeText(txt); b.textContent='복사됨 ✓'; }catch(err){ b.textContent='복사 못 함'; }
+      return;
+    }
     if(act==='copy'){
       const p=j.pick, txt='[훅 타이틀] '+p.hookTitle+'\n\n'+p.lines.map(l=>l.say+(l.scene?'  (화면: '+l.scene+')':'')).join('\n');
       try{ await navigator.clipboard.writeText(txt); b.textContent='복사됨 ✓'; }catch(err){ b.textContent='복사 못 함'; }
