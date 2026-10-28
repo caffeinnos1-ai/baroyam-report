@@ -21656,6 +21656,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     $('pfRuleOpenT').textContent=c?(c.name||'판매처')+' 계산법 설정':'계산법 설정';
     $('pfRuleOpenSub').textContent=c?ruleText(c):'';
     $('pfRuleOpen').disabled=!c;
+    /* 배너 제목 · 판매처 이름을 붙인다(톡딜마진표 · 쿠팡마진표 · 10-28 사용자 요청) · 다른 탭을 보고 있으면 그 탭 제목을 건드리지 않는다 */
+    const tt=$('profitViewTitle'); if(tt&&!pane.hidden) tt.textContent=(c&&c.name?c.name.trim():'')+'마진표';
     /* 배너 제목 왼쪽 로고 · 그림은 퀵링크 로고(logos/*.png) · 자사몰은 사이드바 바로얌 로고 · 모르는 판매처는 로고 없음 */
     const logo=$('pfChanLogo'); if(!logo) return;
     const own=document.querySelector('.sb-logo');
@@ -21849,13 +21851,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(cb){ cb.classList.remove('pf-nudge'); void cb.offsetWidth; cb.classList.add('pf-nudge');
       cb.addEventListener('animationend',()=>cb.classList.remove('pf-nudge'),{once:true}); }
   }
+  /* r·g 는 읽을 때마다 지금 데이터에서 찾는다 · 저장이 끝나거나 1분마다 서버본을 받으면 CALC.data 가 새 객체로 바뀌어,
+     메뉴·확인 창을 연 사이에 붙잡아 둔 옛 객체를 고치면 고침이 사라졌다(10-28 프라임 구간이 안 바뀌던 것) */
   function rowOf(el){
-    const tr=el.closest('tr[data-row]');
-    return tr?{tr,r:B().rows[tr.dataset.row]}:null;
+    const tr=el.closest('tr[data-row]'), id=tr&&tr.dataset.row;
+    return tr?{tr,get r(){ return B().rows[id]; }}:null;
   }
   function prodOf(el){
-    const box=el.closest('[data-prod]');
-    return box?{box,g:B().prods[box.dataset.prod]}:null;
+    const box=el.closest('[data-prod]'), id=box&&box.dataset.prod;
+    return box?{box,get g(){ return B().prods[id]; }}:null;
   }
   $('pfCalcTable').addEventListener('input',e=>{
     if(!canEdit()) return;
@@ -21955,7 +21959,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const c=COST.data, isCh=b.dataset.menu==='chan';
       const opts=isCh?live(c.chans).map(o=>({value:o.id,label:o.name,sub:comma(o.rate)+'%'}))
         :[{value:'',label:'없음',sub:''}].concat(live(c.ship).map(o=>({value:o.id,label:o.name,sub:won(o.fee)})));
-      window.UI.menu(b,opts,isCh?x.r.chan||'':x.r.prime||'',v=>{ x.r[isCh?'chan':'prime']=v||null; CALC.mark(); paintCalc(); });
+      window.UI.menu(b,opts,isCh?x.r.chan||'':x.r.prime||'',v=>{ if(!x.r) return; x.r[isCh?'chan':'prime']=v||null; CALC.mark(); paintCalc(); });
       return;
     }
     if(b.hasAttribute('data-mix')){ openMix(x.r); return; }
@@ -22123,8 +22127,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     T.querySelectorAll('tr[data-row]').forEach(tr=>rkOut(tr,RK().rows[tr.dataset.row]));
     applyRO();
   }
-  const rkRowOf=el=>{ const tr=el.closest('tr[data-row]'); return tr?{tr,r:RK().rows[tr.dataset.row]}:null; };
-  const rkProdOf=el=>{ const box=el.closest('[data-prod]'); return box?{box,g:RK().prods[box.dataset.prod]}:null; };
+  /* 마진표 rowOf 와 같이 읽을 때마다 지금 데이터에서 찾는다 */
+  const rkRowOf=el=>{ const tr=el.closest('tr[data-row]'), id=tr&&tr.dataset.row; return tr?{tr,get r(){ return RK().rows[id]; }}:null; };
+  const rkProdOf=el=>{ const box=el.closest('[data-prod]'), id=box&&box.dataset.prod; return box?{box,get g(){ return RK().prods[id]; }}:null; };
   const rkFocus=(sel,id,pick)=>{
     const el=[...$('pfRkTable').querySelectorAll(sel)].find(x=>(x.dataset.row||x.dataset.prod)===id);
     const inp=el&&(el.querySelector('[data-gk="name"]')||el.querySelector('[data-q="q"]')||el.querySelector('[data-k="label"]'));
