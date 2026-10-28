@@ -27915,6 +27915,14 @@ window.baroyamAsk=function(title,body,okText){
   function 메뉴폴더(이름){ return /^(메뉴이미지|메뉴사진)$/.test(이름||''); }
   function 인쇄폴더(이름){ return 이름==='포스터'||/^인쇄물/.test(이름||''); }
   function 번호뗀이름(이름){ return String(이름||'').replace(/^\d+\s*[.)_-]\s*/,'').trim(); }
+  /* 촬영본 탭은 칩을 이미지 / 영상으로만 나눈다(사용자 요청 · 확장자로 가름 · GIF·카메라 원본(RAW·HIF)은 이미지 ·
+     영상 옆에 붙는 xml·xmp 같은 기록 파일과 psd·prproj 는 '그 밖') */
+  const 카메라원본={arw:1,cr2:1,cr3:1,nef:1,raf:1,dng:1,orf:1,rw2:1,hif:1};
+  function 칩종류(r){
+    if(상태.회사!=='촬영본') return 종류(r);
+    const f=형식(r);
+    return (f==='이미지'||f==='GIF'||카메라원본[확장자(r.이름)])?'이미지':f==='영상'?'영상':'그 밖';
+  }
   function 종류(r){
     /* 메타광고는 이름에서 종류를 못 뽑은 파일이 대부분 광고 이미지라 '그 밖' 대신 '이미지'로 묶는다(사용자 요청) */
     if(회사(r)!=='카페이노스') return r.자산종류||(회사(r)==='메타광고'?'이미지':'그 밖');
@@ -27976,7 +27984,7 @@ window.baroyamAsk=function(title,body,okText){
     return (줄들||[]).filter(function(r){
       if(!탭에듦(r,상태.회사)) return false;
       if(건너뛸!=='브랜드'&&상태.브랜드&&갈래(r)!==상태.브랜드) return false;
-      if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(종류(r))) return false;
+      if(건너뛸!=='종류'&&상태.종류.size&&!상태.종류.has(칩종류(r))) return false;
       if(건너뛸!=='형식'&&상태.형식.size&&!상태.형식.has(형식(r))) return false;
       if(검색){
         const 밭=(r.이름+' '+r.브랜드+' '+r.제품+' '+종류(r)+' '+r.경로).toLowerCase();
@@ -28003,10 +28011,10 @@ window.baroyamAsk=function(title,body,okText){
 
   function 칩줄(){
     const 바탕=거른줄('종류');
-    const 셈={}; 바탕.forEach(function(r){ const k=종류(r); 셈[k]=(셈[k]||0)+1; });
+    const 셈={}; 바탕.forEach(function(r){ const k=칩종류(r); 셈[k]=(셈[k]||0)+1; });
     /* 카페이노스는 판매처 네 칸만 정해진 순서로 둔다 · 모두 끄면 전체가 보인다 */
     const 카페=상태.회사==='카페이노스';
-    const 이름들=카페?카페칩목록():Object.keys(셈).sort(function(a,b){ return 셈[b]-셈[a]; });
+    const 이름들=카페?카페칩목록():상태.회사==='촬영본'?['이미지','영상'].concat(셈['그 밖']?['그 밖']:[]):Object.keys(셈).sort(function(a,b){ return 셈[b]-셈[a]; });
     let h=카페?'':'<button type="button" class="ui-chip" data-kind="" aria-pressed="'+(상태.종류.size?'false':'true')+'">전체<b>'+바탕.length+'</b></button>';
     이름들.forEach(function(k){
       h+='<button type="button" class="ui-chip" data-kind="'+안전(k)+'" aria-pressed="'+(상태.종류.has(k)?'true':'false')+'">'
