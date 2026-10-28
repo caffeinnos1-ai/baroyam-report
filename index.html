@@ -3226,7 +3226,6 @@ window.BAROYAM_FONT=(function(){
   .cm-lead{margin:0 0 16px;font-size:12.5px;line-height:1.6;color:var(--body);word-break:keep-all}
   .cm-field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
   .cm-field>label{font-size:13px;font-weight:600;color:var(--ink)}
-  .cm-pick2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:8px}
   .cm-field>label em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute);margin-left:4px}
   .cm-hint{margin:0;font-size:11.5px;color:var(--mute);line-height:1.5}
   .cm-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -10925,13 +10924,9 @@ window.BAROYAM_FONT=(function(){
             <div class="cm-card" id="cwForm">
               <h3>직접 기획</h3>
               <p class="cm-lead">입력하고 <b>대본 만들기</b>를 누르면 기획자가 대본 후보를 쓰고, 검수자가 점수를 매겨 추천 순서를 정해요. 보통 1~3분 걸려요.</p>
-              <div class="cm-field"><label>어떤 브랜드 · 제품인가요 <em>필수</em></label>
-                <div class="cm-pick2">
-                  <button type="button" class="ui-field" id="cwBrand"><span class="t">브랜드 고르기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-                  <button type="button" class="ui-field" id="cwProdBtn"><span class="t">제품 고르기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-                </div>
-                <input class="ui-field block" id="cwProduct" maxlength="120" autocomplete="off" placeholder="제품 이름 직접 입력 (예: 쫀득란빵 토핑 계란빵)" hidden>
-                <p class="cm-hint">제품 목록은 마진관리 › 품목별 원가표의 상품이에요. 브랜드 소구점은 대본 서비스의 브랜드 가이드(md)에서 읽어요.</p></div>
+              <div class="cm-field"><label>어떤 브랜드인가요 <em>필수</em></label>
+                <button type="button" class="ui-field block" id="cwBrand"><span class="t">브랜드 고르기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                <p class="cm-hint">고른 브랜드의 소구점 가이드(md)를 대본에 함께 넘겨요.</p></div>
               <div class="cm-field"><label>어느 채널 영상인가요</label>
                 <div class="ui-chips" id="cwChannel"></div>
                 <p class="cm-hint">채널 관리의 채널이에요. 고른 채널의 타깃·편집 스타일을 대본에 함께 넘겨요.</p></div>
@@ -18235,39 +18230,18 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* ---------- 입력 칸 ---------- */
   function defForm(){ return {target:'주부',format:'꿀팁형',length:30,count:6}; }
   try{ st.form=Object.assign(defForm(),JSON.parse(localStorage.getItem(LS_FORM)||'{}')); }catch(e){ st.form=defForm(); }
-  // 브랜드 고르기 전에 적어 둔 제품 이름 · 이름에 든 브랜드를 고르고 이름은 직접 입력으로 남긴다
-  if(!st.form.brand&&st.form.product){ st.form.brand=BRANDS.find(b=>st.form.product.includes(b))||''; st.form.prodCustom=!!st.form.brand; if(!st.form.brand) st.form.product=''; }
-  /* 브랜드 · 제품 고르기 · 제품은 원가표에서 그 브랜드 상품 · 목록에 없으면 "직접 입력"(prodCustom) */
+  // 예전에 적어 둔 제품 이름 · 이름에 든 브랜드를 고른다
+  if(!st.form.brand&&st.form.product) st.form.brand=BRANDS.find(b=>String(st.form.product).includes(b))||'';
+  delete st.form.product; delete st.form.prodCustom;
+  /* 브랜드 고르기 · 제품은 고르지 않는다(사용자 요청) · 목록 = 위 넷 + 원가표의 브랜드 */
   const cost={items:[],loaded:false};
   async function loadCost(){
-    try{ const c=await window.BAROYAM_DB.loadSetting('profit_cost_v1',true); cost.items=live(c&&c.items).filter(x=>x.name); cost.loaded=true; paintForm(); }catch(e){}
+    try{ const c=await window.BAROYAM_DB.loadSetting('profit_cost_v1',true); cost.items=live(c&&c.items); cost.loaded=true; }catch(e){}
   }
   const brandList=()=>{ const l=[...BRANDS]; cost.items.forEach(x=>{ const b=String(x.brand||'').trim(); if(b&&!l.includes(b)) l.push(b); }); return l; };
-  const prodList=b=>cost.items.filter(x=>String(x.brand||'').trim()===b).sort((a,c)=>(a.ord||0)-(c.ord||0)).map(x=>x.name);
-  $('cwProduct').value=st.form.prodCustom?(st.form.product||''):'';
-  $('cwProduct').addEventListener('input',()=>{ st.form.product=$('cwProduct').value; keepForm(); });
   $('cwBrand').addEventListener('click',e=>{
     e.stopPropagation(); if(!cost.loaded) loadCost();
-    window.UI.menu($('cwBrand'),brandList().map(b=>({value:b,label:b,sub:cost.loaded?prodList(b).length+'개 제품':''})),st.form.brand,v=>{
-      if(v===st.form.brand) return;
-      st.form.brand=v; st.form.prodCustom=false;
-      st.form.product=prodList(v)[0]||'';   // 첫 제품으로 · 원가표에 제품이 없으면 직접 입력
-      if(!st.form.product){ st.form.prodCustom=true; $('cwProduct').value=''; }
-      paintForm(); keepForm();
-      if(st.form.prodCustom) $('cwProduct').focus();
-    });
-  });
-  $('cwProdBtn').addEventListener('click',e=>{
-    e.stopPropagation();
-    if(!st.form.brand){ $('cwBrand').click(); return; }
-    const ps=prodList(st.form.brand);
-    const opts=ps.map(n=>({value:n,label:n})).concat([{value:CUSTOM,label:'직접 입력',sub:'목록에 없는 제품'}]);
-    window.UI.menu($('cwProdBtn'),opts,st.form.prodCustom?CUSTOM:st.form.product,v=>{
-      if(v===CUSTOM){ st.form.prodCustom=true; $('cwProduct').value=ps.includes(st.form.product)?'':(st.form.product||''); st.form.product=$('cwProduct').value; }
-      else{ st.form.prodCustom=false; st.form.product=v; }
-      paintForm(); keepForm();
-      if(st.form.prodCustom) $('cwProduct').focus();
-    },{search:ps.length>8,placeholder:'제품 찾기'});
+    window.UI.menu($('cwBrand'),brandList().map(b=>({value:b,label:b})),st.form.brand,v=>{ st.form.brand=v; paintForm(); keepForm(); });
   });
   /* 타깃 고르기 · 목록 + 직접 입력 */
   if(!TARGETS.includes(st.form.target)) $('cwTargetIn').value=st.form.target||'';
@@ -18289,11 +18263,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const custom=!TARGETS.includes(st.form.target)||!!st.form.targetCustom;
     $('cwTarget').querySelector('.t').textContent=custom?'직접 입력':st.form.target;
     $('cwTargetIn').hidden=!custom;
-    const bt=$('cwBrand').querySelector('.t'), pt=$('cwProdBtn').querySelector('.t');
+    const bt=$('cwBrand').querySelector('.t');
     bt.textContent=st.form.brand||'브랜드 고르기'; bt.style.color=st.form.brand?'':'var(--mute)';
-    pt.textContent=!st.form.brand?'제품 고르기':st.form.prodCustom?'직접 입력':(st.form.product||'제품 고르기');
-    pt.style.color=st.form.brand?'':'var(--mute)';
-    $('cwProduct').hidden=!(st.form.brand&&st.form.prodCustom);
     chips($('cwFormat'),FORMATS.map(([v,s])=>[v,v,s]),st.form.format,true);
     chips($('cwLength'),LENGTHS.map(n=>[n,n+'초']),st.form.length);
     chips($('cwCount'),COUNTS.map(n=>[n,n+'개']),st.form.count);
@@ -18324,7 +18295,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     keepForm();
     const it=document.querySelector('#contentTabs [data-content="make"]'); if(it){ window.activateView('content'); it.click(); }
     paintForm(); if(!cost.loaded) loadCost();
-    (st.form.brand?(st.form.prodCustom?$('cwProduct'):$('cwProdBtn')):$('cwBrand')).focus();
+    if(!st.form.brand) $('cwBrand').focus();
   });
   $('cwModes').addEventListener('click',e=>{
     const c=e.target.closest('.ui-chip'); if(!c) return;
@@ -18432,17 +18403,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
 
   async function create(){
     const f=st.form;
-    if(f.prodCustom) f.product=$('cwProduct').value.trim();
     if(f.targetCustom||!TARGETS.includes(f.target)){ const t=$('cwTargetIn').value.trim(); if(!t){ msg('누구에게 보여 줄지 적어 주세요'); $('cwTargetIn').focus(); return; } f.target=t; }
     const ch=channels().find(c=>c.name===f.channel)||{};
     if(!f.brand){ msg('브랜드를 골라 주세요'); $('cwBrand').focus(); return; }
-    if(!f.product){ msg(f.prodCustom?'제품 이름을 적어 주세요':'제품을 골라 주세요'); (f.prodCustom?$('cwProduct'):$('cwProdBtn')).focus(); return; }
     await load();
     if(!st.loaded) return;
     const btn=$('cwGo'); btn.disabled=true; msg('');
     try{
       const id='cj'+rid();
-      const job={id,at:now(),by:me(),input:{brand:f.brand,product:f.product,channel:f.channel,target:f.target,format:f.format,length:f.length,count:f.count,
+      const job={id,at:now(),by:me(),input:{brand:f.brand,product:f.brand,channel:f.channel,target:f.target,format:f.format,length:f.length,count:f.count,
         channelNote:[ch.target&&'타깃 '+ch.target,ch.style&&'편집 스타일 '+ch.style].filter(Boolean).join(' · '),review:$('cwReview').checked},
         rounds:{},cur:1};
       const req=await send(job,1);
