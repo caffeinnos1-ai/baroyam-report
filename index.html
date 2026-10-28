@@ -18165,8 +18165,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const JOBS_KEY='content_jobs_v1', BUCKET='brand-files';
   const LS_FORM='baroyam_cw_form_v1';
   const TARGETS=['직장인','자취생','주부','워킹맘','학생','부모님'];
-  // 브랜드 목록은 마진관리 품목별 원가표(profit_cost_v1.items)의 브랜드 · 원가표를 못 읽어도 이 넷은 늘 보인다
-  const BRANDS=['쫀득란빵','오꾸밥','홀떡피자','이응떡볶이'];
+  // 브랜드 목록 = 아래 브랜드 + 마진관리 품목별 원가표(profit_cost_v1.items)의 브랜드 · 원가표를 못 읽어도 아래는 늘 보인다
+  const BRANDS=['쫀득란빵','오꾸밥','홀떡피자','이응떡볶이','잡채랑','바비쿡','방구석포차'];   // 소구점 md 가 있는 브랜드(baroyam-vault/브랜드제품)
   const CUSTOM='__custom';
   const FORMATS=[['꿀팁형','번호 붙인 해결팁 3–5개'],['후기형','써 본 사람의 솔직한 첫인상·장단점'],['공감 상황극형',"'이거 완전 나' 순간 → 해결"],['비교형','전·후, 이것 vs 저것']];
   const LENGTHS=[15,30,45,60], COUNTS=[3,6];
