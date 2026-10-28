@@ -3933,6 +3933,8 @@ window.BAROYAM_FONT=(function(){
   /* 직접 고친 자동 값 · 점선 밑줄로만 표시(색은 늘리지 않음) · 자동 값 칸은 두 번 눌러 고친다 */
   .pf-calc td.out{cursor:default}
   /* 직접 고친 값 표시 · 'man' 은 메뉴얼가이드 문서 칸(.man{padding:34px 48px 48px})과 이름이 겹쳐 is-man 으로 쓴다 */
+  /* Shift 로 여러 줄 고른 칸 */
+  .pf-calc tbody td.pf-sel{background:var(--btn-soft);box-shadow:inset 0 0 0 1.5px var(--btn)}
   .pf-calc td.out.is-man,.pf-calc .pf-cost .t.is-man{text-decoration:underline dotted var(--mute);text-underline-offset:3px}
   .pf-calc td.out .pf-ov{width:100%;height:26px;padding:0 4px;background:var(--paper);border-color:var(--btn)}
   .pf-mix-ov{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--mute)}
@@ -21545,6 +21547,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   let chanF='', brandP='', qP='', adOnly=false;
   try{ chanF=localStorage.getItem('baroyam_profit_chan')||''; brandP=localStorage.getItem('baroyam_profit_brand')||''; }catch(e){}
   const B=()=>CALC.data;
+  /* Shift 로 여러 줄 고르기 상태(아래 selTrack) · 다시 그려도 paintCalc 가 칸 표시를 되살린다 */
+  const sel={a:null,col:'',ids:[]};
   const prodBrand=g=>((g.brand||'').trim())||(g.item&&COST.data.items[g.item]?brandOf(COST.data.items[g.item]):'');
   /* 예전 계산표(sheets)의 상품·옵션을 새 칸으로 옮긴다 · 몇 번을 돌려도 같은 결과(id 그대로 · 이미 있으면 건드리지 않음) */
   function migrate(){
@@ -21831,6 +21835,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     if(!curChan()) h=msg('품목별 원가표 › 판매처에 판매처(자사몰·쿠팡·스마트스토어 …)를 먼저 넣어 주세요');
     else if(!list.length) h=msg(filtered?'조건에 맞는 상품이 없습니다':esc(cn)+'에 등록한 상품이 없습니다 · "+ 상품 등록" 으로 상품 이름을 정하고, 그 안에 옵션을 추가하세요');
     $('pfCalcTable').innerHTML=h;
+    if(sel.ids.length){
+      const q=sel.col==='prime'?'[data-menu="prime"]':'[data-k="'+sel.col+'"]';
+      sel.ids=sel.ids.filter(id=>{ const c=$('pfCalcTable').querySelector('tr[data-row="'+id+'"] '+q); if(c) c.closest('td').classList.add('pf-sel'); return !!c; });
+    }
     $('pfCalcTable').querySelectorAll('tr[data-row]').forEach(tr=>outCells(tr,B().rows[tr.dataset.row]));
     applyRO();
   }
@@ -21876,8 +21884,45 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     }
     const k=e.target.dataset.k, x=rowOf(e.target); if(!k||!x||!x.r) return;
     x.r[k]=k==='label'?e.target.value:num(e.target.value);
-    outCells(x.tr,x.r); CALC.mark();
+    outCells(x.tr,x.r);
+    /* Shift 로 여러 줄을 골라 둔 칸이면 고른 줄 모두 같은 값 */
+    selRows(k,x.r.id).forEach(o=>{ if(o.r===x.r) return;
+      o.r[k]=x.r[k]; const inp=o.tr.querySelector('[data-k="'+k+'"]');
+      if(inp) inp.value=k==='label'||k==='rate'?e.target.value:comma(x.r[k]);
+      outCells(o.tr,o.r); });
+    CALC.mark();
   });
+  /* Shift 로 여러 줄 고르기(10-28 사용자 요청) · 한 칸을 누른 뒤 Shift 를 누른 채 같은 열의 다른 칸을 누르면 그 사이 줄이 모두 골라진다(상품 상자를 넘어도 됨) ·
+     적는 칸(옵션·소비자가·최종판매가·배송비·수수료율)은 적는 값이 고른 줄 모두에 들어가고, 프라임은 고른 구간이 모두에 들어간다 ·
+     Esc·표 밖 누르기·Shift 없이 다른 칸 누르기로 풀린다 */
+  const selColOf=el=>el?(el.dataset.k||(el.dataset.menu==='prime'?'prime':'')):'';
+  function selClear(){ sel.ids=[]; $('pfCalcTable').querySelectorAll('td.pf-sel').forEach(td=>td.classList.remove('pf-sel')); }
+  /* 고른 줄들({tr,r}) · 이 칸이 고른 범위 안일 때만 · 아니면 빈 목록 */
+  function selRows(col,id){
+    if(sel.col!==col||sel.ids.length<2||!sel.ids.includes(id)) return [];
+    return sel.ids.map(i=>{ const tr=$('pfCalcTable').querySelector('tr[data-row="'+i+'"]'), r=B().rows[i]; return tr&&r?{tr,r}:null; }).filter(Boolean);
+  }
+  function selTrack(el,shift){
+    const col=selColOf(el), tr=el.closest('tr[data-row]');
+    if(!col||!tr){ selClear(); sel.a=null; return; }
+    if(shift&&sel.a&&sel.col===col&&sel.a!==tr.dataset.row){
+      const cells=[...$('pfCalcTable').querySelectorAll(col==='prime'?'[data-menu="prime"]':'[data-k="'+col+'"]')];
+      const ids=cells.map(c=>c.closest('tr[data-row]').dataset.row), i=ids.indexOf(sel.a), j=ids.indexOf(tr.dataset.row);
+      if(i>=0&&j>=0){
+        selClear(); const lo=Math.min(i,j), hi=Math.max(i,j);
+        sel.ids=ids.slice(lo,hi+1); cells.slice(lo,hi+1).forEach(c=>c.closest('td').classList.add('pf-sel'));
+        return;
+      }
+    }
+    selClear(); sel.a=tr.dataset.row; sel.col=col;
+  }
+  $('pfCalcTable').addEventListener('click',e=>{
+    if(!canEdit()) return;
+    const el=e.target.closest('input[data-k],[data-menu="prime"]');
+    if(el) selTrack(el,e.shiftKey); else if(!e.target.closest('td.pf-sel')){ selClear(); sel.a=null; }
+  },true);
+  document.addEventListener('mousedown',e=>{ if(!sel.ids.length||e.target.closest('#pfCalcTable,.ui-pop')) return; selClear(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&sel.ids.length) selClear(); });
   /* 자동 값 칸(할인률·개당단가·마진·마진률·최소 ROAS·정산예정금·수수료·부가세)을 두 번 누르면 그 자리에서 고친다 ·
      Enter·칸 밖 누르기 = 저장, Esc = 취소, 비우고 저장 = 다시 자동 */
   const PCT={disc:1,mrate:1,roas:1};
@@ -21961,7 +22006,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       const c=COST.data, isCh=b.dataset.menu==='chan';
       const opts=isCh?live(c.chans).map(o=>({value:o.id,label:o.name,sub:comma(o.rate)+'%'}))
         :[{value:'',label:'없음',sub:''}].concat(live(c.ship).map(o=>({value:o.id,label:o.name,sub:won(o.fee)})));
-      window.UI.menu(b,opts,isCh?x.r.chan||'':x.r.prime||'',v=>{ if(!x.r) return; x.r[isCh?'chan':'prime']=v||null; CALC.mark(); paintCalc(); });
+      const many=isCh?[]:selRows('prime',x.r.id);
+      window.UI.menu(b,opts,isCh?x.r.chan||'':x.r.prime||'',v=>{
+        if(many.length){ many.forEach(o=>{ const r=B().rows[o.r.id]; if(r) r.prime=v||null; }); sel.ids=[]; CALC.mark(); paintCalc(); return; }
+        if(!x.r) return; x.r[isCh?'chan':'prime']=v||null; CALC.mark(); paintCalc(); });
       return;
     }
     if(b.hasAttribute('data-mix')){ openMix(x.r); return; }
