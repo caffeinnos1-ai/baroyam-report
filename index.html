@@ -3905,6 +3905,8 @@ window.BAROYAM_FONT=(function(){
   .pf-empty,.pf-msg{padding:22px;border:1px dashed var(--line);border-radius:14px;color:var(--mute);font-size:13.5px;font-weight:500;text-align:center}
   .pf-empty[hidden],.pf-msg[hidden]{display:none}
   .pf-foot{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  /* 마진표·로켓프레시 아래 계산식 안내는 10-28 사용자 요청으로 가림(글은 남겨 둠) */
+  .pf-foot[hidden]{display:none}
   .pf-note{font-size:11.5px;font-weight:500;color:var(--mute);line-height:1.5}
   /* 계산 표 · 가로 스크롤 없이 화면 폭에 맞춘다(table-layout:fixed + 칸 비율) ·
      색은 거의 쓰지 않는다: 적는 칸 = 옅은 회색 바탕, 계산 칸 = 흰 바탕 글자, 강조는 마진·마진률 굵은 글자뿐(적자만 빨강) ·
@@ -11329,7 +11331,7 @@ window.BAROYAM_FONT=(function(){
               <div class="pf-calc-wrap">
                 <div class="pf-books" id="pfCalcTable"></div>
               </div>
-              <div class="pf-foot">
+              <div class="pf-foot" hidden>
                 <span class="pf-note">자동 값 칸은 두 번 눌러 직접 고칠 수 있습니다(비우면 다시 자동 · 고친 칸은 점선 밑줄) · 수수료 = 판매가 × 수수료율 (+ 배송비 × 배송비 수수료율) · 부가세 = (판매가+배송비 − 원가 − 프라임 − 수수료) ÷ 11 · 마진 = 판매가+배송비 − 원가 − 프라임 − 수수료 − 부가세 · 마진률 = 마진 ÷ (판매가+배송비) · 최소 ROAS = (판매가+배송비) ÷ 마진 (× 보정) · 정산예정금 = 판매가+배송비 − 수수료 · 수수료·부가세·ROAS 보정은 판매처마다 배너 오른쪽 계산법 설정을 따릅니다</span>
               </div>
             </div>
@@ -11353,7 +11355,7 @@ window.BAROYAM_FONT=(function(){
               <div class="pf-calc-wrap">
                 <div class="pf-books" id="pfRkTable"></div>
               </div>
-              <div class="pf-foot">
+              <div class="pf-foot" hidden>
                 <span class="pf-note">공급가는 금액으로 적거나 쿠팡 몫(%)으로 적습니다 · 쿠팡 몫을 적으면 공급가 = 최종판매가 × (1 − 쿠팡 몫) · 장려금 = 공급가 × 장려금율 · 부가세 = (공급가 − 원가 − 입고 물류비 − 장려금) ÷ 11 · 마진 = 공급가 − 원가 − 입고 물류비 − 장려금 − 부가세 · 마진률 = 마진 ÷ 공급가 · 최소 ROAS = 최종판매가 ÷ 마진 · 공급가는 부가세 포함 금액으로 적습니다 · 원가는 품목별 원가표의 상품을 고릅니다</span>
               </div>
             </div>
