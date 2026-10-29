@@ -3048,6 +3048,12 @@ window.BAROYAM_FONT=(function(){
   .ma-bud-in{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--mute)}
   .ma-bud-in .ui-field{width:100%;font-size:15px;font-variant-numeric:tabular-nums}
   .ma-bud-dlg .ma-gv-imp b{font-size:17px}
+  .ma-table td.ma-budcol small.ma-bud-sch{color:var(--btn);font-weight:500}
+  .ma-bud-when{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--mute)}
+  .ma-bud-when em{font-style:normal;font-weight:400;margin-left:4px}
+  .ma-bud-when .ui-tabs{align-self:flex-start;flex-wrap:wrap}
+  .ma-bud-schbox{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12.5px}
+  .ma-bud-schbox b{font-weight:600}
   .ma-sw-no{color:var(--mute)}
   .ma-table th.ma-swcol,.ma-table td.ma-swcol{width:58px;text-align:center;padding-left:4px;padding-right:4px;cursor:default}
   .ma-list .ma-table th.ma-swcol{width:58px}
@@ -19636,13 +19642,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       }
       return last&&r.st==='ACTIVE'?'now':ever?'past':'';
     };
-    const budEd=budCan();
+    const budEd=budCan(); if(budEd) budSchLoad();
     const budTd=r=>{
       if(r.bud==null) return '<td class="ma-budcol is-zero">-</td>';
       const tip=r.budCbo?' title="캠페인 예산(세트·소재가 나눠 씀)'+(budEd?' · 캠페인 탭에서 바꿉니다':'')+'"':tab==='asset'?' title="이 소재가 든 광고 세트의 예산"':'';
       if(budEd&&r.budEd){ shownBud[r.budEd.id]=r;
-        if(BUD_PEND[r.budEd.id]) return '<td class="ma-budcol">'+money(r.bud,cur)+'<small class="ma-sw-pend">바꾸는 중</small></td>';
-        return '<td class="ma-budcol"><button type="button" class="ma-bud-ed" data-bud="'+r.budEd.lv+'|'+esc(r.budEd.id)+'" title="예산 바꾸기">'+money(r.bud,cur)+BUD_PEN+'</button></td>'; }
+        if(BUD_PEND[r.budEd.id]) return '<td class="ma-budcol">'+money(r.bud,cur)+'<small class="ma-sw-pend">보내는 중</small></td>';
+        const sc=budSchOf(r.budEd.id), from=budOf[r.budEd.id].d;
+        const scTxt=sc?'<small class="ma-bud-sch" title="'+esc(budWhenTxt(sc.when)+' 예약 · '+(sc.by||''))+'">'+budWhenTxt(sc.when,1)+' → '+money(r.bud*sc.to/from,cur)+'</small>':'';
+        return '<td class="ma-budcol"><button type="button" class="ma-bud-ed" data-bud="'+r.budEd.lv+'|'+esc(r.budEd.id)+'" title="예산 바꾸기">'+money(r.bud,cur)+BUD_PEN+'</button>'+scTxt+'</td>'; }
       return '<td class="ma-budcol"'+tip+'>'+money(r.bud,cur)+(r.budCbo?'<small>캠페인</small>':'')+'</td>'; };
     /* 소재 게재 칸 · n일째만 연두 알약으로(오늘 = 1일째 · 한국 시각 · 날짜는 올리면 보임) */
     const today=Date.parse(kst()), atTd=at=>{ if(!at) return '<td class="ma-atcol is-zero">-</td>';
@@ -20164,6 +20172,26 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const BUD_PEND={}, shownBud={};
   const BUD_PEN='<svg class="ma-bud-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const BUD_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>';
+  /* 예약(10-29 사용자 요청 · 한국 시간 00시·02시) · VPS 가 metaads/gv/sched.json 에 적어 두고 시각이 되면 바꾼다 · 화면은 그 파일을 읽기만 */
+  let budSch={}, budSchAt=0, budSchBusy=false;
+  const budSchOf=id=>Object.entries(budSch).map(([k,x])=>Object.assign({key:k},x)).find(x=>x.id===id)||null;
+  async function budSchLoad(force){
+    if(budSchBusy||(!force&&Date.now()-budSchAt<60e3)) return;
+    budSchBusy=true; budSchAt=Date.now();
+    try{
+      const DB=window.BAROYAM_DB; let u=null; try{ u=await DB.fileUrl('brand-files','metaads/gv/sched.json',60); }catch(e){}
+      const r=u?await fetch(u,{cache:'no-store'}).catch(()=>null):null;
+      const j=r&&r.ok?await r.json().catch(()=>null):null;
+      const next=(j&&j.items)||{};
+      if(JSON.stringify(next)!==JSON.stringify(budSch)){ budSch=next; gvRepaint(); }
+    }finally{ budSchBusy=false; }
+  }
+  /* 다음 한국 시간 h시 · 1분 안쪽이면 다음 날 */
+  function budNextAt(h){ const k=new Date(Date.now()+9*3600e3); k.setUTCHours(h,0,0,0); let t=k.getTime()-9*3600e3; if(t<=Date.now()+60e3) t+=86400e3; return new Date(t).toISOString(); }
+  function budWhenTxt(iso,short){ const k=new Date(Date.parse(iso)+9*3600e3), hh=String(k.getUTCHours()).padStart(2,'0')+'시';
+    const today=new Date(Date.now()+9*3600e3).toISOString().slice(0,10), d=k.toISOString().slice(0,10);
+    if(short) return (d===today?'오늘 ':'')+hh;
+    return (k.getUTCMonth()+1)+'.'+k.getUTCDate()+'('+'일월화수목금토'[k.getUTCDay()]+') '+hh; }
   function budCan(){ try{ const a=acc(); return !!(a&&a.manage)&&!!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; } }
   function budAsk(lv,id,name){
     const a=acc(); if(!a||!budCan()) return;
@@ -20177,7 +20205,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const ads=(a.ads||[]).filter(y=>lv==='campaign'?y.c===id:y.s===id).map(y=>y.id), D=a.adDaily||{}, days=Object.keys(D).sort().slice(-7), m=[0,0,0];
     days.forEach(d=>ads.forEach(k=>{ const v=D[d][k]; if(v){ m[0]+=v[0]; m[1]+=v[1]; m[2]+=v[2]; } }));
     const roas=m[0]?Math.round(m[1]/m[0]*100):null, avg=days.length?m[0]/days.length:0, mc=inKrw()?'KRW':cur;
-    const C=lv==='adset'?(a.campaigns||[]).find(y=>y.id===x.c):null, nm=GV_LV[lv];
+    const C=lv==='adset'?(a.campaigns||[]).find(y=>y.id===x.c):null, nm=GV_LV[lv], sc=budSchOf(id);
     const dlg=document.createElement('div');
     dlg.className='settings-overlay ma-gv-ov';
     dlg.innerHTML='<div class="settings-panel ma-gv-dlg is-on ma-bud-dlg" role="alertdialog" aria-modal="true" aria-labelledby="maBudT">'
@@ -20188,9 +20216,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       +'<div class="ma-gv-k"><span class="cap">최근 7일</span><div><small>하루 평균 광고비</small><b>'+money(avg,mc)+'</b></div><div><small>ROAS</small><b>'+(roas==null?'-':roas+'%')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
       +'<div class="ma-bud-set"><div class="ui-chips" data-pct>'+[10,20,30,50].map(p=>'<button type="button" class="ui-chip" aria-pressed="false" data-p="'+p+'">+'+p+'%</button>').join('')+'</div>'
       +'<label class="ma-bud-in"><span>새 하루 예산'+(cur!=='KRW'?' ('+cur+')':'')+'</span><input type="text" class="ui-field" inputmode="decimal" autocomplete="off" value="'+(raw/unit)+'"></label></div>'
+      +(sc?'<div class="ma-bud-schbox"><span><b>'+budWhenTxt(sc.when)+' 예약</b> · '+nat(sc.from)+' → '+nat(sc.to)+(sc.by?' · '+esc(sc.by):'')+'</span><button type="button" class="ui-btn ghost sm" data-cancel>예약 취소</button></div>':'')
+      +'<div class="ma-bud-when"><span>적용 시각 <em>한국 시간</em></span><div class="ui-tabs" data-when>'
+      +'<button type="button" class="ui-tab active" data-value="">지금 바로</button>'
+      +[0,2].map(h=>'<button type="button" class="ui-tab" data-value="'+h+'">'+budWhenTxt(budNextAt(h))+' 예약</button>').join('')+'</div></div>'
       +'<div class="ma-gv-imp"><div><b data-now>'+nat(raw)+'</b><small>지금 '+krw(raw)+'</small></div><div class="is-hot"><b data-new>'+nat(raw)+'</b><small data-newk>바꾼 뒤 '+krw(raw)+'</small></div><div><b data-pc>0%</b><small>변화</small></div></div>'
       +'<p class="ma-gv-warn" data-big hidden>20% 넘게 바꾸면 메타가 성과를 다시 배우느라(학습 단계) 며칠 동안 효율이 흔들릴 수 있습니다.</p>'
-      +'<ul class="ma-gv-note"><li>바꾸면 바로 적용됩니다. 메타는 하루에 예산보다 조금 더(최대 75%) 쓸 수 있고, 주 단위로 맞춥니다.</li>'
+      +'<ul class="ma-gv-note"><li>바뀌는 순간부터 적용됩니다. 메타는 하루에 예산보다 조금 더(최대 75%) 쓸 수 있고, 주 단위로 맞춥니다.</li>'
+      +'<li>예약은 그 시각에 메타의 예산이 지금과 같을 때만 바꿉니다(그사이 누가 바꿨으면 하지 않음). 한 곳에 예약은 하나만 둡니다.</li>'
       +'<li>한 번에 두 배까지 바꿀 수 있습니다. 누가 언제 바꿨는지 기록이 남습니다.</li></ul>'
       +'</div>'
       +'<div class="ma-gv-confirm">'
@@ -20205,10 +20238,22 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
     document.addEventListener('keydown',onKey,true);
     const $d=q=>dlg.querySelector(q), go=$d('[data-go]'), msg=$d('.ma-gv-msg'), ok=$d('.ma-gv-ok input'), pw=$d('.ma-gv-secret'), inp=$d('.ma-bud-in input');
-    let next=raw;
+    let next=raw, when='';
+    const goTxt=()=>when?budWhenTxt(when)+'에 예약':'예산 바꾸기';
+    dlg.querySelectorAll('[data-when] [data-value]').forEach(b=>b.addEventListener('click',()=>{
+      dlg.querySelectorAll('[data-when] [data-value]').forEach(y=>y.classList.toggle('active',y===b));
+      when=b.dataset.value===''?'':budNextAt(+b.dataset.value); go.textContent=goTxt(); paint(); }));
+    const cancel=$d('[data-cancel]');
+    if(cancel) cancel.addEventListener('click',async()=>{
+      if(!confirm(budWhenTxt(sc.when)+' 예약을 취소할까요?')) return;
+      cancel.disabled=true; cancel.textContent='취소하는 중…';
+      const res=await budCancel(sc.key);
+      if(res.ok){ $d('.ma-bud-schbox').remove(); return; }
+      cancel.disabled=false; cancel.textContent='예약 취소'; msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent=res.msg;
+    });
     const read=()=>{ const v=parseFloat(String(inp.value).replace(/[^0-9.]/g,'')); return isFinite(v)&&v>0?Math.round(v*unit):0; };
     const paint=()=>{
-      const pc=next&&raw?Math.round((next-raw)/raw*1000)/10:0, bad=!next?'금액을 적어 주세요.':next>raw*2?'한 번에 두 배까지만 바꿀 수 있습니다.':next===raw?'지금 예산과 같습니다.':'';
+      const pc=next&&raw?Math.round((next-raw)/raw*1000)/10:0, bad=!next?'금액을 적어 주세요.':next>raw*2?'한 번에 두 배까지만 바꿀 수 있습니다.':next===raw?'지금 예산과 같습니다.':when&&budSchOf(id)?'이미 예약이 있습니다. 예약을 취소한 뒤 다시 해 주세요.':'';
       $d('[data-new]').textContent=next?nat(next):'-'; $d('[data-newk]').textContent='바꾼 뒤 '+(next?krw(next):'');
       $d('[data-pc]').textContent=(pc>0?'+':'')+pc+'%';
       $d('[data-big]').hidden=!(next&&Math.abs(pc)>20);
@@ -20229,26 +20274,44 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       go.disabled=true; go.textContent='확인 중…';
       let right=false; try{ right=(await gvHash(pw.value.trim()))===GV_LOCK.hash; }catch(err){ console.error(err); }
       if(!right){
-        msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent='예산 바꾸기';
+        msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent=goTxt();
         pw.value=''; pw.classList.add('is-err'); pw.focus(); paint(); return;
       }
       go.textContent='보내는 중…'; ok.disabled=pw.disabled=inp.disabled=true;
       msg.hidden=false; msg.className='ma-gv-msg'; msg.textContent='메타에 보내는 중입니다 · 서버가 받기까지 1분 안쪽이 걸릴 수 있습니다.';
-      const res=await budSend(lv,id,name,raw,next,pw.value.trim());
-      pw.value=''; ok.disabled=pw.disabled=inp.disabled=false; go.textContent='예산 바꾸기';
+      const res=await budSend(lv,id,name,raw,next,pw.value.trim(),when);
+      pw.value=''; ok.disabled=pw.disabled=inp.disabled=false; go.textContent=goTxt();
       if(res.ok){ close(); return; }
       msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent=res.msg; paint();
     });
   }
+  /* 예약 취소 · 같은 요청 길(kind:'budget-cancel') · 비밀번호 없이(돈이 나가는 쪽이 아님 · 팀장 화면에서만 보임) */
+  async function budCancel(key){
+    const DB=window.BAROYAM_DB;
+    try{
+      if(!DB||!DB.fileUpload||!(await DB.ensureSession())) return {ok:false,msg:'로그인이 풀렸습니다. 새로고침한 뒤 다시 해 주세요.'};
+      const fname=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json';
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      await DB.fileUpload('brand-files','metaads/gv/req/'+fname,new Blob([JSON.stringify({v:1,kind:'budget-cancel',at:new Date().toISOString(),sched:key,by})],{type:'application/json'}));
+      const t0=Date.now();
+      for(;;){
+        await new Promise(r=>setTimeout(r,2000));
+        const res=await gvRes(fname);
+        if(res&&(res.state==='done'||res.state==='failed')){ await budSchLoad(true); return res.state==='done'?{ok:true}:{ok:false,msg:res.message||'취소하지 못했습니다.'}; }
+        if(Date.now()-t0>120e3) return {ok:false,msg:'서버가 요청을 받지 않았습니다. 잠시 뒤 다시 해 주세요.'};
+      }
+    }catch(e){ return {ok:false,msg:'보내지 못했습니다: '+(e&&e.message||e)}; }
+  }
   /* +n% · 원화는 100원 단위, 그 밖은 최소 단위(센트)로 */
   function budStep(raw,p,unit){ const v=raw*(1+p/100); return unit===1?Math.round(v/100)*100:Math.round(v); }
-  async function budSend(lv,id,name,from,to,pw){
+  async function budSend(lv,id,name,from,to,pw,when){
     const DB=window.BAROYAM_DB, a=acc();
     try{
       if(!DB||!DB.fileUpload||!(await DB.ensureSession())) return {ok:false,msg:'로그인이 풀렸습니다. 새로고침한 뒤 다시 해 주세요.'};
       const fname=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json';
       let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
       const q={v:1,kind:'budget',at:new Date().toISOString(),lv,id,from,to,acct:a&&a.id,name,by,pw};
+      if(when) q.when=when;
       BUD_PEND[id]={to,at:Date.now()};
       await DB.fileUpload('brand-files','metaads/gv/req/'+fname,new Blob([JSON.stringify(q)],{type:'application/json'}));
       const t0=Date.now();
@@ -20256,9 +20319,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       for(;;){
         await new Promise(r=>setTimeout(r,2000));
         const res=await gvRes(fname), sec=(Date.now()-t0)/1000;
-        if(res&&(res.state==='done'||res.state==='failed')){
-          delete BUD_PEND[id]; apply(res.bud); gvRepaint();
-          return res.state==='done'?{ok:true}:{ok:false,msg:res.message||'바꾸지 못했습니다.'};
+        if(res&&(res.state==='done'||res.state==='failed'||res.state==='scheduled')){
+          delete BUD_PEND[id]; apply(res.bud);
+          if(res.state==='scheduled') await budSchLoad(true);
+          gvRepaint();
+          return res.state==='failed'?{ok:false,msg:res.message||'바꾸지 못했습니다.'}:{ok:true};
         }
         if(!res&&sec>120){ delete BUD_PEND[id]; gvRepaint(); return {ok:false,msg:'서버가 요청을 받지 않았습니다. 잠시 뒤 다시 해 주세요.'}; }
         if(sec>240){ delete BUD_PEND[id]; gvRepaint(); return {ok:false,msg:'4분이 지나도 답이 없습니다. 잠시 뒤 새로고침해 확인해 주세요.'}; }
