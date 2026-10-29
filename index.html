@@ -15269,7 +15269,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     return false;
   }
   function changed(id){ if(id) dirty.add(id); keepLocal(); document.dispatchEvent(new CustomEvent('baroyam:pj-channels')); push(); }
-  const RESERVED=['개인일정','미지정'];   /* 경로가 빈 프로젝트의 이름 · 경로 이름으로 쓰지 않는다 */
+  const RESERVED=['업무','개인일정','미지정','없음'];   /* 경로가 빈 프로젝트의 이름 · 경로 이름으로 쓰지 않는다 */
   function taken(l,id){ return RESERVED.includes(l)||all().some(x=>!x.del&&x.id!==id&&(x.l||x.k)===l); }
   function rename(id,l){
     l=String(l||'').trim().slice(0,20);
@@ -24726,8 +24726,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* 경로 목록은 관리자 설정 › 프로젝트설정(BAROYAM_PJ_CHANNELS)에서 고친다 · k = 프로젝트에 저장되는 값, l = 보이는 이름 */
   const PJC=window.BAROYAM_PJ_CHANNELS;
   const pjChannels=()=>PJC?PJC.list():[];
-  /* 경로가 빈 프로젝트 = '없음' · 개인일정·회사일정은 경로가 아니라 종류(kind)로 나눈다(10-29 사용자 결정) */
-  const PJ_PERSONAL='없음', PJ_PERSONAL_C='#c3c7cc';
+  /* 경로가 빈 프로젝트 = '업무'(10-29 사용자 요청 · '없음' 대신) · 개인 업무·공지는 경로가 아니라 종류(kind)로 나눈다 */
+  const PJ_PERSONAL='업무', PJ_PERSONAL_C='#c3c7cc';
   const kindLabel=v=>(PJ_KINDS.find(x=>x.k===(v||''))||PJ_KINDS[0]).l;
   const chLabel=v=>v?(PJC?PJC.label(v):v):PJ_PERSONAL;
   const chColor=v=>v?((PJC&&PJC.color(v))||''):PJ_PERSONAL_C;
