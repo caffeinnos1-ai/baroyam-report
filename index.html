@@ -4451,6 +4451,16 @@ window.BAROYAM_FONT=(function(){
   .pj-filter-reset[hidden]{display:none}
   .pj-kinds{align-self:center}
   .pj-filter-reset{color:var(--body)}
+  .pj-filter-reset.is-idle{color:var(--mute);opacity:.55;box-shadow:none;background:none}
+  /* 기간 · 맨 오른쪽 · 고른 기간을 글자로 크게(10-29 사용자 요청 "잘 보이게") */
+  .pj-filter.pj-datebtn{min-width:190px;height:36px;box-sizing:border-box;padding:0 12px 0 14px;gap:8px;font-size:13.5px;
+    box-shadow:inset 0 0 0 1px var(--line),var(--mh-card-shadow)}
+  .pj-datebtn svg{width:15px;height:15px;color:var(--btn)}
+  .pj-datebtn .pj-date-l{color:var(--mute);font-weight:500}
+  .pj-filter.pj-datebtn .pj-date-v{all:unset;flex:1;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .pj-datebtn .pj-date-chev{width:13px;height:13px;color:var(--mute)}
+  .pj-datebtn.is-on{box-shadow:inset 0 0 0 1.5px var(--btn)}
+  .pj-filter.pj-datebtn.is-on .pj-date-v{color:var(--btn-soft-ink)}
   .pj-filter{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);font-size:12.5px;font-weight:600;color:var(--ink)}
   .pj-filter svg{width:12.5px;height:12.5px}
@@ -9060,8 +9070,9 @@ window.BAROYAM_FONT=(function(){
             <div class="pj-filters" id="pjFilters">
               <!-- 종류 · 필터 줄 대신 기간 왼쪽 탭(10-29 사용자 요청 "필터가 너무 많다") -->
               <div class="ui-tabs pj-kinds" id="pjKinds" role="tablist" aria-label="종류"></div>
-              <button type="button" class="pj-filter" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>기간<span class="pj-filter-n"></span></button>
-              <button type="button" class="pj-filter pj-filter-reset" id="pjFilterReset" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.5 8.5A7 7 0 1 0 19 12"/><path d="M19 4.5V9h-4.5"/></svg>필터 초기화</button>
+              <button type="button" class="pj-filter pj-filter-reset" id="pjFilterReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.5 8.5A7 7 0 1 0 19 12"/><path d="M19 4.5V9h-4.5"/></svg>필터 초기화</button>
+              <button type="button" class="pj-filter pj-datebtn" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span class="pj-date-l">기간</span><span class="pj-filter-n pj-date-v">전체</span><svg class="pj-date-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+
               <div class="pj-pop" id="pjPop" hidden></div>
             </div>
           </div>
@@ -26466,13 +26477,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const k=b.dataset.filter;
       /* 마감일 버튼에는 고른 기간을 그대로 보여 준다(9.14~9.20) */
       const txt=k==='date'
-        ?((pf.from||pf.to)?(pf.from?fmtMD(pf.from):'')+'~'+(pf.to?fmtMD(pf.to):''):'')
+        ?((pf.from||pf.to)?(pf.from?fmtMD(pf.from):'')+' ~ '+(pf.to?fmtMD(pf.to):''):'')
         :(pf[k].size||'');
       b.classList.toggle('is-on',!!txt);
-      b.querySelector('.pj-filter-n').textContent=txt;
+      b.querySelector('.pj-filter-n').textContent=k==='date'?(txt||'전체'):txt;
     });
     const reset=$('pjFilterReset');
-    if(reset) reset.hidden=!(pf.status.size||pf.owner.size||pf.channel.size||pf.kind.size||pf.from||pf.to||pf.q);
+    /* 필터 초기화는 늘 그 자리에 둔다(10-29 사용자 요청 · 나타났다 사라지면 줄이 흔들림) · 걸린 것이 없으면 흐리게 */
+    if(reset) reset.classList.toggle('is-idle',!(pf.status.size||pf.owner.size||pf.channel.size||pf.kind.size||pf.from||pf.to||pf.q));
     renderKinds();
     renderFacets();
     renderCal();
