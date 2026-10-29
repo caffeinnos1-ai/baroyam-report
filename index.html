@@ -11505,7 +11505,8 @@ window.BAROYAM_FONT=(function(){
                위 한 줄(기준 시각 · 요약 칩) + 숫자 카드 셋(배송·판매수량·판매 상품) + 목록 하나(브랜드 | 상품명 | 당일수량 | 현재고) -->
           <div class="pf-pane" data-ops-pane="sales">
             <div class="iv-meta">
-              <span class="iv-live"></span><b>이지어드민 당일판매</b><span id="dsAt"></span><span class="iv-demo" id="dsDemo" hidden>예시 화면</span>
+              <!-- 언제 판매인지 한눈에 · 재고현황과 같은 오늘 / 어제 / n일 전 알약 + 큰 날짜·시각 -->
+              <span class="iv-fresh" id="dsFresh" hidden></span><span class="iv-when" id="dsAt"></span><span class="iv-src">이지어드민 당일판매</span><span class="iv-demo" id="dsDemo" hidden>예시 화면</span>
               <span class="pf-grow"></span><span class="iv-sum" id="dsSum"></span>
               <button type="button" class="ui-btn sm soft" id="dsHideOpen" title="상품 이름·숨김과 위험재고 색을 정합니다"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>표시 설정</button>
             </div>
@@ -23166,6 +23167,11 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const box=$('dsStale'), btn=$('ivFetch');
     const now=new Date(), today=!!(d&&!d.demo&&d.date===kstDay());
     const need=DS.loaded&&!today&&!(DS.error&&!DS.data);
+    /* 며칠 전 판매인지 · 재고현황처럼 달력 날짜로 센다 */
+    const real=at&&!isNaN(at)&&!(d&&d.demo);
+    const ago=real?Math.round((new Date(now.toDateString())-new Date(at.toDateString()))/864e5):null;
+    const fr=$('dsFresh'); fr.hidden=ago==null;
+    if(ago!=null){ fr.textContent=ago<=0?'오늘 판매':ago===1?'어제 판매':ago+'일 전 판매'; fr.classList.toggle('old',ago===1); fr.classList.toggle('stale',ago>=2); }
     box.hidden=!need; if(window.baroyamOpsTab==='sales') btn.classList.toggle('need',need); $('dsAt').parentNode.classList.toggle('stale',need);
     if(!need) return;
     const early=now.getHours()<11||(now.getHours()===11&&now.getMinutes()<5);
@@ -23180,7 +23186,7 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const d=real||(DS.loaded?demoSales():null);
     $('dsDemo').hidden=!(d&&d.demo);
     const at=d&&d.updatedAt?new Date(d.updatedAt):null, p2=n=>String(n).padStart(2,'0');
-    $('dsAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준'+(real&&!today?' · 오늘 것 아님':''):'';
+    $('dsAt').textContent=at&&!isNaN(at)?(at.getMonth()+1)+'월 '+at.getDate()+'일 ('+'일월화수목금토'[at.getDay()]+') '+p2(at.getHours())+':'+p2(at.getMinutes())+' 기준':'';
     if(window.baroyamOpsTab==='sales') $('ivFetchAt').textContent=fetchAtText(at);
     paintSalesStale(d,at);
     const blank=(t,c)=>'<div class="iv-blank'+(c?' '+c:'')+'">'+t+'</div>';
