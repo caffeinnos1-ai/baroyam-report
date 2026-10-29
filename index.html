@@ -8684,7 +8684,7 @@ window.BAROYAM_FONT=(function(){
             <!-- 프로젝트설정 · 프로젝트 보드 경로 필터(자사몰·톡딜 등)의 이름·순서·색 · 빼기·더하기 -->
             <section class="settings-view" data-settings-panel="pjset" hidden>
               <div class="mg-manager">
-                <p class="mg-hint"><b>경로</b> · 프로젝트 보드의 경로 필터와 프로젝트 창의 경로 목록이에요. 고친 것은 바로 저장돼 모든 회원에게 같이 보입니다.<br>색 점을 누르면 색이 바뀌고, ✕ 로 뺀 경로는 아래에서 되살릴 수 있어요. 이름을 바꿔도 이미 적힌 프로젝트는 그대로 따라옵니다.<br>개인일정·회사일정·행사는 경로가 아니라 프로젝트 창의 <b>종류</b>(업무·행사·회사일정)로 나눠요.</p>
+                <p class="mg-hint"><b>경로</b> · 프로젝트 보드의 경로 필터와 프로젝트 창의 경로 목록이에요. 고친 것은 바로 저장돼 모든 회원에게 같이 보입니다.<br>색 점을 누르면 색이 바뀌고, ✕ 로 뺀 경로는 아래에서 되살릴 수 있어요. 이름을 바꿔도 이미 적힌 프로젝트는 그대로 따라옵니다.<br>개인 업무·행사·공지는 경로가 아니라 프로젝트 창의 <b>종류</b>(업무·행사·공지)로 나눠요.</p>
                 <div class="mg-list so-list" id="pcList"></div>
                 <form class="mg-add-item" id="pcAdd"><input type="text" maxlength="20" placeholder="새 경로 이름" autocomplete="off"><button type="submit">추가</button></form>
                 <div class="pc-gone" id="pcGone" hidden></div>
@@ -9070,7 +9070,6 @@ window.BAROYAM_FONT=(function(){
             <div class="pj-filters" id="pjFilters">
               <!-- 종류 · 필터 줄 대신 기간 왼쪽 탭(10-29 사용자 요청 "필터가 너무 많다") -->
               <div class="ui-tabs pj-kinds" id="pjKinds" role="tablist" aria-label="종류"></div>
-              <button type="button" class="pj-filter pj-filter-reset" id="pjFilterReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.5 8.5A7 7 0 1 0 19 12"/><path d="M19 4.5V9h-4.5"/></svg>필터 초기화</button>
               <button type="button" class="pj-filter pj-datebtn" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span class="pj-date-l">기간</span><span class="pj-filter-n pj-date-v">전체</span><svg class="pj-date-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
 
               <div class="pj-pop" id="pjPop" hidden></div>
@@ -24756,9 +24755,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const PJ_SEE_ALL=['회의용'];
   function canSeeAllProjects(){ return isProjectLead()||PJ_SEE_ALL.includes(myName()); }
   function projectOwner(requested){ return isProjectLead()?String(requested||''):myName(); }
-  /* 종류(kind) · '' 업무(기본) / 행사 / 회사일정 (10-29 사용자 결정) ·
+  /* 종류(kind) · '' 업무(기본) / 행사 / 회사일정(화면 이름 '공지' · 저장값은 그대로) (10-29 사용자 결정) ·
      행사·회사일정은 담당자와 상관없이 모든 회원이 보고, 고치기·지우기·종류 정하기는 팀장과 회의용만 */
-  const PJ_KINDS=[{k:'',l:'업무',c:'#9ca3af'},{k:'행사',l:'행사',c:'#e2672a'},{k:'회사일정',l:'회사일정',c:'#6b7280'}];
+  const PJ_KINDS=[{k:'',l:'업무',c:'#9ca3af'},{k:'행사',l:'행사',c:'#e2672a'},{k:'회사일정',l:'공지',c:'#6b7280'}];
   function isSharedProject(p){ return !!p&&(p.kind==='행사'||p.kind==='회사일정'); }
   function canEditShared(){ return canSeeAllProjects(); }
   function canManageProject(p){
@@ -26292,7 +26291,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const el=board.querySelector('.pj-card[data-id="'+pickedCard+'"]');
     if(el) el.classList.add('is-picked'); else pickedCard=null;
   }
-  const pf={status:new Set(),owner:new Set(),channel:new Set(),kind:new Set(),from:'',to:'',q:''};
+  const pf={status:new Set(),owner:new Set(),channel:new Set(),kind:new Set(['']),from:'',to:'',q:''};   /* 종류는 늘 하나 · 처음엔 업무 */
   const STATUS_TAG={'예정':['rgba(124,111,224,.14)','#6b5fe0'],'진행중':['rgba(59,130,246,.12)','#2f6fd6'],
     '보류':['rgba(240,138,36,.14)','#d9731a'],'완료':['rgba(34,160,90,.13)','#1d8a4d'],'종료':['rgba(107,114,128,.14)','#4b5563']};
   const tag=(t,bg,fg)=>`<span class="pj-tag" style="--tag-bg:${bg};--tag-fg:${fg}">${esc(t)}</span>`;
@@ -26361,13 +26360,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
                       :(initial?esc(initial):PJ_FACE);
     return `<span class="pj-chip-ava" style="background:${esc(color||memberColor(name))}">${inner}</span>`;
   }
-  /* 종류 탭 · 전체 / 업무 / 행사 / 회사일정 중 하나 · 숫자는 다른 조건을 다 건 뒤의 개수 */
+  /* 종류 탭 · 업무 / 행사 / 공지 중 하나(전체 없음 · 10-29 사용자 요청) · 숫자는 다른 조건을 다 건 뒤의 개수 */
   function renderKinds(){
     const host=$('pjKinds');
     if(!host) return;
     const base=state.projects.filter(p=>pjMatch(p,'kind')), cur=pf.kind.size?[...pf.kind][0]:null;
     const tab=(v,l,n)=>`<button type="button" class="ui-tab" role="tab" data-kind="${v==null?'*':esc(v)}" aria-selected="${cur===v}">${l}<span class="n">${n}</span></button>`;
-    host.innerHTML=tab(null,'전체',base.length)+PJ_KINDS.map(x=>tab(x.k,x.l,base.filter(p=>(p.kind||'')===x.k).length)).join('');
+    host.innerHTML=PJ_KINDS.map(x=>tab(x.k,x.l,base.filter(p=>(p.kind||'')===x.k).length)).join('');
   }
   function renderFacets(){
     const host=$('pjFacets');
@@ -26446,7 +26445,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       <div class="pj-card-made">작성 ${esc((p.created||'').replace(/-/g,'.'))}</div>
       ${p.memo?`<div class="pj-card-memo"><span class="pj-card-memo-t">${pjLinkify(p.memo)}</span></div>`:''}
       <div class="pj-tags">
-        ${isSharedProject(p)?tag(p.kind,p.kind==='행사'?'color-mix(in srgb,var(--btn) 16%,transparent)':'rgba(107,114,128,.16)',p.kind==='행사'?'var(--btn-soft-ink)':'var(--body)'):''}
+        ${isSharedProject(p)?tag(kindLabel(p.kind),p.kind==='행사'?'color-mix(in srgb,var(--btn) 16%,transparent)':'rgba(107,114,128,.16)',p.kind==='행사'?'var(--btn-soft-ink)':'var(--body)'):''}
         ${tag(p.status,st[0],st[1])}
         ${DONE_ST.includes(p.status)?'':p.urgent?tag('긴급','rgba(232,72,85,.12)','#e0394a'):tag('보통','rgba(59,130,246,.12)','#2f6fd6')}
         ${p.owner?tag(p.owner,`color-mix(in srgb,${oc} 14%,transparent)`,oc):''}
@@ -26482,9 +26481,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       b.classList.toggle('is-on',!!txt);
       b.querySelector('.pj-filter-n').textContent=k==='date'?(txt||'전체'):txt;
     });
-    const reset=$('pjFilterReset');
-    /* 필터 초기화는 늘 그 자리에 둔다(10-29 사용자 요청 · 나타났다 사라지면 줄이 흔들림) · 걸린 것이 없으면 흐리게 */
-    if(reset) reset.classList.toggle('is-idle',!(pf.status.size||pf.owner.size||pf.channel.size||pf.kind.size||pf.from||pf.to||pf.q));
+    /* 필터 초기화 단추는 10-29 사용자 요청으로 뺐다 · 칩 줄의 '전체'와 기간 창으로 푼다 */
     renderKinds();
     renderFacets();
     renderCal();
@@ -26550,7 +26547,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         const barC=p.kind==='행사'?(chColor(p.channel)&&p.channel?chColor(p.channel):'var(--btn)'):colorOf(p.status);
         bars+=`<button type="button" class="pj-mcal-bar${kc}${sp.s<ws?' is-cont-l':''}${sp.e>we?' is-cont-r':''}${drag?' can-drag':''}${calDrag&&calDrag.moved&&calDrag.id===p.id?' is-dragging':''}" data-id="${esc(p.id)}"
           style="grid-column:${c0+1}/${c1+2};grid-row:${lane+2};--bar:${esc(barC)}"
-          title="${esc(p.name)}${p.kind?' · '+esc(p.kind)+(p.channel?' · '+esc(chLabel(p.channel)):''):''} · ${esc(p.status||'')} · 진행 ${range}${drag?' · 끌어서 옮기기, 끝을 끌어 늘이기':''}">${grips}${esc(p.name||'이름 없음')}</button>`;
+          title="${esc(p.name)}${p.kind?' · '+esc(kindLabel(p.kind))+(p.channel?' · '+esc(chLabel(p.channel)):''):''} · ${esc(p.status||'')} · 진행 ${range}${drag?' · 끌어서 옮기기, 끝을 끌어 늘이기':''}">${grips}${esc(p.name||'이름 없음')}</button>`;
       });
       let cells='';
       for(let i=0;i<7;i++){
@@ -26896,7 +26893,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
     $('pjFilters').addEventListener('click',e=>{
       const kt=e.target.closest('#pjKinds [data-kind]');
-      if(kt){ pf.kind.clear(); if(kt.dataset.kind!=='*') pf.kind.add(kt.dataset.kind); pop.hidden=true; renderBoard(); return; }
+      if(kt){ pf.kind.clear(); pf.kind.add(kt.dataset.kind==='*'?'':kt.dataset.kind); pop.hidden=true; renderBoard(); return; }
       if(e.target.closest('#pjFilterReset')){
         pf.status.clear(); pf.owner.clear(); pf.channel.clear(); pf.kind.clear();
         pf.from=''; pf.to=''; pf.q=''; $('pjSearch').value='';
