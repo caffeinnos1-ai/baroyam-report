@@ -2579,8 +2579,8 @@ window.BAROYAM_FONT=(function(){
   /* 10-29 간격 다시 정리(사용자: "중구난방") · 위 줄 모든 칸 30px · 간격 8px · 단계 탭 줄은 밑줄을 끝까지 긋고 업로드 단추를 같은 가운데 선에 */
   .ma-listbar{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:14px}
   .ma-listbar-end{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .ma-listbar .ui-field.sm,.ma-listbar .ui-chip,.ma-listbar .ui-btn.sm{height:var(--ui-h-sm)}
-  .ma-listbar .ui-chips{gap:6px}
+  .ma-listbar .ui-field.sm,.ma-levelbar .ui-chip,.ma-levelbar .ui-btn.sm{height:var(--ui-h-sm)}
+  .ma-levelbar .ui-chips{gap:6px}
   .ma-list .ma-crumb{margin:0 0 12px}
   .ma-levelbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--line)}
   .ma-levelbar .ui-btn[hidden]{display:none}
@@ -10735,15 +10735,16 @@ window.BAROYAM_FONT=(function(){
                   <button type="button" class="ui-field sm" id="maSortPick" aria-haspopup="listbox"><span class="t">지출 많은 순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
                   <div class="ui-tabs" id="maMode" hidden><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
                 </div>
-                <div class="ma-listbar-end"><div class="ui-chips" id="maShow"></div>
-                  <button type="button" class="ui-btn sm soft icon ma-linkbtn" id="maLinkBtn" title="연동 리스트 · 소재를 마진표 상품(대표 ROAS)·드라이브 영상과 잇기" aria-label="연동 리스트"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></button></div></div>
+              </div>
               <div hidden><h3 id="maListT"></h3><small id="maListS"></small></div>
               <div class="ma-crumb" id="maCrumb" hidden></div>
               <!-- 단계 탭 · 메타 광고 관리자처럼 표 바로 위 · 캠페인을 체크하고 세트로 넘어가면 그 캠페인의 세트만 -->
               <!-- 광고 업로드 단추 · 배너 위 단추 줄에서 단계 탭 줄 오른쪽 끝으로 옮김(10-29 사용자 요청 · 주황) -->
               <div class="ma-levelbar">
                 <div class="ui-tabs ma-levels" id="maLevel"><button class="ui-tab" data-value="campaign">캠페인</button><button class="ui-tab" data-value="adset">세트</button><button class="ui-tab" data-value="asset">소재</button></div>
-                <button type="button" class="ui-btn primary sm" id="maUpBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>광고 업로드</button>
+                <div class="ma-listbar-end"><div class="ui-chips" id="maShow"></div>
+                  <button type="button" class="ui-btn sm soft icon ma-linkbtn" id="maLinkBtn" title="연동 리스트 · 소재를 마진표 상품(대표 ROAS)·드라이브 영상과 잇기" aria-label="연동 리스트"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></button>
+                <button type="button" class="ui-btn primary sm" id="maUpBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>광고 업로드</button></div>
               </div>
               <div id="maTable"></div>
             </div>
