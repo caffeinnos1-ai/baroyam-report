@@ -3036,6 +3036,15 @@ window.BAROYAM_FONT=(function(){
   .ma-one{grid-template-columns:260px;flex:none}
   .ma-asset-ads{flex:1;min-width:240px}
   .ma-sw-pend{font-size:11px;color:var(--btn);white-space:nowrap}
+  .ma-table td.ma-budcol small.ma-sw-pend{color:var(--btn)}
+  .ma-bud-ed{display:inline-flex;align-items:center;gap:4px;margin:-3px -6px;padding:3px 6px;border:1px solid transparent;border-radius:7px;background:none;font:inherit;color:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
+  .ma-bud-ed .ma-bud-pen{width:12px;height:12px;color:var(--btn);opacity:0;transition:opacity .15s}
+  .ma-table tr:hover .ma-bud-ed .ma-bud-pen,.ma-bud-ed:focus-visible .ma-bud-pen{opacity:1}
+  .ma-bud-ed:hover{border-color:var(--btn);background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .ma-bud-set{display:flex;flex-direction:column;gap:8px}
+  .ma-bud-in{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--mute)}
+  .ma-bud-in .ui-field{width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+  .ma-bud-dlg .ma-gv-imp b{font-size:17px}
   .ma-sw-no{color:var(--mute)}
   .ma-table th.ma-swcol,.ma-table td.ma-swcol{width:58px;text-align:center;padding-left:4px;padding-right:4px;cursor:default}
   .ma-list .ma-table th.ma-swcol{width:58px}
@@ -19432,7 +19441,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     const fxNow=cur&&cur!=='KRW'&&inKrw()&&data.fx&&data.fx[cur]?(()=>{ const f=data.fx[cur], k=Object.keys(f).sort(); return k.length?f[k[k.length-1]]:null; })():null;
     const budVal=r=>{ const b=(tab!=='campaign'&&budOf[r.s])||budOf[r.c]; if(!b||!b.d) return null;
       let v=cur==='KRW'||cur==='JPY'?b.d:b.d/100; if(fxNow) v*=fxNow; return {v,cbo:!(tab!=='campaign'&&budOf[r.s]&&budOf[r.s].d)&&tab!=='campaign'}; };
-    rows.forEach(r=>{ r.brand=bOf[r.c]||''; const b=budVal(r); r.bud=b?b.v:null; r.budCbo=!!(b&&b.cbo); });
+    rows.forEach(r=>{ r.brand=bOf[r.c]||''; const b=budVal(r); r.bud=b?b.v:null; r.budCbo=!!(b&&b.cbo);
+      /* 예산 바꾸기(팀장) · 하루 예산이 그 줄 자신에게 있을 때만 · CBO 캠페인 안의 세트·소재는 캠페인 탭에서 */
+      const own=tab==='campaign'?r.c:tab==='adset'?r.s:null; r.budEd=own&&budOf[own]&&budOf[own].d?{lv:tab,id:own}:null; });
     if(sortKey==='bud') rows.sort((p,r)=>p.bud==null?1:r.bud==null?-1:(p.bud-r.bud)*sortDir);
     else if(sortKey==='at') rows.sort((p,r)=>p.at==null?1:r.at==null?-1:(p.at-r.at)*sortDir);
     else if(sortKey==='brand'||sortKey==='name') rows.sort((p,r)=>String(p[sortKey]).localeCompare(String(r[sortKey]),'ko')*-sortDir);
@@ -19619,8 +19630,14 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       }
       return last&&r.st==='ACTIVE'?'now':ever?'past':'';
     };
-    const budTd=r=>r.bud==null?'<td class="ma-budcol is-zero">-</td>'
-      :'<td class="ma-budcol"'+(r.budCbo?' title="캠페인 예산(세트·소재가 나눠 씀)"':tab==='asset'?' title="이 소재가 든 광고 세트의 예산"':'')+'>'+money(r.bud,cur)+(r.budCbo?'<small>캠페인</small>':'')+'</td>';
+    const budEd=budCan();
+    const budTd=r=>{
+      if(r.bud==null) return '<td class="ma-budcol is-zero">-</td>';
+      const tip=r.budCbo?' title="캠페인 예산(세트·소재가 나눠 씀)'+(budEd?' · 캠페인 탭에서 바꿉니다':'')+'"':tab==='asset'?' title="이 소재가 든 광고 세트의 예산"':'';
+      if(budEd&&r.budEd){ shownBud[r.budEd.id]=r;
+        if(BUD_PEND[r.budEd.id]) return '<td class="ma-budcol">'+money(r.bud,cur)+'<small class="ma-sw-pend">바꾸는 중</small></td>';
+        return '<td class="ma-budcol"><button type="button" class="ma-bud-ed" data-bud="'+r.budEd.lv+'|'+esc(r.budEd.id)+'" title="예산 바꾸기">'+money(r.bud,cur)+BUD_PEN+'</button></td>'; }
+      return '<td class="ma-budcol"'+tip+'>'+money(r.bud,cur)+(r.budCbo?'<small>캠페인</small>':'')+'</td>'; };
     /* 소재 게재 칸 · n일째만 연두 알약으로(오늘 = 1일째 · 한국 시각 · 날짜는 올리면 보임) */
     const today=Date.parse(kst()), atTd=at=>{ if(!at) return '<td class="ma-atcol is-zero">-</td>';
       const d=new Date(at+9*3600e3).toISOString().slice(0,10), n=Math.round((today-Date.parse(d))/864e5)+1;
@@ -20133,6 +20150,117 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
       return {ok:false,msg:'보내지 못했습니다: '+(e&&e.message||e)};
     }
   }
+  /* 예산 바꾸기(10-29 사용자 요청 · 팀장만) · 정밀성과 캠페인·광고 세트 목록의 일예산 칸을 누르면 뜬다 ·
+     하루 예산이 그 줄 자신에게 있을 때만(CBO 캠페인은 캠페인 줄, 세트 예산은 세트 줄 · 총예산은 메타 광고관리자에서) ·
+     켜기·끄기와 같은 확인(체크 + 같은 비밀번호)과 같은 길(brand-files metaads/gv/req · kind:'budget')로 보내고,
+     VPS 가 메타의 지금 값이 화면과 같은지 본 뒤 바꾼다 · 한 번에 두 배까지(숫자 실수 막기) · 금액은 광고계정 통화로 적는다(메타가 그 통화로 받음) */
+  const BUD_PEND={}, shownBud={};
+  const BUD_PEN='<svg class="ma-bud-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  const BUD_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>';
+  function budCan(){ try{ const a=acc(); return !!(a&&a.manage)&&!!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; } }
+  function budAsk(lv,id,name){
+    const a=acc(); if(!a||!budCan()) return;
+    const x=(lv==='campaign'?a.campaigns:a.adsets||[]).find(y=>y.id===id);
+    if(!x||!x.budget||!x.budget.d) return;
+    const cur=a.currency||'KRW', unit=cur==='KRW'||cur==='JPY'?1:100, raw=x.budget.d;
+    const fx=cur!=='KRW'&&data.fx&&data.fx[cur]?(()=>{ const f=data.fx[cur], k=Object.keys(f).sort(); return k.length?f[k[k.length-1]]:null; })():null;
+    const nat=v=>{ const m=v/unit; return cur==='KRW'?Math.round(m).toLocaleString('ko-KR')+'원':cur==='USD'?'$'+m.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):m.toLocaleString('en-US')+' '+cur; };
+    const krw=v=>fx?'≈ '+Math.round(v/unit*fx).toLocaleString('ko-KR')+'원':'';
+    /* 최근 7일 · 이 캠페인·세트 광고들의 하루 값 */
+    const ads=(a.ads||[]).filter(y=>lv==='campaign'?y.c===id:y.s===id).map(y=>y.id), D=a.adDaily||{}, days=Object.keys(D).sort().slice(-7), m=[0,0,0];
+    days.forEach(d=>ads.forEach(k=>{ const v=D[d][k]; if(v){ m[0]+=v[0]; m[1]+=v[1]; m[2]+=v[2]; } }));
+    const roas=m[0]?Math.round(m[1]/m[0]*100):null, avg=days.length?m[0]/days.length:0, mc=inKrw()?'KRW':cur;
+    const C=lv==='adset'?(a.campaigns||[]).find(y=>y.id===x.c):null, nm=GV_LV[lv];
+    const dlg=document.createElement('div');
+    dlg.className='settings-overlay ma-gv-ov';
+    dlg.innerHTML='<div class="settings-panel ma-gv-dlg is-on ma-bud-dlg" role="alertdialog" aria-modal="true" aria-labelledby="maBudT">'
+      +'<div class="ma-gv-top"><span class="ma-gv-ic">'+BUD_ICON+'</span><div class="ma-gv-who"><small>'+nm+' 예산 바꾸기</small>'
+      +'<h2 id="maBudT" title="'+esc(name)+'">'+esc(name)+'</h2>'+(C?'<p title="'+esc(C.name)+'">캠페인 · '+esc(C.name)+'</p>':'')+'</div>'
+      +'<button class="settings-close" type="button" aria-label="닫기">✕</button></div>'
+      +'<div class="ma-gv-body">'
+      +'<div class="ma-gv-k"><span class="cap">최근 7일</span><div><small>하루 평균 광고비</small><b>'+money(avg,mc)+'</b></div><div><small>ROAS</small><b>'+(roas==null?'-':roas+'%')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
+      +'<div class="ma-bud-set"><div class="ui-chips" data-pct>'+[10,20,30,50].map(p=>'<button type="button" class="ui-chip" aria-pressed="false" data-p="'+p+'">+'+p+'%</button>').join('')+'</div>'
+      +'<label class="ma-bud-in"><span>새 하루 예산'+(cur!=='KRW'?' ('+cur+')':'')+'</span><input type="text" class="ui-field" inputmode="decimal" autocomplete="off" value="'+(raw/unit)+'"></label></div>'
+      +'<div class="ma-gv-imp"><div><b data-now>'+nat(raw)+'</b><small>지금 '+krw(raw)+'</small></div><div class="is-hot"><b data-new>'+nat(raw)+'</b><small data-newk>바꾼 뒤 '+krw(raw)+'</small></div><div><b data-pc>0%</b><small>변화</small></div></div>'
+      +'<p class="ma-gv-warn" data-big hidden>20% 넘게 바꾸면 메타가 성과를 다시 배우느라(학습 단계) 며칠 동안 효율이 흔들릴 수 있습니다.</p>'
+      +'<ul class="ma-gv-note"><li>바꾸면 바로 적용됩니다. 메타는 하루에 예산보다 조금 더(최대 75%) 쓸 수 있고, 주 단위로 맞춥니다.</li>'
+      +'<li>한 번에 두 배까지 바꿀 수 있습니다. 누가 언제 바꿨는지 기록이 남습니다.</li></ul>'
+      +'</div>'
+      +'<div class="ma-gv-confirm">'
+      +'<label class="ma-gv-ok"><input type="checkbox"><span>위 내용을 확인했습니다</span></label>'
+      +'<input type="text" class="ui-field ma-gv-secret" name="bud-'+Math.random().toString(36).slice(2,8)+'" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="numeric"'
+      +' data-lpignore="true" data-1p-ignore data-form-type="other" aria-label="켜기·끄기 비밀번호" placeholder="켜기·끄기 비밀번호">'
+      +'<p class="ma-gv-msg" hidden></p>'
+      +'<div class="ma-gv-foot"><button type="button" class="ui-btn ghost" data-x>취소</button><button type="button" class="ui-btn primary" data-go disabled>예산 바꾸기</button></div>'
+      +'</div></div>';
+    document.body.appendChild(dlg);
+    const onKey=e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } };
+    const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
+    document.addEventListener('keydown',onKey,true);
+    const $d=q=>dlg.querySelector(q), go=$d('[data-go]'), msg=$d('.ma-gv-msg'), ok=$d('.ma-gv-ok input'), pw=$d('.ma-gv-secret'), inp=$d('.ma-bud-in input');
+    let next=raw;
+    const read=()=>{ const v=parseFloat(String(inp.value).replace(/[^0-9.]/g,'')); return isFinite(v)&&v>0?Math.round(v*unit):0; };
+    const paint=()=>{
+      const pc=next&&raw?Math.round((next-raw)/raw*1000)/10:0, bad=!next?'금액을 적어 주세요.':next>raw*2?'한 번에 두 배까지만 바꿀 수 있습니다.':next===raw?'지금 예산과 같습니다.':'';
+      $d('[data-new]').textContent=next?nat(next):'-'; $d('[data-newk]').textContent='바꾼 뒤 '+(next?krw(next):'');
+      $d('[data-pc]').textContent=(pc>0?'+':'')+pc+'%';
+      $d('[data-big]').hidden=!(next&&Math.abs(pc)>20);
+      dlg.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',String(next===budStep(raw,+b.dataset.p,unit))));
+      msg.hidden=!bad||!inp.value; msg.className='ma-gv-msg is-err'; if(bad) msg.textContent=bad;
+      go.disabled=!!bad||!(ok.checked&&pw.value.trim());
+      return !bad;
+    };
+    dlg.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{ next=budStep(raw,+b.dataset.p,unit); inp.value=String(next/unit); paint(); }));
+    inp.addEventListener('input',()=>{ next=read(); paint(); });
+    ok.addEventListener('change',()=>{ paint(); if(ok.checked) pw.focus(); });
+    pw.addEventListener('input',()=>{ pw.classList.remove('is-err'); paint(); });
+    pw.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!go.disabled){ e.preventDefault(); go.click(); } });
+    setTimeout(()=>{ inp.focus(); inp.select(); },30);
+    dlg.addEventListener('click',async e=>{
+      if(e.target===dlg||e.target.closest('.settings-close')||e.target.closest('[data-x]')) return close();
+      if(!e.target.closest('[data-go]')||go.disabled||!paint()) return;
+      go.disabled=true; go.textContent='확인 중…';
+      let right=false; try{ right=(await gvHash(pw.value.trim()))===GV_LOCK.hash; }catch(err){ console.error(err); }
+      if(!right){
+        msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent='예산 바꾸기';
+        pw.value=''; pw.classList.add('is-err'); pw.focus(); paint(); return;
+      }
+      go.textContent='보내는 중…'; ok.disabled=pw.disabled=inp.disabled=true;
+      msg.hidden=false; msg.className='ma-gv-msg'; msg.textContent='메타에 보내는 중입니다 · 서버가 받기까지 1분 안쪽이 걸릴 수 있습니다.';
+      const res=await budSend(lv,id,name,raw,next,pw.value.trim());
+      pw.value=''; ok.disabled=pw.disabled=inp.disabled=false; go.textContent='예산 바꾸기';
+      if(res.ok){ close(); return; }
+      msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent=res.msg; paint();
+    });
+  }
+  /* +n% · 원화는 100원 단위, 그 밖은 최소 단위(센트)로 */
+  function budStep(raw,p,unit){ const v=raw*(1+p/100); return unit===1?Math.round(v/100)*100:Math.round(v); }
+  async function budSend(lv,id,name,from,to,pw){
+    const DB=window.BAROYAM_DB, a=acc();
+    try{
+      if(!DB||!DB.fileUpload||!(await DB.ensureSession())) return {ok:false,msg:'로그인이 풀렸습니다. 새로고침한 뒤 다시 해 주세요.'};
+      const fname=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json';
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      const q={v:1,kind:'budget',at:new Date().toISOString(),lv,id,from,to,acct:a&&a.id,name,by,pw};
+      BUD_PEND[id]={to,at:Date.now()};
+      await DB.fileUpload('brand-files','metaads/gv/req/'+fname,new Blob([JSON.stringify(q)],{type:'application/json'}));
+      const t0=Date.now();
+      const apply=bud=>{ const A=acc(); if(!A||!bud) return; ['campaigns','adsets'].forEach(k=>(A[k]||[]).forEach(x=>{ if(bud[x.id]) x.budget={d:bud[x.id]}; })); };
+      for(;;){
+        await new Promise(r=>setTimeout(r,2000));
+        const res=await gvRes(fname), sec=(Date.now()-t0)/1000;
+        if(res&&(res.state==='done'||res.state==='failed')){
+          delete BUD_PEND[id]; apply(res.bud); gvRepaint();
+          return res.state==='done'?{ok:true}:{ok:false,msg:res.message||'바꾸지 못했습니다.'};
+        }
+        if(!res&&sec>120){ delete BUD_PEND[id]; gvRepaint(); return {ok:false,msg:'서버가 요청을 받지 않았습니다. 잠시 뒤 다시 해 주세요.'}; }
+        if(sec>240){ delete BUD_PEND[id]; gvRepaint(); return {ok:false,msg:'4분이 지나도 답이 없습니다. 잠시 뒤 새로고침해 확인해 주세요.'}; }
+      }
+    }catch(e){
+      delete BUD_PEND[id]; gvRepaint();
+      return {ok:false,msg:'보내지 못했습니다: '+(e&&e.message||e)};
+    }
+  }
   function openCard(r){
     if(!cardBox){
       cardBox=document.createElement('div');
@@ -20525,6 +20653,8 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   /* 켜기·끄기 스위치 · 줄 누르기(소재 팝업)보다 먼저 잡는다 */
   $('maTable').addEventListener('click',e=>{
+    const bd=e.target.closest('[data-bud]');
+    if(bd){ e.stopPropagation(); e.preventDefault(); const [lv,id]=bd.dataset.bud.split('|'), r=shownBud[id]; if(r) budAsk(lv,id,r.name); return; }
     const sw=e.target.closest('[data-sw]'); if(!sw) return;
     e.stopPropagation(); e.preventDefault();
     const [lv,id]=sw.dataset.sw.split('|'), r=shownSw[id];
