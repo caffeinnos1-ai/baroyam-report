@@ -2740,7 +2740,7 @@ window.BAROYAM_FONT=(function(){
   .ma-step-sets{display:flex;flex-direction:column;gap:6px;margin-left:28px;padding-left:12px;border-left:2px solid var(--line)}
   .ma-step-sets .ma-step-row{padding-left:0}
   .ma-step-assets{display:flex;flex-direction:column;gap:6px;padding-left:28px}
-  .ma-step-asset{display:grid;grid-template-columns:minmax(0,1fr) 260px 110px;gap:10px;align-items:center}
+  .ma-step-asset{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:10px;align-items:center}
   .ma-step-asset .nm2{display:flex;flex-direction:column;min-width:0}
   .ma-step-asset .nm2 .nm{font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-step-asset .nm2 small{font-size:11px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -19467,7 +19467,6 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b>'+(m[3]?'<span class="sub">'+m[3]+'</span>':'')+'</div>').join('')+'</div>'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
         +bdHtml+tgBox
-        +(l.script?'<div class="ma-sec"><h4>대본</h4><div class="ma-pv-script">'+esc(l.script)+'</div></div>':'')
         +txBox
         +'</div></div>';
     };
@@ -19653,25 +19652,23 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     linkStick=curCamp;
     const live=linkShow.startsWith('on');
     const assets=allAssets.filter(x=>!live||x.st==='ACTIVE');
-    let tA=0, tV=0, tS=0;
+    let tA=0, tV=0;
     const vBtn=x=>{ const l=links[x.id]||{};
       return '<div class="ma-ll-v"><button type="button" class="ui-field sm'+(l.drive?' is-on':'')+'" data-link="drive" data-id="'+esc(x.id)+'" title="'+esc(l.driveName||'바로얌 드라이브 메타광고 영상 고르기')+'"><span class="t">'+(l.drive?esc(l.driveName||'영상'):'<span class="ph">영상 고르기</span>')+'</span>'+CHEV+'</button>'
         +(l.drive?'<a class="ma-ll-play" href="https://drive.google.com/file/d/'+encodeURIComponent(l.drive)+'/view" target="_blank" rel="noopener" title="드라이브에서 영상 열기" aria-label="영상 열기">▶</a>':'')+'</div>'; };
-    const sBtn=x=>{ const t=(links[x.id]||{}).script||'';
-      return '<button type="button" class="ui-field sm'+(t?' is-on':'')+'" data-link="script" data-id="'+esc(x.id)+'" title="'+esc(t?t.slice(0,200):'대본 붙여넣기')+'"><span class="t">'+(t?'대본 '+t.length.toLocaleString('ko-KR')+'자':'<span class="ph">대본 넣기</span>')+'</span></button>'; };
     let nav='', detail='';
     cs.forEach(o=>{
       const cid=o.c.id;
       let sets=(a.adsets||[]).filter(x=>x.c===cid);
       if(live) sets=sets.filter(x=>x.st==='ACTIVE');
       const mine=assets.filter(x=>x.c===cid).sort((p,q)=>q.x.spend-p.x.spend);
-      const nV=mine.filter(x=>(links[x.id]||{}).drive).length, nS=mine.filter(x=>(links[x.id]||{}).script).length;
-      tA+=mine.length; tV+=nV; tS+=nS;
+      const nV=mine.filter(x=>(links[x.id]||{}).drive).length;
+      tA+=mine.length; tV+=nV;
       const R=repFor(cid,null), hasOver=sets.some(x=>linkS[x.id]&&linkS[x.id].prod), split=setMode.has(cid)||hasOver, open=curCamp===cid;
       const done1=!!R, done2=mine.length&&nV===mine.length;
       const pill=(ok,t)=>'<span class="ma-acc-pill'+(ok?' is-ok':'')+'">'+t+'</span>';
       nav+='<button type="button" class="ma-toc-item'+(open?' is-on':'')+'" data-acc="'+esc(cid)+'"><span class="nm"><span class="ma-st'+stCls(o.c.st)+'"></span>'+esc(bOf[cid]||o.c.name)+'</span>'
-        +'<small title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</small><span class="ps">'+pill(done1,R?'상품 ✓':'상품')+pill(done2,'영상 '+nV+'/'+mine.length)+pill(mine.length&&nS===mine.length,'대본 '+nS+'/'+mine.length)+'</span></button>';
+        +'<small title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</small><span class="ps">'+pill(done1,R?'상품 ✓':'상품')+pill(done2,'영상 '+nV+'/'+mine.length)+'</span></button>';
       if(open){
         detail='<div class="ma-toc-title"><span class="ma-st'+stCls(o.c.st)+'"></span><b title="'+esc(o.c.name)+'">'+esc(o.c.name)+'</b><small>세트 '+sets.length+' · 소재 '+mine.length+'</small></div><div class="ma-acc-body">'
           /* ① 대표 ROAS */
@@ -19680,15 +19677,15 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
           +(sets.length>1||hasOver?'<label class="ma-step-tg"><input type="checkbox" data-split="'+esc(cid)+'"'+(split?' checked':'')+(hasOver?' disabled title="세트에 따로 이은 상품이 있어 켜져 있습니다"':'')+'> 세트마다 다른 상품(랜딩)이 있어요</label>':'')
           +(split?'<div class="ma-step-sets">'+sets.map(x=>'<div class="ma-step-row is-set"><span class="lb" title="'+esc(x.name)+'">'+esc(x.name)+'</span>'+prodBtn('set',x.id,cid)+'</div>').join('')+'</div>':'')
           +'</div>'
-          /* ② 소재 영상·대본 */
-          +'<div class="ma-step"><div class="ma-step-h"><span class="ma-step-n'+(done2?' is-ok':'')+'">'+(done2?'✓':'2')+'</span><b>소재 영상 · 대본</b><small>소재마다 바로얌 드라이브 영상과 대본을 잇습니다 · 이름이 비슷한 영상을 추천</small></div>'
-          +(mine.length?'<div class="ma-step-assets">'+mine.map(x=>'<div class="ma-step-asset"><div class="ma-ll-name"><span class="ma-st'+stCls(x.st)+'"></span><div class="nm2"><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><small>'+esc(sName[x.s]||'')+'</small></div></div>'+vBtn(x)+sBtn(x)+'</div>').join('')+'</div>'
+          /* ② 소재 영상 · 대본 넣기는 10-29 사용자 요청으로 뺌(저장된 script 값은 그대로 둠) */
+          +'<div class="ma-step"><div class="ma-step-h"><span class="ma-step-n'+(done2?' is-ok':'')+'">'+(done2?'✓':'2')+'</span><b>소재 영상</b><small>소재마다 바로얌 드라이브 영상을 잇습니다 · 이름이 비슷한 영상을 추천</small></div>'
+          +(mine.length?'<div class="ma-step-assets">'+mine.map(x=>'<div class="ma-step-asset"><div class="ma-ll-name"><span class="ma-st'+stCls(x.st)+'"></span><div class="nm2"><span class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</span><small>'+esc(sName[x.s]||'')+'</small></div></div>'+vBtn(x)+'</div>').join('')+'</div>'
             :'<div class="ma-empty">'+(live?'게재 중인 소재가 없습니다':'소재가 없습니다')+'</div>')
           +'</div></div>';
       }
     });
-    linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+tA+'개 · 영상 '+tV+' · 대본 '+tS;
-    linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">왼쪽에서 캠페인을 고르고 ① 대표 ROAS 상품 → ② 소재 영상·대본 순서로 잇습니다</span>'
+    linkBox.querySelector('#maLinkT').textContent='연동 리스트 · 소재 '+tA+'개 · 영상 '+tV;
+    linkBox.querySelector('.ma-link-tools').innerHTML='<span class="ma-link-note">왼쪽에서 캠페인을 고르고 ① 대표 ROAS 상품 → ② 소재 영상 순서로 잇습니다</span>'
       +'<div class="ui-chips">'+[['on-no','집행 중 · 미연동'],['on-ok','집행 중 · 연동'],['off-no','집행 종료 · 미연동'],['off-ok','집행 종료 · 연동']]
         .map(c=>'<button type="button" class="ui-chip" data-ls="'+c[0]+'" aria-pressed="'+(linkShow===c[0])+'">'+c[1]+' <b>'+cnt[c[0]]+'</b></button>').join('')+'</div>';
     linkBox.querySelector('.ma-link-list').innerHTML=cs.length?'<div class="ma-toc"><nav class="ma-toc-nav">'+nav+'</nav><div class="ma-toc-main">'+detail+'</div></div>':'<div class="ma-empty">보여 줄 캠페인이 없습니다.</div>';
