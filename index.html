@@ -25195,6 +25195,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!statPop.hidden) renderStatPop();   /* 열려 있으면 목록도 같이 맞춘다 */
   }
   function statDueText(p,today){
+    if(DONE_ST.includes(p.status)) return p.status;
     if(!p.due) return '';
     const d=dayDiff(today,p.due);
     return d<0?`${-d}일 지연`:(d===0?'오늘 마감':`D-${d}`);
@@ -25214,7 +25215,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     list.innerHTML=rows.slice()
       .sort((a,b)=>String(a.due||'9').localeCompare(String(b.due||'9')))
       .map(p=>{
-        const late=p.due&&p.due<today;
+        const late=p.due&&p.due<today&&!DONE_ST.includes(p.status);
         const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
         return `<button type="button" class="mh-statpop-item" data-id="${esc(p.id)}">
           <span class="mh-statpop-name">${esc(p.name)}</span>
@@ -25742,8 +25743,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     return c?c.c:'var(--mute)';
   }
   /* 마감일 옆 딱지 · 지난 날짜면 빨강, 사흘 안이면 주황 */
-  function pjDdayHtml(due){
-    if(!due) return '';
+  /* 완료·종료된 프로젝트는 지연·D-day 가 없다(10-29 사용자 요청) */
+  function pjDdayHtml(due,status){
+    if(!due||DONE_ST.includes(status)) return '';
     const d=dayDiff(kstToday(),due);
     const cls=d<0?' is-late':(d<=3?' is-soon':'');
     const txt=d<0?`${-d}일 지연`:(d===0?'오늘 마감':`D-${d}`);
@@ -25800,8 +25802,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     wrap.querySelector('input[type=hidden]').value=iso;
     wrap.querySelector('.pjf-sel-t').textContent=pjFmtDate(iso,wrap.dataset.date);
     /* D-day 는 마감기한 옆에만 · 시작날짜를 골라도 마감 D-day 는 그대로 */
-    const slot=wrap.dataset.date==='due'&&form.querySelector('[data-dday]');
-    if(slot) slot.innerHTML=pjDdayHtml(iso);
+    if(wrap.dataset.date==='due') pjDdayRefresh();
     closeDateCals(null);
     flushProjectSave();
   }
@@ -25838,6 +25839,15 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     wrap.querySelector('.pjf-sel-t').textContent=name==='channel'?chLabel(v):(v||'없음');
     wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o.dataset.v===v));
+    if(name==='status') pjDdayRefresh();
+  }
+  /* 마감기한 옆 D-day 를 지금 창의 마감일·상태로 다시 그린다 */
+  function pjDdayRefresh(){
+    const slot=form&&form.querySelector('[data-dday]');
+    if(!slot) return;
+    const due=(form.querySelector('[data-date="due"] input[type=hidden]')||form.querySelector('input[name=due]')||{}).value||'';
+    const st=(form.querySelector('input[name=status]')||{}).value||'';
+    slot.innerHTML=pjDdayHtml(due,st);
   }
   /* 한 목록을 열면 나머지는 닫는다 */
   function closePickMenus(except){
@@ -25906,6 +25916,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const r=form.querySelector('input[name=progress]');
       if(r){ r.value=100; const o=form.querySelector('output'); if(o) o.textContent='100%'; }
     }
+    if(name==='status') pjDdayRefresh();
     flushProjectSave();
   });
 
@@ -26171,7 +26182,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
            <div class="pjf-row"><span class="pjf-rl">마감기한</span>
              <div class="pjf-rc">
                ${pjDateField('due',cur.due)}
-               <span data-dday>${pjDdayHtml(cur.due)}</span>
+               <span data-dday>${pjDdayHtml(cur.due,cur.status)}</span>
              </div>
            </div>
            <div class="pjf-row"><span class="pjf-rl">경로</span>
@@ -26219,9 +26230,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const dot=form.querySelector('[data-dot="'+n+'"]');
       if(dot) dot.style.background=pjPickColor(n,e.target.value);
     }else if(n==='due'){
-      const slot=form.querySelector('[data-dday]');
-      if(slot) slot.innerHTML=pjDdayHtml(e.target.value);
+      pjDdayRefresh();
     }
+    if(n==='status') pjDdayRefresh();
     flushProjectSave();                    /* 고르는 값은 미루지 않고 바로 저장한다 */
   });
 
@@ -26382,7 +26393,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       ${p.memo?`<div class="pj-card-memo"><span class="pj-card-memo-t">${pjLinkify(p.memo)}</span></div>`:''}
       <div class="pj-tags">
         ${tag(p.status,st[0],st[1])}
-        ${p.urgent?tag('긴급','rgba(232,72,85,.12)','#e0394a'):tag('보통','rgba(59,130,246,.12)','#2f6fd6')}
+        ${DONE_ST.includes(p.status)?'':p.urgent?tag('긴급','rgba(232,72,85,.12)','#e0394a'):tag('보통','rgba(59,130,246,.12)','#2f6fd6')}
         ${p.owner?tag(p.owner,`color-mix(in srgb,${oc} 14%,transparent)`,oc):''}
       </div>
       <div class="pj-card-prog"><span class="mh-proj-bar"><i style="width:${pct}%"></i></span><b class="num">${pct}%</b></div>
