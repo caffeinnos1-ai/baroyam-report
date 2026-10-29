@@ -8664,7 +8664,7 @@ window.BAROYAM_FONT=(function(){
             <!-- 프로젝트설정 · 프로젝트 보드 경로 필터(자사몰·톡딜 등)의 이름·순서·색 · 빼기·더하기 -->
             <section class="settings-view" data-settings-panel="pjset" hidden>
               <div class="mg-manager">
-                <p class="mg-hint"><b>경로</b> · 프로젝트 보드의 경로 필터와 프로젝트 창의 경로 목록이에요. 고친 것은 바로 저장돼 모든 회원에게 같이 보입니다.<br>색 점을 누르면 색이 바뀌고, ✕ 로 뺀 경로는 아래에서 되살릴 수 있어요. 이름을 바꿔도 이미 적힌 프로젝트는 그대로 따라옵니다.</p>
+                <p class="mg-hint"><b>경로</b> · 프로젝트 보드의 경로 필터와 프로젝트 창의 경로 목록이에요. 고친 것은 바로 저장돼 모든 회원에게 같이 보입니다.<br>색 점을 누르면 색이 바뀌고, ✕ 로 뺀 경로는 아래에서 되살릴 수 있어요. 이름을 바꿔도 이미 적힌 프로젝트는 그대로 따라옵니다.<br><b>개인일정</b>은 경로를 고르지 않은 프로젝트(새 프로젝트의 기본값)라 늘 맨 앞에 있고 고치거나 뺄 수 없어요.</p>
                 <div class="mg-list so-list" id="pcList"></div>
                 <form class="mg-add-item" id="pcAdd"><input type="text" maxlength="20" placeholder="새 경로 이름" autocomplete="off"><button type="submit">추가</button></form>
                 <div class="pc-gone" id="pcGone" hidden></div>
@@ -15247,7 +15247,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     return false;
   }
   function changed(id){ if(id) dirty.add(id); keepLocal(); document.dispatchEvent(new CustomEvent('baroyam:pj-channels')); push(); }
-  function taken(l,id){ return all().some(x=>!x.del&&x.id!==id&&(x.l||x.k)===l); }
+  const RESERVED=['개인일정','미지정'];   /* 경로가 빈 프로젝트의 이름 · 경로 이름으로 쓰지 않는다 */
+  function taken(l,id){ return RESERVED.includes(l)||all().some(x=>!x.del&&x.id!==id&&(x.l||x.k)===l); }
   function rename(id,l){
     l=String(l||'').trim().slice(0,20);
     if(!items[id]||!l||l===items[id].l||taken(l,id)) return false;
@@ -15257,7 +15258,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function restore(id){ if(!items[id]) return; delete items[id].del; changed(id); }
   function recolor(id){ if(!items[id]) return; const i=COLORS.indexOf(items[id].c); items[id].c=COLORS[(i+1)%COLORS.length]; changed(id); }
   function add(l){
-    l=String(l||'').trim().slice(0,20); if(!l) return false;
+    l=String(l||'').trim().slice(0,20); if(!l||RESERVED.includes(l)) return false;
     const same=all().find(x=>x.k===l||(x.l||x.k)===l);
     if(same){ if(same.del){ restore(same.id); return true; } return false; }
     const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -24703,8 +24704,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* 경로 목록은 관리자 설정 › 프로젝트설정(BAROYAM_PJ_CHANNELS)에서 고친다 · k = 프로젝트에 저장되는 값, l = 보이는 이름 */
   const PJC=window.BAROYAM_PJ_CHANNELS;
   const pjChannels=()=>PJC?PJC.list():[];
-  const chLabel=v=>PJC&&v?PJC.label(v):v;
-  const chColor=v=>(PJC&&v&&PJC.color(v))||'';
+  /* 경로가 빈 프로젝트 = 개인일정(10-29 사용자 요청 · '미지정' 대신) · 저장값은 빈 칸 그대로라 새 프로젝트도 처음엔 개인일정 */
+  const PJ_PERSONAL='개인일정', PJ_PERSONAL_C='#9ca3af';
+  const chLabel=v=>v?(PJC?PJC.label(v):v):PJ_PERSONAL;
+  const chColor=v=>v?((PJC&&PJC.color(v))||''):PJ_PERSONAL_C;
   function kstToday(){
     const d=new Date(Date.now()+9*3600*1000);
     return d.toISOString().slice(0,10);
@@ -25732,9 +25735,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   /* 담당자·경로 왼쪽 점 색 · 고르지 않았으면 색을 비운다 */
   function pjPickColor(kind,v){
+    if(kind==='channel') return chColor(v)||'var(--mute)';
     if(!v) return 'transparent';
     if(kind==='owner') return memberColor(v);
-    if(kind==='channel') return chColor(v)||'var(--mute)';
     const c=STATUSES.find(x=>x.k===v);
     return c?c.c:'var(--mute)';
   }
@@ -25813,12 +25816,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* 담당자·경로 고르기 한 벌 · 고른 값은 숨은 칸(name=...)에 담기므로 저장 코드는 그대로다 */
   function pickList(name,list,cur,allowEmpty){
     const lb=v=>name==='channel'?chLabel(v):v;
-    const rows=(allowEmpty===false?[]:[{v:'',t:'없음'}]).concat(list.map(v=>({v:v,t:lb(v)})));
+    const rows=(allowEmpty===false?[]:[{v:'',t:name==='channel'?PJ_PERSONAL:'없음'}]).concat(list.map(v=>({v:v,t:lb(v)})));
     return `<span class="pjf-pick" data-pick="${name}">
       <input type="hidden" name="${name}" value="${esc(cur||'')}">
       <button type="button" class="pjf-sel" aria-haspopup="listbox" aria-expanded="false">
         <i class="pjf-dot" data-dot="${name}" style="background:${pjPickColor(name,cur)}"></i>
-        <span class="pjf-sel-t">${esc(cur?lb(cur):'없음')}</span>
+        <span class="pjf-sel-t">${esc(cur?lb(cur):(name==='channel'?PJ_PERSONAL:'없음'))}</span>
       </button>
       <div class="pjf-menu" role="listbox" hidden>
         ${rows.map(r=>`<button type="button" class="pjf-opt${r.v===(cur||'')?' is-on':''}" role="option" data-v="${esc(r.v)}">
@@ -25832,7 +25835,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const wrap=form.querySelector('.pjf-pick[data-pick="'+name+'"]');
     if(!wrap) return;
     wrap.querySelector('input[type=hidden]').value=v;
-    wrap.querySelector('.pjf-sel-t').textContent=v?(name==='channel'?chLabel(v):v):'없음';
+    wrap.querySelector('.pjf-sel-t').textContent=name==='channel'?chLabel(v):(v||'없음');
     wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o.dataset.v===v));
   }
@@ -25894,7 +25897,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!opt){ closePickMenus(null); closeDateCals(null); return; }
     const wrap=opt.closest('.pjf-pick'), name=wrap.dataset.pick, v=opt.dataset.v;
     wrap.querySelector('input[type=hidden]').value=v;
-    wrap.querySelector('.pjf-sel-t').textContent=v?(name==='channel'?chLabel(v):v):'없음';
+    wrap.querySelector('.pjf-sel-t').textContent=name==='channel'?chLabel(v):(v||'없음');
     wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o===opt));
     wrap.querySelector('.pjf-menu').hidden=true;
@@ -26263,7 +26266,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(!(inR(p.due)||inR(p.start)||inR(p.created))) return false;
     }
     if(pf.q){
-      const hay=[p.name,p.owner,p.channel,p.status].join(' ').toLowerCase();
+      const hay=[p.name,p.owner,chLabel(p.channel),p.status].join(' ').toLowerCase();
       if(!hay.includes(pf.q)) return false;
     }
     return true;
@@ -26281,7 +26284,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const out=[],seen=new Set();
     const push=(v,c,keep)=>{ if(seen.has(v)) return; seen.add(v); out.push({v:v,c:c,keep:!!keep}); };
     if(k==='status') STATUSES.forEach(s=>push(s.k,s.c,true));
-    else if(k==='channel') pjChannels().forEach(c=>push(c.k,c.c,true));   /* 자사몰·톡딜 등은 0건이어도 늘 고를 수 있게 둔다 */
+    else if(k==='channel'){ push('',PJ_PERSONAL_C,true); pjChannels().forEach(c=>push(c.k,c.c,true)); }   /* 자사몰·톡딜 등은 0건이어도 늘 고를 수 있게 둔다 */
     else if(canSeeAllProjects()) readMembers().forEach(m=>push(m.name,m.color||'#6b7280',true));   /* 팀장은 등록된 회원 전체를 고른다 */
     else if(myName()) push(myName(),memberColor(myName()),true);
     state.projects.forEach(p=>{ const v=p[k]||''; if(v) push(v,k==='owner'?memberColor(v):'#9ca3af'); });
@@ -26320,7 +26323,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         if(!n&&!on&&!o.keep) return '';
         const mark=f.k==='owner'?memberFace(o.v,o.c):`<i class="pj-chip-dot" style="background:${esc(o.c)}"></i>`;
         return `<button type="button" class="pj-chip${on?' is-on':''}${n?'':' is-zero'}" data-facet="${f.k}" data-val="${esc(o.v)}" aria-pressed="${on}">
-          ${mark}${esc(o.v?(f.k==='channel'?chLabel(o.v):o.v):'미지정')}<span class="pj-chip-n num">${n}</span></button>`;
+          ${mark}${esc(f.k==='channel'?chLabel(o.v):(o.v||'미지정'))}<span class="pj-chip-n num">${n}</span></button>`;
       }).join('');
       const allOn=!sel.size;
       return `<div class="pj-facet-row" data-facet="${f.k}">
@@ -26383,7 +26386,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         ${p.owner?tag(p.owner,`color-mix(in srgb,${oc} 14%,transparent)`,oc):''}
       </div>
       <div class="pj-card-prog"><span class="mh-proj-bar"><i style="width:${pct}%"></i></span><b class="num">${pct}%</b></div>
-      ${p.channel?`<div class="pj-card-foot"><i style="background:${chColor(p.channel)||'#9ca3af'}"></i>${esc(chLabel(p.channel))}</div>`:''}
+      <div class="pj-card-foot"><i style="background:${chColor(p.channel)||'#9ca3af'}"></i>${esc(chLabel(p.channel))}</div>
     </div>`;
   }
   function renderBoard(){
