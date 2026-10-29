@@ -2580,6 +2580,9 @@ window.BAROYAM_FONT=(function(){
   .ma-listbar-end{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .ma-list .ma-crumb{margin:0 0 10px}
   .ma-levels{margin:4px 0 6px}
+  .ma-levelbar{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .ma-levelbar #maUpBtn{margin-bottom:10px}
+  .ma-levelbar .ui-btn[hidden]{display:none}
   /* 크기 고정 · 고르거나 배지가 붙어도 폭이 늘지 않게(사용자 요청) */
   .ma-levels .ui-tab{width:88px;padding:0 8px;justify-content:center;gap:5px}
   .ma-levels .ma-selcount.is-empty{display:none}
@@ -10680,7 +10683,6 @@ window.BAROYAM_FONT=(function(){
         <div class="hero-view-tabs" id="perfTabs" role="tablist" aria-label="퍼포먼스마케팅 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-perf="daily" data-sub="하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.">데일리성과</button>
           <button type="button" class="hero-view-tab" role="tab" data-perf="detail" data-sub="캠페인 → 광고 세트 → 소재를 한 표에서 봅니다. 이름을 누르면 안쪽으로 들어갑니다.">정밀성과</button>
-          <button type="button" class="hero-view-tab" role="tab" data-perf="upload" data-sub="캠페인을 고르고, 기준 세트를 복제한 새 광고 세트에 영상·이미지 소재를 올립니다.">광고 업로드</button>
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
@@ -10751,7 +10753,11 @@ window.BAROYAM_FONT=(function(){
               <div hidden><h3 id="maListT"></h3><small id="maListS"></small></div>
               <div class="ma-crumb" id="maCrumb" hidden></div>
               <!-- 단계 탭 · 메타 광고 관리자처럼 표 바로 위 · 캠페인을 체크하고 세트로 넘어가면 그 캠페인의 세트만 -->
-              <div class="ui-tabs ma-levels" id="maLevel"><button class="ui-tab" data-value="campaign">캠페인</button><button class="ui-tab" data-value="adset">세트</button><button class="ui-tab" data-value="asset">소재</button></div>
+              <!-- 광고 업로드 단추 · 배너 위 단추 줄에서 단계 탭 줄 오른쪽 끝으로 옮김(10-29 사용자 요청 · 주황) -->
+              <div class="ma-levelbar">
+                <div class="ui-tabs ma-levels" id="maLevel"><button class="ui-tab" data-value="campaign">캠페인</button><button class="ui-tab" data-value="adset">세트</button><button class="ui-tab" data-value="asset">소재</button></div>
+                <button type="button" class="ui-btn primary sm" id="maUpBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>광고 업로드</button>
+              </div>
               <div id="maTable"></div>
             </div>
             </div>
@@ -19664,11 +19670,12 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* ---------- 배너 위 단추 · 화면 고르기 ---------- */
   const perfTabs=[...document.querySelectorAll('#perfTabs [data-perf]')];
   function paintTab(){
-    const pt=upMode?'upload':tab==='daily'?'daily':'detail';   /* 정밀성과 단추 하나가 캠페인·광고 세트·소재를 맡는다 · 광고 업로드는 upMode */
+    const pt=tab==='daily'&&!upMode?'daily':'detail';   /* 정밀성과 단추 하나가 캠페인·광고 세트·소재를 맡는다 · 광고 업로드(upMode)는 정밀성과 안 단추로 들어가는 화면 */
     $('maRoot').hidden=upMode; $('muRoot').hidden=!upMode;
     perfTabs.forEach(b=>{ const on=b.dataset.perf===pt; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     const b=perfTabs.find(x=>x.dataset.perf===pt);
-    $('perfViewTitle').textContent=b?b.textContent.trim():''; $('perfViewSub').textContent=b?b.dataset.sub||'':'';
+    $('perfViewTitle').textContent=upMode?'광고 업로드':b?b.textContent.trim():''; $('perfViewSub').textContent=upMode?UP_SUB:b?b.dataset.sub||'':'';
+    $('maUpBtn').hidden=!((data&&data.accounts)||[]).some(x=>x.manage);   /* 켜고 끌 수 있는 계정(manage)이 있을 때만 */
     root.querySelector('[data-ma-pane="daily"]').dataset.on=tab==='daily'?'1':'';
     root.querySelector('[data-ma-pane="level"]').dataset.on=tab!=='daily'?'1':'';
     root.querySelector('[data-ma-pane="list"]').dataset.on=tab!=='daily'?'1':'';
@@ -20572,8 +20579,9 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
     m.textContent=miss.length?'아직 채울 것: '+miss.join(' · '):'화면 모양만 · 아직 메타와 연결되지 않아 올리지 않았습니다';
   });
 
+  const UP_SUB='캠페인을 고르고, 기준 세트를 복제한 새 광고 세트에 영상·이미지 소재를 올립니다. 위 정밀성과를 누르면 목록으로 돌아갑니다.';
+  $('maUpBtn').addEventListener('click',()=>{ upMode=true; keep('baroyam_perf_up','1'); paint(); window.scrollTo({top:0,behavior:'smooth'}); });
   perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf;
-    if(v==='upload'){ upMode=true; keep('baroyam_perf_up','1'); paint(); return; }
     if(upMode){ upMode=false; keep('baroyam_perf_up',''); if(v==='detail'&&tab!=='daily'){ paint(); return; } }
     if(v==='detail'){ if(tab==='daily'){ show='on'; go('campaign'); } }   /* 정밀성과에 들어오면 늘 게재 중부터(사용자 요청) */ else go(v); }));
 
