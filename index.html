@@ -2924,102 +2924,82 @@ window.BAROYAM_FONT=(function(){
   .ma-tg dd{margin:0;display:flex;flex-wrap:wrap;gap:5px}
   .ma-tg dd span{font-size:12px;font-weight:500;color:var(--ink);padding:3px 9px;border-radius:7px;background:var(--chip-flat)}
   .ma-tg dd em{font-style:normal;font-size:12px;color:var(--mute);padding-top:4px}
-  /* 광고 업로드(10-26 · 화면 모양만) · 왼쪽 네 단계 | 오른쪽 미리보기·확인(따라옴) */
-  .mu[hidden],.mu-grid[hidden],.ip.ma[hidden]{display:none}
-  .mu-demo{display:flex;gap:10px;align-items:center;padding:10px 14px;margin-bottom:14px;border-radius:12px;background:var(--warn-soft);color:var(--body);font-size:12.5px}
-  .mu-demo b{flex:none;font-size:11.5px;font-weight:600;color:var(--warn);padding:2px 8px;border-radius:99px;background:var(--paper)}
-  .mu-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
-  .mu-form{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .mu-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:16px}
-  .mu-step{display:flex;flex-direction:column;gap:14px}
-  .mu-step-head{display:flex;gap:12px;align-items:center}
-  .mu-step-head h3{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
-  .mu-step-head small{font-size:12px;color:var(--mute)}
-  .mu-n{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
-  .mu-step.is-done .mu-n{background:var(--btn);color:var(--paper)}
-  .mu-f{display:flex;flex-direction:column;gap:6px;min-width:0}
-  .mu-f>label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--ink)}
-  .mu-f>label em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute)}
-  .mu-f>label em.is-over{color:var(--neg)}
-  .mu-f textarea.ui-field{height:auto;min-height:96px;padding:10px 12px;line-height:1.55;resize:vertical}
-  .mu-f .ui-field,.mu-step>.ui-field{width:100%;box-sizing:border-box}
-  .mu-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
-  .mu-hint{margin:0;font-size:11.5px;color:var(--mute)}
-  .mu-load{margin-left:auto;border:0;background:none;padding:0;font:inherit;font-size:12px;font-weight:500;color:var(--btn-soft-ink);cursor:pointer}
-  .mu-load:hover{text-decoration:underline}
-  .mu-meta{display:flex;flex-wrap:wrap;gap:6px}
-  .mu-meta:empty{display:none}
-  .mu-meta span{font-size:12px;color:var(--body);padding:3px 9px;border-radius:7px;background:var(--chip-flat)}
-  .mu-meta span.is-on{color:var(--pos);background:var(--pos-soft)}
-  .mu-sub{display:flex;flex-direction:column;gap:12px;padding-top:14px;border-top:1px solid var(--line)}
-  .mu-sub>h4{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0;font-size:13.5px;font-weight:600;color:var(--ink)}
-  .mu-sw{display:inline-flex;align-items:center;gap:7px;margin-left:auto;font-size:12.5px;font-weight:500;color:var(--body);cursor:pointer}
-  .mu-sw em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute)}
-  .mu-inline{display:flex;align-items:center;gap:8px;min-width:0}
-  .mu-inline>.ui-field{flex:1;min-width:0}
-  .mu-inline>.ui-tabs{flex:none}
-  .mu-dash{color:var(--mute)}
-  .mu-tagbox{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-  .mu-tagbox>.ui-field,.mu-tagbox .mu-inline{width:100%}
-  .mu-tags{display:flex;flex-wrap:wrap;gap:6px}
-  .mu-tags:empty{display:none}
-  .mu-tags span{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--ink);padding:3px 4px 3px 10px;border-radius:7px;background:var(--chip-flat)}
-  .mu-tags button{all:unset;cursor:pointer;width:18px;height:18px;display:grid;place-items:center;border-radius:5px;color:var(--mute);font-size:13px;line-height:1}
-  .mu-tags button:hover{background:var(--line);color:var(--ink)}
-  .mu-pl{display:flex;flex-direction:column;gap:12px}
-  .mu-pl[hidden],.mu-f[hidden],.mu-cbo[hidden]{display:none}
-  .ui-tabs.is-off{opacity:.5;pointer-events:none}
-  .mu-cbo{padding:8px 12px;border-radius:10px;background:var(--chip-flat);color:var(--body)}
-  .mu-sub.is-adv .mu-row,.mu-sub.is-adv>.mu-f{opacity:.75}
-  .mu-drop{display:flex;flex-direction:column;gap:12px;padding:12px;border:1.5px dashed var(--line);border-radius:14px;transition:border-color .15s,background .15s}
-  .mu-drop.is-over{border-color:var(--btn);background:var(--btn-soft)}
-  .mu-files{display:flex;flex-direction:column;gap:8px}
-  .mu-files:empty{display:none}
-  .mu-file{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px;border-radius:10px;background:var(--paper);border:1px solid var(--line)}
-  .mu-file.is-pv{border-color:var(--btn)}
-  .mu-thumb{width:52px;height:52px;border:0;padding:0;border-radius:8px;overflow:hidden;background:var(--chip-flat);position:relative;cursor:pointer}
-  .mu-thumb img,.mu-thumb video{width:100%;height:100%;object-fit:cover;display:block}
-  .mu-thumb i{position:absolute;left:3px;bottom:3px;font-style:normal;font-size:10px;font-weight:600;padding:0 5px;border-radius:99px;background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--paper)}
-  .mu-file .ui-field{height:var(--ui-h-sm);font-size:12.5px;width:100%;box-sizing:border-box}
-  .mu-file small{display:block;margin-top:3px;font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mu-adds{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  .mu-adds small{font-size:11.5px;color:var(--mute)}
-  .mu-adds .ui-btn svg{width:15px;height:15px}
-  .mu-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-  .mu-sum div{padding:10px 12px;border-radius:10px;background:var(--chip-flat);min-width:0}
-  .mu-sum small{display:block;font-size:11px;color:var(--mute)}
-  .mu-sum b{display:block;margin-top:2px;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mu-go{display:flex;align-items:center;justify-content:flex-end;gap:12px}
-  .mu-msg{font-size:12.5px;color:var(--mute)}
-  .mu-msg.is-warn{color:var(--warn)}
-  .mu-phone{width:100%;max-width:300px;margin:0 auto;border-radius:22px;border:1px solid var(--line);overflow:hidden;background:var(--paper);font-size:12.5px;color:var(--ink)}
-  .mu-ph-top{display:flex;align-items:center;gap:8px;padding:10px 12px}
-  .mu-ph-top i{width:28px;height:28px;border-radius:99px;background:var(--btn-soft);color:var(--btn-soft-ink);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:600}
-  .mu-ph-top b{font-weight:600}
-  .mu-ph-top small{display:block;font-size:10.5px;color:var(--mute)}
-  .mu-ph-media{aspect-ratio:4/5;background:var(--chip-flat);display:grid;place-items:center;color:var(--mute);font-size:12px;overflow:hidden}
-  .mu-ph-media img,.mu-ph-media video{width:100%;height:100%;object-fit:cover;display:block}
-  .mu-ph-cta{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--chip-flat)}
-  .mu-ph-cta div{flex:1;min-width:0}
-  .mu-ph-cta b,.mu-ph-cta small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mu-ph-cta b{font-weight:600}
-  .mu-ph-cta small{font-size:10.5px;color:var(--mute)}
-  .mu-ph-cta span{flex:none;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:7px;background:var(--btn);color:var(--paper)}
-  .mu-ph-body{padding:10px 12px 14px;line-height:1.5;color:var(--body);white-space:pre-wrap;word-break:break-word;max-height:9em;overflow:hidden}
-  .mu-ph-body:empty::before{content:'본문이 여기에 보입니다';color:var(--mute)}
-  .mu-phone.is-reels{position:relative;aspect-ratio:9/16;background:#1c1c1f}
-  .mu-phone.is-reels .mu-ph-media{position:absolute;inset:0;aspect-ratio:auto;background:none;color:#9a9aa0}
-  .mu-ph-over{position:absolute;left:0;right:0;bottom:0;padding:14px 12px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.65))}
-  .mu-ph-over b{font-weight:600}
-  .mu-ph-over p{margin:6px 0 10px;font-size:11.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .mu-ph-over span{display:block;text-align:center;font-size:12px;font-weight:600;padding:7px;border-radius:8px;background:rgba(255,255,255,.22)}
-  .mu-check{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-  .mu-check li{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mute)}
-  .mu-check li::before{content:'';flex:none;width:16px;height:16px;border-radius:99px;border:1.5px solid var(--line);box-sizing:border-box}
-  .mu-check li.is-ok{color:var(--ink)}
-  .mu-check li.is-ok::before{border:0;background:var(--pos) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-8'/%3E%3C/svg%3E") center/11px no-repeat}
-  @media (max-width:1100px){ .mu-grid{grid-template-columns:1fr} .mu-side{position:static} }
-  @media (max-width:640px){ .mu-row{grid-template-columns:1fr} .mu-sum{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  /* 광고 업로드 창(10-29 · 단계별 · 화면 모양만) · 위 진행 막대·점 → 단계 내용(스크롤) → 이전 | 빠진 것 | n / 6 | 다음 */
+  .ip.ma[hidden]{display:none}
+  .settings-panel.mw-dlg{max-width:680px;width:100%;height:auto;max-height:min(880px,92vh);display:flex;flex-direction:column;overflow:hidden;padding:0}
+  .mw-top{position:relative;display:flex;align-items:center;justify-content:center;padding:16px 16px 6px;flex:none}
+  .mw-bar{position:absolute;left:0;top:0;height:3px;background:var(--btn);border-radius:0 3px 3px 0;transition:width .25s}
+  .mw-dots{display:flex;gap:6px;align-items:center}
+  .mw-dots i{width:7px;height:7px;border-radius:99px;background:var(--line);transition:width .2s,background .2s}
+  .mw-dots i.is-done{background:color-mix(in srgb,var(--btn) 60%,var(--paper))}
+  .mw-dots i.is-on{width:26px;background:var(--btn)}
+  .mw-top .settings-close{position:absolute;right:10px;top:8px}
+  .mw-body-wrap{flex:1;min-height:0;overflow:auto;padding:10px 24px 22px;display:flex;flex-direction:column;gap:14px}
+  .mw-body-wrap h3{margin:4px 0 -4px;font-size:15px;font-weight:600;color:var(--ink)}
+  .mw-body-wrap h3 em,.mw-f label em{font-style:normal;font-weight:400;font-size:12px;color:var(--mute);margin-left:6px}
+  .mw-f{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .mw-f>label{font-size:12px;font-weight:500;color:var(--mute)}
+  .mw-f.mw-narrow{max-width:240px}
+  .mw-req{color:var(--neg);font-weight:600}
+  .mw-hint{margin:-4px 0 0;font-size:12px;line-height:1.55;color:var(--mute)}
+  .mw-hint b{font-weight:600;color:var(--ink)}
+  .mw-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .mw-row .mw-row-hint{margin:0 0 9px}
+  .mw-pick{justify-content:space-between;gap:8px}
+  .mw-pick .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mw-pick .t.is-ph{color:var(--mute)}
+  .mw-pick svg{width:14px;height:14px;flex:none}
+  .mw-pick.sm{align-self:flex-start;min-width:220px}
+  .mw-money{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--body)}
+  .mw-money .ui-field{width:110px;text-align:right;font-variant-numeric:tabular-nums}
+  .mw-angle-in{max-width:320px}
+  .mw-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .mw-tags span{display:inline-flex;align-items:center;gap:4px;padding:4px 6px 4px 10px;border-radius:99px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12.5px;font-weight:500}
+  .mw-tags button{all:unset;cursor:pointer;width:18px;height:18px;border-radius:99px;display:grid;place-items:center;font-size:14px;line-height:1}
+  .mw-tags button:hover{background:color-mix(in srgb,var(--btn) 20%,transparent)}
+  .mw-body{min-height:150px;resize:vertical;line-height:1.55;white-space:pre-wrap}
+  .mw-hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+  .mw-drop{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 16px;border:1.5px dashed var(--line);border-radius:14px;text-align:center;color:var(--mute);font-size:13px;transition:border-color .15s,background .15s}
+  .mw-drop p{margin:0}
+  .mw-drop>div{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .mw-drop small{font-size:11.5px}
+  .mw-drop.is-over{border-color:var(--btn);background:var(--btn-soft)}
+  .mw-files{display:flex;flex-direction:column;gap:8px}
+  .mw-file{display:flex;align-items:center;gap:12px;padding:8px;border:1px solid var(--line);border-radius:12px}
+  .mw-file>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .mw-file small{font-size:11.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mw-thumb{position:relative;flex:none;width:52px;height:52px;border-radius:9px;overflow:hidden;background:var(--bg)}
+  .mw-thumb img,.mw-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+  .mw-thumb i{position:absolute;left:3px;bottom:3px;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.55);color:#fff;font-style:normal;font-size:10px;line-height:16px}
+  .mw-review{display:flex;flex-direction:column;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+  .mw-tree{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--body);padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .mw-tree>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;word-break:break-all}
+  .mw-tree b{font-weight:600;color:var(--ink)}
+  .mw-tree .l2{padding-left:16px}
+  .mw-tree .l3{padding-left:34px}
+  .mw-badge{flex:none;padding:2px 9px;border-radius:7px;border:1px solid var(--line);background:var(--paper);font-size:11.5px;font-weight:500;color:var(--mute)}
+  .mw-badge.is-new{border-color:color-mix(in srgb,var(--btn) 40%,transparent);color:var(--btn-soft-ink);background:var(--btn-soft)}
+  .mw-sum{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:0;font-size:13px}
+  .mw-sum dt{color:var(--mute)}
+  .mw-sum dd{margin:0;color:var(--ink);font-weight:500;word-break:break-all}
+  .mw-copy{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--body)}
+  .mw-copy p{margin:0;display:flex;gap:10px}
+  .mw-copy span{color:var(--mute);flex:none}
+  .mw-copy b{font-weight:600;color:var(--ink)}
+  .mw-copy pre{margin:0;padding-left:12px;font:inherit;white-space:pre-wrap;word-break:break-word;color:var(--body)}
+  .mw-warn{margin:0;padding:12px 14px;border-radius:12px;background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);font-size:13px;color:var(--body)}
+  .mw-warn b{font-weight:600;color:var(--ink)}
+  .mw-done{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:12px 0 4px}
+  .mw-done h3{margin:0}
+  .mw-done p{margin:0;font-size:13px;line-height:1.6;color:var(--body);max-width:460px}
+  .mw-done-ic{width:48px;height:48px;border-radius:99px;display:grid;place-items:center;background:var(--btn-soft);color:var(--btn)}
+  .mw-done-ic svg{width:24px;height:24px}
+  .mw-foot{flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
+  .mw-foot [data-prev][hidden]{display:none}
+  .mw-miss{flex:1;text-align:right;font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mw-n{flex:none;padding:3px 9px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .mw-foot [data-next]{min-width:76px}
+  @media (max-width:640px){ .mw-body-wrap{padding:8px 16px 18px} .mw-miss{display:none} }
   @media (max-width:640px){ .ma-bd{grid-template-columns:1fr} }
   .ma-pv-link{display:flex;flex-direction:column;gap:6px;padding-top:14px;border-top:1px solid var(--line)}
   .ma-pv-link small{font-size:11.5px;color:var(--mute)}
@@ -10783,135 +10763,6 @@ window.BAROYAM_FONT=(function(){
             </div>
           </div>
 
-          <!-- 광고 업로드(10-26 · 사용자 요청 · 지금은 화면 모양만 · 저장·업로드 없음) · 새 광고 세트 + 새 소재 ·
-               ① 캠페인 고르기 → ② 기준 세트를 복제한 새 세트(이름·예산·시작일 · 타깃·지면은 기준 세트 그대로) →
-               ③ 소재(내 컴퓨터·바로얌 드라이브 · 소재마다 광고 이름) + 함께 쓰는 문구·랜딩 주소 → ④ 꺼진 채로 올리기 ·
-               오른쪽은 광고 미리보기(피드·릴스)와 확인 목록 · 연동하면 VPS 가 메타에 올리고 정밀성과 ON/OFF 로 켠다 -->
-          <div class="ip mu" id="muRoot" hidden>
-            <div class="mu-demo"><b>화면 모양만</b> 아직 메타와 연결되지 않아 올리기를 눌러도 실제로 올라가지 않습니다. 캠페인·세트 목록은 실제 수집 값입니다.</div>
-            <div class="ma-empty ip-card" id="muEmpty" hidden></div>
-            <div class="mu-grid" id="muGrid">
-              <div class="mu-form">
-                <section class="ip-card mu-step" data-step="camp">
-                  <div class="mu-step-head"><span class="mu-n">1</span><div><h3>캠페인</h3><small id="muAcctTxt">새 광고 세트를 넣을 캠페인을 고릅니다</small></div></div>
-                  <button type="button" class="ui-field" id="muCamp" aria-haspopup="listbox"><span class="t">캠페인 고르기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-                  <div class="mu-meta" id="muCampMeta"></div>
-                </section>
-
-                <section class="ip-card mu-step" data-step="set">
-                  <div class="mu-step-head"><span class="mu-n">2</span><div><h3>새 광고 세트</h3><small>기준 세트 값으로 먼저 채워지고, 칸마다 고칠 수 있습니다</small></div></div>
-                  <div class="mu-row">
-                    <div class="mu-f"><label>기준 세트 <em>설정을 불러올 세트</em></label>
-                      <button type="button" class="ui-field" id="muTpl" aria-haspopup="listbox"><span class="t">기준 세트 고르기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div>
-                    <div class="mu-f"><label for="muSetName">세트 이름</label><input class="ui-field" id="muSetName" maxlength="200" autocomplete="off"></div>
-                  </div>
-
-                  <div class="mu-sub"><h4>성과 목표</h4>
-                    <div class="mu-row">
-                      <div class="mu-f"><label>최적화 기준</label><button type="button" class="ui-field" id="muGoal" aria-haspopup="listbox"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div>
-                      <div class="mu-f" id="muEventF"><label>전환 이벤트 <em>자사몰 픽셀</em></label>
-                        <div class="ui-chips" id="muEvent">
-                          <button type="button" class="ui-chip" data-v="PURCHASE">구매</button>
-                          <button type="button" class="ui-chip" data-v="INITIATED_CHECKOUT">결제 시작</button>
-                          <button type="button" class="ui-chip" data-v="ADD_TO_CART">장바구니</button>
-                          <button type="button" class="ui-chip" data-v="CONTENT_VIEW">콘텐츠 조회</button>
-                        </div></div>
-                    </div>
-                  </div>
-
-                  <div class="mu-sub"><h4>예산 · 일정</h4>
-                    <p class="mu-hint mu-cbo" id="muCboNote" hidden></p>
-                    <div class="mu-row">
-                      <div class="mu-f"><label>예산 <em id="muBudgetCur"></em></label>
-                        <div class="mu-inline"><div class="ui-tabs" id="muBudType"><button class="ui-tab" data-value="d">하루</button><button class="ui-tab" data-value="l">총</button></div>
-                          <input class="ui-field" id="muBudget" inputmode="decimal" autocomplete="off"></div>
-                        <small class="mu-hint" id="muBudgetHint"></small></div>
-                      <div class="mu-f"><label>입찰 전략</label><button type="button" class="ui-field" id="muBid" aria-haspopup="listbox"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-                        <input class="ui-field" id="muBidAmt" inputmode="decimal" autocomplete="off" hidden></div>
-                    </div>
-                    <div class="mu-row">
-                      <div class="mu-f"><label>시작일</label><button type="button" id="muStart"></button></div>
-                      <div class="mu-f"><label>종료일 <em>비우면 계속</em></label><button type="button" id="muEnd"></button></div>
-                    </div>
-                  </div>
-
-                  <div class="mu-sub"><h4>타깃 <label class="mu-sw"><button type="button" class="ui-switch" role="switch" id="muAdv" aria-checked="false"></button>어드밴티지+ 타깃 <em>메타가 넓혀서 찾음 · 아래 값은 제안으로 씀</em></label></h4>
-                    <div class="mu-row">
-                      <div class="mu-f"><label>위치</label><div class="mu-tagbox" data-tags="geo"><div class="mu-tags" id="muGeoTags"></div><input class="ui-field sm" data-add="geo" placeholder="지역 입력 후 Enter (예: 서울)"></div></div>
-                      <div class="mu-f"><label>언어 <em>비우면 모든 언어</em></label><div class="mu-tagbox" data-tags="lang"><div class="mu-tags" id="muLangTags"></div><button type="button" class="ui-btn ghost sm" data-pick="lang">+ 추가</button></div></div>
-                    </div>
-                    <div class="mu-row">
-                      <div class="mu-f"><label>연령</label><div class="mu-inline">
-                        <button type="button" class="ui-field" id="muAgeMin" aria-haspopup="listbox"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><span class="mu-dash">–</span>
-                        <button type="button" class="ui-field" id="muAgeMax" aria-haspopup="listbox"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div></div>
-                      <div class="mu-f"><label>성별</label><div class="ui-chips" id="muGender">
-                        <button type="button" class="ui-chip" data-v="0">전체</button><button type="button" class="ui-chip" data-v="1">남성</button><button type="button" class="ui-chip" data-v="2">여성</button></div></div>
-                    </div>
-                    <div class="mu-f"><label>관심사·행동 <em>비우면 넓은 타깃</em></label><div class="mu-tagbox" data-tags="int"><div class="mu-tags" id="muIntTags"></div>
-                      <div class="mu-inline"><input class="ui-field sm" data-add="int" placeholder="관심사 입력 후 Enter"><button type="button" class="ui-btn ghost sm" data-pick="int">다른 세트에서 고르기</button></div></div></div>
-                    <div class="mu-row">
-                      <div class="mu-f"><label>맞춤 타깃 포함</label><div class="mu-tagbox" data-tags="inc"><div class="mu-tags" id="muIncTags"></div><button type="button" class="ui-btn ghost sm" data-pick="inc">+ 추가</button></div></div>
-                      <div class="mu-f"><label>맞춤 타깃 제외 <em>이미 산 사람 등</em></label><div class="mu-tagbox" data-tags="exc"><div class="mu-tags" id="muExcTags"></div><button type="button" class="ui-btn ghost sm" data-pick="exc">+ 추가</button></div></div>
-                    </div>
-                  </div>
-
-                  <div class="mu-sub"><h4>노출 위치</h4>
-                    <div class="ui-chips" id="muPlMode">
-                      <button type="button" class="ui-chip" data-v="adv">어드밴티지+ 노출 위치 (권장)</button>
-                      <button type="button" class="ui-chip" data-v="manual">직접 고르기</button>
-                    </div>
-                    <div class="mu-pl" id="muPlBox">
-                      <div class="mu-f"><label>플랫폼</label><div class="ui-chips" id="muPlats"></div></div>
-                      <div class="mu-f"><label>위치</label><div class="ui-chips" id="muPos"></div></div>
-                    </div>
-                  </div>
-                </section>
-
-                <section class="ip-card mu-step" data-step="ad">
-                  <div class="mu-step-head"><span class="mu-n">3</span><div><h3>소재</h3><small>소재 하나 = 광고 하나 · 문구와 랜딩 주소는 함께 씁니다</small></div></div>
-                  <div class="mu-drop" id="muDrop">
-                    <div class="mu-files" id="muFiles"></div>
-                    <div class="mu-adds">
-                      <button type="button" class="ui-btn soft sm" id="muDrive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.8 21 19.4H3Z"/><path d="M12 3.8v9.1M12 12.9 3.9 19.1M12 12.9l8.1 6.2"/></svg>바로얌 드라이브에서</button>
-                      <button type="button" class="ui-btn ghost sm" id="muPc">내 컴퓨터에서</button>
-                      <small>영상(mp4·mov)·이미지(jpg·png) · 여기로 끌어 놓아도 됩니다</small>
-                    </div>
-                    <input type="file" id="muInput" accept="video/mp4,video/quicktime,image/jpeg,image/png" multiple hidden>
-                  </div>
-                  <div class="mu-f"><label for="muBody">본문 <em id="muBodyN">0자</em><button type="button" class="mu-load" id="muLoadTx">기준 세트 문구 불러오기</button></label><textarea class="ui-field" id="muBody" rows="4" maxlength="2200"></textarea></div>
-                  <div class="mu-row">
-                    <div class="mu-f"><label for="muTitle">제목 <em id="muTitleN">0자</em></label><input class="ui-field" id="muTitle" maxlength="255" autocomplete="off"></div>
-                    <div class="mu-f"><label>버튼</label><button type="button" class="ui-field" id="muCta" aria-haspopup="listbox"><span class="t">구매하기</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div>
-                  </div>
-                  <div class="mu-f"><label for="muDesc">설명 <em>선택</em></label><input class="ui-field" id="muDesc" maxlength="255" autocomplete="off"></div>
-                  <div class="mu-f"><label for="muLink">랜딩 주소 <em>utm_content 에 광고 이름이 자동으로 붙습니다</em></label><input class="ui-field" id="muLink" inputmode="url" autocomplete="off" placeholder="https://"></div>
-                </section>
-
-                <section class="ip-card mu-step" data-step="go">
-                  <div class="mu-step-head"><span class="mu-n">4</span><div><h3>올리기</h3><small>메타 검토를 거쳐 게재됩니다</small></div></div>
-                  <div class="ui-chips mu-status" id="muStatus">
-                    <button type="button" class="ui-chip" data-v="PAUSED" aria-pressed="true">꺼진 채로 올리기</button>
-                    <button type="button" class="ui-chip" data-v="ACTIVE" aria-pressed="false">올리고 바로 켜기</button>
-                  </div>
-                  <p class="mu-hint" id="muStatusHint"></p>
-                  <div class="mu-sum" id="muSum"></div>
-                  <div class="mu-go"><span class="mu-msg" id="muMsg"></span><button type="button" class="ui-btn primary" id="muGo">메타에 올리기</button></div>
-                </section>
-              </div>
-
-              <aside class="mu-side">
-                <div class="ip-card mu-pv-card">
-                  <div class="ip-card-head"><div><h3>미리보기</h3><small id="muPvSub">소재를 넣으면 보입니다</small></div>
-                    <div class="ui-tabs" id="muPvTabs"><button class="ui-tab" data-value="feed">피드</button><button class="ui-tab" data-value="reels">릴스</button></div></div>
-                  <div class="mu-phone" id="muPhone"></div>
-                </div>
-                <div class="ip-card">
-                  <div class="ip-card-head"><div><h3>확인</h3><small>모두 채우면 올릴 수 있습니다</small></div></div>
-                  <ul class="mu-check" id="muCheck"></ul>
-                </div>
-              </aside>
-            </div>
-          </div>
         </section>
       </div><!-- /view-perf -->
       <div id="view-content" style="display:none">
@@ -19679,11 +19530,10 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   /* ---------- 배너 위 단추 · 화면 고르기 ---------- */
   const perfTabs=[...document.querySelectorAll('#perfTabs [data-perf]')];
   function paintTab(){
-    const pt=tab==='daily'&&!upMode?'daily':'detail';   /* 정밀성과 단추 하나가 캠페인·광고 세트·소재를 맡는다 · 광고 업로드(upMode)는 정밀성과 안 단추로 들어가는 화면 */
-    $('maRoot').hidden=upMode; $('muRoot').hidden=!upMode;
+    const pt=tab==='daily'?'daily':'detail';   /* 정밀성과 단추 하나가 캠페인·광고 세트·소재를 맡는다 · 광고 업로드는 목록 위 단추로 여는 창(mwOpen) */
     perfTabs.forEach(b=>{ const on=b.dataset.perf===pt; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     const b=perfTabs.find(x=>x.dataset.perf===pt);
-    $('perfViewTitle').textContent=upMode?'광고 업로드':b?b.textContent.trim():''; $('perfViewSub').textContent=upMode?UP_SUB:b?b.dataset.sub||'':'';
+    $('perfViewTitle').textContent=b?b.textContent.trim():''; $('perfViewSub').textContent=b?b.dataset.sub||'':'';
     $('maUpBtn').hidden=!((data&&data.accounts)||[]).some(x=>x.manage);   /* 켜고 끌 수 있는 계정(manage)이 있을 때만 */
     root.querySelector('[data-ma-pane="daily"]').dataset.on=tab==='daily'?'1':'';
     root.querySelector('[data-ma-pane="level"]').dataset.on=tab!=='daily'?'1':'';
@@ -20369,291 +20219,335 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   const BRAND_ALIAS={'아미아미':'아미'};   /* 이름 → 묶을 브랜드 · 더 생기면 한 줄씩 */
   const SORTS=[{value:'spend',label:'광고비 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'매출 많은 순'}];
 
-  /* ---------- 광고 업로드(10-26 · 사용자 요청 · 지금은 화면 모양만 · 저장·업로드 없음) ----------
-     새 광고 세트(기준 세트를 복제 · 이름·예산·시작일만 바꿈 · 타깃·지면·최적화는 그대로) + 소재마다 광고 하나(문구·랜딩은 함께 씀) ·
-     켜고 끌 수 있는 계정(accounts[].manage)만 · 연동할 때: 화면이 파일을 brand-files 에 올리고 주문 파일을 두면
-     VPS 가 세트 복제 → 소재(영상·이미지) 올리기 → 광고 만들기를 하고, 켜기는 정밀성과 ON/OFF 로 한다 */
-  let upMode=store('baroyam_perf_up')==='1';
-  const CTAS=[{value:'SHOP_NOW',label:'구매하기'},{value:'LEARN_MORE',label:'더 알아보기'},{value:'ORDER_NOW',label:'지금 주문하기'},{value:'GET_OFFER',label:'혜택 받기'},{value:'SIGN_UP',label:'가입하기'},{value:'NO_BUTTON',label:'버튼 없음'}];
-  /* 세트 설정 · 기준 세트를 고르면 그 값으로 채우고(upFromTpl) 칸마다 고친다 · 위치·성과 목표 이벤트·입찰은 수집값에 없어 기본값으로 시작 */
-  const UP_GOALS=[{value:'OFFSITE_CONVERSIONS',label:'전환수 최대화',sub:'구매 같은 전환을 많이'},{value:'VALUE',label:'전환값 최대화',sub:'구매 금액을 크게'},
-    {value:'LANDING_PAGE_VIEWS',label:'랜딩 페이지 조회',sub:'상세페이지까지 들어오게'},{value:'LINK_CLICKS',label:'링크 클릭'},{value:'REACH',label:'도달',sub:'많은 사람에게 한 번씩'},{value:'IMPRESSIONS',label:'노출'},{value:'THRUPLAY',label:'동영상 시청(ThruPlay)'}];
-  const UP_BIDS=[{value:'LOWEST_COST_WITHOUT_CAP',label:'최고 볼륨',sub:'예산 안에서 결과를 가장 많이 · 기본'},{value:'COST_CAP',label:'결과당 비용 목표',sub:'구매 1건 비용을 이 금액 근처로'},
-    {value:'LOWEST_COST_WITH_MIN_ROAS',label:'최소 ROAS',sub:'이 ROAS 아래로는 쓰지 않음'},{value:'LOWEST_COST_WITH_BID_CAP',label:'입찰가 한도',sub:'경매 입찰 상한'}];
-  const UP_PLATS=[{v:'facebook',l:'페이스북'},{v:'instagram',l:'인스타그램'},{v:'audience_network',l:'오디언스 네트워크'},{v:'messenger',l:'메신저'},{v:'threads',l:'스레드'}];
-  const UP_POSS=[{v:'feed',l:'피드'},{v:'story',l:'스토리'},{v:'reels',l:'릴스'},{v:'explore',l:'탐색'},{v:'search',l:'검색'},{v:'instream_video',l:'인스트림 동영상'},{v:'marketplace',l:'마켓플레이스'}];
-  /* 언어 · 메타 locale 번호(k) · 바로얌 세트는 모두 12(한국어) · 번호를 모르는 언어는 연동할 때 메타 언어 검색으로 찾는다 */
-  const UP_LANGS=[{k:12,l:'한국어'},{k:6,l:'영어(미국)'},{k:24,l:'영어(영국)'},{l:'영어(전체)'},{l:'일본어'},{l:'중국어(간체)'},{l:'중국어(번체)'},{l:'베트남어'},{l:'태국어'},{l:'러시아어'}];
-  const UP_GEO={KR:'대한민국',US:'미국',JP:'일본',CN:'중국',TW:'대만',VN:'베트남',TH:'태국'};
-  const UP_AGES=Array.from({length:48},(_,i)=>i+18);
-  const upSetNew=()=>({goal:'OFFSITE_CONVERSIONS',event:'PURCHASE',budType:'d',bid:'LOWEST_COST_WITHOUT_CAP',bidAmt:'',end:null,adv:true,geo:['대한민국'],lang:['한국어'],ageMin:18,ageMax:65,g:0,int:[],inc:[],exc:[],plMode:'adv',plats:['facebook','instagram'],pos:['feed','story','reels']});
-  const up={camp:'',tpl:'',name:'',nameAuto:true,budget:'',start:kst(),set:upSetNew(),files:[],pv:0,body:'',title:'',desc:'',cta:'SHOP_NOW',link:'',status:'PAUSED',pvTab:'feed',acc:''};
+  /* ---------- 광고 업로드 창(10-29 사용자 요청 · 대시보드 화면 대신 업로드 단추를 누르면 뜨는 단계별 창 · 여전히 화면 모양만 · 메타에 올리지 않음) ----------
+     ① 브랜드·소구점 → ② 소재(내 컴퓨터·바로얌 드라이브 · 광고 이름 = 파일 이름) → ③ 집행 방식(신규 집행·세트 추가·세트 복사·소재 추가) →
+     ④ 세부 설정(예산·최적화·시작·연령·광고 문구) → ⑤ 미리보기 [검토] → ⑥ 등록 · 늘 일시정지로 만들고 켜기는 정밀성과 ON/OFF ·
+     세트 이름은 지금 쓰는 규칙(날짜_브랜드 첫 글자+오픈T|상세T_관심사_구매(14)제외_소구점NN)으로 만든다 ·
+     켜고 끌 수 있는 계정(accounts[].manage)만 · 연동할 때: 화면이 파일을 brand-files 에 올리고 주문 파일을 두면 VPS 가 메타에 만든다 */
+  const CTAS=[{value:'ORDER_NOW',label:'지금 주문하기'},{value:'SHOP_NOW',label:'구매하기'},{value:'LEARN_MORE',label:'더 알아보기'},{value:'GET_OFFER',label:'혜택 받기'},{value:'SIGN_UP',label:'가입하기'},{value:'NO_BUTTON',label:'버튼 없음'}];
+  const MW_MODES=[{v:'new',l:'신규 집행',d:'새 캠페인 + 세트 + 광고'},{v:'set',l:'세트 추가',d:'기존 캠페인에 새 세트'},{v:'copy',l:'세트 복사',d:'기존 세트를 복사해 새 소재로'},{v:'ad',l:'소재 추가',d:'기존 세트에 광고만'}];
+  const MW_TYPES=['PHABO','PHCBO','ABO','CBO'];
+  const MW_ANGLES=['리뷰형','사회적증거','협상','제품경험','문제해결','상황극','스토리','희소성','프로모션'];
+  const MW_GOALS=[{value:'OFFSITE_CONVERSIONS',label:'전환수',sub:'SKU(상품) 하나일 때'},{value:'VALUE',label:'전환값',sub:'여러 상품을 팔 때'}];
+  const MW_STEPS=['브랜드 · 소구점','소재','집행 방식','세부 설정','미리보기 [검토]','등록'];
+  const MW_TIMES=Array.from({length:48},(_,i)=>String(i>>1).padStart(2,'0')+':'+(i%2?'30':'00'));
+  const DOWN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
   const upAcc=()=>{ const L=(data&&data.accounts)||[]; return L.find(x=>x.manage)||null; };
   const yymmdd=d=>d.slice(2,4)+d.slice(5,7)+d.slice(8,10);
-  const upSpend=(a,lv,id)=>((((a.insights||{}).last_7d||{})[lv]||{})[id]||{}).spend||0;
+  const upIns=(a,lv,id)=>((((a.insights||{}).last_7d||{})[lv]||{})[id])||{};
   const upLive=x=>x.st!=='ARCHIVED'&&x.st!=='DELETED';
   const upOn=x=>(x.sw||x.st)==='ACTIVE';
-  const upCamp=a=>(a.campaigns||[]).find(c=>c.id===up.camp)||null;
-  const upTpl=a=>(a.adsets||[]).find(x=>x.id===up.tpl)||null;
-  const upCbo=c=>!!(c&&c.budget);
-  /* 예산 · 메타는 원화 말고는 센트 단위로 준다 · 원화가 아니면 오늘 환율로 옆에 원화를 붙인다 */
-  function upMajor(a,v){ return a.currency==='KRW'||a.currency==='JPY'?v:v/100; }
-  function upBudTxt(a,v){
-    if(a.currency==='KRW') return int(v)+'원';
-    const f=data.fx&&data.fx[a.currency], k=f?Object.keys(f).sort():[], r=k.length?f[k[k.length-1]]:null;
-    return (a.currency==='USD'?'$':'')+(+v).toLocaleString('en-US',{maximumFractionDigits:2})+(a.currency==='USD'?'':' '+a.currency)+(r?' · 약 '+int(v*r)+'원':'');
+  /* 예산 · 메타는 원화 말고는 센트 단위 */
+  const upMajor=(a,v)=>a.currency==='KRW'||a.currency==='JPY'?v:v/100;
+  const upFx=a=>{ const f=a.currency!=='KRW'&&data.fx&&data.fx[a.currency], k=f?Object.keys(f).sort():[]; return k.length?f[k[k.length-1]]:null; };
+  const mwNew=()=>({step:0,brand:'',angle:'',files:[],mode:'',camp:'',ctype:'',target:'open',ints:[],set:'',budget:'',budAuto:true,goal:'OFFSITE_CONVERSIONS',
+    start:kst(),time:'00:00',ageMin:20,ageR:[25,65],body:'',title:'',desc:'',cta:'ORDER_NOW',link:'',txFrom:'',msg:''});
+  let W=mwNew(), mwBox=null, mwDateBtn=null, mwDate=null;
+  const mwCamp=a=>(a.campaigns||[]).find(c=>c.id===W.camp)||null;
+  const mwSet=a=>(a.adsets||[]).find(x=>x.id===W.set)||null;
+  const mwType=c=>{ const m=/_(PHABO|PHCBO|ABO|CBO)$/i.exec(c&&c.name||''); return m?m[1].toUpperCase():''; };
+  /* 이번 예산이 어디 붙는지 · 신규 CBO 는 캠페인 예산, 기존 CBO 캠페인은 캠페인 예산을 나눠 씀(입력 없음) */
+  const mwBudWhere=a=>W.mode==='ad'?'':W.mode==='new'?(/CBO$/.test(W.ctype)?'campaign':'set'):(mwCamp(a)&&mwCamp(a).budget?'':'set');
+  const mwIntName=n=>String(n).replace(/\(.*?\)/g,'').replace(/\s+/g,'');
+  const mwRoas=i=>i.spend?Math.round(i.rev/i.spend*100)+'%':'-';
+  function mwBrands(a){
+    const bOf=brandMap(a), m={};
+    (a.campaigns||[]).filter(upLive).forEach(c=>{ const b=bOf[c.id]; if(b) m[b]=(m[b]||0)+(upIns(a,'campaign',c.id).spend||0); });
+    return Object.keys(m).sort((p,q)=>m[q]-m[p]||p.localeCompare(q,'ko'));
   }
-  function upAutoName(a){
-    const t=upTpl(a); if(!t) return '';
-    const d=yymmdd(up.start||kst());
-    return /^\d{6}_/.test(t.name)?d+t.name.slice(6):d+'_'+t.name;
+  const mwBrandCamps=a=>{ const bOf=brandMap(a); return (a.campaigns||[]).filter(c=>upLive(c)&&bOf[c.id]===W.brand); };
+  const mwBrandSets=a=>{ const ids=new Set(mwBrandCamps(a).map(c=>c.id)); return (a.adsets||[]).filter(x=>ids.has(x.c)&&upLive(x)); };
+  /* 소구점 · 이 브랜드 세트 이름 끝(…제외_소구점NN)에서 모으고 기본 목록을 뒤에 */
+  function mwAngles(a){
+    const m={};
+    mwBrandSets(a).forEach(x=>{ const p=x.name.split('_'), last=p[p.length-1].replace(/[\d\-]+$/,''); if(p.length>3&&last.length>=2&&!/제외$|^(CBO|ABO)$/.test(last)) m[last]=(m[last]||0)+1; });
+    return [...new Set(Object.keys(m).sort((p,q)=>m[q]-m[p]).concat(MW_ANGLES))];
   }
-  function upAdName(f){ return yymmdd(up.start||kst())+'_'+(f.kind==='video'?'V':'I')+'_'+String(f.name||'').replace(/\.[^.]+$/,''); }
-  /* 캠페인을 고르면 기준 세트(게재 중 → 최근 7일 지출 순 첫째)·이름·예산을 다시 채운다 */
-  function upPickCamp(a,id){
-    up.camp=id;
-    const sets=(a.adsets||[]).filter(x=>x.c===id&&upLive(x)).sort((p,q)=>(upOn(q)-upOn(p))||(upSpend(a,'adset',q.id)-upSpend(a,'adset',p.id)));
-    upPickTpl(a,sets[0]?sets[0].id:'');
+  /* 기준 세트 · 기본값(제외 타깃·예산·연령·문구)을 가져올 곳 · 복사·소재 추가는 고른 세트, 아니면 캠페인(없으면 브랜드)에서 최근 7일 지출이 가장 큰 세트 */
+  function mwBase(a){
+    if((W.mode==='copy'||W.mode==='ad')&&mwSet(a)) return mwSet(a);
+    const L=(W.camp&&W.mode!=='new'?(a.adsets||[]).filter(x=>x.c===W.camp&&upLive(x)):[]);
+    const pool=L.length?L:mwBrandSets(a);
+    return pool.slice().sort((p,q)=>(upOn(q)-upOn(p))||((upIns(a,'adset',q.id).spend||0)-(upIns(a,'adset',p.id).spend||0)))[0]||null;
   }
-  function upPickTpl(a,id){
-    up.tpl=id; const t=upTpl(a);
-    if(up.nameAuto) up.name=upAutoName(a);
-    up.budget=t&&t.budget?String(upMajor(a,t.budget.d||t.budget.l)):'';
-    upFromTpl(t);
-    if(!up.link&&t){ const ad=(a.ads||[]).filter(x=>x.s===t.id&&x.link).sort((p,q)=>upSpend(a,'ad',q.id)-upSpend(a,'ad',p.id))[0]; if(ad) up.link=ad.link; }
+  function mwExSeg(a){ const b=mwBase(a), ex=(b&&b.tg&&b.tg.ex)||[]; return ex.length?[...new Set(ex.map(x=>String(x).replace(/_[^_()]*$/,'')))].join('/')+'제외':''; }
+  function mwCampName(){ return yymmdd(W.start)+'_'+W.brand+'_'+(W.ctype||'PHABO'); }
+  function mwSetName(a){
+    if(W.mode==='ad'){ const s=mwSet(a); return s?s.name:''; }
+    if(W.mode==='copy'){ const s=mwSet(a); return s?(/^\d{6}_/.test(s.name)?yymmdd(W.start)+s.name.slice(6):yymmdd(W.start)+'_'+s.name):''; }
+    const pool=W.mode==='new'?mwBrandSets(a):(a.adsets||[]).filter(x=>x.c===W.camp);
+    const n=pool.filter(x=>x.name.split('_').pop().replace(/[\d\-]+$/,'')===W.angle).length+1;
+    const ints=W.target==='int'&&W.ints.length?W.ints.map(mwIntName).join('/'):'';
+    return [yymmdd(W.start),(W.brand||'?').slice(0,1)+(W.target==='int'?'상세T':'오픈T'),ints,mwExSeg(a),W.angle+String(n).padStart(2,'0')].filter(Boolean).join('_');
   }
-  function upFromTpl(t){
-    const S=upSetNew(); up.set=S; if(!t) return;
-    const tg=t.tg||{};
-    if(t.goal) S.goal=t.goal;
-    if(t.budget&&t.budget.l&&!t.budget.d) S.budType='l';
-    S.adv=!!tg.adv; S.ageMin=tg.a&&tg.a[0]||18; S.ageMax=tg.a&&tg.a[1]||65; S.g=tg.g||0;
-    S.int=(tg.int||[]).slice(); S.inc=(tg.ca||[]).slice(); S.exc=(tg.ex||[]).slice();
-    if(tg.lang) S.lang=tg.lang.map(k=>(UP_LANGS.find(x=>x.k===+k)||{l:'언어 '+k}).l);
-    if(tg.geo) S.geo=tg.geo.map(c=>UP_GEO[c]||c);
-    if(tg.pl&&tg.pl.length){
-      S.plMode='manual';
-      S.plats=[...new Set(tg.pl.map(k=>k.split('.')[0]))];
-      const ps=new Set(); tg.pl.forEach(k=>{ const q=k.split('.')[1]; if(q) ps.add(q==='stream'?'feed':q==='facebook_reels'?'reels':q==='explore_home'?'explore':q); });
-      if(ps.size) S.pos=[...ps];
+  const mwAdName=f=>{ const n=String(f.name||'').replace(/\.[^.]+$/,''); return /^\d{6}_/.test(n)?n:yymmdd(W.start)+'_'+n; };
+  /* 기본값 채우기 · 세부 설정으로 갈 때 비어 있는 칸만 */
+  function mwDefaults(a){
+    const b=mwBase(a);
+    if(W.budAuto){ const bud=b&&b.budget&&b.budget.d; W.budget=bud?String(upMajor(a,bud)):''; }
+    if(b&&b.goal&&/^(OFFSITE_CONVERSIONS|VALUE)$/.test(b.goal)&&!W.goalSet) W.goal=b.goal;
+    if(!W.ageSet&&b&&b.tg&&b.tg.a) W.ageR=[b.tg.a[0]||25,b.tg.a[1]||65];
+    if(b&&W.txFrom!==b.id&&!W.body&&!W.title){
+      const TX=a.texts||[], ad=(a.ads||[]).filter(x=>x.s===b.id&&x.tx).sort((p,q)=>(upIns(a,'ad',q.id).spend||0)-(upIns(a,'ad',p.id).spend||0))[0];
+      if(ad){ const one=k=>{ const i=(ad.tx[k]||[])[0]; return i!=null&&TX[i]?TX[i]:''; }; W.body=one('b'); W.title=one('t'); W.desc=one('d'); }
+      const lk=(a.ads||[]).filter(x=>x.s===b.id&&x.link)[0]; if(lk&&!W.link) W.link=lk.link;
+      W.txFrom=b.id;
     }
   }
-  let upDate=null, upEnd=null;
-  /* 세트 설정 칸 그리기(입력 칸 값은 건드리지 않음 · 고를 때마다 불러도 커서가 튀지 않게) */
-  function paintUpSet(){
-    const a=upAcc(); if(!a) return;
-    const S=up.set, c=upCamp(a), cbo=upCbo(c), lab=(L,v)=>(L.find(x=>x.value===v)||{label:v}).label;
-    const press=(id,f)=>$(id).querySelectorAll('.ui-chip').forEach(b=>b.setAttribute('aria-pressed',f(b.dataset.v)?'true':'false'));
-    $('muGoal').querySelector('.t').textContent=lab(UP_GOALS,S.goal);
-    $('muEventF').hidden=!/^(OFFSITE_CONVERSIONS|VALUE)$/.test(S.goal);
-    press('muEvent',v=>v===S.event);
-    $('muCboNote').hidden=!cbo;
-    $('muCboNote').textContent=cbo?'이 캠페인은 캠페인 예산(어드밴티지+ 캠페인 예산)이라 세트 예산·입찰 전략은 캠페인을 따릅니다.':'';
-    $('muBudget').disabled=cbo; $('muBudget').placeholder=cbo?'캠페인 예산을 나눠 씀':'';
-    tabsOf('muBudType',v=>{ up.set.budType=v; paintUpSide(); }).set(S.budType);
-    $('muBudType').classList.toggle('is-off',cbo);
-    $('muBid').querySelector('.t').textContent=lab(UP_BIDS,S.bid); $('muBid').disabled=cbo;
-    const amt=S.bid!=='LOWEST_COST_WITHOUT_CAP'&&!cbo;
-    $('muBidAmt').hidden=!amt;
-    $('muBidAmt').placeholder=S.bid==='LOWEST_COST_WITH_MIN_ROAS'?'최소 ROAS (%) 예: 250':S.bid==='COST_CAP'?'구매 1건 목표 비용 ('+(a.currency==='KRW'?'원':a.currency)+')':'입찰 한도 ('+(a.currency==='KRW'?'원':a.currency)+')';
-    $('muAdv').setAttribute('aria-checked',S.adv?'true':'false');
-    $('muAdv').closest('.mu-sub').classList.toggle('is-adv',S.adv);
-    $('muAgeMin').querySelector('.t').textContent=S.ageMin+'세';
-    $('muAgeMax').querySelector('.t').textContent=S.ageMax>=65?'65세 이상':S.ageMax+'세';
-    press('muGender',v=>+v===S.g);
-    const tags=(k,id)=>{ $(id).innerHTML=S[k].map((x,i)=>'<span>'+esc(x)+'<button type="button" data-del="'+k+'|'+i+'" aria-label="'+esc(x)+' 빼기">×</button></span>').join(''); };
-    tags('geo','muGeoTags'); tags('lang','muLangTags'); tags('int','muIntTags'); tags('inc','muIncTags'); tags('exc','muExcTags');
-    press('muPlMode',v=>v===S.plMode);
-    $('muPlBox').hidden=S.plMode!=='manual';
-    $('muPlats').innerHTML=UP_PLATS.map(x=>'<button type="button" class="ui-chip" data-v="'+x.v+'" aria-pressed="'+S.plats.includes(x.v)+'">'+x.l+'</button>').join('');
-    $('muPos').innerHTML=UP_POSS.map(x=>'<button type="button" class="ui-chip" data-v="'+x.v+'" aria-pressed="'+S.pos.includes(x.v)+'">'+x.l+'</button>').join('');
-    paintUpSide();
+  function mwBrandAge(a){ const L=mwBrandSets(a).filter(x=>x.tg&&x.tg.a).sort((p,q)=>(upIns(a,'adset',q.id).spend||0)-(upIns(a,'adset',p.id).spend||0)); return L[0]?[L[0].tg.a[0],L[0].tg.a[1]]:[25,65]; }
+  /* 단계마다 다음으로 가기 전에 빠진 것 */
+  function mwMissing(a,s){
+    if(s===0) return !W.brand?'브랜드를 골라 주세요':!W.angle?'소구점을 골라 주세요':'';
+    if(s===1) return !W.files.length?'소재를 넣어 주세요':W.files.some(f=>!f.ad.trim())?'광고 이름을 모두 적어 주세요':'';
+    if(s===2){
+      if(!W.mode) return '집행 방식을 골라 주세요';
+      if(W.mode==='new') return !W.ctype?'캠페인 유형을 골라 주세요':W.target==='int'&&!W.ints.length?'관심사를 골라 주세요':'';
+      if(!mwCamp(a)) return '캠페인을 골라 주세요';
+      if(W.mode==='set') return W.target==='int'&&!W.ints.length?'관심사를 골라 주세요':'';
+      return mwSet(a)?'':'세트를 골라 주세요';
+    }
+    if(s===3){
+      if(mwBudWhere(a)&&!(+W.budget>0)) return '일 예산을 적어 주세요';
+      if(W.mode!=='ad'&&(!(W.ageMin>=13)||!(W.ageR[0]<=W.ageR[1]))) return '연령을 확인해 주세요';
+      if(!W.body.trim()) return '광고 문구를 적어 주세요';
+      if(!/^https:\/\/\S+\.\S+/.test(W.link.trim())) return '랜딩 주소(https://…)를 적어 주세요';
+    }
+    return '';
   }
-  /* 다른 세트에서 쓴 관심사·맞춤 타깃 모음(고르기 목록) */
-  function upKnown(a,k){
-    if(k==='lang') return UP_LANGS.filter(x=>!up.set.lang.includes(x.l)).map(x=>({value:x.l,label:x.l}));
-    const m={};
-    (a.adsets||[]).forEach(x=>{ const tg=x.tg||{}; (k==='int'?tg.int||[]:[...(tg.ca||[]),...(tg.ex||[])]).forEach(n=>{ if(n) m[n]=(m[n]||0)+1; }); });
-    return Object.keys(m).filter(n=>!up.set[k].includes(n)).sort((p,q)=>m[q]-m[p]||p.localeCompare(q,'ko')).map(n=>({value:n,label:n,sub:'세트 '+m[n]+'곳에서 씀'}));
-  }
-  function paintUp(){
-    const a=upAcc();
-    $('muEmpty').hidden=!!a; $('muGrid').hidden=!a;
-    if(!a){ $('muEmpty').textContent=!data?(failed?'메타광고 데이터를 불러오지 못했습니다.':'불러오는 중…'):'광고를 올릴 수 있는(광고 관리 권한이 있는) 광고계정이 없습니다.'; return; }
-    if(up.acc!==a.id){ up.acc=a.id; up.camp=''; up.tpl=''; up.link=''; }
-    if(!upCamp(a)){ const c=(a.campaigns||[]).filter(upLive).sort((p,q)=>(upOn(q)-upOn(p))||(upSpend(a,'campaign',q.id)-upSpend(a,'campaign',p.id)))[0]; if(c) upPickCamp(a,c.id); }
-    const c=upCamp(a), t=upTpl(a), cbo=upCbo(c);
-    $('muAcctTxt').textContent=a.name+' · 새 광고 세트를 넣을 캠페인을 고릅니다';
-    $('muCamp').querySelector('.t').textContent=c?c.name:'캠페인 고르기';
-    $('muCampMeta').innerHTML=c?'<span'+(upOn(c)?' class="is-on"':'')+'>'+(upOn(c)?'게재 중':'꺼짐')+'</span>'
-      +(c.obj?'<span>'+esc(({OUTCOME_SALES:'판매',OUTCOME_TRAFFIC:'트래픽',OUTCOME_ENGAGEMENT:'참여',OUTCOME_AWARENESS:'인지도',OUTCOME_LEADS:'잠재 고객',OUTCOME_APP_PROMOTION:'앱 홍보'})[c.obj]||c.obj)+'</span>':'')
-      +'<span>'+(cbo?'캠페인 예산 '+(c.budget.d?'하루 '+upBudTxt(a,upMajor(a,c.budget.d)):'기간 '+upBudTxt(a,upMajor(a,c.budget.l))):'세트마다 예산')+'</span>'
-      +'<span>세트 '+(a.adsets||[]).filter(x=>x.c===c.id&&upOn(x)).length+'개 게재 중</span>':'';
-    $('muTpl').querySelector('.t').textContent=t?t.name:'기준 세트 고르기';
-    $('muSetName').value=up.name;
-    $('muBudgetCur').textContent=a.currency==='KRW'?'원':a.currency;
-    $('muBudget').value=cbo?'':up.budget;
-    if(!upDate&&window.UI&&window.UI.datePicker) upDate=window.UI.datePicker($('muStart'),{mode:'single',min:kst(),onChange:v=>{ up.start=v||kst(); if(up.nameAuto){ up.name=upAutoName(upAcc()); $('muSetName').value=up.name; } up.files.forEach(f=>{ if(f.adAuto) f.ad=upAdName(f); }); paintUpFiles(); paintUpSide(); }});
-    if(upDate) upDate.set(up.start);
-    if(!upEnd&&window.UI&&window.UI.datePicker) upEnd=window.UI.datePicker($('muEnd'),{mode:'single',min:kst(),placeholder:'종료일 없음',resetValue:null,onChange:v=>{ up.set.end=v||null; paintUpSide(); }});
-    if(upEnd) upEnd.set(up.set.end);
-    $('muBidAmt').value=up.set.bidAmt;
-    paintUpSet();
-    $('muBody').value=up.body; $('muTitle').value=up.title; $('muDesc').value=up.desc; $('muLink').value=up.link;
-    $('muCta').querySelector('.t').textContent=(CTAS.find(x=>x.value===up.cta)||CTAS[0]).label;
-    $('muStatus').querySelectorAll('.ui-chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===up.status?'true':'false'));
-    tabsOf('muPvTabs',v=>{ up.pvTab=v; paintUpSide(); }).set(up.pvTab);
-    paintUpFiles(); paintUpSide();
-  }
-  function upMedia(f,big){
+  function mwMedia(f,big){
     if(!f) return '';
-    if(f.src==='drive') return '<img loading="lazy" referrerpolicy="no-referrer" alt="" src="https://drive.google.com/thumbnail?id='+esc(f.id)+'&amp;sz=w'+(big?600:120)+'">';
-    return f.kind==='video'?'<video src="'+esc(f.url)+'" muted playsinline loop'+(big?' autoplay':'')+' preload="metadata"></video>':'<img alt="" src="'+esc(f.url)+'">';
+    if(f.src==='drive') return '<img loading="lazy" referrerpolicy="no-referrer" alt="" src="https://drive.google.com/thumbnail?id='+esc(f.id)+'&amp;sz=w'+(big?400:120)+'">';
+    return f.kind==='video'?'<video src="'+esc(f.url)+'" muted playsinline preload="metadata"></video>':'<img alt="" src="'+esc(f.url)+'">';
   }
-  function paintUpFiles(){
-    $('muFiles').innerHTML=up.files.map((f,i)=>'<div class="mu-file'+(i===up.pv?' is-pv':'')+'">'
-      +'<button type="button" class="mu-thumb" data-pv="'+i+'" title="미리보기로 보기">'+upMedia(f)+'<i>'+(f.kind==='video'?'영상':'이미지')+'</i></button>'
-      +'<div><input class="ui-field" data-ad="'+i+'" value="'+esc(f.ad)+'" maxlength="200" aria-label="광고 이름"><small>'+(f.src==='drive'?'바로얌 드라이브 · ':'내 컴퓨터 · ')+esc(f.name)+'</small></div>'
-      +'<button type="button" class="ui-btn ghost sm icon" data-x="'+i+'" aria-label="빼기" title="빼기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>').join('');
+  const mwChip=(k,v,l,on,sub)=>'<button type="button" class="ui-chip" data-set="'+k+'" data-v="'+esc(v)+'" aria-pressed="'+!!on+'">'+esc(l)+(sub!=null?' <b>'+esc(sub)+'</b>':'')+'</button>';
+  const mwPick=(k,txt,ph)=>'<button type="button" class="ui-field block mw-pick" data-menu="'+k+'"><span class="t'+(txt?'':' is-ph')+'">'+esc(txt||ph)+'</span>'+DOWN+'</button>';
+  const mwF=(label,body,cls)=>'<div class="mw-f'+(cls?' '+cls:'')+'"><label>'+label+'</label>'+body+'</div>';
+  function mwBody(a){
+    const s=W.step;
+    if(s===0){
+      const brands=mwBrands(a);
+      return '<h3>브랜드</h3><div class="ui-chips">'+brands.map(b=>mwChip('brand',b,b,W.brand===b)).join('')+'</div>'
+        +(W.brand?'<h3>소구점 <em>세트 이름 끝에 붙습니다 · 이 브랜드에서 쓴 것부터</em></h3><div class="ui-chips">'+mwAngles(a).concat(W.angle&&!mwAngles(a).includes(W.angle)?[W.angle]:[]).map(v=>mwChip('angle',v,v,W.angle===v)).join('')+'</div>'
+          +'<input class="ui-field mw-angle-in" data-add="angle" maxlength="20" placeholder="다른 소구점 직접 입력 후 Enter">':'');
+    }
+    if(s===1){
+      return '<h3>소재 <em>광고 하나에 소재 하나 · 광고 이름은 파일 이름(바꿀 수 있음)</em></h3>'
+        +'<div class="mw-drop" data-drop><p>영상·이미지를 여기에 끌어 놓거나</p><div><button type="button" class="ui-btn soft sm" data-act="pc">내 컴퓨터에서</button>'
+        +'<button type="button" class="ui-btn soft sm" data-act="drive">바로얌 드라이브에서</button></div><small>jpg · png · mp4 · mov</small></div>'
+        +'<input type="file" data-file multiple accept="image/jpeg,image/png,video/mp4,video/quicktime" hidden>'
+        +'<div class="mw-files">'+W.files.map((f,i)=>'<div class="mw-file"><span class="mw-thumb">'+mwMedia(f)+'<i>'+(f.kind==='video'?'영상':'이미지')+'</i></span>'
+          +'<div><input class="ui-field" data-ad="'+i+'" value="'+esc(f.ad)+'" maxlength="200" aria-label="광고 이름"><small>'+(f.src==='drive'?'바로얌 드라이브 · ':'내 컴퓨터 · ')+esc(f.name)+'</small></div>'
+          +'<button type="button" class="ui-btn ghost sm icon" data-del="'+i+'" aria-label="빼기" title="빼기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>').join('')+'</div>';
+    }
+    if(s===2){
+      const c=mwCamp(a), st=mwSet(a), sp=kst(), sp7=(()=>{ const d=new Date(Date.parse(sp)-6*864e5); return d.toISOString().slice(0,10); })();
+      let h='<h3>집행 방식</h3><div class="ui-chips">'+MW_MODES.map(m=>'<button type="button" class="ui-chip" data-set="mode" data-v="'+m.v+'" aria-pressed="'+(W.mode===m.v)+'" title="'+esc(m.d)+'">'+m.l+'</button>').join('')+'</div>';
+      if(!W.mode) return h+'<p class="mw-hint">'+MW_MODES.map(m=>'<b>'+m.l+'</b> '+m.d).join(' · ')+'</p>';
+      if(W.mode!=='new') h+=mwF('캠페인 <em>최근 7일 성과('+sp7+' ~ '+sp+')</em>',mwPick('camp',c&&c.name,'캠페인 선택'));
+      h+=mwF('캠페인 유형'+(W.mode==='new'?'':' <em>캠페인 목록 거르기</em>'),'<div class="ui-chips">'+MW_TYPES.map(t=>mwChip('ctype',t,t,W.ctype===t)).join('')+'</div>');
+      if(W.mode==='new') h+='<p class="mw-hint">새 캠페인 이름 · <b>'+esc(mwCampName())+'</b>'+(/CBO$/.test(W.ctype)?' · 예산은 캠페인에 둡니다':'')+'</p>';
+      if(W.mode==='new'||W.mode==='set'){
+        h+=mwF('타겟','<div class="ui-chips">'+mwChip('target','open','오픈',W.target==='open')+mwChip('target','int','상세 (관심사)',W.target==='int')+'</div>');
+        if(W.target==='int') h+=mwF('관심사 <em>고른 대로 이름이 만들어집니다 | 횟수는 '+esc(W.brand)+' 기준</em>',
+          (W.ints.length?'<div class="mw-tags">'+W.ints.map((x,i)=>'<span>'+esc(x)+'<button type="button" data-untag="'+i+'" aria-label="빼기">×</button></span>').join('')+'</div>':'')
+          +'<button type="button" class="ui-field mw-pick sm" data-menu="int"><span class="t is-ph">관심사 선택</span>'+DOWN+'</button>');
+      }
+      if(W.mode==='copy'||W.mode==='ad') h+=mwF(W.mode==='copy'?'복사할 세트 <em>타깃·예산·최적화를 그대로 가져옵니다</em>':'소재를 넣을 세트',mwPick('set',st&&st.name,c?'세트 선택':'캠페인을 먼저 고르세요'));
+      const nm=mwSetName(a);
+      if(nm&&W.mode!=='ad') h+='<p class="mw-hint">만들 세트 이름 · <b>'+esc(nm)+'</b></p>';
+      return h;
+    }
+    if(s===3){
+      const where=mwBudWhere(a), fx=upFx(a), cur=a.currency;
+      let h='<h3>세부 설정</h3>';
+      if(W.mode!=='ad'){
+        if(where) h+=mwF(where==='campaign'?'캠페인 일 예산':'일 예산','<div class="mw-money">'+(cur==='USD'?'<span>$</span>':'')+'<input class="ui-field" data-in="budget" inputmode="decimal" value="'+esc(W.budget)+'"><span>'+(cur==='USD'?'':cur==='KRW'?'원':cur)+' / 일</span></div>'
+          +'<p class="mw-hint" data-budk>'+(cur!=='KRW'?'메타 계정 통화가 '+(cur==='USD'?'달러':cur)+'입니다'+(fx?' | 환율 '+fx.toLocaleString('ko-KR')+'원'+(+W.budget>0?' · 약 '+int(+W.budget*fx)+'원':''):''):'')+'</p>');
+        else h+='<p class="mw-hint">이 캠페인은 캠페인 예산(CBO)이라 세트 예산 없이 캠페인 예산을 나눠 씁니다.</p>';
+        if(W.mode!=='copy') h+=mwF('최적화',mwPick('goal',(MW_GOALS.find(g=>g.value===W.goal)||{label:W.goal}).label,'')+'<p class="mw-hint">SKU 하나면 <b>전환수</b> | 여러 개면 <b>전환값</b>입니다.</p>','mw-narrow');
+        h+='<div class="mw-row">'+mwF('시작일','<span data-date></span>')+mwF('시작 시각',mwPick('time',W.time,''),'mw-narrow')+'<p class="mw-hint mw-row-hint">KST 기준 | 종료일은 없습니다</p></div>';
+        if(W.mode!=='copy'){
+          const bd=mwBrandAge(a);
+          h+=mwF('시작 연령 <em>이 나이 아래로는 보이지 않음</em>','<div class="mw-money"><input class="ui-field" data-in="ageMin" inputmode="numeric" value="'+W.ageMin+'"><span>세</span></div>');
+          h+=mwF('추천 연령 범위 <em>어드밴티지+ 타깃에 알려 주는 범위</em>','<div class="mw-money"><input class="ui-field" data-in="age0" inputmode="numeric" value="'+W.ageR[0]+'"><span>~</span><input class="ui-field" data-in="age1" inputmode="numeric" value="'+W.ageR[1]+'"><span>세</span>'
+            +'<button type="button" class="ui-btn soft sm" data-act="ageDef">브랜드 기본값</button></div><p class="mw-hint">브랜드 기본값 '+bd[0]+'~'+bd[1]+'</p>');
+        }else h+='<p class="mw-hint">타깃·연령·최적화는 복사할 세트 그대로 씁니다.</p>';
+        h+='<hr class="mw-hr">';
+      }else h+='<p class="mw-hint">세트의 예산·타깃·일정은 그대로 두고 광고만 더합니다.</p>';
+      h+=mwF('광고 문구 <b class="mw-req">*</b> <em>'+(W.txFrom?'기준 세트에서 가장 많이 쓴 광고 문구를 불러왔습니다':'')+'</em>','<textarea class="ui-field mw-body" data-in="body" rows="8" placeholder="본문">'+esc(W.body)+'</textarea>'
+        +'<input class="ui-field" data-in="title" maxlength="80" placeholder="제목" value="'+esc(W.title)+'">'
+        +'<input class="ui-field" data-in="desc" maxlength="80" placeholder="설명 (선택)" value="'+esc(W.desc)+'">');
+      h+='<div class="mw-row">'+mwF('행동 유도',mwPick('cta',(CTAS.find(x=>x.value===W.cta)||CTAS[0]).label,''),'mw-narrow')+'</div>';
+      h+=mwF('랜딩 주소 <b class="mw-req">*</b>','<input class="ui-field" data-in="link" inputmode="url" placeholder="https://baroyam.com/…" value="'+esc(W.link)+'">');
+      return h;
+    }
+    if(s===4||s===5){
+      const c=mwCamp(a), nm=mwSetName(a), where=mwBudWhere(a), fx=upFx(a), cur=a.currency;
+      const tag=t=>'<span class="mw-badge'+(t==='기존'?'':' is-new')+'">'+t+'</span>';
+      const campName=W.mode==='new'?mwCampName():c?c.name:'-';
+      const tree='<div class="mw-tree"><div>캠페인 <b>'+esc(campName)+'</b>'+tag(W.mode==='new'?'신규 생성':'기존')+'</div>'
+        +'<div class="l2">└ 세트 <b>'+esc(nm)+'</b>'+tag(W.mode==='ad'?'기존':W.mode==='copy'?'복사 생성':'신규 생성')+'</div>'
+        +W.files.map(f=>'<div class="l3">└ 광고 <b>'+esc(f.ad)+'</b>'+tag('신규 생성')+'</div>').join('')+'</div>';
+      const money=v=>(cur==='USD'?'$'+(+v).toFixed(2):int(+v)+(cur==='KRW'?'원':' '+cur))+(fx?' (약 '+int(+v*fx)+'원)':'');
+      const rows=[];
+      if(where) rows.push([where==='campaign'?'캠페인 일 예산':'일 예산',money(W.budget)]);
+      if(W.mode!=='ad'){
+        if(W.mode!=='copy') rows.push(['최적화',(MW_GOALS.find(g=>g.value===W.goal)||{}).label]);
+        rows.push(['시작',W.start+' '+W.time+' (KST)']);
+      }
+      rows.push(['소구점',W.angle]);
+      if(W.mode!=='ad'&&W.mode!=='copy'){
+        rows.push(['최소 연령',W.ageMin+'세 이상'],['추천 연령 범위',W.ageR[0]+'~'+W.ageR[1]+'세']);
+        rows.push(['타겟',W.target==='int'?'상세 · '+W.ints.map(mwIntName).join(', '):'오픈']);
+        if(mwExSeg(a)) rows.push(['제외',mwExSeg(a).replace(/제외$/,'')]);
+      }
+      rows.push(['행동 유도',(CTAS.find(x=>x.value===W.cta)||CTAS[0]).label],['랜딩',W.link]);
+      const sum='<dl class="mw-sum">'+rows.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl>'
+        +'<div class="mw-copy"><p><span>제목</span><b>'+esc(W.title||'-')+'</b></p>'+(W.desc?'<p><span>설명</span>'+esc(W.desc)+'</p>':'')+'<p><span>기본 문구</span></p><pre>'+esc(W.body)+'</pre></div>';
+      if(s===4) return '<h3>미리보기 [검토]</h3><div class="mw-review">'+tree+sum+'</div><p class="mw-warn">현재 세팅은 <b>일시정지</b>로 만듭니다. 관리자 확인 후 정밀성과 ON/OFF 로 켭니다.</p>';
+      return '<div class="mw-done"><div class="mw-done-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
+        +'<h3>등록 준비가 끝났습니다</h3><p>아직 메타와 연결되지 않아 <b>실제로 올라가지는 않았습니다</b>(화면 모양만). 연결하면 이 내용 그대로 일시정지 상태로 만들어집니다.</p></div>'
+        +'<div class="mw-review">'+tree+'</div>';
+    }
+    return '';
   }
-  function upChecks(a){
-    const c=upCamp(a), t=upTpl(a), cbo=upCbo(c), link=up.link.trim();
-    return [
-      ['캠페인 고르기',!!c],
-      ['기준 세트 고르기',!!t],
-      ['세트 이름',!!up.name.trim()],
-      [cbo?'예산 · 캠페인 예산을 나눠 씀':(up.set.budType==='l'?'총 예산':'하루 예산'),cbo||+up.budget>0],
-      ['입찰 금액',cbo||up.set.bid==='LOWEST_COST_WITHOUT_CAP'||+up.set.bidAmt>0],
-      ['타깃 위치',up.set.geo.length>0],
-      ['노출 위치',up.set.plMode==='adv'||(up.set.plats.length>0&&up.set.pos.length>0)],
-      ['소재 '+(up.files.length?up.files.length+'개':'넣기'),up.files.length>0],
-      ['광고 이름 모두',up.files.length>0&&up.files.every(f=>f.ad.trim())],
-      ['본문',!!up.body.trim()],
-      ['랜딩 주소(https)',/^https:\/\/\S+\.\S+/.test(link)],
-      ['켜기·끄기 권한',gvCan()]
-    ];
+  function mwRender(){
+    const a=upAcc(); if(!mwBox) return;
+    const dlg=mwBox.querySelector('.mw-dlg'), body=dlg.querySelector('.mw-body-wrap');
+    dlg.querySelector('.mw-dots').innerHTML=MW_STEPS.map((t,i)=>'<i class="'+(i<W.step?'is-done':i===W.step?'is-on':'')+'" title="'+esc(t)+'"></i>').join('');
+    dlg.querySelector('.mw-bar').style.width=((W.step+1)/MW_STEPS.length*100)+'%';
+    if(!a){ body.innerHTML='<p class="mw-hint">'+(!data?'메타광고 데이터를 불러오는 중입니다…':'광고를 올릴 수 있는(광고 관리 권한이 있는) 광고계정이 없습니다.')+'</p>'; mwFoot(a); return; }
+    if(W.step===3) mwDefaults(a);
+    body.innerHTML=mwBody(a);
+    body.scrollTop=0;
+    const slot=body.querySelector('[data-date]');
+    if(slot){
+      if(!mwDateBtn){ mwDateBtn=document.createElement('button'); mwDate=window.UI.datePicker(mwDateBtn,{mode:'single',min:kst(),onChange:v=>{ W.start=v||kst(); W.files.forEach(f=>{ if(f.adAuto) f.ad=mwAdName(f); }); }}); }
+      mwDate.set(W.start); slot.replaceWith(mwDateBtn);
+    }
+    mwFoot(a);
   }
-  function paintUpSide(){
-    const a=upAcc(); if(!a) return;
-    const c=upCamp(a), cta=CTAS.find(x=>x.value===up.cta)||CTAS[0], f=up.files[up.pv]||null;
-    $('muBodyN').textContent=up.body.length+'자'; $('muBodyN').classList.toggle('is-over',up.body.length>125);
-    $('muBodyN').title=up.body.length>125?'125자가 넘으면 피드에서 "더 보기"로 접힙니다':'';
-    $('muTitleN').textContent=up.title.length+'자'; $('muTitleN').classList.toggle('is-over',up.title.length>40);
-    const cbo=upCbo(c);
-    $('muBudgetHint').textContent=cbo?'':+up.budget>0?(up.set.budType==='l'?'총 ':'하루 ')+upBudTxt(a,+up.budget)+(up.set.budType==='l'&&!up.set.end?' · 총 예산은 종료일이 필요합니다':''):'';
-    $('muStatusHint').textContent=up.status==='PAUSED'?'메타 검토는 올리자마자 시작되고, 켜는 것은 정밀성과 목록의 ON/OFF 로 합니다. 처음엔 이쪽을 권합니다.'
-      :'검토가 끝나면 시작일에 바로 게재되고 예산이 나가기 시작합니다.';
-    const nm=(a.name||'').replace(/\s*(공식몰)?\s*광고계정$/,'')||'광고', ini=nm.slice(0,1);
-    const host=(()=>{ try{ return new URL(up.link.trim()).hostname.replace(/^www\./,''); }catch(e){ return ''; } })();
-    $('muPvSub').textContent=f?(up.files.length>1?(up.pv+1)+' / '+up.files.length+' · 소재 썸네일을 눌러 바꿉니다':'광고 하나'):'소재를 넣으면 보입니다';
-    const ph=$('muPhone');
-    ph.classList.toggle('is-reels',up.pvTab==='reels');
-    ph.innerHTML=up.pvTab==='reels'
-      ?'<div class="mu-ph-media">'+(f?upMedia(f,1):'소재 없음')+'</div><div class="mu-ph-over"><b>'+esc(nm)+'</b> · 광고<p>'+esc(up.body||'본문이 여기에 보입니다')+'</p>'+(up.cta!=='NO_BUTTON'?'<span>'+esc(cta.label)+'</span>':'')+'</div>'
-      :'<div class="mu-ph-top"><i>'+esc(ini)+'</i><div><b>'+esc(nm)+'</b><small>광고</small></div></div>'
-        +'<div class="mu-ph-media">'+(f?upMedia(f,1):'소재 없음')+'</div>'
-        +'<div class="mu-ph-cta"><div><small>'+esc(host||'랜딩 주소')+'</small><b>'+esc(up.title||'제목')+'</b>'+(up.desc?'<small>'+esc(up.desc)+'</small>':'')+'</div>'+(up.cta!=='NO_BUTTON'?'<span>'+esc(cta.label)+'</span>':'')+'</div>'
-        +'<div class="mu-ph-body">'+esc(up.body)+'</div>';
-    const ck=upChecks(a);
-    $('muCheck').innerHTML=ck.map(([t,ok])=>'<li'+(ok?' class="is-ok"':'')+'>'+esc(t)+'</li>').join('');
-    const done={camp:ck[0][1],set:ck.slice(1,7).every(x=>x[1]),ad:ck.slice(7,11).every(x=>x[1]),go:ck.every(x=>x[1])};
-    $('muRoot').querySelectorAll('.mu-step').forEach(el=>el.classList.toggle('is-done',!!done[el.dataset.step]));
-    $('muSum').innerHTML='<div><small>캠페인</small><b title="'+esc(c?c.name:'')+'">'+esc(c?c.name:'-')+'</b></div>'
-      +'<div><small>새 세트</small><b title="'+esc(up.name)+'">'+esc(up.name||'-')+'</b></div>'
-      +'<div><small>만들 광고</small><b>'+up.files.length+'개</b></div>'
-      +'<div><small>올린 뒤</small><b>'+(up.status==='PAUSED'?'꺼짐':'바로 게재')+'</b></div>';
+  function mwFoot(a){
+    const f=mwBox.querySelector('.mw-foot'), miss=a&&W.step<4?mwMissing(a,W.step):'';
+    f.querySelector('[data-prev]').hidden=W.step===0||W.step===5;
+    f.querySelector('.mw-n').textContent=(W.step+1)+' / '+MW_STEPS.length;
+    const nx=f.querySelector('[data-next]');
+    nx.textContent=W.step===4?'등록':W.step===5?'닫기':'다음';
+    nx.disabled=!a||!!miss;
+    f.querySelector('.mw-miss').textContent=miss;
   }
-  function upAddFiles(list){
+  function mwClose(force){
+    if(!force&&W.step<5&&(W.files.length||W.mode)&&!confirm('광고 업로드 창을 닫을까요? 적은 내용은 이 창을 다시 열면 이어집니다.')) return;
+    mwBox.hidden=true; document.removeEventListener('keydown',mwKey,true);
+    if(W.step===5){ W.files.forEach(f=>{ if(f.url) try{ URL.revokeObjectURL(f.url); }catch(e){} }); W=mwNew(); }
+  }
+  function mwKey(e){ if(e.key==='Escape'&&!document.querySelector('.ui-pop:not([hidden])')){ e.stopPropagation(); mwClose(); } }
+  function mwAddFiles(list){
     list.forEach(file=>{
       const kind=/^video\//.test(file.type)?'video':/^image\/(jpeg|png)$/.test(file.type)?'image':null;
       if(!kind) return;
-      const f={src:'pc',kind,name:file.name,url:URL.createObjectURL(file),file,adAuto:true}; f.ad=upAdName(f); up.files.push(f);
+      const f={src:'pc',kind,name:file.name,url:URL.createObjectURL(file),file,adAuto:true}; f.ad=mwAdName(f); W.files.push(f);
     });
-    paintUpFiles(); paintUpSide();
+    mwRender();
   }
-  $('muCamp').addEventListener('click',e=>{
-    e.stopPropagation(); const a=upAcc(); if(!a) return;
-    const list=(a.campaigns||[]).filter(upLive).sort((p,q)=>(upOn(q)-upOn(p))||(upSpend(a,'campaign',q.id)-upSpend(a,'campaign',p.id)));
-    window.UI.menu($('muCamp'),list.map(c=>({value:c.id,label:c.name,sub:(upOn(c)?'게재 중':'꺼짐')+' · 최근 7일 '+short(upSpend(a,'campaign',c.id),a.currency)+(upCbo(c)?' · 캠페인 예산':'')})),up.camp,v=>{ upPickCamp(a,v); paintUp(); });
-  });
-  $('muTpl').addEventListener('click',e=>{
-    e.stopPropagation(); const a=upAcc(); if(!a||!up.camp) return;
-    const list=(a.adsets||[]).filter(x=>x.c===up.camp&&upLive(x)).sort((p,q)=>(upOn(q)-upOn(p))||(upSpend(a,'adset',q.id)-upSpend(a,'adset',p.id)));
-    window.UI.menu($('muTpl'),list.map(x=>({value:x.id,label:x.name,sub:(upOn(x)?'게재 중':'꺼짐')+' · 최근 7일 '+short(upSpend(a,'adset',x.id),a.currency)+(x.budget&&x.budget.d?' · 하루 '+upBudTxt(a,upMajor(a,x.budget.d)):'')})),up.tpl,v=>{ upPickTpl(a,v); paintUp(); });
-  });
-  const upS=()=>up.set;
-  $('muGoal').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('muGoal'),UP_GOALS,upS().goal,v=>{ upS().goal=v; paintUpSet(); }); });
-  $('muBid').addEventListener('click',e=>{ e.stopPropagation(); if($('muBid').disabled) return; window.UI.menu($('muBid'),UP_BIDS,upS().bid,v=>{ upS().bid=v; upS().bidAmt=''; $('muBidAmt').value=''; paintUpSet(); }); });
-  $('muBidAmt').addEventListener('input',()=>{ upS().bidAmt=$('muBidAmt').value.replace(/[^\d.]/g,''); paintUpSide(); });
-  $('muAgeMin').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('muAgeMin'),UP_AGES.filter(n=>n<=upS().ageMax).map(n=>({value:n,label:n+'세'})),upS().ageMin,v=>{ upS().ageMin=+v; paintUpSet(); }); });
-  $('muAgeMax').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('muAgeMax'),UP_AGES.filter(n=>n>=upS().ageMin).map(n=>({value:n,label:n>=65?'65세 이상':n+'세'})),upS().ageMax,v=>{ upS().ageMax=+v; paintUpSet(); }); });
-  $('muAdv').addEventListener('click',()=>{ upS().adv=!upS().adv; paintUpSet(); });
-  [['muEvent','event'],['muGender','g'],['muPlMode','plMode']].forEach(([id,k])=>$(id).addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(!b) return; upS()[k]=k==='g'?+b.dataset.v:b.dataset.v; paintUpSet(); }));
-  [['muPlats','plats'],['muPos','pos']].forEach(([id,k])=>$(id).addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(!b) return; const L=upS()[k], v=b.dataset.v; upS()[k]=L.includes(v)?L.filter(x=>x!==v):L.concat(v); paintUpSet(); }));
-  /* 태그 칸(위치·관심사·맞춤 타깃) · × 로 빼고, 입력 칸 Enter 로 더하고, "고르기"는 다른 세트에서 쓴 것 */
-  $('muRoot').addEventListener('click',e=>{
-    const d=e.target.closest('[data-del]'), pk=e.target.closest('[data-pick]');
-    if(d){ const [k,i]=d.dataset.del.split('|'); upS()[k].splice(+i,1); paintUpSet(); }
-    else if(pk){ e.stopPropagation(); const a=upAcc(), k=pk.dataset.pick, L=a?upKnown(a,k):[];
-      if(!L.length){ $('muMsg').textContent=k==='lang'?'더 고를 언어가 없습니다':'다른 세트에서 쓴 '+(k==='int'?'관심사':'맞춤 타깃')+'가 없습니다'; return; }
-      window.UI.menu(pk,L,null,v=>{ if(!upS()[k].includes(v)) upS()[k].push(v); paintUpSet(); }); }
-  });
-  $('muRoot').addEventListener('keydown',e=>{
-    const inp=e.target.closest('[data-add]'); if(!inp||e.key!=='Enter'||e.isComposing) return;
-    e.preventDefault(); const v=inp.value.trim(), k=inp.dataset.add; if(!v) return;
-    if(!upS()[k].includes(v)) upS()[k].push(v); inp.value=''; paintUpSet();
-  });
-  $('muCta').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('muCta'),CTAS,up.cta,v=>{ up.cta=v; $('muCta').querySelector('.t').textContent=(CTAS.find(x=>x.value===v)||CTAS[0]).label; paintUpSide(); }); });
-  $('muSetName').addEventListener('input',()=>{ up.name=$('muSetName').value; up.nameAuto=!up.name; paintUpSide(); });
-  $('muBudget').addEventListener('input',()=>{ up.budget=$('muBudget').value.replace(/[^\d.]/g,''); paintUpSide(); });
-  [['muBody','body'],['muTitle','title'],['muDesc','desc'],['muLink','link']].forEach(([id,k])=>$(id).addEventListener('input',()=>{ up[k]=$(id).value; paintUpSide(); }));
-  /* 기준 세트 문구 불러오기 · 그 세트에서 지출이 가장 큰 광고의 제목·본문·설명·랜딩(서버 ads[].tx = a.texts 번호) */
-  $('muLoadTx').addEventListener('click',()=>{
-    const a=upAcc(), t=a&&upTpl(a); if(!t) return;
-    const TX=a.texts||[], ad=(a.ads||[]).filter(x=>x.s===t.id&&x.tx).sort((p,q)=>upSpend(a,'ad',q.id)-upSpend(a,'ad',p.id))[0];
-    if(!ad){ $('muMsg').textContent='이 세트에는 불러올 문구가 없습니다'; return; }
-    const one=k=>{ const i=(ad.tx[k]||[])[0]; return i!=null&&TX[i]?TX[i]:''; };
-    up.body=one('b')||up.body; up.title=one('t')||up.title; up.desc=one('d')||up.desc; if(ad.link) up.link=ad.link;
-    $('muBody').value=up.body; $('muTitle').value=up.title; $('muDesc').value=up.desc; $('muLink').value=up.link;
-    $('muMsg').textContent=''; paintUpSide();
-  });
-  $('muStatus').addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(!b) return; up.status=b.dataset.v; $('muStatus').querySelectorAll('.ui-chip').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false')); paintUpSide(); });
-  $('muPc').addEventListener('click',()=>$('muInput').click());
-  $('muInput').addEventListener('change',()=>{ upAddFiles([...$('muInput').files]); $('muInput').value=''; });
-  $('muDrive').addEventListener('click',()=>{
-    if(!window.baroyamDrivePick){ $('muMsg').textContent='드라이브 창을 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요'; return; }
-    window.baroyamDrivePick({title:'바로얌 드라이브에서 소재 고르기',add:'넣기',accept:r=>/^(jpe?g|png|mp4|mov)$/i.test(r.ext||'')},rows=>{
-      rows.forEach(r=>{ const f={src:'drive',id:r.id,name:r.name,kind:/^(mp4|mov)$/i.test(r.ext||'')?'video':'image',adAuto:true}; f.ad=upAdName(f); up.files.push(f); });
-      paintUpFiles(); paintUpSide();
-    });
-  });
-  $('muFiles').addEventListener('click',e=>{
-    const x=e.target.closest('[data-x]'), pv=e.target.closest('[data-pv]');
-    if(x){ const f=up.files.splice(+x.dataset.x,1)[0]; if(f&&f.url) try{ URL.revokeObjectURL(f.url); }catch(err){} if(up.pv>=up.files.length) up.pv=Math.max(0,up.files.length-1); paintUpFiles(); paintUpSide(); }
-    else if(pv){ up.pv=+pv.dataset.pv; paintUpFiles(); paintUpSide(); }
-  });
-  $('muFiles').addEventListener('input',e=>{ const i=e.target.dataset.ad; if(i==null) return; const f=up.files[+i]; f.ad=e.target.value; f.adAuto=!f.ad; paintUpSide(); });
-  const muDrop=$('muDrop');
-  ['dragenter','dragover'].forEach(ev=>muDrop.addEventListener(ev,e=>{ e.preventDefault(); muDrop.classList.add('is-over'); }));
-  ['dragleave','drop'].forEach(ev=>muDrop.addEventListener(ev,()=>muDrop.classList.remove('is-over')));
-  muDrop.addEventListener('drop',e=>{ e.preventDefault(); upAddFiles([...e.dataTransfer.files]); });
-  $('muGo').addEventListener('click',()=>{
-    const a=upAcc(); if(!a) return;
-    const miss=upChecks(a).filter(x=>!x[1]).map(x=>x[0]);
-    const m=$('muMsg');
-    m.classList.toggle('is-warn',!!miss.length);
-    m.textContent=miss.length?'아직 채울 것: '+miss.join(' · '):'화면 모양만 · 아직 메타와 연결되지 않아 올리지 않았습니다';
-  });
-
-  const UP_SUB='캠페인을 고르고, 기준 세트를 복제한 새 광고 세트에 영상·이미지 소재를 올립니다. 위 정밀성과를 누르면 목록으로 돌아갑니다.';
-  $('maUpBtn').addEventListener('click',()=>{ upMode=true; keep('baroyam_perf_up','1'); paint(); window.scrollTo({top:0,behavior:'smooth'}); });
+  function mwOpen(){
+    if(!mwBox){
+      mwBox=document.createElement('div');
+      mwBox.className='settings-overlay mw-ov'; mwBox.hidden=true;
+      mwBox.innerHTML='<div class="settings-panel mw-dlg" role="dialog" aria-modal="true" aria-label="광고 업로드"><div class="mw-top"><span class="mw-bar"></span>'
+        +'<div class="mw-dots"></div><button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div>'
+        +'<div class="mw-body-wrap"></div>'
+        +'<div class="mw-foot"><button type="button" class="ui-btn ghost" data-prev>이전</button><span class="mw-miss"></span><span class="mw-n"></span><button type="button" class="ui-btn primary" data-next>다음</button></div></div>';
+      document.body.appendChild(mwBox);
+      const body=mwBox.querySelector('.mw-body-wrap');
+      mwBox.addEventListener('click',e=>{
+        const a=upAcc();
+        if(e.target===mwBox||e.target.closest('.settings-close')) return mwClose();
+        if(e.target.closest('[data-prev]')){ if(W.step>0){ W.step--; mwRender(); } return; }
+        if(e.target.closest('[data-next]')){ if(W.step===5) return mwClose(true); if(!a||mwMissing(a,W.step)) return; W.step++; mwRender(); return; }
+        if(!a) return;
+        const ch=e.target.closest('[data-set]');
+        if(ch){
+          const k=ch.dataset.set, v=ch.dataset.v;
+          if(k==='brand'&&W.brand!==v){ W.brand=v; W.angle=''; W.camp=''; W.set=''; W.ints=[]; W.txFrom=''; W.body=W.title=W.desc=W.link=''; W.budAuto=true; W.ageSet=false; }
+          else if(k==='ctype'){ W.ctype=W.mode!=='new'&&W.ctype===v?'':v; const c=mwCamp(a); if(W.mode!=='new'&&c&&W.ctype&&mwType(c)!==W.ctype){ W.camp=''; W.set=''; } }
+          else if(k==='mode'){ if(W.mode!==v){ W.mode=v; W.set=''; W.budAuto=true; if(v==='new') W.camp=''; } }
+          else W[k]=v;
+          mwRender(); return;
+        }
+        const un=e.target.closest('[data-untag]'); if(un){ W.ints.splice(+un.dataset.untag,1); mwRender(); return; }
+        const del=e.target.closest('[data-del]');
+        if(del){ const f=W.files.splice(+del.dataset.del,1)[0]; if(f&&f.url) try{ URL.revokeObjectURL(f.url); }catch(err){} mwRender(); return; }
+        const act=e.target.closest('[data-act]');
+        if(act){ const k=act.dataset.act;
+          if(k==='pc') body.querySelector('[data-file]').click();
+          if(k==='drive'){
+            if(!window.baroyamDrivePick){ alert('드라이브 창을 아직 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.'); return; }
+            window.baroyamDrivePick({title:'바로얌 드라이브에서 소재 고르기',add:'넣기',accept:r=>/^(jpe?g|png|mp4|mov)$/i.test(r.ext||'')},rows=>{
+              rows.forEach(r=>{ const f={src:'drive',id:r.id,name:r.name,kind:/^(mp4|mov)$/i.test(r.ext||'')?'video':'image',adAuto:true}; f.ad=mwAdName(f); W.files.push(f); });
+              mwRender();
+            });
+          }
+          if(k==='ageDef'){ W.ageR=mwBrandAge(a); W.ageSet=true; mwRender(); }
+          return;
+        }
+        const mb=e.target.closest('[data-menu]');
+        if(mb){ e.stopPropagation(); const k=mb.dataset.menu;
+          if(k==='camp'){
+            const L=mwBrandCamps(a).filter(c=>!W.ctype||mwType(c)===W.ctype).sort((p,q)=>(upOn(q)-upOn(p))||((upIns(a,'campaign',q.id).spend||0)-(upIns(a,'campaign',p.id).spend||0)));
+            if(!L.length){ alert(W.brand+(W.ctype?' '+W.ctype:'')+' 캠페인이 없습니다.'); return; }
+            window.UI.menu(mb,L.map(c=>{ const i=upIns(a,'campaign',c.id); return {value:c.id,label:c.name,sub:(upOn(c)?'게재 중':'꺼짐')+' · 광고비 '+short(i.spend||0,a.currency)+' · ROAS '+mwRoas(i)+(c.budget?' · 캠페인 예산':'')}; }),W.camp,
+              v=>{ W.camp=v; W.set=''; W.budAuto=true; mwRender(); },{search:L.length>8,placeholder:'캠페인 찾기'});
+          }
+          if(k==='set'){
+            const L=(a.adsets||[]).filter(x=>x.c===W.camp&&upLive(x)).sort((p,q)=>(upOn(q)-upOn(p))||((upIns(a,'adset',q.id).spend||0)-(upIns(a,'adset',p.id).spend||0)));
+            if(!L.length) return;
+            window.UI.menu(mb,L.map(x=>{ const i=upIns(a,'adset',x.id); return {value:x.id,label:x.name,sub:(upOn(x)?'게재 중':'꺼짐')+' · 광고비 '+short(i.spend||0,a.currency)+' · ROAS '+mwRoas(i)}; }),W.set,
+              v=>{ W.set=v; W.budAuto=true; mwRender(); },{search:L.length>8,placeholder:'세트 찾기'});
+          }
+          if(k==='int'){
+            const m={}, all={};
+            (a.adsets||[]).forEach(x=>((x.tg||{}).int||[]).forEach(n=>{ all[n]=1; }));
+            mwBrandSets(a).forEach(x=>((x.tg||{}).int||[]).forEach(n=>{ m[n]=(m[n]||0)+1; }));
+            const L=Object.keys(all).filter(n=>!W.ints.includes(n)).sort((p,q)=>(m[q]||0)-(m[p]||0)||p.localeCompare(q,'ko'));
+            if(!L.length){ alert('다른 세트에서 쓴 관심사가 없습니다.'); return; }
+            window.UI.menu(mb,L.map(n=>({value:n,label:n,sub:m[n]?m[n]+'회':''})),null,v=>{ if(!W.ints.includes(v)) W.ints.push(v); mwRender(); },{search:L.length>8,placeholder:'관심사 찾기'});
+          }
+          if(k==='goal') window.UI.menu(mb,MW_GOALS,W.goal,v=>{ W.goal=v; W.goalSet=true; mwRender(); });
+          if(k==='time') window.UI.menu(mb,MW_TIMES.map(t=>({value:t,label:t})),W.time,v=>{ W.time=v; mwRender(); });
+          if(k==='cta') window.UI.menu(mb,CTAS,W.cta,v=>{ W.cta=v; mwRender(); });
+        }
+      });
+      /* 글 칸은 다시 그리지 않고 값만 · 아래 버튼(다음)만 다시 살핀다 */
+      body.addEventListener('input',e=>{
+        const t=e.target, a=upAcc(); if(!a) return;
+        if(t.dataset.ad!=null){ const f=W.files[+t.dataset.ad]; f.ad=t.value; f.adAuto=!t.value; }
+        const k=t.dataset.in;
+        if(k==='budget'){ W.budget=t.value.replace(/[^\d.]/g,''); W.budAuto=false; const fx=upFx(a), el=body.querySelector('[data-budk]'); if(el&&fx) el.textContent='메타 계정 통화가 '+(a.currency==='USD'?'달러':a.currency)+'입니다 | 환율 '+fx.toLocaleString('ko-KR')+'원'+(+W.budget>0?' · 약 '+int(+W.budget*fx)+'원':''); }
+        else if(k==='ageMin') W.ageMin=+t.value.replace(/\D/g,'')||0;
+        else if(k==='age0'||k==='age1'){ W.ageR[k==='age0'?0:1]=+t.value.replace(/\D/g,'')||0; W.ageSet=true; }
+        else if(k) W[k]=t.value;
+        mwFoot(a);
+      });
+      body.addEventListener('keydown',e=>{
+        const t=e.target.closest('[data-add]'); if(!t||e.key!=='Enter'||e.isComposing) return;
+        e.preventDefault(); const v=t.value.trim().replace(/[_\s]+/g,''); if(!v) return; W.angle=v; mwRender();
+      });
+      body.addEventListener('change',e=>{ if(e.target.matches('[data-file]')){ mwAddFiles([...e.target.files]); e.target.value=''; } });
+      body.addEventListener('dragover',e=>{ const d=e.target.closest('[data-drop]'); if(!d) return; e.preventDefault(); d.classList.add('is-over'); });
+      body.addEventListener('dragleave',e=>{ const d=e.target.closest('[data-drop]'); if(d) d.classList.remove('is-over'); });
+      body.addEventListener('drop',e=>{ const d=e.target.closest('[data-drop]'); if(!d) return; e.preventDefault(); d.classList.remove('is-over'); mwAddFiles([...e.dataTransfer.files]); });
+    }
+    if(!W.brand){ const a=upAcc(), bOf=a?brandMap(a):{}, c=a&&acc()===a&&tab!=='daily'&&selC.size===1?[...selC][0]:''; if(c&&bOf[c]) W.brand=bOf[c]; }
+    mwBox.hidden=false; document.addEventListener('keydown',mwKey,true);
+    mwRender();
+  }
+  $('maUpBtn').addEventListener('click',mwOpen);
   perfTabs.forEach(b=>b.addEventListener('click',()=>{ const v=b.dataset.perf;
-    if(upMode){ upMode=false; keep('baroyam_perf_up',''); if(v==='detail'&&tab!=='daily'){ paint(); return; } }
     if(v==='detail'){ if(tab==='daily'){ show='on'; go('campaign'); } }   /* 정밀성과에 들어오면 늘 게재 중부터(사용자 요청) */ else go(v); }));
 
   function paint(){
     paintTab(); paintAcct();
-    if(upMode){ paintUp(); return; }
     const a=acc();
     $('maEmpty').hidden=!!a;
     root.querySelectorAll('.ma-need').forEach(el=>{ el.hidden=!a||el.dataset.on!=='1'; });
