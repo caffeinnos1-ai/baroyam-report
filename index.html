@@ -4449,6 +4449,7 @@ window.BAROYAM_FONT=(function(){
   .pj-chip-ava svg{width:17px;height:17px}
   .pj-filters{margin-left:auto;display:flex;gap:8px;position:relative}
   .pj-filter-reset[hidden]{display:none}
+  .pj-kinds{align-self:center}
   .pj-filter-reset{color:var(--body)}
   .pj-filter{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);font-size:12.5px;font-weight:600;color:var(--ink)}
@@ -9057,6 +9058,8 @@ window.BAROYAM_FONT=(function(){
               <button type="button" class="ui-tab" data-value="cal">캘린더</button>
             </div>
             <div class="pj-filters" id="pjFilters">
+              <!-- 종류 · 필터 줄 대신 기간 왼쪽 탭(10-29 사용자 요청 "필터가 너무 많다") -->
+              <div class="ui-tabs pj-kinds" id="pjKinds" role="tablist" aria-label="종류"></div>
               <button type="button" class="pj-filter" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>기간<span class="pj-filter-n"></span></button>
               <button type="button" class="pj-filter pj-filter-reset" id="pjFilterReset" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18.5 8.5A7 7 0 1 0 19 12"/><path d="M19 4.5V9h-4.5"/></svg>필터 초기화</button>
               <div class="pj-pop" id="pjPop" hidden></div>
@@ -26320,7 +26323,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      프로젝트(channel) 줄은 지금 안 쓰기로 해서 뺐다 · 다시 쓸 때는 아래 줄에
      {k:'channel',cap:'프로젝트'}를 회원과 상태 사이에 끼우면 그대로 돌아온다
      (거르는 쪽 pjMatch·facetValues·초기화는 channel을 계속 다룰 줄 안다) */
-  const FACETS=[{k:'owner',cap:'회원'},{k:'kind',cap:'종류'},{k:'status',cap:'상태'},{k:'channel',cap:'경로'}];   /* 경로 줄 · 10-29 사용자 요청으로 다시 켬 */
+  const FACETS=[{k:'owner',cap:'회원'},{k:'status',cap:'상태'},{k:'channel',cap:'경로'}];   /* 종류는 위 탭(#pjKinds) */   /* 경로 줄 · 10-29 사용자 요청으로 다시 켬 */
   /* keep:true = 맡은 프로젝트가 아직 없어도 칩을 남겨 둔다(정해 둔 프로젝트·상태 목록과 설정에 등록된 회원) */
   function facetValues(k){
     const out=[],seen=new Set();
@@ -26346,6 +26349,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const inner=avatar?`<img src="${esc(avatar)}" alt="" referrerpolicy="no-referrer">`
                       :(initial?esc(initial):PJ_FACE);
     return `<span class="pj-chip-ava" style="background:${esc(color||memberColor(name))}">${inner}</span>`;
+  }
+  /* 종류 탭 · 전체 / 업무 / 행사 / 회사일정 중 하나 · 숫자는 다른 조건을 다 건 뒤의 개수 */
+  function renderKinds(){
+    const host=$('pjKinds');
+    if(!host) return;
+    const base=state.projects.filter(p=>pjMatch(p,'kind')), cur=pf.kind.size?[...pf.kind][0]:null;
+    const tab=(v,l,n)=>`<button type="button" class="ui-tab" role="tab" data-kind="${v==null?'*':esc(v)}" aria-selected="${cur===v}">${l}<span class="n">${n}</span></button>`;
+    host.innerHTML=tab(null,'전체',base.length)+PJ_KINDS.map(x=>tab(x.k,x.l,base.filter(p=>(p.kind||'')===x.k).length)).join('');
   }
   function renderFacets(){
     const host=$('pjFacets');
@@ -26461,7 +26472,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       b.querySelector('.pj-filter-n').textContent=txt;
     });
     const reset=$('pjFilterReset');
-    if(reset) reset.hidden=!(pf.status.size||pf.owner.size||pf.channel.size||pf.from||pf.to||pf.q);
+    if(reset) reset.hidden=!(pf.status.size||pf.owner.size||pf.channel.size||pf.kind.size||pf.from||pf.to||pf.q);
+    renderKinds();
     renderFacets();
     renderCal();
   }
@@ -26871,6 +26883,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       </div>`;
     }
     $('pjFilters').addEventListener('click',e=>{
+      const kt=e.target.closest('#pjKinds [data-kind]');
+      if(kt){ pf.kind.clear(); if(kt.dataset.kind!=='*') pf.kind.add(kt.dataset.kind); pop.hidden=true; renderBoard(); return; }
       if(e.target.closest('#pjFilterReset')){
         pf.status.clear(); pf.owner.clear(); pf.channel.clear(); pf.kind.clear();
         pf.from=''; pf.to=''; pf.q=''; $('pjSearch').value='';
