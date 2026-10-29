@@ -2576,12 +2576,13 @@ window.BAROYAM_FONT=(function(){
   .ma-ck{width:15px;height:15px;margin:0 2px 0 0;flex:none;accent-color:var(--btn);cursor:pointer;vertical-align:-2px}
   /* 정밀성과 목록 · 간격 정리(사용자 요청) */
   .ma-list{padding:16px 20px 12px}
-  .ma-listbar{display:flex;align-items:center;justify-content:space-between;gap:10px 12px;flex-wrap:wrap;margin-bottom:12px}
-  .ma-listbar-end{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .ma-list .ma-crumb{margin:0 0 10px}
-  .ma-levels{margin:4px 0 6px}
-  .ma-levelbar{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
-  .ma-levelbar #maUpBtn{margin-bottom:10px}
+  /* 10-29 간격 다시 정리(사용자: "중구난방") · 위 줄 모든 칸 30px · 간격 8px · 단계 탭 줄은 밑줄을 끝까지 긋고 업로드 단추를 같은 가운데 선에 */
+  .ma-listbar{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:14px}
+  .ma-listbar-end{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ma-listbar .ui-field.sm,.ma-listbar .ui-chip,.ma-listbar .ui-btn.sm{height:var(--ui-h-sm)}
+  .ma-listbar .ui-chips{gap:6px}
+  .ma-list .ma-crumb{margin:0 0 12px}
+  .ma-levelbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid var(--line)}
   .ma-levelbar .ui-btn[hidden]{display:none}
   /* 크기 고정 · 고르거나 배지가 붙어도 폭이 늘지 않게(사용자 요청) */
   .ma-levels .ui-tab{width:88px;padding:0 8px;justify-content:center;gap:5px}
@@ -2591,7 +2592,7 @@ window.BAROYAM_FONT=(function(){
   .ma-list .ma-table tbody tr:not(.is-total) td{height:52px}
   .ma-list .ma-table tr.is-total td{height:40px}
   /* 정밀성과 목록 · 참고 그림처럼 가볍게(10-20 사용자 요청) · 밑줄 탭 · 제품 칸 · 모든 머리에 정렬 표시 · 합계 줄은 바탕 없이 */
-  .ma-list .ma-levels{background:none;padding:0 0 8px;border-bottom:1px solid var(--line);border-radius:0;gap:4px;display:inline-flex}
+  .ma-list .ma-levels{background:none;padding:0;margin:0;border:0;border-radius:0;gap:4px;display:inline-flex}
   .ma-list .ma-levels .ui-tab{background:none;box-shadow:none;color:var(--mute);font-weight:500}
   .ma-list .ma-levels .ui-tab.active,.ma-list .ma-levels .ui-tab[aria-selected="true"]{background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:600}
   .ma-list .ma-levels .ui-tab .ma-selcount{background:var(--chip-flat);color:var(--mute)}
@@ -2615,7 +2616,7 @@ window.BAROYAM_FONT=(function(){
   .ma-list .ma-table td.is-under,.ma-list .ma-table td.is-over,.ma-list .ma-table td:last-child{font-weight:600}
   .ma-list .ma-table td.is-under{color:var(--neg)}
   .ma-list .ma-table td.is-over{color:var(--coupang)}
-  .ma-list #maBrand,.ma-list #maSortPick{width:180px;justify-content:space-between}
+  .ma-list #maBrand,.ma-list #maSortPick{width:168px;justify-content:space-between}
   .ma-list #maBrand .t,.ma-list #maSortPick .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-list .ma-table{table-layout:fixed;min-width:1100px}
   .ma-list .ma-table th.ma-namecol{width:30%}
