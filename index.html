@@ -6406,6 +6406,12 @@ window.BAROYAM_FONT=(function(){
   .so-name{flex:1;min-width:0;padding:7px 9px;color:var(--ink);font:600 13.5px var(--app-font);letter-spacing:-.2px}
   .so-list .is-locked .mg-no{background:var(--mute)}
   .so-list .is-locked .so-name{color:var(--mute)}
+  /* 프로젝트설정 · 경로 줄 · 색 점은 눌러서 바꿈 */
+  .pc-dot{all:unset;box-sizing:border-box;flex:none;width:14px;height:14px;margin:0 4px 0 6px;border-radius:50%;cursor:pointer;box-shadow:0 0 0 3px var(--paper),0 0 0 4px var(--line)}
+  .pc-dot:focus-visible{outline:2px solid var(--btn);outline-offset:3px}
+  .pc-was{flex:none;font-size:11.5px;color:var(--mute)}
+  .pc-gone{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:12px;color:var(--mute)}
+  .pc-gone[hidden]{display:none}
   /* 글꼴 탭 · 글꼴마다 카드 하나 · 카드 글자는 그 글꼴로 그린다 · 고른 카드는 강조색 테두리 + 체크 */
   .ft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
   .ft-card{all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:column;gap:8px;padding:14px 16px;
@@ -8602,6 +8608,10 @@ window.BAROYAM_FONT=(function(){
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M9 4v16M12.5 9h4.5M12.5 12.5h4.5M12.5 16h4.5"/></svg>
               <span>사이드탭설정</span>
             </button>
+            <button class="mini-sb-item" type="button" data-settings-view="pjset" id="pcSettingsTab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="5" height="15" rx="1.4"/><rect x="9.5" y="4.5" width="5" height="10" rx="1.4"/><rect x="15.5" y="4.5" width="5" height="12.5" rx="1.4"/></svg>
+              <span>프로젝트설정</span>
+            </button>
             <button class="mini-sb-item" type="button" data-settings-view="font" id="ftSettingsTab">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 19 8.5 5h1l5 14M5.4 14h7.2"/><path d="M20.5 19v-5.2a2.6 2.6 0 0 0-5 0M20.5 15.6c-3.4-.2-5.4.6-5.4 2 0 .9.7 1.6 1.9 1.6 1.6 0 3.5-1.2 3.5-3.6"/></svg>
               <span>글꼴</span>
@@ -8649,6 +8659,15 @@ window.BAROYAM_FONT=(function(){
                 <p class="mg-hint">▲▼로 사이드바 메뉴의 위아래 순서를 바꿔요. 바꾼 순서는 서버에 저장돼 모든 회원·다른 PC의 사이드바에 똑같이 적용됩니다.<br>마이홈과 프로젝트는 맨 위에 고정이라 옮길 수 없어요.</p>
                 <div class="mg-list so-list" id="soList"></div>
                 <div><button type="button" class="ui-btn sm ghost" id="soReset">기본 순서로</button></div>
+              </div>
+            </section>
+            <!-- 프로젝트설정 · 프로젝트 보드 경로 필터(자사몰·톡딜 등)의 이름·순서·색 · 빼기·더하기 -->
+            <section class="settings-view" data-settings-panel="pjset" hidden>
+              <div class="mg-manager">
+                <p class="mg-hint"><b>경로</b> · 프로젝트 보드의 경로 필터와 프로젝트 창의 경로 목록이에요. 고친 것은 바로 저장돼 모든 회원에게 같이 보입니다.<br>색 점을 누르면 색이 바뀌고, ✕ 로 뺀 경로는 아래에서 되살릴 수 있어요. 이름을 바꿔도 이미 적힌 프로젝트는 그대로 따라옵니다.</p>
+                <div class="mg-list so-list" id="pcList"></div>
+                <form class="mg-add-item" id="pcAdd"><input type="text" maxlength="20" placeholder="새 경로 이름" autocomplete="off"><button type="submit">추가</button></form>
+                <div class="pc-gone" id="pcGone" hidden></div>
               </div>
             </section>
             <!-- 글꼴 · 화면 전체 글꼴을 고른다 · 서버에 저장돼 모든 회원에게 같이 적용 -->
@@ -15171,6 +15190,138 @@ window.BAROYAM_SIDEBAR_ORDER=(function(){
   });
   if(resetBtn) resetBtn.addEventListener('click',()=>{ SO.reset(); render(); });
   document.addEventListener('baroyam:sidebar-order',render);
+  render();
+})();
+
+/* 프로젝트 경로 목록 · 관리자 설정 › 프로젝트설정에서 이름 바꾸기·빼기·더하기·순서·색(10-29 사용자 요청) ·
+   app_settings 의 projectChannels = {items:{id:{k,l,c,ord,del}},updatedAt} · saveMerged 로 바꾼 줄만 얹는다 ·
+   프로젝트에 저장되는 값은 k(처음 이름)라 이름(l)을 바꿔도 프로젝트는 그대로 따라온다 · 빼기는 del 표시만(되살릴 수 있음) */
+window.BAROYAM_PJ_CHANNELS=(function(){
+  const KEY='projectChannels', LS='baroyam_pj_channels_v1';
+  const DEFAULT=[['자사몰','#ef4f6b'],['스마트스토어','#7c6fe0'],['쿠팡','#3b82f6'],['톡딜','#3b82f6'],['오픈몰','#14a896'],['기타','#ef4f6b']];
+  const COLORS=['#ef4f6b','#f08a24','#e0b400','#22a05a','#14a896','#3b82f6','#7c6fe0','#8a5cd6','#6b7280'];
+  const items={};
+  DEFAULT.forEach((d,i)=>{ items[d[0]]={k:d[0],l:d[0],c:d[1],ord:i+1}; });
+  const dirty=new Set();
+  function take(v){
+    if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ return false; } }
+    if(!v||!v.items||typeof v.items!=='object') return false;
+    Object.keys(v.items).forEach(id=>{ const x=v.items[id]; if(!dirty.has(id)&&x&&x.k) items[id]=Object.assign({},x); });
+    return true;
+  }
+  try{ take(JSON.parse(localStorage.getItem(LS)||'null')); }catch(e){}
+  function keepLocal(){ try{ localStorage.setItem(LS,JSON.stringify({items})); }catch(e){} }
+  function all(){ return Object.keys(items).map(id=>Object.assign({id},items[id])).sort((a,b)=>(a.ord||0)-(b.ord||0)); }
+  function list(){ return all().filter(x=>!x.del).map(x=>({k:x.k,l:x.l||x.k,c:x.c||'#9ca3af'})); }
+  function find(k){ const id=Object.keys(items).find(i=>items[i].k===k); return id?items[id]:null; }
+  function label(k){ const x=find(k); return x?(x.l||x.k):k; }
+  function color(k){ const x=find(k); return x?x.c:''; }
+  let retry=null, busy=false, again=false;
+  async function push(){
+    clearTimeout(retry);
+    const DB=window.BAROYAM_DB;
+    if(!DB||!DB.saveMerged||!dirty.size) return;
+    if(busy){ again=true; return; }   /* 보내는 중이면 끝난 뒤 한 번 더 */
+    busy=true; again=false;
+    let ok=false;
+    try{ ok=await pushOnce(DB); }finally{ busy=false; }
+    if(ok&&(again||dirty.size)) push();
+  }
+  async function pushOnce(DB){
+    const ids=[...dirty], mine={}; ids.forEach(id=>{ mine[id]=Object.assign({},items[id]); });
+    DB.saveNotice(KEY,'pending');
+    const r=await DB.saveMerged(KEY,function(cur){
+      if(typeof cur==='string'){ try{ cur=JSON.parse(cur); }catch(e){ cur=null; } }
+      const out={items:Object.assign({},(cur&&cur.items)||{}),updatedAt:Date.now()};
+      ids.forEach(id=>{ out.items[id]=mine[id]; });
+      return out;
+    });
+    if(r){
+      ids.forEach(id=>{ if(JSON.stringify(items[id])===JSON.stringify(mine[id])) dirty.delete(id); });
+      take(r); keepLocal(); DB.saveNotice(KEY,'ok');
+      document.dispatchEvent(new CustomEvent('baroyam:pj-channels'));
+      return true;
+    }
+    DB.saveNotice(KEY,'failing');
+    retry=setTimeout(push,15000);   /* 실패하면 빨간 알림 + 15초 뒤 다시 */
+    return false;
+  }
+  function changed(id){ if(id) dirty.add(id); keepLocal(); document.dispatchEvent(new CustomEvent('baroyam:pj-channels')); push(); }
+  function taken(l,id){ return all().some(x=>!x.del&&x.id!==id&&(x.l||x.k)===l); }
+  function rename(id,l){
+    l=String(l||'').trim().slice(0,20);
+    if(!items[id]||!l||l===items[id].l||taken(l,id)) return false;
+    items[id].l=l; changed(id); return true;
+  }
+  function remove(id){ if(!items[id]) return; items[id].del=Date.now(); changed(id); }
+  function restore(id){ if(!items[id]) return; delete items[id].del; changed(id); }
+  function recolor(id){ if(!items[id]) return; const i=COLORS.indexOf(items[id].c); items[id].c=COLORS[(i+1)%COLORS.length]; changed(id); }
+  function add(l){
+    l=String(l||'').trim().slice(0,20); if(!l) return false;
+    const same=all().find(x=>x.k===l||(x.l||x.k)===l);
+    if(same){ if(same.del){ restore(same.id); return true; } return false; }
+    const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    items[id]={k:l,l:l,c:COLORS[all().filter(x=>!x.del).length%COLORS.length],ord:Math.max(0,...all().map(x=>x.ord||0))+1};
+    changed(id); return true;
+  }
+  function move(id,dir){
+    const live=all().filter(x=>!x.del), i=live.findIndex(x=>x.id===id), j=i+dir;
+    if(i<0||j<0||j>=live.length) return;
+    live.splice(j,0,live.splice(i,1)[0]);
+    live.forEach((x,n)=>{ if(items[x.id].ord!==n+1){ items[x.id].ord=n+1; dirty.add(x.id); } });
+    changed(null);
+  }
+  function applyRemote(settings){
+    const v=settings&&settings[KEY];
+    if(!v) return;
+    if(take(v)){ keepLocal(); document.dispatchEvent(new CustomEvent('baroyam:pj-channels')); }
+  }
+  return {all,list,label,color,rename,remove,restore,recolor,add,move,applyRemote};
+})();
+
+/* 프로젝트설정 화면 · 경로 줄마다 색 점(누르면 다음 색) · 이름 칸(고치고 나가면 저장) · ▲▼ · ✕(빼기) · 아래 추가 칸 · 뺀 경로는 되살리기 */
+(function(){
+  const PC=window.BAROYAM_PJ_CHANNELS;
+  const box=document.getElementById('pcList'), addForm=document.getElementById('pcAdd'), gone=document.getElementById('pcGone');
+  if(!PC||!box||!addForm||!gone) return;
+  const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function render(){
+    if(box.contains(document.activeElement)&&document.activeElement.matches('[data-pc-name]')) return;   /* 이름을 적는 중에는 다시 그리지 않는다 */
+    const live=PC.all().filter(x=>!x.del), dead=PC.all().filter(x=>x.del);
+    box.innerHTML=live.map((x,i)=>'<div class="mg-group"><div class="mg-row">'
+      +'<button type="button" class="pc-dot" data-pc-color="'+esc(x.id)+'" style="background:'+esc(x.c)+'" title="색 바꾸기" aria-label="'+esc(x.l||x.k)+' 색 바꾸기"></button>'
+      +'<input class="mg-name" data-pc-name="'+esc(x.id)+'" value="'+esc(x.l||x.k)+'" maxlength="20" aria-label="경로 이름">'
+      +(x.l&&x.l!==x.k?'<span class="pc-was" title="프로젝트에 저장된 값">처음 이름 '+esc(x.k)+'</span>':'')
+      +'<span class="mg-move"><button type="button" data-pc-move="'+esc(x.id)+'" data-dir="-1"'+(i===0?' disabled':'')+' title="위로">▲</button>'
+      +'<button type="button" data-pc-move="'+esc(x.id)+'" data-dir="1"'+(i===live.length-1?' disabled':'')+' title="아래로">▼</button></span>'
+      +'<button type="button" class="mg-del" data-pc-del="'+esc(x.id)+'" title="빼기" aria-label="'+esc(x.l||x.k)+' 빼기">✕</button>'
+      +'</div></div>').join('')||'<p class="mg-hint">경로가 없습니다.</p>';
+    gone.hidden=!dead.length;
+    gone.innerHTML=dead.length?'<span>뺀 경로</span>'+dead.map(x=>'<button type="button" class="ui-chip" data-pc-back="'+esc(x.id)+'" title="되살리기">'+esc(x.l||x.k)+' ↺</button>').join(''):'';
+  }
+  box.addEventListener('click',e=>{
+    const c=e.target.closest('[data-pc-color]'); if(c){ PC.recolor(c.dataset.pcColor); return; }
+    const m=e.target.closest('[data-pc-move]'); if(m&&!m.disabled){ PC.move(m.dataset.pcMove,+m.dataset.dir); return; }
+    const d=e.target.closest('[data-pc-del]');
+    if(d){ const x=PC.all().find(y=>y.id===d.dataset.pcDel);
+      if(x&&confirm('"'+(x.l||x.k)+'" 경로를 뺄까요?\n필터와 프로젝트 창의 경로 목록에서 빠집니다. 이미 이 경로가 적힌 프로젝트는 그대로 남고, 아래 "뺀 경로"에서 되살릴 수 있어요.')) PC.remove(x.id); }
+  });
+  box.addEventListener('change',e=>{
+    const n=e.target.closest('[data-pc-name]'); if(!n) return;
+    const v=n.value.trim(), ok=PC.rename(n.dataset.pcName,v);
+    n.blur();
+    if(!ok&&v&&PC.all().some(x=>!x.del&&x.id!==n.dataset.pcName&&(x.l||x.k)===v)) alert('같은 이름의 경로가 이미 있습니다.');
+    render();
+  });
+  box.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('[data-pc-name]')){ e.preventDefault(); e.target.blur(); } });
+  box.addEventListener('focusout',e=>{ if(e.target.matches('[data-pc-name]')) setTimeout(render,0); });
+  gone.addEventListener('click',e=>{ const b=e.target.closest('[data-pc-back]'); if(b) PC.restore(b.dataset.pcBack); });
+  addForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    const inp=addForm.querySelector('input');
+    if(PC.add(inp.value)) inp.value=''; else if(inp.value.trim()) alert('같은 이름의 경로가 이미 있습니다.');
+  });
+  document.addEventListener('baroyam:pj-channels',render);
   render();
 })();
 
@@ -24513,6 +24664,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(window.BAROYAM_PROFILES) window.BAROYAM_PROFILES.applyRemote(settings);
       if(window.BAROYAM_ACCESS) window.BAROYAM_ACCESS.applyRemote(settings);
       if(window.BAROYAM_SIDEBAR_ORDER) window.BAROYAM_SIDEBAR_ORDER.applyRemote(settings);
+      if(window.BAROYAM_PJ_CHANNELS) window.BAROYAM_PJ_CHANNELS.applyRemote(settings);
       if(window.BAROYAM_FONT) window.BAROYAM_FONT.applyRemote(settings);
       if(window.BAROYAM_EDIT_ACCESS) window.BAROYAM_EDIT_ACCESS.applyRemote(settings);
       /* 덩어리를 관계형 테이블에 펼쳐 둔다 · Table Editor에서 행으로 보기 위한 거울이다.
@@ -24548,9 +24700,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const STATUSES=[
     {k:'예정',c:'#6b5fe0'},{k:'진행중',c:'#3b82f6'},{k:'보류',c:'#f08a24'},{k:'완료',c:'#22a05a'},{k:'종료',c:'#4b5563'}];
   const STATUS_KEYS=STATUSES.map(x=>x.k);
-  const CHANNELS=[
-    {k:'자사몰',c:'#ef4f6b'},{k:'스마트스토어',c:'#7c6fe0'},{k:'쿠팡',c:'#3b82f6'},{k:'톡딜',c:'#3b82f6'},
-    {k:'오픈몰',c:'#14a896'},{k:'기타',c:'#ef4f6b'}];
+  /* 경로 목록은 관리자 설정 › 프로젝트설정(BAROYAM_PJ_CHANNELS)에서 고친다 · k = 프로젝트에 저장되는 값, l = 보이는 이름 */
+  const PJC=window.BAROYAM_PJ_CHANNELS;
+  const pjChannels=()=>PJC?PJC.list():[];
+  const chLabel=v=>PJC&&v?PJC.label(v):v;
+  const chColor=v=>(PJC&&v&&PJC.color(v))||'';
   function kstToday(){
     const d=new Date(Date.now()+9*3600*1000);
     return d.toISOString().slice(0,10);
@@ -25580,7 +25734,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function pjPickColor(kind,v){
     if(!v) return 'transparent';
     if(kind==='owner') return memberColor(v);
-    const c=(kind==='status'?STATUSES:CHANNELS).find(x=>x.k===v);
+    if(kind==='channel') return chColor(v)||'var(--mute)';
+    const c=STATUSES.find(x=>x.k===v);
     return c?c.c:'var(--mute)';
   }
   /* 마감일 옆 딱지 · 지난 날짜면 빨강, 사흘 안이면 주황 */
@@ -25657,12 +25812,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
   /* 담당자·경로 고르기 한 벌 · 고른 값은 숨은 칸(name=...)에 담기므로 저장 코드는 그대로다 */
   function pickList(name,list,cur,allowEmpty){
-    const rows=(allowEmpty===false?[]:[{v:'',t:'없음'}]).concat(list.map(v=>({v:v,t:v})));
+    const lb=v=>name==='channel'?chLabel(v):v;
+    const rows=(allowEmpty===false?[]:[{v:'',t:'없음'}]).concat(list.map(v=>({v:v,t:lb(v)})));
     return `<span class="pjf-pick" data-pick="${name}">
       <input type="hidden" name="${name}" value="${esc(cur||'')}">
       <button type="button" class="pjf-sel" aria-haspopup="listbox" aria-expanded="false">
         <i class="pjf-dot" data-dot="${name}" style="background:${pjPickColor(name,cur)}"></i>
-        <span class="pjf-sel-t">${esc(cur||'없음')}</span>
+        <span class="pjf-sel-t">${esc(cur?lb(cur):'없음')}</span>
       </button>
       <div class="pjf-menu" role="listbox" hidden>
         ${rows.map(r=>`<button type="button" class="pjf-opt${r.v===(cur||'')?' is-on':''}" role="option" data-v="${esc(r.v)}">
@@ -25676,7 +25832,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const wrap=form.querySelector('.pjf-pick[data-pick="'+name+'"]');
     if(!wrap) return;
     wrap.querySelector('input[type=hidden]').value=v;
-    wrap.querySelector('.pjf-sel-t').textContent=v||'없음';
+    wrap.querySelector('.pjf-sel-t').textContent=v?(name==='channel'?chLabel(v):v):'없음';
     wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o.dataset.v===v));
   }
@@ -25738,7 +25894,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!opt){ closePickMenus(null); closeDateCals(null); return; }
     const wrap=opt.closest('.pjf-pick'), name=wrap.dataset.pick, v=opt.dataset.v;
     wrap.querySelector('input[type=hidden]').value=v;
-    wrap.querySelector('.pjf-sel-t').textContent=v||'없음';
+    wrap.querySelector('.pjf-sel-t').textContent=v?(name==='channel'?chLabel(v):v):'없음';
     wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o===opt));
     wrap.querySelector('.pjf-menu').hidden=true;
@@ -26017,7 +26173,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
            </div>
            <div class="pjf-row"><span class="pjf-rl">경로</span>
              <div class="pjf-rc">
-               ${pickList('channel',CHANNELS.map(c=>c.k),cur.channel)}
+               ${pickList('channel',pjChannels().map(c=>c.k),cur.channel)}
              </div>
            </div>
            <div class="pjf-row"><span class="pjf-rl">상태</span>
@@ -26125,7 +26281,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const out=[],seen=new Set();
     const push=(v,c,keep)=>{ if(seen.has(v)) return; seen.add(v); out.push({v:v,c:c,keep:!!keep}); };
     if(k==='status') STATUSES.forEach(s=>push(s.k,s.c,true));
-    else if(k==='channel') CHANNELS.forEach(c=>push(c.k,c.c,true));   /* 자사몰·톡딜 등은 0건이어도 늘 고를 수 있게 둔다 */
+    else if(k==='channel') pjChannels().forEach(c=>push(c.k,c.c,true));   /* 자사몰·톡딜 등은 0건이어도 늘 고를 수 있게 둔다 */
     else if(canSeeAllProjects()) readMembers().forEach(m=>push(m.name,m.color||'#6b7280',true));   /* 팀장은 등록된 회원 전체를 고른다 */
     else if(myName()) push(myName(),memberColor(myName()),true);
     state.projects.forEach(p=>{ const v=p[k]||''; if(v) push(v,k==='owner'?memberColor(v):'#9ca3af'); });
@@ -26164,7 +26320,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         if(!n&&!on&&!o.keep) return '';
         const mark=f.k==='owner'?memberFace(o.v,o.c):`<i class="pj-chip-dot" style="background:${esc(o.c)}"></i>`;
         return `<button type="button" class="pj-chip${on?' is-on':''}${n?'':' is-zero'}" data-facet="${f.k}" data-val="${esc(o.v)}" aria-pressed="${on}">
-          ${mark}${esc(o.v||'미지정')}<span class="pj-chip-n num">${n}</span></button>`;
+          ${mark}${esc(o.v?(f.k==='channel'?chLabel(o.v):o.v):'미지정')}<span class="pj-chip-n num">${n}</span></button>`;
       }).join('');
       const allOn=!sel.size;
       return `<div class="pj-facet-row" data-facet="${f.k}">
@@ -26187,6 +26343,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* 회원 목록이 바뀌면 "내 담당" 판정과 담당자 칩이 같이 바뀌므로 전체를 다시 그린다 */
   document.addEventListener('baroyam:members',()=>render());
   document.addEventListener('baroyam:profiles',()=>renderBoard());
+  document.addEventListener('baroyam:pj-channels',()=>render());
   /* 복제한 카드의 이름 · 끝에 '(복사본)'을 붙이고, 이미 복사본이면 숫자를 하나 올린다 ·
      이름 칸이 80자까지라 뒤에 붙는 만큼 앞을 잘라 둔다 */
   function pjCopyName(name){
@@ -26209,7 +26366,6 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
     const late=p.due&&p.due<today&&(p.status==='진행중'||p.status==='예정');
     const st=STATUS_TAG[p.status]||STATUS_TAG['진행중'];
-    const ch=CHANNELS.find(c=>c.k===p.channel);
     const oc=p.owner?memberColor(p.owner):'';
     return `<div class="pj-card" data-id="${esc(p.id)}">
       <div class="pj-card-tools">
@@ -26227,7 +26383,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         ${p.owner?tag(p.owner,`color-mix(in srgb,${oc} 14%,transparent)`,oc):''}
       </div>
       <div class="pj-card-prog"><span class="mh-proj-bar"><i style="width:${pct}%"></i></span><b class="num">${pct}%</b></div>
-      ${p.channel?`<div class="pj-card-foot"><i style="background:${ch?ch.c:'#9ca3af'}"></i>${esc(p.channel)}</div>`:''}
+      ${p.channel?`<div class="pj-card-foot"><i style="background:${chColor(p.channel)||'#9ca3af'}"></i>${esc(chLabel(p.channel))}</div>`:''}
     </div>`;
   }
   function renderBoard(){
