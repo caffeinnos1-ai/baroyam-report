@@ -3000,6 +3000,11 @@ window.BAROYAM_FONT=(function(){
   .mw-done p{margin:0;font-size:13px;line-height:1.6;color:var(--body);max-width:460px}
   .mw-done-ic{width:48px;height:48px;border-radius:99px;display:grid;place-items:center;background:var(--btn-soft);color:var(--btn)}
   .mw-done-ic svg{width:24px;height:24px}
+  .mw-confirm{--gv:var(--btn);border-radius:14px;border:1px solid var(--line)}
+  .mw-spin svg{animation:mwSpin 1s linear infinite}
+  .mw-done+.mw-review .mw-tree{border-bottom:0;padding-bottom:0}
+  @keyframes mwSpin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){ .mw-spin svg{animation:none} }
   .mw-foot{flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
   .mw-foot [data-prev][hidden]{display:none}
   .mw-miss{flex:1;text-align:right;font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -20422,12 +20427,14 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const BRAND_ALIAS={'아미아미':'아미'};   /* 이름 → 묶을 브랜드 · 더 생기면 한 줄씩 */
   const SORTS=[{value:'spend',label:'광고비 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'매출 많은 순'}];
 
-  /* ---------- 광고 업로드 창(10-29 사용자 요청 · 대시보드 화면 대신 업로드 단추를 누르면 뜨는 단계별 창 · 여전히 화면 모양만 · 메타에 올리지 않음) ----------
+  /* ---------- 광고 업로드 창(10-29 사용자 요청 · 대시보드 화면 대신 업로드 단추를 누르면 뜨는 단계별 창 · 10-30 메타 등록 연동) ----------
      ① 집행 방식(신규 집행·세트 추가·세트 복사·소재 추가 · 캠페인을 고르면 브랜드가 정해짐 · 신규는 브랜드를 고름 · 타겟·소구점) →
      ② 소재(내 컴퓨터·바로얌 드라이브 · 광고 이름 = 파일 이름) → ③ 세부 설정(예산·최적화·시작·연령·광고 문구) → ④ 미리보기 [검토] → ⑤ 등록 ·
      10-30 사용자 요청으로 브랜드 고르기 단계를 없애고 집행 방식부터 시작 · 늘 일시정지로 만들고 켜기는 정밀성과 ON/OFF ·
      세트 이름은 지금 쓰는 규칙(날짜_브랜드 첫 글자+오픈T|상세T_관심사_구매(14)제외_소구점NN)으로 만든다 ·
-     켜고 끌 수 있는 계정(accounts[].manage)만 · 연동할 때: 화면이 파일을 brand-files 에 올리고 주문 파일을 두면 VPS 가 메타에 만든다 */
+     켜고 끌 수 있는 계정(accounts[].manage)만 · 등록(10-30): 미리보기에서 확인 체크 + 켜기·끄기 비밀번호 → 소재를 brand-files 의
+     metaads/mk/up/<주문id>/ 에 올리고 주문 metaads/mk/req/<이름>.json 을 두면 VPS meta_ads_create.js 가 메타에 만들고 metaads/mk/res 에 답한다 ·
+     메타 새 기능(어드밴티지+ 크리에이티브 자동 보정·여러 광고주 광고 등)은 서버가 모두 끄고, 세트 타깃·노출 위치는 기준 세트 그대로 쓴다 */
   const CTAS=[{value:'ORDER_NOW',label:'지금 주문하기'},{value:'SHOP_NOW',label:'구매하기'},{value:'LEARN_MORE',label:'더 알아보기'},{value:'GET_OFFER',label:'혜택 받기'},{value:'SIGN_UP',label:'가입하기'},{value:'NO_BUTTON',label:'버튼 없음'}];
   const MW_MODES=[{v:'new',l:'신규 집행',d:'새 캠페인 + 세트 + 광고'},{v:'set',l:'세트 추가',d:'기존 캠페인에 새 세트'},{v:'copy',l:'세트 복사',d:'기존 세트를 복사해 새 소재로'},{v:'ad',l:'소재 추가',d:'기존 세트에 광고만'}];
   const MW_TYPES=['PHABO','PHCBO','ABO','CBO'];
@@ -20445,7 +20452,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const upMajor=(a,v)=>a.currency==='KRW'||a.currency==='JPY'?v:v/100;
   const upFx=a=>{ const f=a.currency!=='KRW'&&data.fx&&data.fx[a.currency], k=f?Object.keys(f).sort():[]; return k.length?f[k[k.length-1]]:null; };
   const mwNew=()=>({step:0,brand:'',angle:'',files:[],mode:'',camp:'',ctype:'',target:'open',ints:[],set:'',budget:'',budAuto:true,goal:'OFFSITE_CONVERSIONS',
-    start:kst(),time:'00:00',ageMin:20,ageR:[25,65],body:'',title:'',desc:'',cta:'ORDER_NOW',link:'',txFrom:'',msg:''});
+    start:kst(),time:'00:00',ageMin:20,ageR:[25,65],body:'',title:'',desc:'',cta:'ORDER_NOW',link:'',txFrom:'',msg:'',ok:false,pw:'',run:null});
   let W=mwNew(), mwBox=null, mwDateBtn=null, mwDate=null;
   const mwCamp=a=>(a.campaigns||[]).find(c=>c.id===W.camp)||null;
   const mwSet=a=>(a.adsets||[]).find(x=>x.id===W.set)||null;
@@ -20565,7 +20572,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         if(where) h+=mwF(where==='campaign'?'캠페인 일 예산':'일 예산','<div class="mw-money">'+(cur==='USD'?'<span>$</span>':'')+'<input class="ui-field" data-in="budget" inputmode="decimal" value="'+esc(W.budget)+'"><span>'+(cur==='USD'?'':cur==='KRW'?'원':cur)+' / 일</span></div>'
           +'<p class="mw-hint" data-budk>'+(cur!=='KRW'?'메타 계정 통화가 '+(cur==='USD'?'달러':cur)+'입니다'+(fx?' | 환율 '+fx.toLocaleString('ko-KR')+'원'+(+W.budget>0?' · 약 '+int(+W.budget*fx)+'원':''):''):'')+'</p>');
         else h+='<p class="mw-hint">이 캠페인은 캠페인 예산(CBO)이라 세트 예산 없이 캠페인 예산을 나눠 씁니다.</p>';
-        if(W.mode!=='copy') h+=mwF('최적화',mwPick('goal',(MW_GOALS.find(g=>g.value===W.goal)||{label:W.goal}).label,'')+'<p class="mw-hint">SKU 하나면 <b>전환수</b> | 여러 개면 <b>전환값</b>입니다.</p>','mw-narrow');
+        if(W.mode==='set'&&!where) h+='<p class="mw-hint">최적화는 이 캠페인 세트들과 같은 값을 씁니다(캠페인 예산 캠페인은 세트마다 다르게 둘 수 없음).</p>';
+        else if(W.mode!=='copy') h+=mwF('최적화',mwPick('goal',(MW_GOALS.find(g=>g.value===W.goal)||{label:W.goal}).label,'')+'<p class="mw-hint">SKU 하나면 <b>전환수</b> | 여러 개면 <b>전환값</b>입니다.</p>','mw-narrow');
         h+='<div class="mw-row">'+mwF('시작일','<span data-date></span>')+mwF('시작 시각',mwPick('time',W.time,''),'mw-narrow')+'<p class="mw-hint mw-row-hint">KST 기준 | 종료일은 없습니다</p></div>';
         if(W.mode!=='copy'){
           const bd=mwBrandAge(a);
@@ -20593,7 +20601,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const rows=[];
       if(where) rows.push([where==='campaign'?'캠페인 일 예산':'일 예산',money(W.budget)]);
       if(W.mode!=='ad'){
-        if(W.mode!=='copy') rows.push(['최적화',(MW_GOALS.find(g=>g.value===W.goal)||{}).label]);
+        if(W.mode!=='copy'&&!(W.mode==='set'&&!where)) rows.push(['최적화',(MW_GOALS.find(g=>g.value===W.goal)||{}).label]);
         rows.push(['시작',W.start+' '+W.time+' (KST)']);
       }
       if(W.angle&&(W.mode==='new'||W.mode==='set')) rows.push(['소구점',W.angle]);
@@ -20605,9 +20613,25 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       rows.push(['행동 유도',(CTAS.find(x=>x.value===W.cta)||CTAS[0]).label],['랜딩',W.link]);
       const sum='<dl class="mw-sum">'+rows.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl>'
         +'<div class="mw-copy"><p><span>제목</span><b>'+esc(W.title||'-')+'</b></p>'+(W.desc?'<p><span>설명</span>'+esc(W.desc)+'</p>':'')+'<p><span>기본 문구</span></p><pre>'+esc(W.body)+'</pre></div>';
-      if(s===3) return '<h3>미리보기 [검토]</h3><div class="mw-review">'+tree+sum+'</div><p class="mw-warn">현재 세팅은 <b>일시정지</b>로 만듭니다. 관리자 확인 후 정밀성과 ON/OFF 로 켭니다.</p>';
-      return '<div class="mw-done"><div class="mw-done-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
-        +'<h3>등록 준비가 끝났습니다</h3><p>아직 메타와 연결되지 않아 <b>실제로 올라가지는 않았습니다</b>(화면 모양만). 연결하면 이 내용 그대로 일시정지 상태로 만들어집니다.</p></div>'
+      const top=W.mode==='new'?'캠페인':W.mode==='ad'?'광고':'세트';
+      if(s===3) return '<h3>미리보기 [검토]</h3><div class="mw-review">'+tree+sum+'</div>'
+        +'<p class="mw-warn"><b>'+top+'</b>를 <b>꺼진 채로</b> 만듭니다. 확인한 뒤 정밀성과 ON/OFF 에서 그 '+top+' 하나만 켜면 게재됩니다.<br>'
+        +'메타의 어드밴티지+ 크리에이티브(자동 보정·문구 바꾸기·사이트 링크 등)와 여러 광고주 광고는 <b>모두 끄고</b> 만듭니다.</p>'
+        +'<div class="ma-gv-confirm mw-confirm"><label class="ma-gv-ok"><input type="checkbox" data-ok'+(W.ok?' checked':'')+'><span>위 내용으로 메타에 등록합니다</span></label>'
+        +'<input type="text" class="ui-field ma-gv-secret" data-in="pw" name="mw-'+Math.random().toString(36).slice(2,8)+'" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="numeric"'
+        +' data-lpignore="true" data-1p-ignore data-form-type="other" aria-label="켜기·끄기 비밀번호" placeholder="켜기·끄기 비밀번호" value="'+esc(W.pw)+'">'
+        +(W.run&&W.run.state==='failed'?'<p class="ma-gv-msg is-err">'+esc(W.run.message||'등록하지 못했습니다.')+'</p>':'')+'</div>';
+      const R=W.run||{};
+      if(R.state==='done'){
+        const M=R.made||{}, nm2=W.mode==='new'?(M.campaign||{}).name:campName;
+        return '<div class="mw-done"><div class="mw-done-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
+          +'<h3>메타에 등록했습니다</h3><p><b>'+top+'</b>가 꺼진 채로 만들어졌습니다. 정밀성과 ON/OFF 에서 켜면 게재됩니다. 이 목록에는 2~5분 뒤 보입니다.</p></div>'
+          +'<div class="mw-review"><div class="mw-tree"><div>캠페인 <b>'+esc(nm2||'-')+'</b></div>'
+          +'<div class="l2">└ 세트 <b>'+esc((M.adset||{}).name||nm)+'</b></div>'+(M.ads||[]).map(x=>'<div class="l3">└ 광고 <b>'+esc(x.name)+'</b></div>').join('')+'</div></div>'
+          +((R.warn||[]).length?'<p class="mw-warn">메타가 다음 기능을 켠 채로 두었습니다: <b>'+esc(R.warn.join(', '))+'</b> · 켜기 전에 광고관리자에서 확인해 주세요.</p>':'');
+      }
+      return '<div class="mw-done"><div class="mw-done-ic mw-spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg></div>'
+        +'<h3>메타에 등록하는 중</h3><p>'+esc(R.step||'보내는 중')+'</p><p class="mw-hint">영상은 메타가 처리하느라 몇 분 걸릴 수 있습니다. 창을 닫아도 서버에서 계속 만듭니다.</p></div>'
         +'<div class="mw-review">'+tree+'</div>';
     }
     return '';
@@ -20629,12 +20653,12 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     mwFoot(a);
   }
   function mwFoot(a){
-    const f=mwBox.querySelector('.mw-foot'), miss=a&&W.step<3?mwMissing(a,W.step):'';
+    const f=mwBox.querySelector('.mw-foot'), miss=a&&W.step<3?mwMissing(a,W.step):W.step===3&&!(W.ok&&W.pw.trim())?'확인 체크와 비밀번호를 넣어 주세요':'';
     f.querySelector('[data-prev]').hidden=W.step===0||W.step===4;
     f.querySelector('.mw-n').textContent=(W.step+1)+' / '+MW_STEPS.length;
     const nx=f.querySelector('[data-next]');
-    nx.textContent=W.step===3?'등록':W.step===4?'닫기':'다음';
-    nx.disabled=!a||!!miss;
+    nx.textContent=W.step===3?(W.busy?'확인 중…':'등록'):W.step===4?'닫기':'다음';
+    nx.disabled=!a||!!miss||!!W.busy;
     f.querySelector('.mw-miss').textContent=miss;
   }
   /* 브랜드가 바뀌면 브랜드에 딸린 값(소구점·관심사·문구·연령)을 비운다 */
@@ -20642,7 +20666,64 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function mwClose(force){
     if(!force&&W.step<4&&(W.files.length||W.mode)&&!confirm('광고 업로드 창을 닫을까요? 적은 내용은 이 창을 다시 열면 이어집니다.')) return;
     mwBox.hidden=true; document.removeEventListener('keydown',mwKey,true);
-    if(W.step===4){ W.files.forEach(f=>{ if(f.url) try{ URL.revokeObjectURL(f.url); }catch(e){} }); W=mwNew(); }
+    W.pw='';
+    /* 등록이 끝났을 때만 비운다 · 등록 중이면 다시 열었을 때 진행을 이어 본다 */
+    if(W.step===4&&W.run&&W.run.state==='done'){ W.files.forEach(f=>{ if(f.url) try{ URL.revokeObjectURL(f.url); }catch(e){} }); W=mwNew(); }
+  }
+  /* 등록 · 비밀번호 확인 → (드라이브 소재는 이 창 구글 권한으로 받아) 소재를 brand-files 에 올림 → 주문 → 서버 답을 3초마다 본다 */
+  const MW_MAX=50*1024*1024;
+  async function mwSubmit(a){
+    if(!a||W.busy||!(W.ok&&W.pw.trim())) return;
+    const G=window.baroyamGoogleToken, tokP=W.files.some(f=>f.src==='drive'&&!f.file)&&G?G():null;   /* 누른 순간에 받아야 허락 창이 막히지 않는다 */
+    if(tokP) tokP.catch(()=>{});
+    W.busy=true; W.run=null; mwFoot(a);
+    let right=false; try{ right=(await gvHash(W.pw.trim()))===GV_LOCK.hash; }catch(err){ console.error(err); }
+    if(!right){ W.busy=false; W.pw=''; W.run={state:'failed',message:'비밀번호가 맞지 않습니다.'}; mwRender(); return; }
+    const pw=W.pw.trim(); W.pw=''; W.busy=false; W.step=4; W.run={state:'running',step:'소재 준비 중'}; mwRender();
+    const fail=m=>{ W.run={state:'failed',message:m}; W.step=3; if(!mwBox.hidden) mwRender(); };
+    const show=st=>{ W.run={state:'running',step:st}; if(!mwBox.hidden) mwRender(); };
+    const DB=window.BAROYAM_DB;
+    try{
+      if(!DB||!DB.fileUpload||!(await DB.ensureSession())) return fail('로그인이 풀렸습니다. 새로고침한 뒤 다시 해 주세요.');
+      const oid=Date.now().toString(36)+Math.random().toString(36).slice(2,6), files=[];
+      for(let i=0;i<W.files.length;i++){
+        const f=W.files[i];
+        show('소재 올리는 중 '+(i+1)+' / '+W.files.length);
+        if(f.src==='drive'&&!f.file){
+          const tok=await tokP;
+          const r=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(f.id)+'?alt=media&supportsAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
+          if(r.status===401&&G) G.clear();
+          if(!r.ok) return fail(f.name+' · 드라이브에서 받지 못했습니다('+r.status+')');
+          const b=await r.blob(); f.file=new File([b],f.name,{type:b.type&&b.type!=='application/octet-stream'?b.type:f.kind==='video'?'video/mp4':'image/jpeg'});
+        }
+        if(f.file.size>MW_MAX) return fail('"'+f.name+'"이(가) 50MB가 넘습니다. 줄여서 다시 넣어 주세요.');
+        const ext=(String(f.name).split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,'')||(f.kind==='video'?'mp4':'jpg');
+        const pth='metaads/mk/up/'+oid+'/'+i+'.'+ext;
+        await DB.fileUpload('brand-files',pth,f.file);
+        files.push({kind:f.kind,path:pth,ad:f.ad.trim()});
+      }
+      const where=mwBudWhere(a), b=mwBase(a), major=a.currency==='KRW'||a.currency==='JPY';
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      const q={v:1,kind:'create',at:new Date().toISOString(),acct:a.id,by,pw,mode:W.mode,ctype:W.ctype,
+        campName:W.mode==='new'?mwCampName():'',campId:W.mode==='new'?'':W.camp,baseSet:b?b.id:'',setName:W.mode==='ad'?'':mwSetName(a),
+        budget:where&&+W.budget>0?Math.round(+W.budget*(major?1:100)):0,goal:W.goal,start:W.start+'T'+W.time+':00+09:00',
+        ageMin:W.ageMin,ageR:W.ageR.slice(),target:W.target,ints:W.ints.slice(),body:W.body,title:W.title,desc:W.desc,cta:W.cta,link:W.link.trim(),files};
+      const fname=oid+'.json';
+      await DB.fileUpload('brand-files','metaads/mk/req/'+fname,new Blob([JSON.stringify(q)],{type:'application/json'}));
+      show('서버가 주문을 받기를 기다리는 중');
+      const t0=Date.now();
+      for(;;){
+        await new Promise(r=>setTimeout(r,3000));
+        let res=null;
+        try{ const u=await DB.fileUrl('brand-files','metaads/mk/res/'+fname,60); const r=await fetch(u,{cache:'no-store'}); res=r.ok?await r.json():null; }catch(e){}
+        const sec=(Date.now()-t0)/1000;
+        if(res&&res.state==='failed') return fail(res.message||'등록하지 못했습니다.');
+        if(res&&res.state==='done'){ W.run=res; if(!mwBox.hidden) mwRender(); return; }
+        if(res&&res.step&&res.step!==W.run.step) show(res.step);
+        if(!res&&sec>150) return fail('서버가 주문을 받지 않았습니다. 잠시 뒤 다시 해 주세요.');
+        if(sec>20*60) return fail('20분이 지나도 끝나지 않았습니다. 메타 광고관리자에서 만들어졌는지 확인해 주세요.');
+      }
+    }catch(e){ return fail('보내지 못했습니다: '+(e&&e.message||e)); }
   }
   function mwKey(e){ if(e.key==='Escape'&&!document.querySelector('.ui-pop:not([hidden])')){ e.stopPropagation(); mwClose(); } }
   function mwAddFiles(list){
@@ -20667,7 +20748,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         const a=upAcc();
         if(e.target===mwBox||e.target.closest('.settings-close')) return mwClose();
         if(e.target.closest('[data-prev]')){ if(W.step>0){ W.step--; mwRender(); } return; }
-        if(e.target.closest('[data-next]')){ if(W.step===4) return mwClose(true); if(!a||mwMissing(a,W.step)) return; W.step++; mwRender(); return; }
+        if(e.target.closest('[data-next]')){ if(W.step===4) return mwClose(true); if(W.step===3) return mwSubmit(a); if(!a||mwMissing(a,W.step)) return; W.step++; mwRender(); return; }
         if(!a) return;
         const ch=e.target.closest('[data-set]');
         if(ch){
@@ -20736,7 +20817,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         const t=e.target.closest('[data-add]'); if(!t||e.key!=='Enter'||e.isComposing) return;
         e.preventDefault(); const v=t.value.trim().replace(/[_\s]+/g,''); if(!v) return; W.angle=v; mwRender();
       });
-      body.addEventListener('change',e=>{ if(e.target.matches('[data-file]')){ mwAddFiles([...e.target.files]); e.target.value=''; } });
+      body.addEventListener('change',e=>{ if(e.target.matches('[data-file]')){ mwAddFiles([...e.target.files]); e.target.value=''; } if(e.target.matches('[data-ok]')){ W.ok=e.target.checked; mwFoot(upAcc()); } });
       body.addEventListener('dragover',e=>{ const d=e.target.closest('[data-drop]'); if(!d) return; e.preventDefault(); d.classList.add('is-over'); });
       body.addEventListener('dragleave',e=>{ const d=e.target.closest('[data-drop]'); if(d) d.classList.remove('is-over'); });
       body.addEventListener('drop',e=>{ const d=e.target.closest('[data-drop]'); if(!d) return; e.preventDefault(); d.classList.remove('is-over'); mwAddFiles([...e.dataTransfer.files]); });
