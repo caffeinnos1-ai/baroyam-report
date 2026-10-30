@@ -20393,8 +20393,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const SORTS=[{value:'spend',label:'광고비 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'매출 많은 순'}];
 
   /* ---------- 광고 업로드 창(10-29 사용자 요청 · 대시보드 화면 대신 업로드 단추를 누르면 뜨는 단계별 창 · 여전히 화면 모양만 · 메타에 올리지 않음) ----------
-     ① 브랜드·소구점 → ② 소재(내 컴퓨터·바로얌 드라이브 · 광고 이름 = 파일 이름) → ③ 집행 방식(신규 집행·세트 추가·세트 복사·소재 추가) →
-     ④ 세부 설정(예산·최적화·시작·연령·광고 문구) → ⑤ 미리보기 [검토] → ⑥ 등록 · 늘 일시정지로 만들고 켜기는 정밀성과 ON/OFF ·
+     ① 집행 방식(신규 집행·세트 추가·세트 복사·소재 추가 · 캠페인을 고르면 브랜드가 정해짐 · 신규는 브랜드를 고름 · 타겟·소구점) →
+     ② 소재(내 컴퓨터·바로얌 드라이브 · 광고 이름 = 파일 이름) → ③ 세부 설정(예산·최적화·시작·연령·광고 문구) → ④ 미리보기 [검토] → ⑤ 등록 ·
+     10-30 사용자 요청으로 브랜드 고르기 단계를 없애고 집행 방식부터 시작 · 늘 일시정지로 만들고 켜기는 정밀성과 ON/OFF ·
      세트 이름은 지금 쓰는 규칙(날짜_브랜드 첫 글자+오픈T|상세T_관심사_구매(14)제외_소구점NN)으로 만든다 ·
      켜고 끌 수 있는 계정(accounts[].manage)만 · 연동할 때: 화면이 파일을 brand-files 에 올리고 주문 파일을 두면 VPS 가 메타에 만든다 */
   const CTAS=[{value:'ORDER_NOW',label:'지금 주문하기'},{value:'SHOP_NOW',label:'구매하기'},{value:'LEARN_MORE',label:'더 알아보기'},{value:'GET_OFFER',label:'혜택 받기'},{value:'SIGN_UP',label:'가입하기'},{value:'NO_BUTTON',label:'버튼 없음'}];
@@ -20402,7 +20403,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const MW_TYPES=['PHABO','PHCBO','ABO','CBO'];
   const MW_ANGLES=['리뷰형','사회적증거','협상','제품경험','문제해결','상황극','스토리','희소성','프로모션'];
   const MW_GOALS=[{value:'OFFSITE_CONVERSIONS',label:'전환수',sub:'SKU(상품) 하나일 때'},{value:'VALUE',label:'전환값',sub:'여러 상품을 팔 때'}];
-  const MW_STEPS=['브랜드 · 소구점','소재','집행 방식','세부 설정','미리보기 [검토]','등록'];
+  const MW_STEPS=['집행 방식','소재','세부 설정','미리보기 [검토]','등록'];
   const MW_TIMES=Array.from({length:48},(_,i)=>String(i>>1).padStart(2,'0')+':'+(i%2?'30':'00'));
   const DOWN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
   const upAcc=()=>{ const L=(data&&data.accounts)||[]; return L.find(x=>x.manage)||null; };
@@ -20470,16 +20471,16 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function mwBrandAge(a){ const L=mwBrandSets(a).filter(x=>x.tg&&x.tg.a).sort((p,q)=>(upIns(a,'adset',q.id).spend||0)-(upIns(a,'adset',p.id).spend||0)); return L[0]?[L[0].tg.a[0],L[0].tg.a[1]]:[25,65]; }
   /* 단계마다 다음으로 가기 전에 빠진 것 */
   function mwMissing(a,s){
-    if(s===0) return !W.brand?'브랜드를 골라 주세요':!W.angle?'소구점을 골라 주세요':'';
+    if(s===0){
+      if(!W.mode) return '집행 방식을 골라 주세요';
+      if(W.mode==='new'&&!W.brand) return '브랜드를 골라 주세요';
+      if(W.mode==='new'&&!W.ctype) return '캠페인 유형을 골라 주세요';
+      if(W.mode!=='new'&&!mwCamp(a)) return '캠페인을 골라 주세요';
+      if(W.mode==='copy'||W.mode==='ad') return mwSet(a)?'':'세트를 골라 주세요';
+      return W.target==='int'&&!W.ints.length?'관심사를 골라 주세요':!W.angle?'소구점을 골라 주세요':'';
+    }
     if(s===1) return !W.files.length?'소재를 넣어 주세요':W.files.some(f=>!f.ad.trim())?'광고 이름을 모두 적어 주세요':'';
     if(s===2){
-      if(!W.mode) return '집행 방식을 골라 주세요';
-      if(W.mode==='new') return !W.ctype?'캠페인 유형을 골라 주세요':W.target==='int'&&!W.ints.length?'관심사를 골라 주세요':'';
-      if(!mwCamp(a)) return '캠페인을 골라 주세요';
-      if(W.mode==='set') return W.target==='int'&&!W.ints.length?'관심사를 골라 주세요':'';
-      return mwSet(a)?'':'세트를 골라 주세요';
-    }
-    if(s===3){
       if(mwBudWhere(a)&&!(+W.budget>0)) return '일 예산을 적어 주세요';
       if(W.mode!=='ad'&&(!(W.ageMin>=13)||!(W.ageR[0]<=W.ageR[1]))) return '연령을 확인해 주세요';
       if(!W.body.trim()) return '광고 문구를 적어 주세요';
@@ -20497,12 +20498,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const mwF=(label,body,cls)=>'<div class="mw-f'+(cls?' '+cls:'')+'"><label>'+label+'</label>'+body+'</div>';
   function mwBody(a){
     const s=W.step;
-    if(s===0){
-      const brands=mwBrands(a);
-      return '<h3>브랜드</h3><div class="ui-chips">'+brands.map(b=>mwChip('brand',b,b,W.brand===b)).join('')+'</div>'
-        +(W.brand?'<h3>소구점 <em>세트 이름 끝에 붙습니다 · 이 브랜드에서 쓴 것부터</em></h3><div class="ui-chips">'+mwAngles(a).concat(W.angle&&!mwAngles(a).includes(W.angle)?[W.angle]:[]).map(v=>mwChip('angle',v,v,W.angle===v)).join('')+'</div>'
-          +'<input class="ui-field mw-angle-in" data-add="angle" maxlength="20" placeholder="다른 소구점 직접 입력 후 Enter">':'');
-    }
     if(s===1){
       return '<h3>소재 <em>광고 하나에 소재 하나 · 광고 이름은 파일 이름(바꿀 수 있음)</em></h3>'
         +'<div class="mw-drop" data-drop><p>영상·이미지를 여기에 끌어 놓거나</p><div><button type="button" class="ui-btn soft sm" data-act="pc">내 컴퓨터에서</button>'
@@ -20512,25 +20507,28 @@ window.BAROYAM_PJ_CHANNELS=(function(){
           +'<div><input class="ui-field" data-ad="'+i+'" value="'+esc(f.ad)+'" maxlength="200" aria-label="광고 이름"><small>'+(f.src==='drive'?'바로얌 드라이브 · ':'내 컴퓨터 · ')+esc(f.name)+'</small></div>'
           +'<button type="button" class="ui-btn ghost sm icon" data-del="'+i+'" aria-label="빼기" title="빼기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>').join('')+'</div>';
     }
-    if(s===2){
+    if(s===0){
       const c=mwCamp(a), st=mwSet(a), sp=kst(), sp7=(()=>{ const d=new Date(Date.parse(sp)-6*864e5); return d.toISOString().slice(0,10); })();
       let h='<h3>집행 방식</h3><div class="ui-chips">'+MW_MODES.map(m=>'<button type="button" class="ui-chip" data-set="mode" data-v="'+m.v+'" aria-pressed="'+(W.mode===m.v)+'" title="'+esc(m.d)+'">'+m.l+'</button>').join('')+'</div>';
       if(!W.mode) return h+'<p class="mw-hint">'+MW_MODES.map(m=>'<b>'+m.l+'</b> '+m.d).join(' · ')+'</p>';
-      if(W.mode!=='new') h+=mwF('캠페인 <em>최근 7일 성과('+sp7+' ~ '+sp+')</em>',mwPick('camp',c&&c.name,'캠페인 선택'));
+      if(W.mode==='new') h+=mwF('브랜드','<div class="ui-chips">'+mwBrands(a).map(b=>mwChip('brand',b,b,W.brand===b)).join('')+'</div>');
+      else h+=mwF('캠페인 <em>최근 7일 성과('+sp7+' ~ '+sp+')</em>',mwPick('camp',c&&c.name,'캠페인 선택'));
       h+=mwF('캠페인 유형'+(W.mode==='new'?'':' <em>캠페인 목록 거르기</em>'),'<div class="ui-chips">'+MW_TYPES.map(t=>mwChip('ctype',t,t,W.ctype===t)).join('')+'</div>');
-      if(W.mode==='new') h+='<p class="mw-hint">새 캠페인 이름 · <b>'+esc(mwCampName())+'</b>'+(/CBO$/.test(W.ctype)?' · 예산은 캠페인에 둡니다':'')+'</p>';
+      if(W.mode==='new'&&W.brand) h+='<p class="mw-hint">새 캠페인 이름 · <b>'+esc(mwCampName())+'</b>'+(/CBO$/.test(W.ctype)?' · 예산은 캠페인에 둡니다':'')+'</p>';
       if(W.mode==='new'||W.mode==='set'){
         h+=mwF('타겟','<div class="ui-chips">'+mwChip('target','open','오픈',W.target==='open')+mwChip('target','int','상세 (관심사)',W.target==='int')+'</div>');
         if(W.target==='int') h+=mwF('관심사 <em>고른 대로 이름이 만들어집니다 | 횟수는 '+esc(W.brand)+' 기준</em>',
           (W.ints.length?'<div class="mw-tags">'+W.ints.map((x,i)=>'<span>'+esc(x)+'<button type="button" data-untag="'+i+'" aria-label="빼기">×</button></span>').join('')+'</div>':'')
           +'<button type="button" class="ui-field mw-pick sm" data-menu="int"><span class="t is-ph">관심사 선택</span>'+DOWN+'</button>');
+        if(W.brand){ const L=mwAngles(a); h+=mwF('소구점 <em>세트 이름 끝에 붙습니다 · '+esc(W.brand)+'에서 쓴 것부터</em>','<div class="ui-chips">'+L.concat(W.angle&&!L.includes(W.angle)?[W.angle]:[]).map(v=>mwChip('angle',v,v,W.angle===v)).join('')+'</div>'
+          +'<input class="ui-field mw-angle-in" data-add="angle" maxlength="20" placeholder="다른 소구점 직접 입력 후 Enter">'); }
       }
       if(W.mode==='copy'||W.mode==='ad') h+=mwF(W.mode==='copy'?'복사할 세트 <em>타깃·예산·최적화를 그대로 가져옵니다</em>':'소재를 넣을 세트',mwPick('set',st&&st.name,c?'세트 선택':'캠페인을 먼저 고르세요'));
       const nm=mwSetName(a);
-      if(nm&&W.mode!=='ad') h+='<p class="mw-hint">만들 세트 이름 · <b>'+esc(nm)+'</b></p>';
+      if(nm&&W.mode!=='ad'&&W.brand&&(W.angle||W.mode==='copy')) h+='<p class="mw-hint">만들 세트 이름 · <b>'+esc(nm)+'</b></p>';
       return h;
     }
-    if(s===3){
+    if(s===2){
       const where=mwBudWhere(a), fx=upFx(a), cur=a.currency;
       let h='<h3>세부 설정</h3>';
       if(W.mode!=='ad'){
@@ -20554,7 +20552,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       h+=mwF('랜딩 주소 <b class="mw-req">*</b>','<input class="ui-field" data-in="link" inputmode="url" placeholder="https://baroyam.com/…" value="'+esc(W.link)+'">');
       return h;
     }
-    if(s===4||s===5){
+    if(s===3||s===4){
       const c=mwCamp(a), nm=mwSetName(a), where=mwBudWhere(a), fx=upFx(a), cur=a.currency;
       const tag=t=>'<span class="mw-badge'+(t==='기존'?'':' is-new')+'">'+t+'</span>';
       const campName=W.mode==='new'?mwCampName():c?c.name:'-';
@@ -20568,7 +20566,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         if(W.mode!=='copy') rows.push(['최적화',(MW_GOALS.find(g=>g.value===W.goal)||{}).label]);
         rows.push(['시작',W.start+' '+W.time+' (KST)']);
       }
-      rows.push(['소구점',W.angle]);
+      if(W.angle&&(W.mode==='new'||W.mode==='set')) rows.push(['소구점',W.angle]);
       if(W.mode!=='ad'&&W.mode!=='copy'){
         rows.push(['최소 연령',W.ageMin+'세 이상'],['추천 연령 범위',W.ageR[0]+'~'+W.ageR[1]+'세']);
         rows.push(['타겟',W.target==='int'?'상세 · '+W.ints.map(mwIntName).join(', '):'오픈']);
@@ -20577,7 +20575,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       rows.push(['행동 유도',(CTAS.find(x=>x.value===W.cta)||CTAS[0]).label],['랜딩',W.link]);
       const sum='<dl class="mw-sum">'+rows.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd>').join('')+'</dl>'
         +'<div class="mw-copy"><p><span>제목</span><b>'+esc(W.title||'-')+'</b></p>'+(W.desc?'<p><span>설명</span>'+esc(W.desc)+'</p>':'')+'<p><span>기본 문구</span></p><pre>'+esc(W.body)+'</pre></div>';
-      if(s===4) return '<h3>미리보기 [검토]</h3><div class="mw-review">'+tree+sum+'</div><p class="mw-warn">현재 세팅은 <b>일시정지</b>로 만듭니다. 관리자 확인 후 정밀성과 ON/OFF 로 켭니다.</p>';
+      if(s===3) return '<h3>미리보기 [검토]</h3><div class="mw-review">'+tree+sum+'</div><p class="mw-warn">현재 세팅은 <b>일시정지</b>로 만듭니다. 관리자 확인 후 정밀성과 ON/OFF 로 켭니다.</p>';
       return '<div class="mw-done"><div class="mw-done-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
         +'<h3>등록 준비가 끝났습니다</h3><p>아직 메타와 연결되지 않아 <b>실제로 올라가지는 않았습니다</b>(화면 모양만). 연결하면 이 내용 그대로 일시정지 상태로 만들어집니다.</p></div>'
         +'<div class="mw-review">'+tree+'</div>';
@@ -20590,7 +20588,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     dlg.querySelector('.mw-dots').innerHTML=MW_STEPS.map((t,i)=>'<i class="'+(i<W.step?'is-done':i===W.step?'is-on':'')+'" title="'+esc(t)+'"></i>').join('');
     dlg.querySelector('.mw-bar').style.width=((W.step+1)/MW_STEPS.length*100)+'%';
     if(!a){ body.innerHTML='<p class="mw-hint">'+(!data?'메타광고 데이터를 불러오는 중입니다…':'광고를 올릴 수 있는(광고 관리 권한이 있는) 광고계정이 없습니다.')+'</p>'; mwFoot(a); return; }
-    if(W.step===3) mwDefaults(a);
+    if(W.step===2) mwDefaults(a);
     body.innerHTML=mwBody(a);
     body.scrollTop=0;
     const slot=body.querySelector('[data-date]');
@@ -20601,18 +20599,20 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     mwFoot(a);
   }
   function mwFoot(a){
-    const f=mwBox.querySelector('.mw-foot'), miss=a&&W.step<4?mwMissing(a,W.step):'';
-    f.querySelector('[data-prev]').hidden=W.step===0||W.step===5;
+    const f=mwBox.querySelector('.mw-foot'), miss=a&&W.step<3?mwMissing(a,W.step):'';
+    f.querySelector('[data-prev]').hidden=W.step===0||W.step===4;
     f.querySelector('.mw-n').textContent=(W.step+1)+' / '+MW_STEPS.length;
     const nx=f.querySelector('[data-next]');
-    nx.textContent=W.step===4?'등록':W.step===5?'닫기':'다음';
+    nx.textContent=W.step===3?'등록':W.step===4?'닫기':'다음';
     nx.disabled=!a||!!miss;
     f.querySelector('.mw-miss').textContent=miss;
   }
+  /* 브랜드가 바뀌면 브랜드에 딸린 값(소구점·관심사·문구·연령)을 비운다 */
+  function mwSetBrand(b){ if(W.brand===b) return; W.brand=b; W.angle=''; W.ints=[]; W.txFrom=''; W.body=W.title=W.desc=W.link=''; W.budAuto=true; W.ageSet=false; }
   function mwClose(force){
-    if(!force&&W.step<5&&(W.files.length||W.mode)&&!confirm('광고 업로드 창을 닫을까요? 적은 내용은 이 창을 다시 열면 이어집니다.')) return;
+    if(!force&&W.step<4&&(W.files.length||W.mode)&&!confirm('광고 업로드 창을 닫을까요? 적은 내용은 이 창을 다시 열면 이어집니다.')) return;
     mwBox.hidden=true; document.removeEventListener('keydown',mwKey,true);
-    if(W.step===5){ W.files.forEach(f=>{ if(f.url) try{ URL.revokeObjectURL(f.url); }catch(e){} }); W=mwNew(); }
+    if(W.step===4){ W.files.forEach(f=>{ if(f.url) try{ URL.revokeObjectURL(f.url); }catch(e){} }); W=mwNew(); }
   }
   function mwKey(e){ if(e.key==='Escape'&&!document.querySelector('.ui-pop:not([hidden])')){ e.stopPropagation(); mwClose(); } }
   function mwAddFiles(list){
@@ -20637,12 +20637,12 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         const a=upAcc();
         if(e.target===mwBox||e.target.closest('.settings-close')) return mwClose();
         if(e.target.closest('[data-prev]')){ if(W.step>0){ W.step--; mwRender(); } return; }
-        if(e.target.closest('[data-next]')){ if(W.step===5) return mwClose(true); if(!a||mwMissing(a,W.step)) return; W.step++; mwRender(); return; }
+        if(e.target.closest('[data-next]')){ if(W.step===4) return mwClose(true); if(!a||mwMissing(a,W.step)) return; W.step++; mwRender(); return; }
         if(!a) return;
         const ch=e.target.closest('[data-set]');
         if(ch){
           const k=ch.dataset.set, v=ch.dataset.v;
-          if(k==='brand'&&W.brand!==v){ W.brand=v; W.angle=''; W.camp=''; W.set=''; W.ints=[]; W.txFrom=''; W.body=W.title=W.desc=W.link=''; W.budAuto=true; W.ageSet=false; }
+          if(k==='brand'){ mwSetBrand(v); }
           else if(k==='ctype'){ W.ctype=W.mode!=='new'&&W.ctype===v?'':v; const c=mwCamp(a); if(W.mode!=='new'&&c&&W.ctype&&mwType(c)!==W.ctype){ W.camp=''; W.set=''; } }
           else if(k==='mode'){ if(W.mode!==v){ W.mode=v; W.set=''; W.budAuto=true; if(v==='new') W.camp=''; } }
           else W[k]=v;
@@ -20667,10 +20667,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         const mb=e.target.closest('[data-menu]');
         if(mb){ e.stopPropagation(); const k=mb.dataset.menu;
           if(k==='camp'){
-            const L=mwBrandCamps(a).filter(c=>!W.ctype||mwType(c)===W.ctype).sort((p,q)=>(upOn(q)-upOn(p))||((upIns(a,'campaign',q.id).spend||0)-(upIns(a,'campaign',p.id).spend||0)));
-            if(!L.length){ alert(W.brand+(W.ctype?' '+W.ctype:'')+' 캠페인이 없습니다.'); return; }
-            window.UI.menu(mb,L.map(c=>{ const i=upIns(a,'campaign',c.id); return {value:c.id,label:c.name,sub:(upOn(c)?'게재 중':'꺼짐')+' · 광고비 '+short(i.spend||0,a.currency)+' · ROAS '+mwRoas(i)+(c.budget?' · 캠페인 예산':'')}; }),W.camp,
-              v=>{ W.camp=v; W.set=''; W.budAuto=true; mwRender(); },{search:L.length>8,placeholder:'캠페인 찾기'});
+            const bOf=brandMap(a), L=(a.campaigns||[]).filter(c=>upLive(c)&&(!W.ctype||mwType(c)===W.ctype)).sort((p,q)=>(upOn(q)-upOn(p))||((upIns(a,'campaign',q.id).spend||0)-(upIns(a,'campaign',p.id).spend||0)));
+            if(!L.length){ alert((W.ctype?W.ctype+' ':'')+'캠페인이 없습니다.'); return; }
+            window.UI.menu(mb,L.map(c=>{ const i=upIns(a,'campaign',c.id); return {value:c.id,tag:bOf[c.id]||'',label:c.name,sub:(upOn(c)?'게재 중':'꺼짐')+' · 광고비 '+short(i.spend||0,a.currency)+' · ROAS '+mwRoas(i)+(c.budget?' · 캠페인 예산':'')}; }),W.camp,
+              v=>{ W.camp=v; W.set=''; W.budAuto=true; mwSetBrand(bOf[v]||''); mwRender(); },{search:L.length>8,placeholder:'캠페인 찾기'});
           }
           if(k==='set'){
             const L=(a.adsets||[]).filter(x=>x.c===W.camp&&upLive(x)).sort((p,q)=>(upOn(q)-upOn(p))||((upIns(a,'adset',q.id).spend||0)-(upIns(a,'adset',p.id).spend||0)));
@@ -20711,7 +20711,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       body.addEventListener('dragleave',e=>{ const d=e.target.closest('[data-drop]'); if(d) d.classList.remove('is-over'); });
       body.addEventListener('drop',e=>{ const d=e.target.closest('[data-drop]'); if(!d) return; e.preventDefault(); d.classList.remove('is-over'); mwAddFiles([...e.dataTransfer.files]); });
     }
-    if(!W.brand){ const a=upAcc(), bOf=a?brandMap(a):{}, c=a&&acc()===a&&tab!=='daily'&&selC.size===1?[...selC][0]:''; if(c&&bOf[c]) W.brand=bOf[c]; }
     mwBox.hidden=false; document.addEventListener('keydown',mwKey,true);
     mwRender();
   }
