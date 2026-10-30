@@ -2528,7 +2528,9 @@ window.BAROYAM_FONT=(function(){
   .ma-daycamp{width:300px;max-width:100%;justify-content:space-between}
   .ma-daycamp .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ma-daycamp.is-on{border-color:var(--btn)}
-  .ma-datebar{display:flex;justify-content:flex-end;margin-bottom:-4px}
+  .ma-datebar{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:-4px}
+  .ma-datebar .ma-listbar{margin-bottom:0}
+  .ma-listbar[hidden]{display:none}
   .ma-datebar .ip-acct-end{margin-left:auto}
   .ma-cur{padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;background:var(--chip-flat);color:var(--mute)}
   .ma-key{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -10731,6 +10733,16 @@ window.BAROYAM_FONT=(function(){
           <div class="ip ma" id="maRoot">
             <!-- 날짜 고르기 줄 · 데일리 = 기간 달력, 정밀성과 = 오늘/어제/7일/30일 -->
             <div class="ma-datebar" id="maAcctBar">
+              <!-- 한 줄: 거르기 칩 | 검색·정렬 · 제목 줄은 사용자 요청으로 뺌(개수는 단계 탭 배지) -->
+              <!-- 10-30 사용자 요청으로 표 상자 안에서 날짜 고르기 줄 왼쪽(배너 바로 아래 빈 자리)으로 올림 · 정밀성과에서만 보임 -->
+              <!-- 왼쪽: 브랜드 고르기(캠페인 이름 '날짜_브랜드_…' 의 브랜드) · 정렬 고르기 | 오른쪽: 게재 중 · 전체 (사용자 요청) -->
+              <div class="ma-listbar" id="maListBar">
+                <div class="ma-listbar-end">
+                  <button type="button" class="ui-field sm" id="maBrand" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                  <button type="button" class="ui-field sm" id="maSortPick" aria-haspopup="listbox"><span class="t">지출 많은 순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                  <div class="ui-tabs" id="maMode" hidden><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
+                </div>
+              </div>
               <div class="ip-acct-end">
                 <div class="ui-tabs" id="maAcct" hidden></div>
                 <div class="ui-tabs" id="maRange" hidden>
@@ -10771,15 +10783,6 @@ window.BAROYAM_FONT=(function(){
             <!-- 정밀성과 · 목록(캠페인 › 광고 세트 › 소재)을 계정 줄 바로 아래(사용자 요청) · 숫자 칸·지출 상위·효율은 아래 level 칸 -->
             <div class="ip-view ma-need" data-ma-pane="list" hidden>
             <div class="ip-card ma-list">
-              <!-- 한 줄: 거르기 칩 | 검색·정렬 · 제목 줄은 사용자 요청으로 뺌(개수는 단계 탭 배지) -->
-              <!-- 왼쪽: 브랜드 고르기(캠페인 이름 '날짜_브랜드_…' 의 브랜드) · 정렬 고르기 | 오른쪽: 게재 중 · 전체 (사용자 요청) -->
-              <div class="ma-listbar">
-                <div class="ma-listbar-end">
-                  <button type="button" class="ui-field sm" id="maBrand" aria-haspopup="listbox"><span class="t">전체 브랜드</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-                  <button type="button" class="ui-field sm" id="maSortPick" aria-haspopup="listbox"><span class="t">지출 많은 순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
-                  <div class="ui-tabs" id="maMode" hidden><button class="ui-tab" data-value="card">카드</button><button class="ui-tab" data-value="list">목록</button></div>
-                </div>
-              </div>
               <div hidden><h3 id="maListT"></h3><small id="maListS"></small></div>
               <div class="ma-crumb" id="maCrumb" hidden></div>
               <!-- 단계 탭 · 메타 광고 관리자처럼 표 바로 위 · 캠페인을 체크하고 세트로 넘어가면 그 캠페인의 세트만 -->
@@ -19725,7 +19728,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     root.querySelector('[data-ma-pane="daily"]').dataset.on=tab==='daily'?'1':'';
     root.querySelector('[data-ma-pane="level"]').dataset.on=tab!=='daily'?'1':'';
     root.querySelector('[data-ma-pane="list"]').dataset.on=tab!=='daily'?'1':'';
-    $('maRange').hidden=tab==='daily'||!acc(); $('maRangePick').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
+    $('maListBar').hidden=tab==='daily'||!acc(); $('maRange').hidden=tab==='daily'||!acc(); $('maRangePick').hidden=tab==='daily'||!acc(); $('maDay').hidden=tab!=='daily'||!acc();
   }
   function go(t){ tab=t; keep('baroyam_perf_tab',t); limit=48; paint(); }
   const LINK_KEY='meta_links_v1';
