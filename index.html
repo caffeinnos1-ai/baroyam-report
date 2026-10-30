@@ -19277,7 +19277,21 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
 
   /* ---------- 데일리 성과 ---------- */
-  let dayPick=null;
+  let dayPick=null, viewTo=null, viewFrom=null;
+  /* 하루 추이·날짜별 기록에 보일 날들 · 처음엔 최근 30일 · 달력에서 30일 전보다 앞선 기간(예: 9월 한 달)을 고르면 그 기간(30일보다 짧으면 끝날까지 30일) ·
+     막대·줄을 눌러 고를 때는 보이는 날들을 옮기지 않는다(10-30 사용자 지적: 9월을 골라도 그래프·표가 최근 30일 그대로) */
+  function viewDays(){
+    const t=kst(), to=viewTo||t, from=viewFrom||dayAdd(to,-29), out=[];
+    for(let d=from;d<=to;d=dayAdd(d,1)) out.push(d);
+    return out;
+  }
+  function viewTxt(){ if(!viewTo) return '최근 30일'; const v=viewDays(), md=d=>(+d.slice(5,7))+'.'+(+d.slice(8)); return md(v[0])+'~'+md(v[v.length-1])+' ('+v.length+'일)'; }
+  function setView(from,to){
+    const t=kst();
+    if(from>=dayAdd(t,-29)){ viewFrom=viewTo=null; return; }
+    let n=0; for(let d=from;d<=to;d=dayAdd(d,1)) n++;
+    viewTo=to; viewFrom=n>=30?from:null;
+  }
   function paintDaily(a){
     const cur=a.currency, t=kst();
     if(!day||day>t) day=t;
@@ -19300,19 +19314,20 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       kpiCard(lab('ROAS'),n.roas==null?'-':Math.round(n.roas)+'<span>%</span>',vs('roas',true,'p'),sp('roas')),
       kpiCard(lab('구매'),int(n.buy)+'<span>건</span>',vs('buy',true),sp('buy')),
     ].join('');   /* 구매당 비용·클릭률 카드는 사용자 요청으로 뺌(날짜별 기록 표에는 남음) */
-    $('maChartSub').textContent='최근 30일 · 막대를 누르면 그날로(Shift 누른 채면 기간으로) · '+(one?'지난주 '+DOW[dowOf(day)]+'요일 ROAS '+pct(w.roas):'고른 '+len+'일 ROAS '+pct(n.roas));
+    $('maChartSub').textContent=viewTxt()+' · 막대를 누르면 그날로(Shift 누른 채면 기간으로) · '+(one?'지난주 '+DOW[dowOf(day)]+'요일 ROAS '+pct(w.roas):'고른 '+len+'일 ROAS '+pct(n.roas));
     paintChart(a); paintDow(a); paintDays(a);
   }
   function paintChart(a){
     const box=$('maChart'), cur=a.currency, t=kst();
-    const days=[]; for(let i=29;i>=0;i--){ const d=dayAdd(t,-i); days.push({d,x:derive(dayVal(a,d))}); }
+    const days=viewDays().map(d=>({d,x:derive(dayVal(a,d))}));
     const W=Math.max(320,box.clientWidth||900), H=Math.max(200,box.clientHeight||230), L=8, R=44, T=10, B=24;
     const pw=W-L-R, ph=H-T-B, n=days.length, step=pw/n, bw=Math.min(44,step*.62), base=T+ph;
     const maxS=Math.max(1e-9,...days.map(o=>o.x.spend)), maxR=Math.max(100,...days.map(o=>o.x.roas||0));
     const yr=v=>base-v/maxR*ph;
     let g='<g class="grid">'; for(let i=0;i<=3;i++){ const yy=T+ph*i/3; g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'"/>'; } g+='</g>';
     let ax='<g class="axis">'+[0,1,2,3].map(i=>'<text x="'+(W-R+6)+'" y="'+(T+ph*i/3+4)+'">'+Math.round(maxR*(3-i)/3)+'%</text>').join('');
-    days.forEach((o,i)=>{ if(i%5===4||i===n-1) ax+='<text x="'+(L+step*i+step/2)+'" y="'+(H-6)+'" text-anchor="middle">'+(+o.d.slice(5,7))+'.'+(+o.d.slice(8))+'</text>'; });
+    const every=Math.max(5,Math.ceil(n/7));
+    days.forEach((o,i)=>{ if(i%every===every-1||i===n-1) ax+='<text x="'+(L+step*i+step/2)+'" y="'+(H-6)+'" text-anchor="middle">'+(+o.d.slice(5,7))+'.'+(+o.d.slice(8))+'</text>'; });
     ax+='</g>';
     let bars='<g class="bars">', hit='<g class="hit">'; const pts=[];
     days.forEach((o,i)=>{
@@ -19370,8 +19385,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(dayCamp&&!camp) dayCamp='';
     $('maDayCamp').querySelector('.t').textContent=camp?camp.name:'전체 캠페인';
     $('maDayCamp').classList.toggle('is-on',!!camp);
-    $('maDaysSub').textContent=camp?'최근 30일 · '+(brandMap(a)[camp.id]||'캠페인')+' 캠페인만 · 줄을 누르면 그날 숫자(계정 전체)를 위에 보여 줍니다':'최근 30일 · 줄을 누르면 그날 숫자를 위에 보여 줍니다';
-    const rows=[]; for(let i=0;i<30;i++){ const d=dayAdd(t,-i); rows.push({d,x:derive(camp?campDay(a,camp.id,d):dayVal(a,d))}); }
+    $('maDaysSub').textContent=camp?viewTxt()+' · '+(brandMap(a)[camp.id]||'캠페인')+' 캠페인만 · 줄을 누르면 그날 숫자(계정 전체)를 위에 보여 줍니다':viewTxt()+' · 줄을 누르면 그날 숫자를 위에 보여 줍니다';
+    const rows=viewDays().reverse().map(d=>({d,x:derive(camp?campDay(a,camp.id,d):dayVal(a,d))}));
     const C=[['spend','지출',v=>money(v,cur)],['rev','구매 전환값',v=>money(v,cur)],['roas','ROAS',pct],['buy','구매',int],['cpa','CPA',v=>v==null?'-':money(v,cur)],
       ['clicks','링크 클릭',int],['ctr','CTR',v=>v==null?'-':v.toFixed(2)+'%'],['cpm','CPM',v=>v==null?'-':money(v,cur)],['imp','노출',int]];
     const td=(c,x)=>{ const v=x[c[0]]; let cls=v==null||v===0?' class="is-zero"':''; if(c[0]==='roas'&&v!=null&&v<100&&x.spend>0) cls=' class="is-low"'; return '<td'+cls+'>'+c[2](v)+'</td>'; };
@@ -20768,7 +20783,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     else { dayFrom=d; day=d; }
   }
   if(window.UI&&window.UI.datePicker) dayPick=window.UI.datePicker($('maDay'),{mode:'range',max:kst(),presets:['today','last7','month','custom'],
-    onChange:v=>{ if(v&&v.start){ dayFrom=v.start; day=v.end||v.start; } else { dayFrom=day=kst(); } paint(); }});
+    onChange:v=>{ if(v&&v.start){ dayFrom=v.start; day=v.end||v.start; } else { dayFrom=day=kst(); } setView(dayFrom,day); paint(); }});
   $('maDay').classList.add('raised');
   $('maShow').addEventListener('click',e=>{ const b=e.target.closest('[data-v]'); if(!b) return; show=b.dataset.v; limit=48; paintList(acc()); });
   $('maBrand').addEventListener('click',e=>{
