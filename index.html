@@ -3026,8 +3026,9 @@ window.BAROYAM_FONT=(function(){
   .ma-table tr:hover .ma-bud-ed .ma-bud-pen,.ma-bud-ed:focus-visible .ma-bud-pen{opacity:1}
   .ma-bud-ed:hover{border-color:var(--btn);background:var(--btn-soft);color:var(--btn-soft-ink)}
   .ma-bud-set{display:flex;flex-direction:column;gap:8px}
-  .ma-bud-in{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--mute)}
-  .ma-bud-in .ui-field{width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+  .ma-bud-cap{font-size:12px;font-weight:500;color:var(--mute)}
+  .ma-bud-pct{display:grid;grid-template-columns:repeat(4,1fr)}
+  .ma-bud-pct .ui-chip{justify-content:center;font-variant-numeric:tabular-nums}
   .ma-bud-dlg .ma-gv-imp b{font-size:17px}
   .ma-table td.ma-budcol small.ma-bud-sch{color:var(--btn);font-weight:500}
   .ma-bud-when{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--mute)}
@@ -20192,7 +20193,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 예산 바꾸기(10-29 사용자 요청 · 팀장만) · 정밀성과 캠페인·광고 세트 목록의 일예산 칸을 누르면 뜬다 ·
      하루 예산이 그 줄 자신에게 있을 때만(CBO 캠페인은 캠페인 줄, 세트 예산은 세트 줄 · 총예산은 메타 광고관리자에서) ·
      켜기·끄기와 같은 확인(체크 + 같은 비밀번호)과 같은 길(brand-files metaads/gv/req · kind:'budget')로 보내고,
-     VPS 가 메타의 지금 값이 화면과 같은지 본 뒤 바꾼다 · 한 번에 두 배까지(숫자 실수 막기) · 금액은 광고계정 통화로 적는다(메타가 그 통화로 받음) */
+     VPS 가 메타의 지금 값이 화면과 같은지 본 뒤 바꾼다 · 10-30 사용자 요청으로 학습이 흔들리지 않게 -20% · -10% · +10% · +20% 단추만(금액 직접 입력 없음 · VPS 도 ±20% 넘으면 거절) */
   const BUD_PEND={}, shownBud={};
   const BUD_PEN='<svg class="ma-bud-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const BUD_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>';
@@ -20238,17 +20239,15 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +'<button class="settings-close" type="button" aria-label="닫기">✕</button></div>'
       +'<div class="ma-gv-body">'
       +'<div class="ma-gv-k"><span class="cap">최근 7일</span><div><small>하루 평균 광고비</small><b>'+money(avg,mc)+'</b></div><div><small>ROAS</small><b>'+(roas==null?'-':roas+'%')+'</b></div><div><small>구매</small><b>'+int(m[2])+'건</b></div></div>'
-      +'<div class="ma-bud-set"><div class="ui-chips" data-pct>'+[10,20,30,50].map(p=>'<button type="button" class="ui-chip" aria-pressed="false" data-p="'+p+'">+'+p+'%</button>').join('')+'</div>'
-      +'<label class="ma-bud-in"><span>새 하루 예산'+(cur!=='KRW'?' ('+cur+')':'')+'</span><input type="text" class="ui-field" inputmode="decimal" autocomplete="off" value="'+(raw/unit)+'"></label></div>'
+      +'<div class="ma-bud-set"><span class="ma-bud-cap">얼마나 바꿀까요</span><div class="ui-chips ma-bud-pct" data-pct>'+[-20,-10,10,20].map(p=>'<button type="button" class="ui-chip" aria-pressed="false" data-p="'+p+'">'+(p>0?'+':'−')+Math.abs(p)+'%</button>').join('')+'</div></div>'
       +(sc?'<div class="ma-bud-schbox"><span><b>'+budWhenTxt(sc.when)+' 예약</b> · '+nat(sc.from)+' → '+nat(sc.to)+(sc.by?' · '+esc(sc.by):'')+'</span><button type="button" class="ui-btn ghost sm" data-cancel>예약 취소</button></div>':'')
       +'<div class="ma-bud-when"><span>적용 시각 <em>한국 시간</em></span><div class="ui-tabs" data-when>'
       +'<button type="button" class="ui-tab active" data-value="">지금 바로</button>'
       +[0,2].map(h=>'<button type="button" class="ui-tab" data-value="'+h+'">'+budWhenTxt(budNextAt(h))+' 예약</button>').join('')+'</div></div>'
       +'<div class="ma-gv-imp"><div><b data-now>'+nat(raw)+'</b><small>지금 '+krw(raw)+'</small></div><div class="is-hot"><b data-new>'+nat(raw)+'</b><small data-newk>바꾼 뒤 '+krw(raw)+'</small></div><div><b data-pc>0%</b><small>변화</small></div></div>'
-      +'<p class="ma-gv-warn" data-big hidden>20% 넘게 바꾸면 메타가 성과를 다시 배우느라(학습 단계) 며칠 동안 효율이 흔들릴 수 있습니다.</p>'
       +'<ul class="ma-gv-note"><li>바뀌는 순간부터 적용됩니다. 메타는 하루에 예산보다 조금 더(최대 75%) 쓸 수 있고, 주 단위로 맞춥니다.</li>'
       +'<li>예약은 그 시각에 메타의 예산이 지금과 같을 때만 바꿉니다(그사이 누가 바꿨으면 하지 않음). 한 곳에 예약은 하나만 둡니다.</li>'
-      +'<li>한 번에 두 배까지 바꿀 수 있습니다. 누가 언제 바꿨는지 기록이 남습니다.</li></ul>'
+      +'<li>메타 학습이 흔들리지 않도록 한 번에 20%까지만 바꿉니다. 누가 언제 바꿨는지 기록이 남습니다.</li></ul>'
       +'</div>'
       +'<div class="ma-gv-confirm">'
       +'<label class="ma-gv-ok"><input type="checkbox"><span>위 내용을 확인했습니다</span></label>'
@@ -20261,7 +20260,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const onKey=e=>{ if(e.key==='Escape'){ e.stopPropagation(); close(); } };
     const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
     document.addEventListener('keydown',onKey,true);
-    const $d=q=>dlg.querySelector(q), go=$d('[data-go]'), msg=$d('.ma-gv-msg'), ok=$d('.ma-gv-ok input'), pw=$d('.ma-gv-secret'), inp=$d('.ma-bud-in input');
+    const $d=q=>dlg.querySelector(q), go=$d('[data-go]'), msg=$d('.ma-gv-msg'), ok=$d('.ma-gv-ok input'), pw=$d('.ma-gv-secret');
     let next=raw, when='';
     const goTxt=()=>when?budWhenTxt(when)+'에 예약':'예산 바꾸기';
     dlg.querySelectorAll('[data-when] [data-value]').forEach(b=>b.addEventListener('click',()=>{
@@ -20275,23 +20274,19 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       if(res.ok){ $d('.ma-bud-schbox').remove(); return; }
       cancel.disabled=false; cancel.textContent='예약 취소'; msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent=res.msg;
     });
-    const read=()=>{ const v=parseFloat(String(inp.value).replace(/[^0-9.]/g,'')); return isFinite(v)&&v>0?Math.round(v*unit):0; };
     const paint=()=>{
-      const pc=next&&raw?Math.round((next-raw)/raw*1000)/10:0, bad=!next?'금액을 적어 주세요.':next>raw*2?'한 번에 두 배까지만 바꿀 수 있습니다.':next===raw?'지금 예산과 같습니다.':when&&budSchOf(id)?'이미 예약이 있습니다. 예약을 취소한 뒤 다시 해 주세요.':'';
+      const pc=next&&raw?Math.round((next-raw)/raw*1000)/10:0, bad=next===raw?'바꿀 만큼(−20% ~ +20%)을 골라 주세요.':when&&budSchOf(id)?'이미 예약이 있습니다. 예약을 취소한 뒤 다시 해 주세요.':'';
       $d('[data-new]').textContent=next?nat(next):'-'; $d('[data-newk]').textContent='바꾼 뒤 '+(next?krw(next):'');
       $d('[data-pc]').textContent=(pc>0?'+':'')+pc+'%';
-      $d('[data-big]').hidden=!(next&&Math.abs(pc)>20);
       dlg.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',String(next===budStep(raw,+b.dataset.p,unit))));
-      msg.hidden=!bad||!inp.value; msg.className='ma-gv-msg is-err'; if(bad) msg.textContent=bad;
+      msg.hidden=!bad||next===raw; msg.className='ma-gv-msg is-err'; if(bad) msg.textContent=bad;
       go.disabled=!!bad||!(ok.checked&&pw.value.trim());
       return !bad;
     };
-    dlg.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{ next=budStep(raw,+b.dataset.p,unit); inp.value=String(next/unit); paint(); }));
-    inp.addEventListener('input',()=>{ next=read(); paint(); });
+    dlg.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{ next=budStep(raw,+b.dataset.p,unit); paint(); }));
     ok.addEventListener('change',()=>{ paint(); if(ok.checked) pw.focus(); });
     pw.addEventListener('input',()=>{ pw.classList.remove('is-err'); paint(); });
     pw.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!go.disabled){ e.preventDefault(); go.click(); } });
-    setTimeout(()=>{ inp.focus(); inp.select(); },30);
     dlg.addEventListener('click',async e=>{
       if(e.target===dlg||e.target.closest('.settings-close')||e.target.closest('[data-x]')) return close();
       if(!e.target.closest('[data-go]')||go.disabled||!paint()) return;
@@ -20301,10 +20296,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent='비밀번호가 맞지 않습니다.'; go.textContent=goTxt();
         pw.value=''; pw.classList.add('is-err'); pw.focus(); paint(); return;
       }
-      go.textContent='보내는 중…'; ok.disabled=pw.disabled=inp.disabled=true;
+      go.textContent='보내는 중…'; ok.disabled=pw.disabled=true;
       msg.hidden=false; msg.className='ma-gv-msg'; msg.textContent='메타에 보내는 중입니다 · 서버가 받기까지 1분 안쪽이 걸릴 수 있습니다.';
       const res=await budSend(lv,id,name,raw,next,pw.value.trim(),when);
-      pw.value=''; ok.disabled=pw.disabled=inp.disabled=false; go.textContent=goTxt();
+      pw.value=''; ok.disabled=pw.disabled=false; go.textContent=goTxt();
       if(res.ok){ close(); return; }
       msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent=res.msg; paint();
     });
