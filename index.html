@@ -2848,8 +2848,9 @@ window.BAROYAM_FONT=(function(){
   .ma-vd-g .v{font-size:9.5px;font-weight:500;fill:var(--body)}
   .ma-vd-g .x{font-size:9.5px;fill:var(--mute)}
   .ma-lp .ui-btn{text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ma-post{gap:6px}
-  .ma-post svg{width:14px;height:14px;flex:none}
+  .ma-posts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .ma-post{gap:6px;text-decoration:none;min-width:0;overflow:hidden;white-space:nowrap}
+  .ma-post svg{width:15px;height:15px;flex:none}
   .ma-pv-info{flex:1;min-width:300px;display:flex;flex-direction:column;gap:12px}
   .ma-pv-range{margin:0 0 -4px;font-size:12px;color:var(--mute)}
   /* 위 숫자 셋 · 한 상자에 칸만 나눔(ROAS 칸은 넓게·크게) */
@@ -19558,14 +19559,14 @@ window.BAROYAM_PJ_CHANNELS=(function(){
           +(lps.length>1?'상세페이지 '+(i+1)+' · '+esc(lpTxt(u)):'상세페이지 열기')+' ↗</a>').join('')+'</div>'
         :'';
       /* 게시물 보기(10-30 사용자 요청) · 광고마다 댓글이 달리는 게시물 · 서버 ads[].fb = 페이스북 게시물 id(페이지id_글id), ads[].ig = 인스타 게시물 주소 ·
-         같은 게시물을 쓴 광고는 하나로 · 누르면 목록(postMenu)에서 골라 새 탭으로 */
-      const posts=[], pSeen=new Set(), many=new Set(r.ads.map(x=>(x.fb||'')+'|'+(x.ig||'')).filter(k=>k!=='|')).size>1;
+         같은 게시물을 쓴 광고는 하나로 · 처음엔 목록이었다가 사용자 요청으로 인스타·페이스북 단추 두 개(아이콘) · 게시물이 여럿이면 번호를 붙여 늘어놓는다 */
+      const igs=[], fbs=[];
       r.ads.forEach(x=>{
-        if(x.fb&&!pSeen.has(x.fb)){ pSeen.add(x.fb); posts.push({value:'https://www.facebook.com/'+x.fb,label:'댓글이 달린 Facebook 게시물',sub:many?x.name:''}); }
-        if(x.ig&&!pSeen.has(x.ig)){ pSeen.add(x.ig); posts.push({value:x.ig,label:'댓글이 달린 Instagram 게시물',sub:many?x.name:''}); }
+        if(x.ig&&!igs.some(o=>o.u===x.ig)) igs.push({u:x.ig,n:x.name});
+        if(x.fb&&!fbs.some(o=>o.u.endsWith('/'+x.fb))) fbs.push({u:'https://www.facebook.com/'+x.fb,n:x.name});
       });
-      postMenu=posts;
-      const postBtn=posts.length?'<button type="button" class="ui-btn sm block ma-post" data-posts>게시물 보기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>':'';
+      const postA=(L,ic,t)=>L.map((o,i)=>'<a class="ui-btn sm ma-post" href="'+esc(o.u)+'" target="_blank" rel="noopener" title="'+esc(t+' 게시물 · '+o.n)+'">'+ic+t+(L.length>1?' '+(i+1):'')+'</a>').join('');
+      const postBtn=igs.length||fbs.length?'<div class="ma-posts">'+postA(igs,POST_IC.ig,'인스타 게시물')+postA(fbs,POST_IC.fb,'페이스북 게시물')+'</div>':'';
       /* 영상 체류(10-22 사용자 요청) · 서버 a.bd.vd = 광고마다 최근 60일 [노출,재생,3초,평균 시청(초),25%,50%,75%,95%,100%,ThruPlay] ·
          곡선은 재생 수를 100% 로 두고 3초·25~100% 지점까지 본 비율 · 평균 시청은 광고마다 재생 수로 가중 평균 */
       const VD=(a.bd||{}).vd||{}, vs=[0,0,0,0,0,0,0,0,0,0];
@@ -20061,7 +20062,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }catch(e){ console.warn('[메타광고] 영상 직접 받기 실패 · 드라이브 미리보기로',e&&e.message); fallback(); }
   }
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
-  let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={}, postMenu=[];
+  let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
+  const POST_IC={
+    ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg>',
+    fb:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-1.6 19.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 12 2z"/></svg>'};
   /* 게재 관리 · 광고(소재) 하나씩 켜고 끄기(10-23 사용자 요청 · 신중해야 해서 목록이 아니라 팝업 안에만 · 확인 창을 거침) ·
      10-23 같은 날 사용자 요청으로 정밀성과 캠페인·광고 세트·소재 목록에도 켜기 칸(스위치)을 달았다(같은 확인 창) ·
      실제 처리는 VPS(meta_ads_toggle.js)가 한다(gvSend) · 메타 토큰에 광고 관리 권한(ads_management)이 있어야 한다 ·
@@ -20392,8 +20396,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const shut=()=>{ cardBox.hidden=true; cardBox.querySelector('.ma-dialog-body').innerHTML=''; };
       cardBox.addEventListener('click',e=>{
         if(e.target===cardBox||e.target.closest('.settings-close')) return shut();
-        const pb=e.target.closest('[data-posts]');
-        if(pb){ e.stopPropagation(); window.UI.menu(pb,postMenu,'',v=>window.open(v,'_blank','noopener')); }
       });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
     }
