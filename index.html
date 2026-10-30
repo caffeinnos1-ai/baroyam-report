@@ -2846,6 +2846,8 @@ window.BAROYAM_FONT=(function(){
   .ma-vd-g .v{font-size:9.5px;font-weight:500;fill:var(--body)}
   .ma-vd-g .x{font-size:9.5px;fill:var(--mute)}
   .ma-lp .ui-btn{text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ma-post{gap:6px}
+  .ma-post svg{width:14px;height:14px;flex:none}
   .ma-pv-info{flex:1;min-width:300px;display:flex;flex-direction:column;gap:12px}
   .ma-pv-range{margin:0 0 -4px;font-size:12px;color:var(--mute)}
   /* 위 숫자 셋 · 한 상자에 칸만 나눔(ROAS 칸은 넓게·크게) */
@@ -19407,7 +19409,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       /* sw = 광고관리자 스위치 · 하나라도 켜져 있으면 켬 · 저장값에 sw 가 없던 예전 값은 st 로 */
       const swA=o.ads.map(x=>x.sw||x.st);
       return {id:o.id,c:top.c,s:top.s,name:top.name,st:o.ads.some(x=>x.st==='ACTIVE')?'ACTIVE':'PAUSED',sw:swA.includes('ACTIVE')?'ACTIVE':swA.includes('PAUSED')?'PAUSED':swA[0],thumb:o.thumb,img:top.img||(o.ads.find(x=>x.img)||{}).img||null,kind:o.kind,n:o.ads.length,at,
-        ads:o.ads.map(x=>({id:x.id,name:x.name,st:x.st,sw:x.sw,sp:sp(x),link:x.link||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
+        ads:o.ads.map(x=>({id:x.id,name:x.name,st:x.st,sw:x.sw,sp:sp(x),link:x.link||null,fb:x.fb||null,ig:x.ig||null,s:x.s,tx:x.tx||null})).sort((p,r)=>r.sp-p.sp),adIds:o.ads.map(x=>x.id),
         sub:(o.kind==='video'?'영상':o.kind==='image'?'이미지':'소재')+' · 광고 '+o.ads.length+'개'+(selS.size===1?'':' · '+(cName[top.c]||'')),m:addUp(o.ads.map(x=>IA[x.id]))};
     });
   }
@@ -19537,6 +19539,15 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const lp=lps.length?'<div class="ma-lp">'+lps.map((u,i)=>'<a class="ui-btn soft sm block" href="'+esc(u)+'" target="_blank" rel="noopener" title="'+esc(u)+'">'
           +(lps.length>1?'상세페이지 '+(i+1)+' · '+esc(lpTxt(u)):'상세페이지 열기')+' ↗</a>').join('')+'</div>'
         :'';
+      /* 게시물 보기(10-30 사용자 요청) · 광고마다 댓글이 달리는 게시물 · 서버 ads[].fb = 페이스북 게시물 id(페이지id_글id), ads[].ig = 인스타 게시물 주소 ·
+         같은 게시물을 쓴 광고는 하나로 · 누르면 목록(postMenu)에서 골라 새 탭으로 */
+      const posts=[], pSeen=new Set(), many=new Set(r.ads.map(x=>(x.fb||'')+'|'+(x.ig||'')).filter(k=>k!=='|')).size>1;
+      r.ads.forEach(x=>{
+        if(x.fb&&!pSeen.has(x.fb)){ pSeen.add(x.fb); posts.push({value:'https://www.facebook.com/'+x.fb,label:'댓글이 달린 Facebook 게시물',sub:many?x.name:''}); }
+        if(x.ig&&!pSeen.has(x.ig)){ pSeen.add(x.ig); posts.push({value:x.ig,label:'댓글이 달린 Instagram 게시물',sub:many?x.name:''}); }
+      });
+      postMenu=posts;
+      const postBtn=posts.length?'<button type="button" class="ui-btn sm block ma-post" data-posts>게시물 보기 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>':'';
       /* 영상 체류(10-22 사용자 요청) · 서버 a.bd.vd = 광고마다 최근 60일 [노출,재생,3초,평균 시청(초),25%,50%,75%,95%,100%,ThruPlay] ·
          곡선은 재생 수를 100% 로 두고 3초·25~100% 지점까지 본 비율 · 평균 시청은 광고마다 재생 수로 가중 평균 */
       const VD=(a.bd||{}).vd||{}, vs=[0,0,0,0,0,0,0,0,0,0];
@@ -19637,7 +19648,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +txRow('t','제목')+txRow('b','본문')+txRow('d','설명')+'</div>':'';
       /* 색 기준은 문구 줄 대신 말풍선으로(사용자 요청 · 줄이 길어짐) */
       const bdHtml=agBox||plBox||hrBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+hrBox+'</div>':'';
-      return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+cvBox+lp+'</div><div class="ma-pv-info">'
+      return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
         +'<p class="ma-pv-range">'+RANGE_TXT[range]+'</p>'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b>'+(m[3]?'<span class="sub">'+m[3]+'</span>':'')+'</div>').join('')+'</div>'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
@@ -20032,7 +20043,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }catch(e){ console.warn('[메타광고] 영상 직접 받기 실패 · 드라이브 미리보기로',e&&e.message); fallback(); }
   }
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
-  let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
+  let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={}, postMenu=[];
   /* 게재 관리 · 광고(소재) 하나씩 켜고 끄기(10-23 사용자 요청 · 신중해야 해서 목록이 아니라 팝업 안에만 · 확인 창을 거침) ·
      10-23 같은 날 사용자 요청으로 정밀성과 캠페인·광고 세트·소재 목록에도 켜기 칸(스위치)을 달았다(같은 확인 창) ·
      실제 처리는 VPS(meta_ads_toggle.js)가 한다(gvSend) · 메타 토큰에 광고 관리 권한(ads_management)이 있어야 한다 ·
@@ -20361,7 +20372,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       document.body.appendChild(cardBox);
       /* 닫을 때 재생 중인 영상을 멈추려고 내용을 비운다 */
       const shut=()=>{ cardBox.hidden=true; cardBox.querySelector('.ma-dialog-body').innerHTML=''; };
-      cardBox.addEventListener('click',e=>{ if(e.target===cardBox||e.target.closest('.settings-close')) shut(); });
+      cardBox.addEventListener('click',e=>{
+        if(e.target===cardBox||e.target.closest('.settings-close')) return shut();
+        const pb=e.target.closest('[data-posts]');
+        if(pb){ e.stopPropagation(); window.UI.menu(pb,postMenu,'',v=>window.open(v,'_blank','noopener')); }
+      });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
     }
     curCard=r;
