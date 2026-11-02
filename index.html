@@ -11385,7 +11385,7 @@ window.BAROYAM_FONT=(function(){
           <button type="button" class="hero-view-tab" role="tab" data-ops="channel" data-sub="판매처별 매출을 한눈에 봅니다.">판매처매출</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="summary" data-sub="채널별·기간별 최종 순이익을 모니터링합니다.">순수익 요약</button>
           <!-- 어드민 수집 · 맨 위 단추 줄 오른쪽 끝 · 누르면 지금 탭(당일판매/재고)의 것을 이지어드민에서 가져온다 -->
-          <button type="button" class="ui-btn" id="ivFetch" title="이지어드민 창에서 로그인만 하면 지금 재고를 자동으로 받아 옵니다">
+          <button type="button" class="ui-btn" id="ivFetch" title="이지어드민에서 지금 것을 받아 옵니다 · 크롬 확장이 없으면(모바일) 서버가 대신 가져옵니다">
             <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
             <span class="lb">어드민 수집</span><span class="at" id="ivFetchAt"></span></button>
         </div>
@@ -23240,10 +23240,40 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   let opsJob='inventory';
   /* 진행 안내는 그 탭의 안내 줄에 · 수집 중인지는 어드민 수집 단추(도는 아이콘)로 본다(게이지는 사용자 요청으로 뺐다) */
   const jobNote=t=>(opsJob==='sales'?dsNote:ivNote)(t);
+  /* 확장이 없으면(모바일·확장 없는 PC) 서버가 대신 수집한다(사용자 요청 11-03) · 메타광고 지금 가져오기와 같은 방식:
+     brand-files 에 ezjob/req/<임의>.json({kind:'inventory'|'sales'})을 올리면 VPS(caffeinnos-automation/ezadmin_request.js · 1분마다)가
+     가상 화면 크롬으로 이지어드민에 로그인해 수집하고 ezjob/res/<같은 이름> 에 {state:'running'|'done'|'failed', message} 를 적는다 ·
+     끝나면 그 탭의 칸(inventory_v1 · daily_sales_v1)을 다시 읽어 그린다 */
+  let ivSrv=false;
+  async function ivServerFetch(sales){
+    const DB=window.BAROYAM_DB;
+    opsJob=sales?'sales':'inventory'; ivSrv=true; ivBusy(true);
+    try{
+      if(!DB||!DB.fileUpload||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 눌러 주세요');
+      const name=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json', t0=Date.now();
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      await DB.fileUpload('brand-files','ezjob/req/'+name,new Blob([JSON.stringify({v:1,kind:opsJob,at:new Date().toISOString(),by})],{type:'application/json'}));
+      jobNote('서버에 수집을 요청했습니다 · 1~2분 걸립니다');
+      for(;;){
+        await new Promise(r=>setTimeout(r,3000));
+        const sec=(Date.now()-t0)/1000;
+        let res=null;
+        try{ const u=await DB.fileUrl('brand-files','ezjob/res/'+name,60); const r=await fetch(u,{cache:'no-store'}); res=r.ok?await r.json():null; }catch(e){}
+        if(res&&res.state==='failed') throw new Error(res.message||'이지어드민에서 받지 못했습니다');
+        if(res&&res.state==='done') break;
+        if(res&&res.state==='running') jobNote('서버가 이지어드민에서 가져오는 중입니다');
+        if(!res&&sec>150) throw new Error('서버가 요청을 받지 않았습니다 · 잠시 뒤 다시 눌러 주세요');
+        if(sec>420) throw new Error('7분이 지나도 끝나지 않았습니다 · 잠시 뒤 새로고침해 주세요');
+      }
+      if(sales){ await DS.load(); paintSales(); } else { await INV.load(); paintStock(); }
+      jobNote(sales?'당일판매를 가져왔습니다':'재고를 가져왔습니다');
+    }catch(e){ console.error(e); jobNote('수집하지 못했습니다 · '+(e&&e.message||e)); }
+    ivSrv=false; ivBusy(false);
+  }
   $('ivFetch').addEventListener('click',()=>{
     const sales=window.baroyamOpsTab==='sales', note=sales?dsNote:ivNote;
-    if($('ivFetch').classList.contains('busy')){ jobNote('수집 중입니다 · 이지어드민 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
-    if(!ivHasExt()){ note(''); ivGuide(true,sales?'dsGuide':'ivGuide'); return; }
+    if($('ivFetch').classList.contains('busy')){ jobNote(ivSrv?'서버가 수집 중입니다 · 잠시만 기다려 주세요':'수집 중입니다 · 이지어드민 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
+    if(!ivHasExt()){ ivGuide(false,sales?'dsGuide':'ivGuide'); ivServerFetch(sales); return; }
     /* 당일판매는 확장 1.5.0 부터 · 요약표(F304) 주소로 바로 연다 · 그 전 확장은 메뉴 누르기가 자주 막혔다 */
     const ver=(document.documentElement.dataset.baroyamInvExt||'0').split('.').map(Number);
     if(sales&&(ver[0]||0)*1000+(ver[1]||0)<1005){
