@@ -2378,12 +2378,13 @@ window.BAROYAM_FONT=(function(){
   #igDlg .settings-panel.ig-dlg{max-width:1360px;width:96vw;height:90vh;max-height:none}
   /* 일정 창 두 칸 · 왼쪽 일정(제목·날짜·형식·상태·메모) | 오른쪽 올릴 내용(피드 가이드·캡션) */
   .ig-dlg-cols{flex:1;min-height:0;display:grid;grid-template-columns:340px minmax(0,1fr);overflow:hidden}
-  /* 오른쪽 · 피드 가이드 | 캡션 나란히, 칸이 창 높이를 다 쓴다(메모 칸은 11-03 사용자 요청으로 뺌 · 예전 memo 값은 저장값에 남음) */
-  .ig-dlg-cols>.ig-form.ig-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;padding:18px 24px;overflow:hidden}
+  /* 오른쪽 · 참고 피드(미리보기+링크) | 피드 가이드 위 · 캡션 아래, 칸이 창 높이를 다 쓴다(메모 칸은 11-03 사용자 요청으로 뺌 · 예전 memo 값은 저장값에 남음) */
+  .ig-dlg-cols>.ig-form.ig-body{display:grid;grid-template-columns:minmax(300px,420px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"ref guide" "ref cap";gap:16px 20px;padding:18px 24px;overflow:hidden}
+  .ig-body>.ig-f.ig-g{grid-area:guide} .ig-body>.ig-f.ig-c{grid-area:cap}
   .ig-body>.ig-f{min-height:0}
   .ig-body .ig-lab{min-height:28px;font-size:13px;font-weight:600;color:var(--ink)}
   .ig-body textarea.ui-field{flex:1;min-height:0;resize:none;font-size:14px;line-height:1.65;padding:14px 16px;background:var(--paper)}
-  @media (max-width:1100px){ .ig-dlg-cols>.ig-form.ig-body{grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(320px,auto);overflow-y:auto} .ig-body textarea.ui-field{min-height:280px} }
+  @media (max-width:1100px){ .ig-dlg-cols>.ig-form.ig-body{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"ref" "guide" "cap";grid-auto-rows:minmax(320px,auto);overflow-y:auto} .ig-ref-box{min-height:520px} .ig-body textarea.ui-field{min-height:280px} }
   .ig-dlg-cols>.ig-form{overflow-y:auto;min-width:0}
   .ig-dlg-cols>.ig-form+.ig-form{border-left:1px solid var(--line);background:color-mix(in srgb,var(--chip-flat) 45%,var(--paper))}
   .ig-form .ig-lab{display:flex;align-items:center;gap:8px}
@@ -2397,32 +2398,17 @@ window.BAROYAM_FONT=(function(){
   .ig-form .ig-meta{font-size:11.5px;color:var(--mute)}
   .ig-form .ig-meta:empty{display:none}
   .ig-dlg [hidden]{display:none}
-  /* 피드 미리보기 · 인스타 게시물 모양(머리 · 4:5 장 · 점 · 캡션) · 장 안은 글로만 */
-  .ig-pv-card{border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden;color:var(--ink)}
-  .ig-pv-head{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12.5px}
-  .ig-pv-head i{width:24px;height:24px;border-radius:99px;flex:none;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:600;color:var(--paper);background:var(--btn)}
-  .ig-pv-head b{font-weight:600}
-  .ig-pv-head span{margin-left:auto;font-size:11px;color:var(--mute)}
-  .ig-pv-stage{position:relative;aspect-ratio:4/5;background:linear-gradient(160deg,color-mix(in srgb,var(--bar) 12%,var(--paper)),color-mix(in srgb,var(--bar) 26%,var(--paper)))}
-  .ig-pv-stage.is-tall{aspect-ratio:9/14}
-  .ig-pv-slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:22px 26px;overflow:hidden;text-align:center}
-  .ig-pv-slide .h{font-size:17px;font-weight:600;line-height:1.4;color:var(--ink);word-break:keep-all}
-  .ig-pv-slide .t{font-size:12.5px;line-height:1.55;color:var(--body);word-break:keep-all}
-  .ig-pv-slide .ph{margin-top:6px;padding:7px 10px;border:1px dashed color-mix(in srgb,var(--bar) 45%,var(--line));border-radius:10px;font-size:11.5px;line-height:1.45;color:var(--mute);background:color-mix(in srgb,var(--paper) 60%,transparent)}
-  .ig-pv-slide .ph::before{content:"사진 · ";font-weight:600}
-  .ig-pv-empty{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font-size:12px;line-height:1.6;color:var(--mute)}
-  .ig-pv-n{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:99px;font-size:11px;color:var(--paper);background:color-mix(in srgb,var(--ink) 70%,transparent)}
-  .ig-pv-tag{position:absolute;top:10px;left:10px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--paper) 85%,transparent)}
-  .ig-pv-stage .ui-btn.ig-pv-go{position:absolute;top:50%;transform:translateY(-50%);border-radius:99px;background:color-mix(in srgb,var(--paper) 90%,transparent);box-shadow:0 2px 8px rgba(0,0,0,.12)}
-  .ig-pv-stage .ui-btn.ig-pv-go[data-pv="-1"]{left:8px}
-  .ig-pv-stage .ui-btn.ig-pv-go[data-pv="1"]{right:8px}
-  .ig-pv-stage .ui-btn.ig-pv-go[hidden]{display:none}
-  .ig-pv-dots{display:flex;justify-content:center;gap:5px;padding:9px 0 4px}
-  .ig-pv-dots i{width:6px;height:6px;border-radius:99px;background:var(--line);cursor:pointer}
-  .ig-pv-dots i.on{background:var(--btn)}
-  .ig-pv-cap{padding:4px 12px 12px;font-size:12px;line-height:1.55;color:var(--body);white-space:pre-line;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-  .ig-pv-cap b{font-weight:600;color:var(--ink);margin-right:5px}
-  .ig-pv-cap:empty{display:none}
+  /* 참고 피드 · 인스타 게시물 링크를 넣으면 그 게시물을 인스타 embed 로 보여 준다(디자이너가 보고 바로 잡게) */
+  .ig-ref{grid-area:ref;display:flex;flex-direction:column;gap:8px}
+  .ig-ref-box{flex:1;min-height:0;border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow-y:auto;overflow-x:hidden}
+  .ig-ref-box iframe{display:block;width:100%;min-height:100%;border:0;background:var(--paper)}
+  .ig-ref-empty{height:100%;min-height:240px;display:grid;place-items:center;padding:24px;text-align:center;font-size:12.5px;line-height:1.7;color:var(--mute)}
+  .ig-ref-empty[hidden],.ig-ref-box iframe[hidden],.ig-ref-row a[hidden]{display:none}
+  .ig-ref-row{display:flex;gap:8px;align-items:center}
+  .ig-ref-row .ui-field{flex:1;min-width:0}
+  .ig-ref-row a{flex:none;font-size:12px;color:var(--btn);text-decoration:none;white-space:nowrap}
+  .ig-ref-msg{font-size:11.5px;color:var(--neg)}
+  .ig-ref-msg:empty{display:none}
   /* 배너 오른쪽 위 · 필터 이름 설정 단추(일정 탭일 때만) */
   .plan-hero .ig-cfg{position:absolute;top:22px;right:28px}
   .plan-hero .ig-cfg[hidden]{display:none}
@@ -11839,16 +11825,20 @@ window.BAROYAM_FONT=(function(){
               </div>
               <div class="ig-f">형식<div class="ui-chips" id="igType"></div></div>
               <div class="ig-f">상태<div class="ui-chips" id="igState"></div></div>
-              <!-- 피드 미리보기 · 피드 가이드의 "슬라이드1: …" 줄을 장마다 글로 보여 준다(그림은 만들지 않음) · ‹ › 로 넘김 -->
-              <div class="ig-f">피드 미리보기<div class="ig-pv" id="igPv"></div></div>
               <div class="ig-meta" id="igMeta"></div>
             </div>
             <!-- 올릴 내용 · 피드 가이드(어떻게 찍고 담을지)·캡션(게시물 글) · 같은 일정 줄의 guide·caption 칸 -->
             <div class="ig-form ig-body">
-              <div class="ig-f"><span class="ig-lab">피드 가이드</span>
+              <!-- 참고 피드 · 인스타 게시물 링크(ref 칸)를 넣으면 위 상자에 그 게시물이 보인다 -->
+              <div class="ig-ref"><span class="ig-lab">참고 피드</span>
+                <p class="ig-hint">참고할 인스타 게시물 링크를 넣으면 여기에 보여요</p>
+                <div class="ig-ref-box"><div class="ig-ref-empty" id="igRefEmpty">아래에 인스타그램 게시물 링크를 넣으면<br>그 피드가 여기에 보여요<br>(instagram.com/p/… · /reel/…)</div><iframe id="igRefFrame" title="참고 피드" loading="lazy" hidden></iframe></div>
+                <div class="ig-ref-row"><input class="ui-field" id="igRef" maxlength="300" placeholder="https://www.instagram.com/p/…" autocomplete="off"><a id="igRefOpen" target="_blank" rel="noopener" hidden>인스타에서 열기 ↗</a></div>
+                <div class="ig-ref-msg" id="igRefMsg"></div></div>
+              <div class="ig-f ig-g"><span class="ig-lab">피드 가이드</span>
                 <p class="ig-hint">사진·영상 구성, 장 순서, 들어갈 문구, 톤 같은 제작 안내</p>
                 <textarea class="ui-field ig-guide" id="igGuide" maxlength="5000" placeholder="예: 1장 제품 단독 컷(위에서) → 2장 조리 과정 → 3장 먹는 장면 · 따뜻한 톤"></textarea></div>
-              <div class="ig-f"><span class="ig-lab">캡션 <em id="igCapCount"></em><button type="button" class="ui-btn ghost sm" id="igCapCopy">복사</button></span>
+              <div class="ig-f ig-c"><span class="ig-lab">캡션 <em id="igCapCount"></em><button type="button" class="ui-btn ghost sm" id="igCapCopy">복사</button></span>
                 <p class="ig-hint">인스타에 그대로 올릴 글 · 해시태그 포함</p>
                 <textarea class="ui-field ig-cap" id="igCaption" maxlength="2200" placeholder="게시물 글 · 해시태그는 30개까지"></textarea></div>
             </div>
@@ -22279,70 +22269,38 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('igTime').innerHTML='<span class="t'+(form.time?'':' ph')+'">'+(form.time?esc((TIMES.find(x=>x.value===form.time)||{label:form.time}).label):'시간 없음')+'</span>';
     $('igType').innerHTML=TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-v="'+t.k+'" aria-pressed="'+(form.type===t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+esc(t.l)+'</button>').join('');
     $('igState').innerHTML=STATES.map(t=>'<button type="button" class="ui-chip" data-v="'+t.k+'" aria-pressed="'+(form.state===t.k)+'">'+esc(t.l)+'</button>').join('');
-    paintPreview();
   }
-  /* ---------- 피드 미리보기 · 피드 가이드에서 "슬라이드1: …"(슬라이드 1·1장·slide 1) 줄을 장으로 나눈다 ·
-     한 줄 안은 " / " 로 끊어 따옴표 문구 = 큰 글, "사진:"·"영상:" = 점선 상자(무엇을 찍을지), 나머지 = 작은 글 ·
-     장 표시가 없으면 가이드 첫 덩어리(빈 줄 전)를 한 장으로 · "[태그]" 같은 대괄호 줄부터는 장이 아님 ---------- */
-  let pvIdx=0;
-  function slidesOf(text){
-    const out=[]; let cur=null;
-    String(text||'').split(/\r?\n/).forEach(line=>{
-      const m=line.match(/^\s*(?:슬라이드|slide)\s*(\d+)\s*[:：.)\-]?\s*(.*)$/i)||line.match(/^\s*(\d+)\s*장\s*[:：.)\-]?\s*(.*)$/);
-      if(m){ cur={n:+m[1],parts:[m[2]]}; out.push(cur); return; }
-      if(/^\s*\[/.test(line)){ cur=null; return; }
-      if(cur&&line.trim()) cur.parts.push(line);
-      else if(!line.trim()) cur=null;
-    });
-    if(!out.length){
-      const first=String(text||'').trim().split(/\n\s*\n/)[0]||'';
-      if(first.trim()) out.push({n:1,parts:first.split(/\n/)});
-    }
-    return out;
+  /* ---------- 참고 피드 · 인스타 게시물 링크 → instagram.com/<p|reel|tv>/<코드>/embed/captioned 를 iframe 으로 ·
+     인스타 embed 가 보내는 높이(MEASURE 메시지)로 iframe 키를 맞춘다 · 계정 주소·비공개 게시물은 보이지 않음 ---------- */
+  function refEmbed(url){
+    const m=String(url||'').trim().match(/^(?:https?:\/\/)?(?:www\.|m\.)?instagram\.com\/(?:[\w.]+\/)?(p|reels?|tv)\/([A-Za-z0-9_-]+)/i);
+    if(!m) return null;
+    const k=m[1].toLowerCase()==='tv'?'tv':m[1].toLowerCase()==='p'?'p':'reel';
+    return {embed:'https://www.instagram.com/'+k+'/'+m[2]+'/embed/captioned/',open:'https://www.instagram.com/'+k+'/'+m[2]+'/'};
   }
-  function slideHtml(sl){
-    const bits=sl.parts.join(' / ').split(/\s+\/\s+/).map(x=>x.trim()).filter(Boolean);
-    return bits.map(b=>{
-      const ph=b.match(/^(?:사진|영상|이미지|컷)\s*[:：]\s*(.*)$/);
-      if(ph) return '<div class="ph">'+esc(ph[1])+'</div>';
-      const q=b.match(/^["“'‘](.+)["”'’]$/);
-      if(q) return '<div class="h">'+esc(q[1])+'</div>';
-      return '<div class="t">'+esc(b)+'</div>';
-    }).join('');
+  let refShown='';
+  function paintRef(){
+    const v=$('igRef').value.trim(), e=refEmbed(v), fr=$('igRefFrame');
+    $('igRefMsg').textContent=v&&!e?'인스타그램 게시물 링크가 아니에요 (instagram.com/p/… 또는 /reel/…)':'';
+    $('igRefEmpty').hidden=!!e; fr.hidden=!e;
+    $('igRefOpen').hidden=!e; if(e) $('igRefOpen').href=e.open;
+    const src=e?e.embed:'';
+    if(src!==refShown){ refShown=src; fr.style.height=''; if(src) fr.src=src; else fr.removeAttribute('src'); }
   }
-  function paintPreview(){
-    const box=$('igPv'); if(!box) return;
-    const t=TYPES.find(x=>x.k===form.type)||TYPES[0];
-    const sl=slidesOf($('igGuide').value);
-    if(pvIdx>=sl.length) pvIdx=Math.max(0,sl.length-1);
-    const cur=sl[pvIdx], many=sl.length>1;
-    const cap=$('igCaption').value.trim();
-    box.innerHTML='<div class="ig-pv-card"><div class="ig-pv-head"><i>B</i><b>baroyam_official</b><span>'+esc(t.l)+'</span></div>'
-      +'<div class="ig-pv-stage'+(form.type==='reels'||form.type==='story'?' is-tall':'')+'" style="--bar:'+t.c+'">'
-      +(cur?'<div class="ig-pv-slide">'+slideHtml(cur)+'</div><span class="ig-pv-tag">슬라이드 '+cur.n+'</span>'
-          :'<div class="ig-pv-empty">피드 가이드에<br>"슬라이드1: …" 처럼 적으면<br>장마다 여기에 보여요</div>')
-      +(many?'<span class="ig-pv-n">'+(pvIdx+1)+' / '+sl.length+'</span>'
-        +'<button type="button" class="ui-btn icon sm ig-pv-go" data-pv="-1" aria-label="이전 장"'+(pvIdx?'':' hidden')+'>‹</button>'
-        +'<button type="button" class="ui-btn icon sm ig-pv-go" data-pv="1" aria-label="다음 장"'+(pvIdx<sl.length-1?'':' hidden')+'>›</button>':'')
-      +'</div>'
-      +(many?'<div class="ig-pv-dots">'+sl.map((x,i)=>'<i class="'+(i===pvIdx?'on':'')+'" data-pv-at="'+i+'"></i>').join('')+'</div>':'')
-      +'<div class="ig-pv-cap">'+(cap?'<b>baroyam_official</b>'+esc(cap):'')+'</div></div>';
-  }
-  $('igGuide').addEventListener('input',paintPreview);
-  $('igCaption').addEventListener('input',paintPreview);
-  $('igPv').addEventListener('click',e=>{
-    const go=e.target.closest('[data-pv]'), at=e.target.closest('[data-pv-at]');
-    if(go){ pvIdx+=+go.dataset.pv; paintPreview(); }
-    else if(at){ pvIdx=+at.dataset.pvAt; paintPreview(); }
+  $('igRef').addEventListener('input',paintRef);
+  window.addEventListener('message',ev=>{
+    if(!/^https:\/\/www\.instagram\.com$/.test(ev.origin)) return;
+    let d=ev.data; try{ if(typeof d==='string') d=JSON.parse(d); }catch(x){ return; }
+    const h=d&&d.type==='MEASURE'&&d.details&&+d.details.height;
+    const fr=$('igRefFrame'); if(h>0&&fr&&fr.contentWindow===ev.source) fr.style.height=Math.ceil(h)+'px';
   });
   function openDlg(id,preset){
     const p=id&&st.data.posts[id];
-    pvIdx=0;
     editId=p?id:null;
-    form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:stateOf(p.state).k,memo:p.memo||'',guide:p.guide||'',caption:p.caption||''}
-          :Object.assign({title:'',date:today(),time:'',type:'feed',state:'plan',memo:'',guide:'',caption:''},preset||{});
+    form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:stateOf(p.state).k,memo:p.memo||'',guide:p.guide||'',caption:p.caption||'',ref:p.ref||''}
+          :Object.assign({title:'',date:today(),time:'',type:'feed',state:'plan',memo:'',guide:'',caption:'',ref:''},preset||{});
     $('igDlgTitle').textContent=p?'업로드 일정 고치기':'새 업로드 일정';
-    $('igTitle').value=form.title; $('igGuide').value=form.guide; $('igCaption').value=form.caption; capCount();
+    $('igTitle').value=form.title; $('igGuide').value=form.guide; $('igCaption').value=form.caption; $('igRef').value=form.ref; paintRef(); capCount();
     if(datePick) datePick.set(form.date);
     $('igDel').hidden=!p; $('igCopy').hidden=!p;
     $('igMeta').textContent=p&&p.at?'마지막 수정 '+new Date(p.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
@@ -22352,7 +22310,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   function closeDlg(){ dlg.hidden=true; editId=null; }
   /* 창의 글 칸을 form 에 옮긴다 */
-  function readText(){ form.title=$('igTitle').value; form.guide=$('igGuide').value; form.caption=$('igCaption').value; }
+  function readText(){ form.title=$('igTitle').value; form.guide=$('igGuide').value; form.caption=$('igCaption').value; form.ref=$('igRef').value.trim(); }
   function capCount(){
     const v=$('igCaption').value, tags=(v.match(/#[^\s#]+/g)||[]).length, c=$('igCapCount');
     c.textContent=v.length+' / 2200자 · 해시태그 '+tags+' / 30'; c.classList.toggle('is-over',tags>30);
@@ -22368,7 +22326,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(!form.title){ $('igTitle').focus(); return; }
     if(!isDay(form.date)) form.date=today();
     const id=editId||uid();
-    const patch={title:form.title,date:form.date,time:form.time,type:form.type,state:form.state,memo:form.memo,guide:form.guide,caption:form.caption};
+    const patch={title:form.title,date:form.date,time:form.time,type:form.type,state:form.state,memo:form.memo,guide:form.guide,caption:form.caption,ref:form.ref};
     if(!editId) patch.ord=Date.now();
     closeDlg();
     calMonth=form.date.slice(0,7);
