@@ -8267,7 +8267,7 @@ window.BAROYAM_FONT=(function(){
     /* 로그아웃은 "이 PC를 다른 사람이 쓴다"는 뜻이라, 골라 둔 회원도 같이 비운다 ·
        그냥 새로고침할 때는 선택이 그대로 남아 다시 묻지 않는다.
        로그인 판정이 Supabase 세션이므로 그 세션을 반드시 끊어야 한다 */
-    try{ localStorage.removeItem(A.lsKey); localStorage.removeItem('baroyam_me_v1'); }catch(e){}
+    try{ localStorage.removeItem(A.lsKey); localStorage.removeItem('baroyam_me_v1'); localStorage.removeItem('baroyam_yt_tok_v1'); }catch(e){}
     if(window.baroyamGoogleToken) window.baroyamGoogleToken.clear();
     window.BAROYAM_LEAD.clear();
     try{ if(window.BAROYAM_DB) await window.BAROYAM_DB.signOut(); }catch(e){ console.error(e); }
@@ -18250,7 +18250,17 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const $=id=>document.getElementById(id);
   const grid=document.querySelector('#view-content .cm-ch-grid'), dlg=$('cmYtDlg');
   if(!grid||!dlg) return;
-  const KEY='content_channels_v1', SCOPE='https://www.googleapis.com/auth/youtube.readonly';
+  const KEY='content_channels_v1', SCOPE='https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload';
+  /* 채널마다 받은 유튜브 권한 · 구글이 1시간짜리만 주므로 그동안은 이 브라우저(localStorage)에 두고 새로고침해도 다시 묻지 않는다 ·
+     채널을 연결·다시 고를 때 받은 권한도 그 채널 몫으로 넣어 두어, 바로 이어 올릴 때 구글 창이 또 뜨지 않게 한다 */
+  const TOK_KEY='baroyam_yt_tok_v1';
+  const tokAll=()=>{ try{ return JSON.parse(localStorage.getItem(TOK_KEY)||'{}')||{}; }catch(e){ return {}; } };
+  window.baroyamYtToken={
+    get(ch){ const t=tokAll()[ch]; return t&&t.v&&t.exp>Date.now()+5*60e3?t.v:''; },
+    set(ch,v,exp){ try{ const a=tokAll(); Object.keys(a).forEach(k=>{ if(!(a[k].exp>Date.now())) delete a[k]; }); a[ch]={v,exp}; localStorage.setItem(TOK_KEY,JSON.stringify(a)); }catch(e){} },
+    clear(ch){ try{ const a=tokAll(); delete a[ch]; localStorage.setItem(TOK_KEY,JSON.stringify(a)); }catch(e){} },
+  };
+  let lastTok=null;
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clone=o=>JSON.parse(JSON.stringify(o||{}));
   const me=()=>{ try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
@@ -18341,6 +18351,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       client_id:window.BAROYAM_AUTH.clientId, scope:SCOPE,
       callback:res=>{
         if(!res||res.error||!res.access_token){ msg('유튜브 권한을 받지 못했어요'+(res&&res.error?' ('+res.error+')':''),true); return; }
+        lastTok={v:res.access_token,exp:Date.now()+((+res.expires_in||3600)-60)*1000};
         readChannel(res.access_token);
       },
       error_callback:err=>msg((err&&err.type)==='popup_closed'?'고르기 창이 닫혔어요':'유튜브 권한을 받지 못했어요',true)
@@ -18358,6 +18369,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       }
       const it=(j.items||[])[0];
       if(!it){ msg('고른 계정에 유튜브 채널이 없어요 · 브랜드 계정 채널이면 고르기 창에서 그 채널을 고르세요',true); return; }
+      if(lastTok&&lastTok.v===tok&&/youtube\.upload/.test(SCOPE)) window.baroyamYtToken.set(it.id,lastTok.v,lastTok.exp);
       const sn=it.snippet||{}, sx=it.statistics||{}, th=sn.thumbnails||{};
       showFound({id:it.id,title:sn.title||'',handle:sn.customUrl||'',thumb:(th.medium||th.default||{}).url||'',
         subs:sx.hiddenSubscriberCount?null:Number(sx.subscriberCount||0),videos:Number(sx.videoCount||0)});
@@ -18459,7 +18471,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const cs=chans();
     if(!cs.find(c=>c.id===form.ch)) form.ch=cs.length===1?cs[0].id:'';
     $('yuChannel').innerHTML=cs.map(c=>'<button type="button" class="ui-chip" data-v="'+esc(c.id)+'" aria-pressed="'+(c.id===form.ch)+'">'+esc(c.name||c.title)+'</button>').join('');
-    $('yuChHint').textContent=cs.length?'올릴 때 구글 창에서 이 채널을 한 번 더 골라 주세요(유튜브 올리기 권한)':'채널 관리에서 유튜브 채널을 먼저 연결해 주세요';
+    const kept=form.ch&&window.baroyamYtToken&&window.baroyamYtToken.get(form.ch);
+    $('yuChHint').textContent=!cs.length?'채널 관리에서 유튜브 채널을 먼저 연결해 주세요':!form.ch?'':kept?'올리기 권한이 있어요 · 구글 창 없이 바로 올라가요':'올릴 때 구글 창에서 이 채널을 한 번 골라 주세요(구글 권한은 1시간 유지 · 그동안 다시 묻지 않아요)';
     const f=form.file;
     // 고른 영상 · 원래 비율 그대로 재생해 볼 수 있게(세로는 세로로) · 다시 그릴 때 재생이 끊기지 않도록 영상이 바뀔 때만 새로 만든다
     const box=$('yuFiles'), have=box.querySelector('video');
@@ -18659,8 +18672,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
 
   /* ---------- 권한 · 누른 순간에 구글 창을 열어야 막히지 않는다 ---------- */
   function token(ch){
-    const c=toks[ch];
+    const c=toks[ch], Y=window.baroyamYtToken, kept=Y&&Y.get(ch);
     if(c&&c.exp>Date.now()+5*60e3) return Promise.resolve(c.t);
+    if(kept) return Promise.resolve(kept);
     return new Promise((ok,no)=>{
       const g=window.google&&google.accounts&&google.accounts.oauth2;
       if(!g) return no(new Error('구글 로그인 도구를 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요'));
@@ -18679,7 +18693,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const got=(j.items||[])[0];
       if(!got) throw new Error('고른 구글 계정에 유튜브 채널이 없어요');
       if(got.id!==ch){ const want=chans().find(c=>c.id===ch); throw new Error('구글 창에서 「'+((want&&want.title)||'고른 채널')+'」 채널을 골라 주세요 · 지금 고른 것은 「'+((got.snippet||{}).title||got.id)+'」이에요'); }
-      toks[ch]=r; return r.t;
+      toks[ch]=r; if(window.baroyamYtToken) window.baroyamYtToken.set(ch,r.t,r.exp); return r.t;
     });
   }
 
@@ -18746,7 +18760,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       form=blank(); aiDesc(); st.tab=publishAt?'wait':'done'; if(tabs) tabs.set(st.tab);
     })().catch(async e=>{
       const m=e&&e.message||String(e);
-      if(/권한이 끝났/.test(m)) delete toks[ch.id];
+      if(/권한이 끝났/.test(m)){ delete toks[ch.id]; if(window.baroyamYtToken) window.baroyamYtToken.clear(ch.id); }
       const started=st.live&&st.live.p>0;
       st.busy=false; st.live=null; msg(m);
       if(started) await save(id,Object.assign(row,{state:'failed',error:m}));   // 고르기 창을 닫은 것 같은 실패는 기록하지 않는다
