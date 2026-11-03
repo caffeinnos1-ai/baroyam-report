@@ -3451,6 +3451,12 @@ window.BAROYAM_FONT=(function(){
   .cm-rv-bar[hidden]{display:none}
   .yu .iu-files{display:block;width:100%}
   .yu .iu-files:empty{display:none}
+  .yu #yuShape{margin-top:2px}
+  .yu #yuShape[hidden]{display:none}
+  .iu-ai-c .why{margin:0;font-size:11.5px;line-height:1.5;color:var(--mute)}
+  .iu-ai-c .tt{margin:0;font-size:14px;font-weight:600;line-height:1.45;color:var(--ink)}
+  .iu-ai-tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .iu-ai-tags span{padding:2px 8px;border-radius:99px;background:var(--paper);border:1px solid var(--line);font-size:11.5px;color:var(--body)}
   .yu-bar{height:6px;margin-top:12px;border-radius:99px;background:var(--line);overflow:hidden}
   .yu-bar[hidden]{display:none}
   .yu-bar>i{display:block;height:100%;width:0;background:var(--btn);transition:width .2s}
@@ -11163,11 +11169,16 @@ window.BAROYAM_FONT=(function(){
                 <button type="button" class="iu-add iu-add-drv" id="yuDrive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 3.8h6.8l6 10.4-3.4 5.9H6l-3.4-5.9Z"/><path d="m8.6 3.8 6 10.4h6.8M15.4 3.8 9.3 14.2 6 20.1"/></svg><span>바로얌 드라이브<br><small>에서 등록하기</small></span></button>
               </div>
               <input type="file" id="yuInput" accept="video/*" hidden>
-              <p class="cm-hint" id="yuFileHint"></p></div>
-            <div class="iu-f"><label for="yuTitle">제목 <em id="yuTitleCount"></em></label>
-              <input class="ui-field block" id="yuTitle" maxlength="100" autocomplete="off" placeholder="영상 제목 (100자까지)"></div>
+              <p class="cm-hint" id="yuFileHint"></p>
+              <!-- 모양 · 영상 가로세로로 저절로 정하고 바꿀 수 있다 · 바로얌 AI 가 이 모양에 맞춰 설명·제목을 쓴다 -->
+              <div class="ui-chips" id="yuShape" hidden><button type="button" class="ui-chip" data-v="mobile" aria-pressed="true">모바일형 · 세로 쇼츠</button><button type="button" class="ui-chip" data-v="pc" aria-pressed="false">PC형 · 가로 영상</button></div></div>
+            <!-- 바로얌 AI · 영상을 넣으면 장면을 대본 서비스(content_writer.js kind:'yt' step:'desc')에 보내 설명 후보 3개 → 설명을 고르면 그 설명과 모양에 맞는 제목 3개(step:'title') -->
             <div class="iu-f"><label for="yuDesc">설명 <em id="yuDescCount"></em></label>
-              <textarea class="ui-field block cm-ta" id="yuDesc" rows="5" maxlength="5000" placeholder="설명 · 해시태그(#쇼츠 등)도 여기에"></textarea></div>
+              <textarea class="ui-field block cm-ta" id="yuDesc" rows="5" maxlength="5000" placeholder="설명 · 해시태그(#쇼츠 등)도 여기에"></textarea>
+              <div class="iu-ai" id="yuAiDesc" hidden></div></div>
+            <div class="iu-f"><label for="yuTitle">제목 <em id="yuTitleCount"></em></label>
+              <input class="ui-field block" id="yuTitle" maxlength="100" autocomplete="off" placeholder="영상 제목 (100자까지)">
+              <div class="iu-ai" id="yuAiTitle" hidden></div></div>
             <div class="iu-f"><label for="yuTags">태그 <em>쉼표로 나눠요</em></label>
               <input class="ui-field block" id="yuTags" maxlength="500" autocomplete="off" placeholder="예: 간편식, 쫀득란빵, 계란빵"></div>
             <div class="iu-f"><label>카테고리</label><button type="button" class="ui-field block" id="yuCat"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
@@ -18396,7 +18407,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
    이 창이 YouTube Data API(videos.insert · 이어 올리기)로 바로 올린다 · 서버(VPS)를 거치지 않으므로 올리는 동안 창을 닫으면 멈춘다 ·
    권한: 올릴 때 구글 고르기 창에서 그 채널(브랜드 계정 포함)을 골라 youtube.upload 를 받는다 · 채널마다 1시간 이 창 메모리에만 둔다 ·
    고른 계정의 채널이 고른 채널과 다르면 올리지 않는다 · 예약 = 비공개로 올리고 status.publishAt 에 유튜브가 공개로 바꾼다 ·
-   기록: app_settings content_uploads_v1 = {items:{id:{id,ch,chName,title,file,size,privacy,publishAt,videoId,state:'done'|'failed',error,at,by,del}}} · saveMerged 로 그 줄만 */
+   기록: app_settings content_uploads_v1 = {items:{id:{id,ch,chName,title,file,size,privacy,publishAt,videoId,state:'done'|'failed',error,at,by,del}}} · saveMerged 로 그 줄만 ·
+   바로얌 AI: 영상을 넣으면 모양(모바일형·PC형)을 정하고 장면을 보고 설명 3개 → 설명을 고르면 제목 3개 + 태그(아래 "바로얌 AI 제목·설명 추천") */
 (function(){
   const root=document.querySelector('#view-content .yu');
   if(!root) return;
@@ -18419,7 +18431,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   let form=null; form=blank();
   function blank(){
     const t=Date.now()+90*60e3, slot=Math.ceil(t/(30*60e3))*30*60e3;
-    return {ch:form&&form.ch||'',file:null,title:'',desc:'',tags:'',cat:'22',kids:false,when:'now',priv:'public',date:kstDay(slot),time:kstTime(slot)};
+    return {ch:form&&form.ch||'',file:null,shape:'mobile',title:'',desc:'',tags:'',cat:'22',kids:false,when:'now',priv:'public',date:kstDay(slot),time:kstTime(slot)};
   }
   function msg(t,ok){ const m=$('yuMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-ok',!!ok); }
   const chans=()=>window.baroyamYtChannels&&window.baroyamYtChannels.list?window.baroyamYtChannels.list():[];
@@ -18456,6 +18468,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(f){ box.querySelector('.k').textContent=(f.dur?Math.round(f.dur)+'초 · ':'')+mb(f.size)+(f.shorts?' · 쇼츠':''); box.querySelector('.x').hidden=st.busy; }
     $('yuAdd').hidden=$('yuDrive').hidden=!!f;
     $('yuFileHint').textContent=f?(f.name+(f.w?' · '+f.w+'×'+f.h:'')+(f.shorts?' · 쇼츠로 올라가요(세로·3분 이하)':f.w?' · 일반 영상으로 올라가요':'')):'mp4·mov 등 영상 하나 · 세로 영상이고 3분 이하면 쇼츠';
+    $('yuShape').hidden=!f;
+    $('yuShape').querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.v===form.shape)));
     if($('yuTitle').value!==form.title) $('yuTitle').value=form.title;
     if($('yuDesc').value!==form.desc) $('yuDesc').value=form.desc;
     if($('yuTags').value!==form.tags) $('yuTags').value=form.tags;
@@ -18490,8 +18504,158 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       v.onloadedmetadata=()=>{ f.dur=v.duration; f.w=v.videoWidth; f.h=v.videoHeight; f.shorts=!!(f.w&&f.h>=f.w&&f.dur<=180); res(); };
       v.onerror=()=>res(); setTimeout(res,8000);
     });
-    if(form.file===f) paintForm();
+    if(form.file!==f) return;
+    form.shape=f.w&&f.w>f.h?'pc':'mobile';   // 가로면 PC형, 세로·정사각은 모바일형
+    paintForm(); aiDesc();
   }
+
+
+  /* ---------- 바로얌 AI 제목·설명 추천 ----------
+     영상을 넣으면 1.2초 뒤 앞에서부터 다섯 장면(긴 변 768px JPEG)과 파일 이름·모양·채널을 brand-files cmjob/req/<이름>.json(kind:'yt', step:'desc')에 올린다 →
+     대본 서비스(VPS·PC content_writer.js)가 Claude 로 장면을 보고 설명 3개를 cmjob/res 에 적는다 · 설명을 고르면 step:'title' 로 그 설명·모양에 맞는 제목 3개 + 태그 */
+  const AI_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>';
+  const BUCKET='brand-files';
+  const ad={sig:'',state:'',items:[],seen:'',msg:'',t0:0,used:'',open:{},timer:null,poll:null};   // 설명
+  const at={sig:'',state:'',items:[],tags:[],msg:'',t0:0,used:'',poll:null};                       // 제목
+  const b64=blob=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]||''); r.onerror=rej; r.readAsDataURL(blob); });
+  function frame(url,sec){
+    return new Promise((res,rej)=>{
+      const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.preload='auto';
+      const t=setTimeout(()=>rej(new Error('장면을 뜨지 못했습니다')),15000);
+      v.onloadedmetadata=()=>{ v.currentTime=Math.min(Math.max(0,sec),Math.max(0,(v.duration||1)-0.1)); };
+      v.onseeked=()=>{
+        clearTimeout(t);
+        const k=Math.min(1,768/Math.max(v.videoWidth,v.videoHeight)), c=document.createElement('canvas');
+        c.width=Math.round(v.videoWidth*k); c.height=Math.round(v.videoHeight*k);
+        c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+        c.toBlob(b=>b?res(b):rej(new Error('장면을 뜨지 못했습니다')),'image/jpeg',0.78);
+      };
+      v.onerror=()=>{ clearTimeout(t); rej(new Error('영상을 읽지 못했습니다')); };
+      v.src=url;
+    });
+  }
+  async function send(body){
+    const db=window.BAROYAM_DB;
+    if(!db||!db.fileUpload||(db.ensureSession&&!(await db.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 눌러 주세요');
+    const name='yt'+rid()+'.1.'+rid()+'.json';
+    await db.fileUpload(BUCKET,'cmjob/req/'+name,new Blob([JSON.stringify(Object.assign({v:1,kind:'yt',job:'yt-copy',round:1,at:new Date().toISOString(),by:me()},body))],{type:'application/json'}));
+    return name;
+  }
+  // 답을 2.5초마다 본다 · 받으면 done(r), 실패면 fail(글)
+  function wait(o,sig,cur,name,done,fail,busyMsg){
+    clearTimeout(o.poll);
+    o.poll=setTimeout(async()=>{
+      if(cur()!==sig) return;
+      let r=null;
+      try{ const u=await window.BAROYAM_DB.fileUrl(BUCKET,'cmjob/res/'+name,60); const x=await fetch(u,{cache:'no-store'}); r=x.ok?await x.json():null; }catch(e){ r=null; }
+      if(cur()!==sig) return;
+      const sec=(Date.now()-o.t0)/1000;
+      if(r&&r.state==='done'&&r.ok) return done(r);
+      if(r&&r.state==='failed') return fail(r.message||'추천하지 못했어요');
+      if(!r&&sec>60) return fail('추천 서비스가 응답하지 않아요 · 잠시 뒤 다시 추천을 눌러 주세요');
+      if(sec>240) return fail('추천이 너무 오래 걸려 멈췄어요 · 다시 추천을 눌러 주세요');
+      if(r) o.msg=busyMsg;
+      paintAi(); wait(o,sig,cur,name,done,fail,busyMsg);
+    },2500);
+  }
+  const chInfo=()=>{ const c=chans().find(x=>x.id===form.ch)||{}; return {channel:c.name||c.title||'',target:c.target||''}; };
+  function aiDesc(){
+    const f=form.file, sig=f?f.url+'|'+form.shape:'';
+    if(sig===ad.sig) return;
+    ad.sig=sig; ad.items=[]; ad.seen=''; ad.msg=''; ad.used=''; ad.open={};
+    clearTimeout(ad.timer); clearTimeout(ad.poll); aiTitleReset();
+    ad.state=sig?'wait':'';
+    if(sig) ad.timer=setTimeout(()=>askDesc(sig),1200);
+    paintAi();
+  }
+  async function askDesc(sig){
+    if(sig!==ad.sig) return;
+    const f=form.file; ad.state='wait'; ad.msg=''; ad.t0=Date.now(); paintAi();
+    try{
+      const d=f.dur||1, out=[];
+      for(const k of [0.05,0.25,0.45,0.65,0.85]){ try{ out.push(await frame(f.url,d*k)); }catch(e){} }
+      if(sig!==ad.sig) return;
+      if(!out.length) throw new Error('영상 장면을 읽지 못했어요');
+      const images=await Promise.all(out.map(async b=>({type:'image/jpeg',data:await b64(b)})));
+      const name=await send({input:Object.assign({step:'desc',file:f.name,shape:form.shape,dur:Math.round(f.dur||0),w:f.w,h:f.h},chInfo()),images});
+      wait(ad,sig,()=>ad.sig,name,r=>{ ad.state='done'; ad.items=r.descs||[]; ad.seen=r.seen||''; paintAi(); },
+        m=>{ ad.state='failed'; ad.msg=m; paintAi(); },'영상을 보고 설명을 쓰는 중');
+    }catch(e){ if(sig===ad.sig){ ad.state='failed'; ad.msg='추천하지 못했어요 · '+(e&&e.message||e); paintAi(); } }
+  }
+  function aiTitleReset(){ at.sig=''; at.state=''; at.items=[]; at.tags=[]; at.msg=''; at.used=''; clearTimeout(at.poll); }
+  async function askTitle(desc){
+    const sig=rid(); aiTitleReset(); at.sig=sig; at.state='wait'; at.t0=Date.now(); paintAi();
+    try{
+      const f=form.file||{};
+      const name=await send({input:Object.assign({step:'title',file:f.name||'',shape:form.shape,dur:Math.round(f.dur||0),w:f.w,h:f.h,desc,seen:ad.seen},chInfo())});
+      wait(at,sig,()=>at.sig,name,r=>{ at.state='done'; at.items=r.titles||[]; at.tags=r.tags||[]; paintAi(); },
+        m=>{ at.state='failed'; at.msg=m; paintAi(); },'설명에 맞는 제목을 쓰는 중');
+    }catch(e){ if(sig===at.sig){ at.state='failed'; at.msg='추천하지 못했어요 · '+(e&&e.message||e); paintAi(); } }
+  }
+  const shapeKo=()=>form.shape==='pc'?'PC형':'모바일형';
+  function aiHead(o,title,again){
+    return '<div class="iu-ai-head">'+AI_ICON+title+
+      (o.state==='wait'?' <small>· '+esc(o.msg||'살펴보는 중')+(o.t0?' '+Math.round((Date.now()-o.t0)/1000)+'초':'')+'</small>':'')+
+      ((o.state==='done'||o.state==='failed')&&again?'<button type="button" class="ui-btn ghost sm" data-ai="'+again+'">다시 추천</button>':'')+'</div>';
+  }
+  const WAIT='<div class="iu-ai-wait"><i></i><i></i><i></i></div>';
+  function paintAi(){
+    const bd=$('yuAiDesc'), bt=$('yuAiTitle');
+    bd.hidden=!ad.sig;
+    if(ad.sig){
+      let body='';
+      if(ad.state==='wait') body=WAIT;
+      else if(ad.state==='failed') body='<p class="iu-ai-msg">'+esc(ad.msg)+'</p>';
+      else if(ad.state==='done') body=(ad.seen?'<p class="iu-ai-seen">본 것 · '+esc(ad.seen)+'</p>':'')+ad.items.map(c=>'<div class="iu-ai-c'+(ad.used===c.key?' is-on':'')+(ad.open[c.key]?' is-open':'')+'" data-k="'+esc(c.key)+'">'+
+        (c.angle?'<span class="ag">'+esc(c.angle)+'</span>':'')+'<p>'+esc(c.text)+'</p>'+
+        '<div class="acts"><button type="button" class="ui-btn soft sm" data-ai="use-d">'+(ad.used===c.key?'쓰는 중':'이 설명 쓰기')+'</button>'+
+        (c.text.split('\n').length>6||c.text.length>220?'<button type="button" class="ui-btn ghost sm" data-ai="more">'+(ad.open[c.key]?'접기':'전체 보기')+'</button>':'')+
+        '<button type="button" class="ui-btn ghost sm" data-ai="copy">복사</button></div></div>').join('')+
+        (ad.used?'':'<p class="iu-ai-msg">설명을 고르면 '+shapeKo()+'에 맞는 제목 3개를 추천해요</p>');
+      bd.innerHTML=aiHead(ad,'바로얌 AI 추천 설명 <small>· '+shapeKo()+'</small>','again-d')+body;
+    }else bd.innerHTML='';
+    bt.hidden=!at.sig;
+    if(at.sig){
+      let body='';
+      if(at.state==='wait') body=WAIT;
+      else if(at.state==='failed') body='<p class="iu-ai-msg">'+esc(at.msg)+'</p>';
+      else if(at.state==='done') body=at.items.map(c=>'<div class="iu-ai-c'+(at.used===c.key?' is-on':'')+'" data-k="'+esc(c.key)+'">'+
+        (c.hook?'<span class="ag">'+esc(c.hook)+'</span>':'')+'<p class="tt">'+esc(c.text)+'</p>'+(c.why?'<p class="why">'+esc(c.why)+'</p>':'')+
+        '<div class="acts"><button type="button" class="ui-btn soft sm" data-ai="use-t">'+(at.used===c.key?'쓰는 중':'이 제목 쓰기')+'</button>'+
+        '<button type="button" class="ui-btn ghost sm" data-ai="copy">복사</button></div></div>').join('')+
+        (at.tags.length?'<div class="iu-ai-tags">'+at.tags.map(t=>'<span>'+esc(t)+'</span>').join('')+'<button type="button" class="ui-btn ghost sm" data-ai="tags">태그 칸에 넣기</button></div>':'');
+      bt.innerHTML=aiHead(at,'바로얌 AI 추천 제목 <small>· '+shapeKo()+' · 후킹</small>','again-t')+body;
+    }else bt.innerHTML='';
+  }
+  setInterval(()=>{ if(ad.state==='wait'||at.state==='wait') paintAi(); },1000);   // 기다린 초만 다시 쓴다
+  async function aiClick(e){
+    const b=e.target.closest('[data-ai]'); if(!b||st.busy) return;
+    const a=b.dataset.ai;
+    if(a==='again-d'){ ad.sig=''; aiDesc(); return; }
+    if(a==='again-t'){ const d=ad.items.find(x=>x.key===ad.used); askTitle(d?d.text:form.desc); return; }
+    if(a==='tags'){ form.tags=at.tags.join(', ').slice(0,500); paintForm(); return; }
+    const box=b.closest('[data-k]'), k=box&&box.dataset.k;
+    const isT=!!b.closest('#yuAiTitle'), c=(isT?at.items:ad.items).find(x=>x.key===k); if(!c) return;
+    if(a==='use-d'){
+      if(form.desc.trim()&&form.desc!==c.text&&!ad.used){
+        const ok=await (window.baroyamAsk?window.baroyamAsk('적어 둔 설명을 바꿀까요?','지금 설명 칸의 글이 추천 설명으로 바뀝니다.','바꾸기'):Promise.resolve(confirm('적어 둔 설명을 바꿀까요?')));
+        if(!ok) return;
+      }
+      form.desc=c.text.slice(0,5000); ad.used=k; paintForm(); paintAi(); askTitle(c.text); return;
+    }
+    if(a==='use-t'){ form.title=c.text.slice(0,100); at.used=k; paintForm(); paintAi(); return; }
+    if(a==='more'){ ad.open[k]=!ad.open[k]; paintAi(); return; }
+    if(a==='copy'){ try{ await navigator.clipboard.writeText(c.text); }catch(err){} b.textContent='복사됨'; setTimeout(()=>{ b.textContent='복사'; },1200); }
+  }
+  $('yuAiDesc').addEventListener('click',aiClick);
+  $('yuAiTitle').addEventListener('click',aiClick);
+  $('yuShape').addEventListener('click',e=>{
+    const c=e.target.closest('.ui-chip'); if(!c||st.busy||c.dataset.v===form.shape) return;
+    form.shape=c.dataset.v; paintForm();
+    // 설명을 이미 골랐으면 제목만 그 모양으로 다시 · 아니면 설명부터 다시
+    if(ad.used){ const d=ad.items.find(x=>x.key===ad.used); askTitle(d?d.text:form.desc); paintAi(); }
+    else aiDesc();
+  });
 
   /* ---------- 권한 · 누른 순간에 구글 창을 열어야 막히지 않는다 ---------- */
   function token(ch){
@@ -18579,7 +18743,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       await save(id,Object.assign(row,{state:'done',videoId:v.id,done:new Date().toISOString()}));
       msg(publishAt?'올렸어요 · '+fmt(publishAt)+'에 공개돼요':'올렸어요 · 유튜브가 처리하는 동안 몇 분은 화질이 낮게 보일 수 있어요',true);
       try{ URL.revokeObjectURL(f.url); }catch(e){}
-      form=blank(); st.tab=publishAt?'wait':'done'; if(tabs) tabs.set(st.tab);
+      form=blank(); aiDesc(); st.tab=publishAt?'wait':'done'; if(tabs) tabs.set(st.tab);
     })().catch(async e=>{
       const m=e&&e.message||String(e);
       if(/권한이 끝났/.test(m)) delete toks[ch.id];
@@ -18625,8 +18789,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   [['yuTitle','title'],['yuDesc','desc'],['yuTags','tags']].forEach(([id,k])=>$(id).addEventListener('input',()=>{ form[k]=$(id).value; paintForm(); }));
   $('yuAdd').addEventListener('click',()=>$('yuInput').click());
   $('yuInput').addEventListener('change',()=>{ setFile($('yuInput').files[0]); $('yuInput').value=''; });
-  $('yuFiles').addEventListener('click',e=>{ if(!e.target.closest('[data-x]')||st.busy) return; try{ URL.revokeObjectURL(form.file.url); }catch(err){} form.file=null; paintForm(); });
-  $('yuReset').addEventListener('click',()=>{ if(form.file) try{ URL.revokeObjectURL(form.file.url); }catch(e){} form=blank(); msg(''); paintForm(); });
+  $('yuFiles').addEventListener('click',e=>{ if(!e.target.closest('[data-x]')||st.busy) return; try{ URL.revokeObjectURL(form.file.url); }catch(err){} form.file=null; paintForm(); aiDesc(); });
+  $('yuReset').addEventListener('click',()=>{ if(form.file) try{ URL.revokeObjectURL(form.file.url); }catch(e){} form=blank(); msg(''); paintForm(); aiDesc(); });
   $('yuGo').addEventListener('click',go);
   $('yuRows').addEventListener('click',e=>{
     const b=e.target.closest('[data-del]'); if(!b) return;
