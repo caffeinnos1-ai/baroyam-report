@@ -2472,6 +2472,26 @@ window.BAROYAM_FONT=(function(){
   .iu-add b{font-size:20px;font-weight:400;color:var(--btn)}
   .iu-add:hover{border-color:var(--btn);color:var(--ink)}
   .iu-add[hidden]{display:none}
+  /* 바로얌 AI 추천 캡션 · 파일을 넣으면 캡션 칸 아래에 저절로 뜬다 */
+  .iu-ai{border-radius:14px;padding:12px;background:color-mix(in srgb,var(--btn-soft) 70%,var(--paper));display:flex;flex-direction:column;gap:10px}
+  .iu-ai[hidden]{display:none}
+  .iu-ai-head{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--btn-soft-ink)}
+  .iu-ai-head svg{width:15px;height:15px;flex:none}
+  .iu-ai-head small{font-weight:400;color:var(--mute);font-size:11.5px}
+  .iu-ai-head .ui-btn{margin-left:auto}
+  .iu-ai-seen{margin:0;font-size:11.5px;line-height:1.5;color:var(--mute)}
+  .iu-ai-wait{display:flex;flex-direction:column;gap:7px}
+  .iu-ai-wait i{display:block;height:10px;border-radius:99px;background:linear-gradient(90deg,var(--line) 0%,var(--paper) 50%,var(--line) 100%);background-size:200% 100%;animation:iuAiShim 1.4s linear infinite}
+  .iu-ai-wait i:nth-child(2){width:82%} .iu-ai-wait i:nth-child(3){width:64%}
+  @keyframes iuAiShim{from{background-position:200% 0}to{background-position:0 0}}
+  @media (prefers-reduced-motion:reduce){ .iu-ai-wait i{animation:none} }
+  .iu-ai-c{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  .iu-ai-c.is-on{border-color:var(--btn)}
+  .iu-ai-c .ag{align-self:flex-start;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;color:var(--btn-soft-ink);background:var(--btn-soft)}
+  .iu-ai-c p{margin:0;font-size:12.5px;line-height:1.6;color:var(--body);white-space:pre-line;max-height:9.6em;overflow:hidden;position:relative}
+  .iu-ai-c.is-open p{max-height:none}
+  .iu-ai-c .acts{display:flex;gap:6px;flex-wrap:wrap}
+  .iu-ai-msg{margin:0;font-size:12px;color:var(--mute)}
   /* 목록 */
   #iuRows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
   .iu-item{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px}
@@ -11769,7 +11789,9 @@ window.BAROYAM_FONT=(function(){
                 <input type="file" id="iuInput" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime" multiple hidden>
                 <p class="cm-hint" id="iuFileHint"></p></div>
               <div class="iu-f" id="iuCapBox"><label for="iuCaption">캡션 <em id="iuCapCount"></em></label>
-                <textarea class="ui-field block cm-ta" id="iuCaption" rows="6" maxlength="2200" placeholder="게시물 글 · 해시태그는 30개까지"></textarea></div>
+                <textarea class="ui-field block cm-ta" id="iuCaption" rows="6" maxlength="2200" placeholder="게시물 글 · 해시태그는 30개까지"></textarea>
+                <!-- 바로얌 AI 추천 캡션 · 파일을 넣으면 사진·영상 장면을 대본 서비스(content_writer.js kind:'caption')에 보내 캡션 후보를 받아 여기에 띄운다 -->
+                <div class="iu-ai" id="iuAi" hidden></div></div>
               <div class="iu-f" id="iuFeedBox"><label class="cm-check" style="margin:0"><input type="checkbox" id="iuShareFeed" checked> 피드에도 보이기(릴스)</label></div>
               <div class="iu-f"><label>언제 올릴까요</label>
                 <div class="ui-chips" id="iuWhen"><button type="button" class="ui-chip" data-v="later" aria-pressed="true">예약</button><button type="button" class="ui-chip" data-v="now" aria-pressed="false">지금 올리기</button></div>
@@ -19324,6 +19346,115 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }
     paintForm();
   }
+
+  /* ---------- 바로얌 AI 추천 캡션 ----------
+     파일이 바뀌면(1.2초 기다렸다가) 사진은 긴 변 768px JPEG, 영상은 앞에서부터 네 장면을 떠서 파일 이름과 함께
+     brand-files 의 cmjob/req/<이름>.json(kind:'caption')에 올린다 → 대본 서비스(VPS·PC content_writer.js)가 Claude 로
+     사진을 보고 브랜드 소구점·반응 좋았던 지난 캡션을 참고해 cmjob/res/<같은 이름> 에 캡션 후보를 적는다 · 화면은 2.5초마다 확인 */
+  const ai={sig:'',state:'',caps:[],seen:'',msg:'',name:'',t0:0,used:'',open:{},timer:null,poll:null};
+  const AI_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>';
+  function aiSig(){ return st.edit||form.type==='story'||!form.files.length?'':form.files.map(f=>f.id).join(','); }
+  function aiSync(){
+    const s=aiSig();
+    if(s===ai.sig) return paintAi();
+    ai.sig=s; ai.caps=[]; ai.seen=''; ai.msg=''; ai.used=''; ai.open={}; ai.name='';
+    clearTimeout(ai.timer); clearTimeout(ai.poll);
+    ai.state=s?'wait':'';
+    if(s) ai.timer=setTimeout(()=>aiAsk(s),1200);
+    paintAi();
+  }
+  // 영상에서 at(초) 장면을 JPEG 로
+  function videoFrame(url,at){
+    return new Promise((res,rej)=>{
+      const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.preload='auto';
+      const t=setTimeout(()=>rej(new Error('장면을 뜨지 못했습니다')),15000);
+      v.onloadedmetadata=()=>{ v.currentTime=Math.min(Math.max(0,at),Math.max(0,(v.duration||1)-0.1)); };
+      v.onseeked=async()=>{ clearTimeout(t); try{ res(await toJpeg(v,v.videoWidth,v.videoHeight,768,0.78)); }catch(e){ rej(e); } };
+      v.onerror=()=>{ clearTimeout(t); rej(new Error('영상을 읽지 못했습니다')); };
+      v.src=url;
+    });
+  }
+  const b64=blob=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]||''); r.onerror=rej; r.readAsDataURL(blob); });
+  async function aiFrames(){
+    const out=[], fs=form.files.slice(0,10), one=fs.length===1;
+    for(const f of fs){
+      if(out.length>=6) break;
+      if(f.kind==='image'&&f.img) out.push(await toJpeg(f.img,f.w,f.h,768,0.78));
+      else if(f.kind==='video'&&f.url){
+        const d=f.dur||1, at=one?[0.12,0.38,0.62,0.88].map(k=>d*k):[d*0.4];
+        for(const a of at){ if(out.length>=6) break; try{ out.push(await videoFrame(f.url,a)); }catch(e){} }
+      }
+    }
+    return Promise.all(out.filter(Boolean).map(async b=>({type:'image/jpeg',data:await b64(b)})));
+  }
+  async function aiAsk(sig){
+    if(sig!==ai.sig) return;
+    ai.state='wait'; ai.msg=''; ai.t0=Date.now(); paintAi();
+    try{
+      const db=DB();
+      if(!db||!db.fileUpload||(db.ensureSession&&!(await db.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 눌러 주세요');
+      const images=await aiFrames();
+      if(sig!==ai.sig) return;
+      if(!images.length) throw new Error('사진·영상 장면을 읽지 못했어요');
+      const name='cap'+rid()+'.1.'+rid()+'.json';
+      const body={v:1,kind:'caption',job:'insta-caption',round:1,at:new Date().toISOString(),by:me(),
+        input:{type:form.type,count:3,files:form.files.map(f=>({name:f.name,kind:f.kind,dur:f.dur?Math.round(f.dur):0}))},images};
+      await db.fileUpload(BUCKET,'cmjob/req/'+name,new Blob([JSON.stringify(body)],{type:'application/json'}));
+      ai.name=name; aiPoll(sig);
+    }catch(e){ if(sig===ai.sig){ ai.state='failed'; ai.msg='추천하지 못했어요 · '+(e&&e.message||e); paintAi(); } }
+  }
+  function aiPoll(sig){
+    clearTimeout(ai.poll);
+    ai.poll=setTimeout(async()=>{
+      if(sig!==ai.sig) return;
+      let r=null;
+      try{ const u=await DB().fileUrl(BUCKET,'cmjob/res/'+ai.name,60); const x=await fetch(u,{cache:'no-store'}); r=x.ok?await x.json():null; }catch(e){ r=null; }
+      if(sig!==ai.sig) return;
+      const sec=(Date.now()-ai.t0)/1000;
+      if(r&&r.state==='done'&&r.ok){ ai.state='done'; ai.caps=r.captions||[]; ai.seen=r.seen||''; paintAi(); return; }
+      if(r&&r.state==='failed'){ ai.state='failed'; ai.msg=r.message||'추천하지 못했어요'; paintAi(); return; }
+      if(!r&&sec>60){ ai.state='failed'; ai.msg='추천 서비스가 응답하지 않아요 · 잠시 뒤 다시 추천을 눌러 주세요'; paintAi(); return; }
+      if(sec>240){ ai.state='failed'; ai.msg='추천이 너무 오래 걸려 멈췄어요 · 다시 추천을 눌러 주세요'; paintAi(); return; }
+      if(r) ai.msg='사진을 보고 캡션을 쓰는 중';
+      paintAi(); aiPoll(sig);
+    },2500);
+  }
+  function paintAi(){
+    const box=$('iuAi'); if(!box) return;
+    box.hidden=!ai.sig;
+    if(!ai.sig){ box.innerHTML=''; return; }
+    const head='<div class="iu-ai-head">'+AI_ICON+'바로얌 AI 추천 캡션'+
+      (ai.state==='wait'?' <small>· '+esc(ai.msg||'파일을 살펴보는 중')+(ai.t0?' '+Math.round((Date.now()-ai.t0)/1000)+'초':'')+'</small>':'')+
+      (ai.state==='done'||ai.state==='failed'?'<button type="button" class="ui-btn ghost sm" data-ai="again">다시 추천</button>':'')+'</div>';
+    let body='';
+    if(ai.state==='wait') body='<div class="iu-ai-wait"><i></i><i></i><i></i></div>';
+    else if(ai.state==='failed') body='<p class="iu-ai-msg">'+esc(ai.msg)+'</p>';
+    else if(ai.state==='done'){
+      body=(ai.seen?'<p class="iu-ai-seen">본 것 · '+esc(ai.seen)+'</p>':'')+ai.caps.map(c=>'<div class="iu-ai-c'+(ai.used===c.key?' is-on':'')+(ai.open[c.key]?' is-open':'')+'" data-k="'+esc(c.key)+'">'+
+        (c.angle?'<span class="ag">'+esc(c.angle)+'</span>':'')+'<p>'+esc(c.text)+'</p>'+
+        '<div class="acts"><button type="button" class="ui-btn soft sm" data-ai="use">'+(ai.used===c.key?'쓰는 중':'이 캡션 쓰기')+'</button>'+
+        (c.text.split('\n').length>6||c.text.length>220?'<button type="button" class="ui-btn ghost sm" data-ai="more">'+(ai.open[c.key]?'접기':'전체 보기')+'</button>':'')+
+        '<button type="button" class="ui-btn ghost sm" data-ai="copy">복사</button></div></div>').join('');
+    }
+    box.innerHTML=head+body;
+  }
+  $('iuAi').addEventListener('click',async e=>{
+    const b=e.target.closest('[data-ai]'); if(!b) return;
+    if(b.dataset.ai==='again'){ clearTimeout(ai.poll); ai.caps=[]; ai.used=''; ai.open={}; aiAsk(ai.sig); return; }
+    const k=b.closest('[data-k]')&&b.closest('[data-k]').dataset.k, c=ai.caps.find(x=>x.key===k); if(!c) return;
+    if(b.dataset.ai==='use'){
+      if(form.caption.trim()&&form.caption!==c.text&&!ai.used){
+        const ok=await (window.baroyamAsk?window.baroyamAsk('적어 둔 캡션을 바꿀까요?','지금 캡션 칸의 글이 추천 캡션으로 바뀝니다.','바꾸기'):Promise.resolve(confirm('적어 둔 캡션을 바꿀까요?')));
+        if(!ok) return;
+      }
+      form.caption=c.text.slice(0,2200); ai.used=k; paintForm(); return;
+    }
+    if(b.dataset.ai==='more'){ ai.open[k]=!ai.open[k]; paintAi(); return; }
+    if(b.dataset.ai==='copy'){
+      try{ await navigator.clipboard.writeText(c.text); }catch(err){}
+      b.textContent='복사됨'; setTimeout(()=>{ b.textContent='복사'; },1200);
+    }
+  });
   function problems(){
     const p=[], fs=form.files, t=form.type;
     const ratioOk=f=>f.kind!=='image'||(f.w/f.h>=0.79&&f.w/f.h<=1.92);
@@ -19370,6 +19501,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('iuTime').innerHTML='<span class="t">'+esc((TIMES.find(x=>x.value===form.time)||{label:form.time}).label)+'</span>';
     $('iuWhenHint').textContent=form.when==='now'?'누르면 2분 안에 인스타그램에 올라갑니다':'이 시각에 서버가 올리고 일정 캘린더에도 표시돼요';
     $('iuGo').textContent=ed?'예약 고치기':form.when==='now'?'지금 올리기':'예약하기';
+    aiSync();
     const p=problems();
     $('iuGo').disabled=st.busy||!!p.length;
     if(st.busy) return;
