@@ -3434,15 +3434,16 @@ window.BAROYAM_FONT=(function(){
   .cm-approve{display:grid;grid-template-columns:330px minmax(0,1fr) 320px;gap:16px;align-items:start}
   .cm-approve[hidden]{display:none}
   .cm-rv-bar{margin:22px 0 14px}
+  #contentTabs .hero-view-tab[hidden]{display:none}   /* 채널 관리는 성과 화면 단추로만 연다 */
   /* 유튜브 성과 · 인스타 성과(ip-*)를 그대로 쓰고 다른 점만 */
   .yp{margin-top:22px}
   .yp[hidden]{display:none}
   .yp-chs .ui-chip{display:inline-flex;align-items:center;gap:7px}
   .yp-chs .ui-chip img,.yp-chs .ui-chip .av{width:20px;height:20px;border-radius:99px;object-fit:cover;flex:none;background:var(--chip-flat);display:inline-grid;place-items:center;font-size:10px}
-  .yp-acct{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .yp-acct .ip-avatar{background:linear-gradient(45deg,var(--neg),color-mix(in srgb,var(--neg) 55%,var(--paper)))}
   .yp-acct .ip-avatar img{width:100%;height:100%;border-radius:99px;object-fit:cover;display:block;background:var(--paper)}
-  .yp-acct .when{margin-left:auto;font-size:12px;color:var(--mute);text-align:right}
+  .yp-acct .ip-who small{white-space:nowrap}
+  .yp-empty:not([hidden]){display:block}
   .yp-chart .line{stroke:var(--neg)}
   .yp-chart .area{fill:url(#ypFill)}
   .yp-chart .net rect{fill:color-mix(in srgb,var(--pos) 40%,transparent)}
@@ -3455,6 +3456,7 @@ window.BAROYAM_FONT=(function(){
   .yp .yp-ttl{margin:0;font-size:12.5px;line-height:1.45;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.9em}
   .yp .yp-meta{font-size:11px;color:var(--mute)}
   .yp-empty{padding:40px 10px;text-align:center;font-size:13px;color:var(--mute);line-height:1.7}
+  .yp-empty[hidden]{display:none}
   .cm-rv-bar[hidden]{display:none}
   .yu .iu-files{display:block;width:100%}
   .yu .iu-files:empty{display:none}
@@ -10926,7 +10928,9 @@ window.BAROYAM_FONT=(function(){
             <div class="ptag">유튜브콘텐츠</div>
             <div class="ptitle" id="contentViewTitle">새 영상 만들기</div>
             <div class="psub" id="contentViewSub">기획을 적고 대본 후보를 받아 고릅니다.</div>
-            <!-- 배너 오른쪽 · 인스타콘텐츠 계정 카드와 같은 자리 · 사람이 할 일 숫자(누르면 그 화면으로) -->
+            <!-- 배너 오른쪽 · 성과 탭은 고른 채널 카드(이름·구독자·영상·총 조회수 · 인스타 계정 카드와 같은 자리) -->
+            <div class="ip-acct ip-hero-acct yp-acct" id="ypAcct" hidden></div>
+            <!-- 배너 오른쪽 · 새 영상 만들기 탭에서만 · 사람이 할 일 숫자(누르면 그 화면으로) -->
             <div class="ip-acct ip-hero-acct cm-hero" id="cmHero">
               <div class="ip-avatar cm-hero-av"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3.5"/><path d="M10.2 9.4v5.2l4.4-2.6Z" fill="currentColor"/></svg></span></div>
               <div class="ip-who"><b>유튜브 쇼츠</b><small id="cmHeroCh">채널 0개</small></div>
@@ -11220,7 +11224,7 @@ window.BAROYAM_FONT=(function(){
             <div class="ip-acct-end"><div class="ui-tabs" id="ypRange"><button class="ui-tab" data-value="7">7일</button><button class="ui-tab" data-value="28">28일</button><button class="ui-tab" data-value="90">90일</button></div>
               <button type="button" class="ui-btn soft sm" id="ypFetch">새로 가져오기</button>
               <button type="button" class="ui-btn ghost sm" id="ypManage">채널 관리</button></div></div>
-          <div class="ip-card yp-acct" id="ypAcct"></div>
+          <div class="ip-card yp-empty" id="ypEmpty" hidden></div>
           <p class="cm-msg" id="ypMsg" hidden></p>
           <div class="ip-kpis" id="ypKpis"></div>
           <div class="ip-row">
@@ -18242,6 +18246,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       p.hidden=p.dataset.contentPane!==(has?k:'other')||(!!p.dataset.reviewSub&&p.dataset.reviewSub!==rv);
     });
     if(rvTabs) rvTabs.querySelectorAll('.ui-tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.value===rv)));
+    const ch=document.getElementById('cmHero'), ya=document.getElementById('ypAcct');
+    if(ch) ch.hidden=k!=='make';                                   // 대본 고르기·승인 대기 숫자는 새 영상 만들기에서만
+    if(ya) ya.hidden=k!=='perf'||!ya.innerHTML;                    // 성과에서는 고른 채널 카드
     document.dispatchEvent(new CustomEvent('baroyam:content-pane',{detail:k}));
   }
   function pickReview(v){
@@ -18599,15 +18606,16 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function paint(){
     pickDefault(); paintBar();
     const D=st.data[cur], cs=chans(), c=cs.find(x=>x.id===cur);
-    const empty=t=>{ $('ypAcct').innerHTML='<div class="yp-empty" style="width:100%">'+t+'</div>'; ['ypKpis','ypTypes','ypVids','ypDailyAx'].forEach(id=>$(id).innerHTML=''); $('ypDaily').innerHTML=''; $('ypTypeNote').textContent=''; $('ypMore').hidden=true; };
+    const empty=t=>{ $('ypAcct').innerHTML=''; $('ypAcct').hidden=true; $('ypEmpty').innerHTML=t; $('ypEmpty').hidden=false; ['ypKpis','ypTypes','ypVids','ypDailyAx'].forEach(id=>$(id).innerHTML=''); $('ypDaily').innerHTML=''; $('ypTypeNote').textContent=''; $('ypMore').hidden=true; };
+    $('ypEmpty').hidden=true;
     if(!cs.length) return empty('연결한 유튜브 채널이 없어요<br><b>채널 관리</b>에서 + 유튜브 채널 연결로 채널을 먼저 연결해 주세요');
     if(!D) return empty(st.loaded?'「'+esc(c.name||c.title)+'」 성과를 아직 가져오지 않았어요<br>위 <b>새로 가져오기</b>를 누르면 구글 창에서 이 채널을 골라 받아요':'성과를 읽는 중…');
     const ch=D.ch||{};
     const av=ch.thumb||c.thumb||'';
     $('ypAcct').innerHTML='<div class="ip-avatar">'+(av?'<img src="'+esc(av)+'" alt="" referrerpolicy="no-referrer" onerror="this.remove()">':'')+'</div>'+
-      '<div class="ip-who"><b><a href="https://www.youtube.com/channel/'+encodeURIComponent(cur)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(ch.title||c.title)+'</a></b><small>'+esc(ch.handle||'')+'</small></div>'+
-      '<div class="ip-nums"><div><b>'+(ch.subs==null?'비공개':num(ch.subs))+'</b><small>구독자</small></div><div><b>'+num(ch.videos)+'</b><small>영상</small></div><div><b>'+num(ch.views)+'</b><small>총 조회수</small></div></div>'+
-      '<div class="when">'+esc(ago(D.at))+' 가져옴'+(D.by?' · '+esc(D.by):'')+'</div>';
+      '<div class="ip-who"><b><a href="https://www.youtube.com/channel/'+encodeURIComponent(cur)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(ch.title||c.title)+'</a></b><small>'+esc([ch.handle,ago(D.at)+' 가져옴'+(D.by?' · '+D.by:'')].filter(Boolean).join(' · '))+'</small></div>'+
+      '<div class="ip-nums"><div><b>'+(ch.subs==null?'비공개':num(ch.subs))+'</b><small>구독자</small></div><div><b>'+num(ch.videos)+'</b><small>영상</small></div><div><b>'+num(ch.views)+'</b><small>총 조회수</small></div></div>';
+    $('ypAcct').hidden=root.hidden;
     // 하루 값 · 마지막 range 일과 그 앞 range 일
     const all=(D.daily||[]).slice().sort((a,b)=>a.d.localeCompare(b.d));
     const curD=all.slice(-range), prevD=all.slice(-range*2,-range);
