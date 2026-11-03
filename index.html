@@ -18796,7 +18796,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
    파일·캡션·시각을 정해 예약하면 파일은 brand-files 버킷 insta/up/<id>/ 에 올리고, app_settings 한 칸
    insta_upload_v1 = {posts:{id:{id,type,files:[{path,kind,w,h,size}],thumb,caption,shareFeed,when(ISO),state,error,mediaId,permalink,schedId,at,by,del}}} 에 적는다 ·
    VPS(caffeinnos-automation/insta_publish.js · 2분마다)가 시각이 된 scheduled 를 publishing 으로 잡아 인스타그램 API 로 올리고 done/failed 를 적는다 ·
-   예약하면 일정 캘린더(insta_schedule_v1)에도 "업로드 준비"로 한 줄 만들고(schedId), 올라가면 VPS 가 "업로드 완료"로 바꾼다 ·
+   예약하면 일정 캘린더(insta_schedule_v1)에도 "예약"(ready)으로 한 줄 만들고(schedId), 올라가면 VPS 가 "업로드 완료"로 바꾼다 ·
    저장은 saveMerged 로 그 게시물 하나만 얹고, 취소·지우기는 del 만 단다 */
 (function(){
   const root=document.querySelector('#view-insta .iu');
@@ -21367,7 +21367,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const named=(g,list)=>list.map(t=>Object.defineProperty(t,'l',{get(){ return lab(g,t.k,t.d); },enumerable:true}));
   /* 형식 · 판매처 색 변수를 빌려 다크 모드에서도 맞는 색 */
   const TYPES=named('type',[{k:'feed',d:'피드',c:'var(--self)'},{k:'reels',d:'릴스',c:'var(--talk)'},{k:'carousel',d:'캐러셀',c:'var(--coupang)'},{k:'story',d:'스토리',c:'var(--naver)'}]);
-  const STATES=named('state',[{k:'plan',d:'기획'},{k:'make',d:'제작 중'},{k:'ready',d:'업로드 준비'},{k:'done',d:'업로드 완료'}]);
+  /* 상태는 기획 · 예약 · 업로드 완료 셋만(11-03 사용자 요청 · '제작 중'(make)은 뺐고 그 값이 남은 일정은 기획으로 봄 · 예약의 열쇠는 예전 '업로드 준비'의 ready 그대로) */
+  const STATES=named('state',[{k:'plan',d:'기획'},{k:'ready',d:'예약'},{k:'done',d:'업로드 완료'}]);
   const FILTERS=named('filter',[{k:'todo',d:'예약'},{k:'done',d:'업로드 완료'},{k:'late',d:'지난 예정'}]);
   const GROUPS=named('group',[{k:'type',d:'형식'},{k:'state',d:'상태'}]);
   const typeOf=k=>TYPES.find(t=>t.k===k)||TYPES[0];
@@ -21546,7 +21547,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function openDlg(id,preset){
     const p=id&&st.data.posts[id];
     editId=p?id:null;
-    form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:p.state||'plan',memo:p.memo||'',guide:p.guide||'',caption:p.caption||''}
+    form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:stateOf(p.state).k,memo:p.memo||'',guide:p.guide||'',caption:p.caption||''}
           :Object.assign({title:'',date:today(),time:'',type:'feed',state:'plan',memo:'',guide:'',caption:''},preset||{});
     $('igDlgTitle').textContent=p?'업로드 일정 고치기':'새 업로드 일정';
     $('igTitle').value=form.title; $('igMemo').value=form.memo; $('igGuide').value=form.guide; $('igCaption').value=form.caption; capCount();
