@@ -3434,6 +3434,13 @@ window.BAROYAM_FONT=(function(){
   .cm-approve{display:grid;grid-template-columns:330px minmax(0,1fr) 320px;gap:16px;align-items:start}
   .cm-approve[hidden]{display:none}
   .cm-rv-bar{margin:22px 0 14px}
+  .cm-yt-sub{margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line);font-size:13.5px;font-weight:600;color:var(--ink)}
+  .cm-yt-sub em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute);margin-left:6px}
+  .cm-yt-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px}
+  @media (max-width:560px){ .cm-yt-row{grid-template-columns:1fr} }
+  .yu-foot{margin:2px 0 0;padding:8px 10px;border-radius:10px;background:var(--chip-flat);font-size:11.5px;line-height:1.5;color:var(--body);white-space:pre-line}
+  .yu-foot b{font-weight:600;color:var(--ink)}
+  .yu-foot[hidden]{display:none}
   #contentTabs .hero-view-tab[hidden]{display:none}   /* 채널 관리는 성과 화면 단추로만 연다 */
   /* 유튜브 성과 · 인스타 성과(ip-*)를 그대로 쓰고 다른 점만 */
   .yp{margin-top:22px}
@@ -11187,6 +11194,7 @@ window.BAROYAM_FONT=(function(){
             <!-- 바로얌 AI · 영상을 넣으면 장면을 대본 서비스(content_writer.js kind:'yt' step:'desc')에 보내 설명 후보 3개 → 설명을 고르면 그 설명과 모양에 맞는 제목 3개(step:'title') -->
             <div class="iu-f"><label for="yuDesc">설명 <em id="yuDescCount"></em></label>
               <textarea class="ui-field block cm-ta" id="yuDesc" rows="5" maxlength="5000" placeholder="설명 · 해시태그(#쇼츠 등)도 여기에"></textarea>
+              <p class="yu-foot" id="yuFoot" hidden></p>
               <div class="iu-ai" id="yuAiDesc" hidden></div></div>
             <div class="iu-f"><label for="yuTitle">제목 <em id="yuTitleCount"></em></label>
               <input class="ui-field block" id="yuTitle" maxlength="100" autocomplete="off" placeholder="영상 제목 (100자까지)">
@@ -11396,6 +11404,15 @@ window.BAROYAM_FONT=(function(){
                 <div class="cm-field"><label for="cmYtName">보일 이름 <em>새 영상 만들기의 채널 단추에 이 이름이 보여요</em></label><input class="ui-field block" id="cmYtName" maxlength="40" autocomplete="off"></div>
                 <div class="cm-field"><label for="cmYtTarget">타깃 <em>대본을 쓸 때 함께 넘겨요</em></label><input class="ui-field block" id="cmYtTarget" maxlength="60" autocomplete="off" placeholder="예: 직장인 · 주부"></div>
                 <div class="cm-field"><label for="cmYtTimes">업로드 시간 <em>쉼표로 구분</em></label><input class="ui-field block" id="cmYtTimes" maxlength="60" autocomplete="off" placeholder="예: 12:00, 19:00"></div>
+                <!-- 업로드 기본값 · 유튜브 스튜디오의 "업로드 기본 설정"은 API 로 올리면 적용되지 않아 ERP 에 채널마다 따로 둔다(업로드 화면이 채널을 고르면 채움) -->
+                <h4 class="cm-yt-sub">업로드 기본값 <em>업로드 탭에서 이 채널을 고르면 미리 채워져요</em></h4>
+                <div class="cm-field"><label for="cmYtTags">기본 태그 <em>쉼표로 구분 · AI 추천 태그와 합쳐져요</em></label><input class="ui-field block" id="cmYtTags" maxlength="400" autocomplete="off" placeholder="예: 바로얌, 간편식, 냉동식품"></div>
+                <div class="cm-field"><label for="cmYtFoot">설명 끝에 붙일 글 <em>링크·고정 해시태그 등 · 올릴 때 설명 맨 끝에 붙어요</em></label><textarea class="ui-field block cm-ta" id="cmYtFoot" rows="3" maxlength="1500" placeholder="예: 🛒 구매하기 https://baroyam.com&#10;#바로얌 #간편식"></textarea></div>
+                <div class="cm-yt-row">
+                  <div class="cm-field"><label>카테고리</label><button type="button" class="ui-field block" id="cmYtCat"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+                  <div class="cm-field"><label>공개 상태</label><div class="ui-chips" id="cmYtPriv"><button type="button" class="ui-chip" data-v="public">공개</button><button type="button" class="ui-chip" data-v="unlisted">일부 공개</button><button type="button" class="ui-chip" data-v="private">비공개</button></div></div>
+                </div>
+                <div class="cm-field"><label>시청자층</label><div class="ui-chips" id="cmYtKids"><button type="button" class="ui-chip" data-v="no">아동용 아님</button><button type="button" class="ui-chip" data-v="yes">아동용</button></div></div>
               </div>
               <p class="cm-msg" id="cmYtMsg" hidden></p>
             </div>
@@ -18370,9 +18387,22 @@ window.BAROYAM_PJ_CHANNELS=(function(){
 
   /* ---------- 창 ---------- */
   function msg(t,warn){ const m=$('cmYtMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-warn',!!warn); }
+  /* 업로드 기본값 · up = {tags,foot,cat,priv,kids} */
+  const YT_CATS=[{value:'22',label:'인물/블로그'},{value:'26',label:'노하우/스타일'},{value:'24',label:'엔터테인먼트'},{value:'19',label:'여행/이벤트'},{value:'28',label:'과학기술'}];
+  let up={};
+  function paintUp(){
+    $('cmYtCat').querySelector('.t').textContent=(YT_CATS.find(x=>x.value===(up.cat||'22'))||YT_CATS[0]).label;
+    $('cmYtPriv').querySelectorAll('.ui-chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===(up.priv||'public'))));
+    $('cmYtKids').querySelectorAll('.ui-chip').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.v==='yes')===!!up.kids)));
+  }
   function fill(c){
     $('cmYtName').value=c?(c.name||c.title||''):''; $('cmYtTarget').value=c?(c.target||''):''; $('cmYtTimes').value=c?(c.times||''):'';
+    up=Object.assign({},c&&c.up||{});
+    $('cmYtTags').value=up.tags||''; $('cmYtFoot').value=up.foot||''; paintUp();
   }
+  $('cmYtCat').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('cmYtCat'),YT_CATS,up.cat||'22',v=>{ up.cat=v; paintUp(); }); });
+  $('cmYtPriv').addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(b){ up.priv=b.dataset.v; paintUp(); } });
+  $('cmYtKids').addEventListener('click',e=>{ const b=e.target.closest('.ui-chip'); if(b){ up.kids=b.dataset.v==='yes'; paintUp(); } });
   function open(id){
     const c=id?st.chs[id]:null;
     st.edit=c&&!c.del?id:null; st.found=null;
@@ -18433,7 +18463,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   async function ok(){
     const id=st.edit||(st.found&&st.found.id); if(!id) return;
-    const patch={name:$('cmYtName').value.trim(),target:$('cmYtTarget').value.trim(),times:$('cmYtTimes').value.trim()};
+    const patch={name:$('cmYtName').value.trim(),target:$('cmYtTarget').value.trim(),times:$('cmYtTimes').value.trim(),
+      up:{tags:$('cmYtTags').value.trim(),foot:$('cmYtFoot').value.trim(),cat:up.cat||'22',priv:up.priv||'public',kids:!!up.kids}};
     if(st.found){
       const f=st.found;
       Object.assign(patch,{id:f.id,title:f.title,handle:f.handle,thumb:f.thumb,subs:f.subs,videos:f.videos,del:false});
@@ -18746,7 +18777,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   let form=null; form=blank();
   function blank(){
     const t=Date.now()+90*60e3, slot=Math.ceil(t/(30*60e3))*30*60e3;
-    return {ch:form&&form.ch||'',file:null,shape:'mobile',title:'',desc:'',tags:'',cat:'22',kids:false,when:'now',priv:'public',date:kstDay(slot),time:kstTime(slot)};
+    return {ch:form&&form.ch||'',defCh:'',file:null,shape:'mobile',title:'',desc:'',tags:'',cat:'22',kids:false,when:'now',priv:'public',date:kstDay(slot),time:kstTime(slot)};
   }
   function msg(t,ok){ const m=$('yuMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-ok',!!ok); }
   const chans=()=>window.baroyamYtChannels&&window.baroyamYtChannels.list?window.baroyamYtChannels.list():[];
@@ -18773,7 +18804,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function paintForm(){
     const cs=chans();
     if(!cs.find(c=>c.id===form.ch)) form.ch=cs.length===1?cs[0].id:'';
+    applyDefaults();
     $('yuChannel').innerHTML=cs.map(c=>'<button type="button" class="ui-chip" data-v="'+esc(c.id)+'" aria-pressed="'+(c.id===form.ch)+'">'+esc(c.name||c.title)+'</button>').join('');
+    const foot=(upOf(form.ch).foot||'').trim();
+    $('yuFoot').hidden=!foot||form.desc.includes(foot);
+    if(foot) $('yuFoot').innerHTML='<b>올릴 때 설명 끝에 붙어요</b> (채널 관리 › 설정)\n'+esc(foot);
     const kept=form.ch&&window.baroyamYtToken&&window.baroyamYtToken.get(form.ch);
     $('yuChHint').textContent=!cs.length?'채널 관리에서 유튜브 채널을 먼저 연결해 주세요':!form.ch?'':kept?'올리기 권한이 있어요 · 구글 창 없이 바로 올라가요':'올릴 때 구글 창에서 이 채널을 한 번 골라 주세요(구글 권한은 1시간 유지 · 그동안 다시 묻지 않아요)';
     const f=form.file;
@@ -18949,7 +18984,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const a=b.dataset.ai;
     if(a==='again-d'){ ad.sig=''; aiDesc(); return; }
     if(a==='again-t'){ const d=ad.items.find(x=>x.key===ad.used); askTitle(d?d.text:form.desc); return; }
-    if(a==='tags'){ form.tags=at.tags.join(', ').slice(0,500); paintForm(); return; }
+    if(a==='tags'){ form.tags=mergeTags(splitTags(upOf(form.ch).tags),at.tags,splitTags(form.tags)); paintForm(); return; }
     const box=b.closest('[data-k]'), k=box&&box.dataset.k;
     const isT=!!b.closest('#yuAiTitle'), c=(isT?at.items:ad.items).find(x=>x.key===k); if(!c) return;
     if(a==='use-d'){
@@ -19046,7 +19081,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }
     const tokP=token(ch.id); tokP.catch(()=>{});   // 첫 await 전에 불러야 구글 창이 막히지 않는다
     const id='yu'+rid();
-    const meta={snippet:{title:form.title,description:form.desc,tags,categoryId:form.cat},
+    const meta={snippet:{title:form.title,description:withFoot(form.desc,ch.id).slice(0,5000),tags,categoryId:form.cat},
       status:Object.assign({privacyStatus:publishAt?'private':form.priv,selfDeclaredMadeForKids:form.kids},publishAt?{publishAt}:{})};
     const row={id,ch:ch.id,chName:ch.name||ch.title,title:form.title,file:f.name,size:f.size,privacy:publishAt?'scheduled':form.priv,publishAt,at:new Date().toISOString(),by:me()};
     st.busy=true; st.live={row,p:0}; msg('구글 창에서 「'+(ch.title||ch.name)+'」 채널을 골라 주세요…',true); paintForm(); paintList();
@@ -19097,7 +19132,21 @@ window.BAROYAM_PJ_CHANNELS=(function(){
 
   /* ---------- 누르기 ---------- */
   if(window.UI&&window.UI.tabs) tabs=window.UI.tabs($('yuTabs'),v=>{ st.tab=v; paintList(); });
-  $('yuChannel').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c||st.busy) return; form.ch=c.dataset.v; paintForm(); });
+  $('yuChannel').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c||st.busy) return; form.ch=c.dataset.v; applyDefaults(); paintForm(); });
+  /* 채널 업로드 기본값(채널 관리 › 설정 · content_channels_v1 의 up) · 유튜브 스튜디오 "업로드 기본 설정"은 API 로 올리면 적용되지 않아 ERP 에 따로 둔다 ·
+     채널을 바꿀 때마다 카테고리·공개 상태·시청자층을 그 채널 값으로, 태그는 지난 채널 기본 태그를 빼고 새 채널 것을 앞에 넣는다 · 설명 끝 글은 올릴 때 붙인다 */
+  const upOf=id=>((chans().find(c=>c.id===id)||{}).up)||{};
+  const splitTags=t=>String(t||'').split(/[,，]/).map(x=>x.trim().replace(/^#/,'')).filter(Boolean);
+  function mergeTags(...lists){ const out=[]; lists.flat().forEach(t=>{ if(t&&!out.some(x=>x.toLowerCase()===t.toLowerCase())) out.push(t); }); return out.join(', ').slice(0,500); }
+  function applyDefaults(){
+    if(form.defCh===form.ch) return;
+    const was=splitTags(upOf(form.defCh).tags), u=upOf(form.ch);
+    form.defCh=form.ch;
+    if(!form.ch) return;
+    form.cat=u.cat||form.cat||'22'; form.priv=u.priv||form.priv||'public'; form.kids=!!u.kids;
+    form.tags=mergeTags(splitTags(u.tags),splitTags(form.tags).filter(t=>!was.includes(t)));
+  }
+  const withFoot=(desc,ch)=>{ const f=(upOf(ch).foot||'').trim(); if(!f||desc.includes(f)) return desc; return (desc.trim()?desc.replace(/\s+$/,'')+'\n\n':'')+f; };
   $('yuKids').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; form.kids=c.dataset.v==='yes'; paintForm(); });
   $('yuWhen').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; form.when=c.dataset.v; paintForm(); });
   $('yuPriv').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; form.priv=c.dataset.v; paintForm(); });
