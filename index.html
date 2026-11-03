@@ -7692,7 +7692,17 @@ window.BAROYAM_FONT=(function(){
   .bs-drv-card .ui-btn.icon:hover{color:var(--neg);background:var(--paper)}
   @media (hover:none){ .bs-drv-card .ui-btn.icon{opacity:1} }
   /* 바로얌 드라이브 연동하기 창 · 이름을 크게, 종류·브랜드·날짜는 한 줄, 폴더 경로는 맨 아래 흐리게 · 찾은 낱말은 형광펜 */
-  .bs-drv-panel{max-width:760px;height:min(760px,90vh)}
+  .bs-drv-panel{max-width:760px;height:min(760px,90vh);position:relative}
+  .bs-drv-prev{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;background:var(--paper);border-radius:inherit;overflow:hidden}
+  .bs-drv-prev[hidden]{display:none}
+  .bs-drv-prev-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .bs-drv-prev-name{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .bs-drv-prev-name b{font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bs-drv-prev-name small{font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bs-drv-prev-body{flex:1;min-height:0;background:var(--chip-flat);display:grid;place-items:center}
+  .bs-drv-prev-body iframe{width:100%;height:100%;border:0;display:block}
+  .bs-drv-picker .bs-drv-check{cursor:pointer}
+  .bs-drv-picker .bs-drv-check:hover{border-color:var(--btn)}
   .bs-drv-tools{flex:none;display:flex;flex-direction:column;gap:10px;padding:14px 22px 12px;border-bottom:1px solid var(--line)}
   .bs-drv-tools .bs-search{height:42px;font-size:14px}
   .bs-drv-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -11959,6 +11969,19 @@ window.BAROYAM_FONT=(function(){
               <span class="bs-drv-picked" id="bsDrvPicked"></span>
               <button type="button" class="ui-btn ghost" data-bs-drv-close>취소</button>
               <button type="button" class="ui-btn primary" id="bsDrvAdd" disabled>붙이기</button>
+            </div>
+            <!-- 미리보기 · 다른 화면이 고르는 창(baroyamDrivePick)에서 줄을 누르면 체크하지 않고 이 판에서 먼저 보여 준다(드라이브 미리보기 iframe) -->
+            <div class="bs-drv-prev" id="bsDrvPrev" hidden>
+              <div class="bs-drv-prev-head">
+                <button type="button" class="ui-btn ghost sm" data-prev-back>‹ 목록</button>
+                <div class="bs-drv-prev-name"><b id="bsDrvPrevName"></b><small id="bsDrvPrevPath"></small></div>
+              </div>
+              <div class="bs-drv-prev-body" id="bsDrvPrevBody"></div>
+              <div class="bs-foot">
+                <span class="bs-drv-picked" id="bsDrvPrevNote"></span>
+                <a class="ui-btn ghost" id="bsDrvPrevOpen" target="_blank" rel="noopener">드라이브에서 열기</a>
+                <button type="button" class="ui-btn primary" id="bsDrvPrevOk"></button>
+              </div>
             </div>
           </div>
         </div>
@@ -18580,7 +18603,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 바로얌 드라이브에서 등록하기 · 인스타 업로드와 같은 창 · 이 창 구글(드라이브) 권한으로 받아 내 컴퓨터 파일처럼 넣는다 */
   $('yuDrive').addEventListener('click',()=>{
     if(!window.baroyamDrivePick){ msg('드라이브 창을 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요'); return; }
-    window.baroyamDrivePick({title:'바로얌 드라이브에서 영상 고르기',add:'넣기',accept:r=>/^(mp4|mov|m4v|webm)$/i.test(r.ext||'')},rows=>{
+    window.baroyamDrivePick({title:'바로얌 드라이브에서 영상 고르기',add:'넣기',single:true,accept:r=>/^(mp4|mov|m4v|webm)$/i.test(r.ext||'')},rows=>{
       const r=rows[0]; if(!r) return;
       const G=window.baroyamGoogleToken, tokP=G?G():Promise.reject(new Error('구글 권한이 없어요'));   // 누른 순간에 받아야 허락 창이 막히지 않는다
       tokP.catch(()=>{});
@@ -32107,12 +32130,13 @@ window.baroyamAsk=function(title,body,okText){
     }
     drvPaint();
   }
-  function drvClose(){ $('bsDrvDlg').hidden=true; drvPick=null; }
+  function drvClose(){ drvPrevClose(); $('bsDrvDlg').hidden=true; drvPick=null; $('bsDrvDlg').classList.remove('bs-drv-picker'); }
   /* 다른 화면이 이 창으로 드라이브 파일을 고른다 · 창은 브랜드전략실 안에 있어 다른 화면에서도 보이도록 body 로 옮긴다 ·
-     opts {title, add(단추 글), accept(줄 → 보일지)} · cb(줄들 [{id,name,ext,…}]) 는 "넣기"를 누른 클릭 안에서 불린다 */
+     opts {title, add(단추 글), accept(줄 → 보일지), single(하나만 · 미리보기에서 바로 넣기)} · cb(줄들 [{id,name,ext,…}]) 는 "넣기"를 누른 클릭 안에서 불린다 ·
+     줄을 누르면 체크 대신 미리보기 판이 뜨고, 오른쪽 동그라미를 누르면 바로 고른다 */
   window.baroyamDrivePick=function(opts,cb){
     const dlg=$('bsDrvDlg'); if(dlg.parentNode!==document.body) document.body.appendChild(dlg);
-    fileTarget=null; drvPick=Object.assign({},opts||{},{cb:cb}); drvOpen();
+    fileTarget=null; drvPick=Object.assign({},opts||{},{cb:cb}); dlg.classList.add('bs-drv-picker'); drvOpen();
   };
   let drvTimer=null;
   $('bsDrvQ').addEventListener('input',function(){
@@ -32127,10 +32151,39 @@ window.baroyamAsk=function(title,body,okText){
     if(e.target.closest('[data-drv-more]')){ drv.limit+=DRV_PAGE; drvPaint(); return; }
     const it=e.target.closest('.bs-drv-item'); if(!it||it.disabled) return;
     const r=drv.rows.find(function(x){ return x.id===it.dataset.id; }); if(!r) return;
-    if(drv.picked.has(r.id)) drv.picked.delete(r.id); else drv.picked.set(r.id,r);
-    const on=drv.picked.has(r.id);
-    it.classList.toggle('on',on); it.setAttribute('aria-pressed',String(on));
+    // 다른 화면이 고르는 창이면 줄을 누를 때 먼저 미리보기 · 오른쪽 동그라미를 누르면 바로 고른다
+    if(drvPick&&!e.target.closest('.bs-drv-check')){ drvPrev(r); return; }
+    drvToggle(r);
+  });
+  function drvToggle(r,on){
+    if(on==null) on=!drv.picked.has(r.id);
+    if(on&&drvPick&&drvPick.single) drv.picked.clear();   // 하나만 고르는 창(유튜브 업로드)
+    if(on) drv.picked.set(r.id,r); else drv.picked.delete(r.id);
+    $('bsDrvList').querySelectorAll('.bs-drv-item').forEach(function(x){ const o=drv.picked.has(x.dataset.id); x.classList.toggle('on',o); x.setAttribute('aria-pressed',String(o)); });
     drvPicked();
+  }
+  let prevRow=null;
+  function drvPrev(r){
+    prevRow=r;
+    $('bsDrvPrevName').textContent=r.name;
+    $('bsDrvPrevPath').textContent=[r.path,r.date&&r.date.slice(0,10)].filter(Boolean).join(' · ');
+    $('bsDrvPrevOpen').href=drvUrl(r.id);
+    $('bsDrvPrevBody').innerHTML='<iframe src="https://drive.google.com/file/d/'+encodeURIComponent(r.id)+'/preview" allow="autoplay; fullscreen" allowfullscreen title="미리보기"></iframe>';
+    drvPrevBtn();
+    $('bsDrvPrev').hidden=false;
+  }
+  function drvPrevBtn(){
+    const r=prevRow; if(!r) return;
+    const on=drv.picked.has(r.id), vid=/^(mp4|mov|m4v|webm|avi|mkv)$/i.test(r.ext||'');
+    $('bsDrvPrevOk').textContent=drvPick&&drvPick.single?'이 '+(vid?'영상':'파일')+' '+((drvPick.add)||'넣기'):on?'고르기 취소':'이 '+(vid?'영상':'파일')+' 고르기';
+    $('bsDrvPrevNote').textContent=drvPick&&drvPick.single?'':drv.picked.size?drv.picked.size+'개 고름':'';
+  }
+  function drvPrevClose(){ $('bsDrvPrev').hidden=true; $('bsDrvPrevBody').innerHTML=''; prevRow=null; }   // iframe 을 지워 재생을 멈춘다
+  $('bsDrvPrev').addEventListener('click',function(e){ if(e.target.closest('[data-prev-back]')) drvPrevClose(); });
+  $('bsDrvPrevOk').addEventListener('click',function(){
+    const r=prevRow; if(!r||!drvPick) return;
+    if(drvPick.single){ const cb=drvPick.cb; drvPrevClose(); drvClose(); cb([r]); return; }   // cb 는 이 클릭 안에서 불러야 구글 권한 창이 막히지 않는다
+    drvToggle(r); drvPrevClose();
   });
   $('bsDrvAdd').addEventListener('click',function(){
     if(drvPick&&drv.picked.size){ const cb=drvPick.cb, rows=Array.from(drv.picked.values()); drvClose(); cb(rows); return; }
@@ -32175,7 +32228,7 @@ window.baroyamAsk=function(title,body,okText){
   $('bsDrvDlg').addEventListener('drop',function(e){ if(!hasFiles(e)) return; e.preventDefault(); drvUpload(e.dataTransfer.files); });
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape') return;
-    if(!$('bsDrvDlg').hidden&&(!$('askDlg')||$('askDlg').hidden)) drvClose();
+    if(!$('bsDrvDlg').hidden&&(!$('askDlg')||$('askDlg').hidden)){ if(!$('bsDrvPrev').hidden) drvPrevClose(); else drvClose(); }
   });
 
   $('bsDeleteBtn').addEventListener('click',async function(){
