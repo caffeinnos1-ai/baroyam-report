@@ -3429,8 +3429,8 @@ window.BAROYAM_FONT=(function(){
   .cm-approve[hidden]{display:none}
   .cm-rv-bar{margin:22px 0 14px}
   .cm-rv-bar[hidden]{display:none}
-  .yu .iu-file{width:150px;height:84px}
-  .yu .iu-file video{background:var(--ink)}
+  .yu .iu-files{display:block;width:100%}
+  .yu .iu-files:empty{display:none}
   .yu-bar{height:6px;margin-top:12px;border-radius:99px;background:var(--line);overflow:hidden}
   .yu-bar[hidden]{display:none}
   .yu-bar>i{display:block;height:100%;width:0;background:var(--btn);transition:width .2s}
@@ -7699,8 +7699,16 @@ window.BAROYAM_FONT=(function(){
   .bs-drv-prev-name{display:flex;flex-direction:column;gap:2px;min-width:0}
   .bs-drv-prev-name b{font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bs-drv-prev-name small{font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .bs-drv-prev-body{flex:1;min-height:0;background:var(--chip-flat);display:grid;place-items:center}
-  .bs-drv-prev-body iframe{width:100%;height:100%;border:0;display:block}
+  .bs-drv-prev-body{flex:1;min-height:0;background:var(--chip-flat);display:flex;align-items:center;justify-content:center;padding:18px;position:relative}
+  .bs-drv-prev-body iframe{width:100%;height:100%;border:0;display:block;border-radius:14px}
+  /* 영상·사진은 원래 비율 그대로 판 안에 맞춘다(세로 쇼츠는 세로로, 가로 영상은 가로로) · 소재 팝업처럼 둥근 모서리 */
+  .bs-drv-pv{display:block;max-width:100%;max-height:100%;width:auto;height:auto;border-radius:14px;background:var(--ink);box-shadow:0 10px 30px color-mix(in srgb,var(--ink) 22%,transparent)}
+  .bs-drv-pv.is-load{opacity:.55;filter:blur(1px)}
+  .bs-drv-pv-pct{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:7px 14px;border-radius:99px;background:var(--paper);color:var(--ink);font-size:12.5px;font-weight:500;box-shadow:0 4px 14px color-mix(in srgb,var(--ink) 18%,transparent)}
+  .yu-prev{position:relative;display:flex;justify-content:center;padding:10px;border-radius:14px;background:var(--chip-flat);width:100%}
+  .yu-prev video{display:block;max-width:100%;max-height:420px;width:auto;height:auto;border-radius:12px;background:var(--ink)}
+  .yu-prev .x{position:absolute;right:8px;top:8px;width:26px;height:26px;border:0;border-radius:99px;background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--paper);font-size:12px;cursor:pointer}
+  .yu-prev .k{position:absolute;left:18px;bottom:18px;padding:2px 8px;border-radius:99px;background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--paper);font-size:11px}
   .bs-drv-picker .bs-drv-check{cursor:pointer}
   .bs-drv-picker .bs-drv-check:hover{border-color:var(--btn)}
   .bs-drv-tools{flex:none;display:flex;flex-direction:column;gap:10px;padding:14px 22px 12px;border-bottom:1px solid var(--line)}
@@ -18419,8 +18427,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('yuChannel').innerHTML=cs.map(c=>'<button type="button" class="ui-chip" data-v="'+esc(c.id)+'" aria-pressed="'+(c.id===form.ch)+'">'+esc(c.name||c.title)+'</button>').join('');
     $('yuChHint').textContent=cs.length?'올릴 때 구글 창에서 이 채널을 한 번 더 골라 주세요(유튜브 올리기 권한)':'채널 관리에서 유튜브 채널을 먼저 연결해 주세요';
     const f=form.file;
-    $('yuFiles').innerHTML=f?'<div class="iu-file'+(f.bad?' is-bad':'')+'" title="'+esc(f.name)+'"><video src="'+f.url+'" muted preload="metadata"></video>'+
-      '<span class="k">'+(f.dur?Math.round(f.dur)+'초 · ':'')+mb(f.size)+'</span>'+(st.busy?'':'<button type="button" class="x" data-x title="빼기">✕</button>')+'</div>':'';
+    // 고른 영상 · 원래 비율 그대로 재생해 볼 수 있게(세로는 세로로) · 다시 그릴 때 재생이 끊기지 않도록 영상이 바뀔 때만 새로 만든다
+    const box=$('yuFiles'), have=box.querySelector('video');
+    if(!f) box.innerHTML='';
+    else if(!have||have.dataset.u!==f.url) box.innerHTML='<div class="yu-prev" title="'+esc(f.name)+'"><video controls playsinline preload="metadata" data-u="'+f.url+'" src="'+f.url+'"></video><span class="k"></span><button type="button" class="x" data-x title="빼기">✕</button></div>';
+    if(f){ box.querySelector('.k').textContent=(f.dur?Math.round(f.dur)+'초 · ':'')+mb(f.size)+(f.shorts?' · 쇼츠':''); box.querySelector('.x').hidden=st.busy; }
     $('yuAdd').hidden=$('yuDrive').hidden=!!f;
     $('yuFileHint').textContent=f?(f.name+(f.w?' · '+f.w+'×'+f.h:'')+(f.shorts?' · 쇼츠로 올라가요(세로·3분 이하)':f.w?' · 일반 영상으로 올라가요':'')):'mp4·mov 등 영상 하나 · 세로 영상이고 3분 이하면 쇼츠';
     if($('yuTitle').value!==form.title) $('yuTitle').value=form.title;
@@ -18608,12 +18619,17 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const G=window.baroyamGoogleToken, tokP=G?G():Promise.reject(new Error('구글 권한이 없어요'));   // 누른 순간에 받아야 허락 창이 막히지 않는다
       tokP.catch(()=>{});
       (async()=>{
-        const tok=await tokP;
-        msg('드라이브에서 받는 중 · '+r.name,true);
-        const res=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.id)+'?alt=media&supportsAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
-        if(res.status===401&&G) G.clear();
-        if(!res.ok) throw new Error('드라이브 '+res.status);
-        const b=await res.blob(), ext=(String(r.name).split('.').pop()||'').toLowerCase();
+        const cached=window.baroyamDriveCached&&window.baroyamDriveCached(r.id);
+        let b=cached?await cached.catch(()=>null):null;
+        if(!b){
+          const tok=await tokP;
+          msg('드라이브에서 받는 중 · '+r.name,true);
+          const res=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.id)+'?alt=media&supportsAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
+          if(res.status===401&&G) G.clear();
+          if(!res.ok) throw new Error('드라이브 '+res.status);
+          b=await res.blob();
+        }
+        const ext=(String(r.name).split('.').pop()||'').toLowerCase();
         const type=b.type&&b.type!=='application/octet-stream'?b.type:({mp4:'video/mp4',mov:'video/quicktime',m4v:'video/mp4',webm:'video/webm'})[ext]||'video/mp4';
         await setFile(new File([b],r.name,{type}));
         msg('');
@@ -32168,17 +32184,60 @@ window.baroyamAsk=function(title,body,okText){
     $('bsDrvPrevName').textContent=r.name;
     $('bsDrvPrevPath').textContent=[r.path,r.date&&r.date.slice(0,10)].filter(Boolean).join(' · ');
     $('bsDrvPrevOpen').href=drvUrl(r.id);
-    $('bsDrvPrevBody').innerHTML='<iframe src="https://drive.google.com/file/d/'+encodeURIComponent(r.id)+'/preview" allow="autoplay; fullscreen" allowfullscreen title="미리보기"></iframe>';
+    const body=$('bsDrvPrevBody'), ext=r.ext||'', thumb='https://drive.google.com/thumbnail?id='+encodeURIComponent(r.id)+'&sz=w1200';
+    const frame=()=>'<iframe src="https://drive.google.com/file/d/'+encodeURIComponent(r.id)+'/preview" allow="autoplay; fullscreen" allowfullscreen title="미리보기"></iframe>';
+    if(/^(mp4|mov|m4v|webm)$/i.test(ext)){
+      // 영상 · 구글 권한으로 받아 원래 비율의 <video> 로 재생(소재 팝업과 같은 방식) · 받는 동안 표지 + 진행 % · 못 받으면 드라이브 미리보기
+      body.innerHTML='<img class="bs-drv-pv is-load" src="'+thumb+'" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility=\'hidden\'"><span class="bs-drv-pv-pct">영상 불러오는 중</span>';
+      const G=window.baroyamGoogleToken, tokP=G?G():Promise.reject(new Error('권한 없음'));   // 누른 순간에 불러야 허락 창이 막히지 않는다
+      tokP.catch(function(){});
+      drvBlob(r,tokP,function(pct){ const t=body.querySelector('.bs-drv-pv-pct'); if(t&&prevRow===r) t.textContent='영상 불러오는 중 '+pct+'%'; })
+        .then(function(b){
+          if(prevRow!==r) return;
+          if(prevUrl) URL.revokeObjectURL(prevUrl);
+          prevUrl=URL.createObjectURL(b);
+          body.innerHTML='<video class="bs-drv-pv" controls autoplay playsinline src="'+prevUrl+'"></video>';
+          body.querySelector('video').addEventListener('error',function(){ if(prevRow===r) body.innerHTML=frame(); });
+        })
+        .catch(function(){ if(prevRow===r) body.innerHTML=frame(); });
+    }else if(/^(jpe?g|png|webp|gif|heic)$/i.test(ext)){
+      body.innerHTML='<img class="bs-drv-pv" src="'+thumb.replace('w1200','w1600')+'" alt="" referrerpolicy="no-referrer">';
+      body.querySelector('img').addEventListener('error',function(){ if(prevRow===r) body.innerHTML=frame(); });
+    }else body.innerHTML=frame();
     drvPrevBtn();
     $('bsDrvPrev').hidden=false;
   }
+  /* 미리보기로 받은 영상은 몇 개 기억해 두고, "넣기" 뒤 업로드 화면이 다시 받지 않게 빌려준다(window.baroyamDriveCached) */
+  const BLOBS=new Map();
+  let prevUrl='';
+  function drvBlob(r,tokP,onp){
+    const had=BLOBS.get(r.id); if(had) return had.p;
+    const ent={at:Date.now(),p:null};
+    ent.p=(async function(){
+      const G=window.baroyamGoogleToken, tok=await tokP;
+      const res=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.id)+'?alt=media&supportsAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
+      if(res.status===401&&G) G.clear();
+      if(!res.ok) throw new Error('드라이브 '+res.status);
+      const total=+res.headers.get('content-length')||0;
+      const ext=String(r.ext||'').toLowerCase(), type=({mp4:'video/mp4',mov:'video/quicktime',m4v:'video/mp4',webm:'video/webm'})[ext]||res.headers.get('content-type')||'video/mp4';
+      if(!res.body||!total) return new Blob([await res.blob()],{type});
+      const rd=res.body.getReader(), parts=[]; let got=0;
+      for(;;){ const x=await rd.read(); if(x.done) break; parts.push(x.value); got+=x.value.length; onp(Math.round(got/total*100)); }
+      return new Blob(parts,{type});
+    })();
+    ent.p.catch(function(){ BLOBS.delete(r.id); });
+    BLOBS.set(r.id,ent);
+    if(BLOBS.size>3){ const old=Array.from(BLOBS.keys())[0]; BLOBS.delete(old); }   // 영상은 커서 3개만
+    return ent.p;
+  }
+  window.baroyamDriveCached=function(id){ const e=BLOBS.get(id); return e?e.p:null; };
   function drvPrevBtn(){
     const r=prevRow; if(!r) return;
     const on=drv.picked.has(r.id), vid=/^(mp4|mov|m4v|webm|avi|mkv)$/i.test(r.ext||'');
     $('bsDrvPrevOk').textContent=drvPick&&drvPick.single?'이 '+(vid?'영상':'파일')+' '+((drvPick.add)||'넣기'):on?'고르기 취소':'이 '+(vid?'영상':'파일')+' 고르기';
     $('bsDrvPrevNote').textContent=drvPick&&drvPick.single?'':drv.picked.size?drv.picked.size+'개 고름':'';
   }
-  function drvPrevClose(){ $('bsDrvPrev').hidden=true; $('bsDrvPrevBody').innerHTML=''; prevRow=null; }   // iframe 을 지워 재생을 멈춘다
+  function drvPrevClose(){ $('bsDrvPrev').hidden=true; $('bsDrvPrevBody').innerHTML=''; prevRow=null; if(prevUrl){ URL.revokeObjectURL(prevUrl); prevUrl=''; } }   // 지워서 재생을 멈춘다
   $('bsDrvPrev').addEventListener('click',function(e){ if(e.target.closest('[data-prev-back]')) drvPrevClose(); });
   $('bsDrvPrevOk').addEventListener('click',function(){
     const r=prevRow; if(!r||!drvPick) return;
