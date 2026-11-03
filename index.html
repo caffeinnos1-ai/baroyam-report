@@ -2397,6 +2397,32 @@ window.BAROYAM_FONT=(function(){
   .ig-form .ig-meta{font-size:11.5px;color:var(--mute)}
   .ig-form .ig-meta:empty{display:none}
   .ig-dlg [hidden]{display:none}
+  /* 피드 미리보기 · 인스타 게시물 모양(머리 · 4:5 장 · 점 · 캡션) · 장 안은 글로만 */
+  .ig-pv-card{border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden;color:var(--ink)}
+  .ig-pv-head{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12.5px}
+  .ig-pv-head i{width:24px;height:24px;border-radius:99px;flex:none;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:600;color:var(--paper);background:var(--btn)}
+  .ig-pv-head b{font-weight:600}
+  .ig-pv-head span{margin-left:auto;font-size:11px;color:var(--mute)}
+  .ig-pv-stage{position:relative;aspect-ratio:4/5;background:linear-gradient(160deg,color-mix(in srgb,var(--bar) 12%,var(--paper)),color-mix(in srgb,var(--bar) 26%,var(--paper)))}
+  .ig-pv-stage.is-tall{aspect-ratio:9/14}
+  .ig-pv-slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:22px 26px;overflow:hidden;text-align:center}
+  .ig-pv-slide .h{font-size:17px;font-weight:600;line-height:1.4;color:var(--ink);word-break:keep-all}
+  .ig-pv-slide .t{font-size:12.5px;line-height:1.55;color:var(--body);word-break:keep-all}
+  .ig-pv-slide .ph{margin-top:6px;padding:7px 10px;border:1px dashed color-mix(in srgb,var(--bar) 45%,var(--line));border-radius:10px;font-size:11.5px;line-height:1.45;color:var(--mute);background:color-mix(in srgb,var(--paper) 60%,transparent)}
+  .ig-pv-slide .ph::before{content:"사진 · ";font-weight:600}
+  .ig-pv-empty{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font-size:12px;line-height:1.6;color:var(--mute)}
+  .ig-pv-n{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:99px;font-size:11px;color:var(--paper);background:color-mix(in srgb,var(--ink) 70%,transparent)}
+  .ig-pv-tag{position:absolute;top:10px;left:10px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--paper) 85%,transparent)}
+  .ig-pv-stage .ui-btn.ig-pv-go{position:absolute;top:50%;transform:translateY(-50%);border-radius:99px;background:color-mix(in srgb,var(--paper) 90%,transparent);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .ig-pv-stage .ui-btn.ig-pv-go[data-pv="-1"]{left:8px}
+  .ig-pv-stage .ui-btn.ig-pv-go[data-pv="1"]{right:8px}
+  .ig-pv-stage .ui-btn.ig-pv-go[hidden]{display:none}
+  .ig-pv-dots{display:flex;justify-content:center;gap:5px;padding:9px 0 4px}
+  .ig-pv-dots i{width:6px;height:6px;border-radius:99px;background:var(--line);cursor:pointer}
+  .ig-pv-dots i.on{background:var(--btn)}
+  .ig-pv-cap{padding:4px 12px 12px;font-size:12px;line-height:1.55;color:var(--body);white-space:pre-line;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .ig-pv-cap b{font-weight:600;color:var(--ink);margin-right:5px}
+  .ig-pv-cap:empty{display:none}
   /* 배너 오른쪽 위 · 필터 이름 설정 단추(일정 탭일 때만) */
   .plan-hero .ig-cfg{position:absolute;top:22px;right:28px}
   .plan-hero .ig-cfg[hidden]{display:none}
@@ -11702,6 +11728,8 @@ window.BAROYAM_FONT=(function(){
               </div>
               <div class="ig-f">형식<div class="ui-chips" id="igType"></div></div>
               <div class="ig-f">상태<div class="ui-chips" id="igState"></div></div>
+              <!-- 피드 미리보기 · 피드 가이드의 "슬라이드1: …" 줄을 장마다 글로 보여 준다(그림은 만들지 않음) · ‹ › 로 넘김 -->
+              <div class="ig-f">피드 미리보기<div class="ig-pv" id="igPv"></div></div>
               <div class="ig-meta" id="igMeta"></div>
             </div>
             <!-- 올릴 내용 · 피드 가이드(어떻게 찍고 담을지)·캡션(게시물 글) · 같은 일정 줄의 guide·caption 칸 -->
@@ -21548,9 +21576,65 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('igTime').innerHTML='<span class="t'+(form.time?'':' ph')+'">'+(form.time?esc((TIMES.find(x=>x.value===form.time)||{label:form.time}).label):'시간 없음')+'</span>';
     $('igType').innerHTML=TYPES.map(t=>'<button type="button" class="ui-chip ig-chip-c" data-v="'+t.k+'" aria-pressed="'+(form.type===t.k)+'" style="--bar:'+t.c+'"><i class="ig-dot"></i>'+esc(t.l)+'</button>').join('');
     $('igState').innerHTML=STATES.map(t=>'<button type="button" class="ui-chip" data-v="'+t.k+'" aria-pressed="'+(form.state===t.k)+'">'+esc(t.l)+'</button>').join('');
+    paintPreview();
   }
+  /* ---------- 피드 미리보기 · 피드 가이드에서 "슬라이드1: …"(슬라이드 1·1장·slide 1) 줄을 장으로 나눈다 ·
+     한 줄 안은 " / " 로 끊어 따옴표 문구 = 큰 글, "사진:"·"영상:" = 점선 상자(무엇을 찍을지), 나머지 = 작은 글 ·
+     장 표시가 없으면 가이드 첫 덩어리(빈 줄 전)를 한 장으로 · "[태그]" 같은 대괄호 줄부터는 장이 아님 ---------- */
+  let pvIdx=0;
+  function slidesOf(text){
+    const out=[]; let cur=null;
+    String(text||'').split(/\r?\n/).forEach(line=>{
+      const m=line.match(/^\s*(?:슬라이드|slide)\s*(\d+)\s*[:：.)\-]?\s*(.*)$/i)||line.match(/^\s*(\d+)\s*장\s*[:：.)\-]?\s*(.*)$/);
+      if(m){ cur={n:+m[1],parts:[m[2]]}; out.push(cur); return; }
+      if(/^\s*\[/.test(line)){ cur=null; return; }
+      if(cur&&line.trim()) cur.parts.push(line);
+      else if(!line.trim()) cur=null;
+    });
+    if(!out.length){
+      const first=String(text||'').trim().split(/\n\s*\n/)[0]||'';
+      if(first.trim()) out.push({n:1,parts:first.split(/\n/)});
+    }
+    return out;
+  }
+  function slideHtml(sl){
+    const bits=sl.parts.join(' / ').split(/\s+\/\s+/).map(x=>x.trim()).filter(Boolean);
+    return bits.map(b=>{
+      const ph=b.match(/^(?:사진|영상|이미지|컷)\s*[:：]\s*(.*)$/);
+      if(ph) return '<div class="ph">'+esc(ph[1])+'</div>';
+      const q=b.match(/^["“'‘](.+)["”'’]$/);
+      if(q) return '<div class="h">'+esc(q[1])+'</div>';
+      return '<div class="t">'+esc(b)+'</div>';
+    }).join('');
+  }
+  function paintPreview(){
+    const box=$('igPv'); if(!box) return;
+    const t=TYPES.find(x=>x.k===form.type)||TYPES[0];
+    const sl=slidesOf($('igGuide').value);
+    if(pvIdx>=sl.length) pvIdx=Math.max(0,sl.length-1);
+    const cur=sl[pvIdx], many=sl.length>1;
+    const cap=$('igCaption').value.trim();
+    box.innerHTML='<div class="ig-pv-card"><div class="ig-pv-head"><i>B</i><b>baroyam_official</b><span>'+esc(t.l)+'</span></div>'
+      +'<div class="ig-pv-stage'+(form.type==='reels'||form.type==='story'?' is-tall':'')+'" style="--bar:'+t.c+'">'
+      +(cur?'<div class="ig-pv-slide">'+slideHtml(cur)+'</div><span class="ig-pv-tag">슬라이드 '+cur.n+'</span>'
+          :'<div class="ig-pv-empty">피드 가이드에<br>"슬라이드1: …" 처럼 적으면<br>장마다 여기에 보여요</div>')
+      +(many?'<span class="ig-pv-n">'+(pvIdx+1)+' / '+sl.length+'</span>'
+        +'<button type="button" class="ui-btn icon sm ig-pv-go" data-pv="-1" aria-label="이전 장"'+(pvIdx?'':' hidden')+'>‹</button>'
+        +'<button type="button" class="ui-btn icon sm ig-pv-go" data-pv="1" aria-label="다음 장"'+(pvIdx<sl.length-1?'':' hidden')+'>›</button>':'')
+      +'</div>'
+      +(many?'<div class="ig-pv-dots">'+sl.map((x,i)=>'<i class="'+(i===pvIdx?'on':'')+'" data-pv-at="'+i+'"></i>').join('')+'</div>':'')
+      +'<div class="ig-pv-cap">'+(cap?'<b>baroyam_official</b>'+esc(cap):'')+'</div></div>';
+  }
+  $('igGuide').addEventListener('input',paintPreview);
+  $('igCaption').addEventListener('input',paintPreview);
+  $('igPv').addEventListener('click',e=>{
+    const go=e.target.closest('[data-pv]'), at=e.target.closest('[data-pv-at]');
+    if(go){ pvIdx+=+go.dataset.pv; paintPreview(); }
+    else if(at){ pvIdx=+at.dataset.pvAt; paintPreview(); }
+  });
   function openDlg(id,preset){
     const p=id&&st.data.posts[id];
+    pvIdx=0;
     editId=p?id:null;
     form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:stateOf(p.state).k,memo:p.memo||'',guide:p.guide||'',caption:p.caption||''}
           :Object.assign({title:'',date:today(),time:'',type:'feed',state:'plan',memo:'',guide:'',caption:''},preset||{});
