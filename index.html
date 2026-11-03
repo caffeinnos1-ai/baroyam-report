@@ -3427,6 +3427,15 @@ window.BAROYAM_FONT=(function(){
   /* 승인 요청 · 목록 | 재생 | 승인·검수 결과 */
   .cm-approve{display:grid;grid-template-columns:330px minmax(0,1fr) 320px;gap:16px;align-items:start}
   .cm-approve[hidden]{display:none}
+  .cm-rv-bar{margin:22px 0 14px}
+  .cm-rv-bar[hidden]{display:none}
+  .yu .iu-file{width:150px;height:84px}
+  .yu .iu-file video{background:var(--ink)}
+  .yu-bar{height:6px;margin-top:12px;border-radius:99px;background:var(--line);overflow:hidden}
+  .yu-bar[hidden]{display:none}
+  .yu-bar>i{display:block;height:100%;width:0;background:var(--btn);transition:width .2s}
+  .yu .iu-item{grid-template-columns:96px minmax(0,1fr) auto}
+  .yu .iu-thumb{width:96px;height:54px}
   .cm-count{color:var(--btn-soft-ink)}
   .cm-ap-list{display:flex;flex-direction:column;position:sticky;top:16px;max-height:calc(100vh - 48px)}
   .cm-ap-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}
@@ -10852,12 +10861,13 @@ window.BAROYAM_FONT=(function(){
         </section>
       </div><!-- /view-perf -->
       <div id="view-content" style="display:none">
-        <!-- 유튜브콘텐츠 · 인스타콘텐츠처럼 배너 위 단추 줄(채널 관리 / 새 영상 만들기 / 승인 요청 / 완성본) + 흰 판 넓게 · 고른 단추는 baroyam_content_tab 으로 기억 -->
+        <!-- 유튜브콘텐츠 · 인스타콘텐츠처럼 배너 위 단추 줄(채널 관리 / 새 영상 만들기 / 제작검수 / 업로드) + 흰 판 넓게 · 고른 단추는 baroyam_content_tab 으로 기억 ·
+             제작검수 안은 승인 요청 / 완성본 두 탭(baroyam_content_review) -->
         <div class="hero-view-tabs" id="contentTabs" role="tablist" aria-label="유튜브콘텐츠 화면">
           <button type="button" class="hero-view-tab" role="tab" data-content="channels" data-sub="채널마다 타깃·업로드 시각·편집 스타일을 정합니다.">채널 관리</button>
           <button type="button" class="hero-view-tab active" role="tab" data-content="make" data-sub="기획을 적고 대본 후보를 받아 고릅니다." title="대본 고르기를 기다리는 영상">새 영상 만들기<b class="n is-todo">1</b></button>
-          <button type="button" class="hero-view-tab" role="tab" data-content="approve" data-sub="편집이 끝난 영상을 보고 승인하거나 반려합니다." title="승인을 기다리는 영상">승인 요청<b class="n is-todo" id="contentApproveCount">5</b></button>
-          <button type="button" class="hero-view-tab" role="tab" data-content="done" data-sub="승인한 영상의 제목·설명을 다듬고 업로드를 준비합니다.">완성본<b class="n" id="contentDoneCount">3</b></button>
+          <button type="button" class="hero-view-tab" role="tab" data-content="review" data-sub="편집이 끝난 영상을 승인하거나 반려하고, 승인한 완성본의 제목·설명을 다듬습니다." title="승인을 기다리는 영상">제작검수<b class="n is-todo" id="contentApproveCount">5</b></button>
+          <button type="button" class="hero-view-tab" role="tab" data-content="upload" data-sub="영상 파일이나 바로얌 드라이브 영상을 골라 원하는 유튜브 채널에 바로 올리거나 예약합니다.">업로드</button>
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
@@ -10870,8 +10880,8 @@ window.BAROYAM_FONT=(function(){
               <div class="ip-who"><b>유튜브 쇼츠</b><small id="cmHeroCh">채널 0개</small></div>
               <div class="ip-nums cm-hero-nums">
                 <button type="button" data-go="make"><b id="cmHeroMake">0</b><small>대본 고르기</small></button>
-                <button type="button" data-go="approve"><b id="cmHeroApprove">0</b><small>승인 대기</small></button>
-                <button type="button" data-go="done"><b id="cmHeroDone">0</b><small>완성본</small></button>
+                <button type="button" data-go="review" data-rv="approve"><b id="cmHeroApprove">0</b><small>승인 대기</small></button>
+                <button type="button" data-go="review" data-rv="done"><b id="cmHeroDone">0</b><small>완성본</small></button>
               </div>
             </div>
           </div>
@@ -10923,7 +10933,13 @@ window.BAROYAM_FONT=(function(){
           </main>
         </div>
         <!-- 승인 요청 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 승인·반려와 검수 결과 -->
-        <div class="cm-approve" data-content-pane="approve" hidden>
+        <div class="cm-rv-bar" data-content-pane="review" hidden>
+          <div class="ui-tabs" id="cmReviewTabs">
+            <button type="button" class="ui-tab" data-value="approve" aria-selected="true">승인 요청 <span class="n" id="cmRvNApprove">5</span></button>
+            <button type="button" class="ui-tab" data-value="done" aria-selected="false">완성본 <span class="n" id="contentDoneCount">3</span></button>
+          </div>
+        </div>
+        <div class="cm-approve" data-content-pane="review" data-review-sub="approve" hidden>
           <aside class="cm-card cm-ap-list">
             <h3>승인 요청 <span class="cm-count">5</span></h3>
             <div class="cm-ap-filters">
@@ -11023,7 +11039,7 @@ window.BAROYAM_FONT=(function(){
           </aside>
         </div>
         <!-- 완성본 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 유튜브 업로드 준비 -->
-        <div class="cm-approve" data-content-pane="done" hidden>
+        <div class="cm-approve" data-content-pane="review" data-review-sub="done" hidden>
           <aside class="cm-card cm-ap-list">
             <h3>완성본 <span class="cm-count">3</span></h3>
             <div class="cm-ap-filters">
@@ -11095,9 +11111,53 @@ window.BAROYAM_FONT=(function(){
             </div>
           </aside>
         </div>
+        <!-- 업로드 · 영상 하나를 골라(내 컴퓨터 · 바로얌 드라이브) 연결한 유튜브 채널에 올린다 · 이 창이 YouTube Data API 로 바로 올림(서버 없음) ·
+             올릴 때마다 구글 창에서 그 채널을 골라 youtube.upload 권한을 받는다(1시간 이 창 메모리에만) · 예약은 비공개로 올리고 publishAt 에 유튜브가 공개로 바꾼다 ·
+             기록은 app_settings content_uploads_v1 = {items:{id:{…}}} 에 saveMerged 로 그 줄만 -->
+        <div class="iu yu" data-content-pane="upload" hidden>
+          <section class="ip-card iu-new">
+            <div class="ip-card-head"><h3>새 영상 올리기</h3><button type="button" class="ui-btn ghost sm" id="yuReset" hidden>새로 쓰기</button></div>
+            <div class="iu-f"><label>어느 채널에 올릴까요 <em>필수</em></label><div class="ui-chips" id="yuChannel"></div><p class="cm-hint" id="yuChHint"></p></div>
+            <div class="iu-f"><label>영상 <em>필수 · 1개</em></label>
+              <div class="iu-drop" id="yuDrop" tabindex="0">
+                <div class="iu-files" id="yuFiles"></div>
+                <button type="button" class="iu-add" id="yuAdd"><b>＋</b><span>파일 고르기<br><small>또는 끌어다 놓기</small></span></button>
+                <button type="button" class="iu-add iu-add-drv" id="yuDrive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.6 3.8h6.8l6 10.4-3.4 5.9H6l-3.4-5.9Z"/><path d="m8.6 3.8 6 10.4h6.8M15.4 3.8 9.3 14.2 6 20.1"/></svg><span>바로얌 드라이브<br><small>에서 등록하기</small></span></button>
+              </div>
+              <input type="file" id="yuInput" accept="video/*" hidden>
+              <p class="cm-hint" id="yuFileHint"></p></div>
+            <div class="iu-f"><label for="yuTitle">제목 <em id="yuTitleCount"></em></label>
+              <input class="ui-field block" id="yuTitle" maxlength="100" autocomplete="off" placeholder="영상 제목 (100자까지)"></div>
+            <div class="iu-f"><label for="yuDesc">설명 <em id="yuDescCount"></em></label>
+              <textarea class="ui-field block cm-ta" id="yuDesc" rows="5" maxlength="5000" placeholder="설명 · 해시태그(#쇼츠 등)도 여기에"></textarea></div>
+            <div class="iu-f"><label for="yuTags">태그 <em>쉼표로 나눠요</em></label>
+              <input class="ui-field block" id="yuTags" maxlength="500" autocomplete="off" placeholder="예: 간편식, 쫀득란빵, 계란빵"></div>
+            <div class="iu-f"><label>카테고리</label><button type="button" class="ui-field block" id="yuCat"><span class="t"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+            <div class="iu-f"><label>시청자층 <em>필수</em></label>
+              <div class="ui-chips" id="yuKids"><button type="button" class="ui-chip" data-v="no" aria-pressed="true">아동용 아님</button><button type="button" class="ui-chip" data-v="yes" aria-pressed="false">아동용</button></div></div>
+            <div class="iu-f"><label>언제 올릴까요</label>
+              <div class="ui-chips" id="yuWhen"><button type="button" class="ui-chip" data-v="now" aria-pressed="true">지금 올리기</button><button type="button" class="ui-chip" data-v="later" aria-pressed="false">공개 예약</button></div>
+              <div class="ui-chips" id="yuPriv"></div>
+              <div class="iu-row" id="yuAt" hidden><button type="button" id="yuDate"></button><button type="button" class="ui-field" id="yuTime" aria-haspopup="listbox"></button></div>
+              <p class="cm-hint" id="yuWhenHint"></p></div>
+            <button type="button" class="ui-btn primary block" id="yuGo">유튜브에 올리기</button>
+            <div class="yu-bar" id="yuBar" hidden><i></i></div>
+            <p class="cm-msg" id="yuMsg" hidden></p>
+          </section>
+          <section class="ip-card iu-list">
+            <div class="ip-card-head"><h3>업로드 기록</h3>
+              <div class="ui-tabs" id="yuTabs">
+                <button type="button" class="ui-tab" data-value="wait" aria-selected="true">예약 <span class="n" id="yuNWait">0</span></button>
+                <button type="button" class="ui-tab" data-value="done" aria-selected="false">올림 <span class="n" id="yuNDone">0</span></button>
+                <button type="button" class="ui-tab" data-value="fail" aria-selected="false">실패 <span class="n" id="yuNFail">0</span></button>
+              </div></div>
+            <div id="yuRows"></div>
+            <p class="cm-hint">올리는 동안에는 이 창을 닫지 마세요(이 창이 직접 올려요). 세로 영상이고 3분 이하면 쇼츠로 올라가요. 예약 영상은 그 시각까지 비공개로 있다가 유튜브가 공개로 바꿔요.</p>
+          </section>
+        </div>
         <!-- 채널 관리 · 지금은 모양만(눌러도 동작하지 않음) · 채널 카드 격자 + 채널 추가 -->
         <div class="cm-channels" data-content-pane="channels" hidden>
-          <p class="cm-box cm-note"><b>+ 유튜브 채널 연결</b>을 누르면 구글 계정에서 채널을 골라 등록해요(채널마다 한 번씩 · 여러 개 가능). 업로드는 아직 모의라 실제 유튜브에는 아무것도 올라가지 않아요.<br>
+          <p class="cm-box cm-note"><b>+ 유튜브 채널 연결</b>을 누르면 구글 계정에서 채널을 골라 등록해요(채널마다 한 번씩 · 여러 개 가능). 영상은 <b>업로드</b> 탭에서 이 채널을 골라 실제로 올려요.<br>
             흐름: 새 영상 만들기에서 주문 → (직접 기획이면 대본 고르기) → 편집 → 승인 요청에서 승인·반려 → 승인하면 이 채널의 다음 빈 업로드 시각에 자동 예약 → 업로드.</p>
           <div class="cm-ch-grid">
             <div class="cm-card cm-ch cm-demo">
@@ -14019,7 +14079,7 @@ window.CsGuide=(function(){
     ['ytcap',3,'영상 자막 서비스','VPS yt-captions','brand-files 의 ytcap/req 를 2초마다 보고 자막을 받아(한국어가 아니면 번역) ytcap/res 에 답합니다.'],
     ['cwriter',3,'대본 서비스','VPS · PC content_writer.js','Claude 구독으로 Claude Code 를 부릅니다(VPS 는 구독 토큰 · PC 는 로그인된 Claude). brand-files 의 cmjob/req 를 2초마다 보고 기획자 → 검수자(대본 결정 뒤 편집자 · 편집 지시서)를 돌려 cmjob/res 에 답합니다. 역할 지침은 prompts/*.md(사람이 결과를 보고 고침). VPS 가 늘 켜 두고, PC 도 켜져 있으면 먼저 잡은 쪽이 씁니다.'],
     ['claude',3,'Claude','PC 의 구독 로그인','대본 서비스가 Claude Code 로 부릅니다(API 키·토큰 없음 · 그 PC 에 로그인된 계정).'],
-    ['youtube',3,'유튜브','자막 원본 · Data API','자막은 국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘). 채널 관리는 연결할 채널을 고를 때 Data API 로 채널 이름·사진·구독자를 읽습니다(youtube.readonly).'],
+    ['youtube',3,'유튜브','자막 원본 · Data API','자막은 국내 IP 인 VPS 에서만 받힙니다(해외 클라우드는 로봇으로 막힘). 채널 관리는 연결할 채널을 고를 때 Data API 로 채널 이름·사진·구독자를 읽고(youtube.readonly), 업로드 탭은 올릴 때 그 채널 권한(youtube.upload)을 받아 이 창이 바로 올립니다.'],
     ['gha',3,'GitHub Actions','baroyam-trend','구글트렌드·네이버데이터랩을 모아 Supabase 트렌드 표에 쌓습니다.'],
     ['apps',3,'앱스크립트','09-29 공개 배포 폐기','예전 데이터 API 입니다. 지금은 쓰지 않지만 index.html 의 AGENDA_API_URL 줄은 지우면 저장이 멈추므로 그대로 둡니다.',true]
   ];
@@ -18046,34 +18106,53 @@ window.BAROYAM_PJ_CHANNELS=(function(){
 })();
 
 
-/* 유튜브콘텐츠 · 배너 위 단추 네 개(채널 관리 / 새 영상 만들기 / 승인 요청 / 완성본) · 인스타콘텐츠와 같은 방식 · 고른 것은 이 브라우저에 기억한다 */
+/* 유튜브콘텐츠 · 배너 위 단추 네 개(채널 관리 / 새 영상 만들기 / 제작검수 / 업로드) · 인스타콘텐츠와 같은 방식 · 고른 것은 이 브라우저에 기억한다 ·
+   제작검수는 화면 안 탭(승인 요청 / 완성본 · data-review-sub)으로 나눠 본다 */
 (function(){
   const box=document.getElementById('contentTabs');
   if(!box) return;
   const title=document.getElementById('contentViewTitle'), sub=document.getElementById('contentViewSub');
   const items=[...box.querySelectorAll('[data-content]')];
-  let cur=items.find(b=>b.dataset.content==='make')||items[0];
-  try{ const k=localStorage.getItem('baroyam_content_tab'); cur=items.find(b=>b.dataset.content===k)||cur; }catch(e){}
+  let cur=items.find(b=>b.dataset.content==='make')||items[0], rv='approve';
+  try{
+    let k=localStorage.getItem('baroyam_content_tab');
+    if(k==='approve'||k==='done'){ rv=k; k='review'; }   // 예전 단추(승인 요청·완성본)를 기억한 브라우저
+    cur=items.find(b=>b.dataset.content===k)||cur;
+    const r=localStorage.getItem('baroyam_content_review'); if(r==='approve'||r==='done') rv=r;
+  }catch(e){}
+  const rvTabs=document.getElementById('cmReviewTabs');
   function pick(el){
     cur=el;
     items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     title.textContent=el.childNodes[0].textContent.trim(); sub.textContent=el.dataset.sub||'';
-    const has=!!document.querySelector('#view-content [data-content-pane="'+el.dataset.content+'"]');
-    document.querySelectorAll('#view-content [data-content-pane]').forEach(p=>{ p.hidden=p.dataset.contentPane!==(has?el.dataset.content:'other'); });
+    const k=el.dataset.content, has=!!document.querySelector('#view-content [data-content-pane="'+k+'"]');
+    document.querySelectorAll('#view-content [data-content-pane]').forEach(p=>{
+      p.hidden=p.dataset.contentPane!==(has?k:'other')||(!!p.dataset.reviewSub&&p.dataset.reviewSub!==rv);
+    });
+    if(rvTabs) rvTabs.querySelectorAll('.ui-tab').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.value===rv)));
+    document.dispatchEvent(new CustomEvent('baroyam:content-pane',{detail:k}));
   }
+  function pickReview(v){
+    rv=v; try{ localStorage.setItem('baroyam_content_review',v); }catch(e){}
+    const t=items.find(x=>x.dataset.content==='review'); if(!t) return;
+    try{ localStorage.setItem('baroyam_content_tab','review'); }catch(e){}
+    pick(t);
+  }
+  if(rvTabs) rvTabs.addEventListener('click',e=>{ const t=e.target.closest('.ui-tab'); if(t) pickReview(t.dataset.value); });
   /* 배너 오른쪽 숫자 · 단추 줄 숫자(.n)와 채널 카드 수를 옮겨 적는다 · 할 일이 있으면 강조색 */
   function hero(){
-    const n=k=>{ const b=box.querySelector('[data-content="'+k+'"] .n'); return b&&b.style.display!=='none'?(parseInt(b.textContent,10)||0):0; };
-    [['make','cmHeroMake',1],['approve','cmHeroApprove',1],['done','cmHeroDone',0]].forEach(([k,id,todo])=>{
+    const n=b=>b&&b.style.display!=='none'?(parseInt(b.textContent,10)||0):0;
+    [[box.querySelector('[data-content="make"] .n'),'cmHeroMake',1],[document.getElementById('contentApproveCount'),'cmHeroApprove',1],[document.getElementById('contentDoneCount'),'cmHeroDone',0]].forEach(([b,id,todo])=>{
       const el=document.getElementById(id); if(!el) return;
-      const v=n(k); el.textContent=v; el.parentElement.classList.toggle('is-todo',!!(todo&&v));
+      const v=n(b); el.textContent=v; el.parentElement.classList.toggle('is-todo',!!(todo&&v));
     });
+    const a=document.getElementById('contentApproveCount'), an=document.getElementById('cmRvNApprove'); if(a&&an) an.textContent=a.textContent;
     const ch=document.getElementById('cmHeroCh');
     if(ch) ch.textContent='채널 '+document.querySelectorAll('#view-content .cm-ch:not([hidden])').length+'개';
   }
   window.baroyamContentHero=hero;
   const heroBox=document.getElementById('cmHero');
-  if(heroBox) heroBox.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; const t=items.find(x=>x.dataset.content===b.dataset.go); if(t) t.click(); });
+  if(heroBox) heroBox.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(!b) return; if(b.dataset.rv){ pickReview(b.dataset.rv); return; } const t=items.find(x=>x.dataset.content===b.dataset.go); if(t) t.click(); });
   pick(cur); hero();
   items.forEach(el=>el.addEventListener('click',()=>{
     try{ localStorage.setItem('baroyam_content_tab',el.dataset.content); }catch(e){}
@@ -18102,7 +18181,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
    권한은 드라이브 권한(baroyamGoogleToken)과 따로, 고를 때만 받고 저장하지 않는다(채널 정보만 남김) ·
    저장: app_settings content_channels_v1 = {channels:{<유튜브 채널 id>:{id,title,handle,thumb,subs,videos,name,target,times,ord,at,by,del}}} ·
    saveMerged 로 그 채널 한 줄만 얹고, 연결 해제는 del 만 단다 · 실제 채널이 하나라도 있으면 예시 카드(.cm-demo)를 숨긴다 ·
-   실제 업로드에는 서버(VPS)가 채널마다 오래 쓰는 권한(refresh token)을 따로 받아야 한다(아직 없음) */
+   업로드는 아래 업로드 화면이 올릴 때마다 그 채널 권한(youtube.upload)을 받아 이 창에서 바로 올린다(서버 권한 없음) */
 (function(){
   const $=id=>document.getElementById(id);
   const grid=document.querySelector('#view-content .cm-ch-grid'), dlg=$('cmYtDlg');
@@ -18256,8 +18335,283 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   $('cmYtOk').addEventListener('click',ok);
   $('cmYtOff').addEventListener('click',off);
   grid.addEventListener('click',e=>{ const b=e.target.closest('[data-yt-edit]'); if(b) open(b.closest('.cm-yt').dataset.yt); });
-  window.baroyamYtChannels={load:()=>load(true)};
+  window.baroyamYtChannels={load:()=>load(true),list:()=>live(),loaded:()=>st.loaded};
   if(location.hash==='#content') setTimeout(()=>load(),1500);
+})();
+
+/* 유튜브콘텐츠 › 업로드 · 영상 하나를 골라(내 컴퓨터 · 바로얌 드라이브) 연결한 유튜브 채널에 올린다
+   이 창이 YouTube Data API(videos.insert · 이어 올리기)로 바로 올린다 · 서버(VPS)를 거치지 않으므로 올리는 동안 창을 닫으면 멈춘다 ·
+   권한: 올릴 때 구글 고르기 창에서 그 채널(브랜드 계정 포함)을 골라 youtube.upload 를 받는다 · 채널마다 1시간 이 창 메모리에만 둔다 ·
+   고른 계정의 채널이 고른 채널과 다르면 올리지 않는다 · 예약 = 비공개로 올리고 status.publishAt 에 유튜브가 공개로 바꾼다 ·
+   기록: app_settings content_uploads_v1 = {items:{id:{id,ch,chName,title,file,size,privacy,publishAt,videoId,state:'done'|'failed',error,at,by,del}}} · saveMerged 로 그 줄만 */
+(function(){
+  const root=document.querySelector('#view-content .yu');
+  if(!root) return;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const KEY='content_uploads_v1';
+  const SCOPE='https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+  const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const me=()=>{ try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const kstDay=ms=>new Date(ms+9*3600e3).toISOString().slice(0,10);
+  const kstTime=ms=>new Date(ms+9*3600e3).toISOString().slice(11,16);
+  const fmt=iso=>{ const t=Date.parse(iso); if(isNaN(t)) return ''; const d=kstDay(t); return (+d.slice(5,7))+'/'+(+d.slice(8))+' '+kstTime(t); };
+  const mb=n=>n>=1073741824?(n/1073741824).toFixed(1)+'GB':Math.max(0.1,n/1048576).toFixed(1)+'MB';
+  const TIMES=[]; for(let h=0;h<24;h++) ['00','30'].forEach(m=>TIMES.push({value:String(h).padStart(2,'0')+':'+m,label:(h<12?'오전 ':'오후 ')+((h+11)%12+1)+':'+m}));
+  const PRIV=[['public','공개'],['unlisted','일부 공개'],['private','비공개']];
+  const CATS=[{value:'22',label:'인물/블로그'},{value:'26',label:'노하우/스타일'},{value:'24',label:'엔터테인먼트'},{value:'19',label:'여행/이벤트'},{value:'28',label:'과학기술'}];
+
+  const st={items:{},loaded:false,tab:'wait',busy:false,live:null};
+  const toks={};   // 채널 id → {t,exp} · 이 창 메모리에만
+  let form=null; form=blank();
+  function blank(){
+    const t=Date.now()+90*60e3, slot=Math.ceil(t/(30*60e3))*30*60e3;
+    return {ch:form&&form.ch||'',file:null,title:'',desc:'',tags:'',cat:'22',kids:false,when:'now',priv:'public',date:kstDay(slot),time:kstTime(slot)};
+  }
+  function msg(t,ok){ const m=$('yuMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-ok',!!ok); }
+  const chans=()=>window.baroyamYtChannels&&window.baroyamYtChannels.list?window.baroyamYtChannels.list():[];
+
+  /* ---------- 기록 ---------- */
+  async function load(){
+    try{ const j=await window.BAROYAM_DB.loadSetting(KEY,true); st.items=(j&&j.items)||{}; st.loaded=true; }catch(e){}
+    paintList();
+  }
+  async function save(id,row){
+    st.items[id]=Object.assign({},st.items[id]||{},row); paintList();
+    const DB=window.BAROYAM_DB;
+    const next=DB&&await DB.saveMerged(KEY,server=>{
+      let s=server; if(typeof s==='string'){ try{ s=JSON.parse(s); }catch(e){ s=null; } }
+      s=JSON.parse(JSON.stringify(s||{})); s.items=s.items||{};
+      s.items[id]=Object.assign({},s.items[id]||{},row); return s;
+    });
+    if(next&&next.items){ st.items=next.items; paintList(); }
+    else msg('유튜브에는 올라갔지만 기록을 저장하지 못했어요 · 새로고침 뒤 확인해 주세요');
+  }
+
+  /* ---------- 입력 칸 ---------- */
+  const datePick=window.UI&&window.UI.datePicker?window.UI.datePicker($('yuDate'),{mode:'single',onChange:v=>{ form.date=v; paintForm(); }}):null;
+  function paintForm(){
+    const cs=chans();
+    if(!cs.find(c=>c.id===form.ch)) form.ch=cs.length===1?cs[0].id:'';
+    $('yuChannel').innerHTML=cs.map(c=>'<button type="button" class="ui-chip" data-v="'+esc(c.id)+'" aria-pressed="'+(c.id===form.ch)+'">'+esc(c.name||c.title)+'</button>').join('');
+    $('yuChHint').textContent=cs.length?'올릴 때 구글 창에서 이 채널을 한 번 더 골라 주세요(유튜브 올리기 권한)':'채널 관리에서 유튜브 채널을 먼저 연결해 주세요';
+    const f=form.file;
+    $('yuFiles').innerHTML=f?'<div class="iu-file'+(f.bad?' is-bad':'')+'" title="'+esc(f.name)+'"><video src="'+f.url+'" muted preload="metadata"></video>'+
+      '<span class="k">'+(f.dur?Math.round(f.dur)+'초 · ':'')+mb(f.size)+'</span>'+(st.busy?'':'<button type="button" class="x" data-x title="빼기">✕</button>')+'</div>':'';
+    $('yuAdd').hidden=$('yuDrive').hidden=!!f;
+    $('yuFileHint').textContent=f?(f.name+(f.w?' · '+f.w+'×'+f.h:'')+(f.shorts?' · 쇼츠로 올라가요(세로·3분 이하)':f.w?' · 일반 영상으로 올라가요':'')):'mp4·mov 등 영상 하나 · 세로 영상이고 3분 이하면 쇼츠';
+    if($('yuTitle').value!==form.title) $('yuTitle').value=form.title;
+    if($('yuDesc').value!==form.desc) $('yuDesc').value=form.desc;
+    if($('yuTags').value!==form.tags) $('yuTags').value=form.tags;
+    $('yuTitleCount').textContent=form.title.length+' / 100자';
+    $('yuDescCount').textContent=form.desc.length+' / 5000자';
+    $('yuCat').querySelector('.t').textContent=(CATS.find(c=>c.value===form.cat)||CATS[0]).label;
+    $('yuKids').querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',String((c.dataset.v==='yes')===form.kids)));
+    $('yuWhen').querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.v===form.when)));
+    const later=form.when==='later';
+    $('yuPriv').hidden=later;
+    $('yuPriv').innerHTML=PRIV.map(([v,l])=>'<button type="button" class="ui-chip" data-v="'+v+'" aria-pressed="'+(form.priv===v)+'">'+l+'</button>').join('');
+    $('yuAt').hidden=!later;
+    if(datePick) datePick.set(form.date);
+    $('yuTime').innerHTML='<span class="t">'+esc((TIMES.find(t=>t.value===form.time)||{}).label||form.time)+'</span>';
+    $('yuWhenHint').textContent=later?'지금 비공개로 올려 두고 '+(+form.date.slice(5,7))+'월 '+(+form.date.slice(8))+'일 '+form.time+'(한국 시간)에 유튜브가 공개로 바꿔요':
+      ({public:'올리자마자 누구나 볼 수 있어요',unlisted:'링크가 있는 사람만 볼 수 있어요',private:'나만 볼 수 있어요 · 나중에 유튜브 스튜디오에서 공개로 바꿔요'})[form.priv];
+    $('yuGo').textContent=st.busy?'올리는 중…':later?'예약해서 올리기':'유튜브에 올리기';
+    $('yuGo').disabled=st.busy;
+    $('yuReset').hidden=st.busy||(!f&&!form.title&&!form.desc&&!form.tags);
+    ['yuTitle','yuDesc','yuTags'].forEach(id=>{ $(id).disabled=st.busy; });
+  }
+  async function setFile(file){
+    if(!file) return;
+    if(!/^video\//.test(file.type)&&!/\.(mp4|mov|m4v|webm|avi|mkv)$/i.test(file.name)){ msg('영상 파일만 올릴 수 있어요'); return; }
+    if(form.file) try{ URL.revokeObjectURL(form.file.url); }catch(e){}
+    const f={file,name:file.name,size:file.size,url:URL.createObjectURL(file)};
+    form.file=f; msg('');
+    if(!form.title) form.title=file.name.replace(/\.[^.]+$/,'').slice(0,100);
+    paintForm();
+    await new Promise(res=>{
+      const v=document.createElement('video'); v.preload='metadata'; v.muted=true; v.src=f.url;
+      v.onloadedmetadata=()=>{ f.dur=v.duration; f.w=v.videoWidth; f.h=v.videoHeight; f.shorts=!!(f.w&&f.h>=f.w&&f.dur<=180); res(); };
+      v.onerror=()=>res(); setTimeout(res,8000);
+    });
+    if(form.file===f) paintForm();
+  }
+
+  /* ---------- 권한 · 누른 순간에 구글 창을 열어야 막히지 않는다 ---------- */
+  function token(ch){
+    const c=toks[ch];
+    if(c&&c.exp>Date.now()+5*60e3) return Promise.resolve(c.t);
+    return new Promise((ok,no)=>{
+      const g=window.google&&google.accounts&&google.accounts.oauth2;
+      if(!g) return no(new Error('구글 로그인 도구를 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요'));
+      g.initTokenClient({
+        client_id:window.BAROYAM_AUTH.clientId, scope:SCOPE,
+        callback:res=>{
+          if(!res||res.error||!res.access_token) return no(new Error('유튜브 올리기 권한을 받지 못했어요'+(res&&res.error?' ('+res.error+')':'')));
+          ok({t:res.access_token,exp:Date.now()+((+res.expires_in||3600)-60)*1000});
+        },
+        error_callback:err=>no(new Error((err&&err.type)==='popup_closed'?'구글 창이 닫혔어요':'유튜브 올리기 권한을 받지 못했어요'))
+      }).requestAccessToken({prompt:'select_account'});
+    }).then(async r=>{
+      if(typeof r==='string') return r;
+      // 고른 계정의 채널이 올릴 채널인지 본다(브랜드 계정이 여럿이면 다른 채널을 고르기 쉬움)
+      const j=await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',{headers:{Authorization:'Bearer '+r.t}}).then(x=>x.json()).catch(()=>({}));
+      const got=(j.items||[])[0];
+      if(!got) throw new Error('고른 구글 계정에 유튜브 채널이 없어요');
+      if(got.id!==ch){ const want=chans().find(c=>c.id===ch); throw new Error('구글 창에서 「'+((want&&want.title)||'고른 채널')+'」 채널을 골라 주세요 · 지금 고른 것은 「'+((got.snippet||{}).title||got.id)+'」이에요'); }
+      toks[ch]=r; return r.t;
+    });
+  }
+
+  /* ---------- 올리기 ---------- */
+  function upload(tok,meta,file,onp){
+    return fetch('https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':file.type||'video/*','X-Upload-Content-Length':String(file.size)},
+      body:JSON.stringify(meta)
+    }).then(async r=>{
+      if(!r.ok){
+        const j=await r.json().catch(()=>({})), why=(((j.error||{}).errors||[])[0]||{}).reason||'';
+        if(r.status===401) throw new Error('권한이 끝났어요 · 다시 눌러 주세요');
+        if(why==='quotaExceeded') throw new Error('오늘 유튜브 API 사용량을 다 썼어요 · 내일 다시 올려 주세요(하루 약 6개)');
+        if(why==='uploadLimitExceeded') throw new Error('이 채널의 하루 업로드 한도를 넘었어요');
+        if(why==='youtubeSignupRequired') throw new Error('이 계정은 아직 유튜브 채널을 만들지 않았어요');
+        if(why==='accessNotConfigured') throw new Error('구글 클라우드에서 YouTube Data API v3 를 켜야 해요(관리자 작업)');
+        throw new Error('올리기 준비 실패 ('+(why||r.status)+')');
+      }
+      const url=r.headers.get('Location');
+      if(!url) throw new Error('올릴 주소를 받지 못했어요');
+      return new Promise((ok,no)=>{
+        const x=new XMLHttpRequest();
+        x.open('PUT',url);
+        x.upload.onprogress=e=>{ if(e.lengthComputable) onp(e.loaded/e.total); };
+        x.onload=()=>{ if(x.status>=200&&x.status<300){ try{ ok(JSON.parse(x.responseText)); }catch(e){ ok({}); } } else no(new Error('올리기 실패 ('+x.status+')')); };
+        x.onerror=()=>no(new Error('연결이 끊겼어요'));
+        x.send(file);
+      });
+    });
+  }
+  function go(){
+    if(st.busy) return;
+    const ch=chans().find(c=>c.id===form.ch), f=form.file;
+    form.title=$('yuTitle').value.trim(); form.desc=$('yuDesc').value; form.tags=$('yuTags').value;
+    if(!ch){ msg('올릴 채널을 골라 주세요'); return; }
+    if(!f){ msg('영상을 넣어 주세요'); return; }
+    if(!form.title){ msg('제목을 적어 주세요'); $('yuTitle').focus(); return; }
+    if(/[<>]/.test(form.title+form.desc)){ msg('제목·설명에는 < > 를 쓸 수 없어요'); return; }
+    const tags=form.tags.split(/[,，]/).map(t=>t.trim().replace(/^#/,'')).filter(Boolean);
+    if(tags.join(',').length>500){ msg('태그가 너무 길어요(모두 합쳐 500자)'); return; }
+    let publishAt='';
+    if(form.when==='later'){
+      const t=Date.parse(form.date+'T'+form.time+':00+09:00');
+      if(!(t>Date.now()+15*60e3)){ msg('예약 시각은 지금보다 15분 넘게 뒤로 골라 주세요'); return; }
+      publishAt=new Date(t).toISOString();
+    }
+    const tokP=token(ch.id); tokP.catch(()=>{});   // 첫 await 전에 불러야 구글 창이 막히지 않는다
+    const id='yu'+rid();
+    const meta={snippet:{title:form.title,description:form.desc,tags,categoryId:form.cat},
+      status:Object.assign({privacyStatus:publishAt?'private':form.priv,selfDeclaredMadeForKids:form.kids},publishAt?{publishAt}:{})};
+    const row={id,ch:ch.id,chName:ch.name||ch.title,title:form.title,file:f.name,size:f.size,privacy:publishAt?'scheduled':form.priv,publishAt,at:new Date().toISOString(),by:me()};
+    st.busy=true; st.live={row,p:0}; msg('구글 창에서 「'+(ch.title||ch.name)+'」 채널을 골라 주세요…',true); paintForm(); paintList();
+    const bar=$('yuBar'); bar.hidden=false; bar.firstElementChild.style.width='0';
+    (async()=>{
+      const tok=await tokP;
+      msg('올리는 중 0%',true);
+      const v=await upload(tok,meta,f.file,p=>{ st.live.p=p; bar.firstElementChild.style.width=Math.round(p*100)+'%'; msg('올리는 중 '+Math.round(p*100)+'% · 창을 닫지 마세요',true); paintList(); });
+      if(!v.id) throw new Error('유튜브가 영상 번호를 돌려주지 않았어요 · 유튜브 스튜디오에서 확인해 주세요');
+      st.busy=false; st.live=null;
+      await save(id,Object.assign(row,{state:'done',videoId:v.id,done:new Date().toISOString()}));
+      msg(publishAt?'올렸어요 · '+fmt(publishAt)+'에 공개돼요':'올렸어요 · 유튜브가 처리하는 동안 몇 분은 화질이 낮게 보일 수 있어요',true);
+      try{ URL.revokeObjectURL(f.url); }catch(e){}
+      form=blank(); st.tab=publishAt?'wait':'done'; if(tabs) tabs.set(st.tab);
+    })().catch(async e=>{
+      const m=e&&e.message||String(e);
+      if(/권한이 끝났/.test(m)) delete toks[ch.id];
+      const started=st.live&&st.live.p>0;
+      st.busy=false; st.live=null; msg(m);
+      if(started) await save(id,Object.assign(row,{state:'failed',error:m}));   // 고르기 창을 닫은 것 같은 실패는 기록하지 않는다
+    }).finally(()=>{ bar.hidden=true; paintForm(); paintList(); });
+  }
+
+  /* ---------- 기록 목록 ---------- */
+  let tabs=null;
+  function paintList(){
+    const all=Object.values(st.items||{}).filter(x=>x&&!x.del).sort((a,b)=>String(b.at).localeCompare(a.at));
+    const now=Date.now();
+    const grp={wait:all.filter(x=>x.state==='done'&&x.publishAt&&Date.parse(x.publishAt)>now),
+      done:all.filter(x=>x.state==='done'&&!(x.publishAt&&Date.parse(x.publishAt)>now)),fail:all.filter(x=>x.state==='failed')};
+    $('yuNWait').textContent=grp.wait.length+(st.live?1:0); $('yuNDone').textContent=grp.done.length; $('yuNFail').textContent=grp.fail.length;
+    const PL={public:'공개',unlisted:'일부 공개',private:'비공개',scheduled:'예약'};
+    const item=x=>{
+      const shorts='https://www.youtube.com/watch?v='+encodeURIComponent(x.videoId||'');
+      const th=x.videoId?'<img src="https://i.ytimg.com/vi/'+encodeURIComponent(x.videoId)+'/mqdefault.jpg" alt="" referrerpolicy="no-referrer">':'';
+      const when=x.state==='failed'?fmt(x.at)+' 실패':x.publishAt?fmt(x.publishAt)+' 공개 예약':fmt(x.done||x.at)+' 올림';
+      return '<div class="iu-item"><div class="iu-thumb">'+th+'</div><div class="iu-body"><p title="'+esc(x.title)+'">'+esc(x.title)+'</p>'+
+        '<small><span class="cm-tag '+(x.state==='failed'?'is-back':x.publishAt&&Date.parse(x.publishAt)>now?'is-wait':'is-done')+'">'+(x.state==='failed'?'실패':PL[x.privacy]||'올림')+'</span>'+esc(x.chName||'')+' · '+when+(x.by?' · '+esc(x.by):'')+'</small>'+
+        (x.error?'<small class="err">'+esc(x.error)+'</small>':'')+'</div><div class="iu-acts">'+
+        (x.videoId?'<a class="ui-btn sm soft" href="'+shorts+'" target="_blank" rel="noopener">유튜브에서 보기</a><a class="ui-btn sm ghost" href="https://studio.youtube.com/video/'+encodeURIComponent(x.videoId)+'/edit" target="_blank" rel="noopener">스튜디오</a>':'')+
+        '<button type="button" class="ui-btn sm ghost" data-del="'+esc(x.id)+'" title="기록에서만 빼요(유튜브 영상은 그대로)">✕</button></div></div>';
+    };
+    let html='';
+    if(st.tab==='wait'&&st.live){ const r=st.live.row; html+='<div class="iu-item is-edit"><div class="iu-thumb"></div><div class="iu-body"><p>'+esc(r.title)+'</p><small><span class="cm-tag is-wait">올리는 중 '+Math.round(st.live.p*100)+'%</span>'+esc(r.chName)+'</small></div><div class="iu-acts"></div></div>'; }
+    html+=grp[st.tab].map(item).join('');
+    $('yuRows').innerHTML=html||'<div class="iu-empty">'+(!st.loaded?'기록을 읽는 중…':({wait:'공개를 기다리는 예약 영상이 없어요',done:'아직 올린 영상이 없어요',fail:'실패한 업로드가 없어요'})[st.tab])+'</div>';
+  }
+
+  /* ---------- 누르기 ---------- */
+  if(window.UI&&window.UI.tabs) tabs=window.UI.tabs($('yuTabs'),v=>{ st.tab=v; paintList(); });
+  $('yuChannel').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c||st.busy) return; form.ch=c.dataset.v; paintForm(); });
+  $('yuKids').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; form.kids=c.dataset.v==='yes'; paintForm(); });
+  $('yuWhen').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; form.when=c.dataset.v; paintForm(); });
+  $('yuPriv').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; form.priv=c.dataset.v; paintForm(); });
+  $('yuTime').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('yuTime'),TIMES,form.time,v=>{ form.time=v; paintForm(); }); });
+  $('yuCat').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('yuCat'),CATS,form.cat,v=>{ form.cat=v; paintForm(); }); });
+  [['yuTitle','title'],['yuDesc','desc'],['yuTags','tags']].forEach(([id,k])=>$(id).addEventListener('input',()=>{ form[k]=$(id).value; paintForm(); }));
+  $('yuAdd').addEventListener('click',()=>$('yuInput').click());
+  $('yuInput').addEventListener('change',()=>{ setFile($('yuInput').files[0]); $('yuInput').value=''; });
+  $('yuFiles').addEventListener('click',e=>{ if(!e.target.closest('[data-x]')||st.busy) return; try{ URL.revokeObjectURL(form.file.url); }catch(err){} form.file=null; paintForm(); });
+  $('yuReset').addEventListener('click',()=>{ if(form.file) try{ URL.revokeObjectURL(form.file.url); }catch(e){} form=blank(); msg(''); paintForm(); });
+  $('yuGo').addEventListener('click',go);
+  $('yuRows').addEventListener('click',e=>{
+    const b=e.target.closest('[data-del]'); if(!b) return;
+    if(!confirm('이 기록을 목록에서 뺄까요? (유튜브에 올라간 영상은 그대로 있어요)')) return;
+    save(b.dataset.del,{del:Date.now(),delBy:me()});
+  });
+  /* 바로얌 드라이브에서 등록하기 · 인스타 업로드와 같은 창 · 이 창 구글(드라이브) 권한으로 받아 내 컴퓨터 파일처럼 넣는다 */
+  $('yuDrive').addEventListener('click',()=>{
+    if(!window.baroyamDrivePick){ msg('드라이브 창을 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요'); return; }
+    window.baroyamDrivePick({title:'바로얌 드라이브에서 영상 고르기',add:'넣기',accept:r=>/^(mp4|mov|m4v|webm)$/i.test(r.ext||'')},rows=>{
+      const r=rows[0]; if(!r) return;
+      const G=window.baroyamGoogleToken, tokP=G?G():Promise.reject(new Error('구글 권한이 없어요'));   // 누른 순간에 받아야 허락 창이 막히지 않는다
+      tokP.catch(()=>{});
+      (async()=>{
+        const tok=await tokP;
+        msg('드라이브에서 받는 중 · '+r.name,true);
+        const res=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.id)+'?alt=media&supportsAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
+        if(res.status===401&&G) G.clear();
+        if(!res.ok) throw new Error('드라이브 '+res.status);
+        const b=await res.blob(), ext=(String(r.name).split('.').pop()||'').toLowerCase();
+        const type=b.type&&b.type!=='application/octet-stream'?b.type:({mp4:'video/mp4',mov:'video/quicktime',m4v:'video/mp4',webm:'video/webm'})[ext]||'video/mp4';
+        await setFile(new File([b],r.name,{type}));
+        msg('');
+      })().catch(e=>msg('드라이브 영상을 받지 못했어요 · '+(e&&e.message||e)));
+    });
+  });
+  const drop=$('yuDrop');
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ if(st.busy) return; e.preventDefault(); drop.classList.add('is-over'); }));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('is-over')));
+  drop.addEventListener('drop',e=>{ if(st.busy) return; e.preventDefault(); const f=[...(e.dataTransfer.files||[])][0]; if(f) setFile(f); });
+  addEventListener('beforeunload',e=>{ if(st.busy){ e.preventDefault(); e.returnValue=''; } });
+
+  // 업로드 화면을 열 때 채널·기록을 읽는다 · 채널을 새로 연결하면 칩을 다시 그린다
+  document.addEventListener('baroyam:content-pane',e=>{
+    if(e.detail!=='upload') return;
+    if(window.baroyamYtChannels&&!window.baroyamYtChannels.loaded()) window.baroyamYtChannels.load();
+    if(!st.loaded) load();
+    paintForm();
+  });
+  document.addEventListener('baroyam:cm-channels',()=>{ if(!st.busy) paintForm(); });
+  paintForm(); paintList();
 })();
 
 /* 유튜브콘텐츠 › 새 영상 만들기 · 대본 만들기(직접 기획)
