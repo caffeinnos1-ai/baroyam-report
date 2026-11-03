@@ -185,7 +185,7 @@ window.BAROYAM_DB=(function(){
       /* 드라이브 색인·사전과 계정관리 목록은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 ·
          계정관리(accounts_v1)는 아이디·비밀번호와 올린 로고 그림이 들어 있어, 첫 화면에서 받으면
          느려지고 계정관리 비밀번호를 통과하기 전에 브라우저에 와 버린다 */
-      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,meta_ads_v1)');
+      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,meta_ads_v1,youtube_insights_v1)');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
@@ -3434,6 +3434,27 @@ window.BAROYAM_FONT=(function(){
   .cm-approve{display:grid;grid-template-columns:330px minmax(0,1fr) 320px;gap:16px;align-items:start}
   .cm-approve[hidden]{display:none}
   .cm-rv-bar{margin:22px 0 14px}
+  /* 유튜브 성과 · 인스타 성과(ip-*)를 그대로 쓰고 다른 점만 */
+  .yp{margin-top:22px}
+  .yp[hidden]{display:none}
+  .yp-chs .ui-chip{display:inline-flex;align-items:center;gap:7px}
+  .yp-chs .ui-chip img,.yp-chs .ui-chip .av{width:20px;height:20px;border-radius:99px;object-fit:cover;flex:none;background:var(--chip-flat);display:inline-grid;place-items:center;font-size:10px}
+  .yp-acct{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .yp-acct .ip-avatar{background:linear-gradient(45deg,var(--neg),color-mix(in srgb,var(--neg) 55%,var(--paper)))}
+  .yp-acct .ip-avatar img{width:100%;height:100%;border-radius:99px;object-fit:cover;display:block;background:var(--paper)}
+  .yp-acct .when{margin-left:auto;font-size:12px;color:var(--mute);text-align:right}
+  .yp-chart .line{stroke:var(--neg)}
+  .yp-chart .area{fill:url(#ypFill)}
+  .yp-chart .net rect{fill:color-mix(in srgb,var(--pos) 40%,transparent)}
+  .yp-chart .ip-dot{border-color:var(--neg)}
+  .yp-posts{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  .yp .ip-thumb{aspect-ratio:16/9}
+  .yp .ip-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .yp a.ip-post{color:inherit;text-decoration:none}
+  .yp a.ip-post:hover{border-color:var(--btn)}
+  .yp .yp-ttl{margin:0;font-size:12.5px;line-height:1.45;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.9em}
+  .yp .yp-meta{font-size:11px;color:var(--mute)}
+  .yp-empty{padding:40px 10px;text-align:center;font-size:13px;color:var(--mute);line-height:1.7}
   .cm-rv-bar[hidden]{display:none}
   .yu .iu-files{display:block;width:100%}
   .yu .iu-files:empty{display:none}
@@ -10894,7 +10915,8 @@ window.BAROYAM_FONT=(function(){
         <!-- 유튜브콘텐츠 · 인스타콘텐츠처럼 배너 위 단추 줄(채널 관리 / 새 영상 만들기 / 제작검수 / 업로드) + 흰 판 넓게 · 고른 단추는 baroyam_content_tab 으로 기억 ·
              제작검수 안은 승인 요청 / 완성본 두 탭(baroyam_content_review) -->
         <div class="hero-view-tabs" id="contentTabs" role="tablist" aria-label="유튜브콘텐츠 화면">
-          <button type="button" class="hero-view-tab" role="tab" data-content="channels" data-sub="채널마다 타깃·업로드 시각·편집 스타일을 정합니다.">채널 관리</button>
+          <button type="button" class="hero-view-tab" role="tab" data-content="perf" data-sub="연결한 유튜브 채널의 조회·시청 시간·구독자 변화와 영상 성과를 봅니다.">성과</button>
+          <button type="button" class="hero-view-tab" role="tab" data-content="channels" data-sub="채널을 연결하고 채널마다 타깃·업로드 시각·편집 스타일을 정합니다." hidden>채널 관리</button>
           <button type="button" class="hero-view-tab active" role="tab" data-content="make" data-sub="기획을 적고 대본 후보를 받아 고릅니다." title="대본 고르기를 기다리는 영상">새 영상 만들기<b class="n is-todo">1</b></button>
           <button type="button" class="hero-view-tab" role="tab" data-content="review" data-sub="편집이 끝난 영상을 승인하거나 반려하고, 승인한 완성본의 제목·설명을 다듬습니다." title="승인을 기다리는 영상">제작검수<b class="n is-todo" id="contentApproveCount">5</b></button>
           <button type="button" class="hero-view-tab" role="tab" data-content="upload" data-sub="영상 파일이나 바로얌 드라이브 영상을 골라 원하는 유튜브 채널에 바로 올리거나 예약합니다.">업로드</button>
@@ -11190,7 +11212,39 @@ window.BAROYAM_FONT=(function(){
             <p class="cm-hint">올리는 동안에는 이 창을 닫지 마세요(이 창이 직접 올려요). 세로 영상이고 3분 이하면 쇼츠로 올라가요. 예약 영상은 그 시각까지 비공개로 있다가 유튜브가 공개로 바꿔요.</p>
           </section>
         </div>
-        <!-- 채널 관리 · 지금은 모양만(눌러도 동작하지 않음) · 채널 카드 격자 + 채널 추가 -->
+        <!-- 성과 · 인스타 성과와 같은 틀(ip-*) · 배너 바로 아래 채널 단추로 계정을 바꿔 본다 ·
+             이 창이 그 채널 구글 권한(baroyamYtToken · youtube.readonly + yt-analytics.readonly)으로 Data API(채널·영상)와 Analytics API(하루 값)를 읽어
+             app_settings youtube_insights_v1 = {channels:{채널 id:{at,by,ch,daily,videos}}} 에 saveMerged 로 그 채널만 저장 · 다른 회원은 저장된 것을 본다 -->
+        <div class="ip yp" data-content-pane="perf">
+          <div class="ip-switch"><div class="ui-chips yp-chs" id="ypChs" aria-label="유튜브 채널"></div>
+            <div class="ip-acct-end"><div class="ui-tabs" id="ypRange"><button class="ui-tab" data-value="7">7일</button><button class="ui-tab" data-value="28">28일</button><button class="ui-tab" data-value="90">90일</button></div>
+              <button type="button" class="ui-btn soft sm" id="ypFetch">새로 가져오기</button>
+              <button type="button" class="ui-btn ghost sm" id="ypManage">채널 관리</button></div></div>
+          <div class="ip-card yp-acct" id="ypAcct"></div>
+          <p class="cm-msg" id="ypMsg" hidden></p>
+          <div class="ip-kpis" id="ypKpis"></div>
+          <div class="ip-row">
+            <div class="ip-card">
+              <div class="ip-card-head"><div><h3>조회수 추이</h3><small id="ypDailySub"></small></div>
+                <div class="ip-legend"><span><i style="background:var(--neg)"></i>조회수</span><span><i style="background:color-mix(in srgb,var(--pos) 40%,transparent)"></i>구독자 늘어난 수</span><span><i style="background:color-mix(in srgb,var(--neg) 45%,transparent)"></i>줄어든 수</span></div></div>
+              <div class="ip-chart yp-chart" id="ypDaily"></div>
+              <div class="ip-axis" id="ypDailyAx"></div>
+            </div>
+            <div class="ip-card">
+              <div class="ip-card-head"><div><h3>형식별 성과</h3><small>기간 안에 올린 영상 하나당 평균 조회수</small></div></div>
+              <div class="ip-types" id="ypTypes"></div>
+              <div class="ip-note" id="ypTypeNote"></div>
+            </div>
+          </div>
+          <div class="ip-card">
+            <div class="ip-card-head"><div><h3>영상 성과</h3><small id="ypVidSub">올린 영상 · 누르면 유튜브에서 엽니다 · 조회·좋아요·댓글은 올린 뒤 전체 합계</small></div>
+              <div class="ip-acct-end"><div class="ui-chips" id="ypVType"><button type="button" class="ui-chip" data-v="" aria-pressed="true">전체</button><button type="button" class="ui-chip" data-v="short" aria-pressed="false">쇼츠</button><button type="button" class="ui-chip" data-v="long" aria-pressed="false">일반 영상</button></div>
+                <div class="ui-tabs" id="ypSort"><button class="ui-tab" data-value="new">최신</button><button class="ui-tab" data-value="v">조회</button><button class="ui-tab" data-value="l">좋아요</button><button class="ui-tab" data-value="c">댓글</button><button class="ui-tab" data-value="er">반응률</button></div></div></div>
+            <div class="ip-posts yp-posts" id="ypVids"></div>
+            <div class="ip-more" id="ypMore" hidden><button type="button" class="ui-btn ghost" id="ypMoreBtn"></button></div>
+          </div>
+        </div>
+        <!-- 채널 관리 · 성과 화면의 "채널 관리" 단추로 연다 · 채널 카드 격자 + 채널 추가 -->
         <div class="cm-channels" data-content-pane="channels" hidden>
           <p class="cm-box cm-note"><b>+ 유튜브 채널 연결</b>을 누르면 구글 계정에서 채널을 골라 등록해요(채널마다 한 번씩 · 여러 개 가능). 영상은 <b>업로드</b> 탭에서 이 채널을 골라 실제로 올려요.<br>
             흐름: 새 영상 만들기에서 주문 → (직접 기획이면 대본 고르기) → 편집 → 승인 요청에서 승인·반려 → 승인하면 이 채널의 다음 빈 업로드 시각에 자동 예약 → 업로드.</p>
@@ -18171,6 +18225,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   try{
     let k=localStorage.getItem('baroyam_content_tab');
     if(k==='approve'||k==='done'){ rv=k; k='review'; }   // 예전 단추(승인 요청·완성본)를 기억한 브라우저
+    if(k==='channels') k='perf';                          // 첫 화면은 성과(채널 관리는 성과 화면의 단추로)
     cur=items.find(b=>b.dataset.content===k)||cur;
     const r=localStorage.getItem('baroyam_content_review'); if(r==='approve'||r==='done') rv=r;
   }catch(e){}
@@ -18213,6 +18268,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     pick(el);
   }));
   window.baroyamContentOpen=function(){ pick(cur); hero(); if(window.baroyamYtChannels) window.baroyamYtChannels.load(); };
+  window.baroyamContentGo=function(k){ const t=items.find(x=>x.dataset.content===k); if(t){ try{ localStorage.setItem('baroyam_content_tab',k); }catch(e){} pick(t); } };
   document.addEventListener('baroyam:cm-channels',hero);
 })();
 
@@ -18240,7 +18296,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const $=id=>document.getElementById(id);
   const grid=document.querySelector('#view-content .cm-ch-grid'), dlg=$('cmYtDlg');
   if(!grid||!dlg) return;
-  const KEY='content_channels_v1', SCOPE='https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload';
+  const KEY='content_channels_v1', SCOPE='https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/yt-analytics.readonly';
   /* 채널마다 받은 유튜브 권한 · 구글이 1시간짜리만 주므로 그동안은 이 브라우저(localStorage)에 두고 새로고침해도 다시 묻지 않는다 ·
      채널을 연결·다시 고를 때 받은 권한도 그 채널 몫으로 넣어 두어, 바로 이어 올릴 때 구글 창이 또 뜨지 않게 한다 */
   const TOK_KEY='baroyam_yt_tok_v1';
@@ -18405,6 +18461,252 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   if(location.hash==='#content') setTimeout(()=>load(),1500);
 })();
 
+/* 유튜브콘텐츠 › 성과 · 인스타 성과와 같은 틀 · 배너 아래 채널 단추로 연결한 채널을 바꿔 본다(처음엔 이름에 '바로얌'이 든 채널)
+   읽기: 그 채널 구글 권한(window.baroyamYtToken · 1시간)이 있으면 Data API(채널 통계·업로드 영상 100개)와
+   Analytics API(최근 180일 하루 조회·시청 분·평균 시청·구독 증감·좋아요·댓글·공유)를 받아
+   app_settings youtube_insights_v1 = {channels:{id:{at,by,ch,daily:[{d,v,m,avd,sg,sl,l,c,s}],videos:[{id,t,th,at,dur,v,l,c}],noAn}}} 에 그 채널만 saveMerged ·
+   권한이 없으면 저장된 것을 보여 주고 "새로 가져오기"(누를 때 구글 창)로 받는다 · 저장된 것이 1시간 넘었고 권한이 있으면 저절로 다시 받는다 */
+(function(){
+  const root=document.querySelector('#view-content .yp');
+  if(!root) return;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const KEY='youtube_insights_v1';
+  const SCOPE='https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/yt-analytics.readonly';
+  const me=()=>{ try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const num=n=>{ n=Math.round(Number(n)||0); return Math.abs(n)>=100000000?(Math.round(n/10000000)/10)+'억':Math.abs(n)>=10000?(Math.round(n/1000)/10)+'만':n.toLocaleString('ko-KR'); };
+  const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
+  const kday=ms=>new Date(ms+9*3600e3).toISOString().slice(0,10);
+  const ago=iso=>{ const m=Math.round((Date.now()-Date.parse(iso))/60000); return isNaN(m)?'':m<1?'방금':m<60?m+'분 전':m<1440?Math.round(m/60)+'시간 전':Math.round(m/1440)+'일 전'; };
+  const pct=(a,b)=>b?Math.round((a-b)/b*100):0;
+  const chans=()=>window.baroyamYtChannels&&window.baroyamYtChannels.list?window.baroyamYtChannels.list():[];
+  let range=28, sort='new', vtype='', limit=24, cur='', busy=false;
+  try{ range=+localStorage.getItem('baroyam_yp_range')||28; cur=localStorage.getItem('baroyam_yp_ch')||''; }catch(e){}
+  const st={data:{},loaded:false};
+
+  function msg(t,ok){ const m=$('ypMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-ok',!!ok); }
+  async function load(){
+    try{ const j=await window.BAROYAM_DB.loadSetting(KEY,true); st.data=(j&&j.channels)||{}; st.loaded=true; }catch(e){}
+    paint();
+  }
+  function pickDefault(){
+    const cs=chans();
+    if(cs.find(c=>c.id===cur)) return;
+    const b=cs.find(c=>/바로얌/.test((c.name||'')+(c.title||'')));
+    cur=(b||cs[0]||{}).id||'';
+  }
+
+  /* ---------- 받기 ---------- */
+  function askToken(ch){
+    const Y=window.baroyamYtToken, kept=Y&&Y.get(ch);
+    if(kept) return Promise.resolve(kept);
+    return new Promise((ok,no)=>{
+      const g=window.google&&google.accounts&&google.accounts.oauth2;
+      if(!g) return no(new Error('구글 로그인 도구를 아직 불러오지 못했어요 · 잠시 뒤 다시 눌러 주세요'));
+      g.initTokenClient({client_id:window.BAROYAM_AUTH.clientId,scope:SCOPE,
+        callback:res=>{
+          if(!res||res.error||!res.access_token) return no(new Error('유튜브 권한을 받지 못했어요'+(res&&res.error?' ('+res.error+')':'')));
+          ok({t:res.access_token,exp:Date.now()+((+res.expires_in||3600)-60)*1000});
+        },
+        error_callback:err=>no(new Error((err&&err.type)==='popup_closed'?'구글 창이 닫혔어요':'유튜브 권한을 받지 못했어요'))
+      }).requestAccessToken({prompt:'select_account'});
+    }).then(async r=>{
+      const j=await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',{headers:{Authorization:'Bearer '+r.t}}).then(x=>x.json()).catch(()=>({}));
+      const got=(j.items||[])[0];
+      if(!got) throw new Error('고른 구글 계정에 유튜브 채널이 없어요');
+      if(got.id!==ch){ const w=chans().find(c=>c.id===ch); throw new Error('구글 창에서 「'+((w&&w.title)||'고른 채널')+'」 채널을 골라 주세요 · 지금 고른 것은 「'+((got.snippet||{}).title||got.id)+'」이에요'); }
+      if(window.baroyamYtToken) window.baroyamYtToken.set(ch,r.t,r.exp);
+      return r.t;
+    });
+  }
+  async function api(url,tok){
+    const r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){
+      const e=new Error(((j.error||{}).message)||('HTTP '+r.status)); e.status=r.status; e.reason=(((j.error||{}).errors||[])[0]||{}).reason||''; throw e;
+    }
+    return j;
+  }
+  const dur=s=>{ const m=String(s||'').match(/P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)||[]; return (+m[1]||0)*86400+(+m[2]||0)*3600+(+m[3]||0)*60+(+m[4]||0); };
+  async function fetchCh(ch,tokP){
+    if(busy) return; busy=true; paintBar(); msg('');
+    try{
+      const tok=await tokP, Y='https://www.googleapis.com/youtube/v3/';
+      const c=(await api(Y+'channels?part=snippet,statistics,contentDetails&id='+encodeURIComponent(ch),tok)).items[0];
+      if(!c) throw new Error('채널을 읽지 못했어요');
+      const sn=c.snippet||{}, sx=c.statistics||{}, th=sn.thumbnails||{};
+      const up=((c.contentDetails||{}).relatedPlaylists||{}).uploads;
+      // 업로드 영상 100개까지
+      let ids=[], page='';
+      for(let i=0;i<2&&up;i++){
+        const j=await api(Y+'playlistItems?part=contentDetails&maxResults=50&playlistId='+encodeURIComponent(up)+(page?'&pageToken='+page:''),tok);
+        ids=ids.concat((j.items||[]).map(x=>(x.contentDetails||{}).videoId).filter(Boolean)); page=j.nextPageToken; if(!page) break;
+      }
+      let videos=[];
+      for(let i=0;i<ids.length;i+=50){
+        const j=await api(Y+'videos?part=snippet,statistics,contentDetails&id='+ids.slice(i,i+50).join(','),tok);
+        videos=videos.concat((j.items||[]).map(v=>{ const s=v.snippet||{}, x=v.statistics||{}, t=s.thumbnails||{};
+          return {id:v.id,t:s.title||'',th:(t.medium||t.high||t.default||{}).url||'',at:s.publishedAt||'',dur:dur((v.contentDetails||{}).duration),v:+x.viewCount||0,l:+x.likeCount||0,c:+x.commentCount||0}; }));
+      }
+      // 하루 값(Analytics) · 권한·API 가 없으면 영상·채널만 저장
+      let daily=null, noAn='';
+      try{
+        const end=kday(Date.now()), start=kday(Date.now()-179*864e5);
+        const j=await api('https://youtubeanalytics.googleapis.com/v2/reports?ids=channel%3D%3DMINE&startDate='+start+'&endDate='+end+
+          '&metrics=views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares&dimensions=day&sort=day',tok);
+        daily=(j.rows||[]).map(r=>({d:r[0],v:+r[1]||0,m:+r[2]||0,avd:+r[3]||0,sg:+r[4]||0,sl:+r[5]||0,l:+r[6]||0,c:+r[7]||0,s:+r[8]||0}));
+      }catch(e){
+        noAn=e.status===403&&/insufficient|scope/i.test(e.message+e.reason)?'scope':/has not been used|disabled|accessNotConfigured/i.test(e.message+e.reason)?'api':'fail';
+        if(noAn==='scope'&&window.baroyamYtToken) window.baroyamYtToken.clear(ch);   // 다음에 누르면 하루 값 권한까지 다시 받는다
+      }
+      const row={at:new Date().toISOString(),by:me(),ch:{title:sn.title||'',handle:sn.customUrl||'',thumb:(th.medium||th.default||{}).url||'',
+        subs:sx.hiddenSubscriberCount?null:+sx.subscriberCount||0,views:+sx.viewCount||0,videos:+sx.videoCount||0},videos,noAn};
+      const old=st.data[ch]||{};
+      row.daily=daily||old.daily||[];   // 하루 값을 못 받았으면 지난번 것을 둔다
+      st.data[ch]=row; paint();
+      const DB=window.BAROYAM_DB;
+      const next=DB&&await DB.saveMerged(KEY,server=>{
+        let s=server; if(typeof s==='string'){ try{ s=JSON.parse(s); }catch(e){ s=null; } }
+        s=JSON.parse(JSON.stringify(s||{})); s.channels=s.channels||{}; s.channels[ch]=row; return s;
+      });
+      if(next&&next.channels) st.data=next.channels;
+      msg(noAn==='scope'?'영상·채널 숫자는 가져왔어요 · 하루 조회수 추이는 권한이 하나 더 필요해요 · 새로 가져오기를 한 번 더 눌러 주세요'
+        :noAn==='api'?'영상·채널 숫자는 가져왔어요 · 하루 조회수 추이는 구글 클라우드에서 YouTube Analytics API 를 켜야 보여요(관리자 작업)'
+        :noAn?'하루 조회수 추이를 받지 못했어요 · 잠시 뒤 다시 눌러 주세요':(next?'':'가져왔지만 저장하지 못했어요 · 다른 회원에게는 아직 안 보여요'),!noAn&&!!next);
+    }catch(e){
+      if(e.status===401&&window.baroyamYtToken) window.baroyamYtToken.clear(ch);
+      msg(e.status===401?'구글 권한이 끝났어요 · 새로 가져오기를 다시 눌러 주세요':/has not been used|disabled/i.test(e.message)?'구글 클라우드에서 YouTube Data API v3 를 켜야 해요(관리자 작업)':'가져오지 못했어요 · '+(e.message||e));
+    }finally{ busy=false; paint(); }
+  }
+
+  /* ---------- 그리기 ---------- */
+  function paintBar(){
+    const cs=chans();
+    $('ypChs').innerHTML=cs.map(c=>'<button type="button" class="ui-chip" data-ch="'+esc(c.id)+'" aria-pressed="'+(c.id===cur)+'">'+
+      (c.thumb?'<img src="'+esc(c.thumb)+'" alt="" referrerpolicy="no-referrer">':'<span class="av">'+esc((c.name||c.title||'?').slice(0,1))+'</span>')+esc(c.name||c.title)+'</button>').join('');
+    const f=$('ypFetch'); f.disabled=busy||!cur; f.textContent=busy?'가져오는 중…':'새로 가져오기';
+    f.title=cur&&window.baroyamYtToken&&window.baroyamYtToken.get(cur)?'구글 창 없이 바로 가져와요':'누르면 구글 창에서 이 채널을 한 번 골라요(1시간 유지)';
+  }
+  function spark(vals){
+    const mx=Math.max(...vals), mn=Math.min(...vals), n=vals.length;
+    const pts=vals.map((v,i)=>(i/(n-1)*100).toFixed(1)+','+(28-(mx===mn?14:(v-mn)/(mx-mn)*24)).toFixed(1)).join(' ');
+    return '<svg class="ip-spark" viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="'+pts+'" fill="none" stroke="var(--neg)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>';
+  }
+  const isShort=v=>v.dur>0&&v.dur<=180;
+  function paint(){
+    pickDefault(); paintBar();
+    const D=st.data[cur], cs=chans(), c=cs.find(x=>x.id===cur);
+    const empty=t=>{ $('ypAcct').innerHTML='<div class="yp-empty" style="width:100%">'+t+'</div>'; ['ypKpis','ypTypes','ypVids','ypDailyAx'].forEach(id=>$(id).innerHTML=''); $('ypDaily').innerHTML=''; $('ypTypeNote').textContent=''; $('ypMore').hidden=true; };
+    if(!cs.length) return empty('연결한 유튜브 채널이 없어요<br><b>채널 관리</b>에서 + 유튜브 채널 연결로 채널을 먼저 연결해 주세요');
+    if(!D) return empty(st.loaded?'「'+esc(c.name||c.title)+'」 성과를 아직 가져오지 않았어요<br>위 <b>새로 가져오기</b>를 누르면 구글 창에서 이 채널을 골라 받아요':'성과를 읽는 중…');
+    const ch=D.ch||{};
+    const av=ch.thumb||c.thumb||'';
+    $('ypAcct').innerHTML='<div class="ip-avatar">'+(av?'<img src="'+esc(av)+'" alt="" referrerpolicy="no-referrer" onerror="this.remove()">':'')+'</div>'+
+      '<div class="ip-who"><b><a href="https://www.youtube.com/channel/'+encodeURIComponent(cur)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(ch.title||c.title)+'</a></b><small>'+esc(ch.handle||'')+'</small></div>'+
+      '<div class="ip-nums"><div><b>'+(ch.subs==null?'비공개':num(ch.subs))+'</b><small>구독자</small></div><div><b>'+num(ch.videos)+'</b><small>영상</small></div><div><b>'+num(ch.views)+'</b><small>총 조회수</small></div></div>'+
+      '<div class="when">'+esc(ago(D.at))+' 가져옴'+(D.by?' · '+esc(D.by):'')+'</div>';
+    // 하루 값 · 마지막 range 일과 그 앞 range 일
+    const all=(D.daily||[]).slice().sort((a,b)=>a.d.localeCompare(b.d));
+    const curD=all.slice(-range), prevD=all.slice(-range*2,-range);
+    const sum=(a,k)=>a.reduce((x,y)=>x+(y[k]||0),0);
+    const full=prevD.length>=curD.length&&curD.length>0;
+    const chip=(d,u)=>full?'<span class="ip-delta'+(d<0?' is-down':'')+'">'+(d>=0?'▲ ':'▼ ')+Math.abs(d)+u+'<i>지난 '+range+'일보다</i></span>':'<span class="ip-delta is-none">비교할 지난 기록 없음</span>';
+    const avd=a=>{ const v=sum(a,'v'); return v?a.reduce((x,y)=>x+y.avd*y.v,0)/v:0; };
+    const sec=t=>{ t=Math.round(t); return t>=60?Math.floor(t/60)+'분 '+(t%60)+'초':t+'초'; };
+    const net=sum(curD,'sg')-sum(curD,'sl'), pnet=sum(prevD,'sg')-sum(prevD,'sl');
+    if(curD.length){
+      const K=[
+        {l:'조회수',v:num(sum(curD,'v')),d:chip(pct(sum(curD,'v'),sum(prevD,'v')),'%'),s:curD.map(x=>x.v)},
+        {l:'시청 시간',v:num(sum(curD,'m')/60),u:'시간',d:chip(pct(sum(curD,'m'),sum(prevD,'m')),'%'),s:curD.map(x=>x.m)},
+        {l:'평균 시청 시간',v:sec(avd(curD)),d:full?chip(Math.round(avd(curD)-avd(prevD)),'초'):chip(0,''),s:curD.map(x=>x.avd)},
+        {l:'구독자 증감',v:(net>=0?'+':'')+net.toLocaleString('ko-KR'),u:'명',d:'<span class="ip-delta'+(net<0?' is-down':'')+'">+'+sum(curD,'sg')+' · −'+sum(curD,'sl')+'<i>'+(full?'지난 '+range+'일 '+(pnet>=0?'+':'')+pnet:'이 기간')+'</i></span>',s:curD.map(x=>x.sg-x.sl)},
+        {l:'좋아요',v:num(sum(curD,'l')),d:chip(pct(sum(curD,'l'),sum(prevD,'l')),'%'),s:curD.map(x=>x.l)},
+        {l:'댓글 · 공유',v:num(sum(curD,'c'))+' · '+num(sum(curD,'s')),d:chip(pct(sum(curD,'c')+sum(curD,'s'),sum(prevD,'c')+sum(prevD,'s')),'%'),s:curD.map(x=>x.c+x.s)}];
+      $('ypKpis').innerHTML=K.map(k=>'<div class="ip-card ip-kpi"><small>'+k.l+'</small><b>'+k.v+(k.u?'<span>'+k.u+'</span>':'')+'</b>'+k.d+(k.s.length>1?spark(k.s):'')+'</div>').join('');
+    }else{
+      const vs=D.videos||[];
+      const K=[['구독자',ch.subs==null?'비공개':num(ch.subs)],['총 조회수',num(ch.views)],['영상',num(ch.videos)],['최근 영상 평균 조회',num(vs.length?vs.slice(0,20).reduce((a,v)=>a+v.v,0)/Math.min(20,vs.length):0)],
+        ['최근 영상 좋아요',num(vs.slice(0,20).reduce((a,v)=>a+v.l,0))],['최근 영상 댓글',num(vs.slice(0,20).reduce((a,v)=>a+v.c,0))]];
+      $('ypKpis').innerHTML=K.map(k=>'<div class="ip-card ip-kpi"><small>'+k[0]+'</small><b>'+k[1]+'</b><span class="ip-delta is-none">하루 값 없음 · 최근 영상 20개 기준</span></div>').join('');
+    }
+    paintDaily(curD);
+    // 형식별 · 기간 안에 올린 영상(없으면 최근 영상 20개)
+    const since=Date.now()-range*864e5, vs=D.videos||[];
+    let inP=vs.filter(v=>Date.parse(v.at)>=since), basis='기간 안에 올린 영상';
+    if(inP.length<2){ inP=vs.slice(0,20); basis='최근 영상 20개'; }
+    const T=[['short','쇼츠','var(--neg)'],['long','일반 영상','var(--coupang)']].map(([k,l,col])=>{ const a=inP.filter(v=>(k==='short')===isShort(v));
+      return {k,l,col,n:a.length,v:a.length?a.reduce((x,y)=>x+y.v,0)/a.length:0,er:a.length?a.reduce((x,y)=>x+(y.v?(y.l+y.c)/y.v*100:0),0)/a.length:0}; });
+    const mx=Math.max(1,...T.map(t=>t.v));
+    $('ypTypes').innerHTML=T.map(t=>'<div class="ip-type" style="--bar:'+t.col+'"><span><i class="ig-dot"></i>'+t.l+'</span><div class="bar"><i style="width:'+(t.v/mx*100).toFixed(1)+'%"></i></div><b>'+num(t.v)+'</b><small>영상 '+t.n+'개 · 반응률 '+t.er.toFixed(1)+'% (좋아요+댓글 ÷ 조회)</small></div>').join('');
+    const [a,b]=T; $('ypTypeNote').innerHTML=a.n&&b.n&&a.v&&b.v?'<b>'+(a.v>=b.v?a.l:b.l)+'</b>가 영상 하나당 조회가 <b>'+(Math.max(a.v,b.v)/Math.min(a.v,b.v)).toFixed(1)+'배</b> 많습니다 · '+basis+' 기준 · 쇼츠 = 3분 이하':basis+' 기준 · 쇼츠 = 3분 이하 영상';
+    paintVids(vs);
+  }
+  function paintDaily(cur){
+    const host=$('ypDaily');
+    $('ypDailySub').textContent=cur.length?'최근 '+range+'일 · '+md(cur[0].d)+' ~ '+md(cur[cur.length-1].d):'';
+    if(cur.length<2){ host.innerHTML='<div class="profit-empty">하루 조회수는 유튜브 분석 권한으로 가져온 뒤에 보여요.</div>'; $('ypDailyAx').innerHTML=''; host.onmousemove=host.onmouseleave=null; return; }
+    const vals=cur.map(x=>x.v), hi=Math.max(1,...vals)*1.15, n=cur.length;
+    const X=i=>i/(n-1)*100, Y=v=>(1-v/hi)*70;
+    const line=cur.map((x,i)=>X(i).toFixed(2)+','+Y(x.v).toFixed(2)).join(' ');
+    const nmax=Math.max(1,...cur.map(x=>Math.abs(x.sg-x.sl))), bw=Math.max(.4,Math.min(2.6,100/n*.6));
+    const bars=cur.map((x,i)=>{ const d=x.sg-x.sl, h=Math.abs(d)/nmax*24; return '<rect data-i="'+i+'" class="'+(d<0?'is-neg':'')+'" x="'+(X(i)-bw/2).toFixed(2)+'" y="'+(100-h).toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+Math.max(.6,h).toFixed(2)+'" rx="0.6"/>'; }).join('');
+    host.innerHTML='<svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="ypFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--neg)" stop-opacity=".18"/><stop offset="1" stop-color="var(--neg)" stop-opacity="0"/></linearGradient></defs>'
+      +'<g class="grid">'+[0,1,2,3].map(k=>'<line x1="0" x2="100" y1="'+(k/3*70)+'" y2="'+(k/3*70)+'" vector-effect="non-scaling-stroke"/>').join('')+'</g>'
+      +'<polygon class="area" points="0,70 '+line+' 100,70"/><polyline class="line" points="'+line+'"/><g class="net">'+bars+'</g></svg>'
+      +[0,1,2,3].map(k=>'<span class="ip-yax" style="top:'+(k/3*70)+'%">'+num(hi*(1-k/3))+'</span>').join('')
+      +'<span class="ip-dot" id="ypDot"></span><div class="ip-tip" id="ypTip"></div>';
+    const step=Math.max(1,Math.round(n/6));
+    $('ypDailyAx').innerHTML=cur.filter((x,i)=>i%step===0||i===n-1).map(x=>'<span>'+md(x.d)+'</span>').join('');
+    host.onmousemove=e=>{
+      const r=host.getBoundingClientRect(), i=Math.max(0,Math.min(n-1,Math.round((e.clientX-r.left)/r.width*(n-1)))), x=cur[i];
+      const px=X(i)/100*r.width, py=Y(x.v)/100*r.height, dot=$('ypDot'), tip=$('ypTip');
+      dot.style.left=px+'px'; dot.style.top=py+'px'; dot.classList.add('is-on');
+      tip.style.left=Math.max(80,Math.min(r.width-80,px))+'px'; tip.style.top=py+'px'; tip.classList.add('is-on');
+      tip.innerHTML=md(x.d)+' · 조회 <b>'+x.v.toLocaleString('ko-KR')+'</b><br>시청 '+Math.round(x.m/60*10)/10+'시간 · 구독 +'+x.sg+' −'+x.sl;
+      host.querySelectorAll('.net rect').forEach(b=>b.classList.toggle('is-on',+b.dataset.i===i));
+    };
+    host.onmouseleave=()=>{ $('ypDot').classList.remove('is-on'); $('ypTip').classList.remove('is-on'); host.querySelectorAll('.net rect.is-on').forEach(b=>b.classList.remove('is-on')); };
+  }
+  function paintVids(vs){
+    const er=v=>v.v?(v.l+v.c)/v.v*100:0;
+    let a=vs.filter(v=>!vtype||(vtype==='short')===isShort(v));
+    const S={new:(x,y)=>String(y.at).localeCompare(x.at),v:(x,y)=>y.v-x.v,l:(x,y)=>y.l-x.l,c:(x,y)=>y.c-x.c,er:(x,y)=>er(y)-er(x)};
+    a=a.slice().sort(S[sort]||S.new);
+    const avg=vs.length?vs.reduce((x,y)=>x+y.v,0)/vs.length:0;
+    $('ypVids').innerHTML=a.slice(0,limit).map(v=>{
+      const m=Math.floor(v.dur/60), s=v.dur%60, url=isShort(v)?'https://www.youtube.com/shorts/'+encodeURIComponent(v.id):'https://www.youtube.com/watch?v='+encodeURIComponent(v.id);
+      return '<a class="ip-post" href="'+url+'" target="_blank" rel="noopener"><div class="ip-thumb">'+(v.th?'<img src="'+esc(v.th)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'')+
+        '<span class="ty">'+(isShort(v)?'쇼츠':'영상')+' · '+m+':'+String(s).padStart(2,'0')+'</span>'+(avg&&v.v>avg*1.5?'<span class="ip-hot">평균 ×'+(v.v/avg).toFixed(1)+'</span>':'')+'</div>'+
+        '<div class="ip-post-body"><p class="yp-ttl">'+esc(v.t)+'</p><span class="yp-meta">'+esc(v.at.slice(0,10).replace(/-/g,'.'))+'</span>'+
+        '<div class="ip-mets"><div><b>'+num(v.v)+'</b><small>조회</small></div><div><b>'+num(v.l)+'</b><small>좋아요</small></div><div><b>'+num(v.c)+'</b><small>댓글</small></div><div><b class="ip-er">'+er(v).toFixed(1)+'%</b><small>반응률</small></div></div></div></a>';
+    }).join('')||'<div class="yp-empty" style="grid-column:1/-1">올린 영상이 없어요</div>';
+    $('ypMore').hidden=a.length<=limit; $('ypMoreBtn').textContent=(a.length-limit)+'개 더 보기';
+  }
+
+  /* ---------- 누르기 ---------- */
+  $('ypChs').addEventListener('click',e=>{ const b=e.target.closest('[data-ch]'); if(!b) return; cur=b.dataset.ch; limit=24; try{ localStorage.setItem('baroyam_yp_ch',cur); }catch(err){} msg(''); paint(); auto(); });
+  $('ypFetch').addEventListener('click',()=>{ if(!cur||busy) return; const p=askToken(cur); p.catch(e=>{ msg(e.message||String(e)); }); fetchCh(cur,p); });   // 구글 창은 누른 순간에 열어야 막히지 않는다
+  $('ypManage').addEventListener('click',()=>{ if(window.baroyamContentGo) window.baroyamContentGo('channels'); });
+  if(window.UI&&window.UI.tabs){
+    window.UI.tabs($('ypRange'),v=>{ range=+v||28; try{ localStorage.setItem('baroyam_yp_range',String(range)); }catch(e){} paint(); }).set(String(range));
+    window.UI.tabs($('ypSort'),v=>{ sort=v; limit=24; paint(); }).set(sort);
+  }
+  $('ypVType').addEventListener('click',e=>{ const c=e.target.closest('.ui-chip'); if(!c) return; vtype=c.dataset.v; limit=24; $('ypVType').querySelectorAll('.ui-chip').forEach(x=>x.setAttribute('aria-pressed',String(x===c))); paint(); });
+  $('ypMoreBtn').addEventListener('click',()=>{ limit+=24; paint(); });
+  // 저장된 것이 1시간 넘었고 그 채널 권한이 있으면 저절로 다시 받는다(구글 창 없이)
+  function auto(){
+    const D=st.data[cur], kept=cur&&window.baroyamYtToken&&window.baroyamYtToken.get(cur);
+    if(kept&&!busy&&(!D||Date.now()-Date.parse(D.at)>3600e3)) fetchCh(cur,Promise.resolve(kept));
+  }
+  document.addEventListener('baroyam:content-pane',async e=>{
+    if(e.detail!=='perf') return;
+    if(window.baroyamYtChannels&&!window.baroyamYtChannels.loaded()) await window.baroyamYtChannels.load();
+    if(!st.loaded) await load(); else paint();
+    auto();
+  });
+  document.addEventListener('baroyam:cm-channels',()=>{ if(!root.hidden) paint(); });
+})();
+
 /* 유튜브콘텐츠 › 업로드 · 영상 하나를 골라(내 컴퓨터 · 바로얌 드라이브) 연결한 유튜브 채널에 올린다
    이 창이 YouTube Data API(videos.insert · 이어 올리기)로 바로 올린다 · 서버(VPS)를 거치지 않으므로 올리는 동안 창을 닫으면 멈춘다 ·
    권한: 올릴 때 구글 고르기 창에서 그 채널(브랜드 계정 포함)을 골라 youtube.upload 를 받는다 · 채널마다 1시간 이 창 메모리에만 둔다 ·
@@ -18417,7 +18719,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const $=id=>document.getElementById(id);
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const KEY='content_uploads_v1';
-  const SCOPE='https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly';
+  const SCOPE='https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly';   // 채널 연결·성과와 같은 권한(한 번 받으면 셋 다 씀)
   const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   const me=()=>{ try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
   const kstDay=ms=>new Date(ms+9*3600e3).toISOString().slice(0,10);
