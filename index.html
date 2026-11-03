@@ -2373,7 +2373,17 @@ window.BAROYAM_FONT=(function(){
   #igCal .pj-mcal-bar.is-late::after{content:"";flex:none;width:6px;height:6px;margin-left:6px;border-radius:99px;background:var(--neg)}
   .ig-trash[hidden]{display:none}
   /* 일정 창 */
-  .settings-panel.ig-dlg{max-width:520px;height:auto;max-height:90vh}
+  .settings-panel.ig-dlg{max-width:980px;height:auto;max-height:90vh}
+  /* 일정 창 두 칸 · 왼쪽 일정(제목·날짜·형식·상태·메모) | 오른쪽 올릴 내용(피드 가이드·캡션) */
+  .ig-dlg-cols{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);overflow:hidden}
+  .ig-dlg-cols>.ig-form{overflow-y:auto;min-width:0}
+  .ig-dlg-cols>.ig-form+.ig-form{border-left:1px solid var(--line);background:color-mix(in srgb,var(--chip-flat) 45%,var(--paper))}
+  .ig-form .ig-lab{display:flex;align-items:center;gap:8px}
+  .ig-form .ig-lab em{font-style:normal;font-weight:400;font-size:11.5px;color:var(--mute);margin-left:auto}
+  .ig-form .ig-lab em.is-over{color:var(--neg)}
+  .ig-form .ig-hint{margin:-2px 0 0;font-size:11.5px;font-weight:400;color:var(--mute)}
+  .ig-form textarea.ui-field.ig-guide{min-height:150px}
+  .ig-form textarea.ui-field.ig-cap{min-height:240px}
   .ig-form{flex:1;min-height:0;overflow-y:auto;padding:16px 22px 4px;display:flex;flex-direction:column;gap:14px}
   .ig-form label,.ig-form .ig-f{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:500;color:var(--mute)}
   .ig-form .ig-row2{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}
@@ -3214,7 +3224,8 @@ window.BAROYAM_FONT=(function(){
   @media (max-width:640px){ .ip-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
   #maDayKpis{grid-template-columns:repeat(4,minmax(0,1fr))}   /* 데일리 성과 숫자 카드 넷(지출·구매 전환값·ROAS·구매) */
   @media (max-width:640px){ #maDayKpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
-  @media (max-width:760px){ .ig-tools #igQ{width:100%} .ig-tools .ig-end{margin-left:0;width:100%} .ig-form .ig-row2{grid-template-columns:1fr} }
+  @media (max-width:760px){ .ig-tools #igQ{width:100%} .ig-tools .ig-end{margin-left:0;width:100%} .ig-form .ig-row2{grid-template-columns:1fr}
+    .ig-dlg-cols{grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;overflow-y:auto} .ig-dlg-cols>.ig-form{overflow:visible} .ig-dlg-cols>.ig-form+.ig-form{border-left:0;border-top:1px solid var(--line)} }
   /* 콘텐츠마케팅 › 새 영상 만들기 (cm-*) · 지금은 모양만 · 버튼·탭·칩·입력칸은 ui-* 그대로, 여기서는 자리와 카드만 잡는다 */
   .cm-make{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
   .cm-make>aside.cm-col{position:sticky;top:16px}
@@ -11676,6 +11687,7 @@ window.BAROYAM_FONT=(function(){
               <h2 id="igDlgTitle">업로드 일정</h2>
               <button type="button" class="settings-close" data-ig-close aria-label="닫기">✕</button>
             </div>
+            <div class="ig-dlg-cols">
             <div class="ig-form">
               <label>제목<input class="ui-field" id="igTitle" maxlength="120" placeholder="예: 신제품 언박싱 릴스" autocomplete="off"></label>
               <div class="ig-row2">
@@ -11686,6 +11698,16 @@ window.BAROYAM_FONT=(function(){
               <div class="ig-f">상태<div class="ui-chips" id="igState"></div></div>
               <label>메모<textarea class="ui-field" id="igMemo" maxlength="3000" placeholder="문구·해시태그·참고 링크 등"></textarea></label>
               <div class="ig-meta" id="igMeta"></div>
+            </div>
+            <!-- 올릴 내용 · 피드 가이드(어떻게 찍고 담을지)·캡션(게시물 글) · 같은 일정 줄의 guide·caption 칸 -->
+            <div class="ig-form">
+              <div class="ig-f"><span class="ig-lab">피드 가이드</span>
+                <p class="ig-hint">사진·영상 구성, 장 순서, 들어갈 문구, 톤 같은 제작 안내</p>
+                <textarea class="ui-field ig-guide" id="igGuide" maxlength="5000" placeholder="예: 1장 제품 단독 컷(위에서) → 2장 조리 과정 → 3장 먹는 장면 · 따뜻한 톤"></textarea></div>
+              <div class="ig-f"><span class="ig-lab">캡션 <em id="igCapCount"></em><button type="button" class="ui-btn ghost sm" id="igCapCopy">복사</button></span>
+                <p class="ig-hint">인스타에 그대로 올릴 글 · 해시태그 포함</p>
+                <textarea class="ui-field ig-cap" id="igCaption" maxlength="2200" placeholder="게시물 글 · 해시태그는 30개까지"></textarea></div>
+            </div>
             </div>
             <div class="pf-mix-foot">
               <button type="button" class="ui-btn ghost danger" id="igDel">삭제</button>
@@ -18987,7 +19009,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         const thumb='insta/up/'+id+'/thumb.jpg';
         if(tb) await DB().fileUpload(BUCKET,thumb,new File([tb],'thumb.jpg',{type:'image/jpeg'}));
         const schedId='ig'+rid();
-        await savePlan(schedId,s=>Object.assign(s,{title,date:kstDay(Date.parse(when)),time:kstTime(Date.parse(when)),type:form.type,state:'ready',memo:'업로드 탭에서 예약 · 시각이 되면 자동으로 올라가요',ord:Date.now()}));
+        await savePlan(schedId,s=>Object.assign(s,{title,date:kstDay(Date.parse(when)),time:kstTime(Date.parse(when)),type:form.type,state:'ready',memo:'업로드 탭에서 예약 · 시각이 되면 자동으로 올라가요',caption:form.type==='story'?'':form.caption,ord:Date.now()}));
         await savePost(id,p=>Object.assign(p,{id,type:form.type,files,thumb:tb?thumb:'',caption:form.type==='story'?'':form.caption,
           shareFeed:form.shareFeed,when,state:'scheduled',schedId,by:me(),created:Date.now()}));
         st.note={t:form.when==='now'?'2분 안에 인스타그램에 올라가요':'예약했어요 · '+fmt(when),ok:true};
@@ -21436,7 +21458,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(F.state==='todo'&&p.state==='done') return false;
     if(F.state==='late'&&!isLate(p)) return false;
     if(F.state==='done'&&p.state!=='done') return false;
-    if(F.q&&((p.title||'')+' '+(p.memo||'')).toLowerCase().indexOf(F.q)<0) return false;
+    if(F.q&&((p.title||'')+' '+(p.memo||'')+' '+(p.guide||'')+' '+(p.caption||'')).toLowerCase().indexOf(F.q)<0) return false;
     return true;
   }
   function paintFilters(all){
@@ -21524,10 +21546,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function openDlg(id,preset){
     const p=id&&st.data.posts[id];
     editId=p?id:null;
-    form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:p.state||'plan',memo:p.memo||''}
-          :Object.assign({title:'',date:today(),time:'',type:'feed',state:'plan',memo:''},preset||{});
+    form=p?{title:p.title||'',date:p.date,time:p.time||'',type:p.type||'feed',state:p.state||'plan',memo:p.memo||'',guide:p.guide||'',caption:p.caption||''}
+          :Object.assign({title:'',date:today(),time:'',type:'feed',state:'plan',memo:'',guide:'',caption:''},preset||{});
     $('igDlgTitle').textContent=p?'업로드 일정 고치기':'새 업로드 일정';
-    $('igTitle').value=form.title; $('igMemo').value=form.memo;
+    $('igTitle').value=form.title; $('igMemo').value=form.memo; $('igGuide').value=form.guide; $('igCaption').value=form.caption; capCount();
     if(datePick) datePick.set(form.date);
     $('igDel').hidden=!p; $('igCopy').hidden=!p;
     $('igMeta').textContent=p&&p.at?'마지막 수정 '+new Date(p.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
@@ -21536,12 +21558,24 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     setTimeout(()=>$('igTitle').focus(),0);
   }
   function closeDlg(){ dlg.hidden=true; editId=null; }
+  /* 창의 글 칸을 form 에 옮긴다 */
+  function readText(){ form.title=$('igTitle').value; form.memo=$('igMemo').value; form.guide=$('igGuide').value; form.caption=$('igCaption').value; }
+  function capCount(){
+    const v=$('igCaption').value, tags=(v.match(/#[^\s#]+/g)||[]).length, c=$('igCapCount');
+    c.textContent=v.length+' / 2200자 · 해시태그 '+tags+' / 30'; c.classList.toggle('is-over',tags>30);
+  }
+  $('igCaption').addEventListener('input',capCount);
+  $('igCapCopy').addEventListener('click',async()=>{
+    const v=$('igCaption').value, b=$('igCapCopy'); if(!v) return;
+    try{ await navigator.clipboard.writeText(v); }catch(e){ $('igCaption').select(); document.execCommand('copy'); }
+    b.textContent='복사됨'; setTimeout(()=>{ b.textContent='복사'; },1200);
+  });
   function saveDlg(){
-    form.title=$('igTitle').value.trim(); form.memo=$('igMemo').value;
+    readText(); form.title=form.title.trim();
     if(!form.title){ $('igTitle').focus(); return; }
     if(!isDay(form.date)) form.date=today();
     const id=editId||uid();
-    const patch={title:form.title,date:form.date,time:form.time,type:form.type,state:form.state,memo:form.memo};
+    const patch={title:form.title,date:form.date,time:form.time,type:form.type,state:form.state,memo:form.memo,guide:form.guide,caption:form.caption};
     if(!editId) patch.ord=Date.now();
     closeDlg();
     calMonth=form.date.slice(0,7);
@@ -21550,7 +21584,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   dlg.addEventListener('click',e=>{
     if(e.target===dlg||e.target.closest('[data-ig-close]')){ closeDlg(); return; }
     const c=e.target.closest('#igType .ui-chip,#igState .ui-chip');
-    if(c){ form.title=$('igTitle').value; form.memo=$('igMemo').value; form[c.parentElement.id==='igType'?'type':'state']=c.dataset.v; paintForm(); }
+    if(c){ readText(); form[c.parentElement.id==='igType'?'type':'state']=c.dataset.v; paintForm(); }
   });
   $('igTime').addEventListener('click',e=>{ e.stopPropagation(); window.UI.menu($('igTime'),TIMES,form.time,v=>{ form.time=v; paintForm(); }); });
   $('igOk').addEventListener('click',saveDlg);
@@ -21558,7 +21592,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!dlg.hidden&&!(document.getElementById('askDlg')&&!document.getElementById('askDlg').hidden)) closeDlg(); });
   $('igCopy').addEventListener('click',()=>{
     if(!editId) return;
-    form.title=$('igTitle').value.trim(); form.memo=$('igMemo').value;
+    readText(); form.title=form.title.trim();
     const preset=Object.assign({},form,{state:form.state==='done'?'plan':form.state,title:form.title+' (복사)'});
     closeDlg(); openDlg(null,preset);
   });
