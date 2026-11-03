@@ -14626,6 +14626,9 @@ window.CsGuide=(function(){
     /* caffeinnos-automation/insta_insights.js · 토큰은 VPS instagram_token.json(7일마다 스스로 갱신) */
     {name:'인스타 성과 수집', cat:'collect', where:'ERP 인스타콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['00:05','07:20','13:20','19:20'], record:'인스타 성과 수집',
      desc:'인스타그램 API 로 계정·게시물 성과(도달·조회·참여·팔로워 증감·팔로워 구성)를 받아 인스타콘텐츠 성과 화면을 채워요. 스토리는 24시간 뒤 사라져서 매시 50분에 따로 받아 쌓아요.', task:'cron'},
+    /* caffeinnos-automation/youtube_insights.js · 권한은 VPS youtube_tokens.json(PC 에서 node youtube_login.js 로 채널마다 연결 · 오래 쓰는 권한) */
+    {name:'유튜브 성과 수집', cat:'collect', where:'ERP 유튜브콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['00:10','07:30','13:30','19:30'], record:'유튜브 성과 수집',
+     desc:'연결한 유튜브 채널마다 채널 통계·최근 영상 100개(Data API)와 최근 180일 하루 조회·시청 시간·구독 증감(Analytics API)을 받아 유튜브콘텐츠 성과 화면을 채워요. 유튜브 분석 숫자는 1~2일 늦게 들어와요.', task:'cron'},
     /* caffeinnos-automation/meta_ads.js · 토큰은 VPS .env META_ADS_TOKEN(시스템 사용자 baroyam-ads · ads_read · 만료 없음) */
     {name:'메타광고 성과 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['00:00','08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
      desc:'메타 마케팅 API 로 광고계정의 캠페인·광고 세트·광고(소재) 성과(지출·구매·매출·ROAS)를 받아 퍼포먼스마케팅 화면을 채워요.', task:'cron'},
