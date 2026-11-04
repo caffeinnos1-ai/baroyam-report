@@ -3520,6 +3520,15 @@ window.BAROYAM_FONT=(function(){
   .cm-sched li.is-empty,.cm-sched li.is-empty b{color:var(--mute);font-weight:400}
   .cm-stage{display:grid;place-items:center;min-height:560px;padding:20px;border-radius:16px;background:var(--chip-flat)}
   .cm-stage .cm-phone{width:100%;max-width:340px;margin:0}
+  .cm-phone.has-vid{padding:0;overflow:hidden;background:#000}
+  .cm-phone iframe{width:100%;height:100%;border:0;display:block}
+  .cm-thumb img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:block}
+  .cm-ap-item.is-busy{opacity:.6;cursor:default}
+  .cm-ap-empty{padding:30px 10px;text-align:center;font-size:12.5px;line-height:1.7;color:var(--mute)}
+  .cm-ap-used{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--body)}
+  .cm-ap-used li{display:flex;gap:6px}.cm-ap-used li b{flex:none;width:18px;color:var(--mute);font-weight:500}
+  .cm-ap-side-msg{margin:8px 0 0;font-size:12px;color:var(--neg)}
+  .cm-ap-side-msg:empty{display:none}
   .cm-ap-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .cm-ap-acts .cm-span{grid-column:1/-1}
   .cm-box{margin:0;padding:10px 12px;border-radius:var(--ui-r);background:var(--chip-flat);font-size:12.5px;line-height:1.55;color:var(--body);word-break:break-all;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -10967,7 +10976,7 @@ window.BAROYAM_FONT=(function(){
           <button type="button" class="hero-view-tab" role="tab" data-content="perf" data-sub="연결한 유튜브 채널의 조회·시청 시간·구독자 변화와 영상 성과를 봅니다.">성과</button>
           <button type="button" class="hero-view-tab" role="tab" data-content="channels" data-sub="채널을 연결하고 채널마다 타깃·업로드 시각·편집 스타일을 정합니다." hidden>채널 관리</button>
           <button type="button" class="hero-view-tab active" role="tab" data-content="make" data-sub="기획을 적고 대본 후보를 받아 고릅니다." title="대본 고르기를 기다리는 영상">새 영상 만들기<b class="n is-todo">1</b></button>
-          <button type="button" class="hero-view-tab" role="tab" data-content="review" data-sub="편집이 끝난 영상을 승인하거나 반려하고, 승인한 완성본의 제목·설명을 다듬습니다." title="승인을 기다리는 영상">제작검수<b class="n is-todo" id="contentApproveCount">5</b></button>
+          <button type="button" class="hero-view-tab" role="tab" data-content="review" data-sub="편집이 끝난 영상을 보고 승인하거나 반려합니다. 승인한 영상은 완성본에서 업로드로 보냅니다." title="승인을 기다리는 영상">제작검수<b class="n is-todo" id="contentApproveCount" style="display:none">0</b></button>
           <button type="button" class="hero-view-tab" role="tab" data-content="upload" data-sub="영상 파일이나 바로얌 드라이브 영상을 골라 원하는 유튜브 채널에 바로 올리거나 예약합니다.">업로드</button>
         </div>
         <section class="section" style="padding-top:0">
@@ -11035,184 +11044,23 @@ window.BAROYAM_FONT=(function(){
             <div class="cm-card cm-job" id="cwJob"></div>
           </main>
         </div>
-        <!-- 승인 요청 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 승인·반려와 검수 결과 -->
+        <!-- 제작검수 · 새 영상 만들기에서 "편집 요청"으로 만든 영상(content_jobs_v1.jobs[id].render)을 본다 · 그리기는 대본 스크립트의 paintReview() ·
+             승인 요청 = 편집이 끝나 드라이브 ★유튜브/60.승인요청 에 있는 영상(편집 중인 것도 흐리게) · 승인하면 99.완성 으로 옮기고 완성본에 · 반려하면 사유를 붙여 다시 편집(수정N) -->
         <div class="cm-rv-bar" data-content-pane="review" hidden>
           <div class="ui-tabs" id="cmReviewTabs">
-            <button type="button" class="ui-tab" data-value="approve" aria-selected="true">승인 요청 <span class="n" id="cmRvNApprove">5</span></button>
-            <button type="button" class="ui-tab" data-value="done" aria-selected="false">완성본 <span class="n" id="contentDoneCount">3</span></button>
+            <button type="button" class="ui-tab" data-value="approve" aria-selected="true">승인 요청 <span class="n" id="cmRvNApprove">0</span></button>
+            <button type="button" class="ui-tab" data-value="done" aria-selected="false">완성본 <span class="n" id="contentDoneCount">0</span></button>
           </div>
         </div>
         <div class="cm-approve" data-content-pane="review" data-review-sub="approve" hidden>
-          <aside class="cm-card cm-ap-list">
-            <h3>승인 요청 <span class="cm-count">5</span></h3>
-            <div class="cm-ap-filters">
-              <button type="button" class="ui-field"><span class="t">전체 주제</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-              <button type="button" class="ui-field"><span class="t">최신순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-            </div>
-            <div class="cm-ap-scroll">
-              <div class="cm-ap-item is-on">
-                <div class="cm-thumb"><span>00:39</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>승인 요청 1</b> · 2026-10-11-자취생에게쫀득란빵토핑계란빵</p>
-                  <p class="cm-ap-file">final.mp4</p>
-                  <p class="cm-ap-meta">10/11 16:38 · 31.5MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:37</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><b>승인 요청 2</b> · 2026-10-11-아이간식1분해결</p>
-                  <p class="cm-ap-file">final.mp4</p>
-                  <p class="cm-ap-meta">10/11 14:01 · 30.3MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:40</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><span class="cm-tag is-back">수정1</span><b>승인 요청 3</b> · 2026-10-11-주부에게쫀득란빵토핑계란빵</p>
-                  <p class="cm-ap-file">final_수정1.mp4</p>
-                  <p class="cm-ap-meta">10/11 13:58 · 34.4MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:31</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><span class="cm-tag is-back">수정2</span><b>승인 요청 4</b> · 2026-10-09-워킹맘간식</p>
-                  <p class="cm-ap-file">final_v5.mp4</p>
-                  <p class="cm-ap-meta">10/9 23:36 · 36.6MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:31</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><span class="cm-tag is-back">수정1</span><b>승인 요청 5</b> · 2026-10-09-워킹맘간식</p>
-                  <p class="cm-ap-file">final_v4.mp4</p>
-                  <p class="cm-ap-meta">10/9 22:10 · 35.9MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm">승인</button><button type="button" class="ui-btn sm">반려</button></div>
-                </div>
-              </div>
-            </div>
-          </aside>
-          <div class="cm-stage">
-            <div class="cm-phone"><span>목록에서 영상을 고르면 여기서 재생돼요</span></div>
-          </div>
-          <aside class="cm-col">
-            <div class="cm-card">
-              <h3>빠른 작업</h3>
-              <div class="cm-ap-acts">
-                <button type="button" class="ui-btn primary">승인</button>
-                <button type="button" class="ui-btn soft">휴지통으로</button>
-              </div>
-              <p class="cm-hint">승인하면 완성본으로 넘어가 <b>주부채널 다음 업로드(10/12 12:00)</b>에 자동으로 예약돼요.</p>
-            </div>
-            <div class="cm-card">
-              <h3>반려 · 다시 편집</h3>
-              <div class="cm-field"><label>어디가 아쉬운가요 <em>여러 개 고를 수 있어요</em></label>
-                <div class="ui-chips cm-chips-sm">
-                  <button type="button" class="ui-chip" aria-pressed="false">훅</button>
-                  <button type="button" class="ui-chip" aria-pressed="false">정보</button>
-                  <button type="button" class="ui-chip" aria-pressed="false">템포</button>
-                  <button type="button" class="ui-chip" aria-pressed="true">화면</button>
-                  <button type="button" class="ui-chip" aria-pressed="false">소리</button>
-                  <button type="button" class="ui-chip" aria-pressed="false">마무리</button>
-                </div></div>
-              <div class="cm-field"><label>편집자에게 한 줄</label>
-                <input class="ui-field block" placeholder="예: 두 번째 장면이 어두워요. 노른자 단면을 더 밝게"></div>
-              <button type="button" class="ui-btn block">반려하고 다시 편집 보내기</button>
-              <p class="cm-hint" style="margin-top:10px">편집자가 고친 영상은 <b>수정1</b>로 이 목록에 다시 올라와요.</p>
-            </div>
-            <div class="cm-card">
-              <h3>제목</h3>
-              <input class="ui-field block" value="final">
-            </div>
-            <div class="cm-card">
-              <h3>주제 · 파일</h3>
-              <p class="cm-box">2026-10-11-자취생에게쫀득란빵토핑계란빵 · 10/11 16:38 · 31.5MB</p>
-            </div>
-            <div class="cm-card">
-              <h3>검수 결과</h3>
-              <p class="cm-box"><span class="cm-tag is-done">통과</span> 평균 8.83</p>
-              <div class="cm-scores"><div class="cm-score"><span>훅</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>정보</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>템포</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score"><span>화면</span><div class="cm-bar"><i style="width:40%"></i></div><b>4</b></div><div class="cm-score"><span>소리</span><div class="cm-bar"><i style="width:90%"></i></div><b>9</b></div><div class="cm-score"><span>자연스러운 마무리</span><div class="cm-bar"><i style="width:100%"></i></div><b>10</b></div><div class="cm-score is-avg"><span>평균</span><div class="cm-bar"><i style="width:88.3%"></i></div><b>8.83</b></div></div>
-              <p class="cm-hint">막대는 10점 만점 기준입니다.</p>
-            </div>
-          </aside>
+          <aside class="cm-card cm-ap-list"><h3>승인 요청 <span class="cm-count" id="cmApN">0</span></h3><div class="cm-ap-scroll" id="cmApList"></div></aside>
+          <div class="cm-stage" id="cmApStage"></div>
+          <aside class="cm-col" id="cmApSide"></aside>
         </div>
-        <!-- 완성본 · 지금은 모양만(눌러도 동작하지 않음) · 왼쪽 완성 영상 목록 | 가운데 재생 | 오른쪽 유튜브 업로드 준비 -->
         <div class="cm-approve" data-content-pane="review" data-review-sub="done" hidden>
-          <aside class="cm-card cm-ap-list">
-            <h3>완성본 <span class="cm-count">3</span></h3>
-            <div class="cm-ap-filters">
-              <button type="button" class="ui-field"><span class="t">전체 주제</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-              <button type="button" class="ui-field"><span class="t">최신순</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-            </div>
-            <div class="cm-ap-scroll">
-              <div class="cm-ap-item is-on">
-                <div class="cm-thumb"><span>00:31</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><span class="cm-tag">예약 10/12 12:00</span><b>완성 1</b> · 2026-10-09-쫀득란빵</p>
-                  <p class="cm-ap-file">final_v6.mp4</p>
-                  <p class="cm-ap-meta">주부채널 · 26.9MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:37</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><span class="cm-tag">예약 10/12 19:00</span><b>완성 2</b> · 2026-10-10-출근길아침</p>
-                  <p class="cm-ap-file">final_수정1.mp4</p>
-                  <p class="cm-ap-meta">주부채널 · 30.1MB</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button></div>
-                </div>
-              </div>
-              <div class="cm-ap-item">
-                <div class="cm-thumb"><span>00:34</span></div>
-                <div class="cm-ap-body">
-                  <p class="cm-ap-topic"><span class="cm-tag is-done">업로드됨</span><b>완성 3</b> · 2026-10-08-콘치즈계란빵</p>
-                  <p class="cm-ap-file">final.mp4</p>
-                  <p class="cm-ap-meta">주부채널 · 10/11 12:00 올림</p>
-                  <div class="ui-btn-row"><button type="button" class="ui-btn sm">영상 보기</button><button type="button" class="ui-btn sm ghost">유튜브에서 보기</button></div>
-                </div>
-              </div>
-            </div>
-          </aside>
-          <div class="cm-stage">
-            <div class="cm-phone"><span>목록에서 영상을 고르면 여기서 재생돼요</span></div>
-          </div>
-          <aside class="cm-col">
-            <div class="cm-card">
-              <h3>빠른 작업</h3>
-              <div class="cm-ap-acts">
-                <button type="button" class="ui-btn">예약 시각 바꾸기</button>
-                <button type="button" class="ui-btn soft">예약 취소 · 휴지통</button>
-              </div>
-            </div>
-            <div class="cm-card cm-up">
-              <div class="cm-up-head"><h3>유튜브 업로드 준비</h3><span class="cm-cnt">필수 4/5</span></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>채널 예약</label></div>
-                <p class="cm-box"><span class="cm-tag">자동 업로드</span> 주부채널 · 10/12(일) 12:00</p>
-                <p class="cm-hint">채널의 다음 업로드 시각에 맞춰 잡혔어요. 그 전까지 아래 내용을 고치면 고친 대로 올라가요.</p></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>제목 <em>필수</em></label><span class="cm-cnt">10/100</span><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <input class="ui-field block" value="출근 전 1분 아침"></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>설명</label><span class="cm-cnt">84/5000</span><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <textarea class="ui-field block" rows="4">이거 1분 돌리면 아침 끝납니다. 외투도 못 챙기고 뛰쳐나왔죠? 편의점 들를 5분도 없고요.
-
-3종 중 원픽은?</textarea></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>해시태그</label><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <input class="ui-field block" value="#shorts #추운 #아침 #출근길">
-                <p class="cm-hint">설명 맨 끝에 붙여요. 앞의 3개가 제목 위에 보이고, 15개가 넘으면 전부 무시돼요.</p></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>태그</label><span class="cm-cnt">36/500</span><button type="button" class="ui-btn ghost sm">복사</button></div>
-                <input class="ui-field block" value="쇼츠, 추운 아침 출근길 1분 아침 간편식 쫀득란빵(계란빵) 3종"></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>공개 상태 <em>필수</em></label></div>
-                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="false">비공개</button><button type="button" class="ui-chip" aria-pressed="false">일부 공개</button><button type="button" class="ui-chip" aria-pressed="true">공개</button></div>
-                <p class="cm-hint">예약 시각이 되면 이 상태로 올라가요.</p></div>
-              <div class="cm-field"><div class="cm-up-lab"><label>시청자층 <em>필수</em></label></div>
-                <div class="ui-chips"><button type="button" class="ui-chip" aria-pressed="true">아동용 아님</button><button type="button" class="ui-chip" aria-pressed="false">아동용</button></div></div>
-            </div>
-          </aside>
+          <aside class="cm-card cm-ap-list"><h3>완성본 <span class="cm-count" id="cmDnN">0</span></h3><div class="cm-ap-scroll" id="cmDnList"></div></aside>
+          <div class="cm-stage" id="cmDnStage"></div>
+          <aside class="cm-col" id="cmDnSide"></aside>
         </div>
         <!-- 업로드 · 영상 하나를 골라(내 컴퓨터 · 바로얌 드라이브) 연결한 유튜브 채널에 올린다 · 이 창이 YouTube Data API 로 바로 올림(서버 없음) ·
              올릴 때마다 구글 창에서 그 채널을 골라 youtube.upload 권한을 받는다(1시간 이 창 메모리에만) · 예약은 비공개로 올리고 publishAt 에 유튜브가 공개로 바꾼다 ·
@@ -19250,6 +19098,22 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       })().catch(e=>msg('드라이브 영상을 받지 못했어요 · '+(e&&e.message||e)));
     });
   });
+  /* 제작검수 › 완성본의 "업로드로 보내기" · 드라이브 영상을 받아 넣고 제목 칸을 채운다 */
+  window.baroyamYtFromDrive=function(r){
+    if(st.busy){ msg('지금 올리는 중이에요 · 끝난 뒤 다시 보내 주세요'); return; }
+    const G=window.baroyamGoogleToken; if(!G){ msg('구글 권한이 없어요'); return; }
+    (async()=>{
+      msg('드라이브에서 받는 중 · '+r.name,true);
+      const tok=await G();
+      const res=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.id)+'?alt=media&supportsAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
+      if(res.status===401) G.clear();
+      if(!res.ok) throw new Error('드라이브 '+res.status);
+      const b=await res.blob();
+      if(r.title&&!form.title) form.title=String(r.title).slice(0,100);
+      await setFile(new File([b],r.name,{type:'video/mp4'}));
+      msg('');
+    })().catch(e=>msg('드라이브 영상을 받지 못했어요 · '+(e&&e.message||e)));
+  };
   const drop=$('yuDrop');
   ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ if(st.busy) return; e.preventDefault(); drop.classList.add('is-over'); }));
   ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('is-over')));
@@ -19470,7 +19334,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 편집 요청 · 편집 지시서로 영상을 만들어 달라고 편집 일꾼(PC 의 caffeinnos-automation/shorts/editor.js)에 주문한다(editjob/req) ·
      일꾼이 AI 로 ★유튜브/00.영상소스/유튜브_<브랜드>_영상소스 에서 컷마다 영상을 골라 편집하고 ★유튜브/60.승인요청 에 올린 뒤 editjob/res 에 답한다 ·
      작업 기록은 job.render = {req,state,rev,at,by,forEdit,message,drive,plan,dur,host,ms} */
-  async function renderStart(id){
+  async function renderStart(id,back){
     const j=st.jobs[id]; if(!j||!j.pick||!(j.edit||{}).sheet) return;
     const DB=window.BAROYAM_DB;
     const rev=((j.render||{}).rev||0)+1;
@@ -19478,9 +19342,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       if(!DB||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다. 새로고침한 뒤 다시 눌러 주세요.');
       const x=j.edit.sheet, name=j.id+'.'+rev+'.'+rid()+'.json';
       const body={v:1,job:j.id,rev,at:now(),by:me(),input:{brand:j.input.brand||j.input.product||'',shape:'mobile',name:j.pick.title||j.pick.hookTitle||'',
-        hook:j.pick.hookTitle||'',edit:{cuts:x.cuts.map(c=>({sec:c.sec,say:c.say,shot:c.shot,sfx:c.sfx||''})),bgm:x.bgm||'',notes:x.notes||''}}};
+        hook:j.pick.hookTitle||'',edit:{cuts:x.cuts.map(c=>({sec:c.sec,say:c.say,shot:c.shot,sfx:c.sfx||''})),bgm:x.bgm||'',notes:x.notes||''},
+        back:back?{tags:back.tags,text:back.text,plan:back.plan}:null}};
       await DB.fileUpload(BUCKET,'editjob/req/'+name,new Blob([JSON.stringify(body)],{type:'application/json'}));
-      await jobPatch(id,y=>{ y.render={req:name,state:'sent',rev,at:now(),by:me(),forEdit:j.edit.done||'',message:''}; });
+      await jobPatch(id,y=>{ y.render={req:name,state:'sent',rev,at:now(),by:me(),forEdit:j.edit.done||'',message:'',backs:((y.render||{}).backs||[])}; });
     }catch(e){ await jobPatch(id,y=>{ y.render=Object.assign({},y.render,{state:'failed',message:'편집을 요청하지 못했습니다 · '+(e&&e.message||e)}); }); }
     paint(); poll();
   }
@@ -19618,7 +19483,128 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         '<span class="cm-bar"><i style="width:'+s.p+'%"></i></span></button>';
     }).join('');
     paintJob();
+    paintReview();
   }
+
+  /* ---------- 제작검수 · 승인 요청 / 완성본 ----------
+     영상은 드라이브 ★유튜브 의 60.승인요청 → (승인) 99.완성 · 옮기기·휴지통은 이 창의 구글(드라이브) 권한으로 · render.decision = 'ok'|'trash'|'back' */
+  const YT_ROOT='1AuOQAI8gpZnGIQqx2-D5OvxHr1LZ_Gf4';
+  const RV_TAGS=['훅','정보','템포','화면','소리','자막','마무리'];
+  const rvSt={ap:null,dn:null,tags:[],text:'',msg:''};
+  const titleOf=j=>(j.pick&&(j.pick.title||j.pick.hookTitle))||((j.input||{}).product)||'영상';
+  const reviewList=()=>live(st.jobs).filter(j=>j.render&&!j.render.decision&&(j.render.state==='done'&&j.render.drive||busyR(j.render)))
+    .sort((a,b)=>String(b.render.done||b.render.at).localeCompare(a.render.done||a.render.at));
+  const doneList=()=>live(st.jobs).filter(j=>j.render&&j.render.decision==='ok'&&j.render.drive)
+    .sort((a,b)=>String(b.render.okAt).localeCompare(a.render.okAt));
+  function phone(r){
+    if(!r||!r.drive) return '<div class="cm-phone"><span>'+(r&&busyR(r)?'아직 편집 중이에요':'목록에서 영상을 고르면 여기서 재생돼요')+'</span></div>';
+    return '<div class="cm-phone has-vid"><iframe src="https://drive.google.com/file/d/'+encodeURIComponent(r.drive.id)+'/preview" allow="autoplay; fullscreen" allowfullscreen title="영상"></iframe></div>';
+  }
+  function apItem(j,on,kind){
+    const r=j.render, i=j.input||{}, rv=r.rev>1?'<span class="cm-tag is-back">수정'+(r.rev-1)+'</span>':'';
+    const th=r.drive?'<img src="https://drive.google.com/thumbnail?id='+encodeURIComponent(r.drive.id)+'&sz=w200" alt="" loading="lazy" onerror="this.remove()">':'';
+    const tag=kind==='done'?(r.sentUp?'<span class="cm-tag is-done">업로드로 보냄</span>':'<span class="cm-tag">승인 '+esc(fmtAt(r.okAt))+'</span>'):busyR(r)?'<span class="cm-tag">편집 중</span>':rv;
+    return '<div class="cm-ap-item'+(on?' is-on':'')+(busyR(r)?' is-busy':'')+'" data-rv="'+esc(j.id)+'" data-kind="'+kind+'">'+
+      '<div class="cm-thumb">'+th+(r.dur?'<span>00:'+String(Math.round(r.dur)).padStart(2,'0')+'</span>':'')+'</div>'+
+      '<div class="cm-ap-body"><p class="cm-ap-topic">'+tag+'<b>'+esc(i.brand||i.product||'')+'</b> · '+esc(titleOf(j))+'</p>'+
+      '<p class="cm-ap-file">'+esc(r.drive?r.drive.name:'편집 일꾼이 만드는 중')+'</p>'+
+      '<p class="cm-ap-meta">'+esc([fmtAt(r.done||r.at),r.host,r.by&&'요청 '+r.by].filter(Boolean).join(' · '))+'</p></div></div>';
+  }
+  function infoCards(j){
+    const r=j.render, p=j.pick||{}, pl=r.plan||{}, rd=(j.rounds||{})[p.round]||{}, rv=(rd.reviews||{})[p.key];
+    let h='<div class="cm-card"><h3>대본</h3><p class="cm-box"><b>'+esc(p.hookTitle||'')+'</b><br>'+esc((p.lines||[]).map(l=>l.say).join(' / '))+'</p></div>';
+    if(pl.cuts) h+='<div class="cm-card"><h3>AI 가 쓴 영상</h3><ol class="cm-ap-used">'+pl.cuts.map((c,k)=>'<li><b>'+(k+1)+'</b><span>'+esc(String(c.file||'').replace(/\.[a-z0-9]+$/i,'').replace(/^[^_]+_/,''))+' · '+c.from+'~'+c.to+'초'+(c.sound?' · 소리':'')+'</span></li>').join('')+'</ol>'+
+      (pl.bgm?'<p class="cm-hint" style="margin-top:8px">배경음 · '+esc(pl.bgm)+'</p>':'')+(pl.note?'<p class="cm-hint">AI 메모 · '+esc(pl.note)+'</p>':'')+'</div>';
+    if(rv&&rv.scores) h+='<div class="cm-card"><h3>대본 검수 결과</h3><p class="cm-box">'+(rv.pass?'<span class="cm-tag is-done">통과</span>':'<span class="cm-tag is-back">고칠 점 있음</span>')+'</p>'+
+      '<div class="cm-scores">'+SC.filter(([c])=>rv.scores[c]!=null).map(([c,l])=>{ const v=+rv.scores[c]||0; return '<div>'+l+'<span class="cm-bar"><i class="'+(v<=5?'is-low':'')+'" style="width:'+v*10+'%"></i></span><b>'+v+'</b></div>'; }).join('')+'</div></div>';
+    if((r.backs||[]).length) h+='<div class="cm-card"><h3>지난 반려</h3><ol class="cm-ap-used">'+r.backs.map((x,k)=>'<li><b>'+(k+1)+'</b><span>'+esc([(x.tags||[]).join('·'),x.text].filter(Boolean).join(' · '))+' <small>'+esc(fmtAt(x.at)+(x.by?' '+x.by:''))+'</small></span></li>').join('')+'</ol></div>';
+    return h;
+  }
+  function paintReview(){
+    if(!st.loaded||!$('cmApList')) return;
+    const ap=reviewList(), dn=doneList(), wait=ap.filter(j=>!busyR(j.render)).length;
+    const c=document.getElementById('contentApproveCount'); if(c){ c.textContent=wait; c.style.display=wait?'':'none'; }
+    const d=document.getElementById('contentDoneCount'); if(d) d.textContent=dn.length;
+    const n=document.getElementById('cmRvNApprove'); if(n) n.textContent=wait;
+    $('cmApN').textContent=ap.length; $('cmDnN').textContent=dn.length;
+    if(!ap.find(j=>j.id===rvSt.ap)) rvSt.ap=(ap.find(j=>!busyR(j.render))||ap[0]||{}).id||null;
+    if(!dn.find(j=>j.id===rvSt.dn)) rvSt.dn=(dn[0]||{}).id||null;
+    $('cmApList').innerHTML=ap.length?ap.map(j=>apItem(j,j.id===rvSt.ap,'ap')).join(''):'<p class="cm-ap-empty">승인을 기다리는 영상이 없어요.<br>새 영상 만들기에서 대본을 결정하고<br><b>편집 요청</b>을 누르면 여기로 와요.</p>';
+    $('cmDnList').innerHTML=dn.length?dn.map(j=>apItem(j,j.id===rvSt.dn,'done')).join(''):'<p class="cm-ap-empty">승인한 영상이 아직 없어요.</p>';
+    const a=st.jobs[rvSt.ap], ar=a&&a.render;
+    if(!$('cmApStage').dataset.vid||$('cmApStage').dataset.vid!==String(ar&&ar.drive&&ar.drive.id)){ $('cmApStage').innerHTML=phone(ar); $('cmApStage').dataset.vid=String(ar&&ar.drive&&ar.drive.id); }
+    $('cmApSide').innerHTML=!a?'':busyR(ar)?'<div class="cm-card"><h3>편집 중</h3><p class="cm-hint">편집이 끝나면 여기서 승인하거나 반려할 수 있어요.</p></div>'+infoCards(a):
+      '<div class="cm-card"><h3>빠른 작업</h3><div class="cm-ap-acts"><button type="button" class="ui-btn primary" data-rvact="ok">승인</button><button type="button" class="ui-btn soft" data-rvact="trash">휴지통으로</button></div>'+
+        '<p class="cm-hint">승인하면 드라이브 ★유튜브 › 완성 폴더로 옮겨지고 완성본 탭에서 업로드로 보낼 수 있어요.</p><p class="cm-ap-side-msg">'+esc(rvSt.msg)+'</p></div>'+
+      '<div class="cm-card"><h3>반려 · 다시 편집</h3><div class="cm-field"><label>어디가 아쉬운가요 <em>여러 개 고를 수 있어요</em></label><div class="ui-chips cm-chips-sm">'+
+        RV_TAGS.map(t=>'<button type="button" class="ui-chip" data-rvtag="'+t+'" aria-pressed="'+rvSt.tags.includes(t)+'">'+t+'</button>').join('')+'</div></div>'+
+        '<div class="cm-field"><label>편집자에게 한 줄</label><input class="ui-field block" id="cmRvText" maxlength="300" value="'+esc(rvSt.text)+'" placeholder="예: 첫 컷은 치즈 늘어나는 장면으로, 공장 장면은 빼 주세요"></div>'+
+        '<button type="button" class="ui-btn block" data-rvact="back">반려하고 다시 편집 보내기</button>'+
+        '<p class="cm-hint" style="margin-top:10px">AI 가 사유를 보고 영상을 다시 골라 <b>수정'+(ar.rev||1)+'</b>로 이 목록에 다시 올려요. 지금 영상은 드라이브 휴지통으로 가요.</p></div>'+infoCards(a);
+    const o=st.jobs[rvSt.dn], orr=o&&o.render;
+    if($('cmDnStage').dataset.vid!==String(orr&&orr.drive&&orr.drive.id)){ $('cmDnStage').innerHTML=phone(orr); $('cmDnStage').dataset.vid=String(orr&&orr.drive&&orr.drive.id); }
+    $('cmDnSide').innerHTML=!o?'':'<div class="cm-card"><h3>빠른 작업</h3><div class="cm-ap-acts"><button type="button" class="ui-btn primary" data-rvact="upload">업로드로 보내기</button><button type="button" class="ui-btn soft" data-rvact="trash">휴지통으로</button></div>'+
+      '<p class="cm-hint">업로드 탭에 이 영상이 들어가고, 바로얌 AI 가 제목·설명을 추천해요. 채널을 고르고 올리면 돼요.</p><p class="cm-ap-side-msg">'+esc(rvSt.msg)+'</p>'+
+      '<p class="cm-hint"><a href="'+esc(orr.drive.link||'https://drive.google.com/file/d/'+orr.drive.id+'/view')+'" target="_blank" rel="noopener">드라이브에서 열기</a> · 승인 '+esc(fmtAt(orr.okAt)+(orr.okBy?' '+orr.okBy:''))+'</p></div>'+infoCards(o);
+  }
+  // 드라이브 · ★유튜브 바로 아래 폴더(이름으로 찾음)
+  async function ytFolder(tok,re){
+    const q="'"+YT_ROOT+"' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const r=await fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true',{headers:{Authorization:'Bearer '+tok}});
+    if(!r.ok) throw new Error('드라이브 '+r.status+(r.status===404?' · 이 구글 계정으로는 ★유튜브 폴더가 보이지 않아요':''));
+    const f=((await r.json()).files||[]).find(x=>re.test(x.name)); if(!f) throw new Error('★유튜브 안에 '+re.source+' 폴더가 없어요'); return f.id;
+  }
+  async function drvPatch(tok,id,qs,body){
+    const r=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?supportsAllDrives=true'+(qs||''),{method:'PATCH',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+    if(r.status===401&&window.baroyamGoogleToken) window.baroyamGoogleToken.clear();
+    if(!r.ok&&r.status!==404) throw new Error('드라이브 '+r.status);
+    return r.status!==404;
+  }
+  async function rvAct(act,btn){
+    const kind=btn.closest('[data-review-sub]').dataset.reviewSub, j=st.jobs[kind==='done'?rvSt.dn:rvSt.ap]; if(!j||!j.render||!j.render.drive) return;
+    const r=j.render, G=window.baroyamGoogleToken, tokP=(act==='upload'||!G)?null:G();   // 누른 순간에 받아야 허락 창이 막히지 않는다
+    if(tokP) tokP.catch(()=>{});
+    rvSt.msg=''; btn.disabled=true;
+    try{
+      if(act==='upload'){
+        if(!window.baroyamYtFromDrive) throw new Error('업로드 화면을 아직 불러오지 못했어요');
+        await jobPatch(j.id,x=>{ if(x.render) x.render.sentUp=now(); });
+        if(window.baroyamContentGo) window.baroyamContentGo('upload');
+        window.baroyamYtFromDrive({id:r.drive.id,name:r.drive.name,title:(j.pick&&j.pick.hookTitle)||titleOf(j)});
+        return;
+      }
+      if(!tokP) throw new Error('구글 권한이 없어요');
+      if(act==='trash'){
+        if(!confirm('이 영상을 드라이브 휴지통으로 옮길까요? (30일 안에는 드라이브 휴지통에서 되살릴 수 있어요)')) return;
+        await drvPatch(await tokP,r.drive.id,'',{trashed:true});
+        await jobPatch(j.id,x=>{ Object.assign(x.render,{decision:'trash',decAt:now(),decBy:me()}); });
+      }
+      if(act==='ok'){
+        const tok=await tokP, to=await ytFolder(tok,/완성/), from=await ytFolder(tok,/승인\s*요청/);
+        await drvPatch(tok,r.drive.id,'&addParents='+to+'&removeParents='+from);
+        await jobPatch(j.id,x=>{ Object.assign(x.render,{decision:'ok',okAt:now(),okBy:me()}); });
+      }
+      if(act==='back'){
+        rvSt.text=($('cmRvText')||{}).value||rvSt.text;
+        if(!rvSt.tags.length&&!rvSt.text.trim()){ rvSt.msg='어디가 아쉬운지 칩을 고르거나 한 줄을 적어 주세요'; return; }
+        const back={at:now(),by:me(),tags:rvSt.tags.slice(),text:rvSt.text.trim(),file:r.drive.name,plan:r.plan||null};
+        await drvPatch(await tokP,r.drive.id,'',{trashed:true}).catch(()=>{});
+        await jobPatch(j.id,x=>{ x.render.backs=(x.render.backs||[]).concat([back]); });
+        await renderStart(j.id,back);
+        rvSt.tags=[]; rvSt.text='';
+      }
+    }catch(e){ rvSt.msg=(e&&e.message)||String(e); }
+    finally{ btn.disabled=false; paint(); }
+  }
+  ['cmApList','cmDnList'].forEach(id=>$(id).addEventListener('click',e=>{ const it=e.target.closest('[data-rv]'); if(!it) return;
+    if(it.dataset.kind==='done') rvSt.dn=it.dataset.rv; else { if(rvSt.ap!==it.dataset.rv){ rvSt.tags=[]; rvSt.text=''; } rvSt.ap=it.dataset.rv; }
+    rvSt.msg=''; paintReview(); }));
+  ['cmApSide','cmDnSide'].forEach(id=>$(id).addEventListener('click',e=>{
+    const t=e.target.closest('[data-rvtag]');
+    if(t){ const v=t.dataset.rvtag; rvSt.text=($('cmRvText')||{}).value||rvSt.text; rvSt.tags=rvSt.tags.includes(v)?rvSt.tags.filter(x=>x!==v):rvSt.tags.concat([v]); paintReview(); return; }
+    const b=e.target.closest('[data-rvact]'); if(b) rvAct(b.dataset.rvact,b);
+  }));
+  document.addEventListener('baroyam:content-pane',e=>{ if(e.detail==='review') load(true).then(paintReview); });
 
   function paintJob(){
     const box=$('cwJob'), j=st.jobs[st.sel];
@@ -19627,9 +19613,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       return;
     }
     const i=j.input||{}, r=lastRound(j)||{}, rs=Object.values(j.rounds||{}).sort((a,b)=>a.n-b.n);
-    const stepNow=j.pick?2:1;
+    const stepNow=(j.render||{}).sentUp?5:(j.render||{}).decision==='ok'?4:(j.render||{}).state==='done'?3:j.pick?2:1;
     const flow=[['주문',fmtAt(j.at)],['대본',j.pick?'결정 '+fmtAt(j.pick.at):busy(r)?(r.state==='reviewing'?'검수자 점수 매기는 중':'기획자 쓰는 중'):r.state==='failed'?'실패':'고르기 · 내 차례'],
-      ['편집',!j.edit?'준비 중':busy(j.edit)?'지시서 쓰는 중':j.edit.sheet?'지시서 나옴':'다시 받기'],['승인','준비 중'],['예약','준비 중'],['업로드','준비 중']];
+      ['편집',!j.edit?'준비 중':busy(j.edit)?'지시서 쓰는 중':busyR(j.render)?'영상 만드는 중':(j.render||{}).drive?'영상 완성':j.edit.sheet?'지시서 나옴 · 편집 요청':'다시 받기'],
+      ['승인',(j.render||{}).decision==='ok'?'승인 '+fmtAt(j.render.okAt):(j.render||{}).state==='done'&&!(j.render||{}).decision?'제작검수에서 승인 대기':'준비 중'],['예약','준비 중'],['업로드',(j.render||{}).sentUp?'업로드로 보냄':'준비 중']];
     let h='<div class="cm-job-head"><div class="cm-job-title"><span class="cm-tag">직접 기획</span><h3>'+esc(i.product)+'</h3>'+
       '<p>'+esc([i.channel,i.target&&'대상 '+i.target,i.format,i.length&&i.length+'초',fmtAt(j.at)+' 주문'+(j.by?' · '+j.by:'')].filter(Boolean).join(' · '))+'</p></div>'+
       '<button type="button" class="ui-btn sm ghost" data-act="del">삭제</button></div>'+
@@ -19754,7 +19741,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(pl&&pl.cuts) h+='<table class="cm-cuts"><thead><tr><th>#</th><th>쓴 영상</th><th>구간</th></tr></thead><tbody>'+
       pl.cuts.map((c,k)=>'<tr><td>'+(k+1)+'</td><td>'+esc(String(c.file||'').replace(/\.[a-z0-9]+$/i,''))+(c.sound?' <b>소리</b>':'')+(c.why?'<br><small>'+esc(c.why)+'</small>':'')+'</td><td>'+c.from+'~'+c.to+'초</td></tr>').join('')+'</tbody></table>'+
       (pl.bgm?'<p class="cm-edit-meta">배경음 · '+esc(pl.bgm)+'</p>':'')+(pl.note?'<p class="cm-edit-meta">AI 메모 · '+esc(pl.note)+'</p>':'');
-    return h+'<div class="cm-script-foot"><button type="button" class="ui-btn soft" data-act="render">다시 편집 요청</button></div></div></div></div>';
+    return h+'<div class="cm-script-foot">'+(r.decision==='ok'?'<span class="cm-tag is-done">승인됨 · 제작검수 › 완성본</span>':r.decision==='trash'?'<span class="cm-tag">휴지통으로 보냄</span><button type="button" class="ui-btn soft" data-act="render">다시 편집 요청</button>':
+      '<button type="button" class="ui-btn soft" data-act="go-review">제작검수에서 승인하기</button><button type="button" class="ui-btn soft" data-act="render">다시 편집 요청</button>')+'</div></div></div></div>';
   }
 
   /* ---------- 누르기 ---------- */
@@ -19806,6 +19794,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(act==='unpick'){ await jobPatch(j.id,x=>{ x.unpicked=(x.unpicked||[]).concat([x.pick]); delete x.pick; }); st.tab='open'; if(tabs) tabs.set('open'); paint(); return; }
     if(act==='edit-again'){ b.disabled=true; await editStart(j.id,j.pick); return; }
     if(act==='render'){ b.disabled=true; await renderStart(j.id); return; }
+    if(act==='go-review'){ rvSt.ap=j.id; if(window.baroyamContentGo) window.baroyamContentGo('review'); paintReview(); return; }
     if(act==='edit-up'||act==='edit-down'){
       const v=act==='edit-up'?1:-1, at=(j.edit||{}).done||'';
       await jobPatch(j.id,x=>{ const y=x.edit=x.edit||{}; y.fbs=y.fbs||[]; let f=y.fbs.find(z=>z.for===at&&z.by===me());
