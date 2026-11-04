@@ -9132,6 +9132,7 @@ window.BAROYAM_FONT=(function(){
           <div class="plan-hero ch-hero">
             <div class="ptag">판매채널</div>
             <div class="ptitle pf-title"><img class="ch-logo" id="channelViewLogo" alt=""><span id="channelViewTitle">쿠팡</span></div>
+            <div class="psub" id="channelViewSub"></div>
             <!-- 기간 선택 · 프로젝트 마감일 고르기와 같은 달력(빠른 선택 → 시작일~종료일 → 적용) · 적용하면 위 숫자가 0에서 다시 올라간다 -->
             <div class="ch-hero-side"><button type="button" class="raised" id="chPeriodBtn"></button></div>
           </div>
@@ -28748,6 +28749,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     document.querySelectorAll('#view-channel [data-ch-pane]').forEach(el=>{ el.hidden=el.dataset.chPane!==chTab; });
     /* 기간 단추는 위 숫자 칸 몫이라 스케줄에서만 */
     $('chPeriodBtn').parentNode.hidden=chTab!=='dash';
+    /* 배너 아래 한 줄 · 짧게(긴 설명은 사용자 요청으로 뺐다가 같은 날 짧게 다시) */
+    $('channelViewSub').textContent=chTab==='proj'
+      ?chActive+' 경로 프로젝트를 캘린더로 봅니다 · 막대를 끌어 날짜를 바꿉니다'
+      :chActive+' 채널 프로젝트의 진행 상황을 한눈에 봅니다';
     if(chTab==='proj'){
       paintChStatus();
       renderCal({host:$('chCal'),month:chCalMonth,
