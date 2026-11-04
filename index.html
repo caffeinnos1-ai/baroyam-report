@@ -29786,11 +29786,12 @@ window.baroyamAsk=function(title,body,okText){
   function 탭에듦(r, 탭){ return 탭==='촬영본'?촬영칸(r)>=0:회사(r)===탭; }
   /* 화면에서 더하는 뿌리폴더 · 분류 사전(drive_dict_v1 · trend 저장소 드라이브_사전.json)에 아직 없어도 새로고침·업로드가 이 폴더를 훑는다 ·
      사전에도 같은 이름으로 넣어 두었으니, 밤 색인(로봇 계정)이 이 폴더를 볼 수 있게 공유되면 그쪽에서도 올라온다 */
-  const 더한뿌리={'메타광고':'1EWyHyk89JDQoHppAEk0AjbQTYPmSmoA0','유튜브':'18X4wqhH9fIK7Tj42L_heaqSb2eTCTvnU'};
+  const 더한뿌리={'메타광고':'1EWyHyk89JDQoHppAEk0AjbQTYPmSmoA0','유튜브':'1AuOQAI8gpZnGIQqx2-D5OvxHr1LZ_Gf4'};
   function 사전보강(사전){
     if(!사전) return 사전;
     const 뿌리=Object.assign({},사전['뿌리폴더']||{}), 대시=(사전['대시보드폴더']||[]).slice();
-    Object.keys(더한뿌리).forEach(function(k){ if(!뿌리[k]) 뿌리[k]=더한뿌리[k]; if(대시.indexOf(k)<0) 대시.push(k); });
+    /* 화면 값이 사전보다 앞선다 · 11-04 유튜브 폴더를 공유 드라이브 ★유튜브 로 옮겼는데 서버 사전에는 옛 폴더 번호가 남아 있었다 */
+    Object.keys(더한뿌리).forEach(function(k){ 뿌리[k]=더한뿌리[k]; if(대시.indexOf(k)<0) 대시.push(k); });
     return Object.assign({},사전,{'뿌리폴더':뿌리,'대시보드폴더':대시});
   }
 
