@@ -15925,14 +15925,26 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 탭마다 주소 · 보고 있는 화면을 주소 끝(#drive 등)에 적어 두어 새로고침·북마크·공유해도 그 탭이 열린다 ·
      탭을 누를 때마다 pushState 로 기록을 쌓아 뒤로가기·앞으로가기가 탭 사이를 오간다 ·
      뒤로가기·첫 화면처럼 주소를 따라 여는 동안(navFromHash)은 replaceState 로 기록을 더 쌓지 않는다 ·
-     마이홈은 주소를 비우고, 판매채널처럼 다시 열 길이 없는 화면도 비운다 */
+     마이홈은 주소를 비운다 · 판매채널은 채널마다 주소(#coupang 등)를 쓴다 */
   let navFromHash=false;
+  /* 판매채널은 채널마다 주소(#coupang · #mall · #smartstore · #talkdeal · 11-04 사용자) · 사이드바 채널 단추를 눌러 연다 */
+  const CH_SLUG={'쿠팡':'coupang','자사몰':'mall','스마트스토어':'smartstore','톡딜':'talkdeal'};
+  function chSubBySlug(v){
+    const name=Object.keys(CH_SLUG).find(k=>CH_SLUG[k]===v);
+    return name?document.querySelector('#sbChannelList .sb-subitem[data-channel="'+name+'"]'):null;
+  }
+  function chActiveSlug(){
+    const a=document.querySelector('#sbChannelList .sb-subitem.active');
+    return a?(CH_SLUG[a.dataset.channel]||''):'';
+  }
   function openFromHashQuiet(v){
     navFromHash=true;
     try{ return openFromHash(v); } finally{ navFromHash=false; }
   }
   function openFromHash(v){
     if(v==='week'||v==='month'){ activateView(v); return true; }
+    const chSub=chSubBySlug(v);
+    if(chSub){ chSub.click(); return true; }
     if(v==='collector'){
       const r=document.getElementById('sbReviewBtn'), c=document.getElementById('sbReviewCollector');
       if(!r||!c) return false;
@@ -15946,7 +15958,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     return v==='week'||v==='month'||v==='collector'||(v!=='home'&&!!document.querySelector('.sidebar .sb-item[data-view="'+v+'"]'));
   }
   function syncHash(v){
-    const want=routable(v)?'#'+v:'';
+    const cs=v==='channel'?chActiveSlug():'';
+    const want=cs?'#'+cs:routable(v)?'#'+v:'';
     if(location.hash===want) return;
     const url=location.pathname+location.search+want;
     try{
@@ -15958,6 +15971,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   window.addEventListener('hashchange',()=>{
     const v=location.hash.slice(1);
     if(v===window.baroyamCurrentView) return;
+    if(window.baroyamCurrentView==='channel'&&v&&v===chActiveSlug()) return;
     if(!openFromHashQuiet(v)){ navFromHash=true; try{ activateView('home'); } finally{ navFromHash=false; } }
   });
 
@@ -16038,6 +16052,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     head.classList.remove('has-active');
   };
   subs.forEach(btn=>btn.addEventListener('click',()=>{
+    /* 불을 먼저 켜야 activateView 안의 주소 맞추기(syncHash)가 이 채널 주소(#coupang 등)를 쓴다 */
+    subs.forEach(b=>b.classList.toggle('active',b===btn));
+    head.classList.add('has-active');
     window.activateView('channel');
     subs.forEach(b=>b.classList.toggle('active',b===btn));
     head.classList.add('has-active');
