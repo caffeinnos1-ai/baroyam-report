@@ -3103,6 +3103,26 @@ window.BAROYAM_FONT=(function(){
   .ma-sw-no{color:var(--mute)}
   .ma-table th.ma-swcol,.ma-table td.ma-swcol{width:58px;text-align:center;padding-left:4px;padding-right:4px;cursor:default}
   .ma-list .ma-table th.ma-swcol{width:58px}
+  .ma-table th.ma-guidecol,.ma-table td.ma-guidecol{width:64px;text-align:center;padding-left:4px;padding-right:8px;cursor:default}
+  .ma-guide{display:inline-block;min-width:38px;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;line-height:18px;cursor:help;outline:none}
+  .ma-guide.is-pass{color:var(--pos);background:var(--pos-soft)}
+  .ma-guide.is-risk{color:var(--neg);background:var(--neg-soft)}
+  .ma-guide.is-watch{color:var(--warn);background:var(--warn-soft)}
+  .ma-guide.is-wait,.ma-guide.is-none{color:var(--mute);background:transparent;font-weight:500}
+  .ma-guide:focus-visible{box-shadow:0 0 0 2px var(--btn)}
+  .ma-guide-tip{position:fixed;z-index:9000;width:250px;padding:12px 14px;border-radius:12px;background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 28px rgba(0,0,0,.14);font-size:12.5px;color:var(--body);pointer-events:none}
+  .ma-guide-tip[hidden]{display:none}
+  .ma-guide-tip>b{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .ma-guide-tip.is-pass>b{color:var(--pos)} .ma-guide-tip.is-risk>b{color:var(--neg)} .ma-guide-tip.is-watch>b{color:var(--warn)}
+  .ma-guide-tip p{margin:4px 0 0;line-height:1.5}
+  .ma-guide-tip .per,.ma-guide-tip .sub{color:var(--mute);font-size:11.5px}
+  .ma-guide-tip ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .ma-guide-tip li{display:flex;align-items:baseline;gap:8px}
+  .ma-guide-tip li span{width:44px;color:var(--mute)}
+  .ma-guide-tip li em{font-style:normal;font-weight:600}
+  .ma-guide-tip li em.ok{color:var(--pos)} .ma-guide-tip li em.no{color:var(--neg)}
+  .ma-guide-tip li small{margin-left:auto;color:var(--mute);font-size:11px}
+  .ma-guide-tip .act{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);color:var(--ink);font-weight:500}
   .ma-gv-warn{margin:0;padding:10px 12px;border-radius:8px;background:var(--neg-soft);color:var(--neg);font-size:12.5px;font-weight:500}
   .ma-gv-ov{z-index:1300}
   .settings-panel.ma-gv-dlg{max-width:460px;height:auto;overflow:hidden;--gv:var(--neg);--gv-soft:var(--neg-soft)}
@@ -20948,20 +20968,38 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const today=Date.parse(kst()), atTd=at=>{ if(!at) return '<td class="ma-atcol is-zero">-</td>';
       const d=new Date(at+9*3600e3).toISOString().slice(0,10), n=Math.round((today-Date.parse(d))/864e5)+1;
       return '<td class="ma-atcol" title="'+d+' 게재 시작"><span class="ma-days-pill">'+n+'일째</span></td>'; };
+    /* 행동지침(11-04 사용자 요청) · 최근 3일(오늘 포함 · adDaily)의 클릭률(링크 클릭 ÷ 노출)·ROAS 로 판정해 ON/OFF 오른쪽에 알약으로 ·
+       클릭률 2% 이상 + ROAS 200% 이상 = 통과 · 클릭률 2% 아래 + ROAS 200% 이하 = 위험 · 하나만 넘으면 관찰 ·
+       소재는 게재 3일째부터 판정(그 전은 학습 중이라 대기) · 3일 광고비가 없으면 - · 근거는 알약에 올렸을 때만 떠 있는 도우미(guideTip) */
+    const G3=[0,1,2].map(i=>new Date(today-i*864e5).toISOString().slice(0,10)).reverse();
+    const guideOf=r=>{
+      const ids=r.adIds||(tab==='campaign'?(a.ads||[]).filter(y=>y.c===r.id):(a.ads||[]).filter(y=>y.s===r.id)).map(y=>y.id);
+      const m=[0,0,0,0,0]; G3.forEach(d=>{ const day=D[d]; if(day) ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; }); });
+      const g={from:G3[0],to:G3[2],sp:m[0],rev:m[1],buy:m[2],clk:m[3],imp:m[4]};
+      g.ctr=m[4]?m[3]/m[4]*100:null; g.roas=m[0]?m[1]/m[0]*100:null;
+      if(tab==='asset'&&r.at){ const n=Math.round((today-Date.parse(new Date(r.at+9*3600e3).toISOString().slice(0,10)))/864e5)+1; if(n<GUIDE.days){ g.k='wait'; g.n=n; return g; } }
+      if(!(m[0]>0)||!m[4]){ g.k='none'; return g; }
+      const cOk=g.ctr>=GUIDE.ctr, rOk=g.roas>=GUIDE.roas;
+      g.k=cOk&&rOk?'pass':!cOk&&g.roas<=GUIDE.roas?'risk':'watch'; g.cOk=cOk; g.rOk=rOk;
+      return g;
+    };
+    const guideTd=r=>{ const g=guideOf(r); shownGuide[r.id]=g;
+      return '<td class="ma-guidecol"><span class="ma-guide is-'+g.k+'" data-guide="'+esc(r.id)+'" tabindex="0">'+GUIDE_TXT[g.k]+'</span></td>'; };
+    shownGuide={};
     const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
     /* 켜기·끄기 칸(10-23) · 맨 오른쪽(사용자 요청) · 팀장·권한 받은 회원만 · 누르면 확인 창(gvAsk) · 실행은 비밀번호를 맞혀야 */
     const swOn=gvCan(), swLv=tab==='asset'?'asset':tab;
     shownSw={};
     const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재',cls:'ma-atcol'}]:[],[{k:'bud',l:'일예산',cls:'ma-budcol'}],COLS).map(c=>{ const on=sortKey===c.k;
-      return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+(swOn?'<th class="ma-swcol" title="게재 켜기·끄기 · 누르면 확인 창과 비밀번호">ON/OFF</th>':'')+'</tr></thead>';
+      return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+(swOn?'<th class="ma-swcol" title="게재 켜기·끄기 · 누르면 확인 창과 비밀번호">ON/OFF</th>':'')+'<th class="ma-guidecol">행동지침</th></tr></thead>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
       const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
       const isA=tab==='asset';
       if(isA) shownRows[r.id]=r;
       const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.sw||r.st,r.name)+'</td>'):'')+'</tr>';
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 월~목) 합산 ROAS 가 대표 ROAS 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.sw||r.st,r.name)+'</td>'):'')+guideTd(r)+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+body+'</tbody></table></div>'+more;
@@ -21314,6 +21352,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   };
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
   let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
+  /* 행동지침 기준(사용자 11-04) · 숫자를 바꾸면 알약·도우미가 같이 바뀐다 */
+  const GUIDE={days:3,ctr:2,roas:200}, GUIDE_TXT={pass:'통과',risk:'위험',watch:'관찰',wait:'대기',none:'-'};
+  let shownGuide={};
   const POST_IC={
     ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg>',
     fb:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-1.6 19.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 12 2z"/></svg>'};
@@ -22141,6 +22182,36 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     window.UI.menu($('maDayCamp'),opts,dayCamp,v=>{ dayCamp=v; keep('baroyam_ma_daycamp',v); paintDays(acc()); },{search:list.length>8,placeholder:'캠페인 찾기'});
   });
   $('maDays').addEventListener('click',e=>{ const tr=e.target.closest('tr[data-d]'); if(!tr) return; pickDay(tr.dataset.d,e.shiftKey); paintDaily(acc()); window.scrollTo({top:root.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'}); });
+  /* 행동지침 도우미 · 알약에 마우스를 올리면 바로 옆에 근거가 뜨고 떼면 사라진다(창 아님 · 사용자 요청) ·
+     줄의 "눌러서 카드 보기" 말풍선이 겹치지 않게 올려 둔 동안 줄의 title 을 잠깐 뺀다 */
+  let guideTip=null, guideTr=null, guideTrTitle='';
+  /* 내림으로 보인다 · 1.995% 를 2% 로 반올림해 보여 주면 기준을 넘은 것처럼 읽힌다 */
+  const pc=(v,n)=>v==null?'-':(Math.floor(v*10**n)/10**n).toFixed(n)+'%';
+  function guideHtml(g){
+    const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10)), per=md(g.from)+'~'+md(g.to)+' (최근 '+GUIDE.days+'일)';
+    if(g.k==='wait') return '<b>판단 대기</b><p>게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.</p>';
+    if(g.k==='none') return '<b>데이터 없음</b><p>'+per+' 동안 광고비·노출이 없습니다.</p>';
+    const row=(l,v,ok,std)=>'<li><span>'+l+'</span><em class="'+(ok?'ok':'no')+'">'+v+'</em><small>기준 '+std+'</small></li>';
+    const act={pass:'유지하세요. 예산을 올려 볼 후보입니다.',risk:'끄거나 소재 교체를 검토하세요.',
+      watch:g.cOk?'클릭은 되는데 구매가 약합니다 → 상세페이지·가격·혜택을 점검하세요.':'구매는 나오는데 클릭이 약합니다 → 썸네일·첫 3초·문구를 점검하세요.'}[g.k];
+    return '<b>'+GUIDE_TXT[g.k]+'</b><p class="per">'+per+'</p><ul>'+row('클릭률',pc(g.ctr,2),g.cOk,GUIDE.ctr+'% 이상')+row('ROAS',pc(g.roas,0),g.rOk,GUIDE.roas+'% 이상')+'</ul>'
+      +'<p class="act">'+act+'</p><p class="sub">광고비 '+money(g.sp,acc().currency)+' · 구매 '+int(g.buy)+'건 · 클릭 '+int(g.clk)+' · 노출 '+int(g.imp)+'</p>';
+  }
+  function guideHide(){ if(guideTip) guideTip.hidden=true; if(guideTr){ if(guideTrTitle) guideTr.setAttribute('title',guideTrTitle); guideTr=null; } }
+  function guideShow(el){
+    const g=shownGuide[el.dataset.guide]; if(!g) return;
+    if(!guideTip){ guideTip=document.createElement('div'); guideTip.className='ma-guide-tip'; guideTip.setAttribute('role','tooltip'); document.body.appendChild(guideTip); }
+    guideTip.className='ma-guide-tip is-'+g.k; guideTip.innerHTML=guideHtml(g); guideTip.hidden=false;
+    const tr=el.closest('tr'); if(tr&&tr.hasAttribute('title')){ guideTr=tr; guideTrTitle=tr.getAttribute('title'); tr.removeAttribute('title'); }
+    const b=el.getBoundingClientRect(), w=guideTip.offsetWidth, h=guideTip.offsetHeight;
+    let x=b.right-w, y=b.bottom+8; if(x<8) x=8; if(y+h>innerHeight-8) y=b.top-h-8;
+    guideTip.style.left=x+'px'; guideTip.style.top=y+'px';
+  }
+  $('maTable').addEventListener('mouseover',e=>{ const el=e.target.closest('[data-guide]'); if(el) guideShow(el); });
+  $('maTable').addEventListener('mouseout',e=>{ const el=e.target.closest('[data-guide]'); if(el&&!el.contains(e.relatedTarget)) guideHide(); });
+  $('maTable').addEventListener('focusin',e=>{ const el=e.target.closest('[data-guide]'); if(el) guideShow(el); });
+  $('maTable').addEventListener('focusout',e=>{ if(e.target.closest('[data-guide]')) guideHide(); });
+  window.addEventListener('scroll',guideHide,{passive:true});
   /* 소재 줄에 마우스를 올리면 연동한 영상을 미리 받기 시작(누르는 순간 이미 받고 있게) */
   $('maTable').addEventListener('mouseover',e=>{
     const tr=e.target.closest('tr.ma-asset-row'); if(!tr) return;
