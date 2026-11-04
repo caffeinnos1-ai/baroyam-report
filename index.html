@@ -3363,6 +3363,13 @@ window.BAROYAM_FONT=(function(){
   .cm-script .cm-similar{margin-top:6px;font-size:11.5px;color:var(--warn)}
   /* 편집 지시서 */
   .cm-edit{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .cm-render-body{display:flex;gap:18px;margin-top:12px;align-items:flex-start}
+  .cm-render-vid{flex:0 0 auto;width:min(300px,100%);aspect-ratio:9/16;border-radius:12px;overflow:hidden;background:var(--line)}
+  .cm-render-vid iframe{width:100%;height:100%;border:0;display:block}
+  .cm-render-side{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+  .cm-render-side .cm-cuts small{color:var(--mute);font-size:11.5px}
+  .cm-render-name{margin:0;font-size:12px;color:var(--mute);word-break:break-all}
+  @media (max-width:700px){ .cm-render-body{flex-direction:column} .cm-render-vid{width:100%;max-width:300px} }
   .cm-edit-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .cm-edit-head h4{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
   .cm-edit-meta{margin:8px 0 10px;font-size:12px;color:var(--body);line-height:1.6}
@@ -19460,6 +19467,31 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }catch(e){ await jobPatch(id,x=>{ x.edit=Object.assign({},x.edit,{state:'failed',message:'편집 지시서를 부탁하지 못했습니다 · '+(e&&e.message||e)}); }); }
     paint(); poll();
   }
+  /* 편집 요청 · 편집 지시서로 영상을 만들어 달라고 편집 일꾼(PC 의 caffeinnos-automation/shorts/editor.js)에 주문한다(editjob/req) ·
+     일꾼이 AI 로 ★유튜브/00.영상소스/유튜브_<브랜드>_영상소스 에서 컷마다 영상을 골라 편집하고 ★유튜브/60.승인요청 에 올린 뒤 editjob/res 에 답한다 ·
+     작업 기록은 job.render = {req,state,rev,at,by,forEdit,message,drive,plan,dur,host,ms} */
+  async function renderStart(id){
+    const j=st.jobs[id]; if(!j||!j.pick||!(j.edit||{}).sheet) return;
+    const DB=window.BAROYAM_DB;
+    const rev=((j.render||{}).rev||0)+1;
+    try{
+      if(!DB||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다. 새로고침한 뒤 다시 눌러 주세요.');
+      const x=j.edit.sheet, name=j.id+'.'+rev+'.'+rid()+'.json';
+      const body={v:1,job:j.id,rev,at:now(),by:me(),input:{brand:j.input.brand||j.input.product||'',shape:'mobile',name:j.pick.title||j.pick.hookTitle||'',
+        hook:j.pick.hookTitle||'',edit:{cuts:x.cuts.map(c=>({sec:c.sec,say:c.say,shot:c.shot,sfx:c.sfx||''})),bgm:x.bgm||'',notes:x.notes||''}}};
+      await DB.fileUpload(BUCKET,'editjob/req/'+name,new Blob([JSON.stringify(body)],{type:'application/json'}));
+      await jobPatch(id,y=>{ y.render={req:name,state:'sent',rev,at:now(),by:me(),forEdit:j.edit.done||'',message:''}; });
+    }catch(e){ await jobPatch(id,y=>{ y.render=Object.assign({},y.render,{state:'failed',message:'편집을 요청하지 못했습니다 · '+(e&&e.message||e)}); }); }
+    paint(); poll();
+  }
+  async function readEditRes(name){
+    const DB=window.BAROYAM_DB;
+    let u; try{ u=await DB.fileUrl(BUCKET,'editjob/res/'+name,60); }catch(e){ return null; }
+    const r=await fetch(u,{cache:'no-store'}).catch(()=>null);
+    return r&&r.ok?r.json().catch(()=>null):null;
+  }
+  const RENDER_BUSY=['sent','planning','downloading','rendering','uploading'];
+  const busyR=r=>r&&RENDER_BUSY.includes(r.state);
   async function readRes(name){
     const DB=window.BAROYAM_DB;
     let u; try{ u=await DB.fileUrl(BUCKET,'cmjob/res/'+name,60); }catch(e){ return null; }
@@ -19470,13 +19502,25 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   let pollT=null, ticking=false;
   function poll(){
     clearTimeout(pollT);
-    const open=Object.values(st.jobs).some(j=>!j.del&&(Object.values(j.rounds||{}).some(busy)||busy(j.edit)));
+    const open=Object.values(st.jobs).some(j=>!j.del&&(Object.values(j.rounds||{}).some(busy)||busy(j.edit)||busyR(j.render)));
     if(!open) return;
     pollT=setTimeout(async()=>{
       if(ticking) return; ticking=true;
       try{
         for(const j of Object.values(st.jobs)){
           if(j.del) continue;
+          const rd=j.render;
+          if(busyR(rd)&&rd.req){
+            const res=await readEditRes(rd.req);
+            if(res&&(res.state==='done'||res.state==='failed')){
+              await jobPatch(j.id,x=>{ const y=x.render; if(!y||!busyR(y)||y.req!==rd.req) return;
+                Object.assign(y,{state:res.ok?'done':'failed',done:res.at,ms:res.ms||0,message:res.message||'',drive:res.drive||null,plan:res.plan||null,dur:res.dur||0,host:res.host||''}); });
+            }else if(res){ Object.assign(rd,{state:res.state,step:res.done,total:res.total,host:res.host,seen:res.at}); }   // 진행 상황은 화면에만
+            else if(Date.now()-Date.parse(rd.at)>10*60e3)
+              await jobPatch(j.id,x=>{ const y=x.render; if(y&&busyR(y)&&y.req===rd.req) Object.assign(y,{state:'failed',message:'10분 넘게 편집 PC 가 주문을 받지 않았습니다 · 편집 일꾼이 켜진 PC 가 없었을 수 있어요(다시 요청하면 켜진 PC 가 받습니다).'}); });
+            if(res&&busyR(res)&&Date.now()-Date.parse(rd.at)>45*60e3)
+              await jobPatch(j.id,x=>{ const y=x.render; if(y&&busyR(y)&&y.req===rd.req) Object.assign(y,{state:'failed',message:'45분 넘게 끝나지 않았습니다 · 편집 PC 가 꺼졌을 수 있어요.'}); });
+          }
           const e=j.edit;
           if(busy(e)&&e.req){
             const res=await readRes(e.req);
@@ -19684,7 +19728,33 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13V4h3v9zM17 13l-4 7a2 2 0 0 1-3-2l1-4H5a2 2 0 0 1-2-2.3l1.2-6A2 2 0 0 1 6.2 4H17"/></svg></button>'+
       '<input class="ui-field sm" data-efb maxlength="300" value="'+esc(f.t||'')+'" placeholder="편집자에게 한 줄 (예: 첫 컷은 한입 베어 무는 장면부터)"></div>'+
       '<div class="cm-script-foot"><button type="button" class="ui-btn" data-act="edit-again">피드백 반영해 다시 쓰기</button><button type="button" class="ui-btn soft" data-act="edit-copy">지시서 복사</button></div></div>';
-    return h;
+    return h+renderHtml(j);
+  }
+  // 영상 편집 · 편집 요청 → 편집 일꾼(PC)이 만든 영상을 드라이브 미리보기로 본다
+  function renderHtml(j){
+    const r=j.render||{}, brand=j.input.brand||j.input.product||'';
+    let h='<div class="cm-edit cm-render"><div class="cm-edit-head"><h4>영상 편집 <span class="cm-hint">편집 일꾼</span></h4>';
+    if(busyR(r)){
+      const n=r.total?' '+Math.min(r.step+1,r.total)+'/'+r.total:'';
+      const say={sent:'편집 PC 가 주문을 받기를 기다리고 있어요',planning:'AI 가 컷마다 쓸 영상을 고르고 있어요',downloading:'드라이브에서 자료를 받고 있어요'+n,
+        rendering:'컷을 잇고 자막·배경음을 넣고 있어요'+(r.total?' (컷'+n+')':''),uploading:'드라이브 60.승인요청 에 올리고 있어요'}[r.state]||'편집 중';
+      return h+'</div><div class="cm-wait"><b>'+esc(say)+'</b><span class="cm-bar"><i></i></span><span><span data-cw-sec="'+esc(r.at)+'">0초</span> 지남'+(r.host?' · '+esc(r.host):'')+' · 보통 1~3분</span>'+
+        (r.state==='sent'?'<span class="cm-hint">편집 일꾼이 켜진 PC 가 있어야 시작돼요</span>':'')+'</div></div>';
+    }
+    if(r.state==='failed') return h+'<button type="button" class="ui-btn sm soft" data-act="render">다시 요청</button></div><p class="cm-msg">'+esc(r.message||'영상을 만들지 못했어요')+'</p></div>';
+    if(r.state!=='done'||!r.drive) return h+'<button type="button" class="ui-btn sm primary" data-act="render">편집 요청</button></div>'+
+      '<p class="cm-hint">AI 가 드라이브 ★유튜브 › 유튜브_'+esc(brand)+'_영상소스 에서 컷마다 맞는 영상을 골라 자막·훅 타이틀·배경음을 넣어 편집해요. 다 되면 ★유튜브 › 승인요청 폴더에 올라가고 여기서 바로 볼 수 있어요.</p></div>';
+    const stale=r.forEdit&&(j.edit||{}).done&&r.forEdit!==j.edit.done;
+    h+='<span class="cm-hint">'+(r.rev>1?'수정'+(r.rev-1)+' · ':'')+(r.dur?Math.round(r.dur)+'초 · ':'')+fmtAt(r.done||r.at)+(r.host?' · '+esc(r.host):'')+(r.ms?' · '+Math.round(r.ms/1000)+'초 걸림':'')+'</span></div>'+
+      (stale?'<p class="cm-msg">편집 지시서가 바뀌었어요 · 다시 편집 요청하면 새 지시서로 만들어요</p>':'')+
+      '<div class="cm-render-body"><div class="cm-render-vid"><iframe src="https://drive.google.com/file/d/'+encodeURIComponent(r.drive.id)+'/preview" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="편집된 영상"></iframe></div>'+
+      '<div class="cm-render-side"><a class="ui-btn sm soft" href="'+esc(r.drive.link||('https://drive.google.com/file/d/'+r.drive.id+'/view'))+'" target="_blank" rel="noopener">드라이브에서 열기</a>'+
+      '<p class="cm-render-name">'+esc(r.drive.name||'')+'</p>';
+    const pl=r.plan;
+    if(pl&&pl.cuts) h+='<table class="cm-cuts"><thead><tr><th>#</th><th>쓴 영상</th><th>구간</th></tr></thead><tbody>'+
+      pl.cuts.map((c,k)=>'<tr><td>'+(k+1)+'</td><td>'+esc(String(c.file||'').replace(/\.[a-z0-9]+$/i,''))+(c.sound?' <b>소리</b>':'')+(c.why?'<br><small>'+esc(c.why)+'</small>':'')+'</td><td>'+c.from+'~'+c.to+'초</td></tr>').join('')+'</tbody></table>'+
+      (pl.bgm?'<p class="cm-edit-meta">배경음 · '+esc(pl.bgm)+'</p>':'')+(pl.note?'<p class="cm-edit-meta">AI 메모 · '+esc(pl.note)+'</p>':'');
+    return h+'<div class="cm-script-foot"><button type="button" class="ui-btn soft" data-act="render">다시 편집 요청</button></div></div></div></div>';
   }
 
   /* ---------- 누르기 ---------- */
@@ -19735,6 +19805,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }
     if(act==='unpick'){ await jobPatch(j.id,x=>{ x.unpicked=(x.unpicked||[]).concat([x.pick]); delete x.pick; }); st.tab='open'; if(tabs) tabs.set('open'); paint(); return; }
     if(act==='edit-again'){ b.disabled=true; await editStart(j.id,j.pick); return; }
+    if(act==='render'){ b.disabled=true; await renderStart(j.id); return; }
     if(act==='edit-up'||act==='edit-down'){
       const v=act==='edit-up'?1:-1, at=(j.edit||{}).done||'';
       await jobPatch(j.id,x=>{ const y=x.edit=x.edit||{}; y.fbs=y.fbs||[]; let f=y.fbs.find(z=>z.for===at&&z.by===me());
