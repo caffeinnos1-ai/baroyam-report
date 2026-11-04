@@ -3522,6 +3522,7 @@ window.BAROYAM_FONT=(function(){
   .cm-stage .cm-phone{width:100%;max-width:340px;margin:0}
   .cm-phone.has-vid{padding:0;overflow:hidden;background:#000}
   .cm-phone iframe{width:100%;height:100%;border:0;display:block}
+  .cm-phone .ma-pv,.cm-render-vid .ma-pv{height:100%;max-height:none;aspect-ratio:auto!important;border-radius:0}
   .cm-thumb img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:block}
   .cm-ap-item.is-busy{opacity:.6;cursor:default}
   .cm-ap-empty{padding:30px 10px;text-align:center;font-size:12.5px;line-height:1.7;color:var(--mute)}
@@ -19501,7 +19502,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     .sort((a,b)=>String(b.render.okAt).localeCompare(a.render.okAt));
   function phone(r){
     if(!r||!r.drive) return '<div class="cm-phone"><span>'+(r&&busyR(r)?'아직 편집 중이에요':'목록에서 영상을 고르면 여기서 재생돼요')+'</span></div>';
-    return '<div class="cm-phone has-vid"><iframe src="https://drive.google.com/file/d/'+encodeURIComponent(r.drive.id)+'/preview" allow="autoplay; fullscreen" allowfullscreen title="영상"></iframe></div>';
+    return '<div class="cm-phone has-vid" data-dv="'+esc(r.drive.id)+'"></div>';
   }
   function apItem(j,on,kind){
     const r=j.render, i=j.input||{}, rv=r.rev>1?'<span class="cm-tag is-back">수정'+(r.rev-1)+'</span>':'';
@@ -19522,6 +19523,16 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       '<div class="cm-scores">'+SC.filter(([c])=>rv.scores[c]!=null).map(([c,l])=>{ const v=+rv.scores[c]||0; return '<div>'+l+'<span class="cm-bar"><i class="'+(v<=5?'is-low':'')+'" style="width:'+v*10+'%"></i></span><b>'+v+'</b></div>'; }).join('')+'</div></div>';
     if((r.backs||[]).length) h+='<div class="cm-card"><h3>지난 반려</h3><ol class="cm-ap-used">'+r.backs.map((x,k)=>'<li><b>'+(k+1)+'</b><span>'+esc([(x.tags||[]).join('·'),x.text].filter(Boolean).join(' · '))+' <small>'+esc(fmtAt(x.at)+(x.by?' '+x.by:''))+'</small></span></li>').join('')+'</ol></div>';
     return h;
+  }
+  // data-dv 자리에 메타광고 소재 팝업과 같은 재생기를 붙인다(window.baroyamDrivePlayer · 없으면 드라이브 미리보기)
+  function mountPlayers(){
+    document.querySelectorAll('#view-content [data-dv]').forEach(el=>{
+      const id=el.dataset.dv; if(el.firstElementChild&&el.firstElementChild.dataset.dvId===id) return;
+      const slot=(el.closest('[data-content-pane]')||{dataset:{}}).dataset.contentPane+(el.closest('[data-review-sub]')||{dataset:{}}).dataset.reviewSub;
+      let w=window.baroyamDrivePlayer&&window.baroyamDrivePlayer(id,slot);
+      if(!w){ w=document.createElement('iframe'); w.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; w.allow='autoplay; fullscreen'; w.allowFullscreen=true; w.title='영상'; }
+      w.dataset.dvId=id; el.replaceChildren(w);
+    });
   }
   function paintReview(){
     if(!st.loaded||!$('cmApList')) return;
@@ -19549,6 +19560,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('cmDnSide').innerHTML=!o?'':'<div class="cm-card"><h3>빠른 작업</h3><div class="cm-ap-acts"><button type="button" class="ui-btn primary" data-rvact="upload">업로드로 보내기</button><button type="button" class="ui-btn soft" data-rvact="trash">휴지통으로</button></div>'+
       '<p class="cm-hint">업로드 탭에 이 영상이 들어가고, 바로얌 AI 가 제목·설명을 추천해요. 채널을 고르고 올리면 돼요.</p><p class="cm-ap-side-msg">'+esc(rvSt.msg)+'</p>'+
       '<p class="cm-hint"><a href="'+esc(orr.drive.link||'https://drive.google.com/file/d/'+orr.drive.id+'/view')+'" target="_blank" rel="noopener">드라이브에서 열기</a> · 승인 '+esc(fmtAt(orr.okAt)+(orr.okBy?' '+orr.okBy:''))+'</p></div>'+infoCards(o);
+    mountPlayers();
   }
   // 드라이브 · ★유튜브 바로 아래 폴더(이름으로 찾음)
   async function ytFolder(tok,re){
@@ -19609,7 +19621,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }));
   document.addEventListener('baroyam:content-pane',e=>{ if(e.detail==='review') load(true).then(paintReview); });
 
-  function paintJob(){
+  function paintJob(){ paintJob0(); mountPlayers(); }
+  function paintJob0(){
     const box=$('cwJob'), j=st.jobs[st.sel];
     if(!j||j.del){
       box.innerHTML='<div class="cm-empty"><b>'+(st.tab==='picked'?'아직 결정한 대본이 없어요':'대본을 만들어 볼까요?')+'</b>왼쪽에 제품·대상·포맷을 고르고 <b style="display:inline">대본 만들기</b>를 누르면<br>기획자가 쓴 대본 후보가 검수자 추천 순서로 여기에 나와요.</div>';
@@ -19737,7 +19750,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const stale=r.forEdit&&(j.edit||{}).done&&r.forEdit!==j.edit.done;
     h+='<span class="cm-hint">'+(r.rev>1?'수정'+(r.rev-1)+' · ':'')+(r.dur?Math.round(r.dur)+'초 · ':'')+fmtAt(r.done||r.at)+(r.host?' · '+esc(r.host):'')+(r.ms?' · '+Math.round(r.ms/1000)+'초 걸림':'')+'</span></div>'+
       (stale?'<p class="cm-msg">편집 지시서가 바뀌었어요 · 다시 편집 요청하면 새 지시서로 만들어요</p>':'')+
-      '<div class="cm-render-body"><div class="cm-render-vid"><iframe src="https://drive.google.com/file/d/'+encodeURIComponent(r.drive.id)+'/preview" allow="autoplay; fullscreen" allowfullscreen loading="lazy" title="편집된 영상"></iframe></div>'+
+      '<div class="cm-render-body"><div class="cm-render-vid" data-dv="'+esc(r.drive.id)+'"></div>'+
       '<div class="cm-render-side"><a class="ui-btn sm soft" href="'+esc(r.drive.link||('https://drive.google.com/file/d/'+r.drive.id+'/view'))+'" target="_blank" rel="noopener">드라이브에서 열기</a>'+
       '<p class="cm-render-name">'+esc(r.drive.name||'')+'</p>';
     const pl=r.plan;
@@ -21236,8 +21249,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   /* 팝업 영상 · 구글 권한이 있으면 드라이브에서 바로 받아 재생 · 없으면 표지만 두고 아래 재생 단추를 누를 때 권한을 받는다
      (권한 창은 누른 순간에만 뜰 수 있음 · 저절로 띄우지 않음 10-19) · 그래도 못 받으면 드라이브 미리보기(iframe)로 */
-  async function playVideo(ask){
-    const v=cardBox&&cardBox.querySelector('video.ma-vid'); if(!v) return;
+  function playVideo(ask){ const v=cardBox&&cardBox.querySelector('video.ma-vid'); if(v) vidAttach(v,ask); }
+  async function vidAttach(v,ask){
+    const playVideo=a=>vidAttach(v,a);
     const id=v.dataset.drive, wrap=v.parentElement, vc=wrap.querySelector('.ma-vc');
     const vb=k=>vc&&vc.querySelector('[data-vc="'+k+'"]');
     const fallback=()=>{ if(!v.isConnected) return; const f=document.createElement('iframe'); f.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview'; f.allow='autoplay; fullscreen'; f.allowFullscreen=true; f.title='소재 영상'; v.replaceWith(f); if(vc) vc.remove(); };
@@ -21282,6 +21296,22 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const p=v.play(); if(p&&p.catch) p.catch(()=>{});
     }catch(e){ console.warn('[메타광고] 영상 직접 받기 실패 · 드라이브 미리보기로',e&&e.message); fallback(); }
   }
+  /* 다른 화면(유튜브콘텐츠 영상 편집·제작검수)도 소재 팝업과 같은 재생기를 쓴다(11-04 사용자 요청) ·
+     드라이브 파일 id 마다 재생기 하나를 만들어 기억하고, 화면을 다시 그려도 같은 재생기를 옮겨 붙여 재생이 끊기지 않게 한다 */
+  const PLAYERS=new Map();
+  window.baroyamDrivePlayer=function(id,slot){
+    const key=id+'#'+(slot||'');   /* 같은 영상이 두 화면에 있으면 자리마다 재생기 하나(받은 영상은 VID 에서 같이 씀) */
+    let w=PLAYERS.get(key);
+    if(w){ PLAYERS.delete(key); PLAYERS.set(key,w); return w; }
+    w=document.createElement('div'); w.className='ma-pv is-video';
+    w.innerHTML='<video class="ma-vid" data-drive="'+esc(id)+'" muted autoplay playsinline loop preload="auto" poster="https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w800"></video>'
+      +'<div class="ma-vc"><button type="button" data-vc="play" aria-label="재생"></button><div class="bar" data-vc="seek"><i class="buf"></i><i class="now"></i></div>'
+      +'<span class="t">0:00</span><button type="button" data-vc="mute" aria-label="소리"></button><button type="button" data-vc="full" aria-label="전체 화면">'+VC_ICON.full+'</button></div>';
+    PLAYERS.set(key,w);
+    if(PLAYERS.size>6){ const k=PLAYERS.keys().next().value; const o=PLAYERS.get(k); PLAYERS.delete(k); const ov=o.querySelector('video'); if(ov){ ov.pause(); ov.removeAttribute('src'); } }
+    vidAttach(w.querySelector('video'));
+    return w;
+  };
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
   let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
   const POST_IC={
