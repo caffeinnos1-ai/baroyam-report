@@ -4559,6 +4559,8 @@ window.BAROYAM_FONT=(function(){
   .pj-chip-ava img{width:100%;height:100%;object-fit:cover;display:block}
   .pj-chip-ava svg{width:17px;height:17px}
   .pj-filters{margin-left:auto;display:flex;gap:8px;position:relative}
+  .pj-qmonth{align-items:center;flex-wrap:nowrap}
+  .pj-qmonth .ui-chip{height:var(--ui-h)}
   .pj-filter-reset[hidden]{display:none}
   .pj-filter-reset{color:var(--body)}
   .pj-filter-reset.is-idle{color:var(--mute);opacity:.55;box-shadow:none;background:none}
@@ -9208,6 +9210,8 @@ window.BAROYAM_FONT=(function(){
               <button type="button" class="ui-tab" data-value="cal">캘린더</button>
             </div>
             <div class="pj-filters" id="pjFilters">
+              <!-- 빠른 기간 · 누르면 그 달 1일~말일로 거르고, 다시 누르면 풀린다 -->
+              <div class="ui-chips pj-qmonth"><button type="button" class="ui-chip" data-qmonth="-1" aria-pressed="false">저번달</button><button type="button" class="ui-chip" data-qmonth="0" aria-pressed="false">이번달</button></div>
               <button type="button" class="pj-filter pj-datebtn" data-filter="date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/></svg><span class="pj-date-l">기간</span><span class="pj-filter-n pj-date-v">전체</span><svg class="pj-date-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
 
               <div class="pj-pop" id="pjPop" hidden></div>
@@ -27608,6 +27612,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(el) el.classList.add('is-picked'); else pickedCard=null;
   }
   const pf={status:new Set(),owner:new Set(),channel:new Set(),from:'',to:'',q:''};
+  /* n달 앞뒤 달의 1일~말일(0 = 이번 달, -1 = 저번 달) · 한국 날짜 기준 */
+  function pjQMonth(n){
+    const [y,m]=kstToday().slice(0,7).split('-').map(Number);
+    const a=new Date(Date.UTC(y,m-1+n,1)), ym=a.toISOString().slice(0,7);
+    return {from:ym+'-01',to:ym+'-'+String(new Date(Date.UTC(a.getUTCFullYear(),a.getUTCMonth()+1,0)).getUTCDate()).padStart(2,'0')};
+  }
   const STATUS_TAG={'예정':['rgba(124,111,224,.14)','#6b5fe0'],'진행중':['rgba(59,130,246,.12)','#2f6fd6'],
     '보류':['rgba(240,138,36,.14)','#d9731a'],'완료':['rgba(34,160,90,.13)','#1d8a4d'],'종료':['rgba(107,114,128,.14)','#4b5563']};
   const tag=(t,bg,fg)=>`<span class="pj-tag" style="--tag-bg:${bg};--tag-fg:${fg}">${esc(t)}</span>`;
@@ -27785,6 +27795,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         :(pf[k].size||'');
       b.classList.toggle('is-on',!!txt);
       b.querySelector('.pj-filter-n').textContent=k==='date'?(txt||'전체'):txt;
+    });
+    /* 저번달·이번달 칩 · 지금 기간이 그 달 1일~말일과 같으면 켜짐 */
+    document.querySelectorAll('#pjFilters [data-qmonth]').forEach(b=>{
+      const m=pjQMonth(+b.dataset.qmonth);
+      b.setAttribute('aria-pressed',String(pf.from===m.from&&pf.to===m.to));
     });
     /* 필터 초기화 단추는 10-29 사용자 요청으로 뺐다 · 칩 줄의 '전체'와 기간 창으로 푼다 */
     renderFacets();
@@ -28204,6 +28219,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         pf.status.clear(); pf.owner.clear(); pf.channel.clear();
         pf.from=''; pf.to=''; pf.q=''; $('pjSearch').value='';
         pop.hidden=true; renderBoard(); return;
+      }
+      const qm=e.target.closest('[data-qmonth]');
+      if(qm){
+        const m=pjQMonth(+qm.dataset.qmonth), on=pf.from===m.from&&pf.to===m.to;
+        pf.from=on?'':m.from; pf.to=on?'':m.to; pop.hidden=true; renderBoard(); return;
       }
       const b=e.target.closest('.pj-filter[data-filter]');
       if(b){
