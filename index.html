@@ -4622,9 +4622,20 @@ window.BAROYAM_FONT=(function(){
     color:#fff;font-size:12.5px;font-weight:600}
   .pj-dpick-apply:hover{filter:brightness(1.07)}
   .pj-dpick-apply:focus-visible,.pj-dpick-clear:focus-visible{outline:2px solid var(--mh-accent);outline-offset:2px}
-  .ch-view{padding:8px 4px}
-  .ch-view-cap{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--mute)}
-  .ch-view-title{margin:6px 0 0;font-size:26px;font-weight:600;letter-spacing:-.6px;color:var(--ink)}
+  /* 판매채널 배너 · 마진표 배너(.plan-hero)와 같은 틀 · 채널 색은 #view-channel 의 data-tone(renderChannel 이 정함) */
+  #view-channel{--tone:var(--self)}
+  #view-channel[data-tone="coupang"]{--tone:var(--coupang)}
+  #view-channel[data-tone="naver"]{--tone:var(--naver)}
+  #view-channel[data-tone="talk"]{--tone:var(--talk)}
+  #view-channel .ch-hero{--hero-accent:var(--tone);
+    background:color-mix(in srgb,var(--tone) 6%,var(--paper));border-color:color-mix(in srgb,var(--tone) 16%,var(--line))}
+  .ch-logo{display:none;width:30px;height:30px;flex:none;border-radius:8px;object-fit:cover}
+  .ch-logo[src]{display:block}
+  .ch-hero-side{position:absolute;right:48px;top:50%;transform:translateY(-50%)}
+  @media (max-width:1280px){ .ch-hero-side{right:32px} }
+  @media (max-width:900px){ .ch-hero-side{position:static;transform:none;margin-top:14px} }
+  /* 흰 판 위라 카드는 그림자 대신 얇은 테두리(인스타 성과와 같은 결) */
+  #view-channel :is(.ch-kpi,.mh-card){box-shadow:none;border:1px solid var(--line)}
   /* 판매채널 화면 · 위에 KPI 네 칸, 아래에 퀵링크 / 판매처 기록노트 / 프로젝트 달성률 / 마감 알림 ·
      카드 생김새는 마이홈(.mh-card·.mh-link·.mh-note·.mh-proj)을 그대로 빌려 쓰고,
      여기서는 배치와 KPI 칸, 페이지 넘김, 알림 줄만 더한다 */
@@ -9106,14 +9117,14 @@ window.BAROYAM_FONT=(function(){
 
       <!-- 판매채널 · 사이드바에서 고른 채널 이름을 제목으로 쓰는 화면 (채널별 내용은 아직 준비 중) -->
       <div id="view-channel" style="display:none">
-        <section class="ch-view">
-          <div class="ch-head">
-            <div>
-              <h2 class="ch-view-title" id="channelViewTitle">쿠팡</h2>
-              <p class="ch-head-sub" id="channelViewSub"></p>
-            </div>
+        <!-- 마진표처럼 흰 판 위 배너(판매채널 · 로고 + 채널 이름) · 배너 색은 채널 색(data-tone) · 11-04 사용자 요청 -->
+        <section class="section ch-view" style="padding-top:0">
+          <div class="plan-hero ch-hero">
+            <div class="ptag">판매채널</div>
+            <div class="ptitle pf-title"><img class="ch-logo" id="channelViewLogo" alt=""><span id="channelViewTitle">쿠팡</span></div>
+            <div class="psub" id="channelViewSub"></div>
             <!-- 기간 선택 · 프로젝트 마감일 고르기와 같은 달력(빠른 선택 → 시작일~종료일 → 적용) · 적용하면 위 숫자가 0에서 다시 올라간다 -->
-            <button type="button" class="raised" id="chPeriodBtn"></button>
+            <div class="ch-hero-side"><button type="button" class="raised" id="chPeriodBtn"></button></div>
           </div>
 
           <!-- 상단 숫자 네 칸 · 화면에 들어오거나 채널·기간을 바꾸면 0에서부터 올라간다 -->
@@ -15871,10 +15882,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(v!=='channel') window.clearChannelActive&&window.clearChannelActive();
     /* 마이홈·프로젝트는 흰 종이 없이 넓게 쓴다 */
     /* 넓게 보기 · 가로로 늘어놓는 화면(마이홈·프로젝트·채널·드라이브·계정관리)은 1720px 를 쓴다 */
-    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='channel'||v==='drive'||v==='account');
+    document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='drive'||v==='account');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
-    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta'||v==='perf'||v==='content');   /* 인스타콘텐츠·퍼포먼스마케팅·유튜브콘텐츠도 손익처럼 흰 판을 넓게 */
+    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta'||v==='perf'||v==='content'||v==='channel');   /* 판매채널도 마진표처럼 흰 판 + 배너(11-04) */   /* 인스타콘텐츠·퍼포먼스마케팅·유튜브콘텐츠도 손익처럼 흰 판을 넓게 */
     if(v==='perf'&&window.baroyamMetaAds) window.baroyamMetaAds.open();
     if(v==='profit'&&window.baroyamProfitOpen) window.baroyamProfitOpen();
     if(v==='ops'&&window.baroyamOpsOpen) window.baroyamOpsOpen();
@@ -28638,6 +28649,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
 
   function renderChannel(animate){
     $('channelViewTitle').textContent=chActive;
+    /* 배너 색·로고 · 마진표 배너와 같은 그림(쿠팡 전용 네모 · 스마트스토어 네이버 · 톡딜 카카오 · 자사몰 사이드바 바로얌 로고) */
+    const tone={'쿠팡':'coupang','스마트스토어':'naver','톡딜':'talk'}[chActive]||'';
+    const cv=$('view-channel'); if(tone) cv.dataset.tone=tone; else delete cv.dataset.tone;
+    const own=document.querySelector('.sb-logo'), logo=$('channelViewLogo');
+    const src={'쿠팡':'logos/coupang-sq.png','스마트스토어':'logos/naver.png','톡딜':'logos/kakao.png'}[chActive]
+      ||(chActive==='자사몰'&&own&&own.getAttribute('src'))||'';
+    if(src){ if(logo.getAttribute('src')!==src) logo.src=src; logo.alt=chActive; } else logo.removeAttribute('src');
     $('channelViewSub').textContent=chActive+' 채널의 프로젝트 달성률(예정·진행중·보류)을 확인하세요 (프로젝트 페이지와 연동됩니다)';
     $('chNoteTitleText').textContent=chActive+' 판매처 기록노트';
     $('chNoteSub').textContent=chActive+' 채널 관련 짧은 기록을 남기는 공간입니다';
