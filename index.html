@@ -19383,6 +19383,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
             }else if(res){ Object.assign(rd,{state:res.state,step:res.done,total:res.total,host:res.host,seen:res.at}); }   // 진행 상황은 화면에만
             else if(Date.now()-Date.parse(rd.at)>10*60e3)
               await jobPatch(j.id,x=>{ const y=x.render; if(y&&busyR(y)&&y.req===rd.req) Object.assign(y,{state:'failed',message:'10분 넘게 편집 PC 가 주문을 받지 않았습니다 · 편집 일꾼이 켜진 PC 가 없었을 수 있어요(다시 요청하면 켜진 PC 가 받습니다).'}); });
+            // 일꾼은 30초마다 소식을 적는다 · 3분 넘게 소식이 없으면 그 PC 에서 멈춘 것(꺼짐·다시 켜짐 · 다시 켜지면 일꾼이 스스로 이어서 만들고 소식이 다시 옴)
+            if(res&&busyR(res)&&res.at&&Date.now()-Date.parse(res.at)>3*60e3)
+              await jobPatch(j.id,x=>{ const y=x.render; if(y&&busyR(y)&&y.req===rd.req) Object.assign(y,{state:'failed',message:'편집 PC('+(res.host||'')+')에서 3분 넘게 소식이 없습니다 · PC 가 꺼졌거나 편집 일꾼이 멈췄을 수 있어요. 다시 요청해 주세요.'}); });
             if(res&&busyR(res)&&Date.now()-Date.parse(rd.at)>45*60e3)
               await jobPatch(j.id,x=>{ const y=x.render; if(y&&busyR(y)&&y.req===rd.req) Object.assign(y,{state:'failed',message:'45분 넘게 끝나지 않았습니다 · 편집 PC 가 꺼졌을 수 있어요.'}); });
           }
