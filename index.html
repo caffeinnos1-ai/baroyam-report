@@ -9129,7 +9129,6 @@ window.BAROYAM_FONT=(function(){
           <div class="plan-hero ch-hero">
             <div class="ptag">판매채널</div>
             <div class="ptitle pf-title"><img class="ch-logo" id="channelViewLogo" alt=""><span id="channelViewTitle">쿠팡</span></div>
-            <div class="psub" id="channelViewSub"></div>
             <!-- 기간 선택 · 프로젝트 마감일 고르기와 같은 달력(빠른 선택 → 시작일~종료일 → 적용) · 적용하면 위 숫자가 0에서 다시 올라간다 -->
             <div class="ch-hero-side"><button type="button" class="raised" id="chPeriodBtn"></button></div>
           </div>
@@ -27848,7 +27847,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
     host.innerHTML=`<div class="pj-mcal-head">
         <span class="pj-mcal-count">이 달 ${inMonth}개</span>
-        <span class="pj-mcal-hint">${o?'막대 = 시작날짜 ~ 마감기한 · 누르면 열립니다':'막대 = 시작날짜 ~ 마감기한 · 끌어서 옮기고 끝을 끌어 늘입니다 · 누르면 열립니다'}</span>
+        ${o?'':'<span class="pj-mcal-hint">막대 = 시작날짜 ~ 마감기한 · 끌어서 옮기고 끝을 끌어 늘입니다 · 누르면 열립니다</span>'}
         <div class="pj-mcal-move">
           <button type="button" class="ui-btn ghost sm icon" data-cal="prev" aria-label="이전 달">‹</button>
           <b class="pj-mcal-month">${y}년 ${m}월</b>
@@ -28696,9 +28695,6 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     document.querySelectorAll('#view-channel [data-ch-pane]').forEach(el=>{ el.hidden=el.dataset.chPane!==chTab; });
     /* 기간 단추는 위 숫자 칸 몫이라 스케줄에서만 */
     $('chPeriodBtn').parentNode.hidden=chTab!=='dash';
-    $('channelViewSub').textContent=chTab==='proj'
-      ?chActive+' 경로로 등록한 프로젝트를 캘린더로 봅니다 · 막대 = 시작날짜 ~ 마감기한 · 누르면 수정창이 열립니다'
-      :chActive+' 채널의 프로젝트 달성률(예정·진행중·보류)을 확인하세요 (프로젝트 페이지와 연동됩니다)';
     if(chTab==='proj') renderCal({host:$('chCal'),month:chCalMonth,
       /* 경로가 이 채널인 것만 · 일반 회원은 프로젝트 보드처럼 자기 프로젝트만 */
       filter:p=>(p.channel||'')===chActive&&(canSeeAllProjects()||!myName()||p.owner===myName()),
