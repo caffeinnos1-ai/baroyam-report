@@ -27801,7 +27801,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   let pjView='board';
   try{ if(localStorage.getItem(PJ_VIEW_KEY)==='cal') pjView='cal'; }catch(e){}
   let calMonthPj=kstToday().slice(0,7);             /* 보고 있는 달 'YYYY-MM' */
-  let calDrag=null;                                   /* 끌고 있는 막대 {id,mode,from0,to0,anchor,s,e,moved} */
+  let calDrag=null, calDragJust=false;   /* calDragJust · 판매채널 캘린더도 끌고 난 뒤 click 을 거른다 */                                   /* 끌고 있는 막대 {id,mode,from0,to0,anchor,s,e,moved} */
   const isDay=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''));
   function dayAdd(d,n){ const [y,m,dd]=d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); }
   function pjSpan(p){
@@ -27847,7 +27847,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         let lane=lanes.findIndex(end=>end<c0);
         if(lane<0){ lane=lanes.length; lanes.push(c1); } else lanes[lane]=c1;
         const range=sp.s===sp.e?fmtKDate(sp.s):fmtKDate(sp.s)+' ~ '+fmtKDate(sp.e);
-        const drag=!o&&canManageProject(p);
+        const drag=canManageProject(p);
         /* 늘이는 손잡이는 막대의 진짜 끝에만 · 다른 주로 이어지는 쪽에는 달지 않는다 */
         const grips=drag?(sp.s>=ws?'<i class="pj-mcal-grip is-l" data-grip="l"></i>':'')+(sp.e<=we?'<i class="pj-mcal-grip is-r" data-grip="r"></i>':''):'';
         bars+=`<button type="button" class="pj-mcal-bar${sp.s<ws?' is-cont-l':''}${sp.e>we?' is-cont-r':''}${drag?' can-drag':''}${calDrag&&calDrag.moved&&calDrag.id===p.id?' is-dragging':''}" data-id="${esc(p.id)}"
@@ -28048,8 +28048,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     let calJustDragged=false, calPt=null;
     /* 포인터 아래 날짜 · 막대가 날짜 칸을 덮고 있어 요소로 찾지 않고 좌표로 계산한다 ·
        세로는 가장 가까운 주 줄, 가로는 그 줄을 7칸으로 나눠 고른다(달력 밖으로 나가도 끝 칸에 붙는다) */
-    function calDateAt(x,y){
-      const weeks=[...cal.querySelectorAll('.pj-mcal-week')];
+    function calDateAt(x,y,host){
+      const weeks=[...(host||cal).querySelectorAll('.pj-mcal-week')];
       if(!weeks.length) return null;
       let wk=weeks[0], best=Infinity;
       weeks.forEach(w=>{ const r=w.getBoundingClientRect(); const d=y<r.top?r.top-y:y>r.bottom?y-r.bottom:0; if(d<best){ best=d; wk=w; } });
@@ -28062,8 +28062,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const d=calDrag; calDrag=null;
       document.body.classList.remove('pj-mcal-dragging','is-resize');
       if(!d||!d.moved) return;
-      calJustDragged=true;
-      setTimeout(()=>{ calJustDragged=false; },0);
+      calJustDragged=true; calDragJust=true;
+      setTimeout(()=>{ calJustDragged=false; calDragJust=false; },0);
       const t=state.projects.find(x=>x.id===d.id);
       if(apply&&t&&(t.start!==d.s||t.due!==d.e)){
         t.start=d.s; t.due=d.e;
@@ -28071,22 +28071,25 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         save();
       }
       renderBoard();
+      if(d.host!==cal) renderChTab();
     }
+    /* 끄는 동안 다시 그리기 · 프로젝트 캘린더 또는 판매채널 › 프로젝트 캘린더 */
+    function calRedraw(){ if(calDrag&&calDrag.host!==cal) renderChTab(); else renderCal(); }
     if(cal){
-      cal.addEventListener('pointerdown',e=>{
+      [cal,$('chCal')].filter(Boolean).forEach(host=>host.addEventListener('pointerdown',e=>{
         if(e.button!==0) return;
         const bar=e.target.closest('.pj-mcal-bar.can-drag');
         if(!bar) return;
         const t=state.projects.find(x=>x.id===bar.dataset.id);
         if(!t||!canManageProject(t)) return;
-        const anchor=calDateAt(e.clientX,e.clientY);
+        const anchor=calDateAt(e.clientX,e.clientY,host);
         if(!anchor) return;
         const sp=pjSpan(t);
         const grip=e.target.closest('[data-grip]');
-        calDrag={id:t.id,mode:grip?grip.dataset.grip:'move',from0:sp.s,to0:sp.e,anchor:anchor,s:sp.s,e:sp.e,moved:false};
+        calDrag={id:t.id,host:host,mode:grip?grip.dataset.grip:'move',from0:sp.s,to0:sp.e,anchor:anchor,s:sp.s,e:sp.e,moved:false};
         calPt={x:e.clientX,y:e.clientY};
         e.preventDefault();
-      });
+      }));
       window.addEventListener('pointermove',e=>{
         if(!calDrag) return;
         if(!calDrag.moved){
@@ -28095,16 +28098,16 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
           document.body.classList.add('pj-mcal-dragging');
           document.body.classList.toggle('is-resize',calDrag.mode!=='move');
         }
-        const at=calDateAt(e.clientX,e.clientY);
+        const at=calDateAt(e.clientX,e.clientY,calDrag.host);
         if(!at) return;
         const delta=dayDiff(calDrag.anchor,at);
         let s=calDrag.from0, en=calDrag.to0;
         if(calDrag.mode==='move'){ s=dayAdd(s,delta); en=dayAdd(en,delta); }
         else if(calDrag.mode==='l'){ s=dayAdd(s,delta); if(s>en) s=en; }
         else{ en=dayAdd(en,delta); if(en<s) en=s; }
-        if(s===calDrag.s&&en===calDrag.e&&cal.querySelector('.pj-mcal-bar.is-dragging')) return;
+        if(s===calDrag.s&&en===calDrag.e&&calDrag.host.querySelector('.pj-mcal-bar.is-dragging')) return;
         calDrag.s=s; calDrag.e=en;
-        renderCal();
+        calRedraw();
       });
       window.addEventListener('pointerup',()=>{ if(calDrag) calEndDrag(true); });
       window.addEventListener('pointercancel',()=>{ if(calDrag) calEndDrag(false); });
@@ -28739,6 +28742,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       return;
     }
     const bar=e.target.closest('.pj-mcal-bar'); if(!bar) return;
+    if(calDragJust){ calDragJust=false; return; }        /* 방금 끌어 옮긴 뒤 따라오는 click 은 창을 열지 않는다 */
     const t=state.projects.find(x=>x.id===bar.dataset.id);
     if(t) openProjectDialog(t);
   });
