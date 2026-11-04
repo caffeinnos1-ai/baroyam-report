@@ -4639,7 +4639,8 @@ window.BAROYAM_FONT=(function(){
   /* 흰 판 위라 카드는 그림자 대신 얇은 테두리(인스타 성과와 같은 결) */
   #view-channel :is(.ch-kpi,.mh-card){box-shadow:none;border:1px solid var(--line)}
   .ch-pane[hidden],.ch-hero-side[hidden]{display:none}
-  .ch-cal{margin-top:22px;box-shadow:none;border:1px solid var(--line)}
+  .ch-st{margin-top:22px}
+  .ch-cal{margin-top:12px;box-shadow:none;border:1px solid var(--line)}
   /* 판매채널 화면 · 위에 KPI 네 칸, 아래에 퀵링크 / 판매처 기록노트 / 프로젝트 달성률 / 마감 알림 ·
      카드 생김새는 마이홈(.mh-card·.mh-link·.mh-note·.mh-proj)을 그대로 빌려 쓰고,
      여기서는 배치와 KPI 칸, 페이지 넘김, 알림 줄만 더한다 */
@@ -9136,7 +9137,7 @@ window.BAROYAM_FONT=(function(){
           </div>
 
           <!-- 프로젝트 탭 · 이 채널 경로(p.channel)의 프로젝트만 프로젝트 캘린더 모양으로(renderCal 을 같이 씀) -->
-          <div class="ch-pane" data-ch-pane="proj" hidden><div class="pj-mcal ch-cal" id="chCal"></div></div>
+          <div class="ch-pane" data-ch-pane="proj" hidden><div class="ui-chips ch-st" id="chStatus" role="group" aria-label="상태"></div><div class="pj-mcal ch-cal" id="chCal"></div></div>
           <div class="ch-pane" data-ch-pane="dash">
           <!-- 상단 숫자 네 칸 · 화면에 들어오거나 채널·기간을 바꾸면 0에서부터 올라간다 -->
           <div class="ch-kpis">
@@ -28728,6 +28729,18 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const CH_TAB_KEY='baroyam_ch_tab';
   let chTab='dash', chCalMonth=kstToday().slice(0,7);
   try{ if(localStorage.getItem(CH_TAB_KEY)==='proj') chTab='proj'; }catch(e){}
+  /* 상태 거르기 · 여러 개 고름 · 비어 있으면 전체 · 네 채널이 같이 쓰고 이 브라우저에 기억 */
+  const CH_ST_KEY='baroyam_ch_status';
+  const chSt=new Set();
+  try{ (JSON.parse(localStorage.getItem(CH_ST_KEY)||'[]')||[]).forEach(k=>{ if(STATUS_KEYS.includes(k)) chSt.add(k); }); }catch(e){}
+  const chSeen=p=>(p.channel||'')===chActive&&(canSeeAllProjects()||!myName()||p.owner===myName());
+  function paintChStatus(){
+    const box=$('chStatus'); if(!box) return;
+    const mine=state.projects.filter(chSeen), n={};
+    mine.forEach(p=>{ n[p.status||'']=(n[p.status||'']||0)+1; });
+    box.innerHTML=`<button type="button" class="ui-chip" data-ch-st="" aria-pressed="${chSt.size?'false':'true'}">전체 <b>${mine.length}</b></button>`
+      +STATUSES.map(x=>`<button type="button" class="ui-chip" data-ch-st="${esc(x.k)}" aria-pressed="${chSt.has(x.k)?'true':'false'}">${esc(x.k)} <b>${n[x.k]||0}</b></button>`).join('');
+  }
   function renderChTab(){
     document.querySelectorAll('#chTabs [data-ch-tab]').forEach(b=>{
       const on=b.dataset.chTab===chTab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');
@@ -28735,11 +28748,22 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     document.querySelectorAll('#view-channel [data-ch-pane]').forEach(el=>{ el.hidden=el.dataset.chPane!==chTab; });
     /* 기간 단추는 위 숫자 칸 몫이라 스케줄에서만 */
     $('chPeriodBtn').parentNode.hidden=chTab!=='dash';
-    if(chTab==='proj') renderCal({host:$('chCal'),month:chCalMonth,
-      /* 경로가 이 채널인 것만 · 일반 회원은 프로젝트 보드처럼 자기 프로젝트만 */
-      filter:p=>(p.channel||'')===chActive&&(canSeeAllProjects()||!myName()||p.owner===myName()),
-      empty:'이 달에 '+esc(chActive)+' 경로 프로젝트가 없습니다'});
+    if(chTab==='proj'){
+      paintChStatus();
+      renderCal({host:$('chCal'),month:chCalMonth,
+        /* 경로가 이 채널인 것만 · 일반 회원은 프로젝트 보드처럼 자기 프로젝트만 · 고른 상태만 */
+        filter:p=>chSeen(p)&&(!chSt.size||chSt.has(p.status||'')),
+        empty:'이 달에 '+(chSt.size?[...chSt].join('·')+' 상태인 ':'')+esc(chActive)+' 경로 프로젝트가 없습니다'});
+    }
   }
+  $('chStatus').addEventListener('click',e=>{
+    const b=e.target.closest('[data-ch-st]'); if(!b) return;
+    const k=b.dataset.chSt;
+    if(!k) chSt.clear(); else if(chSt.has(k)) chSt.delete(k); else chSt.add(k);
+    if(chSt.size===STATUS_KEYS.length) chSt.clear();
+    try{ localStorage.setItem(CH_ST_KEY,JSON.stringify([...chSt])); }catch(e){}
+    renderChTab();
+  });
   $('chTabs').addEventListener('click',e=>{
     const b=e.target.closest('[data-ch-tab]'); if(!b||b.dataset.chTab===chTab) return;
     chTab=b.dataset.chTab;
