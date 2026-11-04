@@ -4636,6 +4636,8 @@ window.BAROYAM_FONT=(function(){
   @media (max-width:900px){ .ch-hero-side{position:static;transform:none;margin-top:14px} }
   /* 흰 판 위라 카드는 그림자 대신 얇은 테두리(인스타 성과와 같은 결) */
   #view-channel :is(.ch-kpi,.mh-card){box-shadow:none;border:1px solid var(--line)}
+  .ch-pane[hidden],.ch-hero-side[hidden]{display:none}
+  .ch-cal{margin-top:22px;box-shadow:none;border:1px solid var(--line)}
   /* 판매채널 화면 · 위에 KPI 네 칸, 아래에 퀵링크 / 판매처 기록노트 / 프로젝트 달성률 / 마감 알림 ·
      카드 생김새는 마이홈(.mh-card·.mh-link·.mh-note·.mh-proj)을 그대로 빌려 쓰고,
      여기서는 배치와 KPI 칸, 페이지 넘김, 알림 줄만 더한다 */
@@ -9117,6 +9119,11 @@ window.BAROYAM_FONT=(function(){
 
       <!-- 판매채널 · 사이드바에서 고른 채널 이름을 제목으로 쓰는 화면 (채널별 내용은 아직 준비 중) -->
       <div id="view-channel" style="display:none">
+        <!-- 배너 위 단추(11-04 사용자) · 스케줄 = 지금 대시보드 · 프로젝트 = 이 채널 경로의 프로젝트만 캘린더로 · 고른 단추는 baroyam_ch_tab -->
+        <div class="hero-view-tabs" id="chTabs" role="tablist" aria-label="판매채널 화면">
+          <button type="button" class="hero-view-tab active" role="tab" data-ch-tab="dash">스케줄</button>
+          <button type="button" class="hero-view-tab" role="tab" data-ch-tab="proj">프로젝트</button>
+        </div>
         <!-- 마진표처럼 흰 판 위 배너(판매채널 · 로고 + 채널 이름) · 배너 색은 채널 색(data-tone) · 11-04 사용자 요청 -->
         <section class="section ch-view" style="padding-top:0">
           <div class="plan-hero ch-hero">
@@ -9127,6 +9134,9 @@ window.BAROYAM_FONT=(function(){
             <div class="ch-hero-side"><button type="button" class="raised" id="chPeriodBtn"></button></div>
           </div>
 
+          <!-- 프로젝트 탭 · 이 채널 경로(p.channel)의 프로젝트만 프로젝트 캘린더 모양으로(renderCal 을 같이 씀) -->
+          <div class="ch-pane" data-ch-pane="proj" hidden><div class="pj-mcal ch-cal" id="chCal"></div></div>
+          <div class="ch-pane" data-ch-pane="dash">
           <!-- 상단 숫자 네 칸 · 화면에 들어오거나 채널·기간을 바꾸면 0에서부터 올라간다 -->
           <div class="ch-kpis">
             <div class="ch-kpi is-cost">
@@ -9184,6 +9194,7 @@ window.BAROYAM_FONT=(function(){
               </div>
               <div class="ch-alerts" id="chAlerts"></div>
             </section>
+          </div>
           </div>
         </section>
       </div>
@@ -27773,7 +27784,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const PJ_VIEW_KEY='baroyam_pj_view_v1';
   let pjView='board';
   try{ if(localStorage.getItem(PJ_VIEW_KEY)==='cal') pjView='cal'; }catch(e){}
-  let calMonth=kstToday().slice(0,7);               /* 보고 있는 달 'YYYY-MM' */
+  let calMonthPj=kstToday().slice(0,7);             /* 보고 있는 달 'YYYY-MM' */
   let calDrag=null;                                   /* 끌고 있는 막대 {id,mode,from0,to0,anchor,s,e,moved} */
   const isDay=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''));
   function dayAdd(d,n){ const [y,m,dd]=d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); }
@@ -27785,12 +27796,16 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(e<s) e=s;
     return {s:s,e:e};
   }
-  function renderCal(){
-    const host=$('pjCal');
+  /* o 를 넘기면 다른 화면(판매채널 › 프로젝트)에 같은 캘린더를 그린다 · {host,month,filter,empty} · 막대 끌기는 프로젝트 화면에서만 */
+  function renderCal(o){
+    const host=o?o.host:$('pjCal');
     if(!host) return;
-    host.hidden=pjView!=='cal';
-    if(board) board.hidden=pjView==='cal';
-    if(pjView!=='cal') return;
+    if(!o){
+      host.hidden=pjView!=='cal';
+      if(board) board.hidden=pjView==='cal';
+      if(pjView!=='cal') return;
+    }
+    const calMonth=o?o.month:calMonthPj;
     const today=kstToday();
     const [y,m]=calMonth.split('-').map(Number);
     const firstDow=new Date(Date.UTC(y,m-1,1)).getUTCDay();          /* 일요일부터 시작 */
@@ -27798,7 +27813,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const weeks=Math.ceil((firstDow+days+7)/7);                      /* 다음 달 첫 주(1~7일)까지 · 달을 넘어 이어지는 일정을 보려고 */
     const gridStart=dayAdd(calMonth+'-01',-firstDow), gridEnd=dayAdd(gridStart,weeks*7-1);
     const monthStart=calMonth+'-01', monthEnd=dayAdd(monthStart,days-1);
-    const items=state.projects.filter(p=>pjMatch(p)).map(p=>({p:p,sp:pjSpan(p)}))
+    const items=state.projects.filter(o?o.filter:(p=>pjMatch(p))).map(p=>({p:p,sp:pjSpan(p)}))
       .filter(x=>x.sp&&x.sp.s<=gridEnd&&x.sp.e>=gridStart)
       .sort((a,b)=>a.sp.s.localeCompare(b.sp.s)||b.sp.e.localeCompare(a.sp.e)||String(a.p.name||'').localeCompare(String(b.p.name||'')));
     const inMonth=items.filter(x=>x.sp.s<=monthEnd&&x.sp.e>=monthStart).length;
@@ -27816,7 +27831,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         let lane=lanes.findIndex(end=>end<c0);
         if(lane<0){ lane=lanes.length; lanes.push(c1); } else lanes[lane]=c1;
         const range=sp.s===sp.e?fmtKDate(sp.s):fmtKDate(sp.s)+' ~ '+fmtKDate(sp.e);
-        const drag=canManageProject(p);
+        const drag=!o&&canManageProject(p);
         /* 늘이는 손잡이는 막대의 진짜 끝에만 · 다른 주로 이어지는 쪽에는 달지 않는다 */
         const grips=drag?(sp.s>=ws?'<i class="pj-mcal-grip is-l" data-grip="l"></i>':'')+(sp.e<=we?'<i class="pj-mcal-grip is-r" data-grip="r"></i>':''):'';
         bars+=`<button type="button" class="pj-mcal-bar${sp.s<ws?' is-cont-l':''}${sp.e>we?' is-cont-r':''}${drag?' can-drag':''}${calDrag&&calDrag.moved&&calDrag.id===p.id?' is-dragging':''}" data-id="${esc(p.id)}"
@@ -27833,7 +27848,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
     host.innerHTML=`<div class="pj-mcal-head">
         <span class="pj-mcal-count">이 달 ${inMonth}개</span>
-        <span class="pj-mcal-hint">막대 = 시작날짜 ~ 마감기한 · 끌어서 옮기고 끝을 끌어 늘입니다 · 누르면 열립니다</span>
+        <span class="pj-mcal-hint">${o?'막대 = 시작날짜 ~ 마감기한 · 누르면 열립니다':'막대 = 시작날짜 ~ 마감기한 · 끌어서 옮기고 끝을 끌어 늘입니다 · 누르면 열립니다'}</span>
         <div class="pj-mcal-move">
           <button type="button" class="ui-btn ghost sm icon" data-cal="prev" aria-label="이전 달">‹</button>
           <b class="pj-mcal-month">${y}년 ${m}월</b>
@@ -27844,7 +27859,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       <div class="pj-mcal-box">
         <div class="pj-mcal-dow">${['일','월','화','수','목','금','토'].map(d=>`<span>${d}</span>`).join('')}</div>
         ${body}
-        ${inMonth?'':'<div class="pj-mcal-empty">이 달에 걸친 프로젝트가 없습니다</div>'}
+        ${inMonth?'':'<div class="pj-mcal-empty">'+((o&&o.empty)||'이 달에 걸친 프로젝트가 없습니다')+'</div>'}
       </div>`;
   }
 
@@ -27992,8 +28007,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const nav=e.target.closest('[data-cal]');
       if(nav){
         const k=nav.dataset.cal;
-        if(k==='today') calMonth=kstToday().slice(0,7);
-        else{ const [y,m]=calMonth.split('-').map(Number); calMonth=new Date(Date.UTC(y,m-1+(k==='next'?1:-1),1)).toISOString().slice(0,7); }
+        if(k==='today') calMonthPj=kstToday().slice(0,7);
+        else{ const [y,m]=calMonthPj.split('-').map(Number); calMonthPj=new Date(Date.UTC(y,m-1+(k==='next'?1:-1),1)).toISOString().slice(0,7); }
         renderCal();
         return;
       }
@@ -28656,7 +28671,6 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const src={'쿠팡':'logos/coupang-sq.png','스마트스토어':'logos/naver.png','톡딜':'logos/kakao.png'}[chActive]
       ||(chActive==='자사몰'&&own&&own.getAttribute('src'))||'';
     if(src){ if(logo.getAttribute('src')!==src) logo.src=src; logo.alt=chActive; } else logo.removeAttribute('src');
-    $('channelViewSub').textContent=chActive+' 채널의 프로젝트 달성률(예정·진행중·보류)을 확인하세요 (프로젝트 페이지와 연동됩니다)';
     $('chNoteTitleText').textContent=chActive+' 판매처 기록노트';
     $('chNoteSub').textContent=chActive+' 채널 관련 짧은 기록을 남기는 공간입니다';
     $('chProjTitleText').textContent=chActive+' 프로젝트 달성률';
@@ -28669,7 +28683,52 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     renderChNotes();
     renderChProjects();
     renderChAlerts();
+    renderChTab();
   }
+  /* ---------- 배너 위 단추 · 스케줄(대시보드) / 프로젝트(이 채널 경로의 캘린더) ---------- */
+  const CH_TAB_KEY='baroyam_ch_tab';
+  let chTab='dash', chCalMonth=kstToday().slice(0,7);
+  try{ if(localStorage.getItem(CH_TAB_KEY)==='proj') chTab='proj'; }catch(e){}
+  function renderChTab(){
+    document.querySelectorAll('#chTabs [data-ch-tab]').forEach(b=>{
+      const on=b.dataset.chTab===chTab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');
+    });
+    document.querySelectorAll('#view-channel [data-ch-pane]').forEach(el=>{ el.hidden=el.dataset.chPane!==chTab; });
+    /* 기간 단추는 위 숫자 칸 몫이라 스케줄에서만 */
+    $('chPeriodBtn').parentNode.hidden=chTab!=='dash';
+    $('channelViewSub').textContent=chTab==='proj'
+      ?chActive+' 경로로 등록한 프로젝트를 캘린더로 봅니다 · 막대 = 시작날짜 ~ 마감기한 · 누르면 수정창이 열립니다'
+      :chActive+' 채널의 프로젝트 달성률(예정·진행중·보류)을 확인하세요 (프로젝트 페이지와 연동됩니다)';
+    if(chTab==='proj') renderCal({host:$('chCal'),month:chCalMonth,
+      /* 경로가 이 채널인 것만 · 일반 회원은 프로젝트 보드처럼 자기 프로젝트만 */
+      filter:p=>(p.channel||'')===chActive&&(canSeeAllProjects()||!myName()||p.owner===myName()),
+      empty:'이 달에 '+esc(chActive)+' 경로 프로젝트가 없습니다'});
+  }
+  $('chTabs').addEventListener('click',e=>{
+    const b=e.target.closest('[data-ch-tab]'); if(!b||b.dataset.chTab===chTab) return;
+    chTab=b.dataset.chTab;
+    try{ localStorage.setItem(CH_TAB_KEY,chTab); }catch(e){}
+    renderChTab();
+  });
+  $('chCal').addEventListener('click',e=>{
+    const nav=e.target.closest('[data-cal]');
+    if(nav){
+      const k=nav.dataset.cal;
+      if(k==='today') chCalMonth=kstToday().slice(0,7);
+      else{ const [y,m]=chCalMonth.split('-').map(Number); chCalMonth=new Date(Date.UTC(y,m-1+(k==='next'?1:-1),1)).toISOString().slice(0,7); }
+      renderChTab(); return;
+    }
+    /* 날짜 칸 + · 그날 마감인 이 채널 경로의 새 프로젝트 */
+    const addDay=e.target.closest('[data-add-date]');
+    if(addDay){
+      const d=addDay.dataset.addDate;
+      openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,due:d,channel:chActive,owner:myName()});
+      return;
+    }
+    const bar=e.target.closest('.pj-mcal-bar'); if(!bar) return;
+    const t=state.projects.find(x=>x.id===bar.dataset.id);
+    if(t) openProjectDialog(t);
+  });
   /* 사이드바에서 채널을 고르면 그 채널로 갈아 끼우고 숫자를 처음부터 다시 센다 */
   window.showChannelView=function(name){
     if(CH_VIEWS.indexOf(name)>=0&&name!==chActive){
