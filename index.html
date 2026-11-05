@@ -3119,9 +3119,9 @@ window.BAROYAM_FONT=(function(){
   .gd-head{padding:16px 22px}
   .gd-hd{display:flex;align-items:center;gap:14px;min-width:0}
   .gd-lv{flex:none;padding:7px 14px;border-radius:10px;font-size:14px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
-  .gd-hd-t{min-width:0}
-  .gd-hd h2{margin:0;font-size:17px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .gd-sub{display:flex;align-items:center;gap:8px;margin:5px 0 0;font-size:12.5px;color:var(--body)}
+  .gd-hd-t{min-width:0;display:flex;align-items:center;gap:10px}
+  .gd-sub-t{flex:none;font-size:12.5px;color:var(--body);white-space:nowrap}
+  .gd-hd h2{margin:0;min-width:0;font-size:17px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .gd-pill{flex:none;min-width:0;padding:1px 10px;font-size:12px}
   .gd-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);gap:16px;padding:16px 22px 20px;font-size:13px;color:var(--body);overflow:hidden}
   .gd-left{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:2px}
@@ -3186,6 +3186,7 @@ window.BAROYAM_FONT=(function(){
   .gd-ai-s{margin:0;line-height:1.65;color:var(--ink)}
   .gd-ai-sec{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--btn) 18%,var(--paper))}
   .gd-ai-sec h5{margin:0;font-size:12.5px;font-weight:600;color:var(--mute)}
+  .gd-ai-act ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-weight:600;color:var(--ink);line-height:1.55}
   .gd-pr{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
   .gd-pr li{display:flex;gap:9px;align-items:baseline;line-height:1.6;color:var(--ink)}
   .gd-pr i{flex:none;font-style:normal;font-size:11.5px;font-weight:600;padding:1px 9px;border-radius:99px;color:var(--neg);background:var(--neg-soft)}
@@ -22482,9 +22483,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +'<div class="gd-skel"><i style="width:55%"></i><i></i><i style="width:85%"></i><i style="width:40%"></i><i></i><i style="width:70%"></i></div></div>';
     }
     if(A.state==='failed') return '<p class="gd-err">'+esc(A.msg)+'</p>'+again;
-    /* 11-05 사용자 요청 · 할 일은 쓰지 않고 어디가 문제인지 + 구매자(누가·언제·어디서) 판단만 */
+    /* 11-05 사용자 요청 · 아주 짧게: 결론 → 상태 한 줄 → 행동지침(1~3줄) → 문제 자리 → 구매자(누가·언제·어디서) */
     const R=A.res, B=R.buyer&&typeof R.buyer==='object'?R.buyer:{who:R.buyer||''}, pr=R.problems||[];
+    const acts=(R.actions||[]).filter(Boolean);
     return '<p class="gd-ai-v">'+esc(R.verdict)+'</p><p class="gd-ai-s">'+esc(R.summary)+'</p>'
+      +(acts.length?'<div class="gd-ai-sec gd-ai-act"><h5>행동지침</h5><ol>'+acts.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol></div>':'')
       +'<div class="gd-ai-sec"><h5>문제 자리</h5>'+(pr.length?'<ul class="gd-pr">'+pr.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul>':'<p class="gd-ok">뚜렷한 문제가 없습니다.</p>')+'</div>'
       +'<div class="gd-ai-sec"><h5>구매자</h5><dl class="gd-by">'+[['누가',B.who],['언제',B.when],['어디서',B.where]].filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl></div>'
       +'<div class="gd-ai-foot"><span>참고용 · '+new Date(A.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 숫자 기준</span>'+again+'</div>';
@@ -22527,7 +22530,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const kpi=(k,l,v,cls,sub)=>'<button type="button" class="gd-k'+cls+(gdKey===k?' is-sel':'')+'" data-gd-k="'+k+'" aria-pressed="'+(gdKey===k)+'" title="눌러서 일자별 '+l+' 보기"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></button>';
     const has=g.sp>0&&g.imp>0;
     const note={wait:'게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.',none:'이 기간에 광고비·노출이 없습니다.',low:'광고비 '+money(g.sp,cur)+' · '+money(GUIDE.minSp,cur)+' 이상 써야 판정합니다. 아래 숫자는 참고만 하세요.'}[g.k];
-    const G=guideHtml(g), act=typeof G==='object'?G.act:'';
     /* 데이터 기준 기간을 왼쪽 맨 위 띠로 크게(11-05 사용자 요청 · 머리 작은 글씨로는 안 보임) · 날짜에 요일 · 운영은 주말 뺀 평일 */
     const WD='일월화수목금토', dw=d=>md(d)+'('+WD[new Date(d+'T00:00:00').getDay()]+')';
     const when='<div class="gd-when"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
@@ -22542,7 +22544,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kpi('ctr','클릭률',gdPct(g.ctr,2),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.cOk:null),'기준 '+GUIDE.ctr+'%'+(g.run?' '+sg(chg(g.ctr,g.pCtr)):''))+'</div>':'')
       +'<div class="gd-two"><section class="gd-card"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일</small></h4>'+gdPageHtml(g)+'</section>'
       +'<section class="gd-card"><h4>영상 <small>최근 60일</small></h4>'+gdVideoHtml(g)+'</section></div>'
-      +(act?'<section class="gd-card gd-act is-'+g.k+'">'+act.replace('<div class="act"><h5>행동지침</h5>','<h4>행동지침</h4>').replace(/<\/div>$/,'')+'</section>':'')
       +(has?'<section class="gd-card gd-chart"></section>':'');
     gdPaintChart();
     gdPaintAi();
@@ -22580,7 +22581,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const g=shownGuide[id]; if(!g) return;
     if(!gdBox){
       gdBox=document.createElement('div'); gdBox.className='settings-overlay gd-ov'; gdBox.hidden=true;
-      gdBox.innerHTML='<div class="settings-panel gd-dlg" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><p class="gd-sub"><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span></p></div></div>'
+      gdBox.innerHTML='<div class="settings-panel gd-dlg" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span></div></div>'
         +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="gd-body"><div class="gd-left"></div><aside class="gd-right"></aside></div></div>';
       document.body.appendChild(gdBox);
       const shut=()=>{ gdBox.hidden=true; clearTimeout(gdTick); };
