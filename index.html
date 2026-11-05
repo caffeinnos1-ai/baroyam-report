@@ -3119,10 +3119,18 @@ window.BAROYAM_FONT=(function(){
   .ma-guide-tip .per,.ma-guide-tip .sub{color:var(--mute);font-size:11.5px}
   .ma-guide-tip ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
   .ma-guide-tip li{display:flex;align-items:baseline;gap:8px}
-  .ma-guide-tip li span{width:44px;color:var(--mute)}
+  .ma-guide-tip li span{width:58px;color:var(--mute)}
   .ma-guide-tip li em{font-style:normal;font-weight:600}
   .ma-guide-tip li em.ok{color:var(--pos)} .ma-guide-tip li em.no{color:var(--neg)}
   .ma-guide-tip li small{margin-left:auto;color:var(--mute);font-size:11px}
+  .ma-guide-tip .cv{margin-top:8px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--gc) 30%,var(--paper))}
+  .ma-guide-tip h5{margin:0;font-size:12px;font-weight:600;color:var(--ink)}
+  .ma-guide-tip h5 small{font-weight:400;font-size:11px;color:var(--body);margin-left:4px}
+  .ma-guide-tip li i.cvg{font-style:normal;font-size:10.5px;font-weight:600;padding:0 6px;border-radius:99px;line-height:16px}
+  .ma-guide-tip li i.cvg.is-pass{color:var(--pos);background:var(--pos-soft)}
+  .ma-guide-tip li i.cvg.is-watch{color:var(--warn);background:var(--warn-soft)}
+  .ma-guide-tip li i.cvg.is-risk{color:var(--neg);background:var(--neg-soft)}
+  .ma-guide-tip li span{flex:none}
   .ma-guide-tip .act{margin-top:8px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--gc) 30%,var(--paper));color:var(--ink);font-weight:500}
   .ma-guide-tip .per,.ma-guide-tip .sub,.ma-guide-tip li span,.ma-guide-tip li small{color:var(--body)}
   .ma-gv-warn{margin:0;padding:10px 12px;border-radius:8px;background:var(--neg-soft);color:var(--neg);font-size:12.5px;font-weight:500}
@@ -20985,6 +20993,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const m=[0,0,0,0,0]; days.forEach(d=>{ const day=D[d]; if(day) ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; }); });
       const g={from:days[0],to:days[days.length-1],w:days.length,n,sp:m[0],rev:m[1],buy:m[2],clk:m[3],imp:m[4]};
       g.ctr=m[4]?m[3]/m[4]*100:null; g.roas=m[0]?m[1]/m[0]*100:null;
+      { const CD=(CLARITY&&CLARITY.format===2&&CLARITY.days)||{}, idSet=new Set(ids), names=[...new Set((a.ads||[]).filter(y=>idSet.has(y.id)).map(y=>y.name))], cs=[0,0,0,0,0,0,0];
+        days.forEach(d=>{ const day=CD[d]; if(day) names.forEach(nm=>{ const v=day[nm]; if(v) for(let i=0;i<7;i++) cs[i]+=v[i]||0; }); });
+        if(cs[0]>0) g.cv={v:cs[0],sc:cs[2]?cs[1]/cs[2]:null,ac:cs[5]?cs[3]/cs[5]:null,qb:cs[6]/cs[0]*100}; }
       if(n!=null&&n<GUIDE.days){ g.k='wait'; return g; }
       if(!(m[0]>0)||!m[4]){ g.k='none'; return g; }
       if(m[0]<GUIDE.minSp){ g.k='low'; return g; }
@@ -21363,6 +21374,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
   /* 행동지침 기준(사용자 11-04) · 숫자를 바꾸면 알약·도우미가 같이 바뀐다 */
   const GUIDE={days:3,long:7,minSp:30000,ctr:2,roas:200}, GUIDE_TXT={pass:'통과',risk:'위험',watch:'관찰',wait:'대기',low:'부족',none:'-'};
+  /* 상세페이지 체류 기준(사용자 11-05) · 도우미에만 보인다(판정 알약에는 넣지 않음) · [합격 이상, 개선 이상] · 빠른 이탈은 낮을수록 좋아 [합격 이하, 개선 이하] ·
+     방문이 minV 아래면 숫자가 흔들려 등급을 매기지 않는다 */
+  const CV_STD={sc:[40,20],ac:[30,20],qb:[40,60],minV:20};
   let shownGuide={};
   const POST_IC={
     ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg>',
@@ -22202,12 +22216,28 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(g.k==='wait') return '<b>판단 대기</b><p>게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.</p>';
     if(g.k==='none') return '<b>데이터 없음</b><p class="per">'+per+'</p><p>이 기간에 광고비·노출이 없습니다.</p>';
     if(g.k==='low') return '<b>데이터 부족</b><p class="per">'+per+'</p><p>광고비 '+money(g.sp,cur)+' · 판정하려면 '+money(GUIDE.minSp,cur)+' 이상 써야 합니다. 숫자가 적으면 클릭 몇 번에도 크게 흔들립니다.</p>'
-      +'<p class="sub">지금 클릭률 '+pc(g.ctr,2)+' · ROAS '+pc(g.roas,0)+' (참고만)</p>';
+      +'<p class="sub">지금 클릭률 '+pc(g.ctr,2)+' · ROAS '+pc(g.roas,0)+' (참고만)</p>'+guideCv(g);
     const row=(l,v,ok,std)=>'<li><span>'+l+'</span><em class="'+(ok?'ok':'no')+'">'+v+'</em><small>기준 '+std+'</small></li>';
+    const cv=guideCv(g);
     const act={pass:'유지하세요. 예산을 올려 볼 후보입니다.',risk:'끄거나 소재 교체를 검토하세요.',
       watch:g.cOk?'클릭은 되는데 구매가 약합니다 → 상세페이지·가격·혜택을 점검하세요.':'구매는 나오는데 클릭이 약합니다 → 썸네일·첫 3초·문구를 점검하세요.'}[g.k];
     return '<b>'+GUIDE_TXT[g.k]+'</b><p class="per">'+per+'</p><ul>'+row('클릭률',pc(g.ctr,2),g.cOk,GUIDE.ctr+'% 이상')+row('ROAS',pc(g.roas,0),g.rOk,GUIDE.roas+'% 이상')+'</ul>'
-      +'<p class="act">'+act+'</p><p class="sub">광고비 '+money(g.sp,cur)+' · 구매 '+int(g.buy)+'건 · 클릭 '+int(g.clk)+' · 노출 '+int(g.imp)+'</p>';
+      +cv+'<p class="act">'+act+'</p><p class="sub">광고비 '+money(g.sp,cur)+' · 구매 '+int(g.buy)+'건 · 클릭 '+int(g.clk)+' · 노출 '+int(g.imp)+'</p>';
+  }
+  /* 상세페이지 체류 줄 · 평균 스크롤·머문 시간(활동)·빠른 이탈마다 합격·개선·위험 */
+  function guideCv(g){
+    const c=g.cv;
+    if(!c) return '<div class="cv"><h5>상세페이지 체류</h5><p class="sub">이 기간 Clarity 방문 기록이 없습니다(하루 늦게 들어옴).</p></div>';
+    const few=c.v<CV_STD.minV;
+    const grade=(v,t,low)=>v==null||few?'':(low?(v<=t[0]?'pass':v<=t[1]?'watch':'risk'):(v>=t[0]?'pass':v>=t[1]?'watch':'risk'));
+    const GT={pass:'합격',watch:'개선',risk:'위험'};
+    const sec=v=>v==null?'-':v<60?Math.floor(v)+'초':Math.floor(v/60)+'분 '+Math.floor(v%60)+'초';
+    const row=(l,v,gr,std)=>'<li><span>'+l+'</span><em>'+v+'</em>'+(gr?'<i class="cvg is-'+gr+'">'+GT[gr]+'</i>':'')+'<small>'+std+'</small></li>';
+    return '<div class="cv"><h5>상세페이지 체류 <small>Clarity 방문 '+int(c.v)+'회</small></h5><ul>'
+      +row('스크롤',c.sc==null?'-':Math.floor(c.sc)+'%',grade(c.sc,CV_STD.sc),CV_STD.sc[0]+'% 이상')
+      +row('머문 시간',sec(c.ac),grade(c.ac,CV_STD.ac),CV_STD.ac[0]+'초 이상')
+      +row('빠른 이탈',Math.floor(c.qb)+'%',grade(c.qb,CV_STD.qb,1),CV_STD.qb[0]+'% 이하')+'</ul>'
+      +(few?'<p class="sub">방문이 '+CV_STD.minV+'회 아래라 등급은 매기지 않습니다.</p>':'')+'</div>';
   }
   function guideHide(){ if(guideTip) guideTip.hidden=true; if(guideTr){ if(guideTrTitle) guideTr.setAttribute('title',guideTrTitle); guideTr=null; } }
   function guideShow(el){
