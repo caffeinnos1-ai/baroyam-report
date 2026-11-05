@@ -3136,6 +3136,23 @@ window.BAROYAM_FONT=(function(){
   .gd-k.ok b{color:var(--pos)} .gd-k.no b{color:var(--neg)}
   .gd-k em{font-style:normal;font-weight:600;margin-left:2px}
   .gd-k em.up{color:var(--pos)} .gd-k em.dn{color:var(--neg)}
+  button.gd-k{all:unset;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--paper);display:flex;flex-direction:column;gap:2px;min-width:0;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  button.gd-k:hover{border-color:color-mix(in srgb,var(--btn) 45%,var(--line))}
+  button.gd-k.is-sel{border-color:var(--btn);box-shadow:0 0 0 2px color-mix(in srgb,var(--btn) 22%,transparent)}
+  button.gd-k:focus-visible{box-shadow:0 0 0 2px var(--btn)}
+  .gd-chart h4 small{font-weight:400}
+  .gd-bars{position:relative;display:flex;align-items:flex-end;gap:10px;height:190px;padding:22px 4px 0;margin-bottom:34px;border-bottom:1px solid var(--line)}
+  .gd-bar{position:relative;flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+  .gd-bar i{display:block;width:min(46px,70%);border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,color-mix(in srgb,var(--btn) 70%,var(--paper)),var(--btn));transform-origin:bottom;animation:gdGrow .6s cubic-bezier(.2,.8,.2,1) both}
+  .gd-bar.ok i{background:linear-gradient(180deg,color-mix(in srgb,var(--pos) 60%,var(--paper)),var(--pos))}
+  .gd-bar.no i{background:linear-gradient(180deg,color-mix(in srgb,var(--neg) 55%,var(--paper)),var(--neg))}
+  .gd-bar em{font-style:normal;font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:4px;white-space:nowrap;font-variant-numeric:tabular-nums;animation:gdFade .4s .35s both}
+  .gd-bar span{position:absolute;bottom:-32px;left:0;right:0;text-align:center;font-size:11.5px;color:var(--body);line-height:1.25}
+  .gd-bar span small{display:block;font-size:10.5px;color:var(--mute)}
+  .gd-line{position:absolute;left:0;right:0;border-top:1.5px dashed color-mix(in srgb,var(--ink) 35%,transparent);z-index:1;pointer-events:none}
+  @keyframes gdGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes gdFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){ .gd-bar i,.gd-bar em{animation:none} }
   .gd-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .gd-card{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
   .gd-card h4{margin:0;font-size:13.5px;font-weight:600;color:var(--ink)}
@@ -21074,7 +21091,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const n=t0?Math.round((today-Date.parse(new Date(t0+9*3600e3).toISOString().slice(0,10)))/864e5)+1:null;
       const run=n==null||n>GUIDE.test;
       const days=run?guideWk.slice(0,GUIDE.wk).reverse():guideDays(Math.max(1,n));
-      const g=Object.assign({run,n,from:days[0],to:days[days.length-1],w:days.length,ids,nm:r.name,brand:r.brand,lv:tab,setId:tab==='adset'?r.id:r.s},guideSum(ids,days));
+      const g=Object.assign({run,n,days,from:days[0],to:days[days.length-1],w:days.length,ids,nm:r.name,brand:r.brand,lv:tab,setId:tab==='adset'?r.id:r.s},guideSum(ids,days));
       { const R0=repFor(r.c,tab==='campaign'?null:r.s); g.beB=R0&&R0.roas!=null?R0.roas:GUIDE.roas; }
       { const CD=(CLARITY&&CLARITY.format===2&&CLARITY.days)||{}, idSet=new Set(ids), names=[...new Set((a.ads||[]).filter(y=>idSet.has(y.id)).map(y=>y.name))], cs=[0,0,0,0,0,0,0];
         days.forEach(d=>{ const day=CD[d]; if(day) names.forEach(nm=>{ const v=day[nm]; if(v) for(let i=0;i<7;i++) cs[i]+=v[i]||0; }); });
@@ -22501,21 +22518,45 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const cur=acc().currency, md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
     const chg=(a1,b1)=>a1==null||b1==null||!b1?null:(a1-b1)/b1*100, sg=v=>v==null?'':'<em class="'+(v>=0?'up':'dn')+'">'+(v>=0?'▲':'▼')+Math.abs(Math.round(v))+'%</em>';
     const be=g.run?g.be:GUIDE.roas, ok=(c)=>c==null?'':c?' ok':' no';
-    const kpi=(l,v,cls,sub)=>'<div class="gd-k'+cls+'"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></div>';
+    const kpi=(k,l,v,cls,sub)=>'<button type="button" class="gd-k'+cls+(gdKey===k?' is-sel':'')+'" data-gd-k="'+k+'" aria-pressed="'+(gdKey===k)+'" title="눌러서 일자별 '+l+' 보기"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></button>';
     const has=g.sp>0&&g.imp>0;
     const note={wait:'게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.',none:'이 기간에 광고비·노출이 없습니다.',low:'광고비 '+money(g.sp,cur)+' · '+money(GUIDE.minSp,cur)+' 이상 써야 판정합니다. 아래 숫자는 참고만 하세요.'}[g.k];
     const G=guideHtml(g), act=typeof G==='object'?G.act:'';
     gdBox.querySelector('.gd-left').innerHTML=
       (note?'<p class="gd-note is-'+g.k+'">'+note+'</p>':'')
       +(has?'<div class="gd-kpis">'
-        +kpi('ROAS',gdPct(g.roas,0),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.rOk:null),(g.run?'손익분기 '+Math.round(be)+'%':'기준 '+GUIDE.roas+'%')+(g.run?' '+sg(chg(g.roas,g.pRoas)):''))
-        +kpi('클릭률',gdPct(g.ctr,2),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.cOk:null),'기준 '+GUIDE.ctr+'%'+(g.run?' '+sg(chg(g.ctr,g.pCtr)):''))
-        +kpi('광고비',money(g.sp,cur),'',int(g.imp)+' 노출')
-        +kpi('구매',int(g.buy)+'건','',g.buy?'CPA '+money(g.sp/g.buy,cur):'-')+'</div>':'')
+        +kpi('roas','ROAS',gdPct(g.roas,0),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.rOk:null),(g.run?'손익분기 '+Math.round(be)+'%':'기준 '+GUIDE.roas+'%')+(g.run?' '+sg(chg(g.roas,g.pRoas)):''))
+        +kpi('sp','광고비',money(g.sp,cur),'',int(g.imp)+' 노출')
+        +kpi('rev','광고매출',money(g.rev,cur),'','구매 '+int(g.buy)+'건'+(g.buy?' · CPA '+money(g.sp/g.buy,cur):''))
+        +kpi('ctr','클릭률',gdPct(g.ctr,2),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.cOk:null),'기준 '+GUIDE.ctr+'%'+(g.run?' '+sg(chg(g.ctr,g.pCtr)):''))+'</div>':'')
       +'<div class="gd-two"><section class="gd-card"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일</small></h4>'+gdPageHtml(g)+'</section>'
       +'<section class="gd-card"><h4>영상 <small>최근 60일</small></h4>'+gdVideoHtml(g)+'</section></div>'
-      +(act?'<section class="gd-card gd-act is-'+g.k+'">'+act.replace('<div class="act"><h5>행동지침</h5>','<h4>행동지침</h4>').replace(/<\/div>$/,'')+'</section>':'');
+      +(act?'<section class="gd-card gd-act is-'+g.k+'">'+act.replace('<div class="act"><h5>행동지침</h5>','<h4>행동지침</h4>').replace(/<\/div>$/,'')+'</section>':'')
+      +(has?'<section class="gd-card gd-chart"></section>':'');
+    gdPaintChart();
     gdPaintAi();
+  }
+  /* 일자별 막대(11-05 사용자 요청) · 위 네 칸을 누르면 그 값을 판정 기간의 날마다(운영 = 평일 7일 · 테스트 = 게재 1일째부터) 막대로 · 처음엔 ROAS ·
+     막대는 아래에서 위로 자란다(움직임 줄이기 설정이면 바로) · ROAS 는 손익분기(테스트는 200%) 점선, 클릭률은 2% 점선 */
+  const GD_KEYS={roas:'ROAS',sp:'광고비',rev:'광고매출',ctr:'클릭률'};
+  let gdKey='roas';
+  function gdPaintChart(){
+    const box=gdBox&&gdBox.querySelector('.gd-chart'); if(!box) return;
+    const g=shownGuide[gdCur]; if(!g) return;
+    const a=acc(), D=a.adDaily||{}, cur=a.currency, WD='일월화수목금토';
+    const rows=(g.days||[]).map(d=>{ const m=[0,0,0,0,0], day=D[d]; if(day) g.ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; });
+      const val={roas:m[0]?m[1]/m[0]*100:null,sp:m[0],rev:m[1],ctr:m[4]?m[3]/m[4]*100:null}[gdKey];
+      return {d,val,buy:m[2],sp:m[0]}; });
+    const fmt=v=>v==null?'-':gdKey==='roas'?Math.round(v)+'%':gdKey==='ctr'?v.toFixed(2)+'%':short(v,cur);
+    const line=gdKey==='roas'?(g.run?g.be:GUIDE.roas):gdKey==='ctr'?GUIDE.ctr:null;
+    const max=Math.max(1,line||0,...rows.map(r=>r.val||0))*1.12;
+    const good=v=>line==null||v==null?'':v>=line?' ok':' no';
+    box.innerHTML='<h4>'+GD_KEYS[gdKey]+' · 일자별 <small>'+(g.run?'평일 최근 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+(line!=null?' · 점선 = '+(gdKey==='roas'?(g.run?'손익분기 ':'기준 ')+Math.round(line)+'%':'기준 '+line+'%'):'')+'</small></h4>'
+      +'<div class="gd-bars">'+(line!=null?'<span class="gd-line" style="bottom:'+(line/max*100).toFixed(1)+'%"></span>':'')
+      +rows.map((r,i)=>{ const dt=new Date(r.d+'T00:00:00');
+        return '<div class="gd-bar'+good(r.val)+'" title="'+r.d+' · 광고비 '+money(r.sp,cur)+' · 구매 '+int(r.buy)+'건"><em>'+fmt(r.val)+'</em>'
+          +'<i style="height:'+(r.val?Math.max(1.5,r.val/max*100).toFixed(1):0)+'%;animation-delay:'+(i*60)+'ms"></i>'
+          +'<span>'+(+r.d.slice(5,7))+'.'+(+r.d.slice(8,10))+'<small>'+WD[dt.getDay()]+'</small></span></div>'; }).join('')+'</div>';
   }
   function gdPaintAi(){
     if(!gdBox||gdBox.hidden) return;
@@ -22535,6 +22576,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       gdBox.addEventListener('click',e=>{
         if(e.target===gdBox||e.target.closest('.settings-close')) return shut();
         if(e.target.closest('[data-gd-ai]')) gdAsk();
+        const kb=e.target.closest('[data-gd-k]');
+        if(kb){ gdKey=kb.dataset.gdK; gdBox.querySelectorAll('[data-gd-k]').forEach(b=>{ const on=b===kb; b.classList.toggle('is-sel',on); b.setAttribute('aria-pressed',on); }); gdPaintChart(); }
       });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&gdBox&&!gdBox.hidden){ e.stopPropagation(); shut(); } },true);
     }
