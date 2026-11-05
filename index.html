@@ -3104,7 +3104,7 @@ window.BAROYAM_FONT=(function(){
   .ma-table th.ma-swcol,.ma-table td.ma-swcol{width:58px;text-align:center;padding-left:4px;padding-right:4px;cursor:default}
   .ma-list .ma-table th.ma-swcol{width:58px}
   .ma-table th.ma-guidecol,.ma-table td.ma-guidecol{width:64px;text-align:center;padding-left:4px;padding-right:8px;cursor:default}
-  .ma-guide{display:inline-block;min-width:38px;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;line-height:18px;cursor:help;outline:none}
+  .ma-guide{display:inline-block;min-width:38px;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;line-height:18px;cursor:pointer;outline:none}
   .ma-guide.is-pass{color:var(--pos);background:var(--pos-soft)}
   .ma-guide.is-risk{color:var(--neg);background:var(--neg-soft)}
   .ma-guide.is-watch{color:var(--warn);background:var(--warn-soft)}
@@ -3113,6 +3113,54 @@ window.BAROYAM_FONT=(function(){
   .ma-guide-tip{--gc:var(--mute);position:fixed;z-index:9000;width:300px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--gc) 9%,var(--paper));border:1px solid color-mix(in srgb,var(--gc) 45%,var(--paper));box-shadow:0 10px 28px rgba(0,0,0,.14);font-size:12.5px;color:var(--ink);pointer-events:none}
   .ma-guide-tip.is-pass{--gc:var(--pos)} .ma-guide-tip.is-risk{--gc:var(--neg)} .ma-guide-tip.is-watch{--gc:var(--warn)}
   .ma-guide-tip[hidden]{display:none}
+  .ma-guide-tip.is-in{position:static;width:auto;box-shadow:none;pointer-events:auto;padding:14px 16px;font-size:13px}
+  .ma-guide-tip .more{margin-top:8px;color:var(--btn-soft-ink);font-weight:500}
+  .settings-panel.gd-dlg{max-width:760px;width:100%;height:auto;max-height:min(860px,92vh);display:flex;flex-direction:column}
+  .gd-hd{display:flex;align-items:center;gap:12px;min-width:0}
+  .gd-hd h2{margin:0;font-size:16px;word-break:break-all}
+  .gd-sub{margin:2px 0 0;font-size:12px;color:var(--mute)}
+  .gd-pill{flex:none;font-size:13px;padding:4px 12px}
+  .gd-tabs{margin:14px 22px 12px;align-self:flex-start;flex-wrap:wrap}
+  .gd-body{flex:1;min-height:0;overflow:auto;padding:0 22px 22px;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--body)}
+  .gd-per{margin:0;font-size:12px;color:var(--mute)}
+  .gd-empty{margin:20px 0;text-align:center;color:var(--mute)}
+  .gd-err{margin:0;color:var(--neg)}
+  .gd-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .gd-step{flex:1;min-width:120px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+  .gd-step small,.gd-rate small{display:block;font-size:12px;color:var(--mute)}
+  .gd-step b{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .gd-arr{color:var(--mute);font-size:18px}
+  .gd-rates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .gd-rate{--gc:var(--mute);position:relative;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--gc) 8%,var(--paper));border:1px solid color-mix(in srgb,var(--gc) 40%,var(--paper))}
+  .gd-rate.is-pass{--gc:var(--pos)} .gd-rate.is-watch{--gc:var(--warn)} .gd-rate.is-risk{--gc:var(--neg)}
+  .gd-rate b{display:block;font-size:24px;font-weight:600;color:var(--gc);font-variant-numeric:tabular-nums}
+  .gd-rate em{display:block;font-style:normal;font-size:11.5px;color:var(--body)}
+  .gd-rate span{display:block;font-size:11.5px;color:var(--mute)}
+  .gd-rate i{position:absolute;right:10px;top:10px;font-style:normal;font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;color:var(--gc);background:color-mix(in srgb,var(--gc) 14%,var(--paper))}
+  .gd-note{margin:0;font-size:11.5px;color:var(--mute)}
+  .gd-tips{margin:0;padding:12px 14px 12px 30px;border-radius:12px;background:var(--bg);display:flex;flex-direction:column;gap:6px;line-height:1.55}
+  .gd-tips b{font-weight:600;color:var(--ink)}
+  .gd-tbs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .gd-tb h5,.gd-ai h5{margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--ink)}
+  .gd-tb h5 small{font-weight:400;color:var(--mute);margin-left:4px}
+  .gd-tb table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+  .gd-tb th{font-weight:500;color:var(--mute);text-align:right;padding:4px 6px;border-bottom:1px solid var(--line)}
+  .gd-tb td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--line)}
+  .gd-tb td:first-child,.gd-tb th:first-child{text-align:left;color:var(--ink)}
+  .gd-tb td b{font-weight:600;color:var(--ink)}
+  .gd-tb td small{color:var(--mute);font-size:11px}
+  .gd-tb td.ok{color:var(--pos);font-weight:600} .gd-tb td.no{color:var(--neg);font-weight:600}
+  .gd-ai{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:12px;border:1px solid color-mix(in srgb,var(--btn) 35%,var(--paper));background:color-mix(in srgb,var(--btn) 5%,var(--paper));line-height:1.6;color:var(--ink)}
+  .gd-ai p{margin:0}
+  .gd-ai-v{font-size:16px;font-weight:600;color:var(--btn-soft-ink)}
+  .gd-ai h5{margin-top:6px}
+  .gd-ai ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+  .gd-ai ol b{font-weight:600}
+  .gd-ai ol small{display:block;color:var(--body);font-size:12px}
+  .gd-ai-wait{display:flex;align-items:center;gap:10px;padding:18px;color:var(--body)}
+  .gd-ai-wait .mw-spin svg{width:20px;height:20px;color:var(--btn)}
+  [data-gd-ai]{align-self:flex-start}
+  @media (max-width:640px){ .gd-rates,.gd-tbs{grid-template-columns:1fr} }
   .ma-guide-tip>b{font-size:13.5px;font-weight:600;color:var(--ink)}
   .ma-guide-tip.is-pass>b{color:var(--pos)} .ma-guide-tip.is-risk>b{color:var(--neg)} .ma-guide-tip.is-watch>b{color:var(--warn)}
   .ma-guide-tip p{margin:4px 0 0;line-height:1.5}
@@ -20894,10 +20942,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const agBox=ages.length?'<div class="ma-sec"><h4>연령 × 성별 <small>ROAS · 구매 · 최근 60일</small></h4><div class="ma-ag"><span></span><span class="h">여성</span><span class="h">남성</span>'
         +ages.map(g=>'<span class="y">'+g+'</span>'+['f','m'].map(x=>{ const v=AG[g+'|'+x];
           return '<div class="c'+rCls(v)+'" title="지출 '+money(v?v[0]:0,cur)+' · 구매 '+int(v?v[2]:0)+'건"><b>'+(v&&v[2]?rTxt(v):'–')+'</b><small>'+int(v?v[2]:0)+'건</small></div>'; }).join('')).join('')+'</div></div>':'';
-      const PL_TXT={'instagram|feed':'인스타 피드','instagram|instagram_reels':'인스타 릴스','instagram|instagram_stories':'인스타 스토리','instagram|instagram_explore':'인스타 탐색','instagram|instagram_explore_grid_home':'인스타 탐색',
-        'instagram|instagram_profile_feed':'인스타 프로필','facebook|feed':'페북 피드','facebook|facebook_reels':'페북 릴스','facebook|facebook_reels_overlay':'페북 릴스','facebook|facebook_stories':'페북 스토리',
-        'facebook|instream_video':'페북 인스트림','facebook|marketplace':'페북 마켓','facebook|video_feeds':'페북 동영상','facebook|facebook_profile_feed':'페북 피드'};
-      const plName=k=>PL_TXT[k]||{audience_network:'오디언스넷',messenger:'메신저',threads:'스레드'}[k.split('|')[0]]||'기타';
       const PL={}; Object.entries(sum3(bd.pl)).forEach(([k,v])=>{ const n=plName(k), t=PL[n]||(PL[n]=[0,0,0]); t[0]+=v[0]; t[1]+=v[1]; t[2]+=v[2]; });
       const plAll=Object.entries(PL).filter(e=>e[1][0]>0).sort((p,q)=>q[1][0]-p[1][0]), plTot=plAll.reduce((n,e)=>n+e[1][0],0);
       const plRows=plAll.filter(e=>e[0]!=='기타'&&e[1][0]>=plTot*.01), etc=plAll.filter(e=>!plRows.includes(e)).reduce((t,e)=>[t[0]+e[1][0],t[1]+e[1][1],t[2]+e[1][2]],[0,0,0]);
@@ -21002,7 +21046,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const n=t0?Math.round((today-Date.parse(new Date(t0+9*3600e3).toISOString().slice(0,10)))/864e5)+1:null;
       const run=n==null||n>GUIDE.test;
       const days=run?guideWk.slice(0,GUIDE.wk).reverse():guideDays(Math.max(1,n));
-      const g=Object.assign({run,n,from:days[0],to:days[days.length-1],w:days.length},guideSum(ids,days));
+      const g=Object.assign({run,n,from:days[0],to:days[days.length-1],w:days.length,ids,nm:r.name,brand:r.brand,lv:tab,setId:tab==='adset'?r.id:r.s},guideSum(ids,days));
+      { const R0=repFor(r.c,tab==='campaign'?null:r.s); g.beB=R0&&R0.roas!=null?R0.roas:GUIDE.roas; }
       { const CD=(CLARITY&&CLARITY.format===2&&CLARITY.days)||{}, idSet=new Set(ids), names=[...new Set((a.ads||[]).filter(y=>idSet.has(y.id)).map(y=>y.name))], cs=[0,0,0,0,0,0,0];
         days.forEach(d=>{ const day=CD[d]; if(day) names.forEach(nm=>{ const v=day[nm]; if(v) for(let i=0;i<7;i++) cs[i]+=v[i]||0; }); });
         if(cs[0]>0) g.cv={v:cs[0],sc:cs[2]?cs[1]/cs[2]:null,ac:cs[5]?cs[3]/cs[5]:null,qb:cs[6]/cs[0]*100}; }
@@ -21387,6 +21432,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     return w;
   };
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
+  /* 게재지면 이름 · 소재 팝업과 행동지침 분석 창이 같이 쓴다 */
+  const PL_TXT={'instagram|feed':'인스타 피드','instagram|instagram_reels':'인스타 릴스','instagram|instagram_stories':'인스타 스토리','instagram|instagram_explore':'인스타 탐색','instagram|instagram_explore_grid_home':'인스타 탐색',
+    'instagram|instagram_profile_feed':'인스타 프로필','facebook|feed':'페북 피드','facebook|facebook_reels':'페북 릴스','facebook|facebook_reels_overlay':'페북 릴스','facebook|facebook_stories':'페북 스토리',
+    'facebook|instream_video':'페북 인스트림','facebook|marketplace':'페북 마켓','facebook|video_feeds':'페북 동영상','facebook|facebook_profile_feed':'페북 피드'};
+  const plName=k=>PL_TXT[k]||{audience_network:'오디언스넷',messenger:'메신저',threads:'스레드'}[k.split('|')[0]]||'기타';
   let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
   /* 행동지침 기준(사용자 11-04) · 숫자를 바꾸면 알약·도우미가 같이 바뀐다 */
   const GUIDE={days:3,test:7,wk:7,minSp:30000,ctr:2,roas:200,watch:0.8,up:1.3,drop:15}, GUIDE_TXT={pass:'통과',risk:'위험',watch:'관찰',wait:'대기',low:'부족',none:'-'};
@@ -22226,22 +22276,24 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   let guideTip=null, guideTr=null, guideTrTitle='';
   /* 내림으로 보인다 · 1.995% 를 2% 로 반올림해 보여 주면 기준을 넘은 것처럼 읽힌다 */
   const pc=(v,n)=>v==null?'-':(Math.floor(v*10**n)/10**n).toFixed(n)+'%';
-  function guideHtml(g){
+  /* short = 마우스를 올렸을 때(결론 한 줄 + 눌러서 자세히) · 아니면 분석 창 지침 탭 */
+  function guideHtml(g,short){
     const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
+    const more=short?'<p class="sub more">눌러서 자세히 보기 · 영상·구매자·바로얌AI 판단</p>':'';
     const stage='<p class="stage">'+(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'')+'</p>';
     const per='<p class="per">'+md(g.from)+'~'+md(g.to)+' · '+(g.run?'평일 최근 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+'</p>';
     const cur=acc().currency;
     if(g.k==='wait') return '<b>판단 대기</b>'+stage+'<p>메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.</p>';
     if(g.k==='none') return '<b>데이터 없음</b>'+stage+per+'<p>이 기간에 광고비·노출이 없습니다.</p>';
     if(g.k==='low') return '<b>데이터 부족</b>'+stage+per+'<p>광고비 '+money(g.sp,cur)+' · 판정하려면 '+money(GUIDE.minSp,cur)+' 이상 써야 합니다. 숫자가 적으면 클릭 몇 번에도 크게 흔들립니다.</p>'
-      +'<p class="sub">지금 클릭률 '+pc(g.ctr,2)+' · ROAS '+pc(g.roas,0)+' (참고만)</p>'+guideCv(g);
+      +'<p class="sub">지금 클릭률 '+pc(g.ctr,2)+' · ROAS '+pc(g.roas,0)+' (참고만)</p>'+(short?more:guideCv(g));
     const row=(l,v,ok,std)=>'<li><span>'+l+'</span><em class="'+(ok?'ok':'no')+'">'+v+'</em><small>'+std+'</small></li>';
     const tail='<p class="sub">광고비 '+money(g.sp,cur)+' · 구매 '+int(g.buy)+'건 · 클릭 '+int(g.clk)+' · 노출 '+int(g.imp)+'</p>';
     if(!g.run){
       const act={pass:'유지하세요. 테스트 통과 · 8일째부터 운영 기준(손익분기점)으로 봅니다.',risk:'끄거나 소재 교체를 검토하세요.',
         watch:g.cOk?'클릭은 되는데 구매가 약합니다 → 상세페이지·가격·혜택을 점검하세요.':'구매는 나오는데 클릭이 약합니다 → 썸네일·첫 3초·문구를 점검하세요.'}[g.k];
       return '<b>'+GUIDE_TXT[g.k]+'</b>'+stage+per+'<ul>'+row('클릭률',pc(g.ctr,2),g.cOk,'기준 '+GUIDE.ctr+'% 이상')+row('ROAS',pc(g.roas,0),g.rOk,'기준 '+GUIDE.roas+'% 이상')+'</ul>'
-        +guideCv(g)+'<p class="act">'+act+'</p>'+tail;
+        +(short?'<p class="act">'+act+'</p>'+more:guideCv(g)+'<p class="act">'+act+'</p>'+tail);
     }
     /* 운영 단계 · 숫자 흐름을 보고 할 일을 몇 줄로 · 맨 위 줄이 결론 */
     const chg=(a1,b1)=>a1==null||b1==null||!b1?null:(a1-b1)/b1*100;
@@ -22263,9 +22315,12 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       else if(meh.length) L.push('상세페이지 '+meh.join('·')+' 개선 필요 → 첫 화면·리뷰 위치를 손보면 좋습니다.');
       else if(g.k!=='pass'&&cg.sc==='pass'&&cg.ac==='pass') L.push('상세페이지는 잘 읽히는데 구매가 약함 → 가격·혜택·옵션 구성을 점검하세요.');
     }
-    return '<b>'+GUIDE_TXT[g.k]+'</b>'+stage+per
+    const head='<b>'+GUIDE_TXT[g.k]+'</b>'+stage+per
       +'<ul>'+row('ROAS',pc(g.roas,0)+sign(dR),g.rOk,'손익분기 '+Math.round(g.be)+'%'+(g.beName?'':' (기본)'))
-      +row('클릭률',pc(g.ctr,2)+sign(dC),g.cOk,'기준 '+GUIDE.ctr+'%')+'</ul>'
+      +row('클릭률',pc(g.ctr,2)+sign(dC),g.cOk,'기준 '+GUIDE.ctr+'%')+'</ul>';
+    g.acts=L;
+    if(short) return head+'<p class="act">'+L[0]+'</p>'+more;
+    return head
       +(dR!=null||dC!=null?'<p class="sub">괄호 = 앞 평일 7일보다</p>':'')
       +guideCv(g)+'<div class="act"><h5>행동지침</h5><ol>'+L.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>'+tail;
   }
@@ -22290,11 +22345,155 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function guideShow(el){
     const g=shownGuide[el.dataset.guide]; if(!g) return;
     if(!guideTip){ guideTip=document.createElement('div'); guideTip.className='ma-guide-tip'; guideTip.setAttribute('role','tooltip'); document.body.appendChild(guideTip); }
-    guideTip.className='ma-guide-tip is-'+g.k; guideTip.innerHTML=guideHtml(g); guideTip.hidden=false;
+    guideTip.className='ma-guide-tip is-'+g.k; guideTip.innerHTML=guideHtml(g,true); guideTip.hidden=false;
     const tr=el.closest('tr'); if(tr&&tr.hasAttribute('title')){ guideTr=tr; guideTrTitle=tr.getAttribute('title'); tr.removeAttribute('title'); }
     const b=el.getBoundingClientRect(), w=guideTip.offsetWidth, h=guideTip.offsetHeight;
     let x=b.right-w, y=b.bottom+8; if(x<8) x=8; if(y+h>innerHeight-8) y=b.top-h-8;
     guideTip.style.left=x+'px'; guideTip.style.top=y+'px';
+  }
+  /* ---------- 행동지침 분석 창(11-05 사용자 요청 · 판단할 것이 많아 작은 도우미 대신 탭 창) ----------
+     알약을 누르면 열린다 · 탭: 행동지침(판정·지침) · 영상(후킹률·유지율·쓰루플레이율) · 상세페이지(Clarity) · 구매자(연령×성별·게재지면·시간대) · 바로얌AI 판단 ·
+     영상·구매자는 서버가 광고마다 쪼개 둔 최근 60일 값(a.bd), 행동지침·상세페이지는 판정과 같은 기간 ·
+     바로얌AI 판단은 이 숫자를 모아 대본 서비스(content_writer.js kind:'adjudge' · 지침 prompts/광고판단.md)에 보내 결론·구매자 시사점·할 일을 받는다(약 30초 · 저장 안 함) */
+  const VID_STD={hook:[30,25],hold:[28,18],thru:[8,5]};   /* 사용자 11-05 · [합격 이상, 개선 이상] · 그 아래 위험 */
+  const GD_GT={pass:'합격',watch:'개선',risk:'위험'};
+  let gdBox=null, gdTab='guide', gdCur=null;
+  const AI_RES={};   /* 줄 id → {state,msg,res,t0,name} · 창을 닫았다 열어도 이어 본다 */
+  const gdPct=(v,n)=>v==null||!isFinite(v)?'-':(Math.floor(v*10**(n||0))/10**(n||0)).toFixed(n||0)+'%';
+  function gdVideo(g){
+    const VD=(acc().bd||{}).vd||{}, t=[0,0,0];
+    g.ids.forEach(id=>{ const m=VD[id]; if(m){ t[0]+=m[0]; t[1]+=m[2]; t[2]+=m[9]||0; } });
+    if(!t[1]) return null;
+    return {imp:t[0],v3:t[1],thru:t[2],hook:t[0]?t[1]/t[0]*100:null,hold:t[2]/t[1]*100,thruRate:t[0]?t[2]/t[0]*100:null};
+  }
+  function gdBuyers(g){
+    const bd=acc().bd||{}, sum=box=>{ const o={}; g.ids.forEach(id=>{ const m=box&&box[id]; if(m) for(const k in m){ const t=o[k]||(o[k]=[0,0,0]); t[0]+=m[k][0]; t[1]+=m[k][1]; t[2]+=m[k][2]; } }); return o; };
+    const AG=sum(bd.ag), ag=[];
+    for(const k in AG){ const [age,sx]=k.split('|'); if(sx!=='f'&&sx!=='m') continue; ag.push({seg:age+' '+(sx==='f'?'여성':'남성'),v:AG[k]}); }
+    const PL={}; Object.entries(sum(bd.pl)).forEach(([k,v])=>{ const nm=plName(k), t=PL[nm]||(PL[nm]=[0,0,0]); t[0]+=v[0]; t[1]+=v[1]; t[2]+=v[2]; });
+    const pl=Object.entries(PL).map(([seg,v])=>({seg,v}));
+    const HR=sum(bd.hr), hr=Array.from({length:24},(_,h)=>({seg:h+'시',v:HR[h]||[0,0,0]}));
+    const share=L=>{ const sp=L.reduce((n,x)=>n+x.v[0],0), by=L.reduce((n,x)=>n+x.v[2],0); L.forEach(x=>{ x.spS=sp?x.v[0]/sp*100:0; x.byS=by?x.v[2]/by*100:0; x.roas=x.v[0]?x.v[1]/x.v[0]*100:null; x.buy=x.v[2]; }); return {L:L.filter(x=>x.v[0]>0||x.buy>0).sort((p,q)=>q.buy-p.buy||q.v[0]-p.v[0]),by}; };
+    return {ag:share(ag),pl:share(pl),hr:share(hr)};
+  }
+  function gdGrade(v,t){ return v==null?'':v>=t[0]?'pass':v>=t[1]?'watch':'risk'; }
+  function gdVideoHtml(g){
+    const v=gdVideo(g);
+    if(!v) return '<p class="gd-empty">영상 기록이 없습니다(이미지 소재이거나 아직 재생이 없음).</p>';
+    const step=(l,n)=>'<div class="gd-step"><small>'+l+'</small><b>'+int(n)+'</b></div>', arr='<span class="gd-arr" aria-hidden="true">→</span>';
+    const card=(l,val,f,std,gr)=>'<div class="gd-rate is-'+(gr||'none')+'"><small>'+l+'</small><b>'+gdPct(val,1)+'</b><em>'+f+'</em><span>기준 '+std+'</span>'+(gr?'<i>'+GD_GT[gr]+'</i>':'')+'</div>';
+    const gh=gdGrade(v.hook,VID_STD.hook), gd=gdGrade(v.hold,VID_STD.hold), gt=gdGrade(v.thruRate,VID_STD.thru);
+    const tips=[];
+    if(gh==='risk') tips.push('<b>후킹 수정</b> · 첫 3초에 손이 멈추지 않습니다. 첫 장면·첫 자막·썸네일을 바꾼 버전을 만드세요.');
+    else if(gh==='watch') tips.push('후킹 개선 · 첫 장면만 바꾼 버전을 하나 더 테스트해 보세요.');
+    if(gd==='risk') tips.push('<b>전개 손보기</b> · 3초 뒤에 많이 빠집니다. 결론(상품·혜택)을 앞으로 당기고 늘어지는 부분을 줄이세요.');
+    else if(gd==='watch') tips.push('유지 개선 · 중간에 같은 말을 반복하는 곳이 없는지 보세요.');
+    if(!tips.length) tips.push('영상은 기준을 넘었습니다. 성과가 약하다면 영상보다 클릭 뒤(상세페이지·가격)를 보세요.');
+    return '<p class="gd-per">최근 60일 · 영상 재생 기준</p>'
+      +'<div class="gd-flow">'+step('광고 노출',v.imp)+arr+step('3초 재생',v.v3)+arr+step('쓰루플레이',v.thru)+'</div>'
+      +'<div class="gd-rates">'+card('후킹률',v.hook,'3초 재생 ÷ 노출',VID_STD.hook[0]+'% 이상',gh)+card('유지율',v.hold,'쓰루플레이 ÷ 3초 재생',VID_STD.hold[0]+'% 이상',gd)+card('쓰루플레이율',v.thruRate,'쓰루플레이 ÷ 노출',VID_STD.thru[0]+'% 이상',gt)+'</div>'
+      +'<p class="gd-note">쓰루플레이 = 15초 이상 봤거나(15초보다 짧은 영상은) 끝까지 본 재생</p>'
+      +'<ul class="gd-tips">'+tips.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+  }
+  function gdBuyersHtml(g){
+    const B=gdBuyers(g), be=g.beB||GUIDE.roas;
+    if(!B.ag.by&&!B.pl.by) return '<p class="gd-empty">최근 60일 구매 기록이 없습니다.</p>';
+    const tbl=(t,S,n)=>!S.L.length?'':'<div class="gd-tb"><h5>'+t+' <small>구매 '+int(S.by)+'건</small></h5><table><thead><tr><th></th><th>지출</th><th>구매</th><th>ROAS</th></tr></thead><tbody>'
+      +S.L.slice(0,n).map(x=>'<tr><td>'+esc(x.seg)+'</td><td>'+Math.round(x.spS)+'%</td><td><b>'+Math.round(x.byS)+'%</b> <small>'+int(x.buy)+'건</small></td><td class="'+(x.roas==null?'':x.roas>=be?'ok':'no')+'">'+(x.roas==null?'-':Math.round(x.roas)+'%')+'</td></tr>').join('')+'</tbody></table></div>';
+    /* 한 줄 요약 · 구매가 가장 많은 칸과 지출 대비 가장 잘 사는 칸(구매 3건 이상) */
+    const best=S=>S.L.filter(x=>x.buy>=3&&x.roas!=null).sort((p,q)=>q.roas-p.roas)[0];
+    const sm=[];
+    if(B.ag.L[0]&&B.ag.L[0].buy) sm.push('구매가 가장 많은 사람은 <b>'+esc(B.ag.L[0].seg)+'</b>(구매의 '+Math.round(B.ag.L[0].byS)+'%)');
+    const ba=best(B.ag); if(ba&&ba!==B.ag.L[0]) sm.push('지출 대비 가장 잘 사는 사람은 <b>'+esc(ba.seg)+'</b>(ROAS '+Math.round(ba.roas)+'%)');
+    if(B.pl.L[0]&&B.pl.L[0].buy) sm.push('<b>'+esc(B.pl.L[0].seg)+'</b>에서 가장 많이 삽니다(구매의 '+Math.round(B.pl.L[0].byS)+'%)');
+    const low=B.pl.L.filter(x=>x.spS>=10&&x.roas!=null&&x.roas<be); if(low.length) sm.push(low.map(x=>esc(x.seg)).join('·')+'는 지출이 '+Math.round(low[0].spS)+'% 넘게 가는데 손익분기점 아래입니다');
+    const hTop=B.hr.L.filter(x=>x.buy>0).slice(0,3).map(x=>x.seg); if(hTop.length) sm.push('구매가 몰리는 시간은 <b>'+hTop.join('·')+'</b>(광고를 본 시각)');
+    return '<p class="gd-per">최근 60일 · 색은 손익분기 '+Math.round(be)+'% 이상 초록, 아래 빨강</p>'
+      +(sm.length?'<ul class="gd-tips">'+sm.map(x=>'<li>'+x+'</li>').join('')+'</ul>':'')
+      +'<div class="gd-tbs">'+tbl('연령 × 성별',B.ag,8)+tbl('게재지면',B.pl,6)+'</div>';
+  }
+  /* 바로얌AI 에 보낼 숫자 · 사람이 읽는 이름으로 */
+  function gdPayload(g){
+    const a=acc(), v=gdVideo(g), B=gdBuyers(g), r1=x=>x==null?null:Math.round(x*10)/10;
+    const seg=S=>S.L.slice(0,8).map(x=>({seg:x.seg,spendShare:Math.round(x.spS),buyShare:Math.round(x.byS),buy:x.buy,roas:x.roas==null?null:Math.round(x.roas)}));
+    const st=(a.adsets||[]).find(y=>y.id===g.setId), tg=st&&st.tg;
+    return {level:{campaign:'캠페인',adset:'광고 세트',asset:'소재'}[g.lv]||g.lv,name:g.nm,brand:g.brand,stage:g.run?'운영(게재 8일째부터)':'소재 테스트(게재 7일 이하)',day:g.n,
+      period:(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일 ('+g.from+'~'+g.to+')',verdict:GUIDE_TXT[g.k],roas:r1(g.roas),breakeven:Math.round(g.beB||GUIDE.roas),
+      roasPrev:r1(g.pRoas),ctr:r1(g.ctr),ctrPrev:r1(g.pCtr),spend:Math.round(g.sp),buy:g.buy,clicks:g.clk,impressions:g.imp,
+      rules:'통과=ROAS가 손익분기 이상(테스트 단계는 클릭률 2%·ROAS 200%) · 영상 기준 후킹률 30%·유지율 28%·쓰루플레이율 8% · 상세페이지 기준 스크롤 40%·머문 시간 30초·빠른 이탈 20% 미만',
+      video:v&&{period:'최근 60일',impressions:v.imp,play3s:v.v3,thruplay:v.thru,hookRate:r1(v.hook),holdRate:r1(v.hold),thruplayRate:r1(v.thruRate)},
+      page:g.cv&&{visits:g.cv.v,scrollPct:r1(g.cv.sc),activeSec:r1(g.cv.ac),quickBouncePct:r1(g.cv.qb)},
+      buyers:{period:'최근 60일 · 구매는 광고를 본 시각 기준',ageGender:seg(B.ag),placement:seg(B.pl),hours:B.hr.L.filter(x=>x.buy>0).slice(0,5).map(x=>({hour:x.seg,buy:x.buy}))},
+      target:tg?{age:tg.a,gender:tg.g,interests:tg.int,exclude:tg.ex,placements:tg.pl,advantageAudience:!!tg.adv}:null};
+  }
+  function gdAiHtml(g){
+    const A=AI_RES[gdCur];
+    const btn='<button type="button" class="ui-btn primary sm" data-gd-ai>'+(A&&A.state==='done'?'다시 판단 받기':'바로얌AI 판단 받기')+'</button>';
+    if(!A) return '<p class="gd-per">이 줄의 숫자(성과·흐름·영상·상세페이지·구매자·타깃)를 모두 모아 바로얌AI 가 오늘 할 일을 정해 줍니다. 30초쯤 걸립니다.</p>'+btn;
+    if(A.state==='wait') return '<div class="gd-ai-wait"><span class="mw-spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg></span>'+esc(A.msg||'판단 중')+'</div>';
+    if(A.state==='failed') return '<p class="gd-err">'+esc(A.msg)+'</p>'+btn;
+    const R=A.res;
+    return '<div class="gd-ai"><p class="gd-ai-v">'+esc(R.verdict)+'</p><p>'+esc(R.summary)+'</p>'
+      +'<h5>할 일</h5><ol>'+(R.actions||[]).map(x=>'<li><b>'+esc(x.do)+'</b><small>'+esc(x.why)+'</small></li>').join('')+'</ol>'
+      +'<h5>구매자</h5><p>'+esc(R.buyer)+'</p>'+(R.watch?'<h5>다음에 볼 것</h5><p>'+esc(R.watch)+'</p>':'')+'</div>'
+      +'<p class="gd-per">바로얌AI 판단은 참고용입니다 · 숫자는 '+new Date(A.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 기준</p>'+btn;
+  }
+  async function gdAsk(){
+    const id=gdCur, g=shownGuide[id]; if(!g) return;
+    const DB=window.BAROYAM_DB;
+    AI_RES[id]={state:'wait',msg:'숫자를 모아 보내는 중',t0:Date.now(),at:Date.now()}; gdPaint();
+    try{
+      if(!DB||!DB.fileUpload||(DB.ensureSession&&!(await DB.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 눌러 주세요');
+      const name='adj'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.1.json';
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      await DB.fileUpload('brand-files','cmjob/req/'+name,new Blob([JSON.stringify({v:1,kind:'adjudge',job:'ad-judge',round:1,at:new Date().toISOString(),by,input:gdPayload(g)})],{type:'application/json'}));
+      AI_RES[id].msg='바로얌AI 가 숫자를 읽는 중'; gdPaint();
+      for(;;){
+        await new Promise(z=>setTimeout(z,2500));
+        if(!AI_RES[id]||AI_RES[id].state!=='wait') return;
+        let r=null; try{ const u=await DB.fileUrl('brand-files','cmjob/res/'+name,60); const x=await fetch(u,{cache:'no-store'}); r=x.ok?await x.json():null; }catch(e){}
+        const sec=(Date.now()-AI_RES[id].t0)/1000;
+        if(r&&r.state==='done'&&r.ok){ AI_RES[id]={state:'done',res:r,at:AI_RES[id].at}; gdPaint(); return; }
+        if(r&&r.state==='failed') throw new Error(r.message||'판단하지 못했습니다');
+        if(!r&&sec>60) throw new Error('바로얌AI 서비스가 응답하지 않습니다 · 잠시 뒤 다시 눌러 주세요');
+        if(sec>240) throw new Error('너무 오래 걸려 멈췄습니다 · 다시 눌러 주세요');
+        if(r) AI_RES[id].msg='판단을 쓰는 중 · '+Math.round(sec)+'초';
+        gdPaint();
+      }
+    }catch(e){ AI_RES[id]={state:'failed',msg:'판단하지 못했습니다 · '+(e&&e.message||e)}; gdPaint(); }
+  }
+  const GD_TABS=[['guide','행동지침'],['video','영상'],['page','상세페이지'],['buyer','구매자'],['ai','바로얌AI 판단']];
+  function gdPaint(){
+    if(!gdBox||gdBox.hidden) return;
+    const g=shownGuide[gdCur]; if(!g) return;
+    gdBox.querySelector('.gd-tabs').innerHTML=GD_TABS.map(([k,l])=>'<button type="button" class="ui-tab" data-gd-tab="'+k+'" aria-selected="'+(gdTab===k)+'">'+l+'</button>').join('');
+    let h='';
+    if(gdTab==='guide') h='<div class="ma-guide-tip is-in is-'+g.k+'">'+guideHtml(g)+'</div>';
+    else if(gdTab==='video') h=gdVideoHtml(g);
+    else if(gdTab==='page') h='<p class="gd-per">'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일 · Clarity</p><div class="ma-guide-tip is-in is-none">'+guideCv(g)+'</div>';
+    else if(gdTab==='buyer') h=gdBuyersHtml(g);
+    else h=gdAiHtml(g);
+    gdBox.querySelector('.gd-body').innerHTML=h;
+  }
+  function guideOpen(id){
+    const g=shownGuide[id]; if(!g) return;
+    if(!gdBox){
+      gdBox=document.createElement('div'); gdBox.className='settings-overlay gd-ov'; gdBox.hidden=true;
+      gdBox.innerHTML='<div class="settings-panel gd-dlg" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head"><div class="gd-hd"><span class="ma-guide gd-pill"></span><div><h2 id="gdT"></h2><p class="gd-sub"></p></div></div>'
+        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="ui-tabs gd-tabs"></div><div class="gd-body"></div></div>';
+      document.body.appendChild(gdBox);
+      gdBox.addEventListener('click',e=>{
+        if(e.target===gdBox||e.target.closest('.settings-close')){ gdBox.hidden=true; return; }
+        const t=e.target.closest('[data-gd-tab]'); if(t){ gdTab=t.dataset.gdTab; gdPaint(); return; }
+        if(e.target.closest('[data-gd-ai]')) gdAsk();
+      });
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&gdBox&&!gdBox.hidden){ e.stopPropagation(); gdBox.hidden=true; } },true);
+    }
+    gdCur=id;
+    const pill=gdBox.querySelector('.gd-pill'); pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k];
+    gdBox.querySelector('#gdT').textContent=g.nm||'';
+    gdBox.querySelector('.gd-sub').textContent={campaign:'캠페인',adset:'광고 세트',asset:'소재'}[g.lv]+' · '+(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'');
+    gdBox.hidden=false; gdPaint();
   }
   $('maTable').addEventListener('mouseover',e=>{ const el=e.target.closest('[data-guide]'); if(el) guideShow(el); });
   $('maTable').addEventListener('mouseout',e=>{ const el=e.target.closest('[data-guide]'); if(el&&!el.contains(e.relatedTarget)) guideHide(); });
@@ -22310,6 +22509,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   });
   /* 켜기·끄기 스위치 · 줄 누르기(소재 팝업)보다 먼저 잡는다 */
   $('maTable').addEventListener('click',e=>{
+    const gp=e.target.closest('[data-guide]');
+    if(gp){ e.stopPropagation(); e.preventDefault(); guideHide(); guideOpen(gp.dataset.guide); return; }
     const bd=e.target.closest('[data-bud]');
     if(bd){ e.stopPropagation(); e.preventDefault(); const [lv,id]=bd.dataset.bud.split('|'), r=shownBud[id]; if(r) budAsk(lv,id,r.name); return; }
     const sw=e.target.closest('[data-sw]'); if(!sw) return;
