@@ -3115,13 +3115,24 @@ window.BAROYAM_FONT=(function(){
   .ma-guide-tip[hidden]{display:none}
   .ma-guide-tip.is-in{position:static;width:auto;box-shadow:none;pointer-events:auto;padding:14px 16px;font-size:13px}
   .ma-guide-tip .more{margin-top:8px;color:var(--btn-soft-ink);font-weight:500}
-  .settings-panel.gd-dlg{max-width:760px;width:100%;height:auto;max-height:min(860px,92vh);display:flex;flex-direction:column}
+  .settings-panel.gd-dlg{max-width:1240px;width:100%;height:min(900px,92vh);max-height:92vh;display:flex;flex-direction:column}
   .gd-hd{display:flex;align-items:center;gap:12px;min-width:0}
   .gd-hd h2{margin:0;font-size:16px;word-break:break-all}
   .gd-sub{margin:2px 0 0;font-size:12px;color:var(--mute)}
   .gd-pill{flex:none;font-size:13px;padding:4px 12px}
-  .gd-tabs{margin:14px 22px 12px;align-self:flex-start;flex-wrap:wrap}
-  .gd-body{flex:1;min-height:0;overflow:auto;padding:0 22px 22px;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--body)}
+  .gd-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;padding:18px 22px 22px;font-size:13px;color:var(--body)}
+  .gd-left,.gd-right{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px}
+  .gd-right{padding:16px 18px;border-radius:14px;border:1px solid color-mix(in srgb,var(--btn) 30%,var(--paper));background:color-mix(in srgb,var(--btn) 4%,var(--paper))}
+  .gd-ai-h{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+  .gd-sec h4 small{font-weight:400;font-size:11.5px;color:var(--mute);margin-left:4px}
+  .gd-cv{padding:0;border:0;background:none}
+  .ma-guide-tip.gd-cv .cv{margin:0;padding:0;border:0}
+  .ma-guide-tip.is-in.gd-cv{padding:0}
+  .ma-guide-tip.gd-cv ul{margin-top:0}
+  .ma-guide-tip.is-in>.act:first-child{margin-top:0;padding-top:0;border-top:0}
+  .gd-cv .cv>h5{display:none}
+  .gd-ai-wait small{display:block;font-size:11.5px;color:var(--mute);margin-top:2px}
+  @media (max-width:900px){ .gd-body{grid-template-columns:1fr;overflow:auto} .gd-left,.gd-right{overflow:visible} }
   .gd-per{margin:0;font-size:12px;color:var(--mute)}
   .gd-sec{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px}
   .gd-sec h4{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
@@ -22278,14 +22289,15 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(g.k==='wait') return '<b>판단 대기</b>'+stage+'<p>메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.</p>';
     if(g.k==='none') return '<b>데이터 없음</b>'+stage+per+'<p>이 기간에 광고비·노출이 없습니다.</p>';
     if(g.k==='low') return '<b>데이터 부족</b>'+stage+per+'<p>광고비 '+money(g.sp,cur)+' · 판정하려면 '+money(GUIDE.minSp,cur)+' 이상 써야 합니다. 숫자가 적으면 클릭 몇 번에도 크게 흔들립니다.</p>'
-      +'<p class="sub">지금 클릭률 '+pc(g.ctr,2)+' · ROAS '+pc(g.roas,0)+' (참고만)</p>'+(short?more:guideCv(g));
+      +'<p class="sub">지금 클릭률 '+pc(g.ctr,2)+' · ROAS '+pc(g.roas,0)+' (참고만)</p>'+more;
     const row=(l,v,ok,std)=>'<li><span>'+l+'</span><em class="'+(ok?'ok':'no')+'">'+v+'</em><small>'+std+'</small></li>';
     const tail='<p class="sub">광고비 '+money(g.sp,cur)+' · 구매 '+int(g.buy)+'건 · 클릭 '+int(g.clk)+' · 노출 '+int(g.imp)+'</p>';
     if(!g.run){
       const act={pass:'유지하세요. 테스트 통과 · 8일째부터 운영 기준(손익분기점)으로 봅니다.',risk:'끄거나 소재 교체를 검토하세요.',
         watch:g.cOk?'클릭은 되는데 구매가 약합니다 → 상세페이지·가격·혜택을 점검하세요.':'구매는 나오는데 클릭이 약합니다 → 썸네일·첫 3초·문구를 점검하세요.'}[g.k];
-      return '<b>'+GUIDE_TXT[g.k]+'</b>'+stage+per+'<ul>'+row('클릭률',pc(g.ctr,2),g.cOk,'기준 '+GUIDE.ctr+'% 이상')+row('ROAS',pc(g.roas,0),g.rOk,'기준 '+GUIDE.roas+'% 이상')+'</ul>'
-        +(short?'<p class="act">'+act+'</p>'+more:guideCv(g)+'<p class="act">'+act+'</p>'+tail);
+      const h0='<b>'+GUIDE_TXT[g.k]+'</b>'+stage+per+'<ul>'+row('클릭률',pc(g.ctr,2),g.cOk,'기준 '+GUIDE.ctr+'% 이상')+row('ROAS',pc(g.roas,0),g.rOk,'기준 '+GUIDE.roas+'% 이상')+'</ul>'
+        +(short?'<p class="act">'+act+'</p>'+more:'');
+      return short?h0:{top:h0+tail,act:'<div class="act"><h5>행동지침</h5><ol><li>'+act+'</li></ol></div>'};
     }
     /* 운영 단계 · 숫자 흐름을 보고 할 일을 몇 줄로 · 맨 위 줄이 결론 */
     const chg=(a1,b1)=>a1==null||b1==null||!b1?null:(a1-b1)/b1*100;
@@ -22315,9 +22327,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +row('클릭률',pc(g.ctr,2)+sign(dC),g.cOk,'기준 '+GUIDE.ctr+'%')+'</ul>';
     g.acts=L;
     if(short) return head+'<p class="act">'+L[0]+'</p>'+more;
-    return head
-      +(dR!=null||dC!=null?'<p class="sub">괄호 = 앞 평일 7일보다</p>':'')
-      +guideCv(g)+'<div class="act"><h5>행동지침</h5><ol>'+L.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>'+tail;
+    return {top:head+(dR!=null||dC!=null?'<p class="sub">괄호 = 앞 평일 7일보다</p>':'')+tail,
+      act:'<div class="act"><h5>행동지침</h5><ol>'+L.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>'};
   }
   /* 상세페이지 체류 줄 · 평균 스크롤·머문 시간(활동)·빠른 이탈마다 합격·개선·위험 */
   const cvGrade=(v,t,low)=>v==null?'':(low?(v<t[0]?'pass':v<t[1]?'watch':'risk'):(v>=t[0]?'pass':v>=t[1]?'watch':'risk'));
@@ -22352,7 +22363,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
      바로얌AI 판단은 이 숫자를 모아 대본 서비스(content_writer.js kind:'adjudge' · 지침 prompts/광고판단.md)에 보내 결론·구매자 시사점·할 일을 받는다(약 30초 · 저장 안 함) */
   const VID_STD={hook:[30,25],hold:[28,18],thru:[8,5]};   /* 사용자 11-05 · [합격 이상, 개선 이상] · 그 아래 위험 */
   const GD_GT={pass:'합격',watch:'개선',risk:'위험'};
-  let gdBox=null, gdTab='guide', gdCur=null;
+  let gdBox=null, gdCur=null;
   const AI_RES={};   /* 줄 id → {state,msg,res,t0,name} · 창을 닫았다 열어도 이어 본다 */
   const gdPct=(v,n)=>v==null||!isFinite(v)?'-':(Math.floor(v*10**(n||0))/10**(n||0)).toFixed(n||0)+'%';
   function gdVideo(g){
@@ -22408,7 +22419,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const A=AI_RES[gdCur];
     const btn='<button type="button" class="ui-btn primary sm" data-gd-ai>'+(A&&A.state==='done'?'다시 판단 받기':'바로얌AI 판단 받기')+'</button>';
     if(!A) return '<p class="gd-per">이 줄의 숫자(성과·흐름·영상·상세페이지·구매자·타깃)를 모두 모아 바로얌AI 가 오늘 할 일을 정해 줍니다. 30초쯤 걸립니다.</p>'+btn;
-    if(A.state==='wait') return '<div class="gd-ai-wait"><span class="mw-spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg></span>'+esc(A.msg||'판단 중')+'</div>';
+    if(A.state==='wait') return '<div class="gd-ai-wait"><span class="mw-spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg></span><div>'+esc(A.msg||'판단 중')+'<small>왼쪽 숫자를 모두 읽고 글로 정리합니다 · 30초쯤</small></div></div>';
     if(A.state==='failed') return '<p class="gd-err">'+esc(A.msg)+'</p>'+btn;
     const R=A.res;
     return '<div class="gd-ai"><p class="gd-ai-v">'+esc(R.verdict)+'</p><p>'+esc(R.summary)+'</p>'
@@ -22419,47 +22430,53 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   async function gdAsk(){
     const id=gdCur, g=shownGuide[id]; if(!g) return;
     const DB=window.BAROYAM_DB;
-    AI_RES[id]={state:'wait',msg:'숫자를 모아 보내는 중',t0:Date.now(),at:Date.now()}; gdPaint();
+    AI_RES[id]={state:'wait',msg:'숫자를 모아 보내는 중',t0:Date.now(),at:Date.now()}; gdPaintAi();
     try{
       if(!DB||!DB.fileUpload||(DB.ensureSession&&!(await DB.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 눌러 주세요');
       const name='adj'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.1.json';
       let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
       await DB.fileUpload('brand-files','cmjob/req/'+name,new Blob([JSON.stringify({v:1,kind:'adjudge',job:'ad-judge',round:1,at:new Date().toISOString(),by,input:gdPayload(g)})],{type:'application/json'}));
-      AI_RES[id].msg='바로얌AI 가 숫자를 읽는 중'; gdPaint();
+      AI_RES[id].msg='바로얌AI 가 숫자를 읽는 중'; gdPaintAi();
       for(;;){
         await new Promise(z=>setTimeout(z,2500));
         if(!AI_RES[id]||AI_RES[id].state!=='wait') return;
         let r=null; try{ const u=await DB.fileUrl('brand-files','cmjob/res/'+name,60); const x=await fetch(u,{cache:'no-store'}); r=x.ok?await x.json():null; }catch(e){}
         const sec=(Date.now()-AI_RES[id].t0)/1000;
-        if(r&&r.state==='done'&&r.ok){ AI_RES[id]={state:'done',res:r,at:AI_RES[id].at}; gdPaint(); return; }
+        if(r&&r.state==='done'&&r.ok){ AI_RES[id]={state:'done',res:r,at:AI_RES[id].at}; gdPaintAi(); return; }
         if(r&&r.state==='failed') throw new Error(r.message||'판단하지 못했습니다');
         if(!r&&sec>60) throw new Error('바로얌AI 서비스가 응답하지 않습니다 · 잠시 뒤 다시 눌러 주세요');
         if(sec>240) throw new Error('너무 오래 걸려 멈췄습니다 · 다시 눌러 주세요');
         if(r) AI_RES[id].msg='판단을 쓰는 중 · '+Math.round(sec)+'초';
-        gdPaint();
+        gdPaintAi();
       }
-    }catch(e){ AI_RES[id]={state:'failed',msg:'판단하지 못했습니다 · '+(e&&e.message||e)}; gdPaint(); }
+    }catch(e){ AI_RES[id]={state:'failed',msg:'판단하지 못했습니다 · '+(e&&e.message||e)}; gdPaintAi(); }
   }
-  const GD_TABS=[['guide','행동지침'],['ai','바로얌AI 판단']];   /* 11-05 사용자 요청 · 영상·상세페이지는 행동지침 탭에 같이 · 구매자 탭은 뺌(구매자 숫자는 바로얌AI 에만 보냄) */
+  /* 11-05 사용자 요청 · 탭 없이 두 칸: 왼쪽은 숫자(판정 → 상세페이지 → 영상 → 맨 아래 행동지침), 오른쪽은 바로얌AI 판단 글 ·
+     창을 열면 바로얌AI 판단을 바로 받는다(이 창에서 이미 받았으면 그대로 · 다시 판단 받기 단추) · 오른쪽만 다시 그려 왼쪽 스크롤을 지킨다 */
   function gdPaint(){
     if(!gdBox||gdBox.hidden) return;
     const g=shownGuide[gdCur]; if(!g) return;
-    gdBox.querySelector('.gd-tabs').innerHTML=GD_TABS.map(([k,l])=>'<button type="button" class="ui-tab" data-gd-tab="'+k+'" aria-selected="'+(gdTab===k)+'">'+l+'</button>').join('');
-    let h='';
-    if(gdTab==='ai') h=gdAiHtml(g);
-    else h='<div class="ma-guide-tip is-in is-'+g.k+'">'+guideHtml(g)+'</div><div class="gd-sec"><h4>영상</h4>'+gdVideoHtml(g)+'</div>';
-    gdBox.querySelector('.gd-body').innerHTML=h;
+    const G=guideHtml(g), P=typeof G==='string'?{top:G,act:''}:G;
+    gdBox.querySelector('.gd-left').innerHTML='<div class="ma-guide-tip is-in is-'+g.k+'">'+P.top+'</div>'
+      +'<div class="gd-sec"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일 · Clarity</small></h4><div class="ma-guide-tip is-in is-none gd-cv">'+guideCv(g)+'</div></div>'
+      +'<div class="gd-sec"><h4>영상</h4>'+gdVideoHtml(g)+'</div>'
+      +(P.act?'<div class="ma-guide-tip is-in is-'+g.k+'">'+P.act+'</div>':'');
+    gdPaintAi();
+  }
+  function gdPaintAi(){
+    if(!gdBox||gdBox.hidden) return;
+    const g=shownGuide[gdCur]; if(!g) return;
+    gdBox.querySelector('.gd-right').innerHTML='<h4 class="gd-ai-h">바로얌AI 판단</h4>'+gdAiHtml(g);
   }
   function guideOpen(id){
     const g=shownGuide[id]; if(!g) return;
     if(!gdBox){
       gdBox=document.createElement('div'); gdBox.className='settings-overlay gd-ov'; gdBox.hidden=true;
       gdBox.innerHTML='<div class="settings-panel gd-dlg" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head"><div class="gd-hd"><span class="ma-guide gd-pill"></span><div><h2 id="gdT"></h2><p class="gd-sub"></p></div></div>'
-        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="ui-tabs gd-tabs"></div><div class="gd-body"></div></div>';
+        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="gd-body"><div class="gd-left"></div><div class="gd-right"></div></div></div>';
       document.body.appendChild(gdBox);
       gdBox.addEventListener('click',e=>{
         if(e.target===gdBox||e.target.closest('.settings-close')){ gdBox.hidden=true; return; }
-        const t=e.target.closest('[data-gd-tab]'); if(t){ gdTab=t.dataset.gdTab; gdPaint(); return; }
         if(e.target.closest('[data-gd-ai]')) gdAsk();
       });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&gdBox&&!gdBox.hidden){ e.stopPropagation(); gdBox.hidden=true; } },true);
@@ -22469,6 +22486,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     gdBox.querySelector('#gdT').textContent=g.nm||'';
     gdBox.querySelector('.gd-sub').textContent={campaign:'캠페인',adset:'광고 세트',asset:'소재'}[g.lv]+' · '+(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'');
     gdBox.hidden=false; gdPaint();
+    if(!AI_RES[id]&&g.k!=='none') gdAsk();
   }
   $('maTable').addEventListener('mouseover',e=>{ const el=e.target.closest('[data-guide]'); if(el) guideShow(el); });
   $('maTable').addEventListener('mouseout',e=>{ const el=e.target.closest('[data-guide]'); if(el&&!el.contains(e.relatedTarget)) guideHide(); });
