@@ -20983,7 +20983,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const d=new Date(at+9*3600e3).toISOString().slice(0,10), n=Math.round((today-Date.parse(d))/864e5)+1;
       return '<td class="ma-atcol" title="'+d+' 게재 시작"><span class="ma-days-pill">'+n+'일째</span></td>'; };
     /* 행동지침(11-04 사용자 요청) · ON/OFF 오른쪽 알약 + 올리면 떠 있는 도우미(guideTip) · 게재일로 두 단계(11-05 사용자 요청):
-       ① 소재 테스트(게재 7일 이하) · 1~2일째 대기(학습 중) · 3~7일째 최근 3일(오늘 포함) 클릭률·ROAS ·
+       ① 소재 테스트(게재 7일 이하) · 1~2일째 대기(학습 중) · 3~7일째 게재 1일째부터 오늘까지 쌓인 클릭률·ROAS(11-05 사용자 요청 · 예전 최근 3일) ·
           클릭률 2% 이상 + ROAS 200% 이상 = 통과 · 클릭률 2% 아래 + ROAS 200% 이하 = 위험 · 하나만 넘으면 관찰
        ② 운영(게재 8일째부터) · 평일(월~금) 최근 7일을 손익분기점(이은 상품의 대표 ROAS · 없으면 200%)과 비교 ·
           이상 = 통과 · 0.8배 이상 = 관찰 · 그 아래 = 위험 · 바로 앞 평일 7일과 견줘 ROAS·클릭률 흐름을 보고 도우미에 할 일을 글로(증액 검토 등)
@@ -21001,7 +21001,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const t0=typeof src==='number'?src:Date.parse(src||'');
       const n=t0?Math.round((today-Date.parse(new Date(t0+9*3600e3).toISOString().slice(0,10)))/864e5)+1:null;
       const run=n==null||n>GUIDE.test;
-      const days=run?guideWk.slice(0,GUIDE.wk).reverse():guideDays(GUIDE.days);
+      const days=run?guideWk.slice(0,GUIDE.wk).reverse():guideDays(Math.max(1,n));
       const g=Object.assign({run,n,from:days[0],to:days[days.length-1],w:days.length},guideSum(ids,days));
       { const CD=(CLARITY&&CLARITY.format===2&&CLARITY.days)||{}, idSet=new Set(ids), names=[...new Set((a.ads||[]).filter(y=>idSet.has(y.id)).map(y=>y.name))], cs=[0,0,0,0,0,0,0];
         days.forEach(d=>{ const day=CD[d]; if(day) names.forEach(nm=>{ const v=day[nm]; if(v) for(let i=0;i<7;i++) cs[i]+=v[i]||0; }); });
@@ -22229,7 +22229,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function guideHtml(g){
     const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
     const stage='<p class="stage">'+(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'')+'</p>';
-    const per='<p class="per">'+md(g.from)+'~'+md(g.to)+' · '+(g.run?'평일 최근 '+g.w+'일':'최근 '+g.w+'일')+'</p>';
+    const per='<p class="per">'+md(g.from)+'~'+md(g.to)+' · '+(g.run?'평일 최근 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+'</p>';
     const cur=acc().currency;
     if(g.k==='wait') return '<b>판단 대기</b>'+stage+'<p>메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.</p>';
     if(g.k==='none') return '<b>데이터 없음</b>'+stage+per+'<p>이 기간에 광고비·노출이 없습니다.</p>';
