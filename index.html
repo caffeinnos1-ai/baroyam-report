@@ -3110,7 +3110,7 @@ window.BAROYAM_FONT=(function(){
   .ma-guide.is-watch{color:var(--warn);background:var(--warn-soft)}
   .ma-guide.is-wait,.ma-guide.is-none,.ma-guide.is-low{color:var(--mute);background:transparent;font-weight:500}
   .ma-guide:focus-visible{box-shadow:0 0 0 2px var(--btn)}
-  .ma-guide-tip{--gc:var(--mute);position:fixed;z-index:9000;width:260px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--gc) 9%,var(--paper));border:1px solid color-mix(in srgb,var(--gc) 45%,var(--paper));box-shadow:0 10px 28px rgba(0,0,0,.14);font-size:12.5px;color:var(--ink);pointer-events:none}
+  .ma-guide-tip{--gc:var(--mute);position:fixed;z-index:9000;width:300px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--gc) 9%,var(--paper));border:1px solid color-mix(in srgb,var(--gc) 45%,var(--paper));box-shadow:0 10px 28px rgba(0,0,0,.14);font-size:12.5px;color:var(--ink);pointer-events:none}
   .ma-guide-tip.is-pass{--gc:var(--pos)} .ma-guide-tip.is-risk{--gc:var(--neg)} .ma-guide-tip.is-watch{--gc:var(--warn)}
   .ma-guide-tip[hidden]{display:none}
   .ma-guide-tip>b{font-size:13.5px;font-weight:600;color:var(--ink)}
@@ -3118,7 +3118,7 @@ window.BAROYAM_FONT=(function(){
   .ma-guide-tip p{margin:4px 0 0;line-height:1.5}
   .ma-guide-tip .per,.ma-guide-tip .sub{color:var(--mute);font-size:11.5px}
   .ma-guide-tip ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
-  .ma-guide-tip li{display:flex;align-items:baseline;gap:8px}
+  .ma-guide-tip ul li{display:flex;align-items:baseline;gap:8px}
   .ma-guide-tip li span{width:58px;color:var(--mute)}
   .ma-guide-tip li em{font-style:normal;font-weight:600}
   .ma-guide-tip li em.ok{color:var(--pos)} .ma-guide-tip li em.no{color:var(--neg)}
@@ -3131,6 +3131,10 @@ window.BAROYAM_FONT=(function(){
   .ma-guide-tip li i.cvg.is-watch{color:var(--warn);background:var(--warn-soft)}
   .ma-guide-tip li i.cvg.is-risk{color:var(--neg);background:var(--neg-soft)}
   .ma-guide-tip li span{flex:none}
+  .ma-guide-tip .stage{margin-top:2px;font-size:11.5px;font-weight:600;color:var(--body)}
+  .ma-guide-tip div.act h5{margin:0 0 4px}
+  .ma-guide-tip ol{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:5px;font-weight:400;line-height:1.5}
+  .ma-guide-tip ol b{font-weight:600}
   .ma-guide-tip .act{margin-top:8px;padding-top:8px;border-top:1px solid color-mix(in srgb,var(--gc) 30%,var(--paper));color:var(--ink);font-weight:500}
   .ma-guide-tip .per,.ma-guide-tip .sub,.ma-guide-tip li span,.ma-guide-tip li small{color:var(--body)}
   .ma-gv-warn{margin:0;padding:10px 12px;border-radius:8px;background:var(--neg-soft);color:var(--neg);font-size:12.5px;font-weight:500}
@@ -20978,29 +20982,41 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const today=Date.parse(kst()), atTd=at=>{ if(!at) return '<td class="ma-atcol is-zero">-</td>';
       const d=new Date(at+9*3600e3).toISOString().slice(0,10), n=Math.round((today-Date.parse(d))/864e5)+1;
       return '<td class="ma-atcol" title="'+d+' 게재 시작"><span class="ma-days-pill">'+n+'일째</span></td>'; };
-    /* 행동지침(11-04 사용자 요청) · 클릭률(링크 클릭 ÷ 노출)·ROAS 로 판정해 ON/OFF 오른쪽에 알약으로 ·
-       클릭률 2% 이상 + ROAS 200% 이상 = 통과 · 클릭률 2% 아래 + ROAS 200% 이하 = 위험 · 하나만 넘으면 관찰 ·
-       게재일에 따라 나눈다(사용자 요청): 1~2일째 대기(학습 중) · 3~6일째 최근 3일 · 7일째부터 최근 7일(오늘 포함 · adDaily) ·
-       그 기간 광고비가 3만원(GUIDE.minSp) 아래면 숫자가 적어 판정하지 않고 '부족' · 게재일은 소재 = 처음 게재, 캠페인·세트 = 만든 날 ·
-       근거는 알약에 올렸을 때만 떠 있는 도우미(guideTip) */
+    /* 행동지침(11-04 사용자 요청) · ON/OFF 오른쪽 알약 + 올리면 떠 있는 도우미(guideTip) · 게재일로 두 단계(11-05 사용자 요청):
+       ① 소재 테스트(게재 7일 이하) · 1~2일째 대기(학습 중) · 3~7일째 최근 3일(오늘 포함) 클릭률·ROAS ·
+          클릭률 2% 이상 + ROAS 200% 이상 = 통과 · 클릭률 2% 아래 + ROAS 200% 이하 = 위험 · 하나만 넘으면 관찰
+       ② 운영(게재 8일째부터) · 평일(월~금) 최근 7일을 손익분기점(이은 상품의 대표 ROAS · 없으면 200%)과 비교 ·
+          이상 = 통과 · 0.8배 이상 = 관찰 · 그 아래 = 위험 · 바로 앞 평일 7일과 견줘 ROAS·클릭률 흐름을 보고 도우미에 할 일을 글로(증액 검토 등)
+       두 단계 모두 그 기간 광고비가 3만원(GUIDE.minSp) 아래면 '부족' · 게재일은 소재 = 처음 게재, 캠페인·세트 = 만든 날 ·
+       상세페이지 체류(Clarity)는 같은 기간으로 더해 도우미에만 보인다 */
     const guideDays=n=>Array.from({length:n},(_,i)=>new Date(today-(n-1-i)*864e5).toISOString().slice(0,10));
+    const guideWk=(()=>{ const L=[]; for(let i=0;i<70&&L.length<GUIDE.wk*2;i++){ const d=new Date(today-i*864e5), w=d.getUTCDay(); if(w>=1&&w<=5) L.push(d.toISOString().slice(0,10)); } return L; })();
+    const guideSum=(ids,days)=>{
+      const m=[0,0,0,0,0]; days.forEach(d=>{ const day=D[d]; if(day) ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; }); });
+      return {sp:m[0],rev:m[1],buy:m[2],clk:m[3],imp:m[4],ctr:m[4]?m[3]/m[4]*100:null,roas:m[0]?m[1]/m[0]*100:null};
+    };
     const guideOf=r=>{
       const ids=r.adIds||(tab==='campaign'?(a.ads||[]).filter(y=>y.c===r.id):(a.ads||[]).filter(y=>y.s===r.id)).map(y=>y.id);
       const src=tab==='asset'?r.at:((tab==='campaign'?a.campaigns:a.adsets)||[]).find(y=>y.id===r.id)?.at;
       const t0=typeof src==='number'?src:Date.parse(src||'');
       const n=t0?Math.round((today-Date.parse(new Date(t0+9*3600e3).toISOString().slice(0,10)))/864e5)+1:null;
-      const days=guideDays(n!=null&&n<GUIDE.long?GUIDE.days:GUIDE.long);
-      const m=[0,0,0,0,0]; days.forEach(d=>{ const day=D[d]; if(day) ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; }); });
-      const g={from:days[0],to:days[days.length-1],w:days.length,n,sp:m[0],rev:m[1],buy:m[2],clk:m[3],imp:m[4]};
-      g.ctr=m[4]?m[3]/m[4]*100:null; g.roas=m[0]?m[1]/m[0]*100:null;
+      const run=n==null||n>GUIDE.test;
+      const days=run?guideWk.slice(0,GUIDE.wk).reverse():guideDays(GUIDE.days);
+      const g=Object.assign({run,n,from:days[0],to:days[days.length-1],w:days.length},guideSum(ids,days));
       { const CD=(CLARITY&&CLARITY.format===2&&CLARITY.days)||{}, idSet=new Set(ids), names=[...new Set((a.ads||[]).filter(y=>idSet.has(y.id)).map(y=>y.name))], cs=[0,0,0,0,0,0,0];
         days.forEach(d=>{ const day=CD[d]; if(day) names.forEach(nm=>{ const v=day[nm]; if(v) for(let i=0;i<7;i++) cs[i]+=v[i]||0; }); });
         if(cs[0]>0) g.cv={v:cs[0],sc:cs[2]?cs[1]/cs[2]:null,ac:cs[5]?cs[3]/cs[5]:null,qb:cs[6]/cs[0]*100}; }
-      if(n!=null&&n<GUIDE.days){ g.k='wait'; return g; }
-      if(!(m[0]>0)||!m[4]){ g.k='none'; return g; }
-      if(m[0]<GUIDE.minSp){ g.k='low'; return g; }
-      const cOk=g.ctr>=GUIDE.ctr, rOk=g.roas>=GUIDE.roas;
-      g.k=cOk&&rOk?'pass':!cOk&&g.roas<=GUIDE.roas?'risk':'watch'; g.cOk=cOk; g.rOk=rOk;
+      if(!run&&n<GUIDE.days){ g.k='wait'; return g; }
+      if(!(g.sp>0)||!g.imp){ g.k='none'; return g; }
+      if(g.sp<GUIDE.minSp){ g.k='low'; return g; }
+      g.cOk=g.ctr>=GUIDE.ctr;
+      if(!run){ g.rOk=g.roas>=GUIDE.roas; g.k=g.cOk&&g.rOk?'pass':!g.cOk&&g.roas<=GUIDE.roas?'risk':'watch'; return g; }
+      const R=repFor(r.c,tab==='campaign'?null:r.s);
+      g.be=R&&R.roas!=null?R.roas:GUIDE.roas; g.beName=R&&R.roas!=null?R.name:'';
+      const pv=guideSum(ids,guideWk.slice(GUIDE.wk,GUIDE.wk*2));
+      if(pv.sp>=GUIDE.minSp){ g.pRoas=pv.roas; g.pCtr=pv.ctr; }
+      g.rOk=g.roas>=g.be;
+      g.k=g.rOk?'pass':g.roas>=g.be*GUIDE.watch?'watch':'risk';
       return g;
     };
     const guideTd=r=>{ const g=guideOf(r); shownGuide[r.id]=g;
@@ -21373,7 +21389,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 소재 카드 팝업창 · 설정 창 틀(settings-overlay)을 같이 쓴다 · ✕·바깥·Esc 로 닫힘 */
   let cardHtml=()=>'', cardBox=null, curCard=null, shownSw={};
   /* 행동지침 기준(사용자 11-04) · 숫자를 바꾸면 알약·도우미가 같이 바뀐다 */
-  const GUIDE={days:3,long:7,minSp:30000,ctr:2,roas:200}, GUIDE_TXT={pass:'통과',risk:'위험',watch:'관찰',wait:'대기',low:'부족',none:'-'};
+  const GUIDE={days:3,test:7,wk:7,minSp:30000,ctr:2,roas:200,watch:0.8,up:1.3,drop:15}, GUIDE_TXT={pass:'통과',risk:'위험',watch:'관찰',wait:'대기',low:'부족',none:'-'};
   /* 상세페이지 체류 기준(사용자 11-05) · 도우미에만 보인다(판정 알약에는 넣지 않음) · [합격 이상, 개선 이상] · 빠른 이탈은 낮을수록 좋아 [이 값 미만 합격, 이 값 미만 개선] · 11-05 사용자: 0~19% 합격 · 20%대 개선 · 30% 이상 위험 ·
      방문이 minV 아래면 숫자가 흔들려 등급을 매기지 않는다 */
   const CV_STD={sc:[40,20],ac:[30,20],qb:[20,30],minV:20};
@@ -22211,25 +22227,56 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 내림으로 보인다 · 1.995% 를 2% 로 반올림해 보여 주면 기준을 넘은 것처럼 읽힌다 */
   const pc=(v,n)=>v==null?'-':(Math.floor(v*10**n)/10**n).toFixed(n)+'%';
   function guideHtml(g){
-    const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10)), per=md(g.from)+'~'+md(g.to)+' · 최근 '+g.w+'일'+(g.n!=null?' (게재 '+g.n+'일째)':'');
+    const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
+    const stage='<p class="stage">'+(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'')+'</p>';
+    const per='<p class="per">'+md(g.from)+'~'+md(g.to)+' · '+(g.run?'평일 최근 '+g.w+'일':'최근 '+g.w+'일')+'</p>';
     const cur=acc().currency;
-    if(g.k==='wait') return '<b>판단 대기</b><p>게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.</p>';
-    if(g.k==='none') return '<b>데이터 없음</b><p class="per">'+per+'</p><p>이 기간에 광고비·노출이 없습니다.</p>';
-    if(g.k==='low') return '<b>데이터 부족</b><p class="per">'+per+'</p><p>광고비 '+money(g.sp,cur)+' · 판정하려면 '+money(GUIDE.minSp,cur)+' 이상 써야 합니다. 숫자가 적으면 클릭 몇 번에도 크게 흔들립니다.</p>'
+    if(g.k==='wait') return '<b>판단 대기</b>'+stage+'<p>메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.</p>';
+    if(g.k==='none') return '<b>데이터 없음</b>'+stage+per+'<p>이 기간에 광고비·노출이 없습니다.</p>';
+    if(g.k==='low') return '<b>데이터 부족</b>'+stage+per+'<p>광고비 '+money(g.sp,cur)+' · 판정하려면 '+money(GUIDE.minSp,cur)+' 이상 써야 합니다. 숫자가 적으면 클릭 몇 번에도 크게 흔들립니다.</p>'
       +'<p class="sub">지금 클릭률 '+pc(g.ctr,2)+' · ROAS '+pc(g.roas,0)+' (참고만)</p>'+guideCv(g);
-    const row=(l,v,ok,std)=>'<li><span>'+l+'</span><em class="'+(ok?'ok':'no')+'">'+v+'</em><small>기준 '+std+'</small></li>';
-    const cv=guideCv(g);
-    const act={pass:'유지하세요. 예산을 올려 볼 후보입니다.',risk:'끄거나 소재 교체를 검토하세요.',
-      watch:g.cOk?'클릭은 되는데 구매가 약합니다 → 상세페이지·가격·혜택을 점검하세요.':'구매는 나오는데 클릭이 약합니다 → 썸네일·첫 3초·문구를 점검하세요.'}[g.k];
-    return '<b>'+GUIDE_TXT[g.k]+'</b><p class="per">'+per+'</p><ul>'+row('클릭률',pc(g.ctr,2),g.cOk,GUIDE.ctr+'% 이상')+row('ROAS',pc(g.roas,0),g.rOk,GUIDE.roas+'% 이상')+'</ul>'
-      +cv+'<p class="act">'+act+'</p><p class="sub">광고비 '+money(g.sp,cur)+' · 구매 '+int(g.buy)+'건 · 클릭 '+int(g.clk)+' · 노출 '+int(g.imp)+'</p>';
+    const row=(l,v,ok,std)=>'<li><span>'+l+'</span><em class="'+(ok?'ok':'no')+'">'+v+'</em><small>'+std+'</small></li>';
+    const tail='<p class="sub">광고비 '+money(g.sp,cur)+' · 구매 '+int(g.buy)+'건 · 클릭 '+int(g.clk)+' · 노출 '+int(g.imp)+'</p>';
+    if(!g.run){
+      const act={pass:'유지하세요. 테스트 통과 · 8일째부터 운영 기준(손익분기점)으로 봅니다.',risk:'끄거나 소재 교체를 검토하세요.',
+        watch:g.cOk?'클릭은 되는데 구매가 약합니다 → 상세페이지·가격·혜택을 점검하세요.':'구매는 나오는데 클릭이 약합니다 → 썸네일·첫 3초·문구를 점검하세요.'}[g.k];
+      return '<b>'+GUIDE_TXT[g.k]+'</b>'+stage+per+'<ul>'+row('클릭률',pc(g.ctr,2),g.cOk,'기준 '+GUIDE.ctr+'% 이상')+row('ROAS',pc(g.roas,0),g.rOk,'기준 '+GUIDE.roas+'% 이상')+'</ul>'
+        +guideCv(g)+'<p class="act">'+act+'</p>'+tail;
+    }
+    /* 운영 단계 · 숫자 흐름을 보고 할 일을 몇 줄로 · 맨 위 줄이 결론 */
+    const chg=(a1,b1)=>a1==null||b1==null||!b1?null:(a1-b1)/b1*100;
+    const dR=chg(g.roas,g.pRoas), dC=chg(g.ctr,g.pCtr), cg=cvGrades(g.cv);
+    const sign=v=>v==null?'':' ('+(v>=0?'+':'')+Math.round(v)+'%)';
+    const L=[];
+    if(g.k==='pass'){
+      if(g.roas>=g.be*GUIDE.up&&(dR==null||dR>-GUIDE.drop)&&g.buy>=10) L.push('<b>증액 검토</b> · 손익분기점의 '+(g.roas/g.be).toFixed(1)+'배이고 흐름도 괜찮습니다. +10~20% 올리고 3일 지켜본 뒤 다음 증액을 정하세요.');
+      else if(dR!=null&&dR<=-GUIDE.drop) L.push('<b>유지 · 증액 보류</b> · 손익분기점은 넘지만 ROAS 가 앞 평일 7일보다 '+Math.round(-dR)+'% 떨어졌습니다. 3일 더 보고 정하세요.');
+      else L.push('<b>유지</b> · 손익분기점은 넘지만 '+(g.buy<10?'구매가 '+g.buy+'건이라 증액하기엔 이릅니다.':'여유가 크지 않습니다(1.3배 아래).'));
+    }else if(g.k==='watch') L.push('<b>유지하며 점검</b> · ROAS 가 손익분기점 바로 아래('+Math.round(g.roas/g.be*100)+'%)입니다. 증액하지 말고 아래 원인부터 보세요.');
+    else L.push('<b>감액 또는 끄기 검토</b> · ROAS 가 손익분기점의 '+Math.round(g.roas/g.be*100)+'%입니다. −20% 줄이거나 '+(tab==='asset'?'소재를 교체':'안쪽 약한 소재를 끄기')+'를 검토하세요.');
+    if(dC!=null&&dC<=-30) L.push('클릭률이 앞 평일 7일보다 '+Math.round(-dC)+'% 떨어짐 → 소재 피로 신호 · 첫 3초·썸네일을 바꾼 새 버전을 준비하세요.');
+    else if(!g.cOk) L.push('클릭률 '+pc(g.ctr,2)+' (기준 '+GUIDE.ctr+'%) → 썸네일·첫 3초·문구를 점검하세요.');
+    if(cg){
+      const bad=[cg.sc==='risk'&&'스크롤',cg.ac==='risk'&&'머문 시간',cg.qb==='risk'&&'빠른 이탈'].filter(Boolean);
+      const meh=[cg.sc==='watch'&&'스크롤',cg.ac==='watch'&&'머문 시간',cg.qb==='watch'&&'빠른 이탈'].filter(Boolean);
+      if(bad.length) L.push('상세페이지 '+bad.join('·')+' 위험 → 광고와 상세페이지 첫 화면이 맞는지, 첫 화면에 혜택·가격이 보이는지 점검하세요.');
+      else if(meh.length) L.push('상세페이지 '+meh.join('·')+' 개선 필요 → 첫 화면·리뷰 위치를 손보면 좋습니다.');
+      else if(g.k!=='pass'&&cg.sc==='pass'&&cg.ac==='pass') L.push('상세페이지는 잘 읽히는데 구매가 약함 → 가격·혜택·옵션 구성을 점검하세요.');
+    }
+    return '<b>'+GUIDE_TXT[g.k]+'</b>'+stage+per
+      +'<ul>'+row('ROAS',pc(g.roas,0)+sign(dR),g.rOk,'손익분기 '+Math.round(g.be)+'%'+(g.beName?'':' (기본)'))
+      +row('클릭률',pc(g.ctr,2)+sign(dC),g.cOk,'기준 '+GUIDE.ctr+'%')+'</ul>'
+      +(dR!=null||dC!=null?'<p class="sub">괄호 = 앞 평일 7일보다</p>':'')
+      +guideCv(g)+'<div class="act"><h5>행동지침</h5><ol>'+L.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>'+tail;
   }
   /* 상세페이지 체류 줄 · 평균 스크롤·머문 시간(활동)·빠른 이탈마다 합격·개선·위험 */
+  const cvGrade=(v,t,low)=>v==null?'':(low?(v<t[0]?'pass':v<t[1]?'watch':'risk'):(v>=t[0]?'pass':v>=t[1]?'watch':'risk'));
+  const cvGrades=c=>!c||c.v<CV_STD.minV?null:{sc:cvGrade(c.sc,CV_STD.sc),ac:cvGrade(c.ac,CV_STD.ac),qb:cvGrade(c.qb,CV_STD.qb,1)};
   function guideCv(g){
     const c=g.cv;
     if(!c) return '<div class="cv"><h5>상세페이지 체류</h5><p class="sub">이 기간 Clarity 방문 기록이 없습니다(하루 늦게 들어옴).</p></div>';
     const few=c.v<CV_STD.minV;
-    const grade=(v,t,low)=>v==null||few?'':(low?(v<t[0]?'pass':v<t[1]?'watch':'risk'):(v>=t[0]?'pass':v>=t[1]?'watch':'risk'));
+    const grade=(v,t,low)=>few?'':cvGrade(v,t,low);
     const GT={pass:'합격',watch:'개선',risk:'위험'};
     const sec=v=>v==null?'-':v<60?Math.floor(v)+'초':Math.floor(v/60)+'분 '+Math.floor(v%60)+'초';
     const row=(l,v,gr,std)=>'<li><span>'+l+'</span><em>'+v+'</em>'+(gr?'<i class="cvg is-'+gr+'">'+GT[gr]+'</i>':'')+'<small>'+std+'</small></li>';
