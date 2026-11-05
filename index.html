@@ -3123,6 +3123,8 @@ window.BAROYAM_FONT=(function(){
   .gd-tabs{margin:14px 22px 12px;align-self:flex-start;flex-wrap:wrap}
   .gd-body{flex:1;min-height:0;overflow:auto;padding:0 22px 22px;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--body)}
   .gd-per{margin:0;font-size:12px;color:var(--mute)}
+  .gd-sec{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px}
+  .gd-sec h4{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
   .gd-empty{margin:20px 0;text-align:center;color:var(--mute)}
   .gd-err{margin:0;color:var(--neg)}
   .gd-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -3140,16 +3142,6 @@ window.BAROYAM_FONT=(function(){
   .gd-note{margin:0;font-size:11.5px;color:var(--mute)}
   .gd-tips{margin:0;padding:12px 14px 12px 30px;border-radius:12px;background:var(--bg);display:flex;flex-direction:column;gap:6px;line-height:1.55}
   .gd-tips b{font-weight:600;color:var(--ink)}
-  .gd-tbs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .gd-tb h5,.gd-ai h5{margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--ink)}
-  .gd-tb h5 small{font-weight:400;color:var(--mute);margin-left:4px}
-  .gd-tb table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
-  .gd-tb th{font-weight:500;color:var(--mute);text-align:right;padding:4px 6px;border-bottom:1px solid var(--line)}
-  .gd-tb td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--line)}
-  .gd-tb td:first-child,.gd-tb th:first-child{text-align:left;color:var(--ink)}
-  .gd-tb td b{font-weight:600;color:var(--ink)}
-  .gd-tb td small{color:var(--mute);font-size:11px}
-  .gd-tb td.ok{color:var(--pos);font-weight:600} .gd-tb td.no{color:var(--neg);font-weight:600}
   .gd-ai{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:12px;border:1px solid color-mix(in srgb,var(--btn) 35%,var(--paper));background:color-mix(in srgb,var(--btn) 5%,var(--paper));line-height:1.6;color:var(--ink)}
   .gd-ai p{margin:0}
   .gd-ai-v{font-size:16px;font-weight:600;color:var(--btn-soft-ink)}
@@ -3160,7 +3152,7 @@ window.BAROYAM_FONT=(function(){
   .gd-ai-wait{display:flex;align-items:center;gap:10px;padding:18px;color:var(--body)}
   .gd-ai-wait .mw-spin svg{width:20px;height:20px;color:var(--btn)}
   [data-gd-ai]{align-self:flex-start}
-  @media (max-width:640px){ .gd-rates,.gd-tbs{grid-template-columns:1fr} }
+  @media (max-width:640px){ .gd-rates{grid-template-columns:1fr} }
   .ma-guide-tip>b{font-size:13.5px;font-weight:600;color:var(--ink)}
   .ma-guide-tip.is-pass>b{color:var(--pos)} .ma-guide-tip.is-risk>b{color:var(--neg)} .ma-guide-tip.is-watch>b{color:var(--warn)}
   .ma-guide-tip p{margin:4px 0 0;line-height:1.5}
@@ -22279,7 +22271,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* short = 마우스를 올렸을 때(결론 한 줄 + 눌러서 자세히) · 아니면 분석 창 지침 탭 */
   function guideHtml(g,short){
     const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
-    const more=short?'<p class="sub more">눌러서 자세히 보기 · 영상·구매자·바로얌AI 판단</p>':'';
+    const more=short?'<p class="sub more">눌러서 자세히 보기 · 상세페이지·영상·바로얌AI 판단</p>':'';
     const stage='<p class="stage">'+(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'')+'</p>';
     const per='<p class="per">'+md(g.from)+'~'+md(g.to)+' · '+(g.run?'평일 최근 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+'</p>';
     const cur=acc().currency;
@@ -22308,6 +22300,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     else L.push('<b>감액 또는 끄기 검토</b> · ROAS 가 손익분기점의 '+Math.round(g.roas/g.be*100)+'%입니다. −20% 줄이거나 '+(tab==='asset'?'소재를 교체':'안쪽 약한 소재를 끄기')+'를 검토하세요.');
     if(dC!=null&&dC<=-30) L.push('클릭률이 앞 평일 7일보다 '+Math.round(-dC)+'% 떨어짐 → 소재 피로 신호 · 첫 3초·썸네일을 바꾼 새 버전을 준비하세요.');
     else if(!g.cOk) L.push('클릭률 '+pc(g.ctr,2)+' (기준 '+GUIDE.ctr+'%) → 썸네일·첫 3초·문구를 점검하세요.');
+    { const v=gdVideo(g), gh=v&&gdGrade(v.hook,VID_STD.hook), gd=v&&gdGrade(v.hold,VID_STD.hold);   /* 영상(최근 60일) */
+      if(gh==='risk') L.push('영상 후킹률 '+gdPct(v.hook,1)+' (기준 '+VID_STD.hook[0]+'%) → 첫 3초를 바꾼 버전을 만드세요(후킹 수정).');
+      else if(gd==='risk') L.push('영상 유지율 '+gdPct(v.hold,1)+' (기준 '+VID_STD.hold[0]+'%) → 3초 뒤가 지루합니다. 결론·혜택을 앞으로 당기세요.'); }
     if(cg){
       const bad=[cg.sc==='risk'&&'스크롤',cg.ac==='risk'&&'머문 시간',cg.qb==='risk'&&'빠른 이탈'].filter(Boolean);
       const meh=[cg.sc==='watch'&&'스크롤',cg.ac==='watch'&&'머문 시간',cg.qb==='watch'&&'빠른 이탈'].filter(Boolean);
@@ -22352,7 +22347,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     guideTip.style.left=x+'px'; guideTip.style.top=y+'px';
   }
   /* ---------- 행동지침 분석 창(11-05 사용자 요청 · 판단할 것이 많아 작은 도우미 대신 탭 창) ----------
-     알약을 누르면 열린다 · 탭: 행동지침(판정·지침) · 영상(후킹률·유지율·쓰루플레이율) · 상세페이지(Clarity) · 구매자(연령×성별·게재지면·시간대) · 바로얌AI 판단 ·
+     알약을 누르면 열린다 · 탭: 행동지침(판정·지침 + 상세페이지 + 영상 후킹률·유지율·쓰루플레이율 · 한 화면) · 바로얌AI 판단 · 구매자(연령×성별·게재지면·시간대)는 바로얌AI 에만 보낸다 ·
      영상·구매자는 서버가 광고마다 쪼개 둔 최근 60일 값(a.bd), 행동지침·상세페이지는 판정과 같은 기간 ·
      바로얌AI 판단은 이 숫자를 모아 대본 서비스(content_writer.js kind:'adjudge' · 지침 prompts/광고판단.md)에 보내 결론·구매자 시사점·할 일을 받는다(약 30초 · 저장 안 함) */
   const VID_STD={hook:[30,25],hold:[28,18],thru:[8,5]};   /* 사용자 11-05 · [합격 이상, 개선 이상] · 그 아래 위험 */
@@ -22394,23 +22389,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +'<div class="gd-rates">'+card('후킹률',v.hook,'3초 재생 ÷ 노출',VID_STD.hook[0]+'% 이상',gh)+card('유지율',v.hold,'쓰루플레이 ÷ 3초 재생',VID_STD.hold[0]+'% 이상',gd)+card('쓰루플레이율',v.thruRate,'쓰루플레이 ÷ 노출',VID_STD.thru[0]+'% 이상',gt)+'</div>'
       +'<p class="gd-note">쓰루플레이 = 15초 이상 봤거나(15초보다 짧은 영상은) 끝까지 본 재생</p>'
       +'<ul class="gd-tips">'+tips.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
-  }
-  function gdBuyersHtml(g){
-    const B=gdBuyers(g), be=g.beB||GUIDE.roas;
-    if(!B.ag.by&&!B.pl.by) return '<p class="gd-empty">최근 60일 구매 기록이 없습니다.</p>';
-    const tbl=(t,S,n)=>!S.L.length?'':'<div class="gd-tb"><h5>'+t+' <small>구매 '+int(S.by)+'건</small></h5><table><thead><tr><th></th><th>지출</th><th>구매</th><th>ROAS</th></tr></thead><tbody>'
-      +S.L.slice(0,n).map(x=>'<tr><td>'+esc(x.seg)+'</td><td>'+Math.round(x.spS)+'%</td><td><b>'+Math.round(x.byS)+'%</b> <small>'+int(x.buy)+'건</small></td><td class="'+(x.roas==null?'':x.roas>=be?'ok':'no')+'">'+(x.roas==null?'-':Math.round(x.roas)+'%')+'</td></tr>').join('')+'</tbody></table></div>';
-    /* 한 줄 요약 · 구매가 가장 많은 칸과 지출 대비 가장 잘 사는 칸(구매 3건 이상) */
-    const best=S=>S.L.filter(x=>x.buy>=3&&x.roas!=null).sort((p,q)=>q.roas-p.roas)[0];
-    const sm=[];
-    if(B.ag.L[0]&&B.ag.L[0].buy) sm.push('구매가 가장 많은 사람은 <b>'+esc(B.ag.L[0].seg)+'</b>(구매의 '+Math.round(B.ag.L[0].byS)+'%)');
-    const ba=best(B.ag); if(ba&&ba!==B.ag.L[0]) sm.push('지출 대비 가장 잘 사는 사람은 <b>'+esc(ba.seg)+'</b>(ROAS '+Math.round(ba.roas)+'%)');
-    if(B.pl.L[0]&&B.pl.L[0].buy) sm.push('<b>'+esc(B.pl.L[0].seg)+'</b>에서 가장 많이 삽니다(구매의 '+Math.round(B.pl.L[0].byS)+'%)');
-    const low=B.pl.L.filter(x=>x.spS>=10&&x.roas!=null&&x.roas<be); if(low.length) sm.push(low.map(x=>esc(x.seg)).join('·')+'는 지출이 '+Math.round(low[0].spS)+'% 넘게 가는데 손익분기점 아래입니다');
-    const hTop=B.hr.L.filter(x=>x.buy>0).slice(0,3).map(x=>x.seg); if(hTop.length) sm.push('구매가 몰리는 시간은 <b>'+hTop.join('·')+'</b>(광고를 본 시각)');
-    return '<p class="gd-per">최근 60일 · 색은 손익분기 '+Math.round(be)+'% 이상 초록, 아래 빨강</p>'
-      +(sm.length?'<ul class="gd-tips">'+sm.map(x=>'<li>'+x+'</li>').join('')+'</ul>':'')
-      +'<div class="gd-tbs">'+tbl('연령 × 성별',B.ag,8)+tbl('게재지면',B.pl,6)+'</div>';
   }
   /* 바로얌AI 에 보낼 숫자 · 사람이 읽는 이름으로 */
   function gdPayload(g){
@@ -22462,17 +22440,14 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       }
     }catch(e){ AI_RES[id]={state:'failed',msg:'판단하지 못했습니다 · '+(e&&e.message||e)}; gdPaint(); }
   }
-  const GD_TABS=[['guide','행동지침'],['video','영상'],['page','상세페이지'],['buyer','구매자'],['ai','바로얌AI 판단']];
+  const GD_TABS=[['guide','행동지침'],['ai','바로얌AI 판단']];   /* 11-05 사용자 요청 · 영상·상세페이지는 행동지침 탭에 같이 · 구매자 탭은 뺌(구매자 숫자는 바로얌AI 에만 보냄) */
   function gdPaint(){
     if(!gdBox||gdBox.hidden) return;
     const g=shownGuide[gdCur]; if(!g) return;
     gdBox.querySelector('.gd-tabs').innerHTML=GD_TABS.map(([k,l])=>'<button type="button" class="ui-tab" data-gd-tab="'+k+'" aria-selected="'+(gdTab===k)+'">'+l+'</button>').join('');
     let h='';
-    if(gdTab==='guide') h='<div class="ma-guide-tip is-in is-'+g.k+'">'+guideHtml(g)+'</div>';
-    else if(gdTab==='video') h=gdVideoHtml(g);
-    else if(gdTab==='page') h='<p class="gd-per">'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일 · Clarity</p><div class="ma-guide-tip is-in is-none">'+guideCv(g)+'</div>';
-    else if(gdTab==='buyer') h=gdBuyersHtml(g);
-    else h=gdAiHtml(g);
+    if(gdTab==='ai') h=gdAiHtml(g);
+    else h='<div class="ma-guide-tip is-in is-'+g.k+'">'+guideHtml(g)+'</div><div class="gd-sec"><h4>영상</h4>'+gdVideoHtml(g)+'</div>';
     gdBox.querySelector('.gd-body').innerHTML=h;
   }
   function guideOpen(id){
