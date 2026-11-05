@@ -3126,6 +3126,12 @@ window.BAROYAM_FONT=(function(){
   .gd-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);gap:16px;padding:16px 22px 20px;font-size:13px;color:var(--body);overflow:hidden}
   .gd-left{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:2px}
   .gd-right{align-self:start;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-radius:14px;border:1px solid color-mix(in srgb,var(--btn) 28%,var(--paper));background:color-mix(in srgb,var(--btn) 4%,var(--paper))}
+  .gd-when{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:10px 14px;border-radius:12px;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .gd-when svg{width:18px;height:18px;flex:none}
+  .gd-when .l{font-size:12.5px;font-weight:500}
+  .gd-when b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .gd-when .n{font-size:12.5px;font-weight:500;padding:1px 9px;border-radius:99px;background:var(--paper)}
+  .gd-when .r{margin-left:auto;font-size:11.5px;color:var(--body)}
   .gd-note{margin:0;padding:10px 14px;border-radius:10px;background:var(--bg);color:var(--body);font-size:12.5px}
   .gd-note.is-low{background:var(--warn-soft);color:var(--ink)}
   .gd-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
@@ -22522,7 +22528,12 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const has=g.sp>0&&g.imp>0;
     const note={wait:'게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.',none:'이 기간에 광고비·노출이 없습니다.',low:'광고비 '+money(g.sp,cur)+' · '+money(GUIDE.minSp,cur)+' 이상 써야 판정합니다. 아래 숫자는 참고만 하세요.'}[g.k];
     const G=guideHtml(g), act=typeof G==='object'?G.act:'';
-    gdBox.querySelector('.gd-left').innerHTML=
+    /* 데이터 기준 기간을 왼쪽 맨 위 띠로 크게(11-05 사용자 요청 · 머리 작은 글씨로는 안 보임) · 날짜에 요일 · 운영은 주말 뺀 평일 */
+    const WD='일월화수목금토', dw=d=>md(d)+'('+WD[new Date(d+'T00:00:00').getDay()]+')';
+    const when='<div class="gd-when"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+      +'<span class="l">데이터 기준</span><b>'+dw(g.from)+' ~ '+dw(g.to)+'</b><span class="n">'+(g.run?'평일 '+g.w+'일 · 주말 제외':'게재 1일째부터 '+g.w+'일')+'</span>'
+      +'<span class="r">영상은 최근 60일</span></div>';
+    gdBox.querySelector('.gd-left').innerHTML=when+
       (note?'<p class="gd-note is-'+g.k+'">'+note+'</p>':'')
       +(has?'<div class="gd-kpis">'
         +kpi('roas','ROAS',gdPct(g.roas,0),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.rOk:null),(g.run?'손익분기 '+Math.round(be)+'%':'기준 '+GUIDE.roas+'%')+(g.run?' '+sg(chg(g.roas,g.pRoas)):''))
@@ -22587,7 +22598,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     gdBox.querySelector('.gd-lv').className='gd-lv lv-'+g.lv;
     gdBox.querySelector('#gdT').textContent=g.nm||'';
     const pill=gdBox.querySelector('.gd-pill'); pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k];
-    gdBox.querySelector('.gd-sub-t').textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'')+' · '+md(g.from)+'~'+md(g.to)+(g.run?' 평일 '+g.w+'일':' '+g.w+'일');
+    gdBox.querySelector('.gd-sub-t').textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'');
     gdBox.hidden=false; gdBox.querySelector('.gd-left').scrollTop=0; gdPaint();
     if(!AI_RES[id]&&g.k!=='none') gdAsk();
   }
