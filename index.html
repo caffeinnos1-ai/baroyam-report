@@ -3113,63 +3113,82 @@ window.BAROYAM_FONT=(function(){
   .ma-guide-tip{--gc:var(--mute);position:fixed;z-index:9000;width:300px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--gc) 9%,var(--paper));border:1px solid color-mix(in srgb,var(--gc) 45%,var(--paper));box-shadow:0 10px 28px rgba(0,0,0,.14);font-size:12.5px;color:var(--ink);pointer-events:none}
   .ma-guide-tip.is-pass{--gc:var(--pos)} .ma-guide-tip.is-risk{--gc:var(--neg)} .ma-guide-tip.is-watch{--gc:var(--warn)}
   .ma-guide-tip[hidden]{display:none}
-  .ma-guide-tip.is-in{position:static;width:auto;box-shadow:none;pointer-events:auto;padding:14px 16px;font-size:13px}
   .ma-guide-tip .more{margin-top:8px;color:var(--btn-soft-ink);font-weight:500}
-  .settings-panel.gd-dlg{max-width:1240px;width:100%;height:min(900px,92vh);max-height:92vh;display:flex;flex-direction:column}
-  .gd-hd{display:flex;align-items:center;gap:12px;min-width:0}
-  .gd-hd h2{margin:0;font-size:16px;word-break:break-all}
-  .gd-sub{margin:2px 0 0;font-size:12px;color:var(--mute)}
-  .gd-pill{flex:none;font-size:13px;padding:4px 12px}
-  .gd-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;padding:18px 22px 22px;font-size:13px;color:var(--body)}
-  .gd-left,.gd-right{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px}
-  .gd-right{padding:16px 18px;border-radius:14px;border:1px solid color-mix(in srgb,var(--btn) 30%,var(--paper));background:color-mix(in srgb,var(--btn) 4%,var(--paper))}
-  .gd-ai-h{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
-  .gd-sec h4 small{font-weight:400;font-size:11.5px;color:var(--mute);margin-left:4px}
-  .gd-cv{padding:0;border:0;background:none}
-  .ma-guide-tip.gd-cv .cv{margin:0;padding:0;border:0}
-  .ma-guide-tip.is-in.gd-cv{padding:0}
-  .ma-guide-tip.gd-cv ul{margin-top:0}
-  .ma-guide-tip.is-in>.act:first-child{margin-top:0;padding-top:0;border-top:0}
-  .gd-cv .cv>h5{display:none}
-  .gd-ai-wait small{display:block;font-size:11.5px;color:var(--mute);margin-top:2px}
-  @media (max-width:900px){ .gd-body{grid-template-columns:1fr;overflow:auto} .gd-left,.gd-right{overflow:visible} }
-  .gd-per{margin:0;font-size:12px;color:var(--mute)}
-  .gd-sec{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px}
-  .gd-sec h4{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
-  .gd-empty{margin:20px 0;text-align:center;color:var(--mute)}
-  .gd-err{margin:0;color:var(--neg)}
-  .gd-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .gd-step{flex:1;min-width:120px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
-  .gd-step small,.gd-rate small{display:block;font-size:12px;color:var(--mute)}
-  .gd-step b{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
-  .gd-arr{color:var(--mute);font-size:18px}
-  .gd-rates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-  .gd-rate{--gc:var(--mute);position:relative;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--gc) 8%,var(--paper));border:1px solid color-mix(in srgb,var(--gc) 40%,var(--paper))}
-  .gd-rate.is-pass{--gc:var(--pos)} .gd-rate.is-watch{--gc:var(--warn)} .gd-rate.is-risk{--gc:var(--neg)}
-  .gd-rate b{display:block;font-size:24px;font-weight:600;color:var(--gc);font-variant-numeric:tabular-nums}
-  .gd-rate em{display:block;font-style:normal;font-size:11.5px;color:var(--body)}
-  .gd-rate span{display:block;font-size:11.5px;color:var(--mute)}
-  .gd-rate i{position:absolute;right:10px;top:10px;font-style:normal;font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;color:var(--gc);background:color-mix(in srgb,var(--gc) 14%,var(--paper))}
-  .gd-note{margin:0;font-size:11.5px;color:var(--mute)}
-  .gd-tips{margin:0;padding:12px 14px 12px 30px;border-radius:12px;background:var(--bg);display:flex;flex-direction:column;gap:6px;line-height:1.55}
-  .gd-tips b{font-weight:600;color:var(--ink)}
-  .gd-ai{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:12px;border:1px solid color-mix(in srgb,var(--btn) 35%,var(--paper));background:color-mix(in srgb,var(--btn) 5%,var(--paper));line-height:1.6;color:var(--ink)}
-  .gd-ai p{margin:0}
-  .gd-ai-v{font-size:16px;font-weight:600;color:var(--btn-soft-ink)}
-  .gd-ai h5{margin-top:6px}
-  .gd-ai ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
-  .gd-pr{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-  .gd-pr li{display:flex;gap:8px;align-items:baseline}
-  .gd-pr i{flex:none;font-style:normal;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:99px;color:var(--neg);background:var(--neg-soft)}
-  .gd-by{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0}
-  .gd-by dt{font-size:12px;font-weight:600;color:var(--mute);padding-top:1px}
+  /* 행동지침 분석 창(11-05) · 왼쪽 숫자 / 오른쪽 바로얌AI */
+  .settings-panel.gd-dlg{max-width:1180px;width:100%;height:auto;max-height:92vh;display:flex;flex-direction:column}
+  .gd-head{padding:16px 22px}
+  .gd-hd{display:flex;align-items:center;gap:14px;min-width:0}
+  .gd-lv{flex:none;padding:7px 14px;border-radius:10px;font-size:14px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .gd-hd-t{min-width:0}
+  .gd-hd h2{margin:0;font-size:17px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gd-sub{display:flex;align-items:center;gap:8px;margin:5px 0 0;font-size:12.5px;color:var(--body)}
+  .gd-pill{flex:none;min-width:0;padding:1px 10px;font-size:12px}
+  .gd-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);gap:16px;padding:16px 22px 20px;font-size:13px;color:var(--body);overflow:hidden}
+  .gd-left{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:2px}
+  .gd-right{align-self:start;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:16px 18px;border-radius:14px;border:1px solid color-mix(in srgb,var(--btn) 28%,var(--paper));background:color-mix(in srgb,var(--btn) 4%,var(--paper))}
+  .gd-note{margin:0;padding:10px 14px;border-radius:10px;background:var(--bg);color:var(--body);font-size:12.5px}
+  .gd-note.is-low{background:var(--warn-soft);color:var(--ink)}
+  .gd-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .gd-k{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--paper);display:flex;flex-direction:column;gap:2px;min-width:0}
+  .gd-k small{font-size:12px;color:var(--mute)}
+  .gd-k b{font-size:21px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gd-k span{font-size:11.5px;color:var(--mute);white-space:nowrap}
+  .gd-k.ok b{color:var(--pos)} .gd-k.no b{color:var(--neg)}
+  .gd-k em{font-style:normal;font-weight:600;margin-left:2px}
+  .gd-k em.up{color:var(--pos)} .gd-k em.dn{color:var(--neg)}
+  .gd-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .gd-card{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+  .gd-card h4{margin:0;font-size:13.5px;font-weight:600;color:var(--ink)}
+  .gd-card h4 small{font-weight:400;font-size:11.5px;color:var(--mute);margin-left:4px}
+  .gd-mx{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+  .gd-mx li{--gc:var(--mute);display:grid;grid-template-columns:76px auto auto 1fr;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+  .gd-mx li:first-child{border-top:0;padding-top:2px}
+  .gd-mx li.is-pass{--gc:var(--pos)} .gd-mx li.is-watch{--gc:var(--warn)} .gd-mx li.is-risk{--gc:var(--neg)}
+  .gd-mx .l{color:var(--body)}
+  .gd-mx b{font-size:16px;font-weight:600;color:var(--gc);font-variant-numeric:tabular-nums}
+  .gd-mx li.is-none b{color:var(--ink)}
+  .gd-mx i{font-style:normal;font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;color:var(--gc);background:color-mix(in srgb,var(--gc) 13%,var(--paper))}
+  .gd-mx i.no{background:none;color:var(--mute)}
+  .gd-mx small{justify-self:end;font-size:11.5px;color:var(--mute)}
+  .gd-flow{margin:0;font-size:11.5px;color:var(--mute)}
+  .gd-flow b{font-weight:600;color:var(--body);font-variant-numeric:tabular-nums}
+  .gd-empty{margin:6px 0;color:var(--mute);font-size:12.5px}
+  .gd-act{--gc:var(--mute);border-left:4px solid var(--gc)}
+  .gd-act.is-pass{--gc:var(--pos)} .gd-act.is-watch{--gc:var(--warn)} .gd-act.is-risk{--gc:var(--neg)}
+  .gd-act ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;line-height:1.6;color:var(--ink)}
+  .gd-act ol b{font-weight:600}
+  .gd-ai-h{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+  .gd-ai-badge{padding:1px 7px;border-radius:6px;font-size:11px;font-weight:600;color:#fff;background:var(--btn)}
+  .gd-ai-v{margin:0;font-size:17px;font-weight:600;line-height:1.45;color:var(--btn-soft-ink)}
+  .gd-ai-s{margin:0;line-height:1.65;color:var(--ink)}
+  .gd-ai-sec{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--btn) 18%,var(--paper))}
+  .gd-ai-sec h5{margin:0;font-size:12.5px;font-weight:600;color:var(--mute)}
+  .gd-pr{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .gd-pr li{display:flex;gap:9px;align-items:baseline;line-height:1.6;color:var(--ink)}
+  .gd-pr i{flex:none;font-style:normal;font-size:11.5px;font-weight:600;padding:1px 9px;border-radius:99px;color:var(--neg);background:var(--neg-soft)}
+  .gd-ok{margin:0;color:var(--pos);font-weight:500}
+  .gd-by{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;margin:0;line-height:1.6;color:var(--ink)}
+  .gd-by dt{font-size:12px;font-weight:600;color:var(--btn-soft-ink);padding:2px 8px;border-radius:6px;background:var(--btn-soft);align-self:start;text-align:center}
   .gd-by dd{margin:0}
-  .gd-ai ol b{font-weight:600}
-  .gd-ai ol small{display:block;color:var(--body);font-size:12px}
-  .gd-ai-wait{display:flex;align-items:center;gap:10px;padding:18px;color:var(--body)}
-  .gd-ai-wait .mw-spin svg{width:20px;height:20px;color:var(--btn)}
-  [data-gd-ai]{align-self:flex-start}
-  @media (max-width:640px){ .gd-rates{grid-template-columns:1fr} }
+  .gd-ai-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--btn) 18%,var(--paper));font-size:11.5px;color:var(--mute)}
+  .gd-ai-empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;color:var(--body)}
+  .gd-ai-empty p{margin:0}
+  .gd-err{margin:0;color:var(--neg)}
+  .gd-ai-load{display:flex;flex-direction:column;gap:12px}
+  .gd-ai-steps{display:flex;flex-wrap:wrap;gap:6px}
+  .gd-ai-steps span{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:12px;color:var(--mute);background:var(--paper);border:1px solid var(--line)}
+  .gd-ai-steps span.is-done{color:var(--pos);border-color:color-mix(in srgb,var(--pos) 35%,var(--paper))}
+  .gd-ai-steps span.is-on{color:var(--btn-soft-ink);border-color:color-mix(in srgb,var(--btn) 45%,var(--paper));background:var(--btn-soft);font-weight:600}
+  .gd-ai-steps svg{width:12px;height:12px;animation:mwSpin 1s linear infinite}
+  .gd-ai-bar{height:5px;border-radius:99px;background:color-mix(in srgb,var(--btn) 12%,var(--paper));overflow:hidden}
+  .gd-ai-bar i{display:block;height:100%;border-radius:99px;background:var(--btn);transition:width .9s linear}
+  .gd-ai-t{margin:-4px 0 0;font-size:11.5px;color:var(--mute)}
+  .gd-skel{display:flex;flex-direction:column;gap:9px;padding-top:4px}
+  .gd-skel i{display:block;height:11px;width:100%;border-radius:6px;background:linear-gradient(90deg,var(--line) 25%,color-mix(in srgb,var(--line) 40%,var(--paper)) 50%,var(--line) 75%);background-size:200% 100%;animation:gdShim 1.4s ease-in-out infinite}
+  @keyframes gdShim{from{background-position:100% 0}to{background-position:-100% 0}}
+  @media (prefers-reduced-motion:reduce){ .gd-skel i,.gd-ai-steps svg{animation:none} }
+  @media (max-width:980px){ .gd-body{grid-template-columns:1fr;overflow:auto} .gd-left,.gd-right{overflow:visible;max-height:none} .gd-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:640px){ .gd-two{grid-template-columns:1fr} }
   .ma-guide-tip>b{font-size:13.5px;font-weight:600;color:var(--ink)}
   .ma-guide-tip.is-pass>b{color:var(--pos)} .ma-guide-tip.is-risk>b{color:var(--neg)} .ma-guide-tip.is-watch>b{color:var(--warn)}
   .ma-guide-tip p{margin:4px 0 0;line-height:1.5}
@@ -22389,23 +22408,28 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     return {ag:share(ag),pl:share(pl),hr:share(hr)};
   }
   function gdGrade(v,t){ return v==null?'':v>=t[0]?'pass':v>=t[1]?'watch':'risk'; }
+  /* 영상 칸 · 세 비율을 한 줄씩(값 · 등급 · 기준) + 아래 흐름 한 줄 */
   function gdVideoHtml(g){
     const v=gdVideo(g);
-    if(!v) return '<p class="gd-empty">영상 기록이 없습니다(이미지 소재이거나 아직 재생이 없음).</p>';
-    const step=(l,n)=>'<div class="gd-step"><small>'+l+'</small><b>'+int(n)+'</b></div>', arr='<span class="gd-arr" aria-hidden="true">→</span>';
-    const card=(l,val,f,std,gr)=>'<div class="gd-rate is-'+(gr||'none')+'"><small>'+l+'</small><b>'+gdPct(val,1)+'</b><em>'+f+'</em><span>기준 '+std+'</span>'+(gr?'<i>'+GD_GT[gr]+'</i>':'')+'</div>';
-    const gh=gdGrade(v.hook,VID_STD.hook), gd=gdGrade(v.hold,VID_STD.hold), gt=gdGrade(v.thruRate,VID_STD.thru);
-    const tips=[];
-    if(gh==='risk') tips.push('<b>후킹 수정</b> · 첫 3초에 손이 멈추지 않습니다. 첫 장면·첫 자막·썸네일을 바꾼 버전을 만드세요.');
-    else if(gh==='watch') tips.push('후킹 개선 · 첫 장면만 바꾼 버전을 하나 더 테스트해 보세요.');
-    if(gd==='risk') tips.push('<b>전개 손보기</b> · 3초 뒤에 많이 빠집니다. 결론(상품·혜택)을 앞으로 당기고 늘어지는 부분을 줄이세요.');
-    else if(gd==='watch') tips.push('유지 개선 · 중간에 같은 말을 반복하는 곳이 없는지 보세요.');
-    if(!tips.length) tips.push('영상은 기준을 넘었습니다. 성과가 약하다면 영상보다 클릭 뒤(상세페이지·가격)를 보세요.');
-    return '<p class="gd-per">최근 60일 · 영상 재생 기준</p>'
-      +'<div class="gd-flow">'+step('광고 노출',v.imp)+arr+step('3초 재생',v.v3)+arr+step('쓰루플레이',v.thru)+'</div>'
-      +'<div class="gd-rates">'+card('후킹률',v.hook,'3초 재생 ÷ 노출',VID_STD.hook[0]+'% 이상',gh)+card('유지율',v.hold,'쓰루플레이 ÷ 3초 재생',VID_STD.hold[0]+'% 이상',gd)+card('쓰루플레이율',v.thruRate,'쓰루플레이 ÷ 노출',VID_STD.thru[0]+'% 이상',gt)+'</div>'
-      +'<p class="gd-note">쓰루플레이 = 15초 이상 봤거나(15초보다 짧은 영상은) 끝까지 본 재생</p>'
-      +'<ul class="gd-tips">'+tips.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+    if(!v) return '<p class="gd-empty">영상 기록이 없습니다 · 이미지 소재이거나 아직 재생이 없습니다.</p>';
+    return '<ul class="gd-mx">'+gdRow('후킹률',gdPct(v.hook,1),gdGrade(v.hook,VID_STD.hook),VID_STD.hook[0]+'% 이상','3초 재생 ÷ 노출')
+      +gdRow('유지율',gdPct(v.hold,1),gdGrade(v.hold,VID_STD.hold),VID_STD.hold[0]+'% 이상','쓰루플레이 ÷ 3초 재생')
+      +gdRow('쓰루플레이율',gdPct(v.thruRate,1),gdGrade(v.thruRate,VID_STD.thru),VID_STD.thru[0]+'% 이상','쓰루플레이 ÷ 노출')+'</ul>'
+      +'<p class="gd-flow">노출 <b>'+int(v.imp)+'</b> → 3초 재생 <b>'+int(v.v3)+'</b> → 쓰루플레이 <b>'+int(v.thru)+'</b></p>';
+  }
+  /* 지표 한 줄 · 이름 | 값 | 등급 | 기준 */
+  function gdRow(l,v,gr,std,how){
+    return '<li class="is-'+(gr||'none')+'"><span class="l"'+(how?' title="'+esc(how)+'"':'')+'>'+l+'</span><b>'+v+'</b>'+(gr?'<i>'+GD_GT[gr]+'</i>':'<i class="no">-</i>')+'<small>'+std+'</small></li>';
+  }
+  /* 상세페이지 칸 */
+  function gdPageHtml(g){
+    const c=g.cv;
+    if(!c) return '<p class="gd-empty">이 기간 Clarity 방문 기록이 없습니다 · 하루 늦게 들어옵니다.</p>';
+    const G=cvGrades(c)||{}, sec=v=>v==null?'-':v<60?Math.floor(v)+'초':Math.floor(v/60)+'분 '+Math.floor(v%60)+'초';
+    return '<ul class="gd-mx">'+gdRow('스크롤',c.sc==null?'-':Math.floor(c.sc)+'%',G.sc,CV_STD.sc[0]+'% 이상')
+      +gdRow('머문 시간',sec(c.ac),G.ac,CV_STD.ac[0]+'초 이상')
+      +gdRow('빠른 이탈',Math.floor(c.qb)+'%',G.qb,CV_STD.qb[0]+'% 미만')+'</ul>'
+      +'<p class="gd-flow">방문 <b>'+int(c.v)+'</b>회'+(c.v<CV_STD.minV?' · 방문이 적어 등급은 매기지 않습니다':'')+'</p>';
   }
   /* 바로얌AI 에 보낼 숫자 · 사람이 읽는 이름으로 */
   function gdPayload(g){
@@ -22421,20 +22445,26 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       buyers:{period:'최근 60일 · 구매는 광고를 본 시각 기준',ageGender:seg(B.ag),placement:seg(B.pl),hours:B.hr.L.filter(x=>x.buy>0).slice(0,5).map(x=>({hour:x.seg,buy:x.buy}))},
       target:tg?{age:tg.a,gender:tg.g,interests:tg.int,exclude:tg.ex,placements:tg.pl,advantageAudience:!!tg.adv}:null};
   }
+  /* 바로얌AI 칸 · 받는 동안은 단계 + 진행 막대 + 글 자리(흐린 줄) · 다 받으면 결론 → 상태 → 문제 자리 → 구매자 */
+  const GD_SPIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>';
   function gdAiHtml(g){
     const A=AI_RES[gdCur];
-    const btn='<button type="button" class="ui-btn primary sm" data-gd-ai>'+(A&&A.state==='done'?'다시 판단 받기':'바로얌AI 판단 받기')+'</button>';
-    if(!A) return '<p class="gd-per">이 줄의 숫자(성과·흐름·영상·상세페이지·구매자·타깃)를 모두 모아 바로얌AI 가 어디가 문제인지와 구매자(누가·언제·어디서)를 판단합니다. 30초쯤 걸립니다.</p>'+btn;
-    if(A.state==='wait') return '<div class="gd-ai-wait"><span class="mw-spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg></span><div>'+esc(A.msg||'판단 중')+'<small>왼쪽 숫자를 모두 읽고 글로 정리합니다 · 30초쯤</small></div></div>';
-    if(A.state==='failed') return '<p class="gd-err">'+esc(A.msg)+'</p>'+btn;
-    const R=A.res;
+    const again='<button type="button" class="ui-btn ghost sm" data-gd-ai>'+(A&&A.state==='done'?'다시 판단':'판단 받기')+'</button>';
+    if(!A) return '<div class="gd-ai-empty"><p>이 '+LVN[g.lv]+'의 숫자와 구매자(연령·성별·시간대·지면)를 읽고 어디가 문제인지 정리합니다.</p>'+again+'</div>';
+    if(A.state==='wait'){
+      const sec=(Date.now()-A.t0)/1000, st=sec<4?0:sec<16?1:2, pct=Math.min(94,Math.round(sec/30*100));
+      const steps=['숫자 모으기','문제 자리 찾기','구매자 판단'];
+      return '<div class="gd-ai-load"><div class="gd-ai-steps">'+steps.map((t,i)=>'<span class="'+(i<st?'is-done':i===st?'is-on':'')+'">'+(i<st?'✓':i===st?GD_SPIN:'')+t+'</span>').join('')+'</div>'
+        +'<div class="gd-ai-bar"><i style="width:'+pct+'%"></i></div><p class="gd-ai-t">'+Math.round(sec)+'초 · 보통 15~30초</p>'
+        +'<div class="gd-skel"><i style="width:55%"></i><i></i><i style="width:85%"></i><i style="width:40%"></i><i></i><i style="width:70%"></i></div></div>';
+    }
+    if(A.state==='failed') return '<p class="gd-err">'+esc(A.msg)+'</p>'+again;
     /* 11-05 사용자 요청 · 할 일은 쓰지 않고 어디가 문제인지 + 구매자(누가·언제·어디서) 판단만 */
-    const B=R.buyer&&typeof R.buyer==='object'?R.buyer:{who:R.buyer||''};
-    const pr=R.problems||[];
-    return '<div class="gd-ai"><p class="gd-ai-v">'+esc(R.verdict)+'</p><p>'+esc(R.summary)+'</p>'
-      +'<h5>문제 자리</h5>'+(pr.length?'<ul class="gd-pr">'+pr.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul>':'<p>뚜렷한 문제가 없습니다.</p>')
-      +'<h5>구매자</h5><dl class="gd-by">'+[['누가',B.who],['언제',B.when],['어디서',B.where]].filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl></div>'
-      +'<p class="gd-per">바로얌AI 판단은 참고용입니다 · 숫자는 '+new Date(A.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 기준</p>'+btn;
+    const R=A.res, B=R.buyer&&typeof R.buyer==='object'?R.buyer:{who:R.buyer||''}, pr=R.problems||[];
+    return '<p class="gd-ai-v">'+esc(R.verdict)+'</p><p class="gd-ai-s">'+esc(R.summary)+'</p>'
+      +'<div class="gd-ai-sec"><h5>문제 자리</h5>'+(pr.length?'<ul class="gd-pr">'+pr.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul>':'<p class="gd-ok">뚜렷한 문제가 없습니다.</p>')+'</div>'
+      +'<div class="gd-ai-sec"><h5>구매자</h5><dl class="gd-by">'+[['누가',B.who],['언제',B.when],['어디서',B.where]].filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl></div>'
+      +'<div class="gd-ai-foot"><span>참고용 · '+new Date(A.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 숫자 기준</span>'+again+'</div>';
   }
   async function gdAsk(){
     const id=gdCur, g=shownGuide[id]; if(!g) return;
@@ -22460,41 +22490,62 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       }
     }catch(e){ AI_RES[id]={state:'failed',msg:'판단하지 못했습니다 · '+(e&&e.message||e)}; gdPaintAi(); }
   }
-  /* 11-05 사용자 요청 · 탭 없이 두 칸: 왼쪽은 숫자(판정 → 상세페이지 → 영상 → 맨 아래 행동지침), 오른쪽은 바로얌AI 판단 글 ·
-     창을 열면 바로얌AI 판단을 바로 받는다(이 창에서 이미 받았으면 그대로 · 다시 판단 받기 단추) · 오른쪽만 다시 그려 왼쪽 스크롤을 지킨다 */
+  /* 11-05 사용자 요청 · 두 칸: 왼쪽은 숫자(핵심 네 칸 → 상세페이지 | 영상 → 맨 아래 행동지침), 오른쪽은 바로얌AI 판단 글 ·
+     머리에 캠페인·광고 세트·소재를 크게(어느 단계를 보는지 헷갈리지 않게) · 창을 열면 바로얌AI 판단을 바로 받는다(이미 받은 줄은 그대로) ·
+     받는 동안 오른쪽만 1초마다 다시 그려 왼쪽 스크롤을 지킨다 */
+  const LVN={campaign:'캠페인',adset:'광고 세트',asset:'소재'};
+  let gdTick=null;
   function gdPaint(){
     if(!gdBox||gdBox.hidden) return;
     const g=shownGuide[gdCur]; if(!g) return;
-    const G=guideHtml(g), P=typeof G==='string'?{top:G,act:''}:G;
-    gdBox.querySelector('.gd-left').innerHTML='<div class="ma-guide-tip is-in is-'+g.k+'">'+P.top+'</div>'
-      +'<div class="gd-sec"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일 · Clarity</small></h4><div class="ma-guide-tip is-in is-none gd-cv">'+guideCv(g)+'</div></div>'
-      +'<div class="gd-sec"><h4>영상</h4>'+gdVideoHtml(g)+'</div>'
-      +(P.act?'<div class="ma-guide-tip is-in is-'+g.k+'">'+P.act+'</div>':'');
+    const cur=acc().currency, md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
+    const chg=(a1,b1)=>a1==null||b1==null||!b1?null:(a1-b1)/b1*100, sg=v=>v==null?'':'<em class="'+(v>=0?'up':'dn')+'">'+(v>=0?'▲':'▼')+Math.abs(Math.round(v))+'%</em>';
+    const be=g.run?g.be:GUIDE.roas, ok=(c)=>c==null?'':c?' ok':' no';
+    const kpi=(l,v,cls,sub)=>'<div class="gd-k'+cls+'"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></div>';
+    const has=g.sp>0&&g.imp>0;
+    const note={wait:'게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.',none:'이 기간에 광고비·노출이 없습니다.',low:'광고비 '+money(g.sp,cur)+' · '+money(GUIDE.minSp,cur)+' 이상 써야 판정합니다. 아래 숫자는 참고만 하세요.'}[g.k];
+    const G=guideHtml(g), act=typeof G==='object'?G.act:'';
+    gdBox.querySelector('.gd-left').innerHTML=
+      (note?'<p class="gd-note is-'+g.k+'">'+note+'</p>':'')
+      +(has?'<div class="gd-kpis">'
+        +kpi('ROAS',gdPct(g.roas,0),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.rOk:null),(g.run?'손익분기 '+Math.round(be)+'%':'기준 '+GUIDE.roas+'%')+(g.run?' '+sg(chg(g.roas,g.pRoas)):''))
+        +kpi('클릭률',gdPct(g.ctr,2),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.cOk:null),'기준 '+GUIDE.ctr+'%'+(g.run?' '+sg(chg(g.ctr,g.pCtr)):''))
+        +kpi('광고비',money(g.sp,cur),'',int(g.imp)+' 노출')
+        +kpi('구매',int(g.buy)+'건','',g.buy?'CPA '+money(g.sp/g.buy,cur):'-')+'</div>':'')
+      +'<div class="gd-two"><section class="gd-card"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일</small></h4>'+gdPageHtml(g)+'</section>'
+      +'<section class="gd-card"><h4>영상 <small>최근 60일</small></h4>'+gdVideoHtml(g)+'</section></div>'
+      +(act?'<section class="gd-card gd-act is-'+g.k+'">'+act.replace('<div class="act"><h5>행동지침</h5>','<h4>행동지침</h4>').replace(/<\/div>$/,'')+'</section>':'');
     gdPaintAi();
   }
   function gdPaintAi(){
     if(!gdBox||gdBox.hidden) return;
     const g=shownGuide[gdCur]; if(!g) return;
-    gdBox.querySelector('.gd-right').innerHTML='<h4 class="gd-ai-h">바로얌AI 판단</h4>'+gdAiHtml(g);
+    gdBox.querySelector('.gd-right').innerHTML='<h4 class="gd-ai-h"><span class="gd-ai-badge">AI</span>바로얌AI 판단</h4>'+gdAiHtml(g);
+    clearTimeout(gdTick);
+    if(AI_RES[gdCur]&&AI_RES[gdCur].state==='wait') gdTick=setTimeout(gdPaintAi,1000);
   }
   function guideOpen(id){
     const g=shownGuide[id]; if(!g) return;
     if(!gdBox){
       gdBox=document.createElement('div'); gdBox.className='settings-overlay gd-ov'; gdBox.hidden=true;
-      gdBox.innerHTML='<div class="settings-panel gd-dlg" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head"><div class="gd-hd"><span class="ma-guide gd-pill"></span><div><h2 id="gdT"></h2><p class="gd-sub"></p></div></div>'
-        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="gd-body"><div class="gd-left"></div><div class="gd-right"></div></div></div>';
+      gdBox.innerHTML='<div class="settings-panel gd-dlg" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><p class="gd-sub"><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span></p></div></div>'
+        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="gd-body"><div class="gd-left"></div><aside class="gd-right"></aside></div></div>';
       document.body.appendChild(gdBox);
+      const shut=()=>{ gdBox.hidden=true; clearTimeout(gdTick); };
       gdBox.addEventListener('click',e=>{
-        if(e.target===gdBox||e.target.closest('.settings-close')){ gdBox.hidden=true; return; }
+        if(e.target===gdBox||e.target.closest('.settings-close')) return shut();
         if(e.target.closest('[data-gd-ai]')) gdAsk();
       });
-      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&gdBox&&!gdBox.hidden){ e.stopPropagation(); gdBox.hidden=true; } },true);
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&gdBox&&!gdBox.hidden){ e.stopPropagation(); shut(); } },true);
     }
     gdCur=id;
-    const pill=gdBox.querySelector('.gd-pill'); pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k];
+    const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
+    gdBox.querySelector('.gd-lv').textContent=LVN[g.lv]||'';
+    gdBox.querySelector('.gd-lv').className='gd-lv lv-'+g.lv;
     gdBox.querySelector('#gdT').textContent=g.nm||'';
-    gdBox.querySelector('.gd-sub').textContent={campaign:'캠페인',adset:'광고 세트',asset:'소재'}[g.lv]+' · '+(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'');
-    gdBox.hidden=false; gdPaint();
+    const pill=gdBox.querySelector('.gd-pill'); pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k];
+    gdBox.querySelector('.gd-sub-t').textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'')+' · '+md(g.from)+'~'+md(g.to)+(g.run?' 평일 '+g.w+'일':' '+g.w+'일');
+    gdBox.hidden=false; gdBox.querySelector('.gd-left').scrollTop=0; gdPaint();
     if(!AI_RES[id]&&g.k!=='none') gdAsk();
   }
   $('maTable').addEventListener('mouseover',e=>{ const el=e.target.closest('[data-guide]'); if(el) guideShow(el); });
