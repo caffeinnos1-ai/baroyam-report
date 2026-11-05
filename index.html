@@ -3158,6 +3158,12 @@ window.BAROYAM_FONT=(function(){
   .gd-ai-v{font-size:16px;font-weight:600;color:var(--btn-soft-ink)}
   .gd-ai h5{margin-top:6px}
   .gd-ai ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+  .gd-pr{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .gd-pr li{display:flex;gap:8px;align-items:baseline}
+  .gd-pr i{flex:none;font-style:normal;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:99px;color:var(--neg);background:var(--neg-soft)}
+  .gd-by{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0}
+  .gd-by dt{font-size:12px;font-weight:600;color:var(--mute);padding-top:1px}
+  .gd-by dd{margin:0}
   .gd-ai ol b{font-weight:600}
   .gd-ai ol small{display:block;color:var(--body);font-size:12px}
   .gd-ai-wait{display:flex;align-items:center;gap:10px;padding:18px;color:var(--body)}
@@ -22360,7 +22366,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* ---------- 행동지침 분석 창(11-05 사용자 요청 · 판단할 것이 많아 작은 도우미 대신 탭 창) ----------
      알약을 누르면 열린다 · 탭: 행동지침(판정·지침 + 상세페이지 + 영상 후킹률·유지율·쓰루플레이율 · 한 화면) · 바로얌AI 판단 · 구매자(연령×성별·게재지면·시간대)는 바로얌AI 에만 보낸다 ·
      영상·구매자는 서버가 광고마다 쪼개 둔 최근 60일 값(a.bd), 행동지침·상세페이지는 판정과 같은 기간 ·
-     바로얌AI 판단은 이 숫자를 모아 대본 서비스(content_writer.js kind:'adjudge' · 지침 prompts/광고판단.md)에 보내 결론·구매자 시사점·할 일을 받는다(약 30초 · 저장 안 함) */
+     바로얌AI 판단은 이 숫자를 모아 대본 서비스(content_writer.js kind:'adjudge' · 지침 prompts/광고판단.md)에 보내 결론·문제 자리·구매자(누가·언제·어디서) 판단을 받는다(할 일은 쓰지 않음 · 약 30초 · 저장 안 함) */
   const VID_STD={hook:[30,25],hold:[28,18],thru:[8,5]};   /* 사용자 11-05 · [합격 이상, 개선 이상] · 그 아래 위험 */
   const GD_GT={pass:'합격',watch:'개선',risk:'위험'};
   let gdBox=null, gdCur=null;
@@ -22418,13 +22424,16 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function gdAiHtml(g){
     const A=AI_RES[gdCur];
     const btn='<button type="button" class="ui-btn primary sm" data-gd-ai>'+(A&&A.state==='done'?'다시 판단 받기':'바로얌AI 판단 받기')+'</button>';
-    if(!A) return '<p class="gd-per">이 줄의 숫자(성과·흐름·영상·상세페이지·구매자·타깃)를 모두 모아 바로얌AI 가 오늘 할 일을 정해 줍니다. 30초쯤 걸립니다.</p>'+btn;
+    if(!A) return '<p class="gd-per">이 줄의 숫자(성과·흐름·영상·상세페이지·구매자·타깃)를 모두 모아 바로얌AI 가 어디가 문제인지와 구매자(누가·언제·어디서)를 판단합니다. 30초쯤 걸립니다.</p>'+btn;
     if(A.state==='wait') return '<div class="gd-ai-wait"><span class="mw-spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg></span><div>'+esc(A.msg||'판단 중')+'<small>왼쪽 숫자를 모두 읽고 글로 정리합니다 · 30초쯤</small></div></div>';
     if(A.state==='failed') return '<p class="gd-err">'+esc(A.msg)+'</p>'+btn;
     const R=A.res;
+    /* 11-05 사용자 요청 · 할 일은 쓰지 않고 어디가 문제인지 + 구매자(누가·언제·어디서) 판단만 */
+    const B=R.buyer&&typeof R.buyer==='object'?R.buyer:{who:R.buyer||''};
+    const pr=R.problems||[];
     return '<div class="gd-ai"><p class="gd-ai-v">'+esc(R.verdict)+'</p><p>'+esc(R.summary)+'</p>'
-      +'<h5>할 일</h5><ol>'+(R.actions||[]).map(x=>'<li><b>'+esc(x.do)+'</b><small>'+esc(x.why)+'</small></li>').join('')+'</ol>'
-      +'<h5>구매자</h5><p>'+esc(R.buyer)+'</p>'+(R.watch?'<h5>다음에 볼 것</h5><p>'+esc(R.watch)+'</p>':'')+'</div>'
+      +'<h5>문제 자리</h5>'+(pr.length?'<ul class="gd-pr">'+pr.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul>':'<p>뚜렷한 문제가 없습니다.</p>')
+      +'<h5>구매자</h5><dl class="gd-by">'+[['누가',B.who],['언제',B.when],['어디서',B.where]].filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl></div>'
       +'<p class="gd-per">바로얌AI 판단은 참고용입니다 · 숫자는 '+new Date(A.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 기준</p>'+btn;
   }
   async function gdAsk(){
