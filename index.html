@@ -6800,8 +6800,39 @@ window.BAROYAM_FONT=(function(){
   .acc-view{padding-top:0}   /* 11-06 · 판매채널처럼 흰 판 넓게(view-is-profit) + 배너 */
   /* 11-06 사용자 요청으로 구역·계정 목록·구역 관리·로고 설정을 화면에서 숨김(새로 개편 예정 · 저장값은 그대로) */
   #view-account :is(.acc-bar,.acc-grid,#accGroups,#accSet,#accSetBtn){display:none!important}
-  .acc-empty{margin-top:22px;padding:72px 20px;border:1px dashed var(--line);border-radius:16px;
-    text-align:center;font-size:13.5px;color:var(--mute)}
+  /* 11-06 · 계정관리 퀵링크 · 모두가 누르고 들어가는 바로가기 타일 */
+  .al{margin-top:22px}
+  .al-bar{display:flex;align-items:center;gap:10px}
+  .al-q{width:260px;max-width:100%}
+  .al-meta{font-size:12.5px;color:var(--mute);margin-right:auto}
+  .al-meta.err{color:var(--neg)}
+  .al-form{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--paper);
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .al-form[hidden]{display:none}
+  .al-form b{font-size:13.5px;font-weight:600;color:var(--ink);margin-right:6px}
+  .al-form .ui-field{width:180px}
+  .al-form .al-url{flex:1;min-width:220px}
+  .al-msg{font-size:12.5px;color:var(--neg);margin-left:auto}
+  .al-sec{margin-top:24px}
+  .al-sec h3{margin:0 0 10px;font-size:13.5px;font-weight:600;color:var(--body);display:flex;gap:6px;align-items:baseline}
+  .al-sec h3 small{font-size:12px;font-weight:500;color:var(--mute)}
+  .al-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .al-tile{position:relative;display:flex;align-items:center;gap:12px;padding:14px 40px 14px 14px;border:1px solid var(--line);
+    border-radius:14px;background:var(--paper);color:var(--ink);text-decoration:none;transition:border-color .15s,transform .15s}
+  .al-tile:hover{border-color:var(--btn);transform:translateY(-1px)}
+  .al-logo{flex:none;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;
+    overflow:hidden;background:var(--paper);font-size:15px;font-weight:600;color:var(--btn-soft-ink)}
+  .al-logo img{width:24px;height:24px;object-fit:contain}
+  .al-logo.txt{background:var(--btn-soft)}
+  .al-tx{min-width:0;display:flex;flex-direction:column;gap:2px}
+  .al-tx b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .al-tx span{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .al-more{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;
+    display:grid;place-items:center;color:var(--mute);opacity:0;transition:opacity .15s}
+  .al-tile:hover .al-more,.al-more:focus-visible{opacity:1}
+  .al-more:hover{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .al-empty{margin-top:22px;padding:56px 20px;border:1px dashed var(--line);border-radius:16px;text-align:center;font-size:13.5px;color:var(--mute)}
+  @media (hover:none){ .al-more{opacity:1} }
   .acc-bar{display:flex;align-items:center;gap:10px;margin-top:18px}
   /* 들어가기 비밀번호 칸 */
   /* 화면 전체를 흐리게 덮고 가운데에 창을 띄운다 · 모양은 삭제 확인창(.ask)과 같은 결 */
@@ -12156,7 +12187,7 @@ window.BAROYAM_FONT=(function(){
           <div class="plan-hero">
             <div class="ptag">업무 도구</div>
             <div class="ptitle">계정관리</div>
-            <p class="psub">회사에서 쓰는 계정을 모아 둡니다</p>
+            <p class="psub">누구나 바로 들어가는 사이트 바로가기를 모아 둡니다</p>
             <!-- 설정 · 계정 추가/수정 칸에 띄울 로고만 고른다 -->
             <button type="button" class="ui-btn sm acc-hero-set" id="accSetBtn" aria-expanded="false" aria-controls="accSet">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
@@ -12243,9 +12274,29 @@ window.BAROYAM_FONT=(function(){
             </div>
           </form>
           <div class="acc-grid" id="accGrid"></div>
-          <!-- 11-06 사용자 요청으로 구역·계정 목록을 화면에서 뺐다(새로 개편 예정) · accounts_v1 저장값과 위 코드는 그대로 둔다 -->
-          <div class="acc-empty">새 계정관리 화면을 준비하고 있습니다</div>
           </div><!-- /accBody -->
+          <!-- 11-06 사용자 요청으로 구역·계정 목록과 들어가기 비밀번호를 뺐다 · 위 accBody·accLock 은 옛 코드가 찾는 자리라 숨긴 채 남기고,
+               옛 목록(accounts_v1 · 아이디·비밀번호가 든 칸)은 더 읽지 않는다 · 대신 모두가 쓰는 퀵링크(account_links_v1) -->
+          <div class="al" id="alRoot">
+            <div class="al-bar">
+              <input class="ui-field al-q" id="alQ" type="search" placeholder="링크 찾기" aria-label="링크 찾기" autocomplete="off">
+              <span class="al-meta" id="alMeta"></span>
+              <button type="button" class="ui-btn primary" id="alAdd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                링크 추가
+              </button>
+            </div>
+            <form class="al-form" id="alForm" hidden autocomplete="off">
+              <b id="alFormTitle">링크 추가</b>
+              <input class="ui-field" name="name" placeholder="이름 (예: 쿠팡 윙)" maxlength="40" required>
+              <input class="ui-field al-url" name="url" placeholder="주소 (예: wing.coupang.com)" maxlength="500" required>
+              <input class="ui-field" name="cat" placeholder="분류 (비우면 기타)" maxlength="20">
+              <span class="al-msg" id="alMsg" role="alert"></span>
+              <button type="button" class="ui-btn ghost" id="alCancel">취소</button>
+              <button type="submit" class="ui-btn primary">저장</button>
+            </form>
+            <div id="alGrid"></div>
+          </div>
         </section>
       </div><!-- /view-account -->
 
@@ -15884,7 +15935,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     document.getElementById('view-insta').style.display=v==='insta'?'':'none';
     document.getElementById('view-ops').style.display=v==='ops'?'':'none';
     document.getElementById('view-brand').style.display=v==='brand'?'':'none';
-    if(v==='account'&&window.baroyamAccountOpen) window.baroyamAccountOpen();
+    if(v==='account'&&window.baroyamAccLinksOpen) window.baroyamAccLinksOpen();   /* 11-06 · 비밀번호·옛 계정 목록 대신 퀵링크 */
     /* 드라이브 목록은 덩어리가 커서 이 화면을 열 때 한 번만 읽는다 */
     if(v==='drive'&&window.baroyamDriveOpen) window.baroyamDriveOpen();
     if(v==='brand'&&window.baroyamBrandOpen) window.baroyamBrandOpen();
@@ -32218,6 +32269,126 @@ window.baroyamAsk=function(title,body,okText){
   });
 
   window.baroyamAccountOpen=열기;
+})();
+</script>
+<script>
+/* ===== 계정관리 · 퀵링크 (11-06) =====
+   모두가 누르고 들어가는 사이트 바로가기 · 로그인한 회원 누구나 더하고 고친다(사용자 요청 · 비밀번호 잠금 없음).
+   app_settings 의 account_links_v1 = {items:{id:{name,url,cat,ord,at,by,del}}} · saveMerged 로 바꾼 링크 하나만 얹고,
+   지우기는 del 만 단다(되살릴 수 있게). 옛 계정 목록(accounts_v1)은 읽지 않는다. */
+(function(){
+  const KEY='account_links_v1';
+  const $=id=>document.getElementById(id);
+  if(!$('alRoot')) return;
+  /* 저장소 logos/ 에 받아 둔 브랜드 그림 · 도메인이 맞으면 이 그림을, 아니면 구글 파비콘 */
+  const LOGOS=[['naver','naver.com'],['google','google.com'],['11st','11st.co.kr'],['toss','toss.im'],['coupang','coupang.com'],
+    ['coupangeats','coupangeats.com'],['kakao','kakao.com'],['baemin','baemin.com'],['yogiyo','yogiyo.co.kr'],['gmarket','gmarket.co.kr'],
+    ['auction','auction.co.kr'],['ssg','ssg.com'],['lotteon','lotteon.com'],['ohou','ohou.se'],['musinsa','musinsa.com'],['cafe24','cafe24.com'],
+    ['meta','facebook.com'],['instagram','instagram.com'],['youtube','youtube.com'],['hometax','hometax.go.kr'],['github','github.com'],['notion','notion.so']];
+  let data=null, loading=false, editing='', q='';
+  const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const fullUrl=u=>{ u=String(u||'').trim(); if(!u) return ''; return /^https?:\/\//i.test(u)?u:'https://'+u; };
+  const host=u=>{ try{ return new URL(fullUrl(u)).hostname.replace(/^www\./,''); }catch(e){ return ''; } };
+  function logo(it){
+    const h=host(it.url);
+    const k=LOGOS.filter(l=>h===l[1]||h.endsWith('.'+l[1])).sort((a,b)=>b[1].length-a[1].length)[0];
+    if(k) return 'logos/'+k[0]+'.png';
+    return h?'https://www.google.com/s2/favicons?domain='+encodeURIComponent(h)+'&sz=64':'';
+  }
+  const meName=()=>{ try{ const m=window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const live=()=>Object.entries((data&&data.items)||{}).filter(([,v])=>v&&!v.del).map(([id,v])=>Object.assign({id},v));
+  function meta(t,err){ const m=$('alMeta'); m.textContent=t; m.classList.toggle('err',!!err); }
+
+  function paint(){
+    const grid=$('alGrid');
+    if(!data){ grid.innerHTML='<div class="al-empty">'+(loading?'링크를 읽는 중이에요':'링크를 읽지 못했어요 · 로그인 상태를 확인해 주세요')+'</div>'; meta(''); return; }
+    const all=live(), k=q.trim().toLowerCase();
+    const list=k?all.filter(x=>(x.name+' '+x.url+' '+(x.cat||'')).toLowerCase().includes(k)):all;
+    meta('링크 '+all.length+'개'+(k?' · 찾은 것 '+list.length+'개':''));
+    if(!all.length){ grid.innerHTML='<div class="al-empty">아직 링크가 없어요 · 오른쪽 위 <b>링크 추가</b>로 자주 가는 사이트를 넣어 주세요</div>'; return; }
+    if(!list.length){ grid.innerHTML='<div class="al-empty">찾는 링크가 없어요</div>'; return; }
+    /* 분류마다 묶는다 · 분류 순서는 그 분류에서 가장 앞 링크 순서 · 이름 없는 분류(기타)는 맨 뒤 */
+    const groups=new Map();
+    list.sort((a,b)=>(a.ord||0)-(b.ord||0)||String(a.name).localeCompare(String(b.name),'ko'))
+      .forEach(x=>{ const c=(x.cat||'').trim()||'기타'; if(!groups.has(c)) groups.set(c,[]); groups.get(c).push(x); });
+    const cats=[...groups.keys()].sort((a,b)=>(a==='기타')-(b==='기타'));
+    grid.innerHTML=cats.map(c=>'<section class="al-sec"><h3>'+esc(c)+' <small>'+groups.get(c).length+'</small></h3><div class="al-grid">'
+      +groups.get(c).map(x=>{
+        const src=logo(x), first=esc(String(x.name||'?').trim().charAt(0)||'?');
+        return '<a class="al-tile" href="'+esc(fullUrl(x.url))+'" target="_blank" rel="noopener" title="'+esc(fullUrl(x.url))+'">'
+          +(src?'<span class="al-logo"><img src="'+esc(src)+'" alt="" loading="lazy" data-first="'+first+'"></span>':'<span class="al-logo txt">'+first+'</span>')
+          +'<span class="al-tx"><b>'+esc(x.name)+'</b><span>'+esc(host(x.url)||x.url)+'</span></span>'
+          +'<button type="button" class="al-more" data-more="'+esc(x.id)+'" aria-label="'+esc(x.name)+' 고치기">'
+          +'<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></a>';
+      }).join('')+'</div></section>').join('');
+    /* 그림을 못 받으면 첫 글자로 */
+    grid.querySelectorAll('.al-logo img').forEach(img=>img.addEventListener('error',()=>{
+      const sp=img.parentNode; sp.classList.add('txt'); sp.textContent=img.dataset.first||'?';
+    },{once:true}));
+  }
+
+  async function load(){
+    const db=window.BAROYAM_DB;
+    if(!db||!db.loadSetting){ data=null; paint(); return; }
+    loading=true; paint();
+    try{
+      let v=await db.loadSetting(KEY,true);
+      if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      data=(v&&typeof v==='object'&&v.items)?v:{items:{}};
+    }catch(e){ /* 못 읽었으면 지난 것을 그대로 둔다 · 처음이면 '읽지 못했어요' */ }
+    loading=false; paint();
+  }
+  /* 링크 하나만 서버 최신본 위에 얹어 저장한다 */
+  async function save(id,patch){
+    const db=window.BAROYAM_DB;
+    const next=db&&db.saveMerged?await db.saveMerged(KEY,server=>{
+      let v=server; if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      v=(v&&typeof v==='object')?v:{}; v.items=v.items||{};
+      v.items[id]=Object.assign({},v.items[id]||{},patch,{at:new Date().toISOString(),by:meName()});
+      return v;
+    }):null;
+    if(!next){ meta('저장하지 못했어요 · 로그인 상태를 확인하고 다시 해 주세요',true); return false; }
+    data=next; paint(); return true;
+  }
+
+  const form=$('alForm');
+  function openForm(id){
+    editing=id||'';
+    const it=id?live().find(x=>x.id===id):null;
+    $('alFormTitle').textContent=it?'링크 고치기':'링크 추가';
+    form.name.value=it?it.name:''; form.url.value=it?it.url:''; form.cat.value=it?(it.cat||''):'';
+    $('alMsg').textContent=''; form.hidden=false; form.name.focus();
+  }
+  function closeForm(){ form.hidden=true; editing=''; }
+  $('alAdd').addEventListener('click',()=>{ if(form.hidden||editing) openForm(''); else closeForm(); });
+  $('alCancel').addEventListener('click',closeForm);
+  form.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); closeForm(); } });
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const name=form.name.value.trim(), url=form.url.value.trim(), cat=form.cat.value.trim();
+    if(!name){ form.name.focus(); return; }
+    if(!host(url)){ $('alMsg').textContent='주소를 확인해 주세요'; form.url.focus(); return; }
+    $('alMsg').textContent='저장하는 중…';
+    const id=editing||(Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    const patch={name,url,cat};
+    if(!editing) patch.ord=Math.max(0,...live().map(x=>x.ord||0))+1;
+    if(await save(id,patch)) closeForm(); else $('alMsg').textContent='저장하지 못했어요';
+  });
+  $('alQ').addEventListener('input',e=>{ q=e.target.value; paint(); });
+  $('alGrid').addEventListener('click',e=>{
+    const b=e.target.closest('[data-more]'); if(!b) return;
+    e.preventDefault(); e.stopPropagation();
+    const id=b.dataset.more, it=live().find(x=>x.id===id); if(!it) return;
+    const pick=v=>{
+      if(v==='edit') openForm(id);
+      else if(v==='del'&&confirm('"'+it.name+'" 링크를 지울까요?')) save(id,{del:true});
+    };
+    if(window.UI&&UI.menu) UI.menu(b,[{value:'edit',label:'고치기'},{value:'del',label:'지우기'}],'',pick);
+    else pick('edit');
+  });
+
+  /* 계정관리를 열 때마다 서버본을 다시 읽는다(다른 회원이 더한 링크) */
+  window.baroyamAccLinksOpen=function(){ load(); };
 })();
 </script>
 <script>
