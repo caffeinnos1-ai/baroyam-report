@@ -26681,10 +26681,24 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      보기만 넓히고, 남의 프로젝트를 고치는 권한(canManageProject·담당자 고르기)은 팀장만 그대로 */
   const PJ_SEE_ALL=['회의용'];
   function canSeeAllProjects(){ return isProjectLead()||PJ_SEE_ALL.includes(myName()); }
-  function projectOwner(requested){ return isProjectLead()?String(requested||''):myName(); }
+  /* 회의용 프로젝트 · 11-06 사용자 요청 · 일반 회원도 담당자를 (나)/(회의용) 중에 고른다 ·
+     회의용 프로젝트는 모든 회원이 보고 고치며, 경로는 늘 '공지'로 고정된다 ·
+     팀장·회의용이 아닌 회원의 내 프로젝트는 경로를 고를 수 없다(새 프로젝트는 '업무') */
+  const PJ_MEETING='회의용';
+  const isMeetingOwner=o=>o===PJ_MEETING;
+  function pjNoticeKey(){
+    const c=pjChannels().find(x=>x.k==='공지'||chLabel(x.k)==='공지');
+    return c?c.k:'공지';
+  }
+  /* 경로를 직접 고를 수 있는가 · 팀장만(회의용 담당은 팀장도 공지로 고정) */
+  const canPickChannel=owner=>isProjectLead()&&!isMeetingOwner(owner);
+  function projectOwner(requested){
+    if(isProjectLead()) return String(requested||'');
+    return isMeetingOwner(requested)?PJ_MEETING:myName();
+  }
   function canManageProject(p){
     const mine=myName();
-    return isProjectLead()||!!(mine&&(!p||p.owner===mine));
+    return isProjectLead()||!!(mine&&(!p||p.owner===mine||isMeetingOwner(p.owner)));
   }
   function myProjects(){
     const n=myName();
@@ -26774,14 +26788,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const guarded=[];
     state.projects.forEach(p=>{
       const old=before.get(p.id);
-      if(old&&old.owner!==mine) guarded.push(old);
-      else if(mine) guarded.push(Object.assign(p,{owner:mine}));
+      if(old&&old.owner!==mine&&!isMeetingOwner(old.owner)) guarded.push(old);
+      else if(mine) guarded.push(Object.assign(p,{owner:isMeetingOwner(p.owner)?PJ_MEETING:mine}));
       else if(old) guarded.push(old);          /* 회원을 안 골랐어도 있던 프로젝트는 빼지 않는다 */
     });
     /* 다른 사람 프로젝트를 배열에서 지우는 우회도 저장되지 않게 원래 자리에 되살린다 */
     const present=new Set(guarded.map(p=>p.id));
     previous.forEach((p,i)=>{
-      if(p.owner===mine||present.has(p.id)) return;
+      if(p.owner===mine||isMeetingOwner(p.owner)||present.has(p.id)) return;
       guarded.splice(Math.min(i,guarded.length),0,p);
       present.add(p.id);
     });
@@ -27632,7 +27646,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       urgent:fd.get('urgent')==='긴급',
       /* 일반 회원은 개발자 도구로 숨은 값을 바꿔도 저장 직전에 다시 본인으로 고정한다 */
       owner:projectOwner(fd.get('owner')),
-      channel:String(fd.get('channel')||''),
+      channel:isMeetingOwner(projectOwner(fd.get('owner')))?pjNoticeKey():String(fd.get('channel')||''),
       start:fd.get('start')==null?(editingProject.start||''):String(fd.get('start')),
       due:String(fd.get('due')||''),
       memo:String(fd.get('memo')||''),
@@ -27841,8 +27855,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
 
   /* 담당자·경로 고르기 한 벌 · 고른 값은 숨은 칸(name=...)에 담기므로 저장 코드는 그대로다 */
+  /* 고르기 칸에 보이는 글 · 경로는 이름표, 일반 회원의 담당자 목록에서는 본인 뒤에 (나) */
+  function pjPickLabel(name,v){
+    if(name==='channel') return chLabel(v);
+    if(!v) return '없음';
+    return name==='owner'&&!isProjectLead()&&v===myName()?v+' (나)':v;
+  }
   function pickList(name,list,cur,allowEmpty){
-    const lb=v=>name==='channel'?chLabel(v):v;
+    const lb=v=>pjPickLabel(name,v);
     const rows=(allowEmpty===false?[]:[{v:'',t:name==='channel'?PJ_PERSONAL:'없음'}]).concat(list.map(v=>({v:v,t:lb(v)})));
     return `<span class="pjf-pick" data-pick="${name}">
       <input type="hidden" name="${name}" value="${esc(cur||'')}">
@@ -27857,12 +27877,30 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       </div>
     </span>`;
   }
+  /* 경로 칸 · 팀장은 고르고, 그 밖에는 담당자에 따라 고정(회의용 → 공지, 내 프로젝트 → 지금 값 · 새 프로젝트는 업무) */
+  function pjChannelField(owner,cur){
+    if(canPickChannel(owner)) return pickList('channel',pjChannels().map(c=>c.k),cur);
+    const v=isMeetingOwner(owner)?pjNoticeKey():(cur||'');
+    return `<span class="pjf-owner-fixed" aria-label="경로 ${esc(chLabel(v))} · 고정">
+        <input type="hidden" name="channel" value="${esc(v)}">
+        <i class="pjf-dot" data-dot="channel" style="background:${pjPickColor('channel',v)}"></i>
+        <span class="pjf-sel-t">${esc(chLabel(v))}</span>
+      </span>`;
+  }
+  /* 담당자를 바꾸면 경로 칸을 다시 그린다 · 회의용 → 공지 · 일반 회원이 회의용에서 (나)로 돌아오면 업무 */
+  function pjOwnerChanged(owner){
+    const row=form.querySelector('[data-chrow]');
+    if(!row) return;
+    const curCh=(form.querySelector('input[name=channel]')||{}).value||'';
+    const next=isMeetingOwner(owner)?pjNoticeKey():(curCh===pjNoticeKey()&&!isProjectLead()?'':curCh);
+    row.innerHTML=pjChannelField(owner,next);
+  }
   /* 고르기 목록의 값을 코드에서 바꾼다 · 보이는 글자·점 색·고른 표시까지 같이 맞춘다 */
   function pjSetPick(name,v){
     const wrap=form.querySelector('.pjf-pick[data-pick="'+name+'"]');
     if(!wrap) return;
     wrap.querySelector('input[type=hidden]').value=v;
-    wrap.querySelector('.pjf-sel-t').textContent=name==='channel'?chLabel(v):(v||'없음');
+    wrap.querySelector('.pjf-sel-t').textContent=pjPickLabel(name,v);
     wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o.dataset.v===v));
     if(name==='status') pjDdayRefresh();
@@ -27933,7 +27971,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!opt){ closePickMenus(null); closeDateCals(null); return; }
     const wrap=opt.closest('.pjf-pick'), name=wrap.dataset.pick, v=opt.dataset.v;
     wrap.querySelector('input[type=hidden]').value=v;
-    wrap.querySelector('.pjf-sel-t').textContent=name==='channel'?chLabel(v):(v||'없음');
+    wrap.querySelector('.pjf-sel-t').textContent=pjPickLabel(name,v);
     wrap.querySelector('[data-dot]').style.background=pjPickColor(name,v);
     wrap.querySelectorAll('.pjf-opt').forEach(o=>o.classList.toggle('is-on',o===opt));
     wrap.querySelector('.pjf-menu').hidden=true;
@@ -27943,6 +27981,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(r){ r.value=100; const o=form.querySelector('output'); if(o) o.textContent='100%'; }
     }
     if(name==='status') pjDdayRefresh();
+    if(name==='owner') pjOwnerChanged(v);
     flushProjectSave();
   });
 
@@ -28171,8 +28210,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const members=readMembers().map(m=>m.name);
     if(cur.owner&&!members.includes(cur.owner)) members.push(cur.owner);
     const fixedOwner=myName();
+    if(isMeetingOwner(cur.owner)&&cur.channel!==pjNoticeKey()) cur.channel=pjNoticeKey();
     const ownerField=isProjectLead()
       ?pickList('owner',members,cur.owner)
+      :!isMeetingOwner(fixedOwner)&&fixedOwner
+      ?pickList('owner',[fixedOwner,PJ_MEETING],cur.owner||fixedOwner,false)
       :`<span class="pjf-owner-fixed" aria-label="담당자 ${esc(fixedOwner)}">
           <input type="hidden" name="owner" value="${esc(fixedOwner)}">
           <i class="pjf-dot" data-dot="owner" style="background:${pjPickColor('owner',fixedOwner)}"></i>
@@ -28213,8 +28255,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
              </div>
            </div>
            <div class="pjf-row"><span class="pjf-rl">경로</span>
-             <div class="pjf-rc">
-               ${pickList('channel',pjChannels().map(c=>c.k),cur.channel)}
+             <div class="pjf-rc" data-chrow>
+               ${pjChannelField(cur.owner,cur.channel)}
              </div>
            </div>
            <div class="pjf-row"><span class="pjf-rl">상태</span>
@@ -28300,7 +28342,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      칩 숫자는 '그 줄을 고르기 전' 기준이라 한 줄의 칩 숫자 합이 그 줄의 '전체'와 같아진다 */
   function pjMatch(p,skip){
     /* 일반 회원의 회원 필터는 선택지가 아니라 본인으로 고정된다 */
-    if(!canSeeAllProjects()&&myName()&&p.owner!==myName()) return false;
+    if(!canSeeAllProjects()&&myName()&&p.owner!==myName()&&!isMeetingOwner(p.owner)) return false;
     if(skip!=='status'&&pf.status.size&&!pf.status.has(p.status||'')) return false;
     if(skip!=='owner'&&pf.owner.size&&!pf.owner.has(p.owner||'')) return false;
     if(skip!=='channel'&&pf.channel.size&&!pf.channel.has(p.channel||'')) return false;
@@ -28330,7 +28372,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(k==='status') STATUSES.forEach(s=>push(s.k,s.c,true));
     else if(k==='channel'){ pjChannels().forEach(c=>push(c.k,c.c,true)); }   /* 자사몰·톡딜 등은 0건이어도 늘 고를 수 있게 둔다 */
     else if(canSeeAllProjects()) readMembers().forEach(m=>push(m.name,m.color||'#6b7280',true));   /* 팀장은 등록된 회원 전체를 고른다 */
-    else if(myName()) push(myName(),memberColor(myName()),true);
+    else if(myName()){ push(myName(),memberColor(myName()),true); push(PJ_MEETING,memberColor(PJ_MEETING),true); }
     state.projects.forEach(p=>{ const v=p[k]||''; if(v) push(v,k==='owner'?memberColor(v):'#9ca3af'); });
     if(state.projects.some(p=>!(p[k]||''))) push('','#c3c7cc');   /* 값이 비어 있는 프로젝트가 있으면 '미지정'도 고를 수 있게 */
     return out;
@@ -28353,7 +28395,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(!host) return;
     host.innerHTML=FACETS.map(f=>{
       const base=state.projects.filter(p=>pjMatch(p,f.k)), sel=pf[f.k];
-      if(f.k==='owner'&&!canSeeAllProjects()){
+      if(f.k==='owner'&&!canSeeAllProjects()&&!myName()){
         const mine=myName(), n=state.projects.filter(p=>pjMatch(p,'owner')&&p.owner===mine).length;
         return `<div class="pj-facet-row" data-facet="owner">
           <span class="pj-facet-cap">회원</span>
@@ -28797,7 +28839,6 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     $('pjFacets').addEventListener('click',e=>{
       const chip=e.target.closest('.pj-chip');
       if(!chip) return;
-      if(chip.dataset.facet==='owner'&&!canSeeAllProjects()) return;
       const set=pf[chip.dataset.facet];
       if(!set) return;
       if(chip.dataset.all) set.clear();
@@ -29396,7 +29437,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const CH_ST_KEY='baroyam_ch_status';
   const chSt=new Set();
   try{ (JSON.parse(localStorage.getItem(CH_ST_KEY)||'[]')||[]).forEach(k=>{ if(STATUS_KEYS.includes(k)) chSt.add(k); }); }catch(e){}
-  const chSeen=p=>(p.channel||'')===chActive&&(canSeeAllProjects()||!myName()||p.owner===myName());
+  const chSeen=p=>(p.channel||'')===chActive&&(canSeeAllProjects()||!myName()||p.owner===myName()||isMeetingOwner(p.owner));
   function paintChStatus(){
     const box=$('chStatus'); if(!box) return;
     const mine=state.projects.filter(chSeen), n={};
