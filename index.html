@@ -1390,7 +1390,7 @@ window.BAROYAM_ACCESS=(function(){
    화면을 가리는 수준의 잠금이다(서버는 로그인 여부만 본다) */
 window.BAROYAM_EDIT_ACCESS=(function(){
   const KEY='editAccess', LS='baroyam_edit_access_v1';
-  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'마진관리 수정',menu:'profit'},{k:'meta',name:'메타광고 켜기·끄기',menu:'perf'}];
+  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'마진관리 수정',menu:'profit'},{k:'meta',name:'메타광고 관리(켜기·끄기·예산·등록)',menu:'perf'}];
   let map={};
   try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&o.map&&typeof o.map==='object') map=o.map; }catch(e){}
   const pending={};   /* 서버에 아직 못 올린 회원별 값 · 서버본을 받아도 이 값이 이긴다 */
@@ -21170,7 +21170,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     perfTabs.forEach(b=>{ const on=b.dataset.perf===pt; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     const b=perfTabs.find(x=>x.dataset.perf===pt);
     $('perfViewTitle').textContent=b?b.textContent.trim():''; $('perfViewSub').textContent=b?b.dataset.sub||'':'';
-    $('maUpBtn').hidden=!((data&&data.accounts)||[]).some(x=>x.manage);   /* 켜고 끌 수 있는 계정(manage)이 있을 때만 */
+    let maEd=false; try{ maEd=window.BAROYAM_EDIT_ACCESS.can('meta'); }catch(e){}
+    $('maUpBtn').hidden=!(maEd&&((data&&data.accounts)||[]).some(x=>x.manage));   /* 켜고 끌 수 있는 계정(manage) + 메타광고 관리 권한(11-06 · 팀장 포함)일 때만 */
     root.querySelector('[data-ma-pane="daily"]').dataset.on=tab==='daily'?'1':'';
     root.querySelector('[data-ma-pane="level"]').dataset.on=tab!=='daily'?'1':'';
     root.querySelector('[data-ma-pane="list"]').dataset.on=tab!=='daily'?'1':'';
@@ -21681,7 +21682,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       return {ok:false,msg:'보내지 못했습니다: '+(e&&e.message||e)};
     }
   }
-  /* 예산 바꾸기(10-29 사용자 요청 · 팀장만) · 정밀성과 캠페인·광고 세트 목록의 일예산 칸을 누르면 뜬다 ·
+  /* 예산 바꾸기(10-29 사용자 요청 · 팀장만 → 11-06 메타광고 관리 권한) · 정밀성과 캠페인·광고 세트 목록의 일예산 칸을 누르면 뜬다 ·
      하루 예산이 그 줄 자신에게 있을 때만(CBO 캠페인은 캠페인 줄, 세트 예산은 세트 줄 · 총예산은 메타 광고관리자에서) ·
      켜기·끄기와 같은 확인(체크 + 같은 비밀번호)과 같은 길(brand-files metaads/gv/req · kind:'budget')로 보내고,
      VPS 가 메타의 지금 값이 화면과 같은지 본 뒤 바꾼다 · 10-30 사용자 요청으로 학습이 흔들리지 않게 -20% · -10% · +10% · +20% 단추만(금액 직접 입력 없음 · VPS 도 ±20% 넘으면 거절) */
@@ -21708,7 +21709,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const today=new Date(Date.now()+9*3600e3).toISOString().slice(0,10), d=k.toISOString().slice(0,10);
     if(short) return (d===today?'오늘 ':'')+hh;
     return (k.getUTCMonth()+1)+'.'+k.getUTCDate()+'('+'일월화수목금토'[k.getUTCDay()]+') '+hh; }
-  function budCan(){ try{ const a=acc(); return !!(a&&a.manage)&&!!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; } }
+  /* 11-06 사용자 요청 · 예산 바꾸기도 켜기·끄기와 같은 권한(팀장 + 권한설정 메타광고 관리) */
+  function budCan(){ return gvCan(); }
   function budAsk(lv,id,name){
     const a=acc(); if(!a||!budCan()) return;
     const x=(lv==='campaign'?a.campaigns:a.adsets||[]).find(y=>y.id===id);
@@ -22188,6 +22190,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     mwRender();
   }
   function mwOpen(){
+    try{ if(!window.BAROYAM_EDIT_ACCESS.can('meta')) return; }catch(e){ return; }
     if(!mwBox){
       mwBox=document.createElement('div');
       mwBox.className='settings-overlay mw-ov'; mwBox.hidden=true;
