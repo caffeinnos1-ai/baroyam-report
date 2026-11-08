@@ -2321,6 +2321,7 @@ window.BAROYAM_FONT=(function(){
   #view-week .vcol:hover{background:color-mix(in srgb,var(--bg) 75%,transparent)}
   #view-week .vtot{font-size:12.5px;font-weight:600;color:var(--body)}
   #view-week .vcol:last-child .vtot{color:var(--ink);font-weight:600}
+  #view-week .vcol.vwait .vtot{color:var(--mute);font-weight:400;font-size:11.5px}
   #view-week .vbar{flex:none;max-width:44px;transform-origin:bottom;animation:mGrowY .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 45ms)}
   #view-week .vbar .seg-new{background:linear-gradient(180deg,var(--ca),var(--cb))}
   #view-week .vbar .seg-re{background:var(--cl);border-top:2px solid var(--paper)}
@@ -12992,10 +12993,14 @@ function renderReport(data){
   ringDonut('donut','donutList',data.siteAdParts.map((n,i)=>({name:n,key:mediaKey(n),v:data.siteAdCurr[i]||0,color:dColors[i],amt:eokCheon(data.siteAdCurr[i]||0)+'원'})),220);
 
   /* 4. 방문자 stacked bars */
+  const visFilled=data.visMonths.filter((m,i)=>data.visTotal[i]>0);
+  const visLast=visFilled[visFilled.length-1]||data.visMonths[data.visMonths.length-1];
+  const visWait=data.visMonths.filter((m,i)=>!(data.visTotal[i]>0));
   document.getElementById('visSsub').textContent=`${data.visMonths[0]} – ${data.visMonths[data.visMonths.length-1]}`;
-  document.getElementById('visUnit').textContent=`단위: 명 · 총방문 = 신규 + 재방문 · ${data.visMonths[data.visMonths.length-1]}까지 반영`;
+  document.getElementById('visUnit').textContent=`단위: 명 · 총방문 = 신규 + 재방문 · ${visLast}까지 반영`+(visWait.length?` · ${visWait.join('·')}은 시트 입력 전`:'');
   const vMax=Math.max(...data.visTotal)||1;
   document.getElementById('vbars').innerHTML=data.visMonths.map((m,i)=>{
+    if(!(data.visTotal[i]>0)) return `<div class="vcol vwait" title="${m} · 시트 '공식몰 회원'에 아직 입력되지 않았습니다"><div class="vtot">입력 전</div><div class="vbar" style="height:0"></div></div>`;
     const totH=data.visTotal[i]/vMax*100;
     const newH=data.visTotal[i]?data.visNew[i]/data.visTotal[i]*100:0;
     return `<div class="vcol ch-self" title="${m} · 총 ${cnt(data.visTotal[i])}명 (신규 ${cnt(data.visNew[i]||0)} · 재방문 ${cnt(data.visTotal[i]-(data.visNew[i]||0))})"><div class="vtot num">${cnt(data.visTotal[i])}</div>
@@ -13006,7 +13011,8 @@ function renderReport(data){
   document.getElementById('vx').innerHTML=data.visMonths.map(m=>`<span>${m}</span>`).join('');
 
   /* 4b. 회원수 라인 */
-  document.getElementById('memberLine').innerHTML=lineChart(data.members,data.visMonths,cnt);
+  { const mi=data.members.map((v,i)=>i).filter(i=>data.members[i]>0);
+    document.getElementById('memberLine').innerHTML=lineChart(mi.map(i=>data.members[i]),mi.map(i=>data.visMonths[i]),cnt); }
 
   /* insights */
   const naverRoasCurr=roasPct(data.adCurr['네이버'].rev,data.adCurr['네이버'].cost);
@@ -13029,7 +13035,7 @@ function renderReport(data){
   /* footnote */
   document.getElementById('foot').innerHTML=
     `<b>산식</b> · ROAS = 광고매출 ÷ 광고비 × 100 (정수 %) · 달성률 = ${data.currMonthNum}/${data.currDay} 누적매출 ÷ ${data.prevLabel} 전체매출 × 100 · 월말 추정 = ${data.currMonthNum}/${data.currDay} 누적 ÷ ${data.currDay} × ${data.daysInCurrMonth}<br>`+
-    `<b>주석</b> · ${data.currLabel} 수치는 모두 <b>${data.currMonthNum}월 1일~${data.currDay}일 누적</b> 기준이며 진행 중 잠정치입니다. ROAS는 표시된 광고비·광고매출 기준으로 계산했습니다. 방문자·회원수는 ${data.visMonths[data.visMonths.length-1]}까지 반영했습니다. 금액 단위: 원. 출처: 바로얌 매출 보고서 구글시트.`;
+    `<b>주석</b> · ${data.currLabel} 수치는 모두 <b>${data.currMonthNum}월 1일~${data.currDay}일 누적</b> 기준이며 진행 중 잠정치입니다. ROAS는 표시된 광고비·광고매출 기준으로 계산했습니다. 방문자·회원수는 ${visLast}까지 반영했습니다. 금액 단위: 원. 출처: 바로얌 매출 보고서 구글시트.`;
 
   /* ===== 월간데이터 탭 ===== */
   /* 월간 성과보고서는 끝난 달만 다룬다 · 이번달이 진행 중이면(10월 중이면) 10월은 빼고 8월 vs 9월을 비교한다 ·
@@ -13467,16 +13473,25 @@ function cellStr(cell){
   return typeof cell.f==='string'?cell.f.trim():'';
 }
 
+/* 시트의 달 이름표 · "10월"(마감된 달) 또는 진행 중인 달 "9월 1일~4일" · "9월 4일" · "2026. 11.1~6" · "11.1~6" · "11/1~6" ·
+   진행 중인 달은 "그 달 1일부터 적힌 끝 날까지 누적"으로 읽는다(11-09 사용자 요청 · 시트에 적힌 날까지만 가져옴) ·
+   달 이름표가 아니면 null */
+function sheetMonthLabel(label){
+  const t=String(label||'').trim().replace(/^20\d{2}\s*(?:년|[.\/\-])\s*/,'');
+  let m=t.match(/^(\d{1,2})월$/);
+  if(m&&+m[1]>=1&&+m[1]<=12) return {monthNum:+m[1],day:null};
+  m=t.match(/^(\d{1,2})월\s*(?:\d{1,2}일?\s*[~\-–]\s*)?(\d{1,2})일?$/)
+    ||t.match(/^(\d{1,2})\s*[.\/]\s*(?:\d{1,2}\s*[~\-–]\s*)?(\d{1,2})\.?$/);
+  if(m&&+m[1]>=1&&+m[1]<=12&&+m[2]>=1&&+m[2]<=31) return {monthNum:+m[1],day:+m[2]};
+  return null;
+}
 function parseSalesSheet(json){
   const cols=json.table.cols, rows=json.table.rows;
   const blocks=[];
   let cur=null;
   function newBlock(label){
-    /* 시트의 진행 중인 달 라벨은 "9월 1일~4일"뿐 아니라 "9월 4일"처럼 시작일을 생략해서
-       적는 경우도 있다. 둘 다 "그 달 1일부터 N일까지 누적"으로 읽는다 */
-    const partial=label.match(/^(\d+)월\s*(?:1일\s*[~\-–]\s*)?(\d+)일$/);
-    const plain=label.match(/^(\d+)월$/);
-    const block={label,isPartial:!!partial,monthNum:partial?+partial[1]:(plain?+plain[1]:null),day:partial?+partial[2]:null,platforms:{}};
+    const ml=sheetMonthLabel(label)||{monthNum:null,day:null};
+    const block={label,isPartial:!!ml.day,monthNum:ml.monthNum,day:ml.day,platforms:{}};
     blocks.push(block);
     return block;
   }
@@ -13495,7 +13510,7 @@ function parseSalesSheet(json){
       adRevParts:adRevParts.length?adRevParts:BASE_COL.adRevParts,
       media:[pick(/^네이버광고(비)?$/,1),pick(/^메타광고(비)?$/,2),pick(/^구글광고(비)?$/,3)],sales};
   };
-  if(cols[0]&&/^\d+월/.test(cols[0].label||'')){ cur=newBlock(cols[0].label); col=headerCols(cols.map(c=>c.label)); }
+  if(cols[0]&&sheetMonthLabel(cols[0].label)){ cur=newBlock(cols[0].label); col=headerCols(cols.map(c=>c.label)); }
   rows.forEach(r=>{
     if(!r||!r.c) return;
     const label=cellStr(r.c[0]);
@@ -13508,7 +13523,7 @@ function parseSalesSheet(json){
       const sales=col.sales[label]!=null?cellNum(r.c[col.sales[label]]):0;
       cur.platforms[label]={sales,cost:adCost,rev:adRevSum||adRevFallback};
       if(label==='자사몰') cur.platforms[label].mediaCost=col.media.map(i=>cellNum(r.c[i]));
-    }else if(/^\d+월/.test(label)){
+    }else if(sheetMonthLabel(label)){
       cur=newBlock(label);
       col=headerCols(r.c.map(cellStr));
     }
@@ -13518,7 +13533,7 @@ function parseSalesSheet(json){
 
 /* 예전 gviz 는 같은 열에 "11,313명" 같은 텍스트와 37182 같은 숫자가 섞이면 셀을 null로
    돌려줘서 그 행만 다시 조회했다 · Sheets API 는 칸 값을 그대로 주므로 그럴 일이 없다 */
-function parseMembersSheet(base){
+function parseMembersSheet(base,upTo){
   const cols=base.table.cols, rows=base.table.rows;
   const allCols=cols.slice(1);
   let monthCount=allCols.findIndex(c=>!c.label);
@@ -13532,7 +13547,13 @@ function parseMembersSheet(base){
     metrics[label]=r.c.slice(1,1+monthLabels.length).map(cellNum);
   });
   const idx=[];
-  monthLabels.forEach((m,i)=>{ if((metrics['총 방문자수']||[])[i]>0) idx.push(i); });
+  const tot=metrics['총 방문자수']||[];
+  const first=tot.findIndex(v=>v>0);
+  monthLabels.forEach((m,i)=>{
+    const n=(sheetMonthLabel(m)||{}).monthNum;
+    /* 값이 있는 달 + 보고서 이번달(upTo)까지의 빈 달(11-09 사용자 요청 · 11월이 시트에 0 이어도 자리를 보임) */
+    if(tot[i]>0||(first>=0&&i>first&&n&&upTo&&n<=upTo)) idx.push(i);
+  });
   const pick=arr=>idx.map(i=>(arr&&arr[i])||0);
   return {
     visMonths:idx.map(i=>monthLabels[i]),
@@ -13567,7 +13588,7 @@ function applyCafe24(blocks,rows){
   });
 }
 
-function buildDataFromSheets(salesJson,memberData,cafe24Rows){
+function buildDataFromSheets(salesJson,membersJson,cafe24Rows){
   const blocks=parseSalesSheet(salesJson);
   applyCafe24(blocks,cafe24Rows);
   const complete=blocks.filter(b=>!b.isPartial);
@@ -13584,6 +13605,7 @@ function buildDataFromSheets(salesJson,memberData,cafe24Rows){
     ||blocks[blocks.indexOf(currBlock)-1]||currBlock;
   /* 날짜 없는 이름표인 이번달은 오늘 날짜까지 누적으로 본다 */
   const currDay=currBlock.day||(currBlock.monthNum===nowMonth?new Date().getDate():0);
+  const memberData=parseMembersSheet(membersJson,currBlock.monthNum);
   const platSales=b=>{const o={};RCH.forEach(c=>o[c]=(b.platforms[c]&&b.platforms[c].sales)||0);return o;};
   const platAd=b=>{const o={};RCH.forEach(c=>o[c]={cost:(b.platforms[c]&&b.platforms[c].cost)||0,rev:(b.platforms[c]&&b.platforms[c].rev)||0});return o;};
   const daysInMonth=monthNum=>new Date(new Date().getFullYear(),monthNum,0).getDate();
@@ -13631,7 +13653,7 @@ try{
    권한이 없으면(탭을 새로 열었을 때) 새로고침 버튼을 누르라고 알린다 */
 async function syncFromSheets(interactive){
   const [[salesJson,membersJson],cafe24Rows]=await Promise.all([fetchSheetTables(interactive),loadCafe24Daily()]);
-  const data=buildDataFromSheets(salesJson,parseMembersSheet(membersJson),cafe24Rows);
+  const data=buildDataFromSheets(salesJson,membersJson,cafe24Rows);
   renderReport(data);
   const at=Date.now();
   localStorage.setItem(SHEET_CACHE_KEY,JSON.stringify({data,at}));
