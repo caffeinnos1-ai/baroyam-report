@@ -3148,6 +3148,16 @@ window.BAROYAM_FONT=(function(){
   button.gd-k.is-sel{border-color:var(--btn);box-shadow:0 0 0 2px color-mix(in srgb,var(--btn) 22%,transparent)}
   button.gd-k:focus-visible{box-shadow:0 0 0 2px var(--btn)}
   .gd-chart h4 small{font-weight:400}
+  .gd-chart-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .gd-rng .ui-tab{height:var(--ui-h-sm);font-size:12.5px}
+  .gd-bars{transition:gap .3s}
+  .gd-bars.is-30{gap:3px}
+  .gd-bars.is-30 .gd-bar i{width:80%;border-radius:4px 4px 1px 1px}
+  .gd-bars.is-30 .gd-bar em{display:none}
+  .gd-bars.is-30 .gd-bar.nolab span{visibility:hidden}
+  .gd-bars.is-30 .gd-bar.wk i{opacity:.55}
+  .gd-bars.is-30 .gd-bar:hover i{opacity:1;filter:brightness(1.08)}
+  .gd-chart .gd-bars{animation:gdFade .35s both}
   .gd-bars{position:relative;display:flex;align-items:flex-end;gap:10px;height:190px;padding:22px 4px 0;margin-bottom:34px;border-bottom:1px solid var(--line)}
   .gd-bar{position:relative;flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
   .gd-bar i{display:block;width:min(46px,70%);border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,color-mix(in srgb,var(--btn) 70%,var(--paper)),var(--btn));transform-origin:bottom;animation:gdGrow .6s cubic-bezier(.2,.8,.2,1) both}
@@ -22601,23 +22611,32 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 일자별 막대(11-05 사용자 요청) · 위 네 칸을 누르면 그 값을 판정 기간의 날마다(운영 = 평일 7일 · 테스트 = 게재 1일째부터) 막대로 · 처음엔 ROAS ·
      막대는 아래에서 위로 자란다(움직임 줄이기 설정이면 바로) · ROAS 는 손익분기(테스트는 200%) 점선, 클릭률은 2% 점선 */
   const GD_KEYS={roas:'ROAS',sp:'광고비',rev:'광고매출',ctr:'클릭률'};
-  let gdKey='roas';
+  let gdKey='roas', gdRng='base';   /* 11-11 사용자 요청 · 기간 고르기: base = 판정 기간(평일 7일 / 게재 1일째부터) · 30 = 최근 30일(주말 포함) */
   function gdPaintChart(){
     const box=gdBox&&gdBox.querySelector('.gd-chart'); if(!box) return;
     const g=shownGuide[gdCur]; if(!g) return;
     const a=acc(), D=a.adDaily||{}, cur=a.currency, WD='일월화수목금토';
-    const rows=(g.days||[]).map(d=>{ const m=[0,0,0,0,0], day=D[d]; if(day) g.ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; });
+    const r30=gdRng==='30';
+    let days=g.days||[];
+    if(r30&&g.to){ const e=new Date(g.to+'T00:00:00'); days=[];
+      for(let i=29;i>=0;i--){ const t=new Date(e); t.setDate(e.getDate()-i); days.push(t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')); } }
+    const rows=days.map(d=>{ const m=[0,0,0,0,0], day=D[d]; if(day) g.ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; });
       const val={roas:m[0]?m[1]/m[0]*100:null,sp:m[0],rev:m[1],ctr:m[4]?m[3]/m[4]*100:null}[gdKey];
       return {d,val,buy:m[2],sp:m[0]}; });
     const fmt=v=>v==null?'-':gdKey==='roas'?Math.round(v)+'%':gdKey==='ctr'?v.toFixed(2)+'%':short(v,cur);
     const line=gdKey==='roas'?(g.run?g.be:GUIDE.roas):gdKey==='ctr'?GUIDE.ctr:null;
     const max=Math.max(1,line||0,...rows.map(r=>r.val||0))*1.12;
     const good=v=>line==null||v==null?'':v>=line?' ok':' no';
-    box.innerHTML='<h4>'+GD_KEYS[gdKey]+' · 일자별 <small>'+(g.run?'평일 최근 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+(line!=null?' · 점선 = '+(gdKey==='roas'?(g.run?'손익분기 ':'기준 ')+Math.round(line)+'%':'기준 '+line+'%'):'')+'</small></h4>'
-      +'<div class="gd-bars">'+(line!=null?'<span class="gd-line" style="bottom:'+(line/max*100).toFixed(1)+'%"></span>':'')
-      +rows.map((r,i)=>{ const dt=new Date(r.d+'T00:00:00');
-        return '<div class="gd-bar'+good(r.val)+'" title="'+r.d+' · 광고비 '+money(r.sp,cur)+' · 구매 '+int(r.buy)+'건"><em>'+fmt(r.val)+'</em>'
-          +'<i style="height:'+(r.val?Math.max(1.5,r.val/max*100).toFixed(1):0)+'%;animation-delay:'+(i*60)+'ms"></i>'
+    const baseTxt=g.run?'평일 최근 '+g.w+'일':'게재 1일째부터 '+g.w+'일';
+    const tab=(v,t)=>'<button type="button" class="ui-tab" data-gd-rng="'+v+'" aria-selected="'+(gdRng===v)+'">'+t+'</button>';
+    box.innerHTML='<div class="gd-chart-h"><h4>'+GD_KEYS[gdKey]+' · 일자별 <small>'+(r30?'최근 30일 · 주말 포함':baseTxt)+(line!=null?' · 점선 = '+(gdKey==='roas'?(g.run?'손익분기 ':'기준 ')+Math.round(line)+'%':'기준 '+line+'%'):'')+'</small></h4>'
+      +'<div class="ui-tabs gd-rng" role="tablist">'+tab('base',g.run?'평일 최근 7일':'게재 1일째부터')+tab('30','최근 30일')+'</div></div>'
+      +'<div class="gd-bars'+(r30?' is-30':'')+'">'+(line!=null?'<span class="gd-line" style="bottom:'+(line/max*100).toFixed(1)+'%"></span>':'')
+      +rows.map((r,i)=>{ const dt=new Date(r.d+'T00:00:00'), wk=dt.getDay()===0||dt.getDay()===6;
+        /* 30일은 막대가 좁아 값 글씨는 숨기고(올리면 말풍선) 날짜는 5일마다·주말은 흐리게 */
+        const lab=!r30||i%5===(rows.length-1)%5;
+        return '<div class="gd-bar'+good(r.val)+(r30&&wk?' wk':'')+(lab?'':' nolab')+'" title="'+r.d+' ('+WD[dt.getDay()]+') · '+GD_KEYS[gdKey]+' '+fmt(r.val)+' · 광고비 '+money(r.sp,cur)+' · 구매 '+int(r.buy)+'건"><em>'+fmt(r.val)+'</em>'
+          +'<i style="height:'+(r.val?Math.max(1.5,r.val/max*100).toFixed(1):0)+'%;animation-delay:'+(i*(r30?14:60))+'ms"></i>'
           +'<span>'+(+r.d.slice(5,7))+'.'+(+r.d.slice(8,10))+'<small>'+WD[dt.getDay()]+'</small></span></div>'; }).join('')+'</div>';
   }
   function gdPaintAi(){
@@ -22639,6 +22658,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         if(e.target===gdBox||e.target.closest('.settings-close')) return shut();
         if(e.target.closest('[data-gd-ai]')) gdAsk();
         const kb=e.target.closest('[data-gd-k]');
+        const rb=e.target.closest('[data-gd-rng]');
+        if(rb){ if(rb.dataset.gdRng!==gdRng){ gdRng=rb.dataset.gdRng; gdPaintChart(); } return; }
         if(kb){ gdKey=kb.dataset.gdK; gdBox.querySelectorAll('[data-gd-k]').forEach(b=>{ const on=b===kb; b.classList.toggle('is-sel',on); b.setAttribute('aria-pressed',on); }); gdPaintChart(); }
       });
       document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&gdBox&&!gdBox.hidden){ e.stopPropagation(); shut(); } },true);
