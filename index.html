@@ -3114,6 +3114,9 @@ window.BAROYAM_FONT=(function(){
   .ma-bud-when{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--mute)}
   .ma-bud-when em{font-style:normal;font-weight:400;margin-left:4px}
   .ma-bud-when .ui-tabs{align-self:flex-start;flex-wrap:wrap}
+  .ma-bud-day{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:4px}
+  .ma-bud-day[hidden]{display:none}
+  .ma-bud-day .ui-field{width:auto;min-width:150px}
   .ma-bud-schbox{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:10px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12.5px}
   .ma-bud-schbox b{font-weight:600}
   .ma-sw-no{color:var(--mute)}
@@ -21758,9 +21761,13 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   /* 다음 한국 시간 h시 · 1분 안쪽이면 다음 날 */
   function budNextAt(h){ const k=new Date(Date.now()+9*3600e3); k.setUTCHours(h,0,0,0); let t=k.getTime()-9*3600e3; if(t<=Date.now()+60e3) t+=86400e3; return new Date(t).toISOString(); }
+  /* 11-11 사용자 요청 · 날짜 지정 예약 · 'YYYY-MM-DD' 한국 시간 h시 · 30일 안쪽 */
+  const BUD_MAXD=30;
+  function budAt(day,h){ return new Date(Date.parse(day+'T00:00:00Z')+(h-9)*3600e3).toISOString(); }
   function budWhenTxt(iso,short){ const k=new Date(Date.parse(iso)+9*3600e3), hh=String(k.getUTCHours()).padStart(2,'0')+'시';
     const today=new Date(Date.now()+9*3600e3).toISOString().slice(0,10), d=k.toISOString().slice(0,10);
-    if(short) return (d===today?'오늘 ':'')+hh;
+    const tmr=new Date(Date.now()+33*3600e3).toISOString().slice(0,10);
+    if(short) return (d===today?'오늘 ':d===tmr?'':(k.getUTCMonth()+1)+'.'+k.getUTCDate()+' ')+hh;
     return (k.getUTCMonth()+1)+'.'+k.getUTCDate()+'('+'일월화수목금토'[k.getUTCDay()]+') '+hh; }
   /* 11-06 사용자 요청 · 예산 바꾸기도 켜기·끄기와 같은 권한(팀장 + 권한설정 메타광고 관리) */
   function budCan(){ return gvCan(); }
@@ -21789,10 +21796,13 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +(sc?'<div class="ma-bud-schbox"><span><b>'+budWhenTxt(sc.when)+' 예약</b> · '+nat(sc.from)+' → '+nat(sc.to)+(sc.by?' · '+esc(sc.by):'')+'</span><button type="button" class="ui-btn ghost sm" data-cancel>예약 취소</button></div>':'')
       +'<div class="ma-bud-when"><span>적용 시각 <em>한국 시간</em></span><div class="ui-tabs" data-when>'
       +'<button type="button" class="ui-tab active" data-value="">지금 바로</button>'
-      +[0,2].map(h=>'<button type="button" class="ui-tab" data-value="'+h+'">'+budWhenTxt(budNextAt(h))+' 예약</button>').join('')+'</div></div>'
+      +[0,2].map(h=>'<button type="button" class="ui-tab" data-value="'+h+'">'+budWhenTxt(budNextAt(h))+' 예약</button>').join('')
+      +'<button type="button" class="ui-tab" data-value="day">날짜 지정</button></div>'
+      +'<div class="ma-bud-day" hidden><button type="button" class="ui-field" data-day></button><div class="ui-chips" data-hr>'
+      +[0,2].map(h=>'<button type="button" class="ui-chip" aria-pressed="'+(h===0)+'" data-h="'+h+'">'+String(h).padStart(2,'0')+'시</button>').join('')+'</div></div></div>'
       +'<div class="ma-gv-imp"><div><b data-now>'+nat(raw)+'</b><small>지금 '+krw(raw)+'</small></div><div class="is-hot"><b data-new>'+nat(raw)+'</b><small data-newk>바꾼 뒤 '+krw(raw)+'</small></div><div><b data-pc>0%</b><small>변화</small></div></div>'
       +'<ul class="ma-gv-note"><li>바뀌는 순간부터 적용됩니다. 메타는 하루에 예산보다 조금 더(최대 75%) 쓸 수 있고, 주 단위로 맞춥니다.</li>'
-      +'<li>예약은 그 시각에 메타의 예산이 지금과 같을 때만 바꿉니다(그사이 누가 바꿨으면 하지 않음). 한 곳에 예약은 하나만 둡니다.</li>'
+      +'<li>예약은 그 시각에 메타의 예산이 지금과 같을 때만 바꿉니다(그사이 누가 바꿨으면 하지 않음). 한 곳에 예약은 하나만 두고, 날짜 지정은 30일 안쪽까지 됩니다.</li>'
       +'<li>메타 학습이 흔들리지 않도록 한 번에 20%까지만 바꿉니다. 누가 언제 바꿨는지 기록이 남습니다.</li></ul>'
       +'</div>'
       +'<div class="ma-gv-confirm">'
@@ -21807,11 +21817,20 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const close=()=>{ dlg.remove(); document.removeEventListener('keydown',onKey,true); };
     document.addEventListener('keydown',onKey,true);
     const $d=q=>dlg.querySelector(q), go=$d('[data-go]'), msg=$d('.ma-gv-msg'), ok=$d('.ma-gv-ok input'), pw=$d('.ma-gv-secret');
-    let next=raw, when='';
-    const goTxt=()=>when?budWhenTxt(when)+'에 예약':'예산 바꾸기';
+    let next=raw, when='', mode='', dDay=null, dHr=0, dayPick=null;
+    const goTxt=()=>when?budWhenTxt(when)+'에 예약':mode==='day'?'날짜를 골라 주세요':'예산 바꾸기';
+    const kDay=n=>new Date(Date.now()+9*3600e3+n*86400e3).toISOString().slice(0,10);
+    const dayBox=$d('.ma-bud-day');
+    const setWhen=()=>{ when=mode===''?'':mode==='day'?(dDay?budAt(dDay,dHr):''):budNextAt(+mode); go.textContent=goTxt(); paint(); };
+    const rmDlg=dlg.remove.bind(dlg); dlg.remove=()=>{ if(dayPick) dayPick.destroy(); rmDlg(); };
+    if(window.UI&&window.UI.datePicker) dayPick=window.UI.datePicker($d('[data-day]'),{mode:'single',placeholder:'날짜 선택',min:kDay(0),max:kDay(BUD_MAXD),onChange:v=>{ dDay=v||null; setWhen(); }});
+    dayBox.querySelectorAll('[data-h]').forEach(b=>b.addEventListener('click',()=>{ dHr=+b.dataset.h;
+      dayBox.querySelectorAll('[data-h]').forEach(y=>y.setAttribute('aria-pressed',String(y===b))); setWhen(); }));
     dlg.querySelectorAll('[data-when] [data-value]').forEach(b=>b.addEventListener('click',()=>{
       dlg.querySelectorAll('[data-when] [data-value]').forEach(y=>y.classList.toggle('active',y===b));
-      when=b.dataset.value===''?'':budNextAt(+b.dataset.value); go.textContent=goTxt(); paint(); }));
+      mode=b.dataset.value; dayBox.hidden=mode!=='day';
+      if(mode==='day'&&!dDay&&dayPick){ dDay=kDay(1); dayPick.set(dDay); }
+      setWhen(); }));
     const cancel=$d('[data-cancel]');
     if(cancel) cancel.addEventListener('click',async()=>{
       if(!confirm(budWhenTxt(sc.when)+' 예약을 취소할까요?')) return;
@@ -21821,7 +21840,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       cancel.disabled=false; cancel.textContent='예약 취소'; msg.hidden=false; msg.className='ma-gv-msg is-err'; msg.textContent=res.msg;
     });
     const paint=()=>{
-      const pc=next&&raw?Math.round((next-raw)/raw*1000)/10:0, bad=next===raw?'바꿀 만큼(−20% ~ +20%)을 골라 주세요.':when&&budSchOf(id)?'이미 예약이 있습니다. 예약을 취소한 뒤 다시 해 주세요.':'';
+      const pc=next&&raw?Math.round((next-raw)/raw*1000)/10:0, bad=next===raw?'바꿀 만큼(−20% ~ +20%)을 골라 주세요.'
+        :mode==='day'&&!when?'예약할 날짜를 골라 주세요.'
+        :when&&Date.parse(when)<=Date.now()+60e3?'이미 지난 시각입니다. 다른 날짜·시각을 골라 주세요.'
+        :when&&budSchOf(id)?'이미 예약이 있습니다. 예약을 취소한 뒤 다시 해 주세요.':'';
       $d('[data-new]').textContent=next?nat(next):'-'; $d('[data-newk]').textContent='바꾼 뒤 '+(next?krw(next):'');
       $d('[data-pc]').textContent=(pc>0?'+':'')+pc+'%';
       dlg.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',String(next===budStep(raw,+b.dataset.p,unit))));
