@@ -1316,7 +1316,7 @@ window.BAROYAM_ACCESS=(function(){
     {k:'brand',     name:'브랜드전략실', sel:'.sidebar .sb-item[data-view="brand"]',   views:['brand']},
     {k:'manual',    name:'메뉴얼가이드', sel:'.sidebar .sb-item[data-view="manual"]',  views:['manual']},
     {k:'automation',name:'자동화',       sel:'#sbAutomationLink',                      views:[]},
-    {k:'account',   name:'계정관리',     sel:'.sidebar .sb-item[data-view="account"]', views:['account']},
+    {k:'account',   name:'퀵링크',     sel:'.sidebar .sb-item[data-view="account"]', views:['account']},
   ];
   function readBox(){
     try{
@@ -8848,7 +8848,7 @@ window.BAROYAM_FONT=(function(){
         <!-- 계정관리 · 자리만 만들어 두었다(내용은 아직 비어 있다) -->
         <button class="sb-item" type="button" data-view="account" id="sbAccountBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 19.6c1.2-3.4 4-5.2 7.2-5.2s6 1.8 7.2 5.2"/></svg>
-          <span>계정관리</span>
+          <span>퀵링크</span>
         </button>
         </div><!-- /sb-scroll -->
       </div>
@@ -12173,7 +12173,7 @@ window.BAROYAM_FONT=(function(){
         <section class="section acc-view">
           <div class="plan-hero">
             <div class="ptag">업무 도구</div>
-            <div class="ptitle">계정관리</div>
+            <div class="ptitle">퀵링크</div>
             <p class="psub">누구나 바로 들어가는 사이트 바로가기를 모아 둡니다</p>
             <!-- 설정 · 계정 추가/수정 칸에 띄울 로고만 고른다 -->
             <button type="button" class="ui-btn sm acc-hero-set" id="accSetBtn" aria-expanded="false" aria-controls="accSet">
@@ -14260,7 +14260,7 @@ window.CsGuide=(function(){
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
     ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너 로고(지금 가져오기 · 오늘 숫자만)는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
     ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, 대본 서비스(VPS·PC)가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1. 채널 관리에서 구글 계정의 유튜브 채널을 여러 개 연결합니다(content_channels_v1).'],
-    ['account',1,'계정관리','판매처 계정 목록','accounts_v1 · 들어올 때마다 비밀번호를 묻고, 맞히기 전에는 서버에서 읽지도 않습니다.'],
+    ['account',1,'퀵링크','모두가 쓰는 사이트 바로가기 카드','myhomeShared.accBoards · 옛 계정 목록(accounts_v1)은 더 읽지 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
 
     ['settings',2,'app_settings','칸 이름 → JSON 한 덩어리','대부분의 공용 데이터가 여기 있습니다(members·myhome:<id>·memberProfile:<id>·channels·accounts_v1·orgChart·manualGuide·brand_*·profit_*·inventory_*·daily_sales_*·editAccess·sidebarOrder·appFont…). 통째로 덮어쓰지 않고 blobSync / saveMerged 로 바꾼 것만 얹습니다. 바뀌기 전 값은 app_settings_history 에 보관.'],
@@ -18166,7 +18166,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     {key:'brand',name:'브랜드전략실',      kind:'메뉴',       go:()=>window.activateView('brand')},
     {key:'manual',name:'메뉴얼가이드',      kind:'메뉴',       go:()=>window.activateView('manual')},
     {key:'drive',name:'드라이브',          kind:'메뉴',       go:()=>window.activateView('drive')},
-    {key:'account',name:'계정관리',          kind:'메뉴',       go:()=>window.activateView('account')},
+    {key:'account',name:'퀵링크',          kind:'메뉴',       go:()=>window.activateView('account')},
     {key:'automation',name:'자동화',            kind:'메뉴 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()},
     {key:'review',name:'리뷰수집하기',      kind:'리뷰수집',   go:()=>{ document.getElementById('sbReviewBtn').click(); document.getElementById('sbReviewCollector').click(); }},
     {key:'automation',name:'자동화 관리',       kind:'자동화 · 새 탭', go:()=>document.getElementById('sbAutomationLink').click()}
