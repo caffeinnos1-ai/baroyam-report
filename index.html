@@ -2985,33 +2985,21 @@ window.BAROYAM_FONT=(function(){
   .ma-tg dd{margin:0;display:flex;flex-wrap:wrap;gap:5px}
   .ma-tg dd span{font-size:12px;font-weight:500;color:var(--ink);padding:3px 9px;border-radius:7px;background:var(--chip-flat)}
   .ma-tg dd em{font-style:normal;font-size:12px;color:var(--mute);padding-top:4px}
-  /* 크리에이티브 다양성(11-11) */
-  .ma-div-sum{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:12px}
-  .ma-div-sum .lv{font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px}
-  .ma-div-sum .lv.is-good{color:var(--pos);background:var(--pos-soft)}
-  .ma-div-sum .lv.is-mid{color:var(--warn);background:var(--warn-soft)}
-  .ma-div-sum .lv.is-low{color:var(--neg);background:var(--neg-soft)}
-  .ma-div-sum b{font-size:15px;font-weight:600;color:var(--ink)}
-  .ma-div-sum span:not(.lv){font-size:12px;color:var(--body)}
-  .ma-div-sum em{flex-basis:100%;font-style:normal;font-size:11.5px;color:var(--mute)}
-  .ma-div-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
-  .ma-div-list li{display:grid;grid-template-columns:minmax(0,1fr) auto 96px 58px;gap:10px;align-items:center;font-size:12.5px;padding:7px 8px;border-radius:8px}
-  .ma-div-list li.is-mine{background:var(--btn-soft)}
-  .ma-div-list .nm{color:var(--ink);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ma-div-list .nm i{font-style:normal;font-size:10.5px;font-weight:600;color:var(--btn-soft-ink);margin-left:4px}
-  .ma-div-list .f{font-size:11.5px;color:var(--mute)}
-  .ma-div-list .n{font-size:11.5px;color:var(--body);text-align:right}
-  .ma-div-list .n.is-dup{color:var(--warn);font-weight:500}
-  .ma-div-list b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
-  .ma-div-list b.is-good{color:var(--pos)} .ma-div-list b.is-bad{color:var(--neg)} .ma-div-list b.is-zero{color:var(--mute)}
-  .ma-div-none{margin:0;font-size:12px;color:var(--mute)}
-  .ma-div-rec{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
-  .ma-div-rec h5{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--body)}
-  .ma-div-rec ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
-  .ma-div-rec li p{margin:0;font-size:12.5px;color:var(--ink)}
-  .ma-div-rec li p b{font-weight:600;color:var(--btn-soft-ink)}
-  .ma-div-rec li small{display:block;font-size:11.5px;color:var(--mute);margin-top:1px;line-height:1.5}
-  @media (max-width:640px){ .ma-div-list li{grid-template-columns:minmax(0,1fr) 80px 52px} .ma-div-list .f{display:none} }
+  /* 크리에이티브 다양성(11-11 · 행동지침 창) */
+  .gd-div-sum{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+  .gd-div-sum .lv{font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px;color:var(--mute);background:var(--bg)}
+  .gd-div-sum .lv.is-good{color:var(--pos);background:var(--pos-soft)}
+  .gd-div-sum .lv.is-mid{color:var(--warn);background:var(--warn-soft)}
+  .gd-div-sum .lv.is-low{color:var(--neg);background:var(--neg-soft)}
+  .gd-div-sum b{font-size:15px;font-weight:600;color:var(--ink)}
+  .gd-div-sum span:not(.lv){font-size:12px;color:var(--body)}
+  .gd-div-sum small{margin-left:auto;font-size:11.5px;color:var(--mute)}
+  .gd-div-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .gd-div-chips span{font-size:12px;font-weight:500;color:var(--body);padding:3px 10px;border-radius:7px;background:var(--bg);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gd-div-chips span.is-mine{color:var(--btn-soft-ink);background:var(--btn-soft)}
+  .gd-div-chips span i{font-style:normal;font-weight:600;color:var(--warn);margin-left:2px}
+  .gd-ai-cr p{margin:0 0 6px;color:var(--ink);line-height:1.6}
+  .gd-ai-cr ul{margin:0;padding-left:18px;color:var(--ink);line-height:1.7}
   /* 광고 업로드 창(10-29 · 단계별 · 화면 모양만) · 위 진행 막대·점 → 단계 내용(스크롤) → 이전 | 빠진 것 | n / 6 | 다음 */
   .ip.ma[hidden]{display:none}
   .settings-panel.mw-dlg{max-width:680px;width:100%;height:auto;max-height:min(880px,92vh);display:flex;flex-direction:column;overflow:hidden;padding:0}
@@ -21105,47 +21093,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +(tg.ex&&tg.ex.length?'<dt>제외</dt><dd>'+tg.ex.map(tag).join('')+'</dd>':'')
         +'<dt>지면</dt><dd>'+(tg.pl&&tg.pl.length?[...new Set(tg.pl.map(k=>{ const [p,q]=k.split('.'); return (PLAT[p]||p)+(q?' '+(POS[q]||q):''); }))].map(tag).join(''):tag('어드밴티지+ 자동'))+'</dd>'
         +'</dl></div>':'';
-      /* 크리에이티브 다양성(11-11 사용자 요청) · 메타는 소재를 보고 보여 줄 사람을 고르므로(안드로메다) 한 세트 안에 '다른 이야기'가 여럿 있어야 넓게 닿는다 ·
-         광고 이름에서 메시지(소구점)를 뽑아 묶는다: 날짜·V/I 뒤의 한글 낱말 · 훅(H00)·속도(x1.15)·_og·(R)·v2·작성자 같은 버전 표시는 떼므로 '훅만 바꾼 것'은 한 메시지로 셈 ·
-         범위 = 이 소재가 든 캠페인에서 지금 켜진 세트의 켜진 광고(세트마다 소재 하나씩 두는 운영이라 세트로 세면 늘 1개) · 추천 = 이 브랜드의 최근 60일(adDaily) 메시지 성과 중 이 캠페인에 없는 것 + 빠진 형식 */
-      let divBox='';
-      const C=(a.campaigns||[]).find(x=>x.id===r.c);
-      if(C){
-        const msgOf=n=>{ const t=String(n||'').split('_'); if(/^\d{6}$/.test(t[0])) t.shift(); if(/^(V|I|IV|VI)$/i.test(t[0]||'')) t.shift();
-          const k=t.map(x=>x.replace(/\(R\)|x\d+(\.\d+)?|v\d+$/gi,'').trim()).filter(x=>/[가-힣]/.test(x)).join(' ');
-          return k||t.filter(x=>x&&!/^(og|v\d+|[A-Z]\d{2}|[a-z]{2,4})$/.test(x)).join(' ')||'(이름 없음)'; };
-        const fmtOf=x=>{ const t=String(x.name||'').split('_'); const f=/^\d{6}$/.test(t[0])?t[1]:''; return /^I$/i.test(f)?'I':/^V$/i.test(f)?'V':x.kind==='video'?'V':x.kind?'I':'V'; };
-        const on=x=>(x.sw||x.st)==='ACTIVE';
-        const D60=a.adDaily||{}, perf={}; Object.values(D60).forEach(day=>{ for(const id in day){ const v=day[id], t=perf[id]||(perf[id]=[0,0,0]); t[0]+=v[0]; t[1]+=v[1]; t[2]+=v[2]; } });
-        const setOn={}; (a.adsets||[]).forEach(x=>{ if(x.c===C.id) setOn[x.id]=on(x); });
-        const live=(a.ads||[]).filter(x=>x.c===C.id&&on(x)&&setOn[x.s]), G={};
-        live.forEach(x=>{ const k=msgOf(x.name), g=G[k]||(G[k]={k,assets:new Set(),fmt:new Set(),p:[0,0,0],mine:false}); g.assets.add(x.asset||x.id); g.fmt.add(fmtOf(x));
-          const v=perf[x.id]; if(v){ g.p[0]+=v[0]; g.p[1]+=v[1]; g.p[2]+=v[2]; } if((r.adIds||[]).includes(x.id)) g.mine=true; });
-        const groups=Object.values(G).sort((p,q)=>q.p[0]-p.p[0]), nMsg=groups.length, nAsset=new Set(live.map(x=>x.asset||x.id)).size;
-        const fmts=new Set(live.map(fmtOf)), dup=groups.filter(g=>g.assets.size>1);
-        const lv=nMsg>=3&&fmts.size>=2?['good','다양함']:nMsg>=2?['mid','보통']:['low','부족'];
-        /* 추가하면 좋은 것 · 같은 브랜드 광고의 최근 60일 메시지 성과(구매 5건 이상 · ROAS 높은 순) 중 이 캠페인에 켜져 있지 않은 것 */
-        const bOf=brandMap(a), br=bOf[r.c], B={};
-        (a.ads||[]).forEach(x=>{ if(bOf[x.c]!==br) return; const v=perf[x.id]; if(!v||!v[0]) return; const k=msgOf(x.name), t=B[k]||(B[k]={k,p:[0,0,0]}); t.p[0]+=v[0]; t.p[1]+=v[1]; t.p[2]+=v[2]; });
-        const goodBar=Math.max(200,base);
-        const recs=Object.values(B).filter(t=>!G[t.k]&&t.p[2]>=5&&t.p[1]/t.p[0]*100>=goodBar).sort((p,q)=>q.p[1]/q.p[0]-p.p[1]/p.p[0]).slice(0,3)
-          .map(t=>['msg','<b>'+esc(t.k)+'</b> 메시지 다시 넣기','이 브랜드 최근 60일 ROAS '+rTxt(t.p)+' · 구매 '+int(t.p[2])+'건 · 지금 이 캠페인에 없음']);
-        if(live.length&&!fmts.has('I')) recs.push(['fmt','<b>이미지</b> 소재 하나','이 캠페인은 영상만 있어요 · 같은 메시지라도 이미지로 바꾸면 다른 사람에게 닿습니다']);
-        else if(live.length&&!fmts.has('V')) recs.push(['fmt','<b>영상</b> 소재 하나','이 캠페인은 이미지만 있어요']);
-        if(dup.length) recs.push(['dup','<b>'+esc(dup[0].k)+'</b> 소재가 '+dup[0].assets.size+'개 겹침','같은 소구점끼리는 메타가 비슷한 소재로 볼 수 있어요 · 다음 소재는 다른 소구점으로']);
-        const usedTxt=Object.keys(B).concat(Object.keys(G),(a.adsets||[]).filter(x=>bOf[x.c]===br).map(x=>x.name)).join(' ');
-        const fresh=MW_ANGLES.filter(x=>!usedTxt.includes(x));
-        if(nMsg<3&&fresh.length) recs.push(['new','새 소구점 시도','이 브랜드가 아직 안 쓴 것: '+fresh.slice(0,4).map(esc).join(' · ')]);
-        divBox='<div class="ma-sec ma-div"><h4>크리에이티브 다양성 <small>'+esc(C.name)+' 캠페인 · 지금 켜진 광고 '+live.length+'개</small></h4>'
-          +'<div class="ma-div-sum"><span class="lv is-'+lv[0]+'">'+lv[1]+'</span><b>메시지 '+nMsg+'가지</b><span>소재 '+nAsset+'개'+(fmts.size?' · '+[...fmts].map(f=>f==='V'?'영상':'이미지').join('·'):'')+'</span>'
-          +'<em>같은 이야기를 여러 번보다 다른 이야기 3가지 이상 · 영상과 이미지 섞기</em></div>'
-          +(groups.length?'<ul class="ma-div-list">'+groups.map(g=>'<li'+(g.mine?' class="is-mine"':'')+'><span class="nm" title="'+esc(g.k)+'">'+esc(g.k)+(g.mine?' <i>이 소재</i>':'')+'</span>'
-            +'<span class="f">'+[...g.fmt].map(f=>f==='V'?'영상':'이미지').join('·')+'</span>'
-            +'<span class="n'+(g.assets.size>1?' is-dup':'')+'">'+(g.assets.size>1?'같은 소구점 '+g.assets.size+'개':'1개')+'</span>'
-            +'<b class="'+rCls(g.p).trim()+'" title="최근 60일 지출 '+money(g.p[0],cur)+' · 구매 '+int(g.p[2])+'건">'+(g.p[0]?rTxt(g.p):'-')+'</b></li>').join('')+'</ul>':'<p class="ma-div-none">지금 이 캠페인에 켜진 광고가 없습니다.</p>')
-          +(recs.length?'<div class="ma-div-rec"><h5>추가하면 좋은 것</h5><ol>'+recs.slice(0,4).map(x=>'<li class="k-'+x[0]+'"><p>'+x[1]+'</p><small>'+x[2]+'</small></li>').join('')+'</ol></div>':'')
-          +'</div>';
-      }
       /* 광고 문구 · 서버가 광고마다 받은 제목·본문·설명(ads[].tx = a.texts 번호 · 10-21) · 같은 소재를 쓴 광고들의 글을 겹치지 않게 모음 ·
          다이내믹 소재처럼 글이 여럿이면 번호를 붙여 모두 보인다 */
       const TX=a.texts||[], txs={t:[],b:[],d:[]};
@@ -21160,7 +21107,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +'<p class="ma-pv-range">'+RANGE_TXT[range]+'</p>'
         +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b>'+(m[3]?'<span class="sub">'+m[3]+'</span>':'')+'</div>').join('')+'</div>'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
-        +bdHtml+tgBox+divBox
+        +bdHtml+tgBox
         +txBox
         +'</div></div>';
     };
@@ -21224,7 +21171,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const n=t0?Math.round((today-Date.parse(new Date(t0+9*3600e3).toISOString().slice(0,10)))/864e5)+1:null;
       const run=n==null||n>GUIDE.test;
       const days=run?guideWk.slice(0,GUIDE.wk).reverse():guideDays(Math.max(1,n));
-      const g=Object.assign({run,n,days,from:days[0],to:days[days.length-1],w:days.length,ids,nm:r.name,brand:r.brand,lv:tab,setId:tab==='adset'?r.id:r.s},guideSum(ids,days));
+      const g=Object.assign({run,n,days,from:days[0],to:days[days.length-1],w:days.length,ids,nm:r.name,brand:r.brand,lv:tab,setId:tab==='adset'?r.id:r.s,campId:r.c,adIds:ids},guideSum(ids,days));
       { const R0=repFor(r.c,tab==='campaign'?null:r.s); g.beB=R0&&R0.roas!=null?R0.roas:GUIDE.roas; }
       { const CD=(CLARITY&&CLARITY.format===2&&CLARITY.days)||{}, idSet=new Set(ids), names=[...new Set((a.ads||[]).filter(y=>idSet.has(y.id)).map(y=>y.name))], cs=[0,0,0,0,0,0,0];
         days.forEach(d=>{ const day=CD[d]; if(day) names.forEach(nm=>{ const v=day[nm]; if(v) for(let i=0;i<7;i++) cs[i]+=v[i]||0; }); });
@@ -21980,7 +21927,34 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     });
     return m;
   }
-  const BRAND_ALIAS={'아미아미':'아미'};   /* 이름 → 묶을 브랜드 · 더 생기면 한 줄씩 */
+  const BRAND_ALIAS={'아미아미':'아미'};
+  /* 크리에이티브 다양성(11-11 사용자 요청) · 메타는 소재를 보고 보여 줄 사람을 고르므로(안드로메다) 한 캠페인 안에 '다른 이야기'가 여럿 있어야 넓게 닿는다 ·
+     광고 이름에서 메시지(소구점)를 뽑아 묶는다: 날짜·V/I 뒤의 한글 낱말 · 훅(H00)·속도(x1.15)·_og·(R)·v2·작성자 같은 버전 표시는 떼므로 훅만 바꾼 것은 한 메시지 ·
+     범위 = 캠페인에서 지금 켜진 세트의 켜진 광고(세트마다 소재 하나씩 두는 운영이라 세트로 세면 늘 1개) ·
+     행동지침 창 왼쪽에는 상태만, 자세한 판단은 바로얌AI(지침 prompts/광고판단.md 의 creative) · 처음엔 소재 팝업에 두었다가 같은 날 사용자 요청으로 옮김 */
+  function divMsg(n){ const t=String(n||'').split('_'); if(/^\d{6}$/.test(t[0])) t.shift(); if(/^(V|I|IV|VI)$/i.test(t[0]||'')) t.shift();
+    const k=t.map(x=>x.replace(/\(R\)|x\d+(\.\d+)?|v\d+$/gi,'').trim()).filter(x=>/[가-힣]/.test(x)).join(' ');
+    return k||t.filter(x=>x&&!/^(og|v\d+|[A-Z]\d{2}|[a-z]{2,4})$/.test(x)).join(' ')||'(이름 없음)'; }
+  function divFmt(x){ const t=String(x.name||'').split('_'); const f=/^\d{6}$/.test(t[0])?t[1]:''; return /^I$/i.test(f)?'I':/^V$/i.test(f)?'V':x.kind==='video'?'V':x.kind?'I':'V'; }
+  function creativeDiv(a,campId,myIds,goodBar){
+    const C=(a.campaigns||[]).find(x=>x.id===campId); if(!C) return null;
+    const on=x=>(x.sw||x.st)==='ACTIVE', mine=new Set(myIds||[]);
+    const perf={}; Object.values(a.adDaily||{}).forEach(day=>{ for(const id in day){ const v=day[id], t=perf[id]||(perf[id]=[0,0,0]); t[0]+=v[0]; t[1]+=v[1]; t[2]+=v[2]; } });
+    const setOn={}; (a.adsets||[]).forEach(x=>{ if(x.c===C.id) setOn[x.id]=on(x); });
+    const live=(a.ads||[]).filter(x=>x.c===C.id&&on(x)&&setOn[x.s]), G={};
+    live.forEach(x=>{ const k=divMsg(x.name), g=G[k]||(G[k]={k,assets:new Set(),fmt:new Set(),p:[0,0,0],mine:false}); g.assets.add(x.asset||x.id); g.fmt.add(divFmt(x));
+      const v=perf[x.id]; if(v){ g.p[0]+=v[0]; g.p[1]+=v[1]; g.p[2]+=v[2]; } if(mine.has(x.id)) g.mine=true; });
+    const groups=Object.values(G).sort((p,q)=>q.p[0]-p.p[0]), fmts=new Set(live.map(divFmt));
+    const nMsg=groups.length, nAsset=new Set(live.map(x=>x.asset||x.id)).size;
+    const lv=!live.length?['none','켜진 광고 없음']:nMsg>=3&&fmts.size>=2?['good','다양함']:nMsg>=2?['mid','보통']:['low','부족'];
+    /* 이 브랜드의 최근 60일 메시지 성과 중 이 캠페인에 없는 것(구매 5건 이상 · ROAS 기준 이상) · 아직 안 쓴 소구점 */
+    const bOf=brandMap(a), br=bOf[C.id], B={};
+    (a.ads||[]).forEach(x=>{ if(bOf[x.c]!==br) return; const v=perf[x.id]; if(!v||!v[0]) return; const k=divMsg(x.name), t=B[k]||(B[k]={k,p:[0,0,0]}); t.p[0]+=v[0]; t.p[1]+=v[1]; t.p[2]+=v[2]; });
+    const bar=Math.max(200,goodBar||0);
+    const missing=Object.values(B).filter(t=>!G[t.k]&&t.p[2]>=5&&t.p[1]/t.p[0]*100>=bar).sort((p,q)=>q.p[1]/q.p[0]-p.p[1]/p.p[0]).slice(0,3);
+    const used=Object.keys(B).concat(Object.keys(G),(a.adsets||[]).filter(x=>bOf[x.c]===br).map(x=>x.name)).join(' ');
+    return {camp:C.name,live:live.length,nMsg,nAsset,fmts:[...fmts],lv,groups,missing,unused:MW_ANGLES.filter(x=>!used.includes(x))};
+  }   /* 이름 → 묶을 브랜드 · 더 생기면 한 줄씩 */
   const SORTS=[{value:'spend',label:'광고비 많은 순'},{value:'roas',label:'ROAS 높은 순'},{value:'buy',label:'구매 많은 순'},{value:'cpa',label:'CPA 높은 순'},{value:'ctr',label:'CTR 높은 순'},{value:'rev',label:'매출 많은 순'}];
 
   /* ---------- 광고 업로드 창(10-29 사용자 요청 · 대시보드 화면 대신 업로드 단추를 누르면 뜨는 단계별 창 · 10-30 메타 등록 연동) ----------
@@ -22574,6 +22548,17 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function gdRow(l,v,gr,std,how){
     return '<li class="is-'+(gr||'none')+'"><span class="l"'+(how?' title="'+esc(how)+'"':'')+'>'+l+'</span><b>'+v+'</b>'+(gr?'<i>'+GD_GT[gr]+'</i>':'<i class="no">-</i>')+'<small>'+std+'</small></li>';
   }
+  /* 크리에이티브 다양성 칸(11-11 사용자 요청) · 상태만 · 자세한 판단은 바로얌AI */
+  function gdDiv(g){ if(g._div===undefined) g._div=creativeDiv(acc(),g.campId,g.lv==='campaign'?[]:g.ids,g.beB); return g._div; }
+  function gdDivHtml(g){
+    const d=gdDiv(g); if(!d) return '';
+    const F=f=>f==='V'?'영상':'이미지';
+    return '<section class="gd-card gd-div"><h4>크리에이티브 다양성 <small>'+esc(d.camp)+' 캠페인 · 켜진 광고 '+d.live+'개</small></h4>'
+      +'<div class="gd-div-sum"><span class="lv is-'+d.lv[0]+'">'+d.lv[1]+'</span><b>메시지 '+d.nMsg+'가지</b><span>소재 '+d.nAsset+'개'+(d.fmts.length?' · '+d.fmts.map(F).join('·'):'')+'</span>'
+      +'<small>기준 · 다른 메시지 3가지 이상 + 영상·이미지 섞기</small></div>'
+      +(d.groups.length?'<div class="gd-div-chips">'+d.groups.map(x=>'<span class="'+(x.mine?'is-mine':'')+(x.assets.size>1?' is-dup':'')+'" title="'+esc(x.k)+' · '+[...x.fmt].map(F).join('·')+' · 소재 '+x.assets.size+'개">'+esc(x.k)+(x.assets.size>1?' <i>×'+x.assets.size+'</i>':'')+'</span>').join('')+'</div>':'')
+      +'</section>';
+  }
   /* 상세페이지 칸 */
   function gdPageHtml(g){
     const c=g.cv;
@@ -22596,7 +22581,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       video:v&&{period:'최근 60일',impressions:v.imp,play3s:v.v3,thruplay:v.thru,hookRate:r1(v.hook),holdRate:r1(v.hold),thruplayRate:r1(v.thruRate)},
       page:g.cv&&{visits:g.cv.v,scrollPct:r1(g.cv.sc),activeSec:r1(g.cv.ac),quickBouncePct:r1(g.cv.qb)},
       buyers:{period:'최근 60일 · 구매는 광고를 본 시각 기준',ageGender:seg(B.ag),placement:seg(B.pl),hours:B.hr.L.filter(x=>x.buy>0).slice(0,5).map(x=>({hour:x.seg,buy:x.buy}))},
-      target:tg?{age:tg.a,gender:tg.g,interests:tg.int,exclude:tg.ex,placements:tg.pl,advantageAudience:!!tg.adv}:null};
+      target:tg?{age:tg.a,gender:tg.g,interests:tg.int,exclude:tg.ex,placements:tg.pl,advantageAudience:!!tg.adv}:null,
+      creative:(d=>d&&{scope:d.camp+' 캠페인에서 지금 켜진 광고 '+d.live+'개',status:d.lv[1],messages:d.nMsg,creatives:d.nAsset,formats:d.fmts.map(f=>f==='V'?'영상':'이미지'),
+        rule:'메시지(소구점) 3가지 이상 + 영상·이미지 섞기 = 다양함 · 같은 소구점 소재가 여럿이면 메타가 비슷한 소재로 봄',
+        list:d.groups.map(x=>({message:x.k,thisAd:x.mine,count:x.assets.size,format:[...x.fmt].map(f=>f==='V'?'영상':'이미지'),roas60:x.p[0]?Math.round(x.p[1]/x.p[0]*100):null,buy60:x.p[2]})),
+        brandWinnersNotHere:d.missing.map(t=>({message:t.k,roas60:Math.round(t.p[1]/t.p[0]*100),buy60:t.p[2]})),unusedAngles:d.unused})(gdDiv(g))};
   }
   /* 바로얌AI 칸 · 받는 동안은 단계 + 진행 막대 + 글 자리(흐린 줄) · 다 받으면 결론 → 상태 → 문제 자리 → 구매자 */
   const GD_SPIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>';
@@ -22620,6 +22609,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       /* 11-11 사용자 요청 · 문제 자리 위에 잘한 점 */
       +(gd.length?'<div class="gd-ai-sec"><h5>잘한 점</h5><ul class="gd-pr good">'+gd.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul></div>':'')
       +'<div class="gd-ai-sec"><h5>문제 자리</h5>'+(pr.length?'<ul class="gd-pr">'+pr.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul>':'<p class="gd-ok">뚜렷한 문제가 없습니다.</p>')+'</div>'
+      /* 11-11 크리에이티브 다양성 · 상태 한 줄 + 추가하면 좋은 소재 */
+      +(R.creative&&(R.creative.state||(R.creative.add||[]).length)?'<div class="gd-ai-sec gd-ai-cr"><h5>크리에이티브 다양성</h5>'+(R.creative.state?'<p>'+esc(R.creative.state)+'</p>':'')
+        +((R.creative.add||[]).filter(Boolean).length?'<ul>'+R.creative.add.filter(Boolean).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'')+'</div>':'')
       +'<div class="gd-ai-sec"><h5>구매자</h5><dl class="gd-by">'+[['누가',B.who],['언제',B.when],['어디서',B.where]].filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl></div>'
       +'<div class="gd-ai-foot"><span>참고용 · '+new Date(A.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 숫자 기준</span>'+again+'</div>';
   }
@@ -22675,6 +22667,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kpi('ctr','클릭률',gdPct(g.ctr,2),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.cOk:null),'기준 '+GUIDE.ctr+'%'+(g.run?' '+sg(chg(g.ctr,g.pCtr)):''))+'</div>':'')
       +'<div class="gd-two"><section class="gd-card"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일</small></h4>'+gdPageHtml(g)+'</section>'
       +'<section class="gd-card"><h4>영상 <small>최근 60일</small></h4>'+gdVideoHtml(g)+'</section></div>'
+      +gdDivHtml(g)
       +(has?'<section class="gd-card gd-chart"></section>':'');
     gdPaintChart();
     gdPaintAi();
