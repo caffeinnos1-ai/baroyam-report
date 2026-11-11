@@ -1301,7 +1301,7 @@ window.BAROYAM_ACCESS=(function(){
   const MENUS=[
     {k:'project',   name:'프로젝트',     sel:'.sidebar .sb-item[data-view="project"]', views:['project']},
     {k:'channel',   name:'판매채널',     sel:'#sbChannelGroup',                        views:['channel']},
-    {k:'perf',      name:'퍼포먼스마케팅', sel:'.sidebar .sb-item[data-view="perf"]',  views:['perf']},
+    {k:'perf',      name:'메타광고관리', sel:'.sidebar .sb-item[data-view="perf"]',  views:['perf']},
     {k:'content',   name:'유튜브콘텐츠', sel:'.sidebar .sb-item[data-view="content"]', views:['content']},
     {k:'insta',     name:'인스타콘텐츠', sel:'.sidebar .sb-item[data-view="insta"]',   views:['insta']},
     {k:'sales',     name:'매출데이터',   sel:'#sbSalesToggle',                         views:['week','month']},
@@ -8809,10 +8809,10 @@ window.BAROYAM_FONT=(function(){
             <button class="sb-subitem" type="button" data-channel="톡딜">톡딜</button>
           </div>
         </div>
-        <!-- 퍼포먼스마케팅 · 콘텐츠마케팅 · 자리만 만들어 두었다(대시보드는 아직 비어 있다) -->
+        <!-- 메타광고관리(옛 이름 퍼포먼스마케팅 · 11-11 사용자 요청으로 이름·메타 로고 · key perf 그대로) -->
         <button class="sb-item" type="button" data-view="perf" id="sbPerfBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11v2.5c0 .8.7 1.5 1.5 1.5H7l4.5 4V5L7 9H5.5C4.7 9 4 9.7 4 10.5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
-          <span>퍼포먼스마케팅</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9.6C10.4 7.2 9 6 7.3 6 4.9 6 3 9.4 3 13.2 3 15.9 4.2 17.6 6.1 17.6c1.8 0 3.1-1.6 5.9-6.6 2.6-4.6 3.9-5 5.4-5 2.6 0 3.6 3.9 3.6 6.9 0 3.1-1.3 4.3-3 4.3-1.9 0-3.3-2.4-5.2-5.9"/></svg>
+          <span>메타광고관리</span>
         </button>
         <button class="sb-item" type="button" data-view="content" id="sbContentBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M10 9.2v5.6l4.8-2.8Z"/></svg>
@@ -11056,13 +11056,13 @@ window.BAROYAM_FONT=(function(){
            인스타콘텐츠 성과와 같은 결(ip-* 카드) · 배너 위 단추 네 개: 데일리 성과(첫 화면 · 하루 단위) / 캠페인 / 광고 세트 / 소재 ·
            광고계정 탭(통화가 달라 섞어 더하지 않음) -->
       <div id="view-perf" style="display:none">
-        <div class="hero-view-tabs" id="perfTabs" role="tablist" aria-label="퍼포먼스마케팅 화면">
+        <div class="hero-view-tabs" id="perfTabs" role="tablist" aria-label="메타광고관리 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-perf="daily" data-sub="하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.">데일리성과</button>
           <button type="button" class="hero-view-tab" role="tab" data-perf="detail" data-sub="캠페인 → 광고 세트 → 소재를 한 표에서 봅니다. 이름을 누르면 안쪽으로 들어갑니다.">정밀성과</button>
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
-            <div class="ptag">퍼포먼스마케팅 · 메타광고</div>
+            <div class="ptag">메타광고관리</div>
             <div class="ptitle" id="perfViewTitle">데일리성과</div>
             <div class="psub" id="perfViewSub">하루 단위로 지출·구매·ROAS 를 보고, 어제·지난주 같은 요일과 견줍니다.</div>
             <!-- 배너 오른쪽 계정 카드 · 인스타콘텐츠 성과 배너와 같은 모양(사용자 요청) -->
@@ -14289,7 +14289,7 @@ window.CsGuide=(function(){
     ['review',1,'리뷰수집','채널별 인박스','회사 PC 리뷰 수집기(4317)와 이야기합니다. 수집기 화면 디자인은 대시보드가 보내 줍니다.'],
     ['manual',1,'메뉴얼가이드','문서 · 상담가이드 · 조직도','목차(manualGuide)·문서·조직도(orgChart)는 app_settings, 상담 가이드는 cs_guide 표. 붙인 이미지는 brand-files manual/ 아래.'],
     ['agenda',1,'회의안건','주간 · 월간 회의','agenda_items 표에 한 안건 한 줄. 메모 이미지는 brand-files agenda/ 아래.'],
-    ['perf',1,'퍼포먼스마케팅','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너 로고(지금 가져오기 · 오늘 숫자만)는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
+    ['perf',1,'메타광고관리','메타광고 성과','VPS(meta_ads.js · 08~22시 2시간마다)가 메타 마케팅 API 로 받아 채운 meta_ads_v1 을 읽기만 합니다 · 배너 로고(지금 가져오기 · 오늘 숫자만)는 brand-files 의 metaads/req 에 요청을 올려 VPS(1분마다 확인)가 바로 수집하게 합니다.'],
     ['content',1,'유튜브콘텐츠','새 영상 만들기','직접 기획을 적고 대본 만들기를 누르면 brand-files 의 cmjob/req 에 주문을 올리고, 대본 서비스(VPS·PC)가 cmjob/res 에 대본 후보·검수 점수를 답합니다. 작업은 content_jobs_v1. 채널 관리에서 구글 계정의 유튜브 채널을 여러 개 연결합니다(content_channels_v1).'],
     ['account',1,'퀵링크','모두가 쓰는 사이트 바로가기 카드','myhomeShared.accBoards · 옛 계정 목록(accounts_v1)은 더 읽지 않습니다.'],
     ['admin',1,'관리자 설정','팀장 전용','회원·권한·사이드탭 순서·글꼴·메뉴얼/브랜드 틀은 app_settings, 워크플로우는 automation_runs, 보안로그는 access_log 를 봅니다.'],
@@ -14756,9 +14756,9 @@ window.CsGuide=(function(){
     {name:'유튜브 성과 수집', cat:'collect', where:'ERP 유튜브콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['00:10','07:30','13:30','19:30'], record:'유튜브 성과 수집',
      desc:'연결한 유튜브 채널마다 채널 통계·최근 영상 100개(Data API)와 최근 180일 하루 조회·시청 시간·구독 증감(Analytics API)을 받아 유튜브콘텐츠 성과 화면을 채워요. 유튜브 분석 숫자는 1~2일 늦게 들어와요.', task:'cron'},
     /* caffeinnos-automation/meta_ads.js · 토큰은 VPS .env META_ADS_TOKEN(시스템 사용자 baroyam-ads · ads_read · 만료 없음) */
-    {name:'메타광고 성과 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['00:00','08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
-     desc:'메타 마케팅 API 로 광고계정의 캠페인·광고 세트·광고(소재) 성과(지출·구매·매출·ROAS)를 받아 퍼포먼스마케팅 화면을 채워요.', task:'cron'},
-    {name:'Clarity 상세페이지 수집', cat:'collect', where:'ERP 퍼포먼스마케팅 · 소재 팝업', days:[0,1,2,3,4,5,6], times:['00:20'], record:'Clarity 상세페이지 수집',
+    {name:'메타광고 성과 수집', cat:'collect', where:'ERP 메타광고관리 · 메타광고 성과', days:[0,1,2,3,4,5,6], times:['00:00','08:40','10:40','12:40','14:40','16:40','18:40','20:40','22:40'], record:'메타광고 성과 수집',
+     desc:'메타 마케팅 API 로 광고계정의 캠페인·광고 세트·광고(소재) 성과(지출·구매·매출·ROAS)를 받아 메타광고관리 화면을 채워요.', task:'cron'},
+    {name:'Clarity 상세페이지 수집', cat:'collect', where:'ERP 메타광고관리 · 소재 팝업', days:[0,1,2,3,4,5,6], times:['00:20'], record:'Clarity 상세페이지 수집',
      desc:'Microsoft Clarity 에서 메타광고로 들어온 자사몰 방문을 광고별로 묶어(스크롤 깊이·머문 시간·빠른 이탈) 소재 팝업에 보여요. API 가 하루 10번이라 하루 한 번 받아요.', task:'cron'},
     /* GitHub Actions(baroyam-trend) · 예전 워크플로우 탭에 따로 있던 것 · 예약 실행이라 늦게 도는 일이 잦다 */
     {name:'구글트렌드 수집', cat:'collect', where:'ERP 트렌드분석 · GitHub Actions', days:[0,1,2,3,4,5,6], times:['09:00','12:00','15:00','18:00'], record:'구글트렌드 수집',
