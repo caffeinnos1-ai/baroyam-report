@@ -3202,6 +3202,7 @@ window.BAROYAM_FONT=(function(){
   .gd-pr li{display:flex;gap:9px;align-items:baseline;line-height:1.6;color:var(--ink)}
   .gd-pr i{flex:none;font-style:normal;font-size:11.5px;font-weight:600;padding:1px 9px;border-radius:99px;color:var(--neg);background:var(--neg-soft)}
   .gd-ok{margin:0;color:var(--pos);font-weight:500}
+  .gd-pr.good i{color:var(--pos);background:var(--pos-soft)}
   .gd-by{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;margin:0;line-height:1.6;color:var(--ink)}
   .gd-by dt{font-size:12px;font-weight:600;color:var(--btn-soft-ink);padding:2px 8px;border-radius:6px;background:var(--btn-soft);align-self:start;text-align:center}
   .gd-by dd{margin:0}
@@ -22544,10 +22545,12 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }
     if(A.state==='failed') return '<p class="gd-err">'+esc(A.msg)+'</p>'+again;
     /* 11-05 사용자 요청 · 아주 짧게: 결론 → 상태 한 줄 → 행동지침(1~3줄) → 문제 자리 → 구매자(누가·언제·어디서) */
-    const R=A.res, B=R.buyer&&typeof R.buyer==='object'?R.buyer:{who:R.buyer||''}, pr=R.problems||[];
+    const R=A.res, B=R.buyer&&typeof R.buyer==='object'?R.buyer:{who:R.buyer||''}, pr=R.problems||[], gd=(R.goods||[]).filter(x=>x&&x.what);
     const acts=(R.actions||[]).filter(Boolean);
     return '<p class="gd-ai-v">'+esc(R.verdict)+'</p><p class="gd-ai-s">'+esc(R.summary)+'</p>'
       +(acts.length?'<div class="gd-ai-sec gd-ai-act"><h5>행동지침</h5><ol>'+acts.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol></div>':'')
+      /* 11-11 사용자 요청 · 문제 자리 위에 잘한 점 */
+      +(gd.length?'<div class="gd-ai-sec"><h5>잘한 점</h5><ul class="gd-pr good">'+gd.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul></div>':'')
       +'<div class="gd-ai-sec"><h5>문제 자리</h5>'+(pr.length?'<ul class="gd-pr">'+pr.map(x=>'<li><i>'+esc(x.where)+'</i><span>'+esc(x.what)+'</span></li>').join('')+'</ul>':'<p class="gd-ok">뚜렷한 문제가 없습니다.</p>')+'</div>'
       +'<div class="gd-ai-sec"><h5>구매자</h5><dl class="gd-by">'+[['누가',B.who],['언제',B.when],['어디서',B.where]].filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('')+'</dl></div>'
       +'<div class="gd-ai-foot"><span>참고용 · '+new Date(A.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 숫자 기준</span>'+again+'</div>';
