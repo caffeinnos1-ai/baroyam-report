@@ -18379,17 +18379,19 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const r=localStorage.getItem('baroyam_content_review'); if(r==='approve'||r==='done') rv=r;
   }catch(e){}
   const rvTabs=document.getElementById('cmReviewTabs');
-  /* 팀장(역할 팀장 + 비밀번호 통과)이 아닌 회원은 업로드 탭만 본다(11-12 사용자 요청) · 화면에서만 막음 ·
-     다른 단추는 숨기고, 기억해 둔 탭·다른 화면에서 부른 탭(baroyamContentGo)도 업로드로 돌린다 */
+  /* 팀장(역할 팀장 + 비밀번호 통과)이 아닌 회원은 성과·업로드 탭만 본다(11-12 사용자 요청) · 화면에서만 막음 ·
+     다른 단추는 숨기고, 기억해 둔 탭·다른 화면에서 부른 탭(baroyamContentGo)도 성과로 돌린다 */
   const isLead=()=>{ try{ return !!(window.BAROYAM_LEAD&&window.BAROYAM_LEAD.isOn()); }catch(e){ return false; } };
-  const upTab=()=>items.find(b=>b.dataset.content==='upload');
+  const MEMBER_TABS=['perf','upload'];
+  const memberOk=el=>MEMBER_TABS.includes(el.dataset.content);
   function gate(){
     const L=isLead();
-    items.forEach(b=>{ if(b.dataset.content!=='channels') b.hidden=!L&&b.dataset.content!=='upload'; });
+    items.forEach(b=>{ if(b.dataset.content!=='channels') b.hidden=!L&&!memberOk(b); });
+    const mg=document.getElementById('ypManage'); if(mg) mg.style.display=L?'':'none';   // 성과 화면의 채널 관리 단추도 팀장만
     return L;
   }
   function pick(el){
-    if(!gate()&&el.dataset.content!=='upload') el=upTab()||el;
+    if(!gate()&&!memberOk(el)) el=items.find(b=>b.dataset.content==='perf')||el;
     cur=el;
     items.forEach(b=>{ const on=b===el; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
     title.textContent=el.childNodes[0].textContent.trim(); sub.textContent=el.dataset.sub||'';
