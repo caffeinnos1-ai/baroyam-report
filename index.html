@@ -4840,6 +4840,9 @@ window.BAROYAM_FONT=(function(){
   /* 기간 단추 · 표준 날짜선택(UI.datePicker, 프로젝트 마감일 고르기와 같은 모양)을 쓴다 */
   .ch-head #chPeriodBtn{flex:none}
   .ch-kpis{margin-top:20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+  /* 11-13 사용자 요청으로 숫자 네 칸(광고비·광고매출·ROAS·전체매출)과 그 칸만 쓰던 기간 단추를 숨긴다 · 코드·값은 그대로 */
+  #view-channel .ch-kpis,#view-channel .ch-hero-side{display:none!important}
+  #view-channel .ch-grid{margin-top:20px}
   .ch-kpi{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:18px;
     background:var(--paper);box-shadow:var(--mh-card-shadow);min-width:0}
   .ch-kpi-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none}
