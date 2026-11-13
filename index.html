@@ -4827,6 +4827,47 @@ window.BAROYAM_FONT=(function(){
   #view-channel :is(.ch-kpi,.mh-card){box-shadow:none;border:1px solid var(--line)}
   .ch-pane[hidden],.ch-hero-side[hidden]{display:none}
   .ch-st{margin-top:22px}
+  /* 자사몰 판매현황(카페24 · 11-13) · 위 기간·브랜드 + 숫자 세 칸, 아래 상품·옵션 표 */
+  .cs{margin-top:22px;display:flex;flex-direction:column;gap:16px}
+  .cs-top{border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .cs-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .cs-bar label{font-size:12.5px;color:var(--mute)}
+  .cs-bar .sep{width:1px;height:20px;background:var(--line)}
+  .cs-bar #csBrand{min-width:150px;justify-content:space-between}
+  .cs-when{margin-left:auto;font-size:12.5px;color:var(--mute)}
+  .cs-when.warn{color:var(--warn)}
+  .cs-kpis{display:flex;flex-wrap:wrap;gap:12px 56px;padding:18px 22px 20px}
+  .cs-kpi .l{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mute)}
+  .cs-kpi .l em{font-style:normal;font-size:11px;font-weight:500;color:var(--btn);border:1px solid color-mix(in srgb,var(--btn) 45%,transparent);border-radius:6px;padding:1px 7px}
+  .cs-kpi .v{margin-top:6px;font-size:25px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+  .cs-kpi .v small{font-size:13px;font-weight:400;color:var(--mute);margin-left:3px}
+  .cs-note{padding:10px 16px;border-radius:12px;font-size:13px;line-height:1.55;color:var(--body);
+    background:color-mix(in srgb,var(--warn) 9%,var(--paper));border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line))}
+  .cs-note b{color:var(--ink);font-weight:600}
+  .cs-note:empty{display:none}
+  .cs-tbl-wrap{border:1px solid var(--line);border-radius:16px;background:var(--paper);overflow-x:auto}
+  .cs-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:860px}
+  .cs-tbl th{font-size:12.5px;font-weight:500;color:var(--body);text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .cs-tbl th:first-child,.cs-tbl td:first-child{padding-left:22px}
+  .cs-tbl th:last-child,.cs-tbl td:last-child{padding-right:22px}
+  .cs-tbl th.r,.cs-tbl td.r{text-align:right}
+  .cs-tbl th button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+  .cs-tbl th button:hover{color:var(--ink)}
+  .cs-tbl th svg{width:12px;height:12px;opacity:.45}
+  .cs-tbl th.on{color:var(--btn)}
+  .cs-tbl th.on svg{opacity:1}
+  #csRoot .cs-tbl td{padding:14px 12px;border-bottom:1px solid var(--line);color:var(--body);vertical-align:middle;text-align:left;font-size:13px}
+  #csRoot .cs-tbl td.r{text-align:right}
+  #csRoot .cs-tbl td:first-child{padding-left:22px;font-size:12px}
+  #csRoot .cs-tbl td:last-child{padding-right:22px}
+  .cs-tbl tr:last-child td{border-bottom:0}
+  .cs-tbl tbody tr:hover td{background:color-mix(in srgb,var(--ink) 3%,transparent)}
+  .cs-tbl td.b{white-space:nowrap}
+  .cs-tbl td.n{color:var(--ink);font-weight:500}
+  .cs-tbl td.o{color:var(--mute)}
+  .cs-tbl td.q,.cs-tbl td.a{color:var(--ink);font-weight:600;white-space:nowrap}
+  .cs-tbl td.m{color:var(--mute);white-space:nowrap}
+  .cs-empty{padding:48px 20px;text-align:center;color:var(--mute);font-size:13.5px}
   .ch-cal{margin-top:12px;box-shadow:none;border:1px solid var(--line)}
   /* 판매채널 화면 · 위에 KPI 네 칸, 아래에 퀵링크 / 판매처 기록노트 / 프로젝트 달성률 / 마감 알림 ·
      카드 생김새는 마이홈(.mh-card·.mh-link·.mh-note·.mh-proj)을 그대로 빌려 쓰고,
@@ -9336,6 +9377,8 @@ window.BAROYAM_FONT=(function(){
         <div class="hero-view-tabs" id="chTabs" role="tablist" aria-label="판매채널 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-ch-tab="dash">스케줄</button>
           <button type="button" class="hero-view-tab" role="tab" data-ch-tab="proj">프로젝트</button>
+          <!-- 11-13 사용자 요청 · 자사몰에서만 · 카페24 주문을 상품·옵션별로(cafe24/items/<달>.json · VPS cafe24_sales.js 가 채움) -->
+          <button type="button" class="hero-view-tab" role="tab" data-ch-tab="sales" id="chSalesTab" hidden>판매현황</button>
         </div>
         <!-- 마진표처럼 흰 판 위 배너(판매채널 · 로고 + 채널 이름) · 배너 색은 채널 색(data-tone) · 11-04 사용자 요청 -->
         <section class="section ch-view" style="padding-top:0">
@@ -9349,6 +9392,7 @@ window.BAROYAM_FONT=(function(){
 
           <!-- 프로젝트 탭 · 이 채널 경로(p.channel)의 프로젝트만 프로젝트 캘린더 모양으로(renderCal 을 같이 씀) -->
           <div class="ch-pane" data-ch-pane="proj" hidden><div class="ui-chips ch-st" id="chStatus" role="group" aria-label="상태"></div><div class="pj-mcal ch-cal" id="chCal"></div></div>
+          <div class="ch-pane" data-ch-pane="sales" hidden><div id="csRoot" class="cs"></div></div>
           <div class="ch-pane" data-ch-pane="dash">
           <!-- 상단 숫자 네 칸 · 화면에 들어오거나 채널·기간을 바꾸면 0에서부터 올라간다 -->
           <div class="ch-kpis">
@@ -29595,7 +29639,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* ---------- 배너 위 단추 · 스케줄(대시보드) / 프로젝트(이 채널 경로의 캘린더) ---------- */
   const CH_TAB_KEY='baroyam_ch_tab';
   let chTab='dash', chCalMonth=kstToday().slice(0,7);
-  try{ if(localStorage.getItem(CH_TAB_KEY)==='proj') chTab='proj'; }catch(e){}
+  try{ const t=localStorage.getItem(CH_TAB_KEY); if(t==='proj'||t==='sales') chTab=t; }catch(e){}
   /* 상태 거르기 · 여러 개 고름 · 비어 있으면 전체 · 네 채널이 같이 쓰고 이 브라우저에 기억 */
   const CH_ST_KEY='baroyam_ch_status';
   const chSt=new Set();
@@ -29609,10 +29653,20 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +STATUSES.map(x=>`<button type="button" class="ui-chip" data-ch-st="${esc(x.k)}" aria-pressed="${chSt.has(x.k)?'true':'false'}">${esc(x.k)} <b>${n[x.k]||0}</b></button>`).join('');
   }
   function renderChTab(){
+    /* 판매현황은 자사몰에만 · 다른 채널에서는 스케줄로 보이고 고른 값은 그대로 둔다(자사몰로 돌아오면 다시 판매현황) */
+    const isMall=chActive==='자사몰';
+    $('chSalesTab').hidden=!isMall;
+    const tab=(chTab==='sales'&&!isMall)?'dash':chTab;
     document.querySelectorAll('#chTabs [data-ch-tab]').forEach(b=>{
-      const on=b.dataset.chTab===chTab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');
+      const on=b.dataset.chTab===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');
     });
-    document.querySelectorAll('#view-channel [data-ch-pane]').forEach(el=>{ el.hidden=el.dataset.chPane!==chTab; });
+    document.querySelectorAll('#view-channel [data-ch-pane]').forEach(el=>{ el.hidden=el.dataset.chPane!==tab; });
+    if(tab==='sales'){
+      $('chPeriodBtn').parentNode.hidden=true;
+      $('channelViewSub').textContent='카페24 자사몰 주문을 상품·옵션별로 봅니다 · 결제 완료 기준(취소·반품 제외)';
+      if(window.baroyamCafe24Sales) window.baroyamCafe24Sales.show();
+      return;
+    }
     /* 기간 단추는 위 숫자 칸 몫이라 스케줄에서만 */
     $('chPeriodBtn').parentNode.hidden=chTab!=='dash';
     /* 배너 아래 한 줄 · 짧게(긴 설명은 사용자 요청으로 뺐다가 같은 날 짧게 다시) */
@@ -29677,6 +29731,156 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
      설정을 읽은 직후의 mirrorAll 과 저장할 때의 mirrorMine 이 맡는다 */
   tick();
   setInterval(tick,1000);
+})();
+
+/* ===== 자사몰 판매현황 (판매채널 › 자사몰 › 판매현황 · 11-13 사용자 요청) =====
+   VPS caffeinnos-automation/cafe24_sales.js 가 카페24 주문의 상품 줄을 날짜 × 상품 × 옵션으로 묶어
+   brand-files 의 cafe24/items/<YYYY-MM>.json = {month, at, days:{날짜:{at, rows:[{pno,n,o,q,a,ids}]}}} 에 쓴다(매시간 최근 3일).
+   화면은 읽기만 한다 · 실주문 = 고른 줄들의 주문번호 수(한 주문에 상품이 여럿이어도 한 번) · 브랜드는 상품 이름으로 알아본다 ·
+   파일이 하나도 없으면(카페24 연결 전) 예시 화면 */
+(function(){
+  const root=document.getElementById('csRoot'); if(!root) return;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const kst=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+  const won=n=>Math.round(n||0).toLocaleString('ko-KR');
+  const BRANDS=['쫀득란빵','홀떡피자','잡채랑','이응떡볶이','오꾸밥','바비쿡','방구석포차','밥카츠','파스타스','통스카츠'];
+  const st={range:{start:kst(),end:kst()},brand:'',brands:[],sort:{k:'a',dir:-1},months:{},sample:false,built:false,seq:0};
+  try{ const s=JSON.parse(localStorage.getItem('baroyam_cs_sort')||'null'); if(s&&s.k) st.sort=s; }catch(e){}
+  let data={days:{},last:''};
+  function brandOf(name,opt){
+    const t=(String(name||'')+' '+String(opt||'')).replace(/\s+/g,'');
+    let best='', at=1e9;
+    BRANDS.forEach(b=>{ const i=t.indexOf(b); if(i>=0&&i<at){ at=i; best=b; } });
+    return best||'기타';
+  }
+  /* 달 파일 읽기 · 5분 기억 · 없으면 null */
+  async function loadMonth(m){
+    const c=st.months[m]; if(c&&Date.now()-c.t<5*60e3) return c.d;
+    const DB=window.BAROYAM_DB; let d=null;
+    try{
+      if(DB&&DB.fileUrl&&(await DB.ensureSession())){
+        const u=await DB.fileUrl('brand-files','cafe24/items/'+m+'.json',60);
+        const r=await fetch(u,{cache:'no-store'});
+        if(r.ok) d=await r.json();
+      }
+    }catch(e){ d=null; }
+    st.months[m]={t:Date.now(),d:d};
+    return d;
+  }
+  function monthsOf(r){
+    const out=[]; let [y,m]=r.start.slice(0,7).split('-').map(Number);
+    const end=r.end.slice(0,7);
+    for(let i=0;i<36;i++){ const k=y+'-'+String(m).padStart(2,'0'); out.push(k); if(k>=end) break; m++; if(m>12){ m=1; y++; } }
+    return out;
+  }
+  /* 예시 · 연결 전에 모양을 보이려고(저장 안 함 · 숫자는 가짜) */
+  function sampleDays(){
+    const P=[['[비밀특가] 쫀득란빵 토핑가득 계란빵 3종','[최대혜택] 쫀득란빵 3종 베이컨5+콘치즈5+페퍼로니1 (총11봉)',27900,29,31],
+      ['[비밀특가] 홀떡피자 소떡위에 피자 4종','[최대혜택] 홀떡피자 4종 (12+1팩)',35700,11,11],
+      ['[비밀특가] 잡채랑 소고기 버섯 궁중잡채','[최대할인] 잡채랑 2인분 350g6팩',29400,7,8],
+      ['[기획전] 쫀득란빵 토핑가득 계란빵 3종','[최대혜택] 쫀득란빵 3종 (15봉)5+5+5봉',39400,5,5],
+      ['[시크릿 할인] 이응떡볶이 골라담기 비밀링크','[BEST] 정식세트 1+1+1+1팩',11600,4,7],
+      ['[기획전] 오꾸밥 오븐에 꾸운 주먹밥 골라담기','[최대할인] 오꾸밥 8종 맛별 4봉 (32봉)',38900,2,2]];
+    let id=1;
+    const rows=P.map((p,i)=>{ const ids=[]; for(let k=0;k<p[3];k++) ids.push('S'+(id++)); return {pno:'s'+i,n:p[0],o:p[1],q:p[4],a:p[4]*p[2],ids:ids}; });
+    return {[kst()]:{at:new Date().toISOString(),rows:rows}};
+  }
+  async function collect(){
+    const r=st.range, days={}; let any=false, last='';
+    for(const m of monthsOf(r)){
+      const d=await loadMonth(m); if(!d) continue; any=true;
+      if(d.at&&d.at>last) last=d.at;
+      Object.keys(d.days||{}).forEach(k=>{ if(k>=r.start&&k<=r.end) days[k]=d.days[k]; });
+    }
+    if(!any){
+      /* 고른 달에 파일이 없으면 이번 달 파일이 있는지 보고, 그것도 없으면 아직 연결 전 */
+      const cur=await loadMonth(kst().slice(0,7));
+      if(cur){ any=true; last=cur.at||''; }
+    }
+    st.sample=!any;
+    return {days:any?days:sampleDays(),last:last};
+  }
+  function build(){
+    root.innerHTML='<div class="cs-top">'
+      +'<div class="cs-bar"><label>기간</label><button type="button" id="csPeriod"></button><span class="sep"></span>'
+      +'<label>브랜드</label><button type="button" class="ui-field" id="csBrand"></button>'
+      +'<span class="cs-when" id="csWhen"></span></div>'
+      +'<div class="cs-kpis" id="csKpis"></div></div>'
+      +'<div id="csNote"></div><div class="cs-tbl-wrap" id="csTbl"></div>';
+    window.UI.datePicker($('csPeriod'),{
+      mode:'range', value:st.range, max:kst(), placeholder:'기간 선택',
+      presets:['today','yesterday','last7','month','prevMonth','custom'],
+      resetValue:{start:kst(),end:kst()},
+      onChange:v=>{ st.range=v||{start:kst(),end:kst()}; paint(); },
+    });
+    $('csBrand').addEventListener('click',e=>{
+      e.stopPropagation();
+      const opts=[{value:'',label:'전체'}].concat(st.brands.map(b=>({value:b,label:b})));
+      window.UI.menu(e.currentTarget,opts,st.brand,v=>{ st.brand=v; draw(); });
+    });
+    $('csTbl').addEventListener('click',e=>{
+      const b=e.target.closest('[data-sort]'); if(!b) return;
+      const k=b.dataset.sort;
+      st.sort=st.sort.k===k?{k:k,dir:-st.sort.dir}:{k:k,dir:(k==='b'||k==='n'||k==='o')?1:-1};
+      try{ localStorage.setItem('baroyam_cs_sort',JSON.stringify(st.sort)); }catch(e){}
+      draw();
+    });
+    st.built=true;
+  }
+  async function paint(){
+    if(!st.built) build();
+    const my=++st.seq;
+    if(!Object.keys(data.days).length) $('csTbl').innerHTML='<div class="cs-empty">불러오는 중…</div>';
+    const d=await collect();
+    if(my!==st.seq) return;          /* 그사이 기간을 또 바꿨으면 늦게 온 답은 버린다 */
+    data=d; draw();
+  }
+  const SVG=p=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';
+  const SORT_SVG=SVG('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),
+    DOWN_SVG=SVG('<path d="M12 5v14M6 13l6 6 6-6"/>'), UP_SVG=SVG('<path d="M12 19V5M6 11l6-6 6 6"/>');
+  function draw(){
+    /* 날짜를 넘어 상품 × 옵션으로 묶는다 */
+    const map=new Map();
+    Object.keys(data.days).forEach(day=>{
+      (data.days[day].rows||[]).forEach(r=>{
+        const k=(r.pno||r.n)+'\u0001'+(r.o||'');
+        let x=map.get(k);
+        if(!x) map.set(k,x={b:brandOf(r.n,r.o),n:r.n||'',o:r.o||'',q:0,a:0,ids:new Set()});
+        x.q+=r.q||0; x.a+=r.a||0; (r.ids||[]).forEach(i=>x.ids.add(i));
+      });
+    });
+    const all=[...map.values()];
+    st.brands=BRANDS.filter(b=>all.some(x=>x.b===b)).concat(all.some(x=>x.b==='기타')?['기타']:[]);
+    if(st.brand&&!st.brands.includes(st.brand)) st.brand='';
+    $('csBrand').innerHTML='<span class="t">'+esc(st.brand||'전체')+'</span>';
+    const rows=all.filter(x=>!st.brand||x.b===st.brand).map(x=>Object.assign(x,{c:x.ids.size,avg:x.ids.size?x.q/x.ids.size:0}));
+    const orders=new Set(); let q=0,a=0;
+    rows.forEach(x=>{ x.ids.forEach(i=>orders.add(i)); q+=x.q; a+=x.a; });
+    $('csKpis').innerHTML=
+      '<div class="cs-kpi"><div class="l">실주문 <em>주문번호 기준</em></div><div class="v num">'+won(orders.size)+'<small>건</small></div></div>'
+      +'<div class="cs-kpi"><div class="l">총 판매</div><div class="v num">'+won(q)+'<small>개</small></div></div>'
+      +'<div class="cs-kpi"><div class="l">매출</div><div class="v num">'+won(a)+'원</div></div>';
+    const when=$('csWhen');
+    when.textContent=''; when.classList.remove('warn');
+    if(!st.sample&&data.last){
+      const t=new Date(data.last), d=new Date(t.getTime()+9*3600e3);
+      when.textContent='카페24 · '+(d.getUTCMonth()+1)+'월 '+d.getUTCDate()+'일 '+String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')+' 기준';
+      when.classList.toggle('warn',Date.now()-t.getTime()>3*3600e3);
+    }
+    $('csNote').innerHTML=st.sample
+      ?'<div class="cs-note"><b>예시 화면</b> · 카페24가 아직 연결되지 않아 모양만 보여 드립니다(숫자는 가짜). 연결되면 매시간 실제 주문이 들어옵니다.</div>':'';
+    const k=st.sort.k, dir=st.sort.dir;
+    rows.sort((x,y)=>{ const A=x[k],B=y[k]; return (typeof A==='string'?A.localeCompare(B,'ko'):A-B)*dir||(y.a-x.a); });
+    const th=(key,label,cls)=>'<th class="'+(cls||'')+(k===key?' on':'')+'"><button type="button" data-sort="'+key+'">'+label+(k===key?(dir<0?DOWN_SVG:UP_SVG):SORT_SVG)+'</button></th>';
+    $('csTbl').innerHTML=rows.length
+      ?'<table class="cs-tbl"><thead><tr>'+th('b','브랜드')+th('n','상품명')+th('o','옵션')+th('c','주문건수','r')+th('q','판매수','r')+th('avg','평균/주문','r')+th('a','매출','r')+'</tr></thead><tbody>'
+        +rows.map(x=>'<tr><td class="b">'+esc(x.b)+'</td><td class="n">'+esc(x.n)+'</td><td class="o">'+esc(x.o||'-')+'</td>'
+          +'<td class="r m">'+won(x.c)+'건</td><td class="r q">'+won(x.q)+'개</td><td class="r m">'+x.avg.toFixed(1)+'개</td><td class="r a">'+won(x.a)+'원</td></tr>').join('')
+        +'</tbody></table>'
+      :'<div class="cs-empty">고른 기간'+(st.brand?'·브랜드':'')+'에 결제된 주문이 없습니다</div>';
+  }
+  window.baroyamCafe24Sales={show:paint};
 })();
 
 /* 회의 안건 메모 · 직접 수정 + 자동 저장 + 회의 기록 저장/불러오기 + PNG 공유 */
