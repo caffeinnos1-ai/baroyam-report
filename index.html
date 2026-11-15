@@ -30764,6 +30764,10 @@ window.baroyamAsk=function(title,body,okText){
   /* 화면에서 더하는 뿌리폴더 · 분류 사전(drive_dict_v1 · trend 저장소 드라이브_사전.json)에 아직 없어도 새로고침·업로드가 이 폴더를 훑는다 ·
      사전에도 같은 이름으로 넣어 두었으니, 밤 색인(로봇 계정)이 이 폴더를 볼 수 있게 공유되면 그쪽에서도 올라온다 */
   const 더한뿌리={'메타광고':'1EWyHyk89JDQoHppAEk0AjbQTYPmSmoA0','유튜브':'1AuOQAI8gpZnGIQqx2-D5OvxHr1LZ_Gf4'};
+  /* 디자인 탭 폴더 · 드라이브에서 이름이 '★제품별_자산' → '01.★제품별_자산' 으로 바뀌어(11월) 앞 번호가 있든 없든 알아본다 ·
+     폴더 번호는 1cF5hm4j_3QJVdDwM35NCGtC9ZUvxkDtF (★바로얌 아래) */
+  const 제품자산폴더=/^(\d+\s*\.\s*)?★제품별_자산$/;
+  function 제품자산경로(경로){ return String(경로||'').split(' / ').some(function(c){ return 제품자산폴더.test(c.trim()); }); }
   function 사전보강(사전){
     if(!사전) return 사전;
     const 뿌리=Object.assign({},사전['뿌리폴더']||{}), 대시=(사전['대시보드폴더']||[]).slice();
@@ -31362,7 +31366,7 @@ window.baroyamAsk=function(title,body,okText){
       const 자산=await 드라이브훑기(사전,토큰,function(폴더,파일){ 글.textContent='폴더 '+폴더+' · 파일 '+파일; });
       const 더할곳=사전['대시보드폴더']||[];
       const 올릴것=분류하기(자산.filter(function(r){
-        return (r.경로+' /').indexOf('/ ★제품별_자산 /')>=0 || 더할곳.indexOf(r.경로.split(' / ')[0])>=0;
+        return 제품자산경로(r.경로) || 더할곳.indexOf(r.경로.split(' / ')[0])>=0;
       }),사전);
       if(!올릴것.length) throw new Error('드라이브에서 파일을 하나도 찾지 못했어요');
       const 칸=['아이디','이름','브랜드','제품','자산종류','판매처','날짜','경로','크기'];
@@ -31481,7 +31485,7 @@ window.baroyamAsk=function(title,body,okText){
   function 짧은경로(p){ const 칸=p.split(' / '); return (칸.length>2?칸.slice(-2):칸).join(' › '); }
   /* 드라이브 화면 목록에 나오는 곳인지 · 새로고침이 올리는 범위와 같다(★제품별_자산 + 사전의 대시보드폴더) */
   function 색인범위(경로){
-    return (경로+' /').indexOf('/ ★제품별_자산 /')>=0
+    return 제품자산경로(경로)
       || ((업.사전&&업.사전['대시보드폴더'])||[]).indexOf(경로.split(' / ')[0])>=0;
   }
   function 뿌리들(회사값){
@@ -31681,7 +31685,12 @@ window.baroyamAsk=function(title,body,okText){
       if(!뿌리) throw new Error(탭이름(회사값)+' 드라이브 폴더가 분류 사전에 없어요');
       /* 처음 위치 · 최근에 올린 곳 → 바로얌은 ★제품별_자산 */
       업.길=[뿌리];
-      const 처음=최근목록()[0]||(회사값==='바로얌'?뿌리.name+' / ★제품별_자산':'');
+      const 처음=최근목록()[0]||'';
+      if(!처음&&회사값==='바로얌'){
+        const 제품=(await 하위폴더(뿌리.id).catch(function(){ return []; })).find(function(f){ return 제품자산폴더.test(f.name.trim()); });
+        if(차례!==업.차례) return;
+        if(제품) 업.길=[뿌리,제품];
+      }
       if(처음){
         const 길=await 경로찾기(처음).catch(function(){ return null; });
         if(차례!==업.차례) return;
