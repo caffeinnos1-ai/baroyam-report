@@ -2575,6 +2575,10 @@ window.BAROYAM_FONT=(function(){
   .ph-th-acts{display:flex;gap:18px;margin-top:10px;color:var(--body)}
   .ph-th-acts svg{width:18px;height:18px}
   /* ③ 쓰레드 추천 피드 · 링크 넣는 줄 + 공식 퍼가기 글 */
+  .rec-open{display:block;width:calc(100% - 24px);margin:10px 12px 0;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);
+    font:inherit;font-size:13px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer}
+  .rec-open small{display:block;margin-top:2px;font-size:11px;font-weight:400;color:var(--mute)}
+  .rec-open:hover{border-color:var(--ink)}
   .rec-add{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
   .rec-add .ui-field{flex:1;min-width:0;height:var(--ui-h-sm);font-size:12.5px}
   .rec-msg{margin:0;padding:6px 12px;font-size:11.5px;color:var(--neg)}
@@ -20870,6 +20874,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const scr=$('iuRecScr'); if(!scr) return;
     recLoad();
     if(!scr.firstChild) scr.innerHTML=PH_STATUS+'<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div>'+
+      '<button type="button" class="rec-open" data-rec-open>쓰레드 추천 피드 열기 <small>새 창 · 내 계정의 실제 추천 글</small></button>'+
       '<form class="rec-add" id="iuRecForm"><input class="ui-field" id="iuRecUrl" placeholder="쓰레드 글 링크 붙여넣기" autocomplete="off"><button type="submit" class="ui-btn primary sm">넣기</button></form>'+
       '<p class="rec-msg" id="iuRecMsg"></p><div id="iuRecList"></div>';
     $('iuRecMsg').textContent=rec.msg; $('iuRecMsg').hidden=!rec.msg;
@@ -20878,7 +20883,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(sig===rec.sig) return; rec.sig=sig;
     const box=$('iuRecList');
     if(!list){ box.innerHTML='<div class="ph-empty">불러오는 중…</div>'; return; }
-    if(!list.length){ box.innerHTML='<div class="ph-empty">쓰레드에서 참고할 만한 글의 링크를 복사해<br>위 칸에 붙여 넣으면 여기에 쌓여요<br><small>글 오른쪽 위 ··· › 링크 복사</small></div>'; return; }
+    if(!list.length){ box.innerHTML='<div class="ph-empty">쓰레드에서 참고할 만한 글의 링크를 복사해<br>위 칸에 붙여 넣으면 여기에 쌓여요<br><small>글 하나의 오른쪽 위 ··· › 링크 복사 (주소에 /post/ 가 들어 있어야 해요)<br>쓰레드 첫 화면 주소는 넣을 수 없어요</small></div>'; return; }
     box.innerHTML=list.map(([id,x])=>'<div class="rec-item" data-rec="'+esc(id)+'"><blockquote class="text-post-media" data-text-post-permalink="'+esc(x.url)+'" data-text-post-version="0"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">쓰레드에서 보기</a></blockquote>'+
       '<div class="rec-meta"><span>'+esc(x.by||'')+' · '+(x.at?(s=>/\.$/.test(s)?s+' 넣음':s+' 전 넣음')(phAgo(new Date(x.at).toISOString())):'')+'</span><button type="button" class="rec-x" data-rec-x="'+esc(id)+'">빼기</button></div></div>').join('');
     // 쓰레드 공식 퍼가기 스크립트 · 새로 그릴 때마다 다시 붙여 새 글을 iframe 으로 바꾸게 함
@@ -20888,7 +20893,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   $('iuRecScr').addEventListener('submit',async e=>{
     if(e.target.id!=='iuRecForm') return; e.preventDefault();
     const inp=$('iuRecUrl'), url=recUrl(inp.value);
-    if(!url){ rec.msg='쓰레드 글 링크가 아니에요 · threads.com/@이름/post/… 모양이어야 해요'; recPaint(); return; }
+    if(!url){ rec.msg=/threads\.(net|com)\/?(\?|#|$)/i.test(inp.value.trim())
+      ?'쓰레드 첫 화면(추천 피드 전체) 주소예요 · 피드는 위 "쓰레드 추천 피드 열기"로 보고, 여기에는 글 하나의 링크(··· › 링크 복사)를 넣어 주세요'
+      :'쓰레드 글 하나의 링크가 아니에요 · threads.com/@이름/post/… 모양이어야 해요'; recPaint(); return; }
     if(rec.items&&Object.values(rec.items).some(x=>x&&!x.del&&x.url===url)){ rec.msg='이미 넣은 글이에요'; recPaint(); return; }
     if(rec.busy) return; rec.busy=true;
     const id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -20897,6 +20904,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(ok) inp.value=''; rec.sig=''; recPaint();
   });
   $('iuRecScr').addEventListener('click',async e=>{
+    // 추천 피드 전체는 쓰레드가 다른 사이트 안에 띄우지 못하게 막아 두어(로그인한 사람마다 다름) 휴대폰 크기 새 창으로 연다
+    if(e.target.closest('[data-rec-open]')){ const w=420,hh=Math.min(900,screen.availHeight-40);
+      window.open('https://www.threads.com/','baroyamThreadsFeed','width='+w+',height='+hh+',left='+Math.max(0,screen.availWidth-w-20)+',top=20'); return; }
     const b=e.target.closest('[data-rec-x]'); if(!b) return;
     if(!confirm('이 글을 추천 피드에서 뺄까요?')) return;
     const ok=await recSave(b.dataset.recX,{del:Date.now()});
