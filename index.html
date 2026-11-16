@@ -2491,6 +2491,72 @@ window.BAROYAM_FONT=(function(){
   .pv-th .pv-acts svg{width:19px;height:19px}
   .pv-th .pv-topic{display:inline-block;margin-left:4px;color:var(--mute);font-weight:400}
   .pv-th .pv-topic b{color:var(--ink);font-weight:500}
+  /* 오른쪽 칸 · 휴대폰 화면 피드 (11-16) · 위 단추로 업로드 목록과 바꿔 봄 */
+  .iu-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .iu-side [hidden]{display:none}
+  .iu-side-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:var(--ui-h-sm)}
+  .iu-side-t{font-size:14px;font-weight:600;color:var(--ink)}
+  #iuListBtn b{margin-left:2px;font-weight:600}
+  #iuListBtn b:empty{display:none}
+  #iuListBtn[aria-pressed="true"]{background:var(--btn);color:#fff}
+  .iu-phone-wrap{display:flex;justify-content:center}
+  .iu-phone{width:100%;max-width:350px;padding:9px;border-radius:44px;background:#1c1c1e;
+    box-shadow:0 0 0 1px #3a3a3c inset,0 18px 40px -18px rgba(0,0,0,.45)}
+  .iu-phone-scr{position:relative;height:min(720px,calc(100vh - 150px));min-height:480px;border-radius:36px;overflow-y:auto;overflow-x:hidden;
+    background:var(--paper);color:var(--ink);font-size:13px;scrollbar-width:none}
+  .iu-phone-scr::-webkit-scrollbar{display:none}
+  .ph-status{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:12px 24px 6px;
+    background:var(--paper);font-size:12.5px;font-weight:600}
+  .ph-status i{width:84px;height:22px;border-radius:12px;background:#1c1c1e}
+  .ph-status span:last-child{letter-spacing:1px;font-size:11px}
+  .ph-empty{padding:40px 24px;text-align:center;font-size:12.5px;line-height:1.7;color:var(--mute)}
+  .ph-img{display:block;width:100%;height:100%;object-fit:cover}
+  .ph-pvtag{position:absolute;left:6px;bottom:6px;padding:2px 7px;border-radius:999px;background:var(--btn);color:#fff;font-size:10.5px;font-weight:600}
+  /* 인스타 · 내 프로필 */
+  .ph-ig-top{display:flex;align-items:center;gap:6px;padding:6px 16px 4px;font-size:17px;font-weight:600}
+  .ph-ig-top .r{margin-left:auto;display:flex;gap:16px}
+  .ph-ig-top svg{width:22px;height:22px}
+  .ph-ig-pro{display:flex;align-items:center;gap:18px;padding:10px 16px 6px}
+  .ph-ig-av{width:78px;height:78px;border-radius:50%;flex:none;overflow:hidden;background:var(--chip-flat);display:grid;place-items:center;font-size:24px;font-weight:600}
+  .ph-ig-cnt{flex:1;display:flex;justify-content:space-around;text-align:center}
+  .ph-ig-cnt b{display:block;font-size:15.5px;font-weight:600}
+  .ph-ig-cnt span{font-size:12px;color:var(--body)}
+  .ph-ig-name{padding:2px 16px 10px;font-size:13px;font-weight:600}
+  .ph-ig-btns{display:flex;gap:6px;padding:0 16px 12px}
+  .ph-ig-btns span{flex:1;height:30px;border-radius:8px;background:var(--chip-flat);display:grid;place-items:center;font-size:12.5px;font-weight:600}
+  .ph-ig-tabs{display:flex;border-bottom:1px solid var(--line)}
+  .ph-ig-tabs span{flex:1;display:grid;place-items:center;height:40px;color:var(--mute)}
+  .ph-ig-tabs span.on{color:var(--ink);box-shadow:inset 0 -1.5px 0 var(--ink)}
+  .ph-ig-tabs svg{width:21px;height:21px}
+  .ph-ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+  .ph-ig-grid a,.ph-ig-grid div{position:relative;aspect-ratio:3/4;background:var(--chip-flat);overflow:hidden;display:block}
+  .ph-ig-grid .k{position:absolute;top:6px;right:6px;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+  .ph-ig-grid .k svg{width:15px;height:15px;display:block}
+  .ph-ig-grid .is-pv{outline:2.5px solid var(--btn);outline-offset:-2.5px}
+  .ph-ig-grid .is-pv img,.ph-ig-grid .is-pv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  /* 쓰레드 · 홈 피드 모양 */
+  .ph-th-top{display:grid;place-items:center;padding:4px 0 6px}
+  .ph-th-top svg{width:28px;height:28px}
+  .ph-th-tabs{display:flex;border-bottom:1px solid var(--line);font-size:13.5px;font-weight:600}
+  .ph-th-tabs span{flex:1;text-align:center;padding:10px 0;color:var(--mute)}
+  .ph-th-tabs span.on{color:var(--ink);box-shadow:inset 0 -1.5px 0 var(--ink)}
+  .ph-th-post{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;padding:13px 14px 10px;border-bottom:1px solid var(--line)}
+  .ph-th-post.is-pv{background:color-mix(in srgb,var(--btn) 6%,var(--paper))}
+  .ph-th-av{position:relative;width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--chip-flat);display:grid;place-items:center;font-size:13px;font-weight:600}
+  .ph-th-head{display:flex;align-items:center;gap:6px}
+  .ph-th-head b{font-weight:600}
+  .ph-th-head small{color:var(--mute);font-size:12.5px}
+  .ph-th-head .m{margin-left:auto;color:var(--mute);letter-spacing:1px}
+  .ph-th-head .pvt{padding:1px 7px;border-radius:999px;background:var(--btn);color:#fff;font-size:10.5px;font-weight:600}
+  .ph-th-text{margin-top:2px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .ph-th-text .tg{color:#3b6fb6}
+  .ph-th-media{display:flex;gap:6px;overflow-x:auto;margin-top:8px;scrollbar-width:none}
+  .ph-th-media::-webkit-scrollbar{display:none}
+  .ph-th-media>*{flex:none;position:relative;height:210px;aspect-ratio:4/5;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--chip-flat)}
+  .ph-th-media.one>*{width:100%;height:auto;max-height:340px;aspect-ratio:4/5}
+  .ph-th-media img,.ph-th-media video{display:block;width:100%;height:100%;object-fit:cover}
+  .ph-th-acts{display:flex;gap:18px;margin-top:10px;color:var(--body)}
+  .ph-th-acts svg{width:18px;height:18px}
   .iu-plat{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   /* 올릴 곳 단추 · 붙은 탭 대신 떨어진 알약 둘 · 고르면 인스타는 인스타 그라데이션, 쓰레드는 검정 (11-16 사용자 요청)
      색은 각 서비스 로고 색이라 화면 색 변수 대신 여기서만 정함 · .ui-tab 의 all:unset 보다 세게 #iuPlat 로 묶음 */
@@ -2585,7 +2651,7 @@ window.BAROYAM_FONT=(function(){
   .iu-body .err{color:var(--neg);white-space:normal}
   .iu-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .iu-empty{padding:30px 10px;text-align:center;font-size:12.5px;color:var(--mute)}
-  @media (max-width:1320px){ .iu{grid-template-columns:minmax(0,440px) minmax(0,1fr)} .iu-list{grid-column:1/-1} .iu-pv{max-width:400px} }
+  @media (max-width:1320px){ .iu{grid-template-columns:minmax(0,440px) minmax(0,1fr)} .iu-side{grid-column:1/-1;position:static} .iu-pv{max-width:400px} }
   @media (max-width:900px){ .iu{grid-template-columns:minmax(0,1fr)} .iu-new,.iu-pv{position:static} }
   /* 인스타콘텐츠 › 성과 (ip-*) · 디자인 초안 · 계정 연결 전에는 예시 데이터로 그린다 */
   .ip{margin-top:22px;display:flex;flex-direction:column;gap:16px}
@@ -12094,7 +12160,13 @@ window.BAROYAM_FONT=(function(){
               <div class="ip-card-head"><h3>미리보기</h3><span class="iu-pv-tag" id="iuPvTag"></span></div>
               <div id="iuPv"></div>
             </section>
-            <section class="ip-card iu-list">
+            <!-- 오른쪽 칸 · 휴대폰 화면 피드(인스타 = 내 프로필 격자 insta_insights_v1 · 쓰레드 = 내 글 threads_feed_v1 · 지금 쓰는 게시물을 맨 앞에 끼움)
+                 업로드 목록은 위 단추를 누르면 휴대폰 자리에 보임 -->
+            <div class="iu-side" id="iuSide">
+              <div class="iu-side-bar"><span class="iu-side-t" id="iuSideT">내 피드</span>
+                <button type="button" class="ui-btn soft sm" id="iuListBtn" aria-pressed="false">업로드 목록 <b id="iuListN"></b></button></div>
+              <div class="iu-phone-wrap" id="iuPhoneWrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPhone"></div></div></div>
+            <section class="ip-card iu-list" hidden>
               <div class="ip-card-head"><h3>업로드 목록</h3>
                 <div class="ui-tabs" id="iuTabs">
                   <button type="button" class="ui-tab" data-value="wait" aria-selected="true">예약 <span class="n" id="iuNWait">0</span></button>
@@ -12104,6 +12176,7 @@ window.BAROYAM_FONT=(function(){
               <div id="iuRows"></div>
               <p class="cm-hint" id="iuListHint">예약 시각이 되면 서버가 2분 안에 올립니다. 인스타그램은 하루 100개까지 올릴 수 있어요.</p>
             </section>
+            </div>
           </div>
         </section>
         <!-- 업로드 일정 창 · 새로 만들기·고치기 같이 쓴다 -->
@@ -20625,6 +20698,83 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       m.innerHTML=pvMedia(fs[pv.i]); keep.forEach(k=>m.appendChild(k)); pvFill(fs,(form.caption||'').trim(),form.type); return; }
     if(e.target.closest('[data-pv="more"],.pv-cap.clamp')){ pv.open=true; pvFill(form.files.filter(f=>!f.bad),(form.caption||'').trim(),form.type); }
   });
+
+  /* ---------- 오른쪽 휴대폰 피드 (11-16) ----------
+     인스타 = 내 프로필 격자(서버가 하루 3번 채우는 insta_insights_v1) · 쓰레드 = 내 글(서버가 30분마다 채우는 threads_feed_v1 ·
+     쓰레드 '추천' 홈피드는 API 로 주지 않아 내 글만) · 지금 쓰는 게시물을 맨 앞에 "미리보기"로 끼운다(저장 없음)
+     피드 칸은 데이터·파일이 바뀔 때만 새로 그리고(스크롤·영상 유지), 쓰레드 미리보기 글은 그 줄만 바꾼다 */
+  const ph={ig:null,th:null,at:{ig:0,th:0},sig:'',list:false};
+  const PH_KEY={ig:'insta_insights_v1',th:'threads_feed_v1'};
+  async function phLoad(p){
+    if(Date.now()-ph.at[p]<10*60e3) return;
+    ph.at[p]=Date.now();
+    try{ const db=DB(); if(!db||!db.loadSetting) return;
+      let v=await db.loadSetting(PH_KEY[p],true); if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      ph[p]=v||{}; ph.sig=''; phPaint();
+    }catch(e){ ph.at[p]=0; console.error(e); }
+  }
+  const phAgo=t=>{ const s=(Date.now()-Date.parse(t))/1e3; if(!(s>=0)) return '';
+    if(s<3600) return Math.max(1,Math.floor(s/60))+'분'; if(s<86400) return Math.floor(s/3600)+'시간'; if(s<7*86400) return Math.floor(s/86400)+'일';
+    const d=new Date(t); return (d.getMonth()+1)+'. '+d.getDate()+'.'; };
+  const phNum=n=>n==null?'-':n>=1e4?(n/1e4).toFixed(n>=1e5?0:1).replace(/\.0$/,'')+'만':Number(n).toLocaleString('ko-KR');
+  const phImg=u=>'<img class="ph-img" src="'+esc(u)+'" alt="" loading="lazy" referrerpolicy="no-referrer">';
+  const PH_STATUS='<div class="ph-status"><span>9:41</span><i></i><span>▮▮▮</span></div>';
+  const PH_IG_ICO={
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>',
+    menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg>',
+    reel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M3.5 8.5h17M8 3.5l3 5M13.5 3.5l3 5M10 12v5l4.5-2.5Z"/></svg>',
+    tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M6.5 20.5a6 6 0 0 1 11 0"/></svg>',
+    car:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 3h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm-4 4v12a2 2 0 0 0 2 2h12v-2H6V7Z"/></svg>',
+    play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5Z"/></svg>'
+  };
+  const PH_TH_LOGO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M15.6 8.6v4.6a2.7 2.7 0 0 0 5.4 0V12a9 9 0 1 0-3.6 7.2"/></svg>';
+  function phPaint(){
+    const scr=$('iuPhone'); if(!scr) return;
+    $('iuSideT').textContent=ph.list?'업로드 목록':(plat==='th'?'내 쓰레드 피드':'내 인스타 피드');
+    phLoad(plat);
+    const fs=form.files.filter(f=>!f.bad), d=ph[plat];
+    const pvOn=plat==='th'?!!(fs.length||(form.caption||'').trim()):!!fs.length&&form.type!=='story';
+    const sig=plat+'|'+(d?d.at||d.updatedAt||1:0)+'|'+(plat==='ig'&&pvOn?form.type+':'+fs[0].id+fs[0].url:'')+(plat==='th'?'|'+pvOn+fs.map(f=>f.id).join(','):'');
+    if(sig!==ph.sig){ ph.sig=sig; scr.innerHTML=PH_STATUS+(d?(plat==='th'?phThreads(d,pvOn):phInsta(d,pvOn,fs)):'<div class="ph-empty">피드를 불러오는 중…</div>'); }
+    if(plat==='th'&&pvOn){ const t=scr.querySelector('[data-ph="pvtext"]'); if(t) t.innerHTML=pvText((form.caption||'').trim())||'<span style="color:var(--mute)">글이 없어요</span>'; }
+  }
+  function phInsta(d,pvOn,fs){
+    const a=d.account||{}, posts=(Array.isArray(d.posts)?d.posts:[]).filter(p=>p&&p.thumb).sort((x,y)=>Date.parse(y.time||y.at)-Date.parse(x.time||x.at)).slice(0,60);
+    const av=a.picture?phImg(a.picture):esc(((a.username||'b')[0]||'b').toUpperCase());
+    let tiles='';
+    if(pvOn){ const f=fs[0]; tiles+='<div class="is-pv" title="지금 쓰는 게시물">'+pvMedia(f)+(form.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':form.type==='carousel'&&fs.length>1?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+'<span class="ph-pvtag">미리보기</span></div>'; }
+    tiles+=posts.map(p=>'<a href="'+esc(p.link||'#')+'" target="_blank" rel="noopener" title="'+esc((p.caption||'').slice(0,80))+'">'+phImg(p.thumb)+
+      (p.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':p.type==='carousel'?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+'</a>').join('');
+    return '<div class="ph-ig-top">'+esc(a.username||'baroyam_official')+' <small style="font-size:12px">▾</small><span class="r">'+PH_IG_ICO.plus+PH_IG_ICO.menu+'</span></div>'+
+      '<div class="ph-ig-pro"><div class="ph-ig-av">'+av+'</div><div class="ph-ig-cnt"><div><b>'+phNum(a.media)+'</b><span>게시물</span></div><div><b>'+phNum(a.followers)+'</b><span>팔로워</span></div><div><b>'+phNum(a.follows)+'</b><span>팔로잉</span></div></div></div>'+
+      (a.name?'<div class="ph-ig-name">'+esc(a.name)+'</div>':'')+
+      '<div class="ph-ig-btns"><span>프로필 편집</span><span>프로필 공유</span></div>'+
+      '<div class="ph-ig-tabs"><span class="on">'+PH_IG_ICO.grid+'</span><span>'+PH_IG_ICO.reel+'</span><span>'+PH_IG_ICO.tag+'</span></div>'+
+      (tiles?'<div class="ph-ig-grid">'+tiles+'</div>':'<div class="ph-empty">아직 받은 게시물이 없어요<br>서버가 하루 세 번 인스타에서 받아 와요</div>');
+  }
+  function phThreads(d,pvOn){
+    const me=d.me||{}, name=me.username||'baroyam_official';
+    const av=me.pic?phImg(me.pic):esc((name[0]||'b').toUpperCase());
+    const acts='<div class="ph-th-acts">'+PV_ICO.heart+PV_ICO.talk+PV_ICO.repost+PV_ICO.send+'</div>';
+    const media=list=>!list.length?'':'<div class="ph-th-media'+(list.length===1?' one':'')+'">'+list.join('')+'</div>';
+    let out='';
+    if(pvOn){ const fs=form.files.filter(f=>!f.bad);
+      out+='<div class="ph-th-post is-pv"><div class="ph-th-av">'+av+'</div><div><div class="ph-th-head"><b>'+esc(name)+'</b><small>방금</small><span class="pvt">미리보기</span></div>'+
+        '<div class="ph-th-text" data-ph="pvtext"></div>'+media(fs.map(f=>'<div style="aspect-ratio:'+(f.w&&f.h&&fs.length>1?Math.max(.6,Math.min(1.5,f.w/f.h)):.8)+'">'+pvMedia(f)+'</div>'))+acts+'</div></div>'; }
+    const posts=Array.isArray(d.posts)?d.posts:[];
+    out+=posts.map(p=>'<div class="ph-th-post"><div class="ph-th-av">'+av+'</div><div><div class="ph-th-head"><b>'+esc(name)+'</b><small>'+phAgo(p.time)+'</small>'+
+      (p.link?'<a class="m" href="'+esc(p.link)+'" target="_blank" rel="noopener" title="쓰레드에서 보기">···</a>':'<span class="m">···</span>')+'</div>'+
+      (p.text?'<div class="ph-th-text">'+pvText(p.text)+'</div>':'')+media((p.media||[]).map(m=>'<div>'+phImg(m.u)+'</div>'))+acts+'</div></div>').join('');
+    if(!posts.length&&!pvOn) out+='<div class="ph-empty">아직 올린 쓰레드 글이 없어요</div>';
+    return '<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">내 글</span><span>추천</span></div>'+out;
+  }
+  $('iuListBtn').addEventListener('click',()=>{
+    ph.list=!ph.list;
+    $('iuListBtn').setAttribute('aria-pressed',String(ph.list));
+    $('iuPhoneWrap').hidden=ph.list; $('iuSide').querySelector('.iu-list').hidden=!ph.list;
+    phPaint();
+  });
   function paintForm(){
     const ed=st.edit&&st.posts[st.edit];
     $('iuTitle').textContent=ed?'예약 고치기':'새 게시물';
@@ -20655,7 +20805,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('iuWhenHint').textContent=form.when==='now'?'누르면 2분 안에 '+PLAT[plat].name+'에 올라갑니다':plat==='th'?'이 시각에 서버가 쓰레드에 올려요':'이 시각에 서버가 올리고 일정 캘린더에도 표시돼요';
     $('iuPlatHint').textContent=PLAT[plat].hint; $('iuListHint').textContent=PLAT[plat].list;
     $('iuPlat').closest('.iu').dataset.plat=plat;
-    pvPaint();
+    pvPaint(); phPaint();
     $('iuGo').textContent=ed?'예약 고치기':form.when==='now'?'지금 올리기':'예약하기';
     aiSync();
     const p=problems();
@@ -20677,6 +20827,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const all=Object.values(st.posts).filter(p=>p&&!p.del);
     const grp={wait:all.filter(p=>p.state==='scheduled'||p.state==='publishing'),done:all.filter(p=>p.state==='done'),fail:all.filter(p=>p.state==='failed')};
     $('iuNWait').textContent=grp.wait.length; $('iuNDone').textContent=grp.done.length; $('iuNFail').textContent=grp.fail.length;
+    $('iuListN').textContent=grp.wait.length+grp.fail.length||'';
     const rows=grp[st.tab].sort((a,b)=>st.tab==='wait'?Date.parse(a.when)-Date.parse(b.when):Date.parse(b.doneAt||b.when)-Date.parse(a.doneAt||a.when));
     if(!rows.length){ $('iuRows').innerHTML='<div class="iu-empty">'+({wait:'예약한 게시물이 없어요',done:'아직 올린 게시물이 없어요',fail:'실패한 게시물이 없어요'})[st.tab]+'</div>'; return; }
     $('iuRows').innerHTML=rows.map(p=>{
