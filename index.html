@@ -2441,23 +2441,28 @@ window.BAROYAM_FONT=(function(){
   /* 올릴 곳 단추 · 붙은 탭 대신 떨어진 알약 둘 · 고르면 인스타는 인스타 그라데이션, 쓰레드는 검정 (11-16 사용자 요청)
      색은 각 서비스 로고 색이라 화면 색 변수 대신 여기서만 정함 · .ui-tab 의 all:unset 보다 세게 #iuPlat 로 묶음 */
   #iuPlat{--ig-grad:linear-gradient(45deg,#f9b14a 0%,#f2603d 30%,#d62976 60%,#962fbf 85%,#5b5bd6 100%);--ig-ink:#d62976;--th-bg:#111113;
-    background:none;padding:0;gap:10px;border-radius:0;box-shadow:none}
-  #iuPlat .ui-tab{height:42px;padding:0 20px 0 8px;gap:10px;border-radius:999px;border:1px solid var(--line);background:var(--paper);
-    color:var(--body);font-size:13.5px;font-weight:500;box-shadow:none;transition:background .18s,border-color .18s,color .18s,box-shadow .18s,transform .18s}
-  #iuPlat .ui-tab .iu-plat-ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}
+    background:none;padding:2px 2px 10px;margin-bottom:-8px;gap:10px;border-radius:0;box-shadow:none;overflow:visible}
+  /* 클릭 때 덜컥거리지 않게(11-16): 그라데이션은 바로 바뀌므로 바탕을 ::before 에 깔고 투명도만 바꿈 · 굵기는 고정(글자 폭이 안 바뀜) ·
+     떠오르기 없음 · .ui-tabs 의 overflow 가 그림자를 자르지 않게 위에서 overflow:visible */
+  #iuPlat .ui-tab{position:relative;isolation:isolate;height:42px;padding:0 20px 0 8px;gap:10px;border-radius:999px;border:1px solid var(--line);
+    background:var(--paper);color:var(--body);font-size:13.5px;font-weight:600;box-shadow:none;
+    transition:color .25s ease,border-color .25s ease,box-shadow .25s ease}
+  #iuPlat .ui-tab::before{content:"";position:absolute;inset:-1px;border-radius:inherit;z-index:-1;opacity:0;transition:opacity .25s ease}
+  #iuPlat .ui-tab[data-value="ig"]::before{background:var(--ig-grad)}
+  #iuPlat .ui-tab[data-value="th"]::before{background:var(--th-bg)}
+  #iuPlat .ui-tab .iu-plat-ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none;transition:background .25s ease}
   #iuPlat .ui-tab .iu-plat-ico svg{width:16px;height:16px}
   #iuPlat .ui-tab[data-value="ig"] .iu-plat-ico{background:var(--ig-grad)}
   #iuPlat .ui-tab[data-value="th"] .iu-plat-ico{background:var(--th-bg)}
-  #iuPlat .ui-tab:hover{color:var(--ink);transform:translateY(-1px)}
+  #iuPlat .ui-tab:hover{color:var(--ink)}
   #iuPlat .ui-tab[data-value="ig"]:hover{border-color:color-mix(in srgb,var(--ig-ink) 45%,var(--line))}
   #iuPlat .ui-tab[data-value="th"]:hover{border-color:color-mix(in srgb,var(--th-bg) 45%,var(--line))}
-  #iuPlat .ui-tab[aria-selected="true"],#iuPlat .ui-tab.active{color:#fff;font-weight:600;border-color:transparent}
-  #iuPlat .ui-tab[data-value="ig"][aria-selected="true"],#iuPlat .ui-tab[data-value="ig"].active{background:var(--ig-grad);
-    box-shadow:0 6px 16px -6px color-mix(in srgb,var(--ig-ink) 60%,transparent)}
-  #iuPlat .ui-tab[data-value="th"][aria-selected="true"],#iuPlat .ui-tab[data-value="th"].active{background:var(--th-bg);
-    box-shadow:0 6px 16px -6px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.08)}
-  #iuPlat .ui-tab[aria-selected="true"] .iu-plat-ico,#iuPlat .ui-tab.active .iu-plat-ico{background:rgba(255,255,255,.18)}
-  .iu-plat .cm-hint{margin-left:4px}
+  #iuPlat .ui-tab[aria-selected="true"],#iuPlat .ui-tab.active{color:#fff;border-color:transparent}
+  #iuPlat .ui-tab[aria-selected="true"]::before,#iuPlat .ui-tab.active::before{opacity:1}
+  #iuPlat .ui-tab[data-value="ig"][aria-selected="true"],#iuPlat .ui-tab[data-value="ig"].active{box-shadow:0 6px 16px -6px color-mix(in srgb,var(--ig-ink) 60%,transparent)}
+  #iuPlat .ui-tab[data-value="th"][aria-selected="true"],#iuPlat .ui-tab[data-value="th"].active{box-shadow:0 6px 16px -6px rgba(0,0,0,.45)}
+  #iuPlat .ui-tab[aria-selected="true"] .iu-plat-ico,#iuPlat .ui-tab.active .iu-plat-ico{background:rgba(255,255,255,.2)}
+  #iuPlatHint{display:none}
   /* 고른 곳 색을 새 게시물 상자 위 띠로도 이어 줌 */
   .iu[data-plat] .iu-new::before{content:"";position:absolute;top:-1px;left:22px;right:22px;height:3px;border-radius:0 0 3px 3px}
   .iu[data-plat="ig"] .iu-new::before{background:linear-gradient(90deg,#f9b14a,#d62976,#962fbf,#5b5bd6)}
