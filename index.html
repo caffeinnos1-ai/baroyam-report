@@ -2434,7 +2434,9 @@ window.BAROYAM_FONT=(function(){
   #igCfgBody .ig-cfg-row input{width:100%;min-width:0}
   @media (max-width:560px){ #igCfgBody .ig-cfg-row{grid-template-columns:1fr;gap:6px} }
   /* 인스타콘텐츠 › 업로드 (iu-*) · 왼쪽 새 게시물 | 오른쪽 업로드 목록 */
-  .iu{margin-top:22px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  /* 업로드 화면 전체를 큰 네모 상자 하나로 묶음(11-16) · 휴대폰 화면 높이 --ph-h 를 업로드 목록도 같이 씀 */
+  .iu{--ph-h:max(480px,min(720px,calc(100vh - 150px)));margin-top:22px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;
+    padding:20px 22px 22px;border:1px solid var(--line);border-radius:22px;background:var(--paper)}
   .iu[hidden]{display:none}
   .iu-new{position:sticky;top:16px}
   /* 미리보기 (11-16) · 가운데 칸 · 인스타 게시물 / 쓰레드 글 모양 */
@@ -2510,7 +2512,7 @@ window.BAROYAM_FONT=(function(){
   .iu-phone-wrap{display:flex;justify-content:center}
   .iu-phone{width:100%;max-width:350px;padding:9px;border-radius:44px;background:#1c1c1e;
     box-shadow:0 0 0 1px #3a3a3c inset,0 18px 40px -18px rgba(0,0,0,.45)}
-  .iu-phone-scr{position:relative;height:min(720px,calc(100vh - 150px));min-height:480px;border-radius:36px;overflow-y:auto;overflow-x:hidden;
+  .iu-phone-scr{position:relative;height:var(--ph-h);border-radius:36px;overflow-y:auto;overflow-x:hidden;
     background:var(--paper);color:var(--ink);font-size:13px;scrollbar-width:none}
   .iu-phone-scr::-webkit-scrollbar{display:none}
   .ph-status{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:12px 24px 6px;
@@ -2670,6 +2672,10 @@ window.BAROYAM_FONT=(function(){
   .iu-ai-msg{margin:0;font-size:12px;color:var(--mute)}
   /* 목록 */
   #iuRows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  /* 업로드 목록은 휴대폰과 같은 높이로 고정하고 안에서 스크롤(눌러도 화면이 늘어나지 않게) */
+  .iu-side .iu-list:not([hidden]){box-sizing:border-box;height:calc(var(--ph-h) + 18px);display:flex;flex-direction:column;margin:0}
+  .iu-side .iu-list #iuRows{flex:1;min-height:0;overflow-y:auto;padding-right:4px;scrollbar-width:thin}
+  .iu-side .iu-list>.cm-hint{flex:none;margin:0}
   .iu-item{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px}
   .iu-item.is-edit{border-color:var(--btn)}
   .iu-thumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;background:var(--chip-flat)}
