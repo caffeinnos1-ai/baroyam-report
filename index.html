@@ -2434,9 +2434,63 @@ window.BAROYAM_FONT=(function(){
   #igCfgBody .ig-cfg-row input{width:100%;min-width:0}
   @media (max-width:560px){ #igCfgBody .ig-cfg-row{grid-template-columns:1fr;gap:6px} }
   /* 인스타콘텐츠 › 업로드 (iu-*) · 왼쪽 새 게시물 | 오른쪽 업로드 목록 */
-  .iu{margin-top:22px;display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:16px;align-items:start}
+  .iu{margin-top:22px;display:grid;grid-template-columns:minmax(0,440px) minmax(0,360px) minmax(0,1fr);gap:16px;align-items:start}
   .iu[hidden]{display:none}
   .iu-new{position:sticky;top:16px}
+  /* 미리보기 (11-16) · 가운데 칸 · 인스타 게시물 / 쓰레드 글 모양 */
+  .iu-pv{position:sticky;top:16px}
+  .iu-pv-tag{font-size:11.5px;font-weight:500;color:var(--mute)}
+  .pv-empty{display:grid;place-items:center;min-height:300px;border:1px dashed var(--line);border-radius:14px;padding:24px;
+    text-align:center;font-size:12.5px;line-height:1.7;color:var(--mute)}
+  .pv-post{border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden;font-size:13px;color:var(--ink)}
+  .pv-head{display:flex;align-items:center;gap:9px;padding:10px 12px}
+  .pv-av{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--ink);
+    background:var(--paper);box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--line)}
+  .pv-ig .pv-av{box-shadow:0 0 0 2px var(--paper),0 0 0 4px #d62976}
+  .pv-name{font-weight:600;font-size:13px}
+  .pv-sub{font-size:11.5px;color:var(--mute)}
+  .pv-more{margin-left:auto;color:var(--mute);letter-spacing:1px}
+  .pv-media{position:relative;background:var(--chip-flat);overflow:hidden}
+  .pv-media img,.pv-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .pv-media .pv-none{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:var(--mute)}
+  .pv-nav{position:absolute;top:50%;transform:translateY(-50%);width:26px;height:26px;border:0;border-radius:50%;cursor:pointer;
+    background:rgba(255,255,255,.85);color:#3d3d42;font-size:14px;line-height:26px;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+  .pv-nav.l{left:8px}.pv-nav.r{right:8px}
+  .pv-cnt{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:11px}
+  .pv-dots{display:flex;justify-content:center;gap:4px;padding:8px 0 0}
+  .pv-dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+  .pv-dots i.on{background:#3897f0}
+  .pv-acts{display:flex;align-items:center;gap:14px;padding:10px 12px 4px;color:var(--ink)}
+  .pv-acts svg{width:21px;height:21px}
+  .pv-acts .r{margin-left:auto}
+  .pv-cap{padding:4px 12px 12px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .pv-cap.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+  .pv-cap .tg{color:#3b6fb6}
+  .pv-cap-more{padding:0 12px 12px;margin-top:-8px;font-size:12px;color:var(--mute);cursor:pointer}
+  /* 릴스·스토리 · 세로 9:16 화면 위에 글을 얹음 */
+  .pv-tall{position:relative;aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:#111113;color:#fff;font-size:12.5px}
+  .pv-tall img,.pv-tall video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pv-tall .pv-none{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.6)}
+  .pv-tall .pv-over{position:absolute;left:0;right:0;bottom:0;padding:40px 52px 14px 12px;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+  .pv-tall .pv-over .pv-name{color:#fff}
+  .pv-tall .pv-over p{margin:6px 0 0;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+  .pv-tall .pv-side{position:absolute;right:10px;bottom:16px;display:flex;flex-direction:column;gap:16px}
+  .pv-tall .pv-side svg{width:22px;height:22px}
+  .pv-tall .pv-bar{position:absolute;top:8px;left:8px;right:8px;height:2px;border-radius:2px;background:rgba(255,255,255,.4)}
+  .pv-tall .pv-bar::after{content:"";position:absolute;inset:0 70% 0 0;background:#fff;border-radius:2px}
+  .pv-tall .pv-top{position:absolute;top:18px;left:10px;display:flex;align-items:center;gap:8px;font-weight:600}
+  .pv-tall .pv-top .pv-av{width:26px;height:26px;font-size:11px}
+  /* 쓰레드 · 왼쪽 프로필 | 오른쪽 이름·글·사진 */
+  .pv-th{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;padding:14px 14px 10px}
+  .pv-th .pv-av{width:36px;height:36px;box-shadow:none;border:1px solid var(--line)}
+  .pv-th .pv-cap{padding:3px 0 0}
+  .pv-th .pv-row{display:flex;gap:6px;overflow-x:auto;margin-top:10px;scrollbar-width:thin}
+  .pv-th .pv-row .pv-media{flex:none;border-radius:10px;border:1px solid var(--line)}
+  .pv-th .pv-one{margin-top:10px;max-height:420px;border-radius:10px;border:1px solid var(--line)}
+  .pv-th .pv-acts{padding:10px 0 0;gap:18px;color:var(--body)}
+  .pv-th .pv-acts svg{width:19px;height:19px}
+  .pv-th .pv-topic{display:inline-block;margin-left:4px;color:var(--mute);font-weight:400}
+  .pv-th .pv-topic b{color:var(--ink);font-weight:500}
   .iu-plat{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   /* 올릴 곳 단추 · 붙은 탭 대신 떨어진 알약 둘 · 고르면 인스타는 인스타 그라데이션, 쓰레드는 검정 (11-16 사용자 요청)
      색은 각 서비스 로고 색이라 화면 색 변수 대신 여기서만 정함 · .ui-tab 의 all:unset 보다 세게 #iuPlat 로 묶음 */
@@ -2531,7 +2585,8 @@ window.BAROYAM_FONT=(function(){
   .iu-body .err{color:var(--neg);white-space:normal}
   .iu-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .iu-empty{padding:30px 10px;text-align:center;font-size:12.5px;color:var(--mute)}
-  @media (max-width:900px){ .iu{grid-template-columns:minmax(0,1fr)} .iu-new{position:static} }
+  @media (max-width:1320px){ .iu{grid-template-columns:minmax(0,440px) minmax(0,1fr)} .iu-list{grid-column:1/-1} .iu-pv{max-width:400px} }
+  @media (max-width:900px){ .iu{grid-template-columns:minmax(0,1fr)} .iu-new,.iu-pv{position:static} }
   /* 인스타콘텐츠 › 성과 (ip-*) · 디자인 초안 · 계정 연결 전에는 예시 데이터로 그린다 */
   .ip{margin-top:22px;display:flex;flex-direction:column;gap:16px}
   .ip[hidden]{display:none}
@@ -12034,6 +12089,11 @@ window.BAROYAM_FONT=(function(){
               <button type="button" class="ui-btn primary block" id="iuGo">예약하기</button>
               <p class="cm-msg" id="iuMsg" hidden></p>
             </section>
+            <!-- 미리보기 · 새 게시물 칸의 파일·캡션을 인스타 게시물 / 쓰레드 글 모양으로 바로 그린다(저장 없음 · pvPaint) -->
+            <section class="ip-card iu-pv">
+              <div class="ip-card-head"><h3>미리보기</h3><span class="iu-pv-tag" id="iuPvTag"></span></div>
+              <div id="iuPv"></div>
+            </section>
             <section class="ip-card iu-list">
               <div class="ip-card-head"><h3>업로드 목록</h3>
                 <div class="ui-tabs" id="iuTabs">
@@ -20486,6 +20546,85 @@ window.BAROYAM_PJ_CHANNELS=(function(){
 
   /* ---------- 그리기 · 새 게시물 ---------- */
   const datePick=window.UI&&window.UI.datePicker?window.UI.datePicker($('iuDate'),{mode:'single',onChange:v=>{ form.date=v; paintForm(); }}):null;
+  /* ---------- 미리보기 · 인스타 게시물 / 쓰레드 글 모양 (11-16) ----------
+     사진·영상 칸은 파일이 바뀔 때만 새로 만들고(영상 재생이 끊기지 않게), 글은 그릴 때마다 바꾼다 */
+  const pv={sig:'',i:0,open:false};
+  const PV_ICO={
+    heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-9.3-9.2C1.4 7.4 3.6 4 7 4c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.4 0 5.6 3.4 4.3 6.8C19.5 15.4 12 20 12 20Z"/></svg>',
+    talk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20.5 12a8.5 8.5 0 1 1-3.9-7.1A8.5 8.5 0 0 1 20.5 12Zm0 0 .9 7.4-5-2"/></svg>',
+    send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M21.5 3 3 10.2l7 2.8m11.5-10-8.6 18-2.9-8m11.5-10L10 13"/></svg>',
+    save:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1Z"/></svg>',
+    repost:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3m13-3v2a4 4 0 0 1-4 4H4"/></svg>'
+  };
+  const PV_NAME='baroyam_official';
+  function pvMedia(f,cls){
+    if(!f||!f.url) return '<span class="pv-none">'+(f?'사진':'파일 없음')+'</span>';
+    return f.kind==='video'?'<video src="'+f.url+'" muted autoplay loop playsinline></video>':'<img src="'+f.url+'" alt="">';
+  }
+  function pvText(t,th){
+    // 해시태그·@이름은 파란 글자 · 쓰레드는 첫 해시태그 하나만 주제 태그로 빼서 이름 옆에 보임(본문에서는 그대로 둠)
+    return esc(t).replace(/([#@][^\s#@]+)/g,'<span class="tg">$1</span>');
+  }
+  function pvPaint(){
+    const box=$('iuPv'); if(!box) return;
+    const fs=form.files.filter(f=>!f.bad), cap=(form.caption||'').trim(), t=form.type;
+    const tagLine=plat==='th'?'쓰레드 · '+((TYPES.find(x=>x.k===t)||{}).l||''):'인스타그램 · '+((TYPES.find(x=>x.k===t)||{}).l||'');
+    $('iuPvTag').textContent=tagLine;
+    if(!fs.length&&!cap){ pv.sig=''; box.innerHTML='<div class="pv-empty">파일을 넣거나 '+(plat==='th'?'글':'캡션')+'을 적으면<br>올라갈 모습이 여기에 보여요</div>'; return; }
+    const sig=plat+'|'+t+'|'+fs.map(f=>f.id+':'+(f.url||'')).join(',');
+    if(sig!==pv.sig){ pv.sig=sig; pv.i=0; pv.open=false; box.innerHTML=pvBuild(fs,t); }
+    pvFill(fs,cap,t);
+  }
+  function pvBuild(fs,t){
+    const av='<span class="pv-av">바</span>';
+    if(plat==='th'){
+      // 쓰레드: 사진이 하나면 원래 비율(세로는 4:5 까지), 여럿이면 옆으로 넘기는 줄
+      let media='';
+      if(fs.length===1){ const f=fs[0], r=f.w&&f.h?Math.max(.8,Math.min(1.91,f.w/f.h)):.8;
+        media='<div class="pv-media pv-one" style="aspect-ratio:'+r+'">'+pvMedia(f)+'</div>'; }
+      else if(fs.length) media='<div class="pv-row">'+fs.map(f=>'<div class="pv-media" style="height:200px;aspect-ratio:'+(f.w&&f.h?Math.max(.6,Math.min(1.5,f.w/f.h)):.8)+'">'+pvMedia(f)+'</div>').join('')+'</div>';
+      return '<div class="pv-post pv-th">'+av+'<div><div><span class="pv-name">'+PV_NAME+'</span><span class="pv-topic" data-pv="topic"></span> <span class="pv-sub">· 방금</span></div>'+
+        '<div class="pv-cap" data-pv="cap"></div>'+media+
+        '<div class="pv-acts">'+PV_ICO.heart+PV_ICO.talk+PV_ICO.repost+PV_ICO.send+'</div></div></div>';
+    }
+    if(t==='reels'||t==='story'){
+      const f=fs[0];
+      if(t==='story') return '<div class="pv-tall">'+pvMedia(f)+'<span class="pv-bar"></span><div class="pv-top">'+av+PV_NAME+' <span style="font-weight:400;opacity:.7">방금</span></div></div>';
+      return '<div class="pv-tall">'+pvMedia(f)+'<div class="pv-side">'+PV_ICO.heart+PV_ICO.talk+PV_ICO.send+'</div>'+
+        '<div class="pv-over"><div style="display:flex;align-items:center;gap:8px">'+av+'<span class="pv-name">'+PV_NAME+'</span></div><p data-pv="cap"></p></div></div>';
+    }
+    // 피드·캐러셀: 첫 장 비율(4:5 ~ 1.91:1)로 모두 맞춰 자름 · 캐러셀은 ‹ › 와 점
+    const f0=fs[0], r=f0&&f0.w&&f0.h?Math.max(.8,Math.min(1.91,f0.w/f0.h)):.8, many=fs.length>1;
+    return '<div class="pv-post pv-ig"><div class="pv-head">'+av+'<span class="pv-name">'+PV_NAME+'</span><span class="pv-more">···</span></div>'+
+      '<div class="pv-media" style="aspect-ratio:'+r+'" data-pv="media">'+pvMedia(f0)+
+      (many?'<span class="pv-cnt" data-pv="cnt"></span><button type="button" class="pv-nav l" data-pv-go="-1" aria-label="이전">‹</button><button type="button" class="pv-nav r" data-pv-go="1" aria-label="다음">›</button>':'')+'</div>'+
+      (many?'<div class="pv-dots" data-pv="dots"></div>':'')+
+      '<div class="pv-acts">'+PV_ICO.heart+PV_ICO.talk+PV_ICO.send+'<span class="r">'+PV_ICO.save+'</span></div>'+
+      '<div class="pv-cap" data-pv="cap"></div><div class="pv-cap-more" data-pv="more" hidden>더 보기</div></div>';
+  }
+  function pvFill(fs,cap,t){
+    const box=$('iuPv'), q=k=>box.querySelector('[data-pv="'+k+'"]');
+    const c=q('cap');
+    if(c){
+      if(plat==='th'){ c.innerHTML=pvText(cap)||'<span class="pv-sub">글이 없어요</span>';
+        const tp=(cap.match(/#([^\s#@]+)/)||[])[1]; q('topic').innerHTML=tp?'› <b>'+esc(tp)+'</b>':''; }
+      else if(t==='reels') c.innerHTML=pvText(cap);
+      else{ c.innerHTML=cap?'<b>'+PV_NAME+'</b> '+pvText(cap):'';
+        c.classList.toggle('clamp',!pv.open);
+        const more=q('more'); if(more) more.hidden=pv.open||!cap||(cap.split('\n').length<=3&&cap.length<=90); }
+    }
+    const n=fs.length; if(pv.i>=n) pv.i=0;
+    const cnt=q('cnt'); if(cnt) cnt.textContent=(pv.i+1)+'/'+n;
+    const dots=q('dots'); if(dots) dots.innerHTML=fs.map((_,i)=>'<i'+(i===pv.i?' class="on"':'')+'></i>').join('');
+    box.querySelectorAll('[data-pv-go]').forEach(b=>{ const d=+b.dataset.pvGo; b.hidden=d<0?pv.i===0:pv.i>=n-1; });
+  }
+  $('iuPv').addEventListener('click',e=>{
+    const go=e.target.closest('[data-pv-go]');
+    if(go){ const fs=form.files.filter(f=>!f.bad); pv.i=Math.max(0,Math.min(fs.length-1,pv.i+(+go.dataset.pvGo)));
+      const m=$('iuPv').querySelector('[data-pv="media"]'), keep=[...m.querySelectorAll('.pv-cnt,.pv-nav')];
+      m.innerHTML=pvMedia(fs[pv.i]); keep.forEach(k=>m.appendChild(k)); pvFill(fs,(form.caption||'').trim(),form.type); return; }
+    if(e.target.closest('[data-pv="more"],.pv-cap.clamp')){ pv.open=true; pvFill(form.files.filter(f=>!f.bad),(form.caption||'').trim(),form.type); }
+  });
   function paintForm(){
     const ed=st.edit&&st.posts[st.edit];
     $('iuTitle').textContent=ed?'예약 고치기':'새 게시물';
@@ -20516,6 +20655,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('iuWhenHint').textContent=form.when==='now'?'누르면 2분 안에 '+PLAT[plat].name+'에 올라갑니다':plat==='th'?'이 시각에 서버가 쓰레드에 올려요':'이 시각에 서버가 올리고 일정 캘린더에도 표시돼요';
     $('iuPlatHint').textContent=PLAT[plat].hint; $('iuListHint').textContent=PLAT[plat].list;
     $('iuPlat').closest('.iu').dataset.plat=plat;
+    pvPaint();
     $('iuGo').textContent=ed?'예약 고치기':form.when==='now'?'지금 올리기':'예약하기';
     aiSync();
     const p=problems();
