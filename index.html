@@ -2543,6 +2543,14 @@ window.BAROYAM_FONT=(function(){
   .ph-ig-grid .k{position:absolute;top:6px;right:6px;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
   .ph-ig-grid .k svg{width:15px;height:15px;display:block}
   .ph-ig-grid .is-pv{outline:2.5px solid var(--btn);outline-offset:-2.5px}
+  /* 고정 게시물 · 오른쪽 위 핀 표시 · 사진에 올리면 왼쪽 아래 "고정 / 고정 풀기" 단추 */
+  .ph-ig-hint{padding:7px 12px;font-size:11.5px;color:var(--mute);background:color-mix(in srgb,var(--chip-flat) 60%,var(--paper))}
+  .ph-ig-grid .k svg{width:15px;height:15px}
+  .ph-ig-grid .ph-pin{position:absolute;left:6px;bottom:6px;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.62);color:#fff;font:inherit;font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:opacity .15s}
+  .ph-ig-grid .ph-pin svg{width:12px;height:12px}
+  .ph-ig-grid a:hover .ph-pin,.ph-ig-grid .ph-pin:focus-visible{opacity:1}
+  .ph-ig-grid a.is-pin .ph-pin{background:var(--btn)}
   .ph-ig-grid .is-pv img,.ph-ig-grid .is-pv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   /* 쓰레드 · 홈 피드 모양 */
   .ph-th-top{display:grid;place-items:center;padding:4px 0 6px}
@@ -20754,13 +20762,28 @@ window.BAROYAM_PJ_CHANNELS=(function(){
      인스타 = 내 프로필 격자(서버가 하루 3번 채우는 insta_insights_v1) · 쓰레드 = 내 글(서버가 30분마다 채우는 threads_feed_v1 ·
      쓰레드 '추천' 홈피드는 API 로 주지 않아 내 글만) · 지금 쓰는 게시물을 맨 앞에 "미리보기"로 끼운다(저장 없음)
      피드 칸은 데이터·파일이 바뀔 때만 새로 그리고(스크롤·영상 유지), 쓰레드 미리보기 글은 그 줄만 바꾼다 */
-  const ph={ig:null,th:null,at:{ig:0,th:0},sig:'',list:false};
+  const ph={ig:null,th:null,at:{ig:0,th:0},sig:'',list:false,pins:{}};
+  /* 인스타 고정 게시물 · 인스타 API 가 고정 여부를 주지 않아(11-16 시험) 화면에서 골라 둔다 · app_settings insta_pins_v1 = {ids:{게시물 id:{on,ord,at}}}
+     최대 3개 · 바꾼 게시물 하나만 saveMerged 로 얹음 · 격자에서 고정 → 미리보기 → 나머지 순으로 보여 "새 게시물은 고정 다음 칸"을 알게 함 */
+  const PIN_KEY='insta_pins_v1', PIN_MAX=3;
+  const pinOrder=()=>Object.keys(ph.pins||{}).filter(id=>ph.pins[id]&&ph.pins[id].on).sort((a,b)=>(ph.pins[a].ord||0)-(ph.pins[b].ord||0));
+  async function pinToggle(id){
+    const on=!(ph.pins[id]&&ph.pins[id].on);
+    if(on&&pinOrder().length>=PIN_MAX){ alert('고정은 '+PIN_MAX+'개까지예요 · 먼저 다른 게시물의 고정을 풀어 주세요'); return; }
+    const old=ph.pins[id], val={on:on,ord:Date.now(),at:Date.now()};
+    ph.pins=Object.assign({},ph.pins,{[id]:val}); ph.sig=''; phPaint();
+    const db=DB(), r=db&&db.saveMerged?await db.saveMerged(PIN_KEY,server=>{ let v=server; if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      v=v&&typeof v==='object'?v:{}; return Object.assign({},v,{ids:Object.assign({},v.ids,{[id]:val})}); }):null;
+    if(r&&r.ids){ ph.pins=r.ids; ph.sig=''; phPaint(); }
+    else{ ph.pins=Object.assign({},ph.pins); if(old) ph.pins[id]=old; else delete ph.pins[id]; ph.sig=''; phPaint(); alert('고정을 저장하지 못했습니다 · 로그인 상태를 확인하고 다시 눌러 주세요'); }
+  }
   const PH_KEY={ig:'insta_insights_v1',th:'threads_feed_v1'};
   async function phLoad(p){
     if(Date.now()-ph.at[p]<10*60e3) return;
     ph.at[p]=Date.now();
     try{ const db=DB(); if(!db||!db.loadSetting) return;
       let v=await db.loadSetting(PH_KEY[p],true); if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      if(p==='ig'){ let q=await db.loadSetting(PIN_KEY,true); if(typeof q==='string'){ try{ q=JSON.parse(q); }catch(e){ q=null; } } ph.pins=(q&&q.ids)||{}; }
       ph[p]=v||{}; ph.sig=''; pvPaint(); phPaint();
     }catch(e){ ph.at[p]=0; console.error(e); }
   }
@@ -20779,6 +20802,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     car:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 3h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm-4 4v12a2 2 0 0 0 2 2h12v-2H6V7Z"/></svg>',
     play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5Z"/></svg>'
   };
+  const PH_PIN='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 2.6 21.4 8.5a1 1 0 0 1-.6 1.7l-2.6.3-3.4 3.4.3 4.2a1 1 0 0 1-1.7.8L9.6 15.1l-5.3 5.3-1.4-1.4 5.3-5.3-3.8-3.8a1 1 0 0 1 .8-1.7l4.2.3 3.4-3.4.3-2.6a1 1 0 0 1 1.7-.6Z"/></svg>';
   const PH_TH_LOGO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M15.6 8.6v4.6a2.7 2.7 0 0 0 5.4 0V12a9 9 0 1 0-3.6 7.2"/></svg>';
   function phPaint(){
     const scr=$('iuPhone'); if(!scr) return;
@@ -20791,18 +20815,22 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(plat==='th'&&pvOn){ const t=scr.querySelector('[data-ph="pvtext"]'); if(t) t.innerHTML=pvText((form.caption||'').trim())||'<span style="color:var(--mute)">글이 없어요</span>'; }
   }
   function phInsta(d,pvOn,fs){
-    const a=d.account||{}, posts=(Array.isArray(d.posts)?d.posts:[]).filter(p=>p&&p.thumb).sort((x,y)=>Date.parse(y.time||y.at)-Date.parse(x.time||x.at)).slice(0,60);
+    const a=d.account||{}, all=(Array.isArray(d.posts)?d.posts:[]).filter(p=>p&&p.thumb).sort((x,y)=>Date.parse(y.time||y.at)-Date.parse(x.time||x.at));
+    const byId={}; all.forEach(p=>{ byId[p.id]=p; });
+    const pinned=pinOrder().map(id=>byId[id]).filter(Boolean).slice(0,PIN_MAX), posts=all.filter(p=>pinned.indexOf(p)<0).slice(0,60);
+    const tile=(p,pin)=>'<a href="'+esc(p.link||'#')+'" target="_blank" rel="noopener"'+(pin?' class="is-pin"':'')+' title="'+esc((p.caption||'').slice(0,80))+'">'+phImg(p.thumb)+
+      (pin?'<span class="k">'+PH_PIN+'</span>':p.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':p.type==='carousel'?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+
+      '<button type="button" class="ph-pin" data-pin="'+esc(p.id)+'" title="'+(pin?'고정 풀기':'맨 앞에 고정')+'">'+PH_PIN+'<span>'+(pin?'고정 풀기':'고정')+'</span></button></a>';
     const av=a.picture?phImg(a.picture):esc(((a.username||'b')[0]||'b').toUpperCase());
-    let tiles='';
+    let tiles=pinned.map(p=>tile(p,true)).join('');
     if(pvOn){ const f=fs[0]; tiles+='<div class="is-pv" title="지금 쓰는 게시물">'+pvMedia(f)+(form.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':form.type==='carousel'&&fs.length>1?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+'<span class="ph-pvtag">미리보기</span></div>'; }
-    tiles+=posts.map(p=>'<a href="'+esc(p.link||'#')+'" target="_blank" rel="noopener" title="'+esc((p.caption||'').slice(0,80))+'">'+phImg(p.thumb)+
-      (p.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':p.type==='carousel'?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+'</a>').join('');
+    tiles+=posts.map(p=>tile(p,false)).join('');
     return '<div class="ph-ig-top">'+esc(a.username||'baroyam_official')+' <small style="font-size:12px">▾</small><span class="r">'+PH_IG_ICO.plus+PH_IG_ICO.menu+'</span></div>'+
       '<div class="ph-ig-pro"><div class="ph-ig-av">'+av+'</div><div class="ph-ig-cnt"><div><b>'+phNum(a.media)+'</b><span>게시물</span></div><div><b>'+phNum(a.followers)+'</b><span>팔로워</span></div><div><b>'+phNum(a.follows)+'</b><span>팔로잉</span></div></div></div>'+
       (a.name?'<div class="ph-ig-name">'+esc(a.name)+'</div>':'')+
       '<div class="ph-ig-btns"><span>프로필 편집</span><span>프로필 공유</span></div>'+
       '<div class="ph-ig-tabs"><span class="on">'+PH_IG_ICO.grid+'</span><span>'+PH_IG_ICO.reel+'</span><span>'+PH_IG_ICO.tag+'</span></div>'+
-      (tiles?'<div class="ph-ig-grid">'+tiles+'</div>':'<div class="ph-empty">아직 받은 게시물이 없어요<br>서버가 하루 세 번 인스타에서 받아 와요</div>');
+      (tiles?'<div class="ph-ig-hint">'+(pinned.length?'고정 '+pinned.length+'개 다음 칸에 새 게시물이 들어가요':'고정 게시물이 있으면 사진에 마우스를 올려 핀을 눌러 주세요')+'</div><div class="ph-ig-grid">'+tiles+'</div>':'<div class="ph-empty">아직 받은 게시물이 없어요<br>서버가 하루 세 번 인스타에서 받아 와요</div>');
   }
   function phThreads(d,pvOn){
     const me=d.me||{}, name=me.username||'baroyam_official';
@@ -20824,6 +20852,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     return '<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div>'+
       '<div class="ph-th-compose"><div class="ph-th-av">'+av+'</div><span>새로운 소식이 있나요?</span><b>게시</b></div>'+out;
   }
+  $('iuPhone').addEventListener('click',e=>{ const b=e.target.closest('[data-pin]'); if(!b) return; e.preventDefault(); e.stopPropagation(); pinToggle(b.dataset.pin); });
   $('iuListBtn').addEventListener('click',()=>{
     ph.list=!ph.list;
     $('iuListBtn').setAttribute('aria-pressed',String(ph.list));
