@@ -11921,12 +11921,6 @@ window.BAROYAM_FONT=(function(){
                 <div class="ip-note" id="ipTypeNote"></div>
               </div>
             </div>
-            <!-- 스토리 시청 · 서버가 매시 지금 올라와 있는 스토리 성과를 받아 쌓은 insta_insights_v1.stories (24시간 뒤에는 마지막 값) -->
-            <div class="ip-card">
-              <div class="ip-card-head"><div><h3>스토리 시청</h3><small id="ipStorySub"></small></div></div>
-              <div class="ip-st-kpis" id="ipStoryKpis"></div>
-              <div class="ip-st-list" id="ipStories"></div>
-            </div>
             <div class="ip-row is-even">
               <div class="ip-card">
                 <div class="ip-card-head"><div><h3>올리기 좋은 시간</h3><small>요일·시간대별 팔로워 접속</small></div></div>
@@ -11942,6 +11936,12 @@ window.BAROYAM_FONT=(function(){
             </div>
             </div>
             <div class="ip-view" id="ipLib" hidden>
+            <!-- 스토리 시청 · 서버가 매시 지금 올라와 있는 스토리 성과를 받아 쌓은 insta_insights_v1.stories (24시간 뒤에는 마지막 값) · 11-16 계정 성과에서 콘텐츠 성과로 옮김 · 기간은 보관함 기간 탭을 따름 -->
+            <div class="ip-card">
+              <div class="ip-card-head"><div><h3>스토리 시청</h3><small id="ipStorySub"></small></div></div>
+              <div class="ip-st-kpis" id="ipStoryKpis"></div>
+              <div class="ip-st-list" id="ipStories"></div>
+            </div>
               <div class="ip-card">
                 <div class="ip-card-head"><div><h3>콘텐츠 성과</h3><small>올린 게시물 전체 · 기간·형식·설명으로 찾고, 누르면 인스타그램에서 엽니다</small></div>
                   <div class="ip-acct-end">
@@ -23230,9 +23230,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('ipOver').hidden=view!=='over'; $('ipLib').hidden=view!=='lib';
     $('ipLibN').textContent=D.posts.length?D.posts.length.toLocaleString('ko-KR'):'';
     paintAcct(cur);
-    if(view==='lib'){ paintLib(); return; }
+    if(view==='lib'){ const sf=LIB.period==='all'?'':dayAdd(today(),-(+LIB.period-1)); paintStories((D.stories||[]).filter(x=>!sf||x.at>=sf)); paintLib(); return; }
     const curS=(D.stories||[]).filter(x=>x.at>=from);
-    paintKpis(cur,prev,curP,prevP); paintFollow(cur); paintTypes(curP,curS); paintStories(curS); paintHeat(); paintAud();
+    paintKpis(cur,prev,curP,prevP); paintFollow(cur); paintTypes(curP,curS); paintHeat(); paintAud();
     $('ipFollowSub').textContent=cur.length?md(from)+' ~ '+md(cur[cur.length-1].d)+' · 아래 막대는 하루 순증':'';
   }
   async function load(){
