@@ -20854,6 +20854,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* ---------- ③ 쓰레드 추천 피드 (11-16) ----------
      다른 사람 글은 API 가 주지 않아(키워드 검색 권한 없음 · 11-16 시험) 직원이 쓰레드에서 본 글 링크를 붙여 넣으면 공식 퍼가기(embed.js)로 실제 모양 그대로 보인다
      app_settings threads_refs_v1 = {items:{id:{url,at,by,del}}} · 넣은 글 하나만 saveMerged · 빼기는 del 표시만 */
+  const REC_PAUSED=true;
   const REC_KEY='threads_refs_v1', rec={items:null,at:0,sig:'',busy:false,msg:''};
   const recUrl=s=>{ const m=String(s||'').trim().match(/^https?:\/\/(?:www\.)?threads\.(?:net|com)\/(@[\w.]+)\/post\/([\w-]+)/i); return m?'https://www.threads.com/'+m[1]+'/post/'+m[2]:''; };
   async function recLoad(force){
@@ -20872,6 +20873,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   function recPaint(){
     const scr=$('iuRecScr'); if(!scr) return;
+    // 11-16 사용자 요청: 추천 피드는 나중에 다시 정함 · 지금은 "개발 중"만 보임(아래 링크 넣기 코드·threads_refs_v1 은 남겨 둠)
+    if(REC_PAUSED){ if(!scr.dataset.paused){ scr.dataset.paused='1'; scr.innerHTML=PH_STATUS+'<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div><div class="ph-empty" style="padding-top:120px">쓰레드 추천 피드는<br><b>개발 중</b>이에요</div>'; } return; }
     recLoad();
     if(!scr.firstChild) scr.innerHTML=PH_STATUS+'<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div>'+
       '<button type="button" class="rec-open" data-rec-open>쓰레드 추천 피드 열기 <small>새 창 · 내 계정의 실제 추천 글</small></button>'+
