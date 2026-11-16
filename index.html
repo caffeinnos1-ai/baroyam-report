@@ -2437,6 +2437,8 @@ window.BAROYAM_FONT=(function(){
   .iu{margin-top:22px;display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:16px;align-items:start}
   .iu[hidden]{display:none}
   .iu-new{position:sticky;top:16px}
+  .iu-plat{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .iu-plat .ui-tab{min-width:120px}
   .iu-f{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
   .iu-f[hidden]{display:none}
   .iu-f>label{font-size:13px;font-weight:600;color:var(--ink)}
@@ -2491,6 +2493,7 @@ window.BAROYAM_FONT=(function(){
   .iu-item.is-edit{border-color:var(--btn)}
   .iu-thumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;background:var(--chip-flat)}
   .iu-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .iu-thumb.is-text{display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft)}
   .iu-thumb .c{position:absolute;right:4px;top:4px;padding:0 5px;border-radius:99px;background:var(--paper);font-size:10.5px;font-weight:600;color:var(--ink)}
   .iu-body{display:flex;flex-direction:column;gap:4px;min-width:0}
   .iu-body p{margin:0;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -11974,6 +11977,9 @@ window.BAROYAM_FONT=(function(){
           <!-- 업로드 · 파일·캡션·시각을 정해 예약하면 VPS(caffeinnos-automation/insta_publish.js · 2분마다)가 그 시각에 인스타그램 API 로 올린다 ·
                예약 목록은 app_settings insta_upload_v1, 파일은 brand-files 버킷 insta/up/<id>/ · 예약하면 일정 캘린더(insta_schedule_v1)에도 한 줄 생긴다 -->
           <div class="iu" data-insta-pane="upload" hidden>
+            <!-- 올릴 곳 · 인스타 업로드(insta_upload_v1 · VPS insta_publish.js) / 쓰레드 업로드(threads_upload_v1 · VPS threads_publish.js) · 고른 쪽은 baroyam_iu_plat -->
+            <div class="iu-plat"><div class="ui-tabs" id="iuPlat" aria-label="올릴 곳"><button type="button" class="ui-tab" data-value="ig">인스타 업로드</button><button type="button" class="ui-tab" data-value="th">쓰레드 업로드</button></div>
+              <span class="cm-hint" id="iuPlatHint"></span></div>
             <section class="ip-card iu-new">
               <div class="ip-card-head"><h3 id="iuTitle">새 게시물</h3><button type="button" class="ui-btn ghost sm" id="iuReset" hidden>새로 쓰기</button></div>
               <div class="iu-f"><label>형식</label><div class="ui-chips" id="iuType"></div><p class="cm-hint" id="iuTypeHint"></p></div>
@@ -12006,7 +12012,7 @@ window.BAROYAM_FONT=(function(){
                   <button type="button" class="ui-tab" data-value="fail" aria-selected="false">실패 <span class="n" id="iuNFail">0</span></button>
                 </div></div>
               <div id="iuRows"></div>
-              <p class="cm-hint">예약 시각이 되면 서버가 2분 안에 올립니다. 인스타그램은 하루 100개까지 올릴 수 있어요.</p>
+              <p class="cm-hint" id="iuListHint">예약 시각이 되면 서버가 2분 안에 올립니다. 인스타그램은 하루 100개까지 올릴 수 있어요.</p>
             </section>
           </div>
         </section>
@@ -14332,7 +14338,7 @@ window.CsGuide=(function(){
     ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
     ['profit',1,'마진관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
-    ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','일정은 업로드 예정 캘린더(insta_schedule_v1 · 프로젝트와 따로) · 바꾼 일정만 얹어 저장하고 지우기는 del 표시만. 성과는 VPS 가 인스타그램 API 로 받아 채운 insta_insights_v1 을 읽기만 합니다(비어 있으면 예시 화면). 업로드는 파일을 brand-files 의 insta/up 에 올리고 insta_upload_v1 에 예약을 적으면, VPS(insta_publish.js · 2분마다)가 그 시각에 인스타그램에 올립니다.'],
+    ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','일정은 업로드 예정 캘린더(insta_schedule_v1 · 프로젝트와 따로) · 바꾼 일정만 얹어 저장하고 지우기는 del 표시만. 성과는 VPS 가 인스타그램 API 로 받아 채운 insta_insights_v1 을 읽기만 합니다(비어 있으면 예시 화면). 업로드는 파일을 brand-files 의 insta/up 에 올리고 insta_upload_v1 에 예약을 적으면, VPS(insta_publish.js · 2분마다)가 그 시각에 인스타그램에 올립니다. 쓰레드 업로드는 threads/up 과 threads_upload_v1 로 따로 적고 VPS(threads_publish.js · 2분마다)가 쓰레드에 올립니다.'],
     ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
     ['drive',1,'드라이브','자산 찾기 · 업로드','구글드라이브 색인(drive_assets_v1)을 브랜드·종류로 거릅니다. 업로드·삭제(휴지통)는 구글 권한으로 드라이브에 직접 합니다.'],
     ['trend',1,'트렌드분석','구글 · 네이버','GitHub Actions 가 모은 trend_google · trend_naver 표를 읽기만 합니다.'],
@@ -20185,19 +20191,38 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   if(!root) return;
   const $=id=>document.getElementById(id);
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const KEY='insta_upload_v1', PLAN_KEY='insta_schedule_v1', BUCKET='brand-files', MAX_MB=50;
+  const PLAN_KEY='insta_schedule_v1', BUCKET='brand-files', MAX_MB=50;
+  /* 올릴 곳 · ig 인스타그램 / th 쓰레드 · 쓰레드는 저장 칸을 따로 둬서(threads_upload_v1) 인스타 서버(insta_publish.js)가 건드리지 않고
+     VPS threads_publish.js(2분마다)가 쓰레드 API 로 올린다 · 쓰레드는 글만도 되고 글 500자 · 캐러셀 20개 · 영상 5분까지 · 일정 캘린더에는 넣지 않는다 */
+  const PLAT={
+    ig:{key:'insta_upload_v1',name:'인스타그램',cap:2200,tags:30,carMax:10,
+      list:'예약 시각이 되면 서버가 2분 안에 올립니다. 인스타그램은 하루 100개까지 올릴 수 있어요.',
+      hint:'인스타그램 @baroyam_official 에 올라가요 · 예약하면 일정 캘린더에도 표시돼요'},
+    th:{key:'threads_upload_v1',name:'쓰레드',cap:500,tags:1,carMax:20,
+      list:'예약 시각이 되면 서버가 2분 안에 쓰레드에 올립니다. 쓰레드는 하루 250개까지 올릴 수 있어요.',
+      hint:'쓰레드에 올라가요 · 글만 올려도 되고, 해시태그는 처음 하나만 주제 태그가 돼요'},
+  };
+  let plat='ig'; try{ if(localStorage.getItem('baroyam_iu_plat')==='th') plat='th'; }catch(e){}
+  let KEY=PLAT[plat].key;
   const DB=()=>window.BAROYAM_DB;
   const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   const me=()=>{ try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
   const kstDay=ms=>new Date(ms+9*3600e3).toISOString().slice(0,10);
   const kstTime=ms=>new Date(ms+9*3600e3).toISOString().slice(11,16);
   const fmt=iso=>{ const t=Date.parse(iso); if(isNaN(t)) return ''; const d=kstDay(t); return (+d.slice(5,7))+'/'+(+d.slice(8))+' '+kstTime(t); };
-  const TYPES=[
+  const IG_TYPES=[
     {k:'feed',l:'피드 사진',hint:'사진 1장 · 비율은 세로 4:5 ~ 가로 1.91:1'},
     {k:'carousel',l:'캐러셀',hint:'사진·영상 2~10개 · 첫 장 비율로 모두 잘려요'},
     {k:'reels',l:'릴스',hint:'세로 영상 1개(3초~15분) · 9:16 권장'},
     {k:'story',l:'스토리',hint:'사진 또는 60초 이하 영상 1개 · 캡션은 붙지 않아요'},
   ];
+  const TH_TYPES=[
+    {k:'text',l:'글',hint:'글만 올려요 · 500자까지'},
+    {k:'image',l:'사진',hint:'사진 1장 · 글을 함께 붙여요'},
+    {k:'video',l:'영상',hint:'영상 1개 · 5분 이하'},
+    {k:'carousel',l:'캐러셀',hint:'사진·영상 2~20개 · 옆으로 넘겨 봐요'},
+  ];
+  let TYPES=plat==='th'?TH_TYPES:IG_TYPES;
   const TIMES=[]; for(let h=0;h<24;h++) ['00','30'].forEach(m=>TIMES.push({value:String(h).padStart(2,'0')+':'+m,label:(h<12?'오전 ':'오후 ')+((h+11)%12+1)+':'+m}));
   const STATE={scheduled:['예약됨','is-wait'],publishing:['올리는 중','is-wait'],done:['올림','is-done'],failed:['실패','is-back']};
 
@@ -20205,8 +20230,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   let form=blank();
   function blank(){
     const t=Date.now()+90*60e3, slot=Math.ceil(t/(30*60e3))*30*60e3;
-    return {type:'feed',files:[],caption:'',shareFeed:true,when:'later',date:kstDay(slot),time:kstTime(slot)};
+    return {type:plat==='th'?'text':'feed',files:[],caption:'',shareFeed:true,when:'later',date:kstDay(slot),time:kstTime(slot)};
   }
+  const forms={};   // 올릴 곳마다 적던 내용을 따로 들고 있는다(탭을 바꿔도 지워지지 않게)
 
   /* ---------- 저장 ---------- */
   function msg(t,ok){ const m=$('iuMsg'); m.textContent=t||''; m.hidden=!t; m.classList.toggle('is-ok',!!ok); }
@@ -20273,7 +20299,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       form.files.push(f);
     }
     // 형식을 아직 안 정했으면 파일에 맞춘다
-    if(!st.edit){
+    if(!st.edit&&plat==='th'){
+      const n=form.files.length;
+      if(n>1) form.type='carousel';
+      else if(n===1) form.type=form.files[0].kind==='video'?'video':'image';
+    }else if(!st.edit){
       const v=form.files.filter(x=>x.kind==='video').length, n=form.files.length;
       if(n>1&&form.type!=='carousel') form.type='carousel';
       else if(n===1&&v===1&&form.type==='feed') form.type='reels';
@@ -20287,7 +20317,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
      사진을 보고 브랜드 소구점·반응 좋았던 지난 캡션을 참고해 cmjob/res/<같은 이름> 에 캡션 후보를 적는다 · 화면은 2.5초마다 확인 */
   const ai={sig:'',state:'',caps:[],seen:'',msg:'',name:'',t0:0,used:'',open:{},timer:null,poll:null};
   const AI_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>';
-  function aiSig(){ return st.edit||form.type==='story'||!form.files.length?'':form.files.map(f=>f.id).join(','); }
+  function aiSig(){ return plat==='th'||st.edit||form.type==='story'||!form.files.length?'':form.files.map(f=>f.id).join(','); }
   function aiSync(){
     const s=aiSig();
     if(s===ai.sig) return paintAi();
@@ -20381,7 +20411,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         const ok=await (window.baroyamAsk?window.baroyamAsk('적어 둔 캡션을 바꿀까요?','지금 캡션 칸의 글이 추천 캡션으로 바뀝니다.','바꾸기'):Promise.resolve(confirm('적어 둔 캡션을 바꿀까요?')));
         if(!ok) return;
       }
-      form.caption=c.text.slice(0,2200); ai.used=k; paintForm(); return;
+      form.caption=c.text.slice(0,PLAT[plat].cap); ai.used=k; paintForm(); return;
     }
     if(b.dataset.ai==='more'){ ai.open[k]=!ai.open[k]; paintAi(); return; }
     if(b.dataset.ai==='copy'){
@@ -20393,6 +20423,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const p=[], fs=form.files, t=form.type;
     const ratioOk=f=>f.kind!=='image'||(f.w/f.h>=0.79&&f.w/f.h<=1.92);
     fs.forEach(f=>{ f.bad=''; });
+    if(plat==='th') return problemsTh(p,fs,t);
     if(!st.edit){
       if(!fs.length) p.push('파일을 넣어 주세요');
       if(t==='feed'){ if(fs.length>1) p.push('피드 사진은 1장만 · 여러 장이면 캐러셀'); if(fs.some(f=>f.kind==='video')) p.push('영상은 릴스로 올려 주세요'); }
@@ -20404,6 +20435,21 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }
     const tags=(form.caption.match(/#[^\s#]+/g)||[]).length;
     if(tags>30) p.push('해시태그는 30개까지');
+    if(form.when==='later'){ const t0=Date.parse(form.date+'T'+form.time+':00+09:00'); if(!(t0>Date.now()+60e3)) p.push('예약 시각이 지났어요'); }
+    return [...new Set(p)];
+  }
+
+  function problemsTh(p,fs,t){
+    if(!st.edit){
+      if(t==='text'){ if(fs.length) p.push('파일이 있으면 사진·영상·캐러셀로 골라 주세요'); if(!form.caption.trim()) p.push('올릴 글을 적어 주세요'); }
+      if(t!=='text'&&!fs.length) p.push('파일을 넣어 주세요');
+      if(t==='image'&&(fs.length>1||fs.some(f=>f.kind!=='image'))) p.push('사진은 1장 · 여러 개면 캐러셀');
+      if(t==='video'){ if(fs.length>1||fs.some(f=>f.kind!=='video')) p.push('영상은 1개 · 여러 개면 캐러셀'); }
+      if(t==='carousel'){ if(fs.length&&fs.length<2) p.push('캐러셀은 2개 이상'); if(fs.length>20) p.push('캐러셀은 20개까지'); }
+      fs.forEach(f=>{ if(f.kind==='video'&&f.dur>300){ f.bad='길이'; p.push('쓰레드 영상은 5분 이하'); } });
+      fs.forEach(f=>{ if(f.kind==='video'&&f.size>MAX_MB*1048576){ f.bad='크기'; p.push('영상은 '+MAX_MB+'MB 이하만 올릴 수 있어요'); } });
+    }
+    if(form.caption.length>500) p.push('쓰레드 글은 500자까지');
     if(form.when==='later'){ const t0=Date.parse(form.date+'T'+form.time+':00+09:00'); if(!(t0>Date.now()+60e3)) p.push('예약 시각이 지났어요'); }
     return [...new Set(p)];
   }
@@ -20420,20 +20466,25 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       (f.kind==='video'?'<video src="'+f.url+'" muted></video>':'<img src="'+(f.url||'')+'" alt="">')+
       (form.files.length>1?'<span class="n">'+(i+1)+'</span>':'')+'<span class="k">'+(f.kind==='video'?(f.dur?Math.round(f.dur)+'초':'영상'):(f.w?f.w+'×'+f.h:'사진'))+'</span>'+
       (ed?'':(i?'<button type="button" class="mv" data-mv="'+i+'" title="앞으로">◀</button>':'')+'<button type="button" class="x" data-x="'+i+'" title="빼기">✕</button>')+'</div>').join('');
-    const max=form.type==='carousel'?10:1;
+    const max=form.type==='carousel'?PLAT[plat].carMax:plat==='th'&&form.type==='text'?20:1;
     $('iuAdd').hidden=$('iuDrive').hidden=!!ed||form.files.length>=max;
     $('iuFileHint').textContent=ed?'올린 파일은 바꿀 수 없어요 · 바꾸려면 취소하고 새로 예약하세요':'사진은 JPEG 로 바꿔 올라가요 · 영상은 '+MAX_MB+'MB 이하(mp4·mov)';
-    $('iuCapBox').hidden=form.type==='story';
-    $('iuFeedBox').hidden=form.type!=='reels';
+    $('iuCapBox').hidden=plat==='ig'&&form.type==='story';
+    $('iuFeedBox').hidden=plat==='th'||form.type!=='reels';
+    $('iuCaption').maxLength=PLAT[plat].cap;
+    $('iuCaption').placeholder=plat==='th'?'쓰레드에 올릴 글 · 500자까지':'게시물 글 · 해시태그는 30개까지';
+    $('iuCapBox').querySelector('label').firstChild.nodeValue=plat==='th'?'글 ':'캡션 ';
     $('iuShareFeed').checked=form.shareFeed!==false;
     if($('iuCaption').value!==form.caption) $('iuCaption').value=form.caption;
     const tags=(form.caption.match(/#[^\s#]+/g)||[]).length, cc=$('iuCapCount');
-    cc.textContent=form.caption.length+' / 2200자 · 해시태그 '+tags+' / 30'; cc.classList.toggle('is-over',tags>30);
+    if(plat==='th'){ cc.textContent=form.caption.length+' / 500자'+(tags>1?' · 주제 태그는 첫 해시태그 하나만':''); cc.classList.toggle('is-over',form.caption.length>500); }
+    else{ cc.textContent=form.caption.length+' / 2200자 · 해시태그 '+tags+' / 30'; cc.classList.toggle('is-over',tags>30); }
     $('iuWhen').querySelectorAll('.ui-chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.v===form.when)));
     $('iuAt').hidden=form.when!=='later';
     if(datePick) datePick.set(form.date);
     $('iuTime').innerHTML='<span class="t">'+esc((TIMES.find(x=>x.value===form.time)||{label:form.time}).label)+'</span>';
-    $('iuWhenHint').textContent=form.when==='now'?'누르면 2분 안에 인스타그램에 올라갑니다':'이 시각에 서버가 올리고 일정 캘린더에도 표시돼요';
+    $('iuWhenHint').textContent=form.when==='now'?'누르면 2분 안에 '+PLAT[plat].name+'에 올라갑니다':plat==='th'?'이 시각에 서버가 쓰레드에 올려요':'이 시각에 서버가 올리고 일정 캘린더에도 표시돼요';
+    $('iuPlatHint').textContent=PLAT[plat].hint; $('iuListHint').textContent=PLAT[plat].list;
     $('iuGo').textContent=ed?'예약 고치기':form.when==='now'?'지금 올리기':'예약하기';
     aiSync();
     const p=problems();
@@ -20460,10 +20511,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     $('iuRows').innerHTML=rows.map(p=>{
       const s=STATE[p.state]||['',''], t=TYPES.find(x=>x.k===p.type)||TYPES[0], n=(p.files||[]).length;
       const acts=p.state==='scheduled'?'<button type="button" class="ui-btn sm ghost" data-act="edit">고치기</button><button type="button" class="ui-btn sm ghost" data-act="cancel">취소</button>'
-        :p.state==='done'?(p.permalink?'<a class="ui-btn sm soft" href="'+esc(p.permalink)+'" target="_blank" rel="noopener">인스타에서 보기</a>':'')
+        :p.state==='done'?(p.permalink?'<a class="ui-btn sm soft" href="'+esc(p.permalink)+'" target="_blank" rel="noopener">'+(plat==='th'?'쓰레드':'인스타')+'에서 보기</a>':'')
         :p.state==='failed'?'<button type="button" class="ui-btn sm soft" data-act="retry">다시 시도</button><button type="button" class="ui-btn sm ghost" data-act="edit">고치기</button><button type="button" class="ui-btn sm ghost" data-act="cancel">지우기</button>':'';
-      return '<div class="iu-item'+(st.edit===p.id?' is-edit':'')+'" data-id="'+esc(p.id)+'"><div class="iu-thumb"><img data-thumb="'+esc(p.thumb||'')+'" alt="">'+(n>1?'<span class="c">'+n+'</span>':'')+'</div>'+
-        '<div class="iu-body"><p>'+esc(String(p.caption||'').split('\n')[0]||'(캡션 없음)')+'</p>'+
+      return '<div class="iu-item'+(st.edit===p.id?' is-edit':'')+'" data-id="'+esc(p.id)+'"><div class="iu-thumb'+(p.thumb?'':' is-text')+'">'+(p.thumb?'<img data-thumb="'+esc(p.thumb)+'" alt="">':'<span>글</span>')+(n>1?'<span class="c">'+n+'</span>':'')+'</div>'+
+        '<div class="iu-body"><p>'+esc(String(p.caption||'').split('\n')[0]||(plat==='th'?'(글 없음)':'(캡션 없음)'))+'</p>'+
         '<small><span class="cm-tag '+s[1]+'">'+s[0]+'</span>'+t.l+' · '+(p.state==='done'?fmt(new Date(p.doneAt).toISOString())+' 올림':fmt(p.when)+(p.state==='scheduled'?' 예약':''))+(p.by?' · '+esc(p.by):'')+'</small>'+
         (p.state==='failed'&&p.error?'<small class="err">'+esc(p.error)+'</small>':'')+'</div><div class="iu-acts">'+acts+'</div></div>';
     }).join('');
@@ -20477,34 +20528,35 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const go=$('iuGo');
     try{
       const when=form.when==='now'?new Date().toISOString():new Date(Date.parse(form.date+'T'+form.time+':00+09:00')).toISOString();
-      const title=(form.caption.split('\n')[0]||'').trim().slice(0,40)||'인스타 '+(TYPES.find(t=>t.k===form.type)||{}).l;
+      const title=(form.caption.split('\n')[0]||'').trim().slice(0,40)||(plat==='th'?'쓰레드 ':'인스타 ')+(TYPES.find(t=>t.k===form.type)||{}).l;
+      const th=plat==='th', cap=th||form.type!=='story'?form.caption:'';
       if(st.edit){
         const p=st.posts[st.edit]; if(!p) throw new Error('예약을 찾지 못했습니다');
         if(p.state!=='scheduled'&&p.state!=='failed') throw new Error('이미 올리는 중이라 고칠 수 없어요');
         const id=st.edit;
-        await savePost(id,x=>{ if(x.state!=='scheduled'&&x.state!=='failed') return; Object.assign(x,{caption:form.type==='story'?'':form.caption,shareFeed:form.shareFeed,when,state:'scheduled',error:''}); });
+        await savePost(id,x=>{ if(x.state!=='scheduled'&&x.state!=='failed') return; Object.assign(x,{caption:cap,shareFeed:form.shareFeed,when,state:'scheduled',error:''}); });
         if(p.schedId) await savePlan(p.schedId,s=>Object.assign(s,{title,date:kstDay(Date.parse(when)),time:kstTime(Date.parse(when)),state:'ready',del:null}));
         st.note={t:'예약을 고쳤어요 · '+fmt(when),ok:true};
       }else{
-        const id='iu'+rid(), files=[];
+        const id=(th?'th':'iu')+rid(), files=[];
         for(let i=0;i<form.files.length;i++){
           const f=form.files[i];
           go.textContent='파일 올리는 중 '+(i+1)+' / '+form.files.length;
           const blob=f.kind==='image'?await toJpeg(f.img,f.w,f.h,1440,0.9):f.file;
           const ext=f.kind==='image'?'jpg':(/\.mov$/i.test(f.name)?'mov':'mp4');
-          const path='insta/up/'+id+'/'+(i+1)+'.'+ext;
+          const path=(th?'threads/up/':'insta/up/')+id+'/'+(i+1)+'.'+ext;
           await DB().fileUpload(BUCKET,path,new File([blob],(i+1)+'.'+ext,{type:f.kind==='image'?'image/jpeg':(f.file.type||'video/mp4')}));
           files.push({path,kind:f.kind,w:f.w,h:f.h,size:blob.size,name:f.name});
         }
         const first=form.files[0];
-        const tb=first.kind==='image'?await toJpeg(first.img,first.w,first.h,320,0.8):first.thumb;
-        const thumb='insta/up/'+id+'/thumb.jpg';
+        const tb=!first?null:first.kind==='image'?await toJpeg(first.img,first.w,first.h,320,0.8):first.thumb;
+        const thumb=(th?'threads/up/':'insta/up/')+id+'/thumb.jpg';
         if(tb) await DB().fileUpload(BUCKET,thumb,new File([tb],'thumb.jpg',{type:'image/jpeg'}));
-        const schedId='ig'+rid();
-        await savePlan(schedId,s=>Object.assign(s,{title,date:kstDay(Date.parse(when)),time:kstTime(Date.parse(when)),type:form.type,state:'ready',memo:'업로드 탭에서 예약 · 시각이 되면 자동으로 올라가요',caption:form.type==='story'?'':form.caption,ord:Date.now()}));
-        await savePost(id,p=>Object.assign(p,{id,type:form.type,files,thumb:tb?thumb:'',caption:form.type==='story'?'':form.caption,
+        const schedId=th?'':'ig'+rid();   // 쓰레드는 일정 캘린더에 넣지 않는다
+        if(schedId) await savePlan(schedId,s=>Object.assign(s,{title,date:kstDay(Date.parse(when)),time:kstTime(Date.parse(when)),type:form.type,state:'ready',memo:'업로드 탭에서 예약 · 시각이 되면 자동으로 올라가요',caption:cap,ord:Date.now()}));
+        await savePost(id,p=>Object.assign(p,{id,platform:th?'threads':'instagram',type:form.type,files,thumb:tb?thumb:'',caption:cap,
           shareFeed:form.shareFeed,when,state:'scheduled',schedId,by:me(),created:Date.now()}));
-        st.note={t:form.when==='now'?'2분 안에 인스타그램에 올라가요':'예약했어요 · '+fmt(when),ok:true};
+        st.note={t:form.when==='now'?'2분 안에 '+PLAT[plat].name+'에 올라가요':'예약했어요 · '+fmt(when),ok:true};
       }
       form.files.forEach(f=>{ try{ URL.revokeObjectURL(f.url); }catch(e){} });
       form=blank(); st.edit=null; st.tab='wait'; if(tabs) tabs.set('wait');
@@ -20556,6 +20608,17 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   $('iuReset').addEventListener('click',()=>{ form.files.forEach(f=>{ try{ URL.revokeObjectURL(f.url); }catch(e){} }); form=blank(); st.edit=null; st.note=null; paintForm(); paintList(); });
   $('iuGo').addEventListener('click',submit);
   let tabs=window.UI&&window.UI.tabs?window.UI.tabs($('iuTabs'),v=>{ st.tab=v; paintList(); }):null;
+  /* 올릴 곳 바꾸기 · 적던 내용은 올릴 곳마다 따로 두고, 목록은 그 곳의 저장 칸을 다시 읽는다 */
+  function setPlat(v){
+    if(!PLAT[v]||v===plat) return;
+    if(st.busy) return platTabs&&platTabs.set(plat);
+    forms[plat]=form; plat=v; KEY=PLAT[v].key; TYPES=v==='th'?TH_TYPES:IG_TYPES;
+    try{ localStorage.setItem('baroyam_iu_plat',v); }catch(e){}
+    form=forms[v]||blank(); st.edit=null; st.note=null; st.posts={}; st.loaded=false;
+    paintForm(); paintList(); load();
+  }
+  const platTabs=window.UI&&window.UI.tabs?window.UI.tabs($('iuPlat'),setPlat):null;
+  if(platTabs) platTabs.set(plat);
   $('iuRows').addEventListener('click',e=>{ act(e).catch(err=>alert(err&&err.message||err)); });
   async function act(e){
     const b=e.target.closest('[data-act]'); if(!b) return;
@@ -20563,11 +20626,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(b.dataset.act==='edit'){
       const t=Date.parse(p.when), later=t>Date.now()+60e3, slot=later?t:Math.ceil((Date.now()+90*60e3)/(30*60e3))*30*60e3;
       form={type:p.type,files:[],caption:p.caption||'',shareFeed:p.shareFeed!==false,when:'later',date:kstDay(slot),time:kstTime(slot)};
-      const u=await thumbUrl(p.thumb); form.files=[{id:'t',url:u,kind:'image',name:'올린 파일',w:0,h:0}];
+      if(p.thumb){ const u=await thumbUrl(p.thumb); form.files=[{id:'t',url:u,kind:'image',name:'올린 파일',w:0,h:0}]; }
       st.edit=id; st.note=null; paintForm(); paintList(); $('iuCaption').focus(); return;
     }
     if(b.dataset.act==='cancel'){
-      const ok=await (window.baroyamAsk?window.baroyamAsk(p.state==='failed'?'이 게시물을 지울까요?':'이 예약을 취소할까요?','인스타그램에는 올라가지 않아요. 기록은 서버에 남아요.',p.state==='failed'?'지우기':'예약 취소'):Promise.resolve(confirm('취소할까요?')));
+      const ok=await (window.baroyamAsk?window.baroyamAsk(p.state==='failed'?'이 게시물을 지울까요?':'이 예약을 취소할까요?',PLAT[plat].name+'에는 올라가지 않아요. 기록은 서버에 남아요.',p.state==='failed'?'지우기':'예약 취소'):Promise.resolve(confirm('취소할까요?')));
       if(!ok) return;
       await savePost(id,x=>{ if(x.state==='publishing'||x.state==='done') return; x.del=Date.now(); x.delBy=me(); });
       if(p.schedId) await savePlan(p.schedId,s=>{ s.del=Date.now(); });
