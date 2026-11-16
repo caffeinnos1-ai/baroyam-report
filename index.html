@@ -24975,7 +24975,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const o={units:base.units,cost,sale,supply,take:sale&&supply!=null?(1-supply/sale)*100:null};
     if(supply==null) return o;
     const reb=supply*rebR/100, pre=supply-cost-logi-reb, vat=pre/11, margin=pre-vat;
-    return Object.assign(o,{logi,reb,vat,margin,mrate:supply?margin/supply:null,roas:margin>0&&sale?sale/margin:null});
+    /* srate = 마진 ÷ 판매가 · 쿠팡 광고 ROAS 는 소비자 판매가 기준 매출이라, 손익분기 ROAS(= 1 ÷ 이익률)와 맞는 이익률은 이것
+       (11-17 사용자 요청 · 마진률(mrate)은 공급가 기준이라 표의 기여이익률과 다름) */
+    return Object.assign(o,{logi,reb,vat,margin,mrate:supply?margin/supply:null,srate:sale?margin/sale:null,roas:margin>0&&sale?sale/margin:null});
   }
   const rkRows=()=>{ const d=RK(); return live(d.rows).filter(r=>r.g&&d.prods[r.g]&&!d.prods[r.g].del); };
   const rkUsed=r=>Object.keys(obj(r.mix)).filter(k=>COST.data.items[k]&&((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0);
@@ -24997,10 +24999,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   /* [열쇠, 머리글, 칸 비율(%), 묶음 첫 칸?, 계산 칸?] */
   const RK_COLS=[
-    ['label','옵션',10,1],['qty','수량',6],['cost','원가',8],
+    ['label','옵션',9,1],['qty','수량',5.5],['cost','원가',7.5],
     ['sale','최종판매가',7.5,1],['take','쿠팡 몫',6],['supply','공급가',7.5],
     ['logi','입고 물류비',6.5,1],['reb','장려금율',6],['rebv','장려금',7,0,1],['unit','개당판매가',6,0,1],
-    ['margin','마진',7,1,1],['mrate','마진률',6,0,1],['roas','최소 ROAS',6,0,1],['vat','부가세',6,0,1],
+    ['margin','마진',7,1,1],['mrate','마진률',5.5,0,1],['srate','판매가 이익률',6,0,1],['roas','최소 ROAS',5.5,0,1],['vat','부가세',5,0,1],
     ['mv','',2,1],['act','',2.5]];
   function rkOut(tr,r){
     const v=rkCalc(r);
@@ -25010,6 +25012,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     put('unit',v.sale&&v.units?won(v.sale/v.units):'–');
     put('margin',won(v.margin),' key hi'+(v.margin<0?' neg':''));
     put('mrate',pct(v.mrate),' key hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
+    put('srate',pct(v.srate),' key hi'+(v.srate!=null&&v.srate<0?' neg':''));
     put('roas',v.margin==null||!v.sale?'–':(v.roas==null?'적자':pct(v.roas,0)),' key hi'+(v.margin!=null&&v.sale&&v.roas==null?' neg':''));
     const cb=tr.querySelector('.pf-cost');
     if(cb){
@@ -25039,7 +25042,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     /* 칸 설정에서 숨긴 칸(hide)은 머리글·줄 모두에서 뺀다 · 남은 칸이 폭을 나눠 갖는다 */
     const COLS_=RK_COLS.filter(cl=>!rkHidden(cl[0]));
     const cg='<colgroup>'+COLS_.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
-    const headRow='<tr class="pf-head">'+COLS_.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+(cl[0]==='sale'?' pf-hot':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
+    const headRow='<tr class="pf-head">'+COLS_.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|srate|roas)$/.test(cl[0])?' key':'')+(cl[0]==='sale'?' pf-hot':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
     const H={}; RK_COLS.forEach(cl=>{ H[cl[0]]=cl; });
     const td=(k,inner,cls)=>{ if(rkHidden(k)) return ''; const cl=H[k], g=cl[3]&&k!=='label';
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
@@ -25054,7 +25057,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +td('logi',inp('logi',r,'0','쿠팡 센터까지 보내는 물류비 · 옵션 한 개 기준'))
       +td('reb',inp('reb',r,'%','판매장려금 · 공급가의 %','decimal'))
       +td('rebv','','out')+td('unit','','out')
-      +td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('vat','','out')
+      +td('margin','','out')+td('mrate','','out')+td('srate','','out')+td('roas','','out')+td('vat','','out')
       +td('mv',optMove(i,arr.length),'act')+td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
       +'</tr>';
     let h='';
