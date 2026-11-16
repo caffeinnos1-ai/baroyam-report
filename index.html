@@ -2434,12 +2434,20 @@ window.BAROYAM_FONT=(function(){
   #igCfgBody .ig-cfg-row input{width:100%;min-width:0}
   @media (max-width:560px){ #igCfgBody .ig-cfg-row{grid-template-columns:1fr;gap:6px} }
   /* 인스타콘텐츠 › 업로드 (iu-*) · 왼쪽 새 게시물 | 오른쪽 업로드 목록 */
-  .iu{margin-top:22px;display:grid;grid-template-columns:minmax(0,440px) minmax(0,360px) minmax(0,1fr);gap:16px;align-items:start}
+  .iu{margin-top:22px;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
   .iu[hidden]{display:none}
   .iu-new{position:sticky;top:16px}
   /* 미리보기 (11-16) · 가운데 칸 · 인스타 게시물 / 쓰레드 글 모양 */
-  .iu-pv{position:sticky;top:16px}
-  .iu-pv-tag{font-size:11.5px;font-weight:500;color:var(--mute)}
+
+  .iu-pv-tag{padding:3px 10px;border-radius:999px;background:var(--chip-flat);font-size:12px;font-weight:500;color:var(--body)}
+  .iu-pv-tag:empty{display:none}
+  /* 미리보기도 오른쪽과 같은 휴대폰 틀 안에 · 틀 안에서는 게시물 테두리를 빼고 화면을 꽉 채움 */
+  .iu-pvcol .pv-empty{border:0;border-radius:0;min-height:480px}
+  .iu-pvcol .pv-post{border:0;border-radius:0}
+  .iu-pvcol .pv-tall{border-radius:0}
+  .pv-apphead{display:flex;align-items:center;gap:12px;padding:4px 14px 10px;font-size:15.5px;font-weight:600;border-bottom:1px solid var(--line)}
+  .pv-apphead svg{width:20px;height:20px}
+  .pv-apphead small{display:block;font-size:11px;font-weight:500;color:var(--mute)}
   .pv-empty{display:grid;place-items:center;min-height:300px;border:1px dashed var(--line);border-radius:14px;padding:24px;
     text-align:center;font-size:12.5px;line-height:1.7;color:var(--mute)}
   .pv-post{border:1px solid var(--line);border-radius:14px;background:var(--paper);overflow:hidden;font-size:13px;color:var(--ink)}
@@ -2494,11 +2502,11 @@ window.BAROYAM_FONT=(function(){
   /* 오른쪽 칸 · 휴대폰 화면 피드 (11-16) · 위 단추로 업로드 목록과 바꿔 봄 */
   .iu-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
   .iu-side [hidden]{display:none}
-  .iu-side-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:var(--ui-h-sm)}
-  .iu-side-t{font-size:14px;font-weight:600;color:var(--ink)}
-  #iuListBtn b{margin-left:2px;font-weight:600}
-  #iuListBtn b:empty{display:none}
-  #iuListBtn[aria-pressed="true"]{background:var(--btn);color:#fff}
+  .iu-side-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;padding:0 4px}
+  .iu-side-t{font-size:15px;font-weight:600;color:var(--ink)}
+
+
+
   .iu-phone-wrap{display:flex;justify-content:center}
   .iu-phone{width:100%;max-width:350px;padding:9px;border-radius:44px;background:#1c1c1e;
     box-shadow:0 0 0 1px #3a3a3c inset,0 18px 40px -18px rgba(0,0,0,.45)}
@@ -2583,6 +2591,19 @@ window.BAROYAM_FONT=(function(){
   #iuPlat .ui-tab[data-value="th"][aria-selected="true"],#iuPlat .ui-tab[data-value="th"].active{box-shadow:0 6px 16px -6px rgba(0,0,0,.45)}
   #iuPlat .ui-tab[aria-selected="true"] .iu-plat-ico,#iuPlat .ui-tab.active .iu-plat-ico{background:rgba(255,255,255,.2)}
   #iuPlatHint{display:none}
+  /* 업로드 목록 단추 · 올릴 곳 단추와 같은 규격(높이 42 · 알약 · 왼쪽 동그라미 아이콘) · 누르면 강조색으로 차고 다시 누르면 피드로 */
+  #iuListBtn{position:relative;isolation:isolate;height:42px;padding:0 16px 0 8px;gap:10px;border-radius:999px;border:1px solid var(--line);
+    background:var(--paper);color:var(--body);font-size:13.5px;font-weight:600;box-shadow:none;transition:color .25s ease,border-color .25s ease,box-shadow .25s ease}
+  #iuListBtn::before{content:"";position:absolute;inset:-1px;border-radius:inherit;z-index:-1;opacity:0;background:var(--btn);transition:opacity .25s ease}
+  #iuListBtn .iu-plat-ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none;background:var(--btn);transition:background .25s ease}
+  #iuListBtn .iu-plat-ico svg{width:15px;height:15px}
+  #iuListBtn b{min-width:22px;height:22px;padding:0 7px;border-radius:999px;display:grid;place-items:center;box-sizing:border-box;
+    background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12px;font-weight:600;transition:background .25s ease,color .25s ease}
+  #iuListBtn b:empty{display:none}
+  #iuListBtn:hover{color:var(--ink);border-color:color-mix(in srgb,var(--btn) 45%,var(--line))}
+  #iuListBtn[aria-pressed="true"]{color:#fff;border-color:transparent;box-shadow:0 6px 16px -6px color-mix(in srgb,var(--btn) 60%,transparent)}
+  #iuListBtn[aria-pressed="true"]::before{opacity:1}
+  #iuListBtn[aria-pressed="true"] .iu-plat-ico,#iuListBtn[aria-pressed="true"] b{background:rgba(255,255,255,.22);color:#fff}
   /* 고른 곳 색을 새 게시물 상자 위 띠로도 이어 줌 */
   .iu[data-plat] .iu-new::before{content:"";position:absolute;top:-1px;left:22px;right:22px;height:3px;border-radius:0 0 3px 3px}
   .iu[data-plat="ig"] .iu-new::before{background:linear-gradient(90deg,#f9b14a,#d62976,#962fbf,#5b5bd6)}
@@ -2651,8 +2672,8 @@ window.BAROYAM_FONT=(function(){
   .iu-body .err{color:var(--neg);white-space:normal}
   .iu-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .iu-empty{padding:30px 10px;text-align:center;font-size:12.5px;color:var(--mute)}
-  @media (max-width:1320px){ .iu{grid-template-columns:minmax(0,440px) minmax(0,1fr)} .iu-side{grid-column:1/-1;position:static} .iu-pv{max-width:400px} }
-  @media (max-width:900px){ .iu{grid-template-columns:minmax(0,1fr)} .iu-new,.iu-pv{position:static} }
+  @media (max-width:1320px){ .iu{grid-template-columns:minmax(0,440px) minmax(0,1fr)} .iu-side:not(.iu-pvcol){grid-column:1/-1} .iu-side{position:static} }
+  @media (max-width:900px){ .iu{grid-template-columns:minmax(0,1fr)} .iu-new{position:static} }
   /* 인스타콘텐츠 › 성과 (ip-*) · 디자인 초안 · 계정 연결 전에는 예시 데이터로 그린다 */
   .ip{margin-top:22px;display:flex;flex-direction:column;gap:16px}
   .ip[hidden]{display:none}
@@ -12156,15 +12177,15 @@ window.BAROYAM_FONT=(function(){
               <p class="cm-msg" id="iuMsg" hidden></p>
             </section>
             <!-- 미리보기 · 새 게시물 칸의 파일·캡션을 인스타 게시물 / 쓰레드 글 모양으로 바로 그린다(저장 없음 · pvPaint) -->
-            <section class="ip-card iu-pv">
-              <div class="ip-card-head"><h3>미리보기</h3><span class="iu-pv-tag" id="iuPvTag"></span></div>
-              <div id="iuPv"></div>
-            </section>
+            <div class="iu-side iu-pvcol">
+              <div class="iu-side-bar"><span class="iu-side-t">미리보기</span><span class="iu-pv-tag" id="iuPvTag"></span></div>
+              <div class="iu-phone-wrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPvScr"><div id="iuPvHead"></div><div id="iuPv"></div></div></div></div>
+            </div>
             <!-- 오른쪽 칸 · 휴대폰 화면 피드(인스타 = 내 프로필 격자 insta_insights_v1 · 쓰레드 = 내 글 threads_feed_v1 · 지금 쓰는 게시물을 맨 앞에 끼움)
                  업로드 목록은 위 단추를 누르면 휴대폰 자리에 보임 -->
             <div class="iu-side" id="iuSide">
               <div class="iu-side-bar"><span class="iu-side-t" id="iuSideT">내 피드</span>
-                <button type="button" class="ui-btn soft sm" id="iuListBtn" aria-pressed="false">업로드 목록 <b id="iuListN"></b></button></div>
+                <button type="button" class="ui-btn" id="iuListBtn" aria-pressed="false"><span class="iu-plat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></span>업로드 목록<b id="iuListN"></b></button></div>
               <div class="iu-phone-wrap" id="iuPhoneWrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPhone"></div></div></div>
             <section class="ip-card iu-list" hidden>
               <div class="ip-card-head"><h3>업로드 목록</h3>
@@ -20621,7 +20642,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const datePick=window.UI&&window.UI.datePicker?window.UI.datePicker($('iuDate'),{mode:'single',onChange:v=>{ form.date=v; paintForm(); }}):null;
   /* ---------- 미리보기 · 인스타 게시물 / 쓰레드 글 모양 (11-16) ----------
      사진·영상 칸은 파일이 바뀔 때만 새로 만들고(영상 재생이 끊기지 않게), 글은 그릴 때마다 바꾼다 */
-  const pv={sig:'',i:0,open:false};
+  const pv={sig:'',i:0,open:false,head:''};
   const PV_ICO={
     heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-9.3-9.2C1.4 7.4 3.6 4 7 4c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.4 0 5.6 3.4 4.3 6.8C19.5 15.4 12 20 12 20Z"/></svg>',
     talk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20.5 12a8.5 8.5 0 1 1-3.9-7.1A8.5 8.5 0 0 1 20.5 12Zm0 0 .9 7.4-5-2"/></svg>',
@@ -20643,13 +20664,19 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const fs=form.files.filter(f=>!f.bad), cap=(form.caption||'').trim(), t=form.type;
     const tagLine=plat==='th'?'쓰레드 · '+((TYPES.find(x=>x.k===t)||{}).l||''):'인스타그램 · '+((TYPES.find(x=>x.k===t)||{}).l||'');
     $('iuPvTag').textContent=tagLine;
+    // 휴대폰 위쪽 · 상태 줄 + 앱 머리(인스타는 "← 게시물", 릴스·스토리는 상태 줄만, 쓰레드는 로고)
+    const head=PH_STATUS+(plat==='th'?'<div class="ph-th-top">'+PH_TH_LOGO+'</div>':t==='reels'||t==='story'?'':
+      '<div class="pv-apphead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><div><small>'+PV_NAME+'</small>게시물</div></div>');
+    if(pv.head!==head){ pv.head=head; $('iuPvHead').innerHTML=head; }
     if(!fs.length&&!cap){ pv.sig=''; box.innerHTML='<div class="pv-empty">파일을 넣거나 '+(plat==='th'?'글':'캡션')+'을 적으면<br>올라갈 모습이 여기에 보여요</div>'; return; }
-    const sig=plat+'|'+t+'|'+fs.map(f=>f.id+':'+(f.url||'')).join(',');
+    const sig=plat+'|'+t+'|'+fs.map(f=>f.id+':'+(f.url||'')).join(',')+'|'+pvPic();
     if(sig!==pv.sig){ pv.sig=sig; pv.i=0; pv.open=false; box.innerHTML=pvBuild(fs,t); }
     pvFill(fs,cap,t);
   }
+  // 미리보기 프로필 사진 · 오른쪽 피드가 받아 둔 계정 사진(없으면 "바")
+  const pvPic=()=>{ const d=ph[plat]||{}; return plat==='th'?(d.me&&d.me.pic)||'':(d.account&&d.account.picture)||''; };
   function pvBuild(fs,t){
-    const av='<span class="pv-av">바</span>';
+    const pic=pvPic(), av='<span class="pv-av" style="overflow:hidden">'+(pic?'<img src="'+esc(pic)+'" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'바')+'</span>';
     if(plat==='th'){
       // 쓰레드: 사진이 하나면 원래 비율(세로는 4:5 까지), 여럿이면 옆으로 넘기는 줄
       let media='';
@@ -20710,7 +20737,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     ph.at[p]=Date.now();
     try{ const db=DB(); if(!db||!db.loadSetting) return;
       let v=await db.loadSetting(PH_KEY[p],true); if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
-      ph[p]=v||{}; ph.sig=''; phPaint();
+      ph[p]=v||{}; ph.sig=''; pvPaint(); phPaint();
     }catch(e){ ph.at[p]=0; console.error(e); }
   }
   const phAgo=t=>{ const s=(Date.now()-Date.parse(t))/1e3; if(!(s>=0)) return '';
