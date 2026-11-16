@@ -2551,6 +2551,13 @@ window.BAROYAM_FONT=(function(){
   .ph-th-post{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;padding:13px 14px 10px;border-bottom:1px solid var(--line)}
   .ph-th-post.is-pv{background:color-mix(in srgb,var(--btn) 6%,var(--paper))}
   .ph-th-av{position:relative;width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--chip-flat);display:grid;place-items:center;font-size:13px;font-weight:600}
+  .ph-th-avw{position:relative;width:36px;height:36px}
+  .ph-th-avw i{position:absolute;right:-3px;bottom:-3px;width:17px;height:17px;border-radius:50%;border:2px solid var(--paper);box-sizing:border-box;
+    background:#111113;color:#fff;font-style:normal;font-size:12px;font-weight:600;line-height:13px;text-align:center}
+  .ph-th-compose{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .ph-th-compose .ph-th-av{width:34px;height:34px}
+  .ph-th-compose span{flex:1;color:var(--mute);font-size:13px}
+  .ph-th-compose b{padding:5px 14px;border-radius:999px;border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--ink)}
   .ph-th-head{display:flex;align-items:center;gap:6px}
   .ph-th-head b{font-weight:600}
   .ph-th-head small{color:var(--mute);font-size:12.5px}
@@ -2560,7 +2567,7 @@ window.BAROYAM_FONT=(function(){
   .ph-th-text .tg{color:#3b6fb6}
   .ph-th-media{display:flex;gap:6px;overflow-x:auto;margin-top:8px;scrollbar-width:none}
   .ph-th-media::-webkit-scrollbar{display:none}
-  .ph-th-media>*{flex:none;position:relative;height:210px;aspect-ratio:4/5;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--chip-flat)}
+  .ph-th-media>*{flex:none;box-sizing:border-box;position:relative;height:210px;aspect-ratio:4/5;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--chip-flat)}
   .ph-th-media.one>*{width:100%;height:auto;max-height:340px;aspect-ratio:4/5}
   .ph-th-media img,.ph-th-media video{display:block;width:100%;height:100%;object-fit:cover}
   .ph-th-acts{display:flex;gap:18px;margin-top:10px;color:var(--body)}
@@ -2600,6 +2607,9 @@ window.BAROYAM_FONT=(function(){
   #iuListBtn b{min-width:22px;height:22px;padding:0 7px;border-radius:999px;display:grid;place-items:center;box-sizing:border-box;
     background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12px;font-weight:600;transition:background .25s ease,color .25s ease}
   #iuListBtn b:empty{display:none}
+  #iuListBtn{margin-left:auto}
+  .iu-phone-cap{margin:4px 0 0;display:flex;justify-content:center;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--mute)}
+  .iu-phone-cap[hidden]{display:none}
   #iuListBtn:hover{color:var(--ink);border-color:color-mix(in srgb,var(--btn) 45%,var(--line))}
   #iuListBtn[aria-pressed="true"]{color:#fff;border-color:transparent;box-shadow:0 6px 16px -6px color-mix(in srgb,var(--btn) 60%,transparent)}
   #iuListBtn[aria-pressed="true"]::before{opacity:1}
@@ -12151,7 +12161,9 @@ window.BAROYAM_FONT=(function(){
           <div class="iu" data-insta-pane="upload" hidden>
             <!-- 올릴 곳 · 인스타 업로드(insta_upload_v1 · VPS insta_publish.js) / 쓰레드 업로드(threads_upload_v1 · VPS threads_publish.js) · 고른 쪽은 baroyam_iu_plat -->
             <div class="iu-plat"><div class="ui-tabs" id="iuPlat" aria-label="올릴 곳"><button type="button" class="ui-tab" data-value="ig"><span class="iu-plat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg></span>인스타 업로드</button><button type="button" class="ui-tab" data-value="th"><span class="iu-plat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.6"/><path d="M15.6 8.6v4.6a2.7 2.7 0 0 0 5.4 0V12a9 9 0 1 0-3.6 7.2"/></svg></span>쓰레드 업로드</button></div>
-              <span class="cm-hint" id="iuPlatHint"></span></div>
+              <span class="cm-hint" id="iuPlatHint"></span>
+              <!-- 업로드 목록 · 올릴 곳 단추 줄 오른쪽 끝 · 누르면 오른쪽 휴대폰 자리에 목록이 보임 -->
+              <button type="button" class="ui-btn" id="iuListBtn" aria-pressed="false"><span class="iu-plat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></span>업로드 목록<b id="iuListN"></b></button></div>
             <section class="ip-card iu-new">
               <div class="ip-card-head"><h3 id="iuTitle">새 게시물</h3><button type="button" class="ui-btn ghost sm" id="iuReset" hidden>새로 쓰기</button></div>
               <div class="iu-f"><label>형식</label><div class="ui-chips" id="iuType"></div><p class="cm-hint" id="iuTypeHint"></p></div>
@@ -12178,15 +12190,14 @@ window.BAROYAM_FONT=(function(){
             </section>
             <!-- 미리보기 · 새 게시물 칸의 파일·캡션을 인스타 게시물 / 쓰레드 글 모양으로 바로 그린다(저장 없음 · pvPaint) -->
             <div class="iu-side iu-pvcol">
-              <div class="iu-side-bar"><span class="iu-side-t">미리보기</span><span class="iu-pv-tag" id="iuPvTag"></span></div>
               <div class="iu-phone-wrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPvScr"><div id="iuPvHead"></div><div id="iuPv"></div></div></div></div>
+              <p class="iu-phone-cap">미리보기 <span class="iu-pv-tag" id="iuPvTag"></span></p>
             </div>
             <!-- 오른쪽 칸 · 휴대폰 화면 피드(인스타 = 내 프로필 격자 insta_insights_v1 · 쓰레드 = 내 글 threads_feed_v1 · 지금 쓰는 게시물을 맨 앞에 끼움)
                  업로드 목록은 위 단추를 누르면 휴대폰 자리에 보임 -->
             <div class="iu-side" id="iuSide">
-              <div class="iu-side-bar"><span class="iu-side-t" id="iuSideT">내 피드</span>
-                <button type="button" class="ui-btn" id="iuListBtn" aria-pressed="false"><span class="iu-plat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></span>업로드 목록<b id="iuListN"></b></button></div>
               <div class="iu-phone-wrap" id="iuPhoneWrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPhone"></div></div></div>
+              <p class="iu-phone-cap" id="iuSideT">내 피드</p>
             <section class="ip-card iu-list" hidden>
               <div class="ip-card-head"><h3>업로드 목록</h3>
                 <div class="ui-tabs" id="iuTabs">
@@ -20758,7 +20769,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const PH_TH_LOGO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M15.6 8.6v4.6a2.7 2.7 0 0 0 5.4 0V12a9 9 0 1 0-3.6 7.2"/></svg>';
   function phPaint(){
     const scr=$('iuPhone'); if(!scr) return;
-    $('iuSideT').textContent=ph.list?'업로드 목록':(plat==='th'?'내 쓰레드 피드':'내 인스타 피드');
+    $('iuSideT').textContent=plat==='th'?'쓰레드 홈 피드':'내 인스타 피드'; $('iuSideT').hidden=ph.list;
     phLoad(plat);
     const fs=form.files.filter(f=>!f.bad), d=ph[plat];
     const pvOn=plat==='th'?!!(fs.length||(form.caption||'').trim()):!!fs.length&&form.type!=='story';
@@ -20783,18 +20794,22 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   function phThreads(d,pvOn){
     const me=d.me||{}, name=me.username||'baroyam_official';
     const av=me.pic?phImg(me.pic):esc((name[0]||'b').toUpperCase());
+    // 홈 피드처럼 프로필 오른쪽 아래 + (팔로우) 표시
+    const avw='<div class="ph-th-avw"><div class="ph-th-av">'+av+'</div><i>+</i></div>';
     const acts='<div class="ph-th-acts">'+PV_ICO.heart+PV_ICO.talk+PV_ICO.repost+PV_ICO.send+'</div>';
     const media=list=>!list.length?'':'<div class="ph-th-media'+(list.length===1?' one':'')+'">'+list.join('')+'</div>';
     let out='';
     if(pvOn){ const fs=form.files.filter(f=>!f.bad);
-      out+='<div class="ph-th-post is-pv"><div class="ph-th-av">'+av+'</div><div><div class="ph-th-head"><b>'+esc(name)+'</b><small>방금</small><span class="pvt">미리보기</span></div>'+
+      out+='<div class="ph-th-post is-pv">'+avw+'<div><div class="ph-th-head"><b>'+esc(name)+'</b><small>방금</small><span class="pvt">미리보기</span></div>'+
         '<div class="ph-th-text" data-ph="pvtext"></div>'+media(fs.map(f=>'<div style="aspect-ratio:'+(f.w&&f.h&&fs.length>1?Math.max(.6,Math.min(1.5,f.w/f.h)):.8)+'">'+pvMedia(f)+'</div>'))+acts+'</div></div>'; }
     const posts=Array.isArray(d.posts)?d.posts:[];
-    out+=posts.map(p=>'<div class="ph-th-post"><div class="ph-th-av">'+av+'</div><div><div class="ph-th-head"><b>'+esc(name)+'</b><small>'+phAgo(p.time)+'</small>'+
+    out+=posts.map(p=>'<div class="ph-th-post">'+avw+'<div><div class="ph-th-head"><b>'+esc(name)+'</b><small>'+phAgo(p.time)+'</small>'+
       (p.link?'<a class="m" href="'+esc(p.link)+'" target="_blank" rel="noopener" title="쓰레드에서 보기">···</a>':'<span class="m">···</span>')+'</div>'+
       (p.text?'<div class="ph-th-text">'+pvText(p.text)+'</div>':'')+media((p.media||[]).map(m=>'<div>'+phImg(m.u)+'</div>'))+acts+'</div></div>').join('');
     if(!posts.length&&!pvOn) out+='<div class="ph-empty">아직 올린 쓰레드 글이 없어요</div>';
-    return '<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">내 글</span><span>추천</span></div>'+out;
+    // 쓰레드 앱 홈 화면 · 로고 → 추천/팔로잉 → "새로운 소식이 있나요?" 쓰기 줄 → 글들
+    return '<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div>'+
+      '<div class="ph-th-compose"><div class="ph-th-av">'+av+'</div><span>새로운 소식이 있나요?</span><b>게시</b></div>'+out;
   }
   $('iuListBtn').addEventListener('click',()=>{
     ph.list=!ph.list;
