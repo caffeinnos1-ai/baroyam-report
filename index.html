@@ -2543,14 +2543,6 @@ window.BAROYAM_FONT=(function(){
   .ph-ig-grid .k{position:absolute;top:6px;right:6px;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
   .ph-ig-grid .k svg{width:15px;height:15px;display:block}
   .ph-ig-grid .is-pv{outline:2.5px solid var(--btn);outline-offset:-2.5px}
-  /* 고정 게시물 · 오른쪽 위 핀 표시 · 사진에 올리면 왼쪽 아래 "고정 / 고정 풀기" 단추 */
-  .ph-ig-hint{padding:7px 12px;font-size:11.5px;color:var(--mute);background:color-mix(in srgb,var(--chip-flat) 60%,var(--paper))}
-  .ph-ig-grid .k svg{width:15px;height:15px}
-  .ph-ig-grid .ph-pin{position:absolute;left:6px;bottom:6px;display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border:0;border-radius:999px;
-    background:rgba(0,0,0,.62);color:#fff;font:inherit;font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:opacity .15s}
-  .ph-ig-grid .ph-pin svg{width:12px;height:12px}
-  .ph-ig-grid a:hover .ph-pin,.ph-ig-grid .ph-pin:focus-visible{opacity:1}
-  .ph-ig-grid a.is-pin .ph-pin{background:var(--btn)}
   .ph-ig-grid .is-pv img,.ph-ig-grid .is-pv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   /* 쓰레드 · 홈 피드 모양 */
   .ph-th-top{display:grid;place-items:center;padding:4px 0 6px}
@@ -2582,6 +2574,18 @@ window.BAROYAM_FONT=(function(){
   .ph-th-media img,.ph-th-media video{display:block;width:100%;height:100%;object-fit:cover}
   .ph-th-acts{display:flex;gap:18px;margin-top:10px;color:var(--body)}
   .ph-th-acts svg{width:18px;height:18px}
+  /* ③ 쓰레드 추천 피드 · 링크 넣는 줄 + 공식 퍼가기 글 */
+  .rec-add{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .rec-add .ui-field{flex:1;min-width:0;height:var(--ui-h-sm);font-size:12.5px}
+  .rec-msg{margin:0;padding:6px 12px;font-size:11.5px;color:var(--neg)}
+  .rec-msg[hidden]{display:none}
+  .rec-item{padding:10px 8px 6px;border-bottom:1px solid var(--line)}
+  .rec-item iframe{max-width:100%!important;min-width:0!important}
+  .rec-item blockquote.text-post-media-registered{display:none}
+  .rec-item blockquote{margin:0;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:12.5px}
+  .rec-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 0;font-size:11px;color:var(--mute)}
+  .rec-x{border:0;background:none;padding:2px 4px;font:inherit;font-size:11px;color:var(--mute);cursor:pointer}
+  .rec-x:hover{color:var(--neg)}
   .iu-plat{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   /* 올릴 곳 단추 · 붙은 탭 대신 떨어진 알약 둘 · 고르면 인스타는 인스타 그라데이션, 쓰레드는 검정 (11-16 사용자 요청)
      색은 각 서비스 로고 색이라 화면 색 변수 대신 여기서만 정함 · .ui-tab 의 all:unset 보다 세게 #iuPlat 로 묶음 */
@@ -2620,6 +2624,7 @@ window.BAROYAM_FONT=(function(){
   #iuListBtn{margin-left:auto}
   .iu-phone-cap{margin:4px 0 0;display:flex;justify-content:center;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--mute)}
   .iu-phone-cap[hidden]{display:none}
+  .iu-side[hidden]{display:none}
   /* 세 칸을 확실히 나눔(11-16) · 휴대폰 칸마다 연한 바탕 상자 + 위에 번호·이름 (1 새 게시물 → 2 미리보기 → 3 피드) */
   .iu-stage{box-sizing:border-box;padding:14px 16px 18px;gap:14px;border:1px solid var(--line);border-radius:18px;
     background:color-mix(in srgb,var(--chip-flat) 55%,var(--paper))}
@@ -2703,7 +2708,7 @@ window.BAROYAM_FONT=(function(){
   .iu-body .err{color:var(--neg);white-space:normal}
   .iu-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .iu-empty{padding:30px 10px;text-align:center;font-size:12.5px;color:var(--mute)}
-  @media (max-width:1320px){ .iu{grid-template-columns:minmax(0,440px) minmax(0,1fr)} .iu-side:not(.iu-pvcol){grid-column:1/-1} .iu-side{position:static} }
+  @media (max-width:1320px){ .iu{grid-template-columns:minmax(0,440px) minmax(0,1fr)} #iuSide{grid-column:1/-1} .iu[data-plat="th"] #iuSide{grid-column:auto} .iu[data-plat="th"] #iuRec{grid-column:1/-1} .iu-side{position:static} }
   @media (max-width:900px){ .iu{grid-template-columns:minmax(0,1fr)} .iu-new{position:static} }
   /* 인스타콘텐츠 › 성과 (ip-*) · 디자인 초안 · 계정 연결 전에는 예시 데이터로 그린다 */
   .ip{margin-top:22px;display:flex;flex-direction:column;gap:16px}
@@ -12210,7 +12215,7 @@ window.BAROYAM_FONT=(function(){
               <p class="cm-msg" id="iuMsg" hidden></p>
             </section>
             <!-- 미리보기 · 새 게시물 칸의 파일·캡션을 인스타 게시물 / 쓰레드 글 모양으로 바로 그린다(저장 없음 · pvPaint) -->
-            <div class="iu-side iu-pvcol iu-stage">
+            <div class="iu-side iu-pvcol iu-stage" id="iuPvCol">
               <div class="iu-phone-wrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPvScr"><div id="iuPvHead"></div><div id="iuPv"></div></div></div></div>
               <p class="iu-phone-cap"><b class="iu-step">2</b>미리보기 <span class="iu-pv-tag" id="iuPvTag"></span></p>
             </div>
@@ -12218,7 +12223,7 @@ window.BAROYAM_FONT=(function(){
                  업로드 목록은 위 단추를 누르면 휴대폰 자리에 보임 -->
             <div class="iu-side iu-stage" id="iuSide">
               <div class="iu-phone-wrap" id="iuPhoneWrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPhone"></div></div></div>
-              <p class="iu-phone-cap"><b class="iu-step">3</b><span id="iuSideT">내 피드</span></p>
+              <p class="iu-phone-cap"><b class="iu-step" id="iuSideN">3</b><span id="iuSideT">내 피드</span></p>
             <section class="ip-card iu-list" hidden>
               <div class="ip-card-head"><h3>업로드 목록</h3>
                 <div class="ui-tabs" id="iuTabs">
@@ -12229,6 +12234,11 @@ window.BAROYAM_FONT=(function(){
               <div id="iuRows"></div>
               <p class="cm-hint" id="iuListHint">예약 시각이 되면 서버가 2분 안에 올립니다. 인스타그램은 하루 100개까지 올릴 수 있어요.</p>
             </section>
+            </div>
+            <!-- 쓰레드일 때만 · ③ 다른 사람들이 올린 쓰레드 추천 피드 (쓰레드에서는 ② 미리보기 칸을 숨기고 내 피드가 ②로 옴) -->
+            <div class="iu-side iu-stage" id="iuRec" hidden>
+              <div class="iu-phone-wrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuRecScr"></div></div></div>
+              <p class="iu-phone-cap"><b class="iu-step">3</b><span>쓰레드 추천 피드</span></p>
             </div>
           </div>
         </section>
@@ -20762,28 +20772,13 @@ window.BAROYAM_PJ_CHANNELS=(function(){
      인스타 = 내 프로필 격자(서버가 하루 3번 채우는 insta_insights_v1) · 쓰레드 = 내 글(서버가 30분마다 채우는 threads_feed_v1 ·
      쓰레드 '추천' 홈피드는 API 로 주지 않아 내 글만) · 지금 쓰는 게시물을 맨 앞에 "미리보기"로 끼운다(저장 없음)
      피드 칸은 데이터·파일이 바뀔 때만 새로 그리고(스크롤·영상 유지), 쓰레드 미리보기 글은 그 줄만 바꾼다 */
-  const ph={ig:null,th:null,at:{ig:0,th:0},sig:'',list:false,pins:{}};
-  /* 인스타 고정 게시물 · 인스타 API 가 고정 여부를 주지 않아(11-16 시험) 화면에서 골라 둔다 · app_settings insta_pins_v1 = {ids:{게시물 id:{on,ord,at}}}
-     최대 3개 · 바꾼 게시물 하나만 saveMerged 로 얹음 · 격자에서 고정 → 미리보기 → 나머지 순으로 보여 "새 게시물은 고정 다음 칸"을 알게 함 */
-  const PIN_KEY='insta_pins_v1', PIN_MAX=3;
-  const pinOrder=()=>Object.keys(ph.pins||{}).filter(id=>ph.pins[id]&&ph.pins[id].on).sort((a,b)=>(ph.pins[a].ord||0)-(ph.pins[b].ord||0));
-  async function pinToggle(id){
-    const on=!(ph.pins[id]&&ph.pins[id].on);
-    if(on&&pinOrder().length>=PIN_MAX){ alert('고정은 '+PIN_MAX+'개까지예요 · 먼저 다른 게시물의 고정을 풀어 주세요'); return; }
-    const old=ph.pins[id], val={on:on,ord:Date.now(),at:Date.now()};
-    ph.pins=Object.assign({},ph.pins,{[id]:val}); ph.sig=''; phPaint();
-    const db=DB(), r=db&&db.saveMerged?await db.saveMerged(PIN_KEY,server=>{ let v=server; if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
-      v=v&&typeof v==='object'?v:{}; return Object.assign({},v,{ids:Object.assign({},v.ids,{[id]:val})}); }):null;
-    if(r&&r.ids){ ph.pins=r.ids; ph.sig=''; phPaint(); }
-    else{ ph.pins=Object.assign({},ph.pins); if(old) ph.pins[id]=old; else delete ph.pins[id]; ph.sig=''; phPaint(); alert('고정을 저장하지 못했습니다 · 로그인 상태를 확인하고 다시 눌러 주세요'); }
-  }
+  const ph={ig:null,th:null,at:{ig:0,th:0},sig:'',list:false};
   const PH_KEY={ig:'insta_insights_v1',th:'threads_feed_v1'};
   async function phLoad(p){
     if(Date.now()-ph.at[p]<10*60e3) return;
     ph.at[p]=Date.now();
     try{ const db=DB(); if(!db||!db.loadSetting) return;
       let v=await db.loadSetting(PH_KEY[p],true); if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
-      if(p==='ig'){ let q=await db.loadSetting(PIN_KEY,true); if(typeof q==='string'){ try{ q=JSON.parse(q); }catch(e){ q=null; } } ph.pins=(q&&q.ids)||{}; }
       ph[p]=v||{}; ph.sig=''; pvPaint(); phPaint();
     }catch(e){ ph.at[p]=0; console.error(e); }
   }
@@ -20802,11 +20797,13 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     car:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 3h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm-4 4v12a2 2 0 0 0 2 2h12v-2H6V7Z"/></svg>',
     play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5Z"/></svg>'
   };
-  const PH_PIN='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 2.6 21.4 8.5a1 1 0 0 1-.6 1.7l-2.6.3-3.4 3.4.3 4.2a1 1 0 0 1-1.7.8L9.6 15.1l-5.3 5.3-1.4-1.4 5.3-5.3-3.8-3.8a1 1 0 0 1 .8-1.7l4.2.3 3.4-3.4.3-2.6a1 1 0 0 1 1.7-.6Z"/></svg>';
   const PH_TH_LOGO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M15.6 8.6v4.6a2.7 2.7 0 0 0 5.4 0V12a9 9 0 1 0-3.6 7.2"/></svg>';
   function phPaint(){
     const scr=$('iuPhone'); if(!scr) return;
-    $('iuSideT').textContent=ph.list?'업로드 목록':plat==='th'?'쓰레드 홈 피드':'내 인스타 피드';
+    $('iuSideT').textContent=ph.list?'업로드 목록':plat==='th'?'내 쓰레드 피드':'내 인스타 피드';
+    // 쓰레드: ② 미리보기 칸을 숨기고 내 피드(맨 위에 지금 쓰는 글)가 ②, 남의 글 추천 피드가 ③
+    $('iuPvCol').hidden=plat==='th'; $('iuRec').hidden=plat!=='th'; $('iuSideN').textContent=plat==='th'?'2':'3';
+    if(plat==='th') recPaint();
     phLoad(plat);
     const fs=form.files.filter(f=>!f.bad), d=ph[plat];
     const pvOn=plat==='th'?!!(fs.length||(form.caption||'').trim()):!!fs.length&&form.type!=='story';
@@ -20816,21 +20813,19 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   function phInsta(d,pvOn,fs){
     const a=d.account||{}, all=(Array.isArray(d.posts)?d.posts:[]).filter(p=>p&&p.thumb).sort((x,y)=>Date.parse(y.time||y.at)-Date.parse(x.time||x.at));
-    const byId={}; all.forEach(p=>{ byId[p.id]=p; });
-    const pinned=pinOrder().map(id=>byId[id]).filter(Boolean).slice(0,PIN_MAX), posts=all.filter(p=>pinned.indexOf(p)<0).slice(0,60);
-    const tile=(p,pin)=>'<a href="'+esc(p.link||'#')+'" target="_blank" rel="noopener"'+(pin?' class="is-pin"':'')+' title="'+esc((p.caption||'').slice(0,80))+'">'+phImg(p.thumb)+
-      (pin?'<span class="k">'+PH_PIN+'</span>':p.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':p.type==='carousel'?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+
-      '<button type="button" class="ph-pin" data-pin="'+esc(p.id)+'" title="'+(pin?'고정 풀기':'맨 앞에 고정')+'">'+PH_PIN+'<span>'+(pin?'고정 풀기':'고정')+'</span></button></a>';
+    const posts=all.slice(0,60);
+    const tile=p=>'<a href="'+esc(p.link||'#')+'" target="_blank" rel="noopener" title="'+esc((p.caption||'').slice(0,80))+'">'+phImg(p.thumb)+
+      (p.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':p.type==='carousel'?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+'</a>';
     const av=a.picture?phImg(a.picture):esc(((a.username||'b')[0]||'b').toUpperCase());
-    let tiles=pinned.map(p=>tile(p,true)).join('');
+    let tiles='';
     if(pvOn){ const f=fs[0]; tiles+='<div class="is-pv" title="지금 쓰는 게시물">'+pvMedia(f)+(form.type==='reels'?'<span class="k">'+PH_IG_ICO.play+'</span>':form.type==='carousel'&&fs.length>1?'<span class="k">'+PH_IG_ICO.car+'</span>':'')+'<span class="ph-pvtag">미리보기</span></div>'; }
-    tiles+=posts.map(p=>tile(p,false)).join('');
+    tiles+=posts.map(tile).join('');
     return '<div class="ph-ig-top">'+esc(a.username||'baroyam_official')+' <small style="font-size:12px">▾</small><span class="r">'+PH_IG_ICO.plus+PH_IG_ICO.menu+'</span></div>'+
       '<div class="ph-ig-pro"><div class="ph-ig-av">'+av+'</div><div class="ph-ig-cnt"><div><b>'+phNum(a.media)+'</b><span>게시물</span></div><div><b>'+phNum(a.followers)+'</b><span>팔로워</span></div><div><b>'+phNum(a.follows)+'</b><span>팔로잉</span></div></div></div>'+
       (a.name?'<div class="ph-ig-name">'+esc(a.name)+'</div>':'')+
       '<div class="ph-ig-btns"><span>프로필 편집</span><span>프로필 공유</span></div>'+
       '<div class="ph-ig-tabs"><span class="on">'+PH_IG_ICO.grid+'</span><span>'+PH_IG_ICO.reel+'</span><span>'+PH_IG_ICO.tag+'</span></div>'+
-      (tiles?'<div class="ph-ig-hint">'+(pinned.length?'고정 '+pinned.length+'개 다음 칸에 새 게시물이 들어가요':'고정 게시물이 있으면 사진에 마우스를 올려 핀을 눌러 주세요')+'</div><div class="ph-ig-grid">'+tiles+'</div>':'<div class="ph-empty">아직 받은 게시물이 없어요<br>서버가 하루 세 번 인스타에서 받아 와요</div>');
+      (tiles?'<div class="ph-ig-grid">'+tiles+'</div>':'<div class="ph-empty">아직 받은 게시물이 없어요<br>서버가 하루 세 번 인스타에서 받아 와요</div>');
   }
   function phThreads(d,pvOn){
     const me=d.me||{}, name=me.username||'baroyam_official';
@@ -20852,7 +20847,61 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     return '<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div>'+
       '<div class="ph-th-compose"><div class="ph-th-av">'+av+'</div><span>새로운 소식이 있나요?</span><b>게시</b></div>'+out;
   }
-  $('iuPhone').addEventListener('click',e=>{ const b=e.target.closest('[data-pin]'); if(!b) return; e.preventDefault(); e.stopPropagation(); pinToggle(b.dataset.pin); });
+  /* ---------- ③ 쓰레드 추천 피드 (11-16) ----------
+     다른 사람 글은 API 가 주지 않아(키워드 검색 권한 없음 · 11-16 시험) 직원이 쓰레드에서 본 글 링크를 붙여 넣으면 공식 퍼가기(embed.js)로 실제 모양 그대로 보인다
+     app_settings threads_refs_v1 = {items:{id:{url,at,by,del}}} · 넣은 글 하나만 saveMerged · 빼기는 del 표시만 */
+  const REC_KEY='threads_refs_v1', rec={items:null,at:0,sig:'',busy:false,msg:''};
+  const recUrl=s=>{ const m=String(s||'').trim().match(/^https?:\/\/(?:www\.)?threads\.(?:net|com)\/(@[\w.]+)\/post\/([\w-]+)/i); return m?'https://www.threads.com/'+m[1]+'/post/'+m[2]:''; };
+  async function recLoad(force){
+    if(!force&&Date.now()-rec.at<5*60e3) return;
+    rec.at=Date.now();
+    try{ const db=DB(); if(!db||!db.loadSetting) return;
+      let v=await db.loadSetting(REC_KEY,true); if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      rec.items=(v&&v.items)||{}; rec.sig=''; recPaint();
+    }catch(e){ rec.at=0; console.error(e); }
+  }
+  async function recSave(id,val){
+    const db=DB(); if(!db||!db.saveMerged) return false;
+    const r=await db.saveMerged(REC_KEY,server=>{ let v=server; if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+      v=v&&typeof v==='object'?v:{}; return Object.assign({},v,{items:Object.assign({},v.items,{[id]:Object.assign({},(v.items||{})[id],val)})}); });
+    if(r&&r.items){ rec.items=r.items; return true; } return false;
+  }
+  function recPaint(){
+    const scr=$('iuRecScr'); if(!scr) return;
+    recLoad();
+    if(!scr.firstChild) scr.innerHTML=PH_STATUS+'<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div>'+
+      '<form class="rec-add" id="iuRecForm"><input class="ui-field" id="iuRecUrl" placeholder="쓰레드 글 링크 붙여넣기" autocomplete="off"><button type="submit" class="ui-btn primary sm">넣기</button></form>'+
+      '<p class="rec-msg" id="iuRecMsg"></p><div id="iuRecList"></div>';
+    $('iuRecMsg').textContent=rec.msg; $('iuRecMsg').hidden=!rec.msg;
+    const list=rec.items?Object.entries(rec.items).filter(([,x])=>x&&x.url&&!x.del).sort((a,b)=>(b[1].at||0)-(a[1].at||0)):null;
+    const sig=list?list.map(([id])=>id).join(','):'-';
+    if(sig===rec.sig) return; rec.sig=sig;
+    const box=$('iuRecList');
+    if(!list){ box.innerHTML='<div class="ph-empty">불러오는 중…</div>'; return; }
+    if(!list.length){ box.innerHTML='<div class="ph-empty">쓰레드에서 참고할 만한 글의 링크를 복사해<br>위 칸에 붙여 넣으면 여기에 쌓여요<br><small>글 오른쪽 위 ··· › 링크 복사</small></div>'; return; }
+    box.innerHTML=list.map(([id,x])=>'<div class="rec-item" data-rec="'+esc(id)+'"><blockquote class="text-post-media" data-text-post-permalink="'+esc(x.url)+'" data-text-post-version="0"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">쓰레드에서 보기</a></blockquote>'+
+      '<div class="rec-meta"><span>'+esc(x.by||'')+' · '+(x.at?(s=>/\.$/.test(s)?s+' 넣음':s+' 전 넣음')(phAgo(new Date(x.at).toISOString())):'')+'</span><button type="button" class="rec-x" data-rec-x="'+esc(id)+'">빼기</button></div></div>').join('');
+    // 쓰레드 공식 퍼가기 스크립트 · 새로 그릴 때마다 다시 붙여 새 글을 iframe 으로 바꾸게 함
+    const old=document.getElementById('threadsEmbedJs'); if(old) old.remove();
+    const s=document.createElement('script'); s.id='threadsEmbedJs'; s.async=true; s.src='https://www.threads.com/embed.js'; document.body.appendChild(s);
+  }
+  $('iuRecScr').addEventListener('submit',async e=>{
+    if(e.target.id!=='iuRecForm') return; e.preventDefault();
+    const inp=$('iuRecUrl'), url=recUrl(inp.value);
+    if(!url){ rec.msg='쓰레드 글 링크가 아니에요 · threads.com/@이름/post/… 모양이어야 해요'; recPaint(); return; }
+    if(rec.items&&Object.values(rec.items).some(x=>x&&!x.del&&x.url===url)){ rec.msg='이미 넣은 글이에요'; recPaint(); return; }
+    if(rec.busy) return; rec.busy=true;
+    const id='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const ok=await recSave(id,{url:url,at:Date.now(),by:me()});
+    rec.busy=false; rec.msg=ok?'':'저장하지 못했습니다 · 로그인 상태를 확인하고 다시 넣어 주세요';
+    if(ok) inp.value=''; rec.sig=''; recPaint();
+  });
+  $('iuRecScr').addEventListener('click',async e=>{
+    const b=e.target.closest('[data-rec-x]'); if(!b) return;
+    if(!confirm('이 글을 추천 피드에서 뺄까요?')) return;
+    const ok=await recSave(b.dataset.recX,{del:Date.now()});
+    if(!ok) alert('빼지 못했습니다 · 다시 눌러 주세요'); rec.sig=''; recPaint();
+  });
   $('iuListBtn').addEventListener('click',()=>{
     ph.list=!ph.list;
     $('iuListBtn').setAttribute('aria-pressed',String(ph.list));
