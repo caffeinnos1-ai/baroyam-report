@@ -2612,6 +2612,13 @@ window.BAROYAM_FONT=(function(){
   #iuListBtn{margin-left:auto}
   .iu-phone-cap{margin:4px 0 0;display:flex;justify-content:center;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--mute)}
   .iu-phone-cap[hidden]{display:none}
+  /* 세 칸을 확실히 나눔(11-16) · 휴대폰 칸마다 연한 바탕 상자 + 위에 번호·이름 (1 새 게시물 → 2 미리보기 → 3 피드) */
+  .iu-stage{box-sizing:border-box;padding:14px 16px 18px;gap:14px;border:1px solid var(--line);border-radius:18px;
+    background:color-mix(in srgb,var(--chip-flat) 55%,var(--paper))}
+  .iu-stage .iu-phone-cap{order:-1;justify-content:flex-start;margin:0;min-height:26px;font-size:14px;font-weight:600;color:var(--ink)}
+  .iu-stage .iu-list{background:var(--paper)}
+  .iu-step{flex:none;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:var(--ink);color:var(--paper);font-size:12px;font-weight:600}
+  .iu-stage-h{display:flex;align-items:center;gap:8px}
   #iuListBtn:hover{color:var(--ink);border-color:color-mix(in srgb,var(--btn) 45%,var(--line))}
   #iuListBtn[aria-pressed="true"]{color:#fff;border-color:transparent;box-shadow:0 6px 16px -6px color-mix(in srgb,var(--btn) 60%,transparent)}
   #iuListBtn[aria-pressed="true"]::before{opacity:1}
@@ -12171,7 +12178,7 @@ window.BAROYAM_FONT=(function(){
               <!-- 업로드 목록 · 올릴 곳 단추 줄 오른쪽 끝 · 누르면 오른쪽 휴대폰 자리에 목록이 보임 -->
               <button type="button" class="ui-btn" id="iuListBtn" aria-pressed="false"><span class="iu-plat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></span>업로드 목록<b id="iuListN"></b></button></div>
             <section class="ip-card iu-new">
-              <div class="ip-card-head"><h3 id="iuTitle">새 게시물</h3><button type="button" class="ui-btn ghost sm" id="iuReset" hidden>새로 쓰기</button></div>
+              <div class="ip-card-head"><h3 class="iu-stage-h"><b class="iu-step">1</b><span id="iuTitle">새 게시물</span></h3><button type="button" class="ui-btn ghost sm" id="iuReset" hidden>새로 쓰기</button></div>
               <div class="iu-f"><label>형식</label><div class="ui-chips" id="iuType"></div><p class="cm-hint" id="iuTypeHint"></p></div>
               <div class="iu-f"><label>파일</label>
                 <div class="iu-drop" id="iuDrop" tabindex="0">
@@ -12195,15 +12202,15 @@ window.BAROYAM_FONT=(function(){
               <p class="cm-msg" id="iuMsg" hidden></p>
             </section>
             <!-- 미리보기 · 새 게시물 칸의 파일·캡션을 인스타 게시물 / 쓰레드 글 모양으로 바로 그린다(저장 없음 · pvPaint) -->
-            <div class="iu-side iu-pvcol">
+            <div class="iu-side iu-pvcol iu-stage">
               <div class="iu-phone-wrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPvScr"><div id="iuPvHead"></div><div id="iuPv"></div></div></div></div>
-              <p class="iu-phone-cap">미리보기 <span class="iu-pv-tag" id="iuPvTag"></span></p>
+              <p class="iu-phone-cap"><b class="iu-step">2</b>미리보기 <span class="iu-pv-tag" id="iuPvTag"></span></p>
             </div>
             <!-- 오른쪽 칸 · 휴대폰 화면 피드(인스타 = 내 프로필 격자 insta_insights_v1 · 쓰레드 = 내 글 threads_feed_v1 · 지금 쓰는 게시물을 맨 앞에 끼움)
                  업로드 목록은 위 단추를 누르면 휴대폰 자리에 보임 -->
-            <div class="iu-side" id="iuSide">
+            <div class="iu-side iu-stage" id="iuSide">
               <div class="iu-phone-wrap" id="iuPhoneWrap"><div class="iu-phone"><div class="iu-phone-scr" id="iuPhone"></div></div></div>
-              <p class="iu-phone-cap" id="iuSideT">내 피드</p>
+              <p class="iu-phone-cap"><b class="iu-step">3</b><span id="iuSideT">내 피드</span></p>
             <section class="ip-card iu-list" hidden>
               <div class="ip-card-head"><h3>업로드 목록</h3>
                 <div class="ui-tabs" id="iuTabs">
@@ -20775,7 +20782,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const PH_TH_LOGO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M15.6 8.6v4.6a2.7 2.7 0 0 0 5.4 0V12a9 9 0 1 0-3.6 7.2"/></svg>';
   function phPaint(){
     const scr=$('iuPhone'); if(!scr) return;
-    $('iuSideT').textContent=plat==='th'?'쓰레드 홈 피드':'내 인스타 피드'; $('iuSideT').hidden=ph.list;
+    $('iuSideT').textContent=ph.list?'업로드 목록':plat==='th'?'쓰레드 홈 피드':'내 인스타 피드';
     phLoad(plat);
     const fs=form.files.filter(f=>!f.bad), d=ph[plat];
     const pvOn=plat==='th'?!!(fs.length||(form.caption||'').trim()):!!fs.length&&form.type!=='story';
