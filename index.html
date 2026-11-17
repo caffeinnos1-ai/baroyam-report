@@ -2510,8 +2510,8 @@ window.BAROYAM_FONT=(function(){
 
 
   .iu-phone-wrap{display:flex;justify-content:center}
-  .iu-phone{width:100%;max-width:350px;padding:9px;border-radius:44px;background:#1c1c1e;
-    box-shadow:0 0 0 1px #3a3a3c inset,0 18px 40px -18px rgba(0,0,0,.45)}
+  .iu-phone{width:100%;max-width:350px;padding:9px;border-radius:44px;background:color-mix(in srgb,var(--mute) 22%,var(--paper));
+    box-shadow:0 0 0 1px color-mix(in srgb,var(--mute) 32%,var(--paper)) inset,0 18px 40px -22px rgba(0,0,0,.25)}
   .iu-phone-scr{position:relative;height:var(--ph-h);border-radius:36px;overflow-y:auto;overflow-x:hidden;
     background:var(--paper);color:var(--ink);font-size:13px;scrollbar-width:none}
   .iu-phone-scr::-webkit-scrollbar{display:none}
@@ -2596,6 +2596,11 @@ window.BAROYAM_FONT=(function(){
   .ph-th-rep .ph-th-text{margin-top:1px}
   .ph-th-rpto{border:0;background:none;padding:2px 0;margin-top:3px;font:inherit;font-size:11.5px;font-weight:600;color:var(--mute);cursor:pointer}
   .ph-th-rpto:hover{color:var(--btn)}
+  .ph-th-act{display:flex;align-items:center;gap:14px;margin-top:3px}
+  .ph-th-act .ph-th-rpto{margin-top:0}
+  .ph-th-like{display:inline-flex;align-items:center;gap:3px;padding:2px 0;font-size:11.5px;font-weight:600;color:var(--mute);text-decoration:none}
+  .ph-th-like svg{width:13px;height:13px}
+  .ph-th-like:hover{color:var(--neg)}
   .ph-th-rpto.main{align-self:flex-start;padding:4px 10px;margin:0;border:1px solid var(--line);border-radius:999px;color:var(--body)}
   .ph-th-rpbox{margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--btn-soft) 45%,var(--paper));display:flex;flex-direction:column;gap:6px}
   .ph-th-rpbox .to{font-size:11.5px;font-weight:600;color:var(--ink)}
@@ -20917,7 +20922,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         (r.mine?'<span class="pvt">내 답글</span>':'')+(r.hid?'<span class="ph-th-hid">숨김</span>':'')+
         (r.link?'<a class="m" href="'+esc(r.link)+'" target="_blank" rel="noopener" title="쓰레드에서 보기">···</a>':'')+'</div>'+
         '<div class="ph-th-text">'+pvText(r.t||'')+'</div>'+
-        (r.mine?'':'<button type="button" class="ph-th-rpto" data-rp-to="'+esc(r.id)+'" data-rp-u="'+esc(r.u||'')+'" data-rp-post="'+esc(p.id)+'">답글</button>')+
+        '<div class="ph-th-act">'+(r.link?'<a class="ph-th-like" href="'+esc(r.link)+'" target="_blank" rel="noopener" title="쓰레드에서 이 댓글에 좋아요 누르기">'+PV_ICO.heart+'좋아요</a>':'')+
+        (r.mine?'':'<button type="button" class="ph-th-rpto" data-rp-to="'+esc(r.id)+'" data-rp-u="'+esc(r.u||'')+'" data-rp-post="'+esc(p.id)+'">답글</button>')+'</div>'+
         composer(p,r.id)+'</div></div>').join('')+'</div>'; };
     out+=posts.map(p=>{ const c=p.c||{}, open=!!(ph.thOpen&&ph.thOpen[p.id]), n=nRep(p);
       return '<div class="ph-th-post'+(open?' is-open':'')+'">'+avw+'<div><div class="ph-th-head"><b>'+esc(name)+'</b><small>'+phAgo(p.time)+'</small>'+
