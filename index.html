@@ -11786,7 +11786,7 @@ window.BAROYAM_FONT=(function(){
             <!-- 판매처 계산법 설정(10-20 사용자: 판매처마다 계산법이 달라 원가표가 아니라 마진표 판매처 배너에서 정함) · 마진표 탭일 때만 보임 -->
             <div class="pf-rule-open"><button type="button" class="ui-btn sm soft" id="pfRuleOpen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span id="pfRuleOpenT">계산법 설정</span></button><small id="pfRuleOpenSub"></small></div>
             <!-- 로켓프레시 계산법(11-17 사용자) · 광고비 부가세 포함/별도(× 1.1) · 로켓프레시 탭일 때만 보임 -->
-            <div class="pf-rule-open rk"><button type="button" class="ui-btn sm soft" id="pfRkRule" aria-haspopup="listbox"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span>로켓프레시 계산법 설정</span></button><small id="pfRkRuleSub"></small></div>
+            <div class="pf-rule-open rk"><button type="button" class="ui-btn sm soft" id="pfRkRule"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span>로켓프레시 계산법 설정</span></button><small id="pfRkRuleSub"></small></div>
           </div>
           <!-- 보기 전용 안내 · 수정 권한이 없을 때만 -->
           <div class="pf-ro-note" id="pfRoNote" hidden>보기 전용이에요 · 마진관리 수정은 팀장 또는 관리자 설정 › 권한설정에서 '마진관리 수정'을 받은 회원만 할 수 있어요.</div>
@@ -11931,6 +11931,25 @@ window.BAROYAM_FONT=(function(){
               <span class="pf-grow"></span>
               <button type="button" class="ui-btn ghost" data-pf-close>취소</button>
               <button type="button" class="ui-btn primary" id="pfRuleOk">저장</button>
+            </div>
+          </div>
+        </div>
+        <!-- 로켓프레시 계산법 창(11-17 사용자 · 마진표 판매처 계산법 창과 같은 모양) · 광고비 부가세 탭 + 최소 ROAS 계산 순서 요약 -->
+        <div class="settings-overlay" id="pfRkRuleDlg" hidden>
+          <div class="settings-panel pf-rule" role="dialog" aria-modal="true" aria-labelledby="pfRkRuleTitle">
+            <div class="settings-head">
+              <h2 id="pfRkRuleTitle">로켓프레시 계산법</h2>
+              <button type="button" class="settings-close" data-pf-close aria-label="닫기">✕</button>
+            </div>
+            <div class="pf-rule-body">
+              <div class="pf-rule-row"><div><b>광고비 부가세</b><small>쿠팡 광고비가 부가세 빼고 보이면 "별도 × 1.1" · 최소 ROAS 에 1.1 을 곱함</small></div>
+                <div class="ui-tabs" id="pfRkAdVat"><button class="ui-tab" data-value="">포함</button><button class="ui-tab" data-value="ex">별도 × 1.1</button></div></div>
+              <div class="pf-rule-ex" id="pfRkRuleEx"></div>
+            </div>
+            <div class="pf-mix-foot">
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn ghost" data-pf-close>취소</button>
+              <button type="button" class="ui-btn primary" id="pfRkRuleOk">저장</button>
             </div>
           </div>
         </div>
@@ -25196,14 +25215,35 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   $('pfRkCols').addEventListener('click',e=>{ e.stopPropagation(); if(ROCKET.loaded) rkColsMenu(); });
   function rkRulePaint(){ const t=$('pfRkRuleSub'); if(t) t.textContent=rkAdVat()?'광고비 부가세 별도 · 최소 ROAS × 1.1':'광고비 부가세 포함 · 최소 ROAS = 판매가 ÷ 마진'; }
-  $('pfRkRule').addEventListener('click',e=>{
-    e.stopPropagation(); if(!ROCKET.loaded) return;
-    const opts=[{value:'',label:'광고비 부가세 포함',sub:'최소 ROAS = 판매가 ÷ 마진'},{value:'ex',label:'광고비 부가세 별도',sub:'광고비가 부가세 빼고 보임(쿠팡) · 최소 ROAS × 1.1'}];
-    window.UI.menu($('pfRkRule'),opts,rkAdVat()?'ex':'',v=>{
-      if(!canEdit()) return;
-      RK().adVat=v==='ex'?'ex':''; ROCKET.mark(); paintRocket();
-    });
+  /* 로켓프레시 계산법 창 · 광고비 부가세 탭 · 아래에 최소 ROAS 가 나오는 순서를 예시 숫자로 보인다 */
+  const rkDlg=$('pfRkRuleDlg');
+  const rkAdTabs=window.UI.tabs($('pfRkAdVat'),()=>rkRuleEx());
+  function rkRuleEx(){
+    const ex=rkAdTabs.value==='ex', sale=10000, sup=6000, cost=3000, logi=500, reb=sup*0.05, pre=sup-cost-logi-reb, vat=pre/11, m=pre-vat;
+    const w=v=>comma(Math.round(v))+'원';
+    $('pfRkRuleEx').innerHTML='<b>최소 ROAS 가 나오는 순서</b><br>'
+      +'① 공급가 = 판매가 × (1 − 쿠팡 몫) <span style="color:var(--mute)">예: 10,000 × (1 − 40%) = '+w(sup)+'</span><br>'
+      +'② 장려금 = 공급가 × 장려금율 <span style="color:var(--mute)">예: 6,000 × 5% = '+w(reb)+'</span><br>'
+      +'③ 부가세 = (공급가 − 원가 − 입고 물류비 − 장려금) ÷ 11 <span style="color:var(--mute)">예: (6,000 − 3,000 − 500 − 300) ÷ 11 = '+w(vat)+'</span><br>'
+      +'④ 마진 = 공급가 − 원가 − 입고 물류비 − 장려금 − 부가세 <span style="color:var(--mute)">예: '+w(m)+'</span><br>'
+      +'⑤ 판매가 이익률 = 마진 ÷ 판매가 <span style="color:var(--mute)">예: 2,000 ÷ 10,000 = 20%</span><br>'
+      +'⑥ 최소 ROAS = 판매가 ÷ 마진 = 1 ÷ 판매가 이익률'+(ex?' × 1.1':'')+' <span style="color:var(--mute)">예: <b>'+(ex?'550%':'500%')+'</b></span><br>'
+      +'<span style="color:var(--mute)">쿠팡 광고 ROAS 는 소비자 판매가로 매출을 재므로, 공급가가 아니라 판매가로 나눕니다'+(ex?' · 광고비가 부가세 빼고 보이니 실제로 나가는 돈(× 1.1)만큼 높여 잡습니다':'')+'</span>';
+  }
+  $('pfRkRule').addEventListener('click',()=>{
+    if(!ROCKET.loaded) return;
+    const ro=!canEdit();
+    rkAdTabs.set(rkAdVat()?'ex':'');
+    rkDlg.querySelectorAll('.ui-tab').forEach(x=>{ x.disabled=ro; });
+    $('pfRkRuleOk').hidden=ro;
+    rkRuleEx(); rkDlg.hidden=false;
   });
+  $('pfRkRuleOk').addEventListener('click',()=>{
+    if(canEdit()){ const v=rkAdTabs.value==='ex'?'ex':''; if((RK().adVat||'')!==v){ RK().adVat=v; ROCKET.mark(); paintRocket(); } }
+    rkDlg.hidden=true;
+  });
+  rkDlg.addEventListener('click',e=>{ if(e.target===rkDlg||e.target.closest('[data-pf-close]')) rkDlg.hidden=true; });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!rkDlg.hidden) rkDlg.hidden=true; });
 
   /* ---------- 원가 고르기 창 ---------- */
   let mixFor=null, mixDraft={}, mixBrand='', mixQ='', mixFirst=null;
