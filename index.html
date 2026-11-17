@@ -24630,11 +24630,14 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const it=r.item&&COST.data.items[r.item]; if(it) return brandOf(it);
     const g=gOf(r); return g?prodBrand(g):'';
   }
-  /* 옵션 칸에 저절로 뜨는 이름 = 고른 상품들의 브랜드(여럿이면 · 로 잇는다) */
+  /* 옵션 칸에 저절로 뜨는 이름 = 원가 상품 하나면 그 상품명(11-18 사용자 요청 · 브랜드만으로는 옵션이 안 갈림) ·
+     여러 상품을 섞었으면 브랜드(여럿이면 · 로 잇는다) */
+  const itemName=k=>{ const it=k&&COST.data.items[k]; return it?((it.name||'').trim()||brandOf(it)):''; };
   function autoName(r){
-    const bs=[...new Set(used(r).map(k=>brandOf(COST.data.items[k])))];
+    const u=used(r); if(u.length===1) return itemName(u[0]);
+    const bs=[...new Set(u.map(k=>brandOf(COST.data.items[k])))];
     if(bs.length) return bs.join(' · ');
-    return rowBrand(r);
+    return itemName(r.item)||rowBrand(r);
   }
   /* 예전에 저절로 붙던 이름("4팩"·"12+1"·"홀떡피자 3종")은 직접 적은 글로 치지 않는다 */
   const isAutoLabel=l=>/^\s*(\d+팩|\d+\+\d+|.*\d+종( \d+팩씩)?)\s*$/.test(l||'');
@@ -24830,7 +24833,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const ch=r.chan&&c.chans[r.chan], pr=r.prime&&c.ship[r.prime], prT=pr?esc(pr.name)+' · '+comma(pr.fee):'';
       const custom=r.label&&!isAutoLabel(r.label)?r.label:'';
       return '<tr data-row="'+esc(r.id)+'">'
-        +td('label','<input class="ui-field sm pf-lbl" data-k="label" maxlength="40" value="'+esc(custom)+'" placeholder="'+esc(autoName(r)||'옵션')+'" title="원가에서 고른 상품의 브랜드가 뜹니다 · 고쳐 적으면 그 글이 남습니다">')
+        +td('label','<input class="ui-field sm pf-lbl" data-k="label" maxlength="40" value="'+esc(custom)+'" placeholder="'+esc(autoName(r)||'옵션')+'" title="원가에서 고른 상품명이 뜹니다(여러 상품을 섞으면 브랜드) · 고쳐 적으면 그 글이 남습니다">')
         +td('qty',qtyCell(r),'pf-key')
         +td('cost','<button type="button" class="ui-field sm pf-cost" data-mix title="원가표 상품 고르기(여러 상품을 섞어도 됨)"></button>')
         +td('price','<input class="ui-field sm pf-num" data-k="price" inputmode="numeric" value="'+esc(comma(r.price))+'" title="비우면 고른 상품의 소비자가 합계">')
@@ -25116,7 +25119,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const rkRows=()=>{ const d=RK(); return live(d.rows).filter(r=>r.g&&d.prods[r.g]&&!d.prods[r.g].del); };
   const rkUsed=r=>Object.keys(obj(r.mix)).filter(k=>COST.data.items[k]&&((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0);
   function rkBrandOf(r){ const u=rkUsed(r); if(u.length) return brandOf(COST.data.items[u[0]]); const it=r.item&&COST.data.items[r.item]; return it?brandOf(it):''; }
-  const rkAuto=r=>[...new Set(rkUsed(r).map(k=>brandOf(COST.data.items[k])))].join(' · ')||rkBrandOf(r);
+  const rkAuto=r=>{ const u=rkUsed(r), nm=k=>{ const it=k&&COST.data.items[k]; return it?((it.name||'').trim()||brandOf(it)):''; };
+    if(u.length===1) return nm(u[0]);
+    return [...new Set(u.map(k=>brandOf(COST.data.items[k])))].join(' · ')||nm(r.item)||rkBrandOf(r); };
   const rkLabel=r=>r.label||rkAuto(r);
   function rkSolo(r){ const u=rkUsed(r); if(u.length>1) return null; return u[0]||(r.item&&COST.data.items[r.item]?r.item:null); }
   function rkProdBrands(g){ return [...new Set(rkRows().filter(r=>r.g===g.id).map(rkBrandOf).filter(Boolean))]; }
