@@ -3542,7 +3542,8 @@ window.BAROYAM_FONT=(function(){
   .ip-type .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--bar) 55%,var(--paper)),color-mix(in srgb,var(--bar) 78%,var(--paper)))}
   .ip-type>b{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .ip-type small{grid-column:2/4;margin-top:-8px;font-size:11px;color:var(--mute)}
-  /* 스토리 시청 */
+  /* 스토리 시청 · 11-17 사용자 요청으로 카드 숨김(코드는 남김) */
+  #ipStoryCard[hidden]{display:none}
   .ip-st-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
   .ip-st-kpis>div{padding:10px 12px;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;gap:3px}
   .ip-st-kpis small{font-size:11.5px;color:var(--mute)}
@@ -12152,7 +12153,7 @@ window.BAROYAM_FONT=(function(){
             </div>
             <div class="ip-view" id="ipLib" hidden>
             <!-- 스토리 시청 · 서버가 매시 지금 올라와 있는 스토리 성과를 받아 쌓은 insta_insights_v1.stories (24시간 뒤에는 마지막 값) · 11-16 계정 성과에서 콘텐츠 성과로 옮김 · 기간은 보관함 기간 탭을 따름 -->
-            <div class="ip-card">
+            <div class="ip-card" id="ipStoryCard" hidden>
               <div class="ip-card-head"><div><h3>스토리 시청</h3><small id="ipStorySub"></small></div></div>
               <div class="ip-st-kpis" id="ipStoryKpis"></div>
               <div class="ip-st-list" id="ipStories"></div>
