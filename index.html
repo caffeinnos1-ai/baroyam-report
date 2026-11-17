@@ -2574,6 +2574,27 @@ window.BAROYAM_FONT=(function(){
   .ph-th-media img,.ph-th-media video{display:block;width:100%;height:100%;object-fit:cover}
   .ph-th-acts{display:flex;gap:18px;margin-top:10px;color:var(--body)}
   .ph-th-acts svg{width:18px;height:18px}
+  /* 11-17 · 숫자 · 댓글 펼치기 · 전체/댓글 달린 글 */
+  .ph-th-acts>span,.ph-th-rbtn{display:inline-flex;align-items:center;gap:4px}
+  .ph-th-acts em{font-style:normal;font-size:12px;color:var(--body)}
+  .ph-th-rbtn{border:0;background:none;padding:2px 6px;margin:-2px -6px;border-radius:999px;font:inherit;color:inherit;cursor:pointer}
+  .ph-th-rbtn:disabled{cursor:default}
+  .ph-th-rbtn.has{color:var(--btn)}
+  .ph-th-rbtn.has em{color:var(--btn);font-weight:600}
+  .ph-th-rbtn.has:hover{background:var(--btn-soft)}
+  .ph-th-post.is-open .ph-th-rbtn.has{background:var(--btn-soft)}
+  .ph-th-views{margin-left:auto;font-size:11.5px;color:var(--mute)}
+  .ph-th-filter{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line)}
+  .ph-th-filter button{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 11px;font:inherit;font-size:12px;font-weight:500;color:var(--body);cursor:pointer}
+  .ph-th-filter button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .ph-th-reps{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:10px}
+  .ph-th-rnone{margin:0;font-size:11.5px;color:var(--mute)}
+  .ph-th-rep{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;font-size:12.5px}
+  .ph-th-rep.sub{margin-left:20px}
+  .ph-th-rep.mine .ph-th-rav{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .ph-th-rav{width:26px;height:26px;border-radius:50%;background:var(--chip-flat);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--body)}
+  .ph-th-rep .ph-th-text{margin-top:1px}
+  .ph-th-hid{padding:0 6px;border-radius:999px;background:var(--chip-flat);font-size:10.5px;color:var(--mute)}
   /* ③ 쓰레드 추천 피드 · 링크 넣는 줄 + 공식 퍼가기 글 */
   .rec-open{display:block;width:calc(100% - 24px);margin:10px 12px 0;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--paper);
     font:inherit;font-size:13px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer}
@@ -20865,14 +20886,32 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(pvOn){ const fs=form.files.filter(f=>!f.bad);
       out+='<div class="ph-th-post is-pv">'+avw+'<div><div class="ph-th-head"><b>'+esc(name)+'</b><small>방금</small><span class="pvt">미리보기</span></div>'+
         '<div class="ph-th-text" data-ph="pvtext"></div>'+media(fs.map(f=>'<div style="aspect-ratio:'+(f.w&&f.h&&fs.length>1?Math.max(.6,Math.min(1.5,f.w/f.h)):.8)+'">'+pvMedia(f)+'</div>'))+acts+'</div></div>'; }
-    const posts=Array.isArray(d.posts)?d.posts:[];
-    out+=posts.map(p=>'<div class="ph-th-post">'+avw+'<div><div class="ph-th-head"><b>'+esc(name)+'</b><small>'+phAgo(p.time)+'</small>'+
+    // 11-17 · 글마다 서버가 받아 둔 숫자(p.c · 조회·좋아요·댓글·리포스트)와 댓글(p.rp)을 보임 · 댓글 숫자를 누르면 그 글 아래로 펼침
+    const all=Array.isArray(d.posts)?d.posts:[];
+    const nRep=p=>(p.c&&p.c.replies)||(p.rp||[]).length||0, withRep=all.filter(p=>nRep(p)>0);
+    const posts=ph.thOnly?withRep:all;
+    const num=n=>n?'<em>'+phNum(n)+'</em>':'';
+    const reps=p=>{ const rs=p.rp||[]; if(!rs.length) return '<div class="ph-th-reps"><p class="ph-th-rnone">받아 둔 댓글이 없어요 · 30분마다 새로 받아요</p></div>';
+      return '<div class="ph-th-reps">'+rs.map(r=>'<div class="ph-th-rep'+(r.to?' sub':'')+(r.mine?' mine':'')+'">'+
+        '<div class="ph-th-rav">'+esc((r.u||'?')[0].toUpperCase())+'</div><div><div class="ph-th-head"><b>'+esc(r.u||'')+'</b><small>'+phAgo(r.time)+'</small>'+
+        (r.mine?'<span class="pvt">내 답글</span>':'')+(r.hid?'<span class="ph-th-hid">숨김</span>':'')+
+        (r.link?'<a class="m" href="'+esc(r.link)+'" target="_blank" rel="noopener" title="쓰레드에서 보기">···</a>':'')+'</div>'+
+        '<div class="ph-th-text">'+pvText(r.t||'')+'</div></div></div>').join('')+'</div>'; };
+    out+=posts.map(p=>{ const c=p.c||{}, open=!!(ph.thOpen&&ph.thOpen[p.id]), n=nRep(p);
+      return '<div class="ph-th-post'+(open?' is-open':'')+'">'+avw+'<div><div class="ph-th-head"><b>'+esc(name)+'</b><small>'+phAgo(p.time)+'</small>'+
       (p.link?'<a class="m" href="'+esc(p.link)+'" target="_blank" rel="noopener" title="쓰레드에서 보기">···</a>':'<span class="m">···</span>')+'</div>'+
-      (p.text?'<div class="ph-th-text">'+pvText(p.text)+'</div>':'')+media((p.media||[]).map(m=>'<div>'+phImg(m.u)+'</div>'))+acts+'</div></div>').join('');
-    if(!posts.length&&!pvOn) out+='<div class="ph-empty">아직 올린 쓰레드 글이 없어요</div>';
-    // 쓰레드 앱 홈 화면 · 로고 → 추천/팔로잉 → "새로운 소식이 있나요?" 쓰기 줄 → 글들
+      (p.text?'<div class="ph-th-text">'+pvText(p.text)+'</div>':'')+media((p.media||[]).map(m=>'<div>'+phImg(m.u)+'</div>'))+
+      '<div class="ph-th-acts"><span>'+PV_ICO.heart+num(c.likes)+'</span>'+
+        '<button type="button" class="ph-th-rbtn'+(n?' has':'')+'" data-th-rep="'+esc(p.id)+'"'+(n?' title="댓글 보기"':' disabled')+'>'+PV_ICO.talk+num(n)+'</button>'+
+        '<span>'+PV_ICO.repost+num(c.reposts)+'</span><span>'+PV_ICO.send+num(c.shares)+'</span>'+
+        (c.views?'<span class="ph-th-views">조회 '+phNum(c.views)+'</span>':'')+'</div>'+
+      (open?reps(p):'')+'</div></div>'; }).join('');
+    if(!posts.length&&!pvOn) out+='<div class="ph-empty">'+(ph.thOnly?'댓글이 달린 글이 없어요':'아직 올린 쓰레드 글이 없어요')+'</div>';
+    // 쓰레드 앱 홈 화면 · 로고 → 추천/팔로잉 → "새로운 소식이 있나요?" 쓰기 줄 → 전체/댓글 달린 글 → 글들
     return '<div class="ph-th-top">'+PH_TH_LOGO+'</div><div class="ph-th-tabs"><span class="on">추천</span><span>팔로잉</span></div>'+
-      '<div class="ph-th-compose"><div class="ph-th-av">'+av+'</div><span>새로운 소식이 있나요?</span><b>게시</b></div>'+out;
+      '<div class="ph-th-compose"><div class="ph-th-av">'+av+'</div><span>새로운 소식이 있나요?</span><b>게시</b></div>'+
+      '<div class="ph-th-filter"><button type="button" data-th-only="0" aria-pressed="'+!ph.thOnly+'">전체 '+all.length+'</button>'+
+        '<button type="button" data-th-only="1" aria-pressed="'+!!ph.thOnly+'">댓글 달린 글 '+withRep.length+'</button></div>'+out;
   }
   /* ---------- ③ 쓰레드 추천 피드 (11-16) ----------
      다른 사람 글은 API 가 주지 않아(키워드 검색 권한 없음 · 11-16 시험) 직원이 쓰레드에서 본 글 링크를 붙여 넣으면 공식 퍼가기(embed.js)로 실제 모양 그대로 보인다
@@ -20937,6 +20976,14 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(!confirm('이 글을 추천 피드에서 뺄까요?')) return;
     const ok=await recSave(b.dataset.recX,{del:Date.now()});
     if(!ok) alert('빼지 못했습니다 · 다시 눌러 주세요'); rec.sig=''; recPaint();
+  });
+  // 내 쓰레드 피드 · 전체/댓글 달린 글 고르기 · 댓글 숫자 누르면 그 글 댓글 펼치기(다시 누르면 접힘) · 스크롤 자리는 그대로
+  $('iuPhone').addEventListener('click',e=>{
+    const f=e.target.closest('[data-th-only]'), r=e.target.closest('[data-th-rep]');
+    if(!f&&!r) return;
+    if(f) ph.thOnly=f.dataset.thOnly==='1';
+    if(r){ ph.thOpen=ph.thOpen||{}; ph.thOpen[r.dataset.thRep]=!ph.thOpen[r.dataset.thRep]; }
+    const scr=$('iuPhone'), y=scr.scrollTop; ph.sig=''; phPaint(); scr.scrollTop=y;
   });
   $('iuListBtn').addEventListener('click',()=>{
     ph.list=!ph.list;
@@ -25001,9 +25048,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const o={units:base.units,cost,sale,supply,take:sale&&supply!=null?(1-supply/sale)*100:null};
     if(supply==null) return o;
     const reb=supply*rebR/100, pre=supply-cost-logi-reb, vat=pre/11, margin=pre-vat;
-    /* srate = 마진 ÷ 판매가 · 쿠팡 광고 ROAS 는 소비자 판매가 기준 매출이라, 손익분기 ROAS(= 1 ÷ 이익률)와 맞는 이익률은 이것
+    /* 마진률 = 마진 ÷ 판매가(손익분기 정석 · 11-17 사용자 · 예전에는 ÷ 공급가) · 쿠팡 광고 ROAS 는 소비자 판매가 기준 매출이라 최소 ROAS = 1 ÷ 마진률
        (11-17 사용자 요청 · 마진률(mrate)은 공급가 기준이라 표의 기여이익률과 다름) */
-    return Object.assign(o,{logi,reb,vat,margin,mrate:supply?margin/supply:null,srate:sale?margin/sale:null,roas:margin>0&&sale?sale/margin*rkRoasK():null});
+    return Object.assign(o,{logi,reb,vat,margin,mrate:sale?margin/sale:null,roas:margin>0&&sale?sale/margin*rkRoasK():null});
   }
   const rkRows=()=>{ const d=RK(); return live(d.rows).filter(r=>r.g&&d.prods[r.g]&&!d.prods[r.g].del); };
   const rkUsed=r=>Object.keys(obj(r.mix)).filter(k=>COST.data.items[k]&&((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0);
@@ -25028,7 +25075,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     ['label','옵션',9,1],['qty','수량',5.5],['cost','원가',7.5],
     ['sale','최종판매가',7.5,1],['take','쿠팡 몫',6],['supply','공급가',7.5],
     ['logi','입고 물류비',6.5,1],['reb','장려금율',6],['rebv','장려금',7,0,1],['unit','개당판매가',6,0,1],
-    ['margin','마진',7,1,1],['mrate','마진률',5.5,0,1],['srate','판매가 이익률',6,0,1],['roas','최소 ROAS',5.5,0,1],['vat','부가세',5,0,1],
+    ['margin','마진',7,1,1],['mrate','마진률',6,0,1],['roas','최소 ROAS',6,0,1],['vat','부가세',5.5,0,1],
     ['mv','',2,1],['act','',2.5]];
   function rkOut(tr,r){
     const v=rkCalc(r);
@@ -25038,7 +25085,6 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     put('unit',v.sale&&v.units?won(v.sale/v.units):'–');
     put('margin',won(v.margin),' key hi'+(v.margin<0?' neg':''));
     put('mrate',pct(v.mrate),' key hi'+(v.mrate!=null&&v.mrate<0?' neg':''));
-    put('srate',pct(v.srate),' key hi'+(v.srate!=null&&v.srate<0?' neg':''));
     put('roas',v.margin==null||!v.sale?'–':(v.roas==null?'적자':pct(v.roas,0)),' key hi'+(v.margin!=null&&v.sale&&v.roas==null?' neg':''));
     const cb=tr.querySelector('.pf-cost');
     if(cb){
@@ -25069,7 +25115,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     /* 칸 설정에서 숨긴 칸(hide)은 머리글·줄 모두에서 뺀다 · 남은 칸이 폭을 나눠 갖는다 */
     const COLS_=RK_COLS.filter(cl=>!rkHidden(cl[0]));
     const cg='<colgroup>'+COLS_.map(cl=>'<col style="width:'+cl[2]+'%">').join('')+'</colgroup>';
-    const headRow='<tr class="pf-head">'+COLS_.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|srate|roas)$/.test(cl[0])?' key':'')+(cl[0]==='sale'?' pf-hot':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
+    const headRow='<tr class="pf-head">'+COLS_.map((cl,i)=>'<th class="'+(cl[3]&&i?'gs':'')+(/^(margin|mrate|roas)$/.test(cl[0])?' key':'')+(cl[0]==='sale'?' pf-hot':'')+'">'+cl[1]+'</th>').join('')+'</tr>';
     const H={}; RK_COLS.forEach(cl=>{ H[cl[0]]=cl; });
     const td=(k,inner,cls)=>{ if(rkHidden(k)) return ''; const cl=H[k], g=cl[3]&&k!=='label';
       return '<td class="'+(cls||'')+(g?' gs':'')+'"'+(g?' data-g="1"':'')+(cl[1]?' data-h="'+cl[1]+'"':'')+(cl[4]?' data-o="'+k+'"':'')+'>'+(inner||'')+'</td>'; };
@@ -25084,7 +25130,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +td('logi',inp('logi',r,'0','쿠팡 센터까지 보내는 물류비 · 옵션 한 개 기준'))
       +td('reb',inp('reb',r,'%','판매장려금 · 공급가의 %','decimal'))
       +td('rebv','','out')+td('unit','','out')
-      +td('margin','','out')+td('mrate','','out')+td('srate','','out')+td('roas','','out')+td('vat','','out')
+      +td('margin','','out')+td('mrate','','out')+td('roas','','out')+td('vat','','out')
       +td('mv',optMove(i,arr.length),'act')+td('act','<button type="button" class="ui-btn sm ghost icon" data-act="more" title="복제·삭제" aria-label="옵션 복제·삭제" aria-haspopup="true">⋯</button>','act')
       +'</tr>';
     let h='';
@@ -25226,8 +25272,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +'② 장려금 = 공급가 × 장려금율 <span style="color:var(--mute)">예: 6,000 × 5% = '+w(reb)+'</span><br>'
       +'③ 부가세 = (공급가 − 원가 − 입고 물류비 − 장려금) ÷ 11 <span style="color:var(--mute)">예: (6,000 − 3,000 − 500 − 300) ÷ 11 = '+w(vat)+'</span><br>'
       +'④ 마진 = 공급가 − 원가 − 입고 물류비 − 장려금 − 부가세 <span style="color:var(--mute)">예: '+w(m)+'</span><br>'
-      +'⑤ 판매가 이익률 = 마진 ÷ 판매가 <span style="color:var(--mute)">예: 2,000 ÷ 10,000 = 20%</span><br>'
-      +'⑥ 최소 ROAS = 판매가 ÷ 마진 = 1 ÷ 판매가 이익률'+(ex?' × 1.1':'')+' <span style="color:var(--mute)">예: <b>'+(ex?'550%':'500%')+'</b></span><br>'
+      +'⑤ 마진률 = 마진 ÷ 판매가 <span style="color:var(--mute)">예: 2,000 ÷ 10,000 = 20%</span><br>'
+      +'⑥ 최소 ROAS = 판매가 ÷ 마진 = 1 ÷ 마진률'+(ex?' × 1.1':'')+' <span style="color:var(--mute)">예: <b>'+(ex?'550%':'500%')+'</b></span><br>'
       +'<span style="color:var(--mute)">쿠팡 광고 ROAS 는 소비자 판매가로 매출을 재므로, 공급가가 아니라 판매가로 나눕니다'+(ex?' · 광고비가 부가세 빼고 보이니 실제로 나가는 돈(× 1.1)만큼 높여 잡습니다':'')+'</span>';
   }
   $('pfRkRule').addEventListener('click',()=>{
