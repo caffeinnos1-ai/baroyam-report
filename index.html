@@ -4676,7 +4676,8 @@ window.BAROYAM_FONT=(function(){
   @media (max-width:640px){ .pf-mix-row{grid-template-columns:1fr} }
   /* 판매처 계산법 · 마진표 배너 오른쪽 단추(지금 판매처 · 아래 요약 한 줄) */
   .pf-rule-open{display:none;position:absolute;right:48px;top:50%;transform:translateY(-50%);flex-direction:column;align-items:flex-end;gap:6px;max-width:300px}
-  #view-profit:has([data-pf-pane="calc"]:not([hidden])) .pf-rule-open{display:flex}
+  #view-profit:has([data-pf-pane="calc"]:not([hidden])) .pf-rule-open:not(.rk),
+  #view-profit:has([data-pf-pane="rocket"]:not([hidden])) .pf-rule-open.rk{display:flex}
   .pf-rule-open small{font-size:12px;color:var(--mute);text-align:right;line-height:1.4}
   @media (max-width:900px){ .pf-rule-open{position:static;transform:none;align-items:flex-start;margin-top:14px;max-width:none}
     .pf-rule-open small{text-align:left} }
@@ -11784,6 +11785,8 @@ window.BAROYAM_FONT=(function(){
             <div class="psub" id="profitViewSub"></div>
             <!-- 판매처 계산법 설정(10-20 사용자: 판매처마다 계산법이 달라 원가표가 아니라 마진표 판매처 배너에서 정함) · 마진표 탭일 때만 보임 -->
             <div class="pf-rule-open"><button type="button" class="ui-btn sm soft" id="pfRuleOpen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span id="pfRuleOpenT">계산법 설정</span></button><small id="pfRuleOpenSub"></small></div>
+            <!-- 로켓프레시 계산법(11-17 사용자) · 광고비 부가세 포함/별도(× 1.1) · 로켓프레시 탭일 때만 보임 -->
+            <div class="pf-rule-open rk"><button type="button" class="ui-btn sm soft" id="pfRkRule" aria-haspopup="listbox"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span>로켓프레시 계산법 설정</span></button><small id="pfRkRuleSub"></small></div>
           </div>
           <!-- 보기 전용 안내 · 수정 권한이 없을 때만 -->
           <div class="pf-ro-note" id="pfRoNote" hidden>보기 전용이에요 · 마진관리 수정은 팀장 또는 관리자 설정 › 권한설정에서 '마진관리 수정'을 받은 회원만 할 수 있어요.</div>
@@ -24966,6 +24969,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* % 칸(쿠팡 몫·장려금율)은 "40%" 처럼 % 를 붙여 보인다(10-15 사용자 · 금액 칸과 바로 구분) · 읽을 때는 num() 이 % 를 뗀다 */
   const rkPct=v=>v==null||v===''?'':comma(v)+'%';
   const rkHidden=k=>!!obj(RK()&&RK().hide)[k];
+  /* 광고비 부가세 · profit_rocket_v1.adVat='ex' 면 쿠팡 광고비가 부가세 빼고 보이므로 최소 ROAS × 1.1 (마진표 판매처 계산법 adVat 과 같음 · 11-17 사용자) */
+  const rkAdVat=()=>!!(RK()&&RK().adVat==='ex');
+  const rkRoasK=()=>rkAdVat()?1.1:1;
   function rkCalc(r){
     const base=calc({mix:obj(r.mix)}), ov=obj(r.ov);
     const cost=num(ov.cost)!=null?num(ov.cost):base.cost;
@@ -24978,7 +24984,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const reb=supply*rebR/100, pre=supply-cost-logi-reb, vat=pre/11, margin=pre-vat;
     /* srate = 마진 ÷ 판매가 · 쿠팡 광고 ROAS 는 소비자 판매가 기준 매출이라, 손익분기 ROAS(= 1 ÷ 이익률)와 맞는 이익률은 이것
        (11-17 사용자 요청 · 마진률(mrate)은 공급가 기준이라 표의 기여이익률과 다름) */
-    return Object.assign(o,{logi,reb,vat,margin,mrate:supply?margin/supply:null,srate:sale?margin/sale:null,roas:margin>0&&sale?sale/margin:null});
+    return Object.assign(o,{logi,reb,vat,margin,mrate:supply?margin/supply:null,srate:sale?margin/sale:null,roas:margin>0&&sale?sale/margin*rkRoasK():null});
   }
   const rkRows=()=>{ const d=RK(); return live(d.rows).filter(r=>r.g&&d.prods[r.g]&&!d.prods[r.g].del); };
   const rkUsed=r=>Object.keys(obj(r.mix)).filter(k=>COST.data.items[k]&&((num(r.mix[k].q)||0)+(num(r.mix[k].f)||0))>0);
@@ -25035,6 +25041,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   }
   function paintRocket(){
     const T=$('pfRkTable');
+    rkRulePaint();
     if(!ROCKET.loaded||!COST.loaded){ T.innerHTML=msg(ROCKET.error||COST.error?'불러오지 못했습니다 · 로그인 상태를 확인하고 다시 열어 주세요':'불러오는 중…'); return; }
     const all=[...new Set([].concat(...live(RK().prods).map(rkProdBrands)))].sort((a,b)=>a.localeCompare(b,'ko'));
     if(rkBrand&&all.indexOf(rkBrand)<0) rkBrand='';
@@ -25188,6 +25195,15 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     });
   }
   $('pfRkCols').addEventListener('click',e=>{ e.stopPropagation(); if(ROCKET.loaded) rkColsMenu(); });
+  function rkRulePaint(){ const t=$('pfRkRuleSub'); if(t) t.textContent=rkAdVat()?'광고비 부가세 별도 · 최소 ROAS × 1.1':'광고비 부가세 포함 · 최소 ROAS = 판매가 ÷ 마진'; }
+  $('pfRkRule').addEventListener('click',e=>{
+    e.stopPropagation(); if(!ROCKET.loaded) return;
+    const opts=[{value:'',label:'광고비 부가세 포함',sub:'최소 ROAS = 판매가 ÷ 마진'},{value:'ex',label:'광고비 부가세 별도',sub:'광고비가 부가세 빼고 보임(쿠팡) · 최소 ROAS × 1.1'}];
+    window.UI.menu($('pfRkRule'),opts,rkAdVat()?'ex':'',v=>{
+      if(!canEdit()) return;
+      RK().adVat=v==='ex'?'ex':''; ROCKET.mark(); paintRocket();
+    });
+  });
 
   /* ---------- 원가 고르기 창 ---------- */
   let mixFor=null, mixDraft={}, mixBrand='', mixQ='', mixFirst=null;
