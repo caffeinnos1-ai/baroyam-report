@@ -185,7 +185,7 @@ window.BAROYAM_DB=(function(){
       /* 드라이브 색인·사전과 계정관리 목록은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 ·
          계정관리(accounts_v1)는 아이디·비밀번호와 올린 로고 그림이 들어 있어, 첫 화면에서 받으면
          느려지고 계정관리 비밀번호를 통과하기 전에 브라우저에 와 버린다 */
-      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,meta_ads_v1,youtube_insights_v1)');
+      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,meta_ads_v1,youtube_insights_v1)').not('key','like','coupang_ads_v1:%');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
@@ -2168,7 +2168,7 @@ window.BAROYAM_FONT=(function(){
   #view-month .tbar .seg.talk{background:linear-gradient(180deg,color-mix(in srgb,var(--talk) 55%,var(--paper)),color-mix(in srgb,var(--talk) 78%,var(--paper)))}
   /* 판매처 색 묶음 · --ca 위(밝은 쪽) · --cb 아래(진한 쪽) · --cl 지난달처럼 한참 옅은 색 ·
      02 비교 막대·03 ROAS 막대·도넛·누적 비중 막대가 모두 01 막대와 같은 그라데이션을 쓴다 */
-  :is(#view-month,#view-week,#view-profit,#view-ops) .ch-coupang{--ca:color-mix(in srgb,var(--coupang) 55%,var(--paper));--cb:color-mix(in srgb,var(--coupang) 78%,var(--paper));--cl:color-mix(in srgb,var(--coupang) 22%,var(--paper))}
+  :is(#view-month,#view-week,#view-profit,#view-ops,#view-channel) .ch-coupang{--ca:color-mix(in srgb,var(--coupang) 55%,var(--paper));--cb:color-mix(in srgb,var(--coupang) 78%,var(--paper));--cl:color-mix(in srgb,var(--coupang) 22%,var(--paper))}
   :is(#view-month,#view-week,#view-profit,#view-ops) .ch-naver{--ca:color-mix(in srgb,var(--naver) 55%,var(--paper));--cb:color-mix(in srgb,var(--naver) 78%,var(--paper));--cl:color-mix(in srgb,var(--naver) 22%,var(--paper))}
   :is(#view-month,#view-week,#view-profit,#view-ops) .ch-self{--ca:color-mix(in srgb,var(--self) 55%,var(--paper));--cb:color-mix(in srgb,var(--self) 78%,var(--paper));--cl:color-mix(in srgb,var(--self) 22%,var(--paper))}
   :is(#view-month,#view-week,#view-profit,#view-ops) .ch-talk{--ca:color-mix(in srgb,var(--talk) 55%,var(--paper));--cb:color-mix(in srgb,var(--talk) 78%,var(--paper));--cl:color-mix(in srgb,var(--talk) 22%,var(--paper))}
@@ -5116,6 +5116,43 @@ window.BAROYAM_FONT=(function(){
   .cs-tbl td.q,.cs-tbl td.a{color:var(--ink);font-weight:600;white-space:nowrap}
   .cs-tbl td.m{color:var(--mute);white-space:nowrap}
   .cs-empty{padding:48px 20px;text-align:center;color:var(--mute);font-size:13.5px}
+  /* ===== 쿠팡광고성과 (판매채널 › 쿠팡 · 11-19) · 자사몰 판매현황(cs-*) 틀을 같이 쓰고 다른 것만 ===== */
+  #chTabs .hero-view-tab[hidden]{display:none}
+  #caRoot .cs-bar #caCamp{min-width:200px;max-width:320px;justify-content:space-between}
+  #caRoot .cs-bar #caCamp .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #caRoot .cs-kpis{gap:12px 44px}
+  #caRoot .cs-kpi .v{font-size:23px}
+  .ca-up input{display:none}
+  .ca-box{border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .ca-box-head{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:16px 22px;border-bottom:1px solid var(--line)}
+  .ca-box-head h3{margin:0;font-size:15px;font-weight:600;color:var(--ink)}
+  .ca-box-head .sub{font-size:12.5px;color:var(--mute)}
+  .ca-box-head .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ca-box-head .ui-field{width:220px}
+  .ca-box .cs-tbl-wrap{border:0;border-radius:0 0 16px 16px}
+  #caRoot .cs-tbl td{padding:12px 12px;border-bottom:1px solid var(--line);color:var(--body);vertical-align:middle;text-align:left;font-size:13px;white-space:nowrap}
+  #caRoot .cs-tbl td.r{text-align:right}
+  #caRoot .cs-tbl td:first-child{padding-left:22px}
+  #caRoot .cs-tbl td:last-child{padding-right:22px}
+  #caRoot .cs-tbl td.k{color:var(--ink);font-weight:500;white-space:normal;min-width:160px}
+  #caRoot .cs-tbl td.k.dim{color:var(--mute);font-weight:400}
+  #caRoot .cs-tbl td.c{color:var(--mute);max-width:220px;overflow:hidden;text-overflow:ellipsis}
+  #caRoot .cs-tbl td.v{color:var(--ink);font-weight:600}
+  #caRoot .cs-tbl tr.pick{cursor:pointer}
+  #caRoot .cs-tbl tr.on td{background:color-mix(in srgb,var(--btn) 7%,transparent)}
+  .ca-roas{display:inline-block;min-width:58px;padding:3px 8px;border-radius:999px;font-weight:600;text-align:center;
+    color:var(--btn-soft-ink);background:var(--btn-soft)}
+  .ca-roas.low{color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
+  .ca-roas.none{color:var(--mute);background:color-mix(in srgb,var(--mute) 12%,transparent);font-weight:500}
+  .ca-more{display:block;margin:0 auto;padding:14px 0 18px}
+  /* 하루 광고비 막대(얇게 · 위만 둥글게 · 올리면 나머지 흐림) + ROAS 숫자 */
+  .ca-days{display:flex;align-items:flex-end;gap:6px;height:170px;padding:22px 22px 12px;overflow-x:auto}
+  .ca-day{flex:1 1 0;min-width:30px;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;cursor:default}
+  .ca-day .bar{width:100%;max-width:44px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--ca,var(--btn)),var(--cb,var(--btn)));transition:opacity .15s}
+  .ca-day .ro{font-size:10.5px;color:var(--mute);white-space:nowrap}
+  .ca-day .d{font-size:11px;color:var(--mute);white-space:nowrap}
+  .ca-days:hover .ca-day .bar{opacity:.35}
+  .ca-days .ca-day:hover .bar{opacity:1}
   .ch-cal{margin-top:12px;box-shadow:none;border:1px solid var(--line)}
   /* 판매채널 화면 · 위에 KPI 네 칸, 아래에 퀵링크 / 판매처 기록노트 / 프로젝트 달성률 / 마감 알림 ·
      카드 생김새는 마이홈(.mh-card·.mh-link·.mh-note·.mh-proj)을 그대로 빌려 쓰고,
@@ -9627,6 +9664,8 @@ window.BAROYAM_FONT=(function(){
           <button type="button" class="hero-view-tab" role="tab" data-ch-tab="proj">프로젝트</button>
           <!-- 11-13 사용자 요청 · 자사몰에서만 · 카페24 주문을 상품·옵션별로(cafe24/items/<달>.json · VPS cafe24_sales.js 가 채움) -->
           <button type="button" class="hero-view-tab" role="tab" data-ch-tab="sales" id="chSalesTab" hidden>판매현황</button>
+          <!-- 11-19 사용자 요청 · 쿠팡에서만 · 쿠팡 광고센터 키워드 보고서 엑셀을 올리면 캠페인·키워드별로(app_settings coupang_ads_v1:<달>) -->
+          <button type="button" class="hero-view-tab" role="tab" data-ch-tab="ads" id="chAdsTab" hidden>쿠팡광고성과</button>
         </div>
         <!-- 마진표처럼 흰 판 위 배너(판매채널 · 로고 + 채널 이름) · 배너 색은 채널 색(data-tone) · 11-04 사용자 요청 -->
         <section class="section ch-view" style="padding-top:0">
@@ -9641,6 +9680,7 @@ window.BAROYAM_FONT=(function(){
           <!-- 프로젝트 탭 · 이 채널 경로(p.channel)의 프로젝트만 프로젝트 캘린더 모양으로(renderCal 을 같이 씀) -->
           <div class="ch-pane" data-ch-pane="proj" hidden><div class="ui-chips ch-st" id="chStatus" role="group" aria-label="상태"></div><div class="pj-mcal ch-cal" id="chCal"></div></div>
           <div class="ch-pane" data-ch-pane="sales" hidden><div id="csRoot" class="cs"></div></div>
+          <div class="ch-pane" data-ch-pane="ads" hidden><div id="caRoot" class="cs"></div></div>
           <div class="ch-pane" data-ch-pane="dash">
           <!-- 상단 숫자 네 칸 · 화면에 들어오거나 채널·기간을 바꾸면 0에서부터 올라간다 -->
           <div class="ch-kpis">
@@ -30342,7 +30382,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   /* ---------- 배너 위 단추 · 스케줄(대시보드) / 프로젝트(이 채널 경로의 캘린더) ---------- */
   const CH_TAB_KEY='baroyam_ch_tab';
   let chTab='dash', chCalMonth=kstToday().slice(0,7);
-  try{ const t=localStorage.getItem(CH_TAB_KEY); if(t==='proj'||t==='sales') chTab=t; }catch(e){}
+  try{ const t=localStorage.getItem(CH_TAB_KEY); if(t==='proj'||t==='sales'||t==='ads') chTab=t; }catch(e){}
   /* 상태 거르기 · 여러 개 고름 · 비어 있으면 전체 · 네 채널이 같이 쓰고 이 브라우저에 기억 */
   const CH_ST_KEY='baroyam_ch_status';
   const chSt=new Set();
@@ -30357,9 +30397,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   function renderChTab(){
     /* 판매현황은 자사몰에만 · 다른 채널에서는 스케줄로 보이고 고른 값은 그대로 둔다(자사몰로 돌아오면 다시 판매현황) */
-    const isMall=chActive==='자사몰';
+    const isMall=chActive==='자사몰', isCp=chActive==='쿠팡';
     $('chSalesTab').hidden=!isMall;
-    const tab=(chTab==='sales'&&!isMall)?'dash':chTab;
+    $('chAdsTab').hidden=!isCp;
+    const tab=((chTab==='sales'&&!isMall)||(chTab==='ads'&&!isCp))?'dash':chTab;
     document.querySelectorAll('#chTabs [data-ch-tab]').forEach(b=>{
       const on=b.dataset.chTab===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');
     });
@@ -30370,8 +30411,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(window.baroyamCafe24Sales) window.baroyamCafe24Sales.show();
       return;
     }
+    if(tab==='ads'){
+      $('chPeriodBtn').parentNode.hidden=true;
+      $('channelViewSub').textContent='쿠팡 광고센터 키워드 보고서를 캠페인·키워드별로 봅니다 · 광고매출·ROAS 는 14일 기준';
+      if(window.baroyamCoupangAds) window.baroyamCoupangAds.show();
+      return;
+    }
     /* 기간 단추는 위 숫자 칸 몫이라 스케줄에서만 */
-    $('chPeriodBtn').parentNode.hidden=chTab!=='dash';
+    $('chPeriodBtn').parentNode.hidden=tab!=='dash';
     /* 배너 아래 한 줄 · 짧게(긴 설명은 사용자 요청으로 뺐다가 같은 날 짧게 다시) */
     $('channelViewSub').textContent=chTab==='proj'
       ?chActive+' 경로 프로젝트를 캘린더로 봅니다 · 막대를 끌어 날짜를 바꿉니다'
@@ -30584,6 +30631,286 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       :'<div class="cs-empty">고른 기간'+(st.brand?'·브랜드':'')+'에 결제된 주문이 없습니다</div>';
   }
   window.baroyamCafe24Sales={show:paint};
+})();
+
+/* ===== 쿠팡광고성과 (판매채널 › 쿠팡 › 쿠팡광고성과 · 11-19 사용자 요청) =====
+   쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀(pa_daily_keyword_…xlsx)을 "엑셀 올리기"로 넣으면
+   날짜 × 캠페인 × 키워드로 묶어 app_settings 의 coupang_ads_v1:<YYYY-MM> 에 저장한다(공개 저장소라 숫자는 파일에 두지 않음).
+   한 달 칸 = {at, by, file, camps:{캠페인ID:{n:이름,t:광고유형}}, days:{YYYY-MM-DD:[[캠페인ID,키워드,노출,클릭,광고비,주문14,매출14,수량14]]}}
+   파일에 든 날짜는 그 파일 내용으로 통째로 바꾸고, 다른 날짜는 그대로 둔다(saveMerged · 다른 PC 가 넣은 달을 지우지 않음) ·
+   목록 칸 coupang_ads_v1 = {months:{YYYY-MM:{at,by,file,from,to}}} · 광고매출·ROAS 는 14일 기준(총 전환매출액(14일)) */
+(function(){
+  const root=document.getElementById('caRoot'); if(!root) return;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const kst=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+  const won=n=>Math.round(n||0).toLocaleString('ko-KR');
+  const pct=(a,b,d)=>b?(a/b*100).toFixed(d==null?0:d)+'%':'-';
+  const IDX='coupang_ads_v1', MKEY=m=>IDX+':'+m;
+  const firstOfMonth=()=>kst().slice(0,8)+'01';
+  const st={range:{start:firstOfMonth(),end:kst()},camp:'',kq:'',kf:'all',ksort:{k:'cost',dir:-1},kmax:100,months:{},index:null,built:false,seq:0,busy:false};
+  try{ const s=JSON.parse(localStorage.getItem('baroyam_ca_sort')||'null'); if(s&&s.k) st.ksort=s; }catch(e){}
+  let data={rows:[],camps:{}};
+  const DB=()=>window.BAROYAM_DB;
+  /* 달 칸 읽기 · 3분 기억 */
+  async function loadMonth(m,force){
+    const c=st.months[m]; if(!force&&c&&Date.now()-c.t<3*60e3) return c.d;
+    let d=null; try{ d=DB()?await DB().loadSetting(MKEY(m)):null; }catch(e){ d=null; }
+    st.months[m]={t:Date.now(),d:d};
+    return d;
+  }
+  async function loadIndex(){ try{ st.index=DB()?await DB().loadSetting(IDX):null; }catch(e){} return st.index; }
+  function monthsOf(r){
+    const out=[]; let [y,m]=r.start.slice(0,7).split('-').map(Number);
+    const end=r.end.slice(0,7);
+    for(let i=0;i<36;i++){ const k=y+'-'+String(m).padStart(2,'0'); out.push(k); if(k>=end) break; m++; if(m>12){ m=1; y++; } }
+    return out;
+  }
+  async function collect(){
+    const r=st.range, rows=[], camps={};
+    for(const m of monthsOf(r)){
+      const d=await loadMonth(m); if(!d) continue;
+      Object.assign(camps,d.camps||{});
+      Object.keys(d.days||{}).forEach(day=>{ if(day>=r.start&&day<=r.end) (d.days[day]||[]).forEach(x=>rows.push([day].concat(x))); });
+    }
+    return {rows:rows,camps:camps};
+  }
+
+  /* ---------- 엑셀 읽기 ---------- */
+  let xlsxP=null;
+  const loadXlsx=()=>xlsxP||(xlsxP=new Promise((ok,no)=>{
+    if(window.XLSX) return ok(window.XLSX);
+    const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload=()=>ok(window.XLSX); sc.onerror=()=>{ xlsxP=null; no(new Error('load')); }; document.head.appendChild(sc);
+  }));
+  const num=v=>{ if(typeof v==='number') return v; const n=parseFloat(String(v==null?'':v).replace(/[^0-9.\-]/g,'')); return isFinite(n)?n:0; };
+  function dayOf(v){
+    const t=String(v==null?'':v).replace(/\.0+$/,'').replace(/[^0-9]/g,'');
+    return t.length>=8?t.slice(0,4)+'-'+t.slice(4,6)+'-'+t.slice(6,8):'';
+  }
+  /* 키워드 칸이 '-' 인 줄(비검색 지면 등)은 지면 이름으로 묶는다 */
+  function kwOf(kw,place){
+    const k=String(kw==null?'':kw).trim();
+    if(k&&k!=='-') return k;
+    const p=String(place||'');
+    if(/비검색/.test(p)) return '(비검색 영역)';
+    if(/오디언스/.test(p)) return '(오디언스 플러스)';
+    return '(키워드 없음)';
+  }
+  function parse(aoa){
+    let hi=-1;
+    for(let i=0;i<Math.min(aoa.length,15);i++){ const r=(aoa[i]||[]).map(x=>String(x==null?'':x).trim()); if(r.includes('키워드')&&r.includes('광고비')){ hi=i; break; } }
+    if(hi<0) throw new Error('쿠팡 키워드 보고서 모양이 아닙니다(머리줄에 "키워드"·"광고비" 칸이 없음)');
+    const H=aoa[hi].map(x=>String(x==null?'':x).replace(/\s+/g,''));
+    const col=(...names)=>{ for(const n of names){ const i=H.indexOf(n.replace(/\s+/g,'')); if(i>=0) return i; } return -1; };
+    const C={d:col('날짜'),cid:col('캠페인ID'),cn:col('캠페인명'),t:col('광고유형'),pl:col('광고노출지면'),kw:col('키워드'),
+      imp:col('노출수'),clk:col('클릭수'),cost:col('광고비'),ord:col('총주문수(14일)'),rev:col('총전환매출액(14일)'),qty:col('총판매수량(14일)')};
+    ['d','cn','kw','imp','clk','cost','rev'].forEach(k=>{ if(C[k]<0) throw new Error('엑셀에 필요한 칸이 없습니다: '+({d:'날짜',cn:'캠페인명',kw:'키워드',imp:'노출수',clk:'클릭수',cost:'광고비',rev:'총 전환매출액(14일)'}[k])); });
+    const map=new Map(), camps={}, days=new Set();
+    for(let i=hi+1;i<aoa.length;i++){
+      const r=aoa[i]; if(!r) continue;
+      const day=dayOf(r[C.d]); if(!day) continue;
+      const name=String(r[C.cn]==null?'':r[C.cn]).trim();
+      const cid=C.cid>=0&&r[C.cid]!=null&&r[C.cid]!==''?String(r[C.cid]).replace(/\.0+$/,''):'n:'+name;
+      if(!camps[cid]) camps[cid]={n:name,t:C.t>=0?String(r[C.t]||''):''};
+      days.add(day);
+      const kw=kwOf(r[C.kw],C.pl>=0?r[C.pl]:'');
+      const k=day+'\u0001'+cid+'\u0001'+kw;
+      let x=map.get(k); if(!x) map.set(k,x=[day,cid,kw,0,0,0,0,0,0]);
+      x[3]+=num(r[C.imp]); x[4]+=num(r[C.clk]); x[5]+=num(r[C.cost]);
+      x[6]+=C.ord>=0?num(r[C.ord]):0; x[7]+=num(r[C.rev]); x[8]+=C.qty>=0?num(r[C.qty]):0;
+    }
+    /* 노출·클릭·광고비·매출이 모두 0 인 줄은 버린다(저장 크기 줄이기) */
+    const rows=[...map.values()].filter(x=>x[3]||x[4]||x[5]||x[7]);
+    return {rows:rows,camps:camps,days:[...days].sort()};
+  }
+  async function upload(file){
+    if(st.busy) return;
+    const msg=t=>{ const m=$('caMsg'); if(m){ m.innerHTML=t||''; } };
+    let X; try{ X=await loadXlsx(); }catch(e){ msg('<div class="cs-note">엑셀 도구를 받지 못했습니다 · 인터넷 연결을 확인하고 다시 눌러 주세요</div>'); return; }
+    let p;
+    try{
+      const wb=X.read(await file.arrayBuffer(),{type:'array'});
+      p=parse(X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null}));
+    }catch(e){ msg('<div class="cs-note"><b>읽지 못했습니다</b> · '+esc(e.message||e)+'</div>'); return; }
+    if(!p.rows.length){ msg('<div class="cs-note">이 파일에는 광고 기록이 없습니다</div>'); return; }
+    const cost=p.rows.reduce((a,x)=>a+x[5],0), rev=p.rows.reduce((a,x)=>a+x[7],0);
+    const f=p.days[0], t=p.days[p.days.length-1];
+    if(!confirm('쿠팡 광고 보고서를 올립니다\n\n기간 '+f+' ~ '+t+' ('+p.days.length+'일)\n캠페인 '+Object.keys(p.camps).length+'개 · 키워드 '+new Set(p.rows.map(x=>x[2])).size+'개\n광고비 '+won(cost)+'원 · 광고매출(14일) '+won(rev)+'원\n\n이 기간에 이미 올린 내용이 있으면 이 파일 내용으로 바뀝니다.')) return;
+    st.busy=true; msg('<div class="cs-note">저장하는 중…</div>');
+    let me=''; try{ const mm=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); me=mm?mm.name:''; }catch(e){}
+    const now=new Date().toISOString();
+    const byMonth={};
+    p.rows.forEach(x=>{ const m=x[0].slice(0,7); (byMonth[m]=byMonth[m]||{})[x[0]]=(byMonth[m][x[0]]||[]); byMonth[m][x[0]].push(x.slice(1)); });
+    p.days.forEach(d=>{ const m=d.slice(0,7); byMonth[m]=byMonth[m]||{}; byMonth[m][d]=byMonth[m][d]||[]; });
+    let ok=true;
+    for(const m of Object.keys(byMonth)){
+      const r=await DB().saveMerged(MKEY(m),server=>{
+        const s=server&&typeof server==='object'?JSON.parse(JSON.stringify(server)):{};
+        s.days=s.days||{}; s.camps=Object.assign({},s.camps||{},p.camps);
+        Object.keys(byMonth[m]).forEach(d=>{ s.days[d]=byMonth[m][d]; });
+        s.at=now; s.by=me; s.file=file.name; return s;
+      });
+      if(!r){ ok=false; break; }
+      st.months[m]={t:Date.now(),d:r};
+    }
+    if(ok){
+      const r=await DB().saveMerged(IDX,server=>{
+        const s=server&&typeof server==='object'?JSON.parse(JSON.stringify(server)):{};
+        s.months=s.months||{};
+        Object.keys(byMonth).forEach(m=>{
+          const ds=Object.keys(byMonth[m]).sort(), o=s.months[m]||{};
+          s.months[m]={at:now,by:me,file:file.name,from:o.from&&o.from<ds[0]?o.from:ds[0],to:o.to&&o.to>ds[ds.length-1]?o.to:ds[ds.length-1]};
+        });
+        return s;
+      });
+      if(r) st.index=r;
+    }
+    st.busy=false;
+    msg(ok?'':'<div class="cs-note"><b>저장하지 못했습니다</b> · 로그인 상태를 확인하고 다시 올려 주세요</div>');
+    if(ok){ st.range={start:f,end:t}; if(st.picker&&st.picker.set) st.picker.set(st.range); paint(); }
+  }
+
+  /* ---------- 화면 ---------- */
+  function build(){
+    root.innerHTML='<div class="cs-top">'
+      +'<div class="cs-bar"><label>기간</label><button type="button" id="caPeriod"></button><span class="sep"></span>'
+      +'<label>캠페인</label><button type="button" class="ui-field" id="caCamp"></button>'
+      +'<span class="cs-when" id="caWhen"></span>'
+      +'<label class="ui-btn soft sm ca-up" title="쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀"><input type="file" id="caFile" accept=".xlsx,.xls,.csv">엑셀 올리기</label></div>'
+      +'<div class="cs-kpis" id="caKpis"></div></div>'
+      +'<div id="caMsg"></div><div id="caNote"></div>'
+      +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3>일별 광고비</h3><span class="sub">막대 = 광고비 · 아래 숫자 = 그날 ROAS(14일)</span></div><div class="ca-days ch-coupang" id="caDays"></div></section>'
+      +'<section class="ca-box"><div class="ca-box-head"><h3>캠페인별 성과</h3><span class="sub">줄을 누르면 그 캠페인의 키워드만 봅니다</span></div><div class="cs-tbl-wrap" id="caCamps"></div></section>'
+      +'<section class="ca-box"><div class="ca-box-head"><h3>키워드별 성과</h3><span class="sub" id="caKwSub"></span>'
+      +'<div class="right"><div class="ui-chips" id="caKf" role="group" aria-label="키워드 거르기"></div><input class="ui-field" id="caKq" placeholder="키워드 찾기"></div></div>'
+      +'<div class="cs-tbl-wrap" id="caKws"></div></section>';
+    st.picker=window.UI.datePicker($('caPeriod'),{
+      mode:'range', value:st.range, max:kst(), placeholder:'기간 선택',
+      presets:['yesterday','last7','last30','month','prevMonth','custom'],
+      resetValue:{start:firstOfMonth(),end:kst()},
+      onChange:v=>{ st.range=v||{start:firstOfMonth(),end:kst()}; paint(); },
+    });
+    $('caCamp').addEventListener('click',e=>{
+      e.stopPropagation();
+      const opts=[{value:'',label:'전체 캠페인'}].concat(campList().map(c=>({value:c.id,label:c.n,sub:won(c.cost)+'원'})));
+      window.UI.menu(e.currentTarget,opts,st.camp,v=>{ st.camp=v; st.kmax=100; draw(); });
+    });
+    $('caFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(f) upload(f); });
+    $('caCamps').addEventListener('click',e=>{
+      const tr=e.target.closest('tr[data-cid]'); if(!tr) return;
+      st.camp=st.camp===tr.dataset.cid?'':tr.dataset.cid; st.kmax=100; draw();
+    });
+    $('caKws').addEventListener('click',e=>{
+      const b=e.target.closest('[data-sort]');
+      if(b){
+        const k=b.dataset.sort;
+        st.ksort=st.ksort.k===k?{k:k,dir:-st.ksort.dir}:{k:k,dir:k==='kw'?1:-1};
+        try{ localStorage.setItem('baroyam_ca_sort',JSON.stringify(st.ksort)); }catch(e){}
+        draw(); return;
+      }
+      if(e.target.closest('[data-more]')){ st.kmax+=200; draw(); }
+    });
+    $('caKf').addEventListener('click',e=>{ const b=e.target.closest('[data-kf]'); if(!b) return; st.kf=b.dataset.kf; st.kmax=100; draw(); });
+    let qt=null;
+    $('caKq').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{ st.kq=e.target.value.trim(); st.kmax=100; draw(); },150); });
+    st.built=true;
+  }
+  async function paint(){
+    if(!st.built) build();
+    const my=++st.seq;
+    if(!data.rows.length) $('caKws').innerHTML='<div class="cs-empty">불러오는 중…</div>';
+    const [d]=await Promise.all([collect(),st.index?null:loadIndex()]);
+    if(my!==st.seq) return;
+    data=d; draw();
+  }
+  const blank=()=>({imp:0,clk:0,cost:0,ord:0,rev:0,qty:0});
+  const add=(o,x)=>{ o.imp+=x[3]; o.clk+=x[4]; o.cost+=x[5]; o.ord+=x[6]; o.rev+=x[7]; o.qty+=x[8]; return o; };
+  /* 기간 안 캠페인 · 광고비 큰 순 */
+  function campList(){
+    const m=new Map();
+    data.rows.forEach(x=>{ let c=m.get(x[1]); if(!c){ const cc=data.camps[x[1]]||{}; m.set(x[1],c=Object.assign(blank(),{id:x[1],n:cc.n||x[1],t:cc.t||''})); } add(c,x); });
+    return [...m.values()].sort((a,b)=>b.cost-a.cost);
+  }
+  function roasPill(o){
+    if(!o.cost) return '<span class="ca-roas none">-</span>';
+    const v=o.rev/o.cost*100;
+    return '<span class="ca-roas'+(!o.rev?' none':v<100?' low':'')+'">'+won(v)+'%</span>';
+  }
+  const SVG=p=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';
+  const SORT_SVG=SVG('<path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/>'),
+    DOWN_SVG=SVG('<path d="M12 5v14M6 13l6 6 6-6"/>'), UP_SVG=SVG('<path d="M12 19V5M6 11l6-6 6 6"/>');
+  function when(){
+    const el=$('caWhen'), ms=(st.index&&st.index.months)||{};
+    const ks=Object.keys(ms).sort(); el.classList.remove('warn');
+    if(!ks.length){ el.textContent=''; return; }
+    const last=ms[ks[ks.length-1]], to=ks.map(k=>ms[k].to||'').sort().pop();
+    const t=last.at?new Date(new Date(last.at).getTime()+9*3600e3):null;
+    el.textContent='데이터 '+(to?to.slice(5).replace('-','.')+'까지':'')+(t?' · '+(t.getUTCMonth()+1)+'월 '+t.getUTCDate()+'일 올림'+(last.by?'('+last.by+')':''):'');
+    /* 마지막 날짜가 사흘 넘게 지났으면 주황 */
+    if(to&&(Date.parse(kst())-Date.parse(to))/864e5>3) el.classList.add('warn');
+  }
+  function draw(){
+    when();
+    const camps=campList();
+    if(st.camp&&!camps.some(c=>c.id===st.camp)) st.camp='';
+    const cur=st.camp?camps.find(c=>c.id===st.camp):null;
+    $('caCamp').innerHTML='<span class="t">'+esc(cur?cur.n:'전체 캠페인')+'</span>';
+    const rows=st.camp?data.rows.filter(x=>x[1]===st.camp):data.rows;
+    const T=rows.reduce(add,blank());
+    const kpi=(l,v,u,sub)=>'<div class="cs-kpi"><div class="l">'+l+(sub?' <em>'+sub+'</em>':'')+'</div><div class="v num">'+v+(u?'<small>'+u+'</small>':'')+'</div></div>';
+    $('caKpis').innerHTML=kpi('광고비',won(T.cost),'원')+kpi('광고매출',won(T.rev),'원','14일')+kpi('ROAS',T.cost?won(T.rev/T.cost*100):'-','%','14일')
+      +kpi('노출수',won(T.imp),'회')+kpi('클릭수',won(T.clk),'회')+kpi('클릭률',T.imp?(T.clk/T.imp*100).toFixed(2):'-','%')+kpi('CPC',T.clk?won(T.cost/T.clk):'-','원');
+    const has=Object.keys((st.index&&st.index.months)||{}).length;
+    $('caNote').innerHTML=!has
+      ?'<div class="cs-note"><b>아직 올린 보고서가 없습니다</b> · 쿠팡 광고센터 › 보고서 › <b>키워드 보고서</b>를 일별로 받아 오른쪽 위 "엑셀 올리기"로 넣어 주세요. 같은 날짜를 다시 올리면 새 파일로 바뀝니다.</div>'
+      :(!data.rows.length?'<div class="cs-note">고른 기간에 올린 광고 기록이 없습니다 · 기간을 바꾸거나 그 기간 보고서를 올려 주세요</div>':'');
+    /* 일별 광고비 */
+    const dm=new Map(); rows.forEach(x=>{ let o=dm.get(x[0]); if(!o) dm.set(x[0],o=blank()); add(o,x); });
+    const ds=[...dm.keys()].sort(), mx=Math.max(1,...ds.map(d=>dm.get(d).cost));
+    $('caDayBox').hidden=!ds.length;
+    const DOW=['일','월','화','수','목','금','토'];
+    $('caDays').innerHTML=ds.map(d=>{ const o=dm.get(d), w=DOW[new Date(d+'T00:00:00Z').getUTCDay()];
+      return '<div class="ca-day" title="'+d+' ('+w+')\n광고비 '+won(o.cost)+'원\n광고매출(14일) '+won(o.rev)+'원\nROAS '+pct(o.rev,o.cost)+'\n클릭 '+won(o.clk)+' · CPC '+(o.clk?won(o.cost/o.clk)+'원':'-')+'">'
+        +'<div class="bar" style="height:'+Math.max(2,o.cost/mx*100)+'px"></div><span class="ro">'+pct(o.rev,o.cost)+'</span><span class="d">'+(+d.slice(8))+'('+w+')</span></div>'; }).join('');
+    /* 캠페인 표 */
+    const tr=c=>'<tr class="pick'+(c.id===st.camp?' on':'')+'" data-cid="'+esc(c.id)+'"><td class="k">'+esc(c.n)+'</td><td class="c">'+esc(c.t||'-')+'</td>'
+      +'<td class="r">'+won(c.imp)+'</td><td class="r">'+won(c.clk)+'</td><td class="r">'+pct(c.clk,c.imp,2)+'</td>'
+      +'<td class="r v">'+won(c.cost)+'원</td><td class="r v">'+won(c.rev)+'원</td><td class="r">'+(c.clk?won(c.cost/c.clk)+'원':'-')+'</td><td class="r">'+roasPill(c)+'</td></tr>';
+    $('caCamps').innerHTML=camps.length
+      ?'<table class="cs-tbl"><thead><tr><th>캠페인</th><th>광고유형</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r">광고비</th><th class="r">광고매출(14일)</th><th class="r">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
+        +camps.map(tr).join('')+'</tbody></table>'
+      :'<div class="cs-empty">고른 기간에 캠페인 기록이 없습니다</div>';
+    /* 키워드 표 · 캠페인을 넘어 키워드로 묶는다(전체 캠페인일 때 · 몇 개 캠페인에서 썼는지 함께) */
+    const km=new Map();
+    rows.forEach(x=>{ let o=km.get(x[2]); if(!o) km.set(x[2],o=Object.assign(blank(),{kw:x[2],cs:new Set()})); add(o,x); o.cs.add(x[1]); });
+    let kws=[...km.values()];
+    const cnt={all:kws.length,rev:0,waste:0,auto:0};
+    const isAuto=o=>o.kw.charAt(0)==='(';
+    kws.forEach(o=>{ if(o.rev>0) cnt.rev++; if(o.cost>0&&!o.rev) cnt.waste++; if(isAuto(o)) cnt.auto++; });
+    const KF=[['all','전체'],['rev','매출 난 키워드'],['waste','광고비만 나간 키워드'],['auto','비검색·키워드 없음']];
+    if(!KF.some(k=>k[0]===st.kf)) st.kf='all';
+    $('caKf').innerHTML=KF.map(k=>'<button type="button" class="ui-chip" data-kf="'+k[0]+'" aria-pressed="'+(st.kf===k[0])+'">'+k[1]+' <b>'+won(cnt[k[0]])+'</b></button>').join('');
+    kws=kws.filter(o=>st.kf==='rev'?o.rev>0:st.kf==='waste'?(o.cost>0&&!o.rev):st.kf==='auto'?isAuto(o):true);
+    if(st.kq){ const q=st.kq.replace(/\s+/g,'').toLowerCase(); kws=kws.filter(o=>o.kw.replace(/\s+/g,'').toLowerCase().includes(q)); }
+    kws.forEach(o=>{ o.ctr=o.imp?o.clk/o.imp:0; o.cpc=o.clk?o.cost/o.clk:0; o.roas=o.cost?o.rev/o.cost:(o.rev?1e9:0); });
+    const k=st.ksort.k, dir=st.ksort.dir;
+    kws.sort((a,b)=>(k==='kw'?a.kw.localeCompare(b.kw,'ko'):(a[k]-b[k]))*dir||(b.cost-a.cost));
+    const wasteCost=kws.filter(o=>o.cost>0&&!o.rev).reduce((a,o)=>a+o.cost,0);
+    $('caKwSub').textContent=won(kws.length)+'개'+(wasteCost?' · 매출 없이 쓴 광고비 '+won(wasteCost)+'원':'');
+    const th=(key,label,cls)=>'<th class="'+(cls||'')+(k===key?' on':'')+'"><button type="button" data-sort="'+key+'">'+label+(k===key?(dir<0?DOWN_SVG:UP_SVG):SORT_SVG)+'</button></th>';
+    const campName=o=>{ if(o.cs.size>1) return '캠페인 '+o.cs.size+'개'; const c=data.camps[[...o.cs][0]]; return c?c.n:'-'; };
+    const show=kws.slice(0,st.kmax);
+    $('caKws').innerHTML=kws.length
+      ?'<table class="cs-tbl"><thead><tr>'+th('kw','키워드')+(st.camp?'':'<th>캠페인</th>')+th('imp','노출수','r')+th('clk','클릭수','r')+th('ctr','클릭률','r')
+        +th('cost','광고비','r')+th('rev','광고매출(14일)','r')+th('cpc','CPC','r')+th('roas','ROAS','r')+'</tr></thead><tbody>'
+        +show.map(o=>'<tr><td class="k'+(isAuto(o)?' dim':'')+'">'+esc(o.kw)+'</td>'+(st.camp?'':'<td class="c" title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'">'+esc(campName(o))+'</td>')
+          +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
+          +'<td class="r v">'+won(o.cost)+'원</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cpc)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>').join('')
+        +'</tbody></table>'+(kws.length>show.length?'<button type="button" class="ui-btn ghost sm ca-more" data-more>더 보기 ('+won(show.length)+' / '+won(kws.length)+')</button>':'')
+      :'<div class="cs-empty">'+(data.rows.length?'조건에 맞는 키워드가 없습니다':'고른 기간에 키워드 기록이 없습니다')+'</div>';
+  }
+  window.baroyamCoupangAds={show:paint};
 })();
 
 /* 회의 안건 메모 · 직접 수정 + 자동 저장 + 회의 기록 저장/불러오기 + PNG 공유 */
