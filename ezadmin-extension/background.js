@@ -12,10 +12,13 @@ const I100_URL = 'https://ga83.ezadmin.co.kr/template35.htm?template=I100';
 // 메뉴 누르기가 javascript: 링크·CSP 로 자주 막혔고, 예전 기억 주소는 template35 만 받아 template40 인 이 화면을 기억하지 못했다)
 const SALES_URL = 'https://ga83.ezadmin.co.kr/template40.htm?template=F304';
 const JOB_TTL_MS = 10 * 60 * 1000; // 로그인 기다림까지 넉넉히 10분
+// 쿠팡 광고센터(1.6.0~) · 보고서를 만들고 내려받는 데 몇 분 걸려 20분
+const COUPANG_URL = 'https://advertising.coupang.com/';
+const JOB_TTL_CP_MS = 20 * 60 * 1000;
 
 const getJob = async () => {
   const { job } = await chrome.storage.session.get('job');
-  if (job && Date.now() - job.startedAt > JOB_TTL_MS) {
+  if (job && Date.now() - job.startedAt > (job.kind === 'coupang' ? JOB_TTL_CP_MS : JOB_TTL_MS)) {
     await chrome.storage.session.remove('job');
     return null;
   }
@@ -115,15 +118,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       try {
         const old = await getJob();
         if (old) { await endJob(); await chrome.windows.remove(old.winId).catch(() => {}); }
-        const url = msg.kind === 'sales' ? SALES_URL : I100_URL;
+        const kind = msg.kind === 'sales' || msg.kind === 'coupang' ? msg.kind : 'inventory';
+        const url = kind === 'coupang' ? COUPANG_URL : kind === 'sales' ? SALES_URL : I100_URL;
         const win = await chrome.windows.create({ url, type: 'normal', state: 'minimized', focused: false });
         const tab = win.tabs[0];
-        await setJob({ winId: win.id, tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind: msg.kind === 'sales' ? 'sales' : 'inventory', shipped: null, moves: 0 });
+        await setJob({ winId: win.id, tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind, shipped: null, moves: 0, from: msg.from || '', to: msg.to || '', phase: 'make', before: 0, gotDl: false });
         quiet(tab.id, 0);   // 첫 화면이 이미 열리기 시작했으면 여기서도 한 번
         sendResponse({ ok: true });
       } catch (e) {
         // 시작부터 실패하면 대시보드 게이지가 계속 돌지 않게 이유를 돌려준다
-        sendResponse({ ok: false, message: '이지어드민을 열지 못했습니다 · ' + e.message });
+        sendResponse({ ok: false, message: (msg.kind === 'coupang' ? '쿠팡 광고센터' : '이지어드민') + '을 열지 못했습니다 · ' + e.message });
       }
       return;
     }
@@ -132,7 +136,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'whoami') {
       const job = await getJob();
       const isJob = !!job && job.tabId === tabId;
-      sendResponse({ isJob, kind: isJob ? job.kind || 'inventory' : null, shipped: isJob ? job.shipped : null, moves: isJob ? job.moves || 0 : 0, searchedAt: isJob ? job.searchedAt || 0 : 0, searches: isJob ? job.searches || 0 : 0 });
+      sendResponse({ isJob, kind: isJob ? job.kind || 'inventory' : null, shipped: isJob ? job.shipped : null, moves: isJob ? job.moves || 0 : 0, searchedAt: isJob ? job.searchedAt || 0 : 0, searches: isJob ? job.searches || 0 : 0,
+        from: isJob ? job.from : '', to: isJob ? job.to : '', phase: isJob ? job.phase : '', before: isJob ? job.before || 0 : 0, startedAt: isJob ? job.startedAt : 0 });
       return;
     }
 
@@ -158,6 +163,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (msg.shipped !== undefined) job.shipped = msg.shipped;
       if (msg.moved) job.moves = (job.moves || 0) + 1;
       if (msg.searched) { job.searchedAt = Date.now(); job.searches = (job.searches || 0) + 1; }
+      if (msg.phase) { job.phase = msg.phase; job.before = msg.before || 0; }
       await setJob(job);
       sendResponse({ ok: true, moves: job.moves || 0 });
       return;
@@ -176,7 +182,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     // 이지어드민 창 · 지금 단계 알림(로그인 기다림·검색 중 …) → 대시보드 안내 줄
     if (msg.type === 'status') {
-      toDashboard(job, { type: 'status', message: msg.message });
+      toDashboard(job, { type: 'status', kind: job.kind, message: msg.message });
       sendResponse({ ok: true });
       return;
     }
@@ -243,5 +249,48 @@ chrome.tabs.onRemoved.addListener(async (closedTabId) => {
   const job = await getJob();
   if (!job || job.tabId !== closedTabId) return;
   await endJob();
-  toDashboard(job, { type: 'status', message: '이지어드민 창을 닫아 수집을 멈췄습니다', done: true });
+  toDashboard(job, { type: 'status', kind: job.kind, message: (job.kind === 'coupang' ? '쿠팡 창' : '이지어드민 창') + '을 닫아 수집을 멈췄습니다', done: true });
+});
+
+// ---------- 쿠팡 광고 보고서 내려받기 (1.6.0~) ----------
+// 쿠팡윙 수집 중에 내려받기가 끝난 csv·xlsx 를 그대로 읽어 대시보드로 넘긴다 · 자동으로 누른 것이든 사람이 직접 누른 것이든 같다 ·
+// https 주소는 여기서 받고(쿠팡 로그인 쿠키 포함), blob: 주소는 그 페이지만 읽을 수 있어 쿠팡 창(coupang.js)에 받아 달라고 한다
+const toB64 = (buf) => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+chrome.downloads.onChanged.addListener(async (d) => {
+  if (!d.state || d.state.current !== 'complete') return;
+  const job = await getJob();
+  if (!job || job.kind !== 'coupang' || job.gotDl) return;
+  const [item] = await chrome.downloads.search({ id: d.id });
+  if (!item) return;
+  const name = String(item.filename || '').split(/[\\/]/).pop();
+  if (!/\.(csv|xlsx|xls)$/i.test(name)) return;
+  if (new Date(item.startTime).getTime() < job.startedAt) return;
+  job.gotDl = true; await setJob(job);
+  toDashboard(job, { type: 'status', kind: 'coupang', message: '내려받은 보고서를 ERP 로 보내는 중' });
+  let b64 = null, why = '';
+  const url = item.finalUrl || item.url || '';
+  try {
+    if (/^blob:/i.test(url)) {
+      const r = await chrome.tabs.sendMessage(job.tabId, { type: 'grab', url }).catch(() => null);
+      if (r && r.ok) b64 = r.b64; else why = (r && r.message) || '쿠팡 창에서 파일을 읽지 못했습니다';
+    } else {
+      const r = await fetch(url, { credentials: 'include' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      b64 = toB64(await r.arrayBuffer());
+    }
+  } catch (e) { why = e.message; }
+  if (!b64) {
+    job.gotDl = false; await setJob(job);
+    toDashboard(job, { type: 'status', kind: 'coupang', done: true, message: '보고서는 내려받았지만(' + name + ') ERP 로 옮기지 못했습니다 · ' + why + ' · 쿠팡광고성과의 "파일 올리기"로 그 파일을 넣어 주세요' });
+    await endJob();
+    return;
+  }
+  const reply = await chrome.tabs.sendMessage(job.dashTabId, { type: 'rows', kind: 'coupang', file: { name, b64 } }).catch(() => null);
+  if (reply && reply.ok) {
+    await endJob();
+    await chrome.windows.remove(job.winId).catch(() => {});
+  } else {
+    job.gotDl = false; await setJob(job);
+    await showWin(job);
+  }
 });

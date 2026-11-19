@@ -13,14 +13,16 @@ toPage({ type: 'ready' });
 window.addEventListener('message', (e) => {
   if (e.source !== window || !e.data || e.data.source !== FROM_PAGE) return;
   // 재고(inventory-start) · 당일판매(sales-start, 1.2.0~)
-  if (e.data.type === 'inventory-start' || e.data.type === 'sales-start') {
+  // 쿠팡 광고 보고서(coupang-start, 1.6.0~) · from·to = 이번 달 1일·오늘
+  if (e.data.type === 'inventory-start' || e.data.type === 'sales-start' || e.data.type === 'coupang-start') {
     // 확장을 새로고침(↻)하면 이미 열려 있던 이 탭의 옛 코드는 확장과 끊긴다 · 그때 sendMessage 는 약속(promise)이 아니라
     // 그 자리에서 오류("Extension context invalidated")를 던지므로 try 로 받아 대시보드 새로고침을 안내한다
     const stale = () => toPage({ type: 'status', message: '확장 프로그램이 새로 바뀌었습니다 · 이 화면을 새로고침(F5)한 뒤 어드민 수집을 다시 눌러 주세요', done: true });
     try {
       if (!chrome.runtime || !chrome.runtime.id) { stale(); return; }
-      chrome.runtime.sendMessage({ type: 'start', kind: e.data.type === 'sales-start' ? 'sales' : 'inventory' })
-        .then((r) => { if (!r || !r.ok) toPage({ type: 'status', message: (r && r.message) || '이지어드민을 열지 못했습니다', done: true }); })
+      const kind = e.data.type === 'sales-start' ? 'sales' : e.data.type === 'coupang-start' ? 'coupang' : 'inventory';
+      chrome.runtime.sendMessage({ type: 'start', kind, from: e.data.from, to: e.data.to })
+        .then((r) => { if (!r || !r.ok) toPage({ type: 'status', kind, message: (r && r.message) || (kind === 'coupang' ? '쿠팡 광고센터를 열지 못했습니다' : '이지어드민을 열지 못했습니다'), done: true }); })
         .catch(stale);
     } catch (err) {
       stale();
@@ -44,7 +46,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     sendResponse({ ok: false, message: '대시보드가 답하지 않습니다 · 대시보드 창을 새로고침한 뒤 다시 눌러 주세요.' });
   }, 30000);
   window.addEventListener('message', onAck);
-  const kind = msg.kind === 'sales' ? 'sales' : 'inventory';
-  toPage({ type: msg.type === 'rows' ? kind : kind + '-error', id, rows: msg.rows, shipped: msg.shipped, orders: msg.orders, message: msg.message });
+  const kind = msg.kind === 'sales' || msg.kind === 'coupang' ? msg.kind : 'inventory';
+  toPage({ type: msg.type === 'rows' ? kind : kind + '-error', id, rows: msg.rows, shipped: msg.shipped, orders: msg.orders, file: msg.file, message: msg.message });
   return true;
 });

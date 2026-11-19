@@ -4236,35 +4236,35 @@ window.BAROYAM_FONT=(function(){
   .iv-blank.ds-none{border-style:solid;background:var(--paper)}
   @media (max-width:760px){ .ds-kpis{grid-template-columns:1fr 1fr} .ds-kpi.main{grid-column:1/-1} .iv-row.ds-row{grid-template-columns:84px minmax(0,1fr) 62px 72px} }
   /* 어드민 수집 · 옆 탭과 같은 높이의 알약 · 왼쪽 동그란 아이콘(강조색) + 이름 + 마지막 수집 시각 */
-  #ivFetch{margin-left:auto;height:38px;padding:0 15px 0 5px;gap:9px;border-radius:999px;background:var(--paper);color:var(--ink);
+  :is(#ivFetch,#caFetch){margin-left:auto;height:38px;padding:0 15px 0 5px;gap:9px;border-radius:999px;background:var(--paper);color:var(--ink);
     border:1.5px solid var(--line);font-size:13px;font-weight:600;letter-spacing:-.2px;
     box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 6%,transparent);transition:border-color .15s,box-shadow .2s,transform .15s}
-  #ivFetch:hover{border-color:var(--btn);box-shadow:0 6px 18px -10px color-mix(in srgb,var(--btn) 70%,transparent)}
-  #ivFetch:active{transform:translateY(1px)}
-  #ivFetch[hidden]{display:none}
-  #ivFetch .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--btn);color:var(--paper);transition:background .15s}
-  #ivFetch:hover .ic{background:var(--btn-hover)}
-  #ivFetch:hover .ic svg{transform:rotate(-40deg)}
-  #ivFetch .ic svg{flex:none;transition:transform .3s}
-  #ivFetch .at{padding-left:9px;border-left:1px solid var(--line);font-size:12px;font-weight:500;color:var(--mute);font-variant-numeric:tabular-nums}
-  #ivFetch .at:empty{display:none}
+  :is(#ivFetch,#caFetch):hover{border-color:var(--btn);box-shadow:0 6px 18px -10px color-mix(in srgb,var(--btn) 70%,transparent)}
+  :is(#ivFetch,#caFetch):active{transform:translateY(1px)}
+  :is(#ivFetch,#caFetch)[hidden]{display:none}
+  :is(#ivFetch,#caFetch) .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--btn);color:var(--paper);transition:background .15s}
+  :is(#ivFetch,#caFetch):hover .ic{background:var(--btn-hover)}
+  :is(#ivFetch,#caFetch):hover .ic svg{transform:rotate(-40deg)}
+  :is(#ivFetch,#caFetch) .ic svg{flex:none;transition:transform .3s}
+  :is(#ivFetch,#caFetch) .at{padding-left:9px;border-left:1px solid var(--line);font-size:12px;font-weight:500;color:var(--mute);font-variant-numeric:tabular-nums}
+  :is(#ivFetch,#caFetch) .at:empty{display:none}
   /* 수집 중 · 크기는 그대로(글자·시각을 바꾸지 않음) · 아이콘이 돌고, 동그라미 둘레로 물결이 퍼지고, 알약 안으로 빛이 지나간다 ·
      끝나면 동그라미만 한 번 통 튄다(scale 이라 자리는 안 바뀜) */
-  #ivFetch{position:relative;overflow:hidden;isolation:isolate}
-  #ivFetch::before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;pointer-events:none;
+  :is(#ivFetch,#caFetch){position:relative;overflow:hidden;isolation:isolate}
+  :is(#ivFetch,#caFetch)::before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;pointer-events:none;
     background:linear-gradient(100deg,transparent 20%,color-mix(in srgb,var(--btn-soft) 90%,transparent) 50%,transparent 80%);transform:translateX(-100%)}
-  #ivFetch.busy{border-color:var(--btn)}
-  #ivFetch.busy::before{opacity:1;animation:ivSweep 1.1s ease-in-out infinite}
-  #ivFetch.busy .ic{animation:ivRing 1.1s ease-out infinite}
-  #ivFetch.busy .ic svg{animation:ivSpin .8s linear infinite}
-  #ivFetch.busy .lb{animation:ivBreath 1.1s ease-in-out infinite}
-  #ivFetch.done .ic{animation:ivPop .5s cubic-bezier(.3,1.6,.5,1)}
+  :is(#ivFetch,#caFetch).busy{border-color:var(--btn)}
+  :is(#ivFetch,#caFetch).busy::before{opacity:1;animation:ivSweep 1.1s ease-in-out infinite}
+  :is(#ivFetch,#caFetch).busy .ic{animation:ivRing 1.1s ease-out infinite}
+  :is(#ivFetch,#caFetch).busy .ic svg{animation:ivSpin .8s linear infinite}
+  :is(#ivFetch,#caFetch).busy .lb{animation:ivBreath 1.1s ease-in-out infinite}
+  :is(#ivFetch,#caFetch).done .ic{animation:ivPop .5s cubic-bezier(.3,1.6,.5,1)}
   @keyframes ivSpin{to{transform:rotate(360deg)}}
   @keyframes ivSweep{to{transform:translateX(100%)}}
   @keyframes ivRing{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--btn) 45%,transparent)}100%{box-shadow:0 0 0 5px color-mix(in srgb,var(--btn) 0%,transparent)}}
   @keyframes ivBreath{50%{color:var(--btn)}}
   @keyframes ivPop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
-  @media (prefers-reduced-motion:reduce){ #ivFetch.busy::before,#ivFetch.busy .ic,#ivFetch.busy .ic svg,#ivFetch.busy .lb,#ivFetch.done .ic{animation:none} #ivFetch .ic svg{transition:none} }
+  @media (prefers-reduced-motion:reduce){ :is(#ivFetch,#caFetch).busy::before,:is(#ivFetch,#caFetch).busy .ic,:is(#ivFetch,#caFetch).busy .ic svg,:is(#ivFetch,#caFetch).busy .lb,:is(#ivFetch,#caFetch).done .ic{animation:none} :is(#ivFetch,#caFetch) .ic svg{transition:none} }
   .pf-grow{flex:1}
   /* 순수익 요약 (ps-*) */
   /* 순수익 요약 위 한 줄 · 왼쪽 대시보드/목록 탭(36px · 둥글기 12px)과 같은 높이·둥글기로 맞춘다 */
@@ -5118,6 +5118,12 @@ window.BAROYAM_FONT=(function(){
   .cs-empty{padding:48px 20px;text-align:center;color:var(--mute);font-size:13.5px}
   /* ===== 쿠팡광고성과 (판매채널 › 쿠팡 · 11-19) · 자사몰 판매현황(cs-*) 틀을 같이 쓰고 다른 것만 ===== */
   #chTabs .hero-view-tab[hidden]{display:none}
+  /* 쿠팡윙 수집 · 배너 오른쪽(어드민 수집과 같은 알약 · 쿠팡광고성과 탭에서만) */
+  .ca-hero-side{position:absolute;right:48px;top:50%;transform:translateY(-50%)}
+  .ca-hero-side[hidden]{display:none}
+  @media (max-width:1280px){ .ca-hero-side{right:32px} }
+  @media (max-width:900px){ .ca-hero-side{position:static;transform:none;margin-top:14px} }
+  .ca-msg-ok{color:var(--btn-soft-ink);background:var(--btn-soft)}
   #caRoot .cs-bar #caCamp{min-width:200px;max-width:320px;justify-content:space-between}
   #caRoot .cs-bar #caCamp .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #caRoot .cs-kpis{gap:12px 44px}
@@ -9675,6 +9681,11 @@ window.BAROYAM_FONT=(function(){
             <div class="psub" id="channelViewSub"></div>
             <!-- 기간 선택 · 프로젝트 마감일 고르기와 같은 달력(빠른 선택 → 시작일~종료일 → 적용) · 적용하면 위 숫자가 0에서 다시 올라간다 -->
             <div class="ch-hero-side"><button type="button" class="raised" id="chPeriodBtn"></button></div>
+            <!-- 쿠팡윙 수집(11-19 사용자) · 크롬 확장이 쿠팡 광고센터에서 이번 달 1일~오늘 · 일별 · 모든 캠페인 · 캠페인·광고그룹·상품·키워드 ·
+                 클릭 발생 키워드만 보고서를 만들어 내려받으면 ERP 에 넣는다 · 사람은 로그인만 -->
+            <div class="ca-hero-side" id="caHeroSide" hidden><button type="button" class="ui-btn" id="caFetch" title="쿠팡 광고센터에서 이번 달 1일~오늘 키워드 보고서를 만들어 가져옵니다 · 크롬 확장 필요">
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
+              <span class="lb">쿠팡윙 수집</span><span class="at" id="caFetchAt"></span></button></div>
           </div>
 
           <!-- 프로젝트 탭 · 이 채널 경로(p.channel)의 프로젝트만 프로젝트 캘린더 모양으로(renderCal 을 같이 씀) -->
@@ -26029,6 +26040,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   window.addEventListener('message',async e=>{
     const d=e.data;
     if(e.source!==window||!d||d.source!=='baroyam-inv-ext') return;
+    if(d.kind==='coupang'||d.type==='coupang'||d.type==='coupang-error') return;     /* 쿠팡윙 수집은 쿠팡광고성과가 받는다 */
     if(d.type==='status'){ if(d.done) ivBusy(false); if(d.message) jobNote(d.message); return; }
     if(d.type!=='inventory'&&d.type!=='inventory-error') return;
     const ack=(ok,message)=>window.postMessage({source:'baroyam-dashboard',type:'inventory-ack',id:d.id,ok,message},location.origin);
@@ -30401,6 +30413,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     $('chSalesTab').hidden=!isMall;
     $('chAdsTab').hidden=!isCp;
     const tab=((chTab==='sales'&&!isMall)||(chTab==='ads'&&!isCp))?'dash':chTab;
+    $('caHeroSide').hidden=tab!=='ads';
     document.querySelectorAll('#chTabs [data-ch-tab]').forEach(b=>{
       const on=b.dataset.chTab===tab; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false');
     });
@@ -30724,19 +30737,32 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const rows=[...map.values()].filter(x=>x[3]||x[4]||x[5]||x[7]);
     return {rows:rows,camps:camps,days:[...days].sort()};
   }
-  async function upload(file){
-    if(st.busy) return;
-    const msg=t=>{ const m=$('caMsg'); if(m){ m.innerHTML=t||''; } };
-    let X; try{ X=await loadXlsx(); }catch(e){ msg('<div class="cs-note">엑셀 도구를 받지 못했습니다 · 인터넷 연결을 확인하고 다시 눌러 주세요</div>'); return; }
+  const msg=(t,ok)=>{ const m=$('caMsg'); if(m) m.innerHTML=t?'<div class="cs-note'+(ok?' ca-msg-ok':'')+'">'+t+'</div>':''; };
+  /* 엑셀(xlsx)·CSV 를 표(줄 배열)로 · CSV 는 UTF-8 이 아니면 한글 윈도우(EUC-KR)로 읽는다 */
+  function sheetOf(X,name,buf){
+    const b=new Uint8Array(buf);
+    const zip=b[0]===0x50&&b[1]===0x4b, ole=b[0]===0xd0&&b[1]===0xcf;
+    let wb;
+    if(zip||ole) wb=X.read(b,{type:'array'});
+    else{
+      let txt; try{ txt=new TextDecoder('utf-8',{fatal:true}).decode(b); }catch(e){ txt=new TextDecoder('euc-kr').decode(b); }
+      wb=X.read(txt.replace(/^\uFEFF/,''),{type:'string',raw:true});
+    }
+    return X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null});
+  }
+  async function upload(file){ return importFile(file.name,await file.arrayBuffer(),false); }
+  /* auto · 쿠팡윙 수집(확장)으로 들어온 파일 · 묻지 않고 저장 · 결과를 {ok,message} 로 돌려준다 */
+  async function importFile(name,buf,auto){
+    if(st.busy) return {ok:false,message:'이미 저장하는 중입니다'};
+    const fail=t=>{ msg(t); return {ok:false,message:t.replace(/<[^>]+>/g,'')}; };
+    let X; try{ X=await loadXlsx(); }catch(e){ return fail('엑셀 도구를 받지 못했습니다 · 인터넷 연결을 확인하고 다시 눌러 주세요'); }
     let p;
-    try{
-      const wb=X.read(await file.arrayBuffer(),{type:'array'});
-      p=parse(X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null}));
-    }catch(e){ msg('<div class="cs-note"><b>읽지 못했습니다</b> · '+esc(e.message||e)+'</div>'); return; }
-    if(!p.rows.length){ msg('<div class="cs-note">이 파일에는 광고 기록이 없습니다</div>'); return; }
+    try{ p=parse(sheetOf(X,name,buf)); }catch(e){ return fail('<b>읽지 못했습니다</b> · '+esc(e.message||e)); }
+    if(!p.rows.length) return fail('이 파일에는 광고 기록이 없습니다');
+    const file={name:name};
     const cost=p.rows.reduce((a,x)=>a+x[5],0), rev=p.rows.reduce((a,x)=>a+x[7],0);
     const f=p.days[0], t=p.days[p.days.length-1];
-    if(!confirm('쿠팡 광고 보고서를 올립니다\n\n기간 '+f+' ~ '+t+' ('+p.days.length+'일)\n캠페인 '+Object.keys(p.camps).length+'개 · 키워드 '+new Set(p.rows.map(x=>x[2])).size+'개\n광고비 '+won(cost)+'원 · 광고매출(14일) '+won(rev)+'원\n\n이 기간에 이미 올린 내용이 있으면 이 파일 내용으로 바뀝니다.')) return;
+    if(!auto&&!confirm('쿠팡 광고 보고서를 올립니다\n\n기간 '+f+' ~ '+t+' ('+p.days.length+'일)\n캠페인 '+Object.keys(p.camps).length+'개 · 키워드 '+new Set(p.rows.map(x=>x[2])).size+'개\n광고비 '+won(cost)+'원 · 광고매출(14일) '+won(rev)+'원\n\n이 기간에 이미 올린 내용이 있으면 이 파일 내용으로 바뀝니다.')) return;
     st.busy=true; msg('<div class="cs-note">저장하는 중…</div>');
     let me=''; try{ const mm=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); me=mm?mm.name:''; }catch(e){}
     const now=new Date().toISOString();
@@ -30767,8 +30793,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(r) st.index=r;
     }
     st.busy=false;
-    msg(ok?'':'<div class="cs-note"><b>저장하지 못했습니다</b> · 로그인 상태를 확인하고 다시 올려 주세요</div>');
+    const done=(auto?'쿠팡윙 수집 완료':'올렸습니다')+' · '+f.slice(5).replace('-','.')+'~'+t.slice(5).replace('-','.')+' · 광고비 '+won(cost)+'원 · 광고매출(14일) '+won(rev)+'원';
+    msg(ok?done:'<b>저장하지 못했습니다</b> · 로그인 상태를 확인하고 다시 '+(auto?'수집해':'올려')+' 주세요',ok);
     if(ok){ st.range={start:f,end:t}; if(st.picker&&st.picker.set) st.picker.set(st.range); paint(); }
+    return ok?{ok:true,message:done}:{ok:false,message:'저장하지 못했습니다'};
   }
 
   /* ---------- 화면 ---------- */
@@ -30777,7 +30805,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<div class="cs-bar"><label>기간</label><button type="button" id="caPeriod"></button><span class="sep"></span>'
       +'<label>캠페인</label><button type="button" class="ui-field" id="caCamp"></button>'
       +'<span class="cs-when" id="caWhen"></span>'
-      +'<label class="ui-btn soft sm ca-up" title="쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀"><input type="file" id="caFile" accept=".xlsx,.xls,.csv">엑셀 올리기</label></div>'
+      +'<label class="ui-btn soft sm ca-up" title="쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀·CSV 를 직접 넣기(수동)"><input type="file" id="caFile" accept=".xlsx,.xls,.csv">파일 올리기</label></div>'
       +'<div class="cs-kpis" id="caKpis"></div></div>'
       +'<div id="caMsg"></div><div id="caNote"></div>'
       +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3>일별 광고비</h3><span class="sub">막대 = 광고비 · 아래 숫자 = 그날 ROAS(14일)</span></div><div class="ca-days ch-coupang" id="caDays"></div></section>'
@@ -30851,7 +30879,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(to&&(Date.parse(kst())-Date.parse(to))/864e5>3) el.classList.add('warn');
   }
   function draw(){
-    when();
+    when(); paintAt();
     const camps=campList();
     if(st.camp&&!camps.some(c=>c.id===st.camp)) st.camp='';
     const cur=st.camp?camps.find(c=>c.id===st.camp):null;
@@ -30863,7 +30891,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +kpi('노출수',won(T.imp),'회')+kpi('클릭수',won(T.clk),'회')+kpi('클릭률',T.imp?(T.clk/T.imp*100).toFixed(2):'-','%')+kpi('CPC',T.clk?won(T.cost/T.clk):'-','원');
     const has=Object.keys((st.index&&st.index.months)||{}).length;
     $('caNote').innerHTML=!has
-      ?'<div class="cs-note"><b>아직 올린 보고서가 없습니다</b> · 쿠팡 광고센터 › 보고서 › <b>키워드 보고서</b>를 일별로 받아 오른쪽 위 "엑셀 올리기"로 넣어 주세요. 같은 날짜를 다시 올리면 새 파일로 바뀝니다.</div>'
+      ?'<div class="cs-note"><b>아직 올린 보고서가 없습니다</b> · 배너 오른쪽 <b>쿠팡윙 수집</b>을 누르거나, 쿠팡 광고센터 › 보고서에서 키워드 보고서(일별 CSV)를 받아 "파일 올리기"로 넣어 주세요. 같은 날짜를 다시 넣으면 새 파일로 바뀝니다.</div>'
       :(!data.rows.length?'<div class="cs-note">고른 기간에 올린 광고 기록이 없습니다 · 기간을 바꾸거나 그 기간 보고서를 올려 주세요</div>':'');
     /* 일별 광고비 */
     const dm=new Map(); rows.forEach(x=>{ let o=dm.get(x[0]); if(!o) dm.set(x[0],o=blank()); add(o,x); });
@@ -30910,6 +30938,43 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         +'</tbody></table>'+(kws.length>show.length?'<button type="button" class="ui-btn ghost sm ca-more" data-more>더 보기 ('+won(show.length)+' / '+won(kws.length)+')</button>':'')
       :'<div class="cs-empty">'+(data.rows.length?'조건에 맞는 키워드가 없습니다':'고른 기간에 키워드 기록이 없습니다')+'</div>';
   }
+  /* ---------- 쿠팡윙 수집 (크롬 확장 1.6.0~) ---------- */
+  const fbtn=document.getElementById('caFetch');
+  const busy=on=>{ fbtn.classList.toggle('busy',!!on); if(!on){ fbtn.classList.add('done'); setTimeout(()=>fbtn.classList.remove('done'),600); } };
+  function paintAt(){
+    const ms=(st.index&&st.index.months)||{}, at=Object.keys(ms).map(k=>ms[k].at||'').sort().pop();
+    const el=document.getElementById('caFetchAt'); if(!el) return;
+    if(!at){ el.textContent=''; return; }
+    const d=new Date(new Date(at).getTime()+9*3600e3), hm=String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
+    el.textContent=(d.toISOString().slice(0,10)===kst()?'':(d.getUTCMonth()+1)+'.'+d.getUTCDate()+' ')+hm;
+  }
+  fbtn.addEventListener('click',()=>{
+    if(!st.built) build();
+    if(fbtn.classList.contains('busy')){ msg('수집 중입니다 · 쿠팡 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
+    const ext=document.documentElement.dataset.baroyamInvExt;
+    const ver=(ext||'0').split('.').map(Number);
+    if(!ext){ msg('<b>크롬 확장 "김비서AI 확장프로그램"이 필요합니다</b> · 이 PC 크롬에 설치(재고현황 어드민 수집과 같은 확장)한 뒤 새로고침해 주세요. 지금은 쿠팡 광고센터에서 보고서를 직접 받아 "파일 올리기"로 넣을 수 있습니다.'); return; }
+    if((ver[0]||0)*1000+(ver[1]||0)<1006){ msg('크롬 확장을 새 버전(1.6.0)으로 바꿔야 쿠팡윙 수집을 할 수 있습니다 · chrome://extensions 에서 이 확장의 새로고침(↻)을 누른 뒤 이 화면도 새로고침해 주세요'); return; }
+    busy(true); msg('쿠팡 광고센터를 여는 중 · 이번 달 1일~오늘 · 일별 · 모든 캠페인 · 키워드(클릭 발생만)');
+    window.postMessage({source:'baroyam-dashboard',type:'coupang-start',from:firstOfMonth(),to:kst()},location.origin);
+  });
+  window.addEventListener('message',async e=>{
+    const d=e.data;
+    if(e.source!==window||!d||d.source!=='baroyam-inv-ext') return;
+    if(d.type==='status'&&d.kind==='coupang'){ if(d.done) busy(false); if(d.message) msg(esc(d.message)); return; }
+    if(d.type!=='coupang'&&d.type!=='coupang-error') return;
+    const ack=(ok,message)=>window.postMessage({source:'baroyam-dashboard',type:'inventory-ack',id:d.id,ok,message},location.origin);
+    if(d.type==='coupang-error'){ busy(false); msg('<b>수집하지 못했습니다</b> · '+esc(d.message||'')); ack(true,'대시보드에 알렸습니다'); return; }
+    let r={ok:false,message:'받은 파일이 없습니다'};
+    try{
+      if(d.file&&d.file.b64){
+        const bin=atob(d.file.b64), b=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) b[i]=bin.charCodeAt(i);
+        r=await importFile(d.file.name||'coupang.csv',b.buffer,true);
+      }else msg(r.message);
+    }catch(err){ console.error(err); r={ok:false,message:err.message||String(err)}; msg('<b>저장하지 못했습니다</b> · '+esc(r.message)); }
+    busy(false); paintAt(); ack(r.ok,r.message);
+  });
   window.baroyamCoupangAds={show:paint};
 })();
 
