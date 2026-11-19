@@ -254,7 +254,7 @@ async function watchDownload(job) {
 // background · blob: 다운로드는 이 페이지만 읽을 수 있어 여기서 받아 넘긴다
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'grab') return;
-  fetch(msg.url).then((r) => r.arrayBuffer()).then((buf) => {
+  fetch(msg.url, { credentials: 'include' }).then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }).then((buf) => {
     let s = ''; const b = new Uint8Array(buf);
     for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
     sendResponse({ ok: true, b64: btoa(s) });

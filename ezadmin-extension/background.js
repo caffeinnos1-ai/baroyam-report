@@ -279,6 +279,11 @@ chrome.downloads.onChanged.addListener(async (d) => {
       b64 = toB64(await r.arrayBuffer());
     }
   } catch (e) { why = e.message; }
+  // 확장이 직접 못 받으면(로그인 헤더가 필요한 주소 등) 쿠팡 창 안에서 같은 주소를 받아 달라고 한다(1.6.5)
+  if (!b64 && !/^blob:/i.test(url)) {
+    const r = await chrome.tabs.sendMessage(job.tabId, { type: 'grab', url }).catch(() => null);
+    if (r && r.ok) b64 = r.b64; else why += (r && r.message) ? ' / ' + r.message : '';
+  }
   if (!b64) {
     job.gotDl = false; await setJob(job);
     toDashboard(job, { type: 'status', kind: 'coupang', done: true, message: '보고서는 내려받았지만(' + name + ') ERP 로 옮기지 못했습니다 · ' + why + ' · 쿠팡광고성과의 "파일 올리기"로 그 파일을 넣어 주세요' });
