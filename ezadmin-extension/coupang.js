@@ -213,9 +213,11 @@ async function run(job) {
   if (miss.length || !enabled(go)) return hand('못 고른 조건: ' + (miss.join('·') || '보고서 만들기가 눌리지 않음'), job);
   // 지금 목록에 같은 조건 줄이 몇 개인지 기억 · 하나 늘어나면 그게 방금 만든 보고서(목록은 최신이 맨 위)
   const before = ourRows(job).length;
-  go.click();
+  // 누르기 전에 "받기 단계"를 먼저 적어 둔다 · 누르는 순간 화면이 새로 열려도 보고서를 또 만들지 않게
   await send({ type: 'meta', phase: 'download', before });
   job.phase = 'download'; job.before = before;
+  go.click();
+  await sleep(1500);
   return watchDownload(job);
 }
 // 오른쪽 보고서 목록(11-19 사용자 캡처) · 줄 = 요청일 | 보고서 기간 "2026-11-01 ~ 2026-11-19" | [일별] 캠페인 > … > 키워드 | 선택한 캠페인 | 상태(생성 완료) | 차트 보기 · 다운로드
@@ -229,25 +231,25 @@ async function watchDownload(job) {
   const before = Array.isArray(job.before) ? job.before.length : (job.before || 0);
   const end = Date.now() + 15 * 60 * 1000;
   let lastReload = Date.now(), lastRefresh = 0, n = 0;
+  const t0 = Date.now();
   while (Date.now() < end) {
-    const rows = ourRows(job);
-    const top = rows[0];
-    // 새 줄이 생겼으면 맨 위 줄 · 3분이 지나도 새 줄이 안 보이면 같은 조건의 가장 최근 완료 줄
-    const fresh = rows.length > before;
-    const late = Date.now() - job.startedAt > 3 * 60 * 1000;
-    const pick = fresh ? top : late ? rows.find((r) => /완료/.test(norm(r.innerText)) && dlBtn(r)) : null;
-    if (pick && /완료/.test(norm(pick.innerText)) && dlBtn(pick)) {
-      dlBtn(pick).click();
+    // 목록은 최신이 맨 위 · 같은 조건의 맨 위 줄이 "생성 완료"면 바로 받는다(사용자 지적: 보고서는 금방 나오는데 한참 뒤에 눌렀다) ·
+    // 맨 위가 아직 만드는 중이면 그 줄을 기다린다(옛 줄을 받지 않게)
+    // 방금 만든 줄이 아직 목록에 안 보이면(줄 수가 그대로) 20초까지만 기다리고, 그 뒤에는 맨 위 완료 줄을 받는다
+    const rows = ourRows(job), top = rows[0];
+    const ready = rows.length > before || Date.now() - t0 > 20000;
+    if (ready && top && /완료/.test(norm(top.innerText)) && dlBtn(top)) {
+      dlBtn(top).click();
       banner('내려받는 중 · ERP 로 보냅니다');
       await status('보고서가 나왔습니다 · 내려받아 ERP 로 보내는 중');
       return;
     }
-    if (++n % 6 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.max(1, Math.round((Date.now() - job.startedAt) / 60000)) + '분째');
+    if (++n % 12 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.max(1, Math.round((Date.now() - job.startedAt) / 60000)) + '분째');
     // "목록 새로 고침"을 10초마다 · 그 단추가 없으면 40초마다 화면을 새로 연다(이 코드가 다시 돌아 이어서 기다림)
     const re = findText(/^(목록 ?)?새로 ?고침$/, 'button,a,[role=button]');
-    if (re) { if (Date.now() - lastRefresh > 10000) { re.click(); lastRefresh = Date.now(); } }
+    if (re) { if (Date.now() - lastRefresh > 4000) { re.click(); lastRefresh = Date.now(); } }
     else if (Date.now() - lastReload > 40000) { location.reload(); return; }
-    await sleep(3000);
+    await sleep(1500);
   }
   return hand('보고서가 15분 안에 다 만들어지지 않았습니다');
 }
