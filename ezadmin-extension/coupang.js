@@ -239,9 +239,21 @@ async function watchDownload(job) {
     const rows = ourRows(job), top = rows[0];
     const ready = rows.length > before || Date.now() - t0 > 20000;
     if (ready && top && /완료/.test(norm(top.innerText)) && dlBtn(top)) {
-      dlBtn(top).click();
+      // 확장이 누른 클릭은 사람이 누른 것으로 치지 않아 팝업 다운로드가 막힐 수 있다 · 누르기 직전 표시를 남겨 새 창 주소를 가로챈다
+      document.documentElement.dataset.baroyamDl = String(Date.now());
+      const b = dlBtn(top);
+      ['pointerdown', 'mousedown', 'pointerup', 'mouseup'].forEach((k) => b.dispatchEvent(new MouseEvent(k, { bubbles: true, cancelable: true, view: window })));
+      b.click();
       banner('내려받는 중 · ERP 로 보냅니다');
       await status('보고서가 나왔습니다 · 내려받아 ERP 로 보내는 중');
+      // 10초 안에 내려받기가 시작되지 않으면 사람에게 다운로드 한 번만 눌러 달라고 한다(그다음은 자동)
+      await sleep(10000);
+      const me = await send({ type: 'whoami' });
+      if (me && me.isJob && !me.gotDl) {
+        banner('"다운로드"를 한 번만 눌러 주세요 · 나머지는 자동으로 ERP 에 들어갑니다', 'hand');
+        await status('쿠팡이 자동 다운로드를 막았습니다 · 쿠팡 창에서 "다운로드"를 한 번만 눌러 주세요(그다음은 자동)');
+        await send({ type: 'show' });
+      }
       return;
     }
     if (++n % 12 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.max(1, Math.round((Date.now() - job.startedAt) / 60000)) + '분째');
@@ -253,6 +265,9 @@ async function watchDownload(job) {
   }
   return hand('보고서가 15분 안에 다 만들어지지 않았습니다');
 }
+
+// 가로챈 새 창 주소 → 확장이 직접 내려받기
+document.addEventListener('baroyam-open', (e) => { if (e.detail) send({ type: 'dl', url: e.detail }); });
 
 // background · blob: 다운로드는 이 페이지만 읽을 수 있어 여기서 받아 넘긴다
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {

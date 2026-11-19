@@ -120,6 +120,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         if (old) { await endJob(); await chrome.windows.remove(old.winId).catch(() => {}); }
         const kind = msg.kind === 'sales' || msg.kind === 'coupang' ? msg.kind : 'inventory';
         const url = kind === 'coupang' ? COUPANG_URL : kind === 'sales' ? SALES_URL : I100_URL;
+        // 쿠팡 광고센터 · 확장이 대신 누른 다운로드가 팝업·여러 파일 내려받기로 막히지 않게 이 사이트만 허용(1.6.8)
+        if (kind === 'coupang' && chrome.contentSettings) {
+          for (const k of ['popups', 'automaticDownloads']) {
+            try { if (chrome.contentSettings[k]) await chrome.contentSettings[k].set({ primaryPattern: 'https://advertising.coupang.com/*', setting: 'allow' }); } catch (e) {}
+          }
+        }
         const win = await chrome.windows.create({ url, type: 'normal', state: 'minimized', focused: false });
         const tab = win.tabs[0];
         await setJob({ winId: win.id, tabId: tab.id, dashTabId: tabId, startedAt: Date.now(), kind, shipped: null, moves: 0, from: msg.from || '', to: msg.to || '', phase: 'make', before: 0, gotDl: false });
@@ -136,13 +142,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'whoami') {
       const job = await getJob();
       const isJob = !!job && job.tabId === tabId;
-      sendResponse({ isJob, kind: isJob ? job.kind || 'inventory' : null, shipped: isJob ? job.shipped : null, moves: isJob ? job.moves || 0 : 0, searchedAt: isJob ? job.searchedAt || 0 : 0, searches: isJob ? job.searches || 0 : 0,
+      sendResponse({ isJob, gotDl: isJob ? !!(job.gotDl || job.dlStarted) : false, kind: isJob ? job.kind || 'inventory' : null, shipped: isJob ? job.shipped : null, moves: isJob ? job.moves || 0 : 0, searchedAt: isJob ? job.searchedAt || 0 : 0, searches: isJob ? job.searches || 0 : 0,
         from: isJob ? job.from : '', to: isJob ? job.to : '', phase: isJob ? job.phase : '', before: isJob ? job.before || 0 : 0, startedAt: isJob ? job.startedAt : 0 });
       return;
     }
 
     const job = await getJob();
     if (!job || job.tabId !== tabId) { sendResponse({ ok: false }); return; }
+
+    // 쿠팡 창 · 가로챈 다운로드 주소를 확장이 직접 내려받는다(사람의 클릭이 필요 없음 · 끝나면 아래 downloads 리스너가 ERP 로 넘김)
+    if (msg.type === 'dl') {
+      try { await chrome.downloads.download({ url: msg.url }); sendResponse({ ok: true }); }
+      catch (e) { sendResponse({ ok: false, message: e.message }); }
+      return;
+    }
 
     // 이지어드민 탭 · 로그인 화면이면 창으로 꺼내 앞에 띄우고, 로그인이 끝나면 다시 접힌 묶음으로 돌려놓은 뒤 대시보드를 앞으로
     if (msg.type === 'show') {
@@ -235,6 +248,17 @@ function quietDialogs() {
   window.alert = (m) => { tell('안내', m); };
   window.confirm = (m) => { tell('확인', m); return true; };
   window.prompt = (m) => { tell('입력', m); return null; };
+  // 쿠팡 보고서 다운로드(1.6.8) · 확장이 대신 누른 직후(10초 안) 페이지가 새 창(window.open)으로 파일을 열려 하면,
+  // 사람이 누른 것이 아니라 크롬이 팝업으로 막는다 · 그 주소를 가로채 확장이 직접 내려받게 넘긴다
+  const open0 = window.open;
+  window.open = function (u) {
+    const t = +(document.documentElement.dataset.baroyamDl || 0);
+    if (u && Date.now() - t < 10000) {
+      try { document.dispatchEvent(new CustomEvent('baroyam-open', { detail: new URL(String(u), location.href).href })); } catch (e) {}
+      return null;
+    }
+    return open0.apply(this, arguments);
+  };
 }
 function quiet(tabId, frameId) {
   chrome.scripting.executeScript({ target: { tabId, frameIds: [frameId] }, world: 'MAIN', injectImmediately: true, func: quietDialogs }).catch(() => {});
@@ -298,4 +322,10 @@ chrome.downloads.onChanged.addListener(async (d) => {
     job.gotDl = false; await setJob(job);
     await showWin(job);
   }
+});
+
+// 내려받기가 "시작"됐는지만 기록 · 큰 파일은 끝나기까지 오래 걸려, 그사이 사람에게 다시 누르라고 하지 않게(1.6.8)
+chrome.downloads.onCreated.addListener(async () => {
+  const job = await getJob();
+  if (job && job.kind === 'coupang' && !job.dlStarted) { job.dlStarted = true; await setJob(job); }
 });
