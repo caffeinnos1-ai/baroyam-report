@@ -12,9 +12,9 @@ const I100_URL = 'https://ga83.ezadmin.co.kr/template35.htm?template=I100';
 // 메뉴 누르기가 javascript: 링크·CSP 로 자주 막혔고, 예전 기억 주소는 template35 만 받아 template40 인 이 화면을 기억하지 못했다)
 const SALES_URL = 'https://ga83.ezadmin.co.kr/template40.htm?template=F304';
 const JOB_TTL_MS = 10 * 60 * 1000; // 로그인 기다림까지 넉넉히 10분
-// 쿠팡 광고센터(1.6.0~) · 보고서를 만들고 내려받는 데 몇 분 걸려 20분
-const COUPANG_URL = 'https://advertising.coupang.com/';
-const JOB_TTL_CP_MS = 20 * 60 * 1000;
+// 쿠팡 광고센터(1.6.0~) · 보고서를 만들고 내려받는 데 몇 분 걸려 30분 · 보고서 화면 주소로 바로 연다(1.6.1)
+const COUPANG_URL = 'https://advertising.coupang.com/marketing-reporting/billboard/reports/pa';
+const JOB_TTL_CP_MS = 30 * 60 * 1000;
 
 const getJob = async () => {
   const { job } = await chrome.storage.session.get('job');
@@ -263,7 +263,7 @@ chrome.downloads.onChanged.addListener(async (d) => {
   const [item] = await chrome.downloads.search({ id: d.id });
   if (!item) return;
   const name = String(item.filename || '').split(/[\\/]/).pop();
-  if (!/\.(csv|xlsx|xls)$/i.test(name)) return;
+  if (!/\.(csv|xlsx|xls|txt|tsv)$/i.test(name)) return;
   if (new Date(item.startTime).getTime() < job.startedAt) return;
   job.gotDl = true; await setJob(job);
   toDashboard(job, { type: 'status', kind: 'coupang', message: '내려받은 보고서를 ERP 로 보내는 중' });

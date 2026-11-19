@@ -59,7 +59,7 @@ function setInput(inp, v) {
 }
 function setPeriod(from, to) {
   // 1) 빠른 선택에 "이번 달"(당월)이 있으면 그것 · 2) 날짜 칸 두 개에 직접
-  const quick = findText(/^(이번 ?달|당월|이번달)$/);
+  const quick = findText(/^(이번 ?달|당월|이번달|이번 달 1일부터)$/);
   if (quick) { press(quick); return true; }
   const ins = [...document.querySelectorAll('input')].filter((i) => visible(i) && /\d{4}[.\-/]\d{2}[.\-/]\d{2}/.test(i.value || i.placeholder || ''));
   if (ins.length >= 2) {
@@ -77,6 +77,54 @@ async function hand(why) {
   await send({ type: 'show' });
 }
 
+const REPORT_PATH = '/marketing-reporting/billboard/reports/pa';
+const REPORT_URL = 'https://advertising.coupang.com' + REPORT_PATH;
+const makeBtn = () => [...document.querySelectorAll('button,[role=button],input[type=submit]')].find((e) => visible(e) && /^보고서 ?만들기$/.test(norm(e.innerText || e.value)));
+const enabled = (e) => e && !e.disabled && e.getAttribute('aria-disabled') !== 'true' && !/disabled/i.test(e.className || '');
+
+// 캠페인 선택 · "캠페인을 선택하세요" 목록을 열고 전체 선택(없으면 보이는 캠페인을 모두) 고른다
+async function pickAllCampaigns() {
+  // 1) 진짜 <select> 이면 모두 고르기
+  const sel = [...document.querySelectorAll('select')].find((x) => visible(x) && /캠페인/.test(norm((x.closest('div') || x).parentElement ? x.parentElement.innerText : '')));
+  if (sel && sel.multiple) { [...sel.options].forEach((o) => { o.selected = true; }); sel.dispatchEvent(new Event('change', { bubbles: true })); return true; }
+  // 2) 꾸민 목록 · 자리 글("캠페인을 선택하세요")이나 지금 고른 값 칸을 눌러 연다
+  const holder = findText(/캠페인을 ?선택/, 'div,span,input,button,p') || (() => {
+    const lab = findText(/^캠페인 ?선택$/, 'label,div,span,p,h3,h4,strong');
+    return lab && lab.parentElement && [...lab.parentElement.querySelectorAll('div,input,button')].find((x) => visible(x) && x !== lab && !x.contains(lab));
+  })();
+  if (!holder) return false;
+  const boxesBefore = new Set(document.querySelectorAll('input[type=checkbox]'));
+  (holder.closest('[class*=select],[class*=Select],[class*=dropdown],[class*=Dropdown],[role=combobox],button') || holder).click();
+  holder.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  await sleep(1200);
+  const all = findText(/^(전체 ?선택|모든 ?캠페인|전체 ?캠페인|전체|Select ?all)$/);
+  if (all) {
+    const box = (all.closest('label,li,[role=option],div') || all).querySelector('input[type=checkbox]');
+    if (!box || !box.checked) press(all);
+  } else {
+    // 전체 선택이 없으면 목록에 새로 나타난 체크칸(또는 항목)을 모두 누른다
+    const boxes = [...document.querySelectorAll('input[type=checkbox]')].filter((b) => !boxesBefore.has(b) && !b.checked);
+    if (boxes.length) boxes.forEach((b) => (b.closest('label') || b).click());
+    else {
+      const opts = [...document.querySelectorAll('[role=option],li[class*=option],div[class*=option]')].filter(visible);
+      if (!opts.length) return false;
+      for (const o of opts) { if (o.getAttribute('aria-selected') !== 'true') { o.click(); await sleep(120); } }
+    }
+  }
+  await sleep(500);
+  // 목록 닫기 · Esc + 빈 곳 누르기
+  document.activeElement && document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  const title = findText(/^보고서 ?구조$/); if (title) title.click();
+  await sleep(500);
+  return !/캠페인을 ?선택하세요/.test(norm((holder.closest('div') || holder).innerText || holder.value || ''));
+}
+function pickRadio(re) {
+  const el = findText(re, 'label,span,div,p'); if (!el) return false;
+  const r = (el.closest('label') || el.parentElement || el).querySelector('input[type=radio]');
+  if (r) { if (!r.checked) (r.closest('label') || r).click(); return true; }
+  press(el); return true;
+}
+
 async function run(job) {
   const host = location.hostname;
   // 로그인 화면 · 창을 앞으로 띄우고 기다린다(로그인되면 광고센터로 돌아와 이 코드가 다시 돈다)
@@ -86,64 +134,71 @@ async function run(job) {
     await send({ type: 'show' });
     return;
   }
+  await send({ type: 'hide' });
+  // 보고서 화면이 아니면 보고서 주소로(세 번까지 · 로그인 뒤 광고 홈으로 떨어지는 경우)
+  if (location.pathname.indexOf(REPORT_PATH) !== 0) {
+    if ((job.moves || 0) >= 3) return hand('보고서 화면으로 가지 못했습니다');
+    await send({ type: 'meta', moved: true });
+    location.href = REPORT_URL;
+    return;
+  }
   if (job.phase === 'download') return watchDownload(job);
   banner('쿠팡 광고 보고서를 만드는 중…');
-  await status('쿠팡 광고센터 보고서 화면을 찾는 중');
-  // 보고서 화면 찾기 · "보고서 만들기" 단추가 보일 때까지 · 없으면 메뉴의 "보고서"를 누른다(세 번까지)
-  let make = await waitFor(() => findText(/^보고서 ?(만들기|생성|요청)$/), 8000);
-  if (!make) {
-    if ((job.moves || 0) < 3) {
-      const nav = findText(/^(광고 ?보고서|보고서)$/, 'a,button,li,span,div');
-      if (nav) { await send({ type: 'meta', moved: true }); press(nav); }
-      make = await waitFor(() => findText(/^보고서 ?(만들기|생성|요청)$/), 12000);
-    }
-    if (!make) return hand('보고서 화면을 찾지 못했습니다');
-  }
-  // 같은 이름 단추가 "새 보고서 창 열기"일 수도 있다 · 누른 뒤 조건 칸이 나오면 그 안에서 고른다
-  const formShown = () => findText(/보고서 ?구조|기간 ?구분|집계 ?단위/);
-  if (!formShown()) { press(make); await sleep(1500); }
-  if (!(await waitFor(formShown, 8000))) return hand('보고서 조건 칸을 찾지 못했습니다');
-  await status('보고서 조건을 고르는 중(이번 달 · 일별 · 모든 캠페인 · 키워드)');
+  await status('보고서 조건을 고르는 중(이번 달 · 일별 · 모든 캠페인 · 캠페인>광고그룹>상품>키워드)');
+  if (!(await waitFor(makeBtn, 20000))) return hand('보고서 만들기 단추를 찾지 못했습니다');
+  await sleep(800);
   const miss = [];
   if (!setPeriod(job.from, job.to)) miss.push('기간');
   await sleep(500);
-  const daily = findText(/^일별$/); if (daily) press(daily); else miss.push('일별');
-  await sleep(400);
-  const allc = findText(/^(모든|전체) ?캠페인$/); if (allc) press(allc); else miss.push('모든 캠페인');
-  await sleep(400);
-  const kw = findText(/캠페인.*광고 ?그룹.*상품.*키워드|키워드 ?(보고서|단위)$|^키워드$/); if (kw) press(kw); else miss.push('보고서 구조');
-  await sleep(400);
+  if (!pickRadio(/^일별$/)) miss.push('일별');
+  await sleep(300);
+  if (!pickRadio(/^캠페인 ?> ?광고 ?그룹 ?> ?상품 ?> ?키워드$/)) miss.push('보고서 구조');
+  await sleep(500);
   if (!check(/클릭이 ?발생한 ?키워드/)) miss.push('클릭 발생 키워드만');
-  await sleep(600);
-  if (miss.length) return hand('못 고른 조건: ' + miss.join('·'));
-  const go = [...document.querySelectorAll('button,[role=button],input[type=submit]')].filter((e) => visible(e) && /^보고서 ?(만들기|생성|요청)$|^(만들기|생성|요청|확인)$/.test(norm(e.innerText || e.value))).pop();
-  if (!go) return hand('보고서 만들기 단추를 찾지 못했습니다');
-  const before = downloadButtons().length;
+  await sleep(300);
+  if (!(await pickAllCampaigns())) miss.push('모든 캠페인');
+  await sleep(800);
+  const go = makeBtn();
+  if (miss.includes('모든 캠페인') || !enabled(go)) return hand('못 고른 조건: ' + (miss.join('·') || '보고서 만들기가 눌리지 않음'));
+  // 지금 목록에 있는 보고서 줄을 기억 · 새로 생긴 줄을 찾으려고
+  const before = rowsNow().map((r) => rowKey(r));
   go.click();
   await send({ type: 'meta', phase: 'download', before });
   job.phase = 'download'; job.before = before;
+  if (miss.length) await status('보고서를 요청했습니다(못 고른 조건: ' + miss.join('·') + ' · 쿠팡 기본값으로)');
   return watchDownload(job);
 }
-const downloadButtons = () => [...document.querySelectorAll('button,a,[role=button]')].filter((e) => visible(e) && /^(다운로드|내려받기|CSV ?다운로드)$/.test(norm(e.innerText || e.textContent)) && !e.disabled && e.getAttribute('aria-disabled') !== 'true');
+// 오른쪽 보고서 목록 · 줄 = 번호 | 기간 | [일별] 구조 | 요청일 | 상태 | 단추
+const rowsNow = () => [...document.querySelectorAll('tr')].filter((r) => visible(r) && /\d{4}-\d{2}-\d{2}\s*-\s*\d{4}-\d{2}-\d{2}/.test(r.innerText || ''));
+const rowKey = (r) => norm(r.innerText).slice(0, 160);
+const dlBtn = (r) => [...r.querySelectorAll('button,a,[role=button]')].find((b) => visible(b) && /다운로드|내려받기/.test(norm(b.innerText || b.textContent)) && enabled(b));
 async function watchDownload(job) {
-  banner('보고서를 만드는 중 · 다 되면 자동으로 내려받습니다');
-  await status('쿠팡이 보고서를 만드는 중 · 보통 1~3분');
-  const end = Date.now() + 6 * 60 * 1000;
+  banner('쿠팡이 보고서를 만드는 중 · 다 되면 자동으로 내려받아 ERP 에 넣습니다');
+  await status('쿠팡이 보고서를 만드는 중 · 몇 분 걸릴 수 있습니다(창은 그대로 두세요)');
+  const before = new Set(job.before || []);
+  const want = (r) => { const t = norm(r.innerText); return t.indexOf(job.from) >= 0 && t.indexOf(job.to) >= 0 && /일별/.test(t) && /키워드/.test(t); };
+  const end = Date.now() + 15 * 60 * 1000;
+  let lastReload = Date.now(), n = 0;
   while (Date.now() < end) {
-    const list = downloadButtons();
-    // 새로 생긴(또는 맨 위) 다운로드 단추 · 목록은 보통 최신이 맨 위
-    if (list.length > (job.before || 0) || (list.length && Date.now() - job.startedAt > 20000)) {
-      press(list[0]);
+    const rows = rowsNow();
+    // 새로 생긴 줄 중 우리 조건 줄 · 없으면 우리 조건 줄 아무거나(새로고침 뒤 before 와 글자가 달라졌을 수 있음)
+    const mine = rows.filter((r) => want(r) && !before.has(rowKey(r)));
+    const cand = mine.length ? mine : rows.filter(want);
+    const done = cand.find((r) => /완료/.test(norm(r.innerText)) && dlBtn(r));
+    if (done && (mine.length || Date.now() - job.startedAt > 30000)) {
+      dlBtn(done).click();
       banner('내려받는 중 · ERP 로 보냅니다');
-      await status('보고서를 내려받는 중');
+      await status('보고서가 나왔습니다 · 내려받아 ERP 로 보내는 중');
       return;
     }
-    // 목록이 저절로 안 바뀌는 화면이면 "새로고침" 단추를 가끔 누른다
+    if (++n % 6 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.round((Date.now() - job.startedAt) / 60000) + '분째');
+    // 목록이 저절로 안 바뀌면 40초마다 화면을 새로 연다(이 코드가 다시 돌아 이어서 기다림)
     const re = findText(/^(새로 ?고침|목록 ?새로고침)$/, 'button,a,[role=button]');
     if (re) re.click();
+    else if (Date.now() - lastReload > 40000) { location.reload(); return; }
     await sleep(5000);
   }
-  return hand('보고서가 6분 안에 다 만들어지지 않았습니다');
+  return hand('보고서가 15분 안에 다 만들어지지 않았습니다');
 }
 
 // background · blob: 다운로드는 이 페이지만 읽을 수 있어 여기서 받아 넘긴다
