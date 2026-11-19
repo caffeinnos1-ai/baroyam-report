@@ -60,37 +60,44 @@ function setInput(inp, v) {
 // 기간 · "기간 설정"을 눌러 달력을 열고 이번 달 1일 → 오늘을 차례로 누른 뒤 적용(사용자 설명 · 11-19) ·
 // 달력에 "이번 달" 같은 빠른 선택이 있으면 그것, 날짜 칸이 있으면 직접 넣기도 해 본다 · 넣은 뒤 화면에 두 날짜가 보이는지 확인
 const dateForms = (d) => { const [y, m, dd] = d.split('-'); return [d, y + '.' + m + '.' + dd, y + '/' + m + '/' + dd, y + '. ' + (+m) + '. ' + (+dd)]; };
-const periodShown = (from, to) => { const t = norm(document.body.innerText); return dateForms(from).some((f) => t.includes(f)) && dateForms(to).some((f) => t.includes(f)); };
+// 날짜 칸 값에 두 날짜가 다 들어 있으면 된 것 · 오른쪽 보고서 목록에 같은 기간 줄이 있을 수 있어 화면 글자는 보지 않는다
+const periodShown = (from, to) => {
+  const t = [...document.querySelectorAll('input')].filter(visible).map((x) => x.value).join(' ');
+  return dateForms(from).some((f) => t.includes(f)) && dateForms(to).some((f) => t.includes(f));
+};
 const dayCells = (box) => [...box.querySelectorAll('td,button,span,div,a')].filter((e) => visible(e) && /^\d{1,2}$/.test(norm(e.innerText)) && ![...e.children].some((c) => /^\d{1,2}$/.test(norm(c.innerText))));
-const offDay = (e) => { const c = (e.className || '') + ' ' + ((e.parentElement && e.parentElement.className) || ''); return /disabled|outside|other|prev|next|muted|neighbor/i.test(String(c)) || e.getAttribute('aria-disabled') === 'true' || e.disabled; };
+const offDay = (e) => { const c = String(e.className || '') + ' ' + String((e.parentElement && e.parentElement.className) || ''); return /disabled|outside|other|prev|next|muted|neighbor/i.test(c) || e.getAttribute('aria-disabled') === 'true' || e.disabled; };
+// 달력 칸 누르기 · 누름 처리를 mousedown 에 둔 달력도 있어 셋 다 보낸다
+const tap = (e) => { const t = e.closest('button,td,[role=gridcell],a') || e; ['mousedown', 'mouseup'].forEach((k) => t.dispatchEvent(new MouseEvent(k, { bubbles: true }))); t.click(); };
+// 보고서 기간 · 실제 화면(11-19 사용자 캡처): 라디오 "기간 설정" → "시작일 ~ 종료일" 칸 → 두 달 달력(2026년 11월 | 12월 · 오늘 뒤는 흐림)
+// → 이번 달 1일 → 오늘을 누르면 칸에 2026-11-01 ~ 2026-11-19 가 들어간다
 async function setPeriod(from, to) {
+  pickRadio(/^기간 ?설정/);
+  await sleep(600);
   if (periodShown(from, to)) return true;
-  const btn = findText(/^기간 ?설정$/, 'button,a,[role=button],span,div,label');
-  if (btn) { press(btn); await sleep(1200); }
-  const quick = findText(/^(이번 ?달|당월|이번달)$/);
+  const startIn = [...document.querySelectorAll('input')].find((x) => visible(x) && /시작일/.test(x.placeholder || '')) ||
+    [...document.querySelectorAll('input')].find((x) => visible(x) && /^\d{4}-\d{2}-\d{2}$/.test(x.value || ''));
+  if (startIn) { startIn.focus(); tap(startIn); await sleep(1000); }
   const [y, m] = from.split('-').map(Number), today = +to.slice(8);
-  if (quick) press(quick);
-  else {
-    const ins = [...document.querySelectorAll('input')].filter((i) => visible(i) && /\d{4}[.\-/]\s?\d{1,2}[.\-/]/.test(i.value || i.placeholder || ''));
-    // 달력 · 이번 달 머리(2026.11 / 2026년 11월)가 든 칸에서 1일과 오늘을 누른다
-    const head = findText(new RegExp('^' + y + '\\s*[.\\-/년]\\s*0?' + m + '\\s*월?$'));
-    let box = head;
-    while (box && box !== document.body && dayCells(box).filter((e) => !offDay(e)).length < 28) box = box.parentElement;
-    if (box && box !== document.body) {
-      // 앞 달 끝 날짜가 섞여 있어 "1" 다음부터 오늘을 찾는다 · 두 달짜리 달력이면 이번 달 머리 칸 안만 본다
-      const cells = dayCells(box).filter((e) => !offDay(e));
-      const i1 = cells.findIndex((e) => norm(e.innerText) === '1');
-      const it = cells.findIndex((e, k) => k >= i1 && +norm(e.innerText) === today);
-      if (i1 < 0 || it < 0) return false;
-      press(cells[i1]); await sleep(400); press(cells[it]); await sleep(500);
-    } else if (ins.length >= 2) {
-      const fmt = (d) => { const s0 = ins[0].value || ins[0].placeholder || ''; const sep = (s0.match(/\d{4}([.\-/])/) || [])[1] || '-'; return d.split('-').join(sep); };
-      setInput(ins[0], fmt(from)); setInput(ins[1], fmt(to));
-    } else return false;
-  }
-  await sleep(500);
+  const head = await waitFor(() => findText(new RegExp(String.raw`^${y}\s*[.\-/년]\s*0?${m}\s*월?$`)), 4000);
+  if (!head) return false;
+  // 머리에서 위로 올라가며 날짜 칸이 한 달치(28개 이상) 들어 있는 상자를 찾는다
+  let box = head;
+  while (box && box !== document.body && dayCells(box).length < 28) box = box.parentElement;
+  if (!box || box === document.body) return false;
+  const cells = dayCells(box);
+  // 앞 달 끝(29·30)이 먼저 나오므로 "1"(흐리지 않은 것) 다음부터 오늘을 찾는다
+  const i1 = cells.findIndex((e) => norm(e.innerText) === '1' && !offDay(e));
+  const i1b = i1 >= 0 ? i1 : cells.findIndex((e) => norm(e.innerText) === '1');
+  const it = cells.findIndex((e, k) => k >= i1b && +norm(e.innerText) === today);
+  if (i1b < 0 || it < 0) return false;
+  tap(cells[i1b]); await sleep(500);
+  tap(cells[it]); await sleep(800);
   const ok = findText(/^(적용|확인|선택|완료)$/, 'button,[role=button],a');
-  if (ok) { ok.click(); await sleep(800); }
+  if (ok && !periodShown(from, to)) { ok.click(); await sleep(800); }
+  // 달력이 아직 열려 있으면 닫는다
+  const title = findText(/^보고서 ?구조$/); if (title) title.click();
+  await sleep(300);
   return periodShown(from, to);
 }
 
