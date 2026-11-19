@@ -156,11 +156,18 @@ async function pickAllCampaigns() {
     }
   }
   await sleep(500);
-  // 목록 닫기 · Esc + 빈 곳 누르기
-  document.activeElement && document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  const title = findText(/^보고서 ?구조$/); if (title) title.click();
-  await sleep(500);
-  return !/캠페인을 ?선택하세요/.test(norm((holder.closest('div') || holder).innerText || holder.value || ''));
+  // 전체선택이 정말 켜졌는지 · 안 켜졌으면 체크칸을 직접 누른다
+  if (all) {
+    const box = (all.closest('label,li,[role=option],div') || all).querySelector('input[type=checkbox]');
+    if (box && !box.checked) { box.click(); await sleep(400); }
+  }
+  // 목록 아래 "확인"을 눌러야 고른 것이 들어간다(11-19 사용자 · Esc·바깥 누르기는 취소가 될 수 있음)
+  const okBtn = await waitFor(() => [...document.querySelectorAll('button,[role=button]')].filter((b) => visible(b) && /^확인$/.test(norm(b.innerText))).pop(), 3000);
+  if (!okBtn) return false;
+  okBtn.click();
+  await sleep(1000);
+  // 칸 글자가 다시 그려질 수 있어 화면에서 다시 찾는다 · 자리 글이 사라졌으면 들어간 것
+  return !findText(/^캠페인을 ?선택하세요$/, 'div,span,p,button');
 }
 function pickRadio(re) {
   const el = findText(re, 'label,span,div,p'); if (!el) return false;
