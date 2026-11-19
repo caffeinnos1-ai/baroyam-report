@@ -113,9 +113,9 @@ async function hand(why, job) {
     const b = e.target.closest && e.target.closest('button,[role=button],input[type=submit]');
     if (!b || !/^보고서 ?만들기$/.test(norm(b.innerText || b.value)) || !enabled(b)) return;
     document.removeEventListener('click', onMake, true);
-    const before = rowsNow().map((r) => rowKey(r));
+    const before = ourRows(job).length;
     await send({ type: 'meta', phase: 'download', before });
-    job.phase = 'download'; job.before = before; job.startedAt = Date.now() - 31000;
+    job.phase = 'download'; job.before = before;
     await sleep(1000);
     watchDownload(job);
   }, true);
@@ -211,42 +211,43 @@ async function run(job) {
   await sleep(800);
   const go = makeBtn();
   if (miss.length || !enabled(go)) return hand('못 고른 조건: ' + (miss.join('·') || '보고서 만들기가 눌리지 않음'), job);
-  // 지금 목록에 있는 보고서 줄을 기억 · 새로 생긴 줄을 찾으려고
-  const before = rowsNow().map((r) => rowKey(r));
+  // 지금 목록에 같은 조건 줄이 몇 개인지 기억 · 하나 늘어나면 그게 방금 만든 보고서(목록은 최신이 맨 위)
+  const before = ourRows(job).length;
   go.click();
   await send({ type: 'meta', phase: 'download', before });
   job.phase = 'download'; job.before = before;
   return watchDownload(job);
 }
-// 오른쪽 보고서 목록 · 줄 = 번호 | 기간 | [일별] 구조 | 요청일 | 상태 | 단추
-const rowsNow = () => [...document.querySelectorAll('tr')].filter((r) => visible(r) && /\d{4}-\d{2}-\d{2}\s*-\s*\d{4}-\d{2}-\d{2}/.test(r.innerText || ''));
-const rowKey = (r) => norm(r.innerText).slice(0, 160);
+// 오른쪽 보고서 목록(11-19 사용자 캡처) · 줄 = 요청일 | 보고서 기간 "2026-11-01 ~ 2026-11-19" | [일별] 캠페인 > … > 키워드 | 선택한 캠페인 | 상태(생성 완료) | 차트 보기 · 다운로드
+// 1.6.5 까지는 기간 사이를 "-" 로만 알아봐 "~" 로 적힌 줄을 하나도 못 찾았다(다운로드를 못 누름)
+const rowsNow = () => [...document.querySelectorAll('tr')].filter((r) => visible(r) && /\d{4}-\d{2}-\d{2}\s*[-~]\s*\d{4}-\d{2}-\d{2}/.test(r.innerText || ''));
+const ourRows = (job) => rowsNow().filter((r) => { const t = norm(r.innerText); return t.indexOf(job.from) >= 0 && t.indexOf(job.to) >= 0 && /일별/.test(t) && /키워드/.test(t); });
 const dlBtn = (r) => [...r.querySelectorAll('button,a,[role=button]')].find((b) => visible(b) && /다운로드|내려받기/.test(norm(b.innerText || b.textContent)) && enabled(b));
 async function watchDownload(job) {
   banner('쿠팡이 보고서를 만드는 중 · 다 되면 자동으로 내려받아 ERP 에 넣습니다');
   await status('쿠팡이 보고서를 만드는 중 · 몇 분 걸릴 수 있습니다(창은 그대로 두세요)');
-  const before = new Set(job.before || []);
-  const want = (r) => { const t = norm(r.innerText); return t.indexOf(job.from) >= 0 && t.indexOf(job.to) >= 0 && /일별/.test(t) && /키워드/.test(t); };
+  const before = Array.isArray(job.before) ? job.before.length : (job.before || 0);
   const end = Date.now() + 15 * 60 * 1000;
-  let lastReload = Date.now(), n = 0;
+  let lastReload = Date.now(), lastRefresh = 0, n = 0;
   while (Date.now() < end) {
-    const rows = rowsNow();
-    // 새로 생긴 줄 중 우리 조건 줄 · 없으면 우리 조건 줄 아무거나(새로고침 뒤 before 와 글자가 달라졌을 수 있음)
-    const mine = rows.filter((r) => want(r) && !before.has(rowKey(r)));
-    const cand = mine.length ? mine : rows.filter(want);
-    const done = cand.find((r) => /완료/.test(norm(r.innerText)) && dlBtn(r));
-    if (done && (mine.length || Date.now() - job.startedAt > 30000)) {
-      dlBtn(done).click();
+    const rows = ourRows(job);
+    const top = rows[0];
+    // 새 줄이 생겼으면 맨 위 줄 · 3분이 지나도 새 줄이 안 보이면 같은 조건의 가장 최근 완료 줄
+    const fresh = rows.length > before;
+    const late = Date.now() - job.startedAt > 3 * 60 * 1000;
+    const pick = fresh ? top : late ? rows.find((r) => /완료/.test(norm(r.innerText)) && dlBtn(r)) : null;
+    if (pick && /완료/.test(norm(pick.innerText)) && dlBtn(pick)) {
+      dlBtn(pick).click();
       banner('내려받는 중 · ERP 로 보냅니다');
       await status('보고서가 나왔습니다 · 내려받아 ERP 로 보내는 중');
       return;
     }
-    if (++n % 6 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.round((Date.now() - job.startedAt) / 60000) + '분째');
-    // 목록이 저절로 안 바뀌면 40초마다 화면을 새로 연다(이 코드가 다시 돌아 이어서 기다림)
-    const re = findText(/^(새로 ?고침|목록 ?새로고침)$/, 'button,a,[role=button]');
-    if (re) re.click();
+    if (++n % 6 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.max(1, Math.round((Date.now() - job.startedAt) / 60000)) + '분째');
+    // "목록 새로 고침"을 10초마다 · 그 단추가 없으면 40초마다 화면을 새로 연다(이 코드가 다시 돌아 이어서 기다림)
+    const re = findText(/^(목록 ?)?새로 ?고침$/, 'button,a,[role=button]');
+    if (re) { if (Date.now() - lastRefresh > 10000) { re.click(); lastRefresh = Date.now(); } }
     else if (Date.now() - lastReload > 40000) { location.reload(); return; }
-    await sleep(5000);
+    await sleep(3000);
   }
   return hand('보고서가 15분 안에 다 만들어지지 않았습니다');
 }
