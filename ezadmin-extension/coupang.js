@@ -222,7 +222,19 @@ async function run(job) {
 }
 // 오른쪽 보고서 목록(11-19 사용자 캡처) · 줄 = 요청일 | 보고서 기간 "2026-11-01 ~ 2026-11-19" | [일별] 캠페인 > … > 키워드 | 선택한 캠페인 | 상태(생성 완료) | 차트 보기 · 다운로드
 // 1.6.5 까지는 기간 사이를 "-" 로만 알아봐 "~" 로 적힌 줄을 하나도 못 찾았다(다운로드를 못 누름)
-const rowsNow = () => [...document.querySelectorAll('tr')].filter((r) => visible(r) && /\d{4}-\d{2}-\d{2}\s*[-~]\s*\d{4}-\d{2}-\d{2}/.test(r.innerText || ''));
+// 줄 찾기는 <tr> 에 기대지 않는다(표처럼 보여도 div 로 그린 목록일 수 있음) · "보고서 기간" 칸(날짜 ~ 날짜만 든 칸)에서 위로 올라가
+// 상태 글(생성중·생성 완료·실패)까지 함께 든 가장 작은 상자를 그 보고서 한 줄로 본다 · 화면 순서 = 최신이 맨 위
+const PERIOD_RE = /^\d{4}-\d{2}-\d{2}\s*[-~]\s*\d{4}-\d{2}-\d{2}$/;
+function rowsNow() {
+  const out = [];
+  for (const cell of document.querySelectorAll('td,div,span,p')) {
+    if (!visible(cell) || !PERIOD_RE.test(norm(cell.innerText)) || [...cell.children].some((c) => PERIOD_RE.test(norm(c.innerText)))) continue;
+    let r = cell.parentElement;
+    while (r && r !== document.body && !/생성|완료|실패|오류/.test(norm(r.innerText))) r = r.parentElement;
+    if (r && r !== document.body && !out.includes(r)) out.push(r);
+  }
+  return out;
+}
 const ourRows = (job) => rowsNow().filter((r) => { const t = norm(r.innerText); return t.indexOf(job.from) >= 0 && t.indexOf(job.to) >= 0 && /일별/.test(t) && /키워드/.test(t); });
 const dlBtn = (r) => [...r.querySelectorAll('button,a,[role=button]')].find((b) => visible(b) && /다운로드|내려받기/.test(norm(b.innerText || b.textContent)) && enabled(b));
 async function watchDownload(job) {
@@ -232,6 +244,7 @@ async function watchDownload(job) {
   const end = Date.now() + 15 * 60 * 1000;
   let lastReload = Date.now(), lastRefresh = 0, n = 0;
   const t0 = Date.now();
+  let lastSig = '', lastChange = Date.now();
   while (Date.now() < end) {
     // 목록은 최신이 맨 위 · 같은 조건의 맨 위 줄이 "생성 완료"면 바로 받는다(사용자 지적: 보고서는 금방 나오는데 한참 뒤에 눌렀다) ·
     // 맨 위가 아직 만드는 중이면 그 줄을 기다린다(옛 줄을 받지 않게)
@@ -256,11 +269,15 @@ async function watchDownload(job) {
       }
       return;
     }
-    if (++n % 12 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.max(1, Math.round((Date.now() - job.startedAt) / 60000)) + '분째');
+    if (++n % 12 === 0) await status('쿠팡이 보고서를 만드는 중 · ' + Math.max(1, Math.round((Date.now() - job.startedAt) / 60000)) + '분째 · 목록에서 이 조건 줄 ' + rows.length + '개' + (top ? ' · 맨 위 상태 ' + ((norm(top.innerText).match(/생성 ?중|생성 ?완료|실패|오류/) || ['?'])[0]) : ''));
     // "목록 새로 고침"을 10초마다 · 그 단추가 없으면 40초마다 화면을 새로 연다(이 코드가 다시 돌아 이어서 기다림)
+    // "목록 새로 고침"은 만드는 동안 흐리게 잠긴다(쿠팡이 스스로 목록을 바꿈) · 눌리는 때만 4초마다 누르고,
+    // 1분 넘게 아무것도 안 바뀌면 화면을 새로 연다(이 코드가 다시 돌아 이어서 기다림)
     const re = findText(/^(목록 ?)?새로 ?고침$/, 'button,a,[role=button]');
-    if (re) { if (Date.now() - lastRefresh > 4000) { re.click(); lastRefresh = Date.now(); } }
-    else if (Date.now() - lastReload > 40000) { location.reload(); return; }
+    if (re && enabled(re) && Date.now() - lastRefresh > 4000) { re.click(); lastRefresh = Date.now(); }
+    const sig = top ? norm(top.innerText) : '';
+    if (sig !== lastSig) { lastSig = sig; lastChange = Date.now(); }
+    if (Date.now() - lastChange > 60000 && Date.now() - lastReload > 60000) { location.reload(); return; }
     await sleep(1500);
   }
   return hand('보고서가 15분 안에 다 만들어지지 않았습니다');
