@@ -57,24 +57,61 @@ function setInput(inp, v) {
   set.call(inp, v); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
   inp.dispatchEvent(new Event('blur', { bubbles: true }));
 }
-function setPeriod(from, to) {
-  // 1) 빠른 선택에 "이번 달"(당월)이 있으면 그것 · 2) 날짜 칸 두 개에 직접
-  const quick = findText(/^(이번 ?달|당월|이번달|이번 달 1일부터)$/);
-  if (quick) { press(quick); return true; }
-  const ins = [...document.querySelectorAll('input')].filter((i) => visible(i) && /\d{4}[.\-/]\d{2}[.\-/]\d{2}/.test(i.value || i.placeholder || ''));
-  if (ins.length >= 2) {
-    const fmt = (d) => { const s = ins[0].value || ins[0].placeholder || ''; const sep = (s.match(/\d{4}([.\-/])/) || [])[1] || '-'; return d.split('-').join(sep); };
-    setInput(ins[0], fmt(from)); setInput(ins[1], fmt(to)); return true;
+// 기간 · "기간 설정"을 눌러 달력을 열고 이번 달 1일 → 오늘을 차례로 누른 뒤 적용(사용자 설명 · 11-19) ·
+// 달력에 "이번 달" 같은 빠른 선택이 있으면 그것, 날짜 칸이 있으면 직접 넣기도 해 본다 · 넣은 뒤 화면에 두 날짜가 보이는지 확인
+const dateForms = (d) => { const [y, m, dd] = d.split('-'); return [d, y + '.' + m + '.' + dd, y + '/' + m + '/' + dd, y + '. ' + (+m) + '. ' + (+dd)]; };
+const periodShown = (from, to) => { const t = norm(document.body.innerText); return dateForms(from).some((f) => t.includes(f)) && dateForms(to).some((f) => t.includes(f)); };
+const dayCells = (box) => [...box.querySelectorAll('td,button,span,div,a')].filter((e) => visible(e) && /^\d{1,2}$/.test(norm(e.innerText)) && ![...e.children].some((c) => /^\d{1,2}$/.test(norm(c.innerText))));
+const offDay = (e) => { const c = (e.className || '') + ' ' + ((e.parentElement && e.parentElement.className) || ''); return /disabled|outside|other|prev|next|muted|neighbor/i.test(String(c)) || e.getAttribute('aria-disabled') === 'true' || e.disabled; };
+async function setPeriod(from, to) {
+  if (periodShown(from, to)) return true;
+  const btn = findText(/^기간 ?설정$/, 'button,a,[role=button],span,div,label');
+  if (btn) { press(btn); await sleep(1200); }
+  const quick = findText(/^(이번 ?달|당월|이번달)$/);
+  const [y, m] = from.split('-').map(Number), today = +to.slice(8);
+  if (quick) press(quick);
+  else {
+    const ins = [...document.querySelectorAll('input')].filter((i) => visible(i) && /\d{4}[.\-/]\s?\d{1,2}[.\-/]/.test(i.value || i.placeholder || ''));
+    // 달력 · 이번 달 머리(2026.11 / 2026년 11월)가 든 칸에서 1일과 오늘을 누른다
+    const head = findText(new RegExp('^' + y + '\\s*[.\\-/년]\\s*0?' + m + '\\s*월?$'));
+    let box = head;
+    while (box && box !== document.body && dayCells(box).filter((e) => !offDay(e)).length < 28) box = box.parentElement;
+    if (box && box !== document.body) {
+      // 앞 달 끝 날짜가 섞여 있어 "1" 다음부터 오늘을 찾는다 · 두 달짜리 달력이면 이번 달 머리 칸 안만 본다
+      const cells = dayCells(box).filter((e) => !offDay(e));
+      const i1 = cells.findIndex((e) => norm(e.innerText) === '1');
+      const it = cells.findIndex((e, k) => k >= i1 && +norm(e.innerText) === today);
+      if (i1 < 0 || it < 0) return false;
+      press(cells[i1]); await sleep(400); press(cells[it]); await sleep(500);
+    } else if (ins.length >= 2) {
+      const fmt = (d) => { const s0 = ins[0].value || ins[0].placeholder || ''; const sep = (s0.match(/\d{4}([.\-/])/) || [])[1] || '-'; return d.split('-').join(sep); };
+      setInput(ins[0], fmt(from)); setInput(ins[1], fmt(to));
+    } else return false;
   }
-  return false;
+  await sleep(500);
+  const ok = findText(/^(적용|확인|선택|완료)$/, 'button,[role=button],a');
+  if (ok) { ok.click(); await sleep(800); }
+  return periodShown(from, to);
 }
 
 let handMode = false;
-async function hand(why) {
+// 사람이 직접 고칠 때 · 그 사람이 "보고서 만들기"를 누르면 그때부터는 다시 자동으로 완료를 기다려 내려받는다
+async function hand(why, job) {
   if (handMode) return; handMode = true;
-  banner('이 창에서 보고서를 직접 만들고 "다운로드"만 눌러 주세요 · 내려받은 파일은 자동으로 ERP 에 들어갑니다', 'hand');
-  await status((why ? why + ' · ' : '') + '쿠팡 창에서 보고서를 직접 만들고 다운로드만 눌러 주세요(파일은 자동으로 ERP 에 들어갑니다)');
+  banner(job ? (why + ' · 직접 고친 뒤 "보고서 만들기"만 눌러 주세요 · 그다음은 자동') : '이 창에서 보고서를 직접 만들고 "다운로드"만 눌러 주세요 · 내려받은 파일은 자동으로 ERP 에 들어갑니다', 'hand');
+  await status((why ? why + ' · ' : '') + (job ? '쿠팡 창에서 직접 고친 뒤 "보고서 만들기"만 눌러 주세요(그다음은 자동)' : '쿠팡 창에서 보고서를 직접 만들고 다운로드만 눌러 주세요(파일은 자동으로 ERP 에 들어갑니다)'));
   await send({ type: 'show' });
+  if (!job) return;
+  document.addEventListener('click', async function onMake(e) {
+    const b = e.target.closest && e.target.closest('button,[role=button],input[type=submit]');
+    if (!b || !/^보고서 ?만들기$/.test(norm(b.innerText || b.value)) || !enabled(b)) return;
+    document.removeEventListener('click', onMake, true);
+    const before = rowsNow().map((r) => rowKey(r));
+    await send({ type: 'meta', phase: 'download', before });
+    job.phase = 'download'; job.before = before; job.startedAt = Date.now() - 31000;
+    await sleep(1000);
+    watchDownload(job);
+  }, true);
 }
 
 const REPORT_PATH = '/marketing-reporting/billboard/reports/pa';
@@ -145,10 +182,10 @@ async function run(job) {
   if (job.phase === 'download') return watchDownload(job);
   banner('쿠팡 광고 보고서를 만드는 중…');
   await status('보고서 조건을 고르는 중(이번 달 · 일별 · 모든 캠페인 · 캠페인>광고그룹>상품>키워드)');
-  if (!(await waitFor(makeBtn, 20000))) return hand('보고서 만들기 단추를 찾지 못했습니다');
+  if (!(await waitFor(makeBtn, 20000))) return hand('보고서 만들기 단추를 찾지 못했습니다', job);
   await sleep(800);
   const miss = [];
-  if (!setPeriod(job.from, job.to)) miss.push('기간');
+  if (!(await setPeriod(job.from, job.to))) miss.push('기간');
   await sleep(500);
   if (!pickRadio(/^일별$/)) miss.push('일별');
   await sleep(300);
@@ -159,13 +196,12 @@ async function run(job) {
   if (!(await pickAllCampaigns())) miss.push('모든 캠페인');
   await sleep(800);
   const go = makeBtn();
-  if (miss.includes('모든 캠페인') || !enabled(go)) return hand('못 고른 조건: ' + (miss.join('·') || '보고서 만들기가 눌리지 않음'));
+  if (miss.length || !enabled(go)) return hand('못 고른 조건: ' + (miss.join('·') || '보고서 만들기가 눌리지 않음'), job);
   // 지금 목록에 있는 보고서 줄을 기억 · 새로 생긴 줄을 찾으려고
   const before = rowsNow().map((r) => rowKey(r));
   go.click();
   await send({ type: 'meta', phase: 'download', before });
   job.phase = 'download'; job.before = before;
-  if (miss.length) await status('보고서를 요청했습니다(못 고른 조건: ' + miss.join('·') + ' · 쿠팡 기본값으로)');
   return watchDownload(job);
 }
 // 오른쪽 보고서 목록 · 줄 = 번호 | 기간 | [일별] 구조 | 요청일 | 상태 | 단추
