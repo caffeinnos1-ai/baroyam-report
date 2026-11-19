@@ -9683,7 +9683,7 @@ window.BAROYAM_FONT=(function(){
             <div class="ch-hero-side"><button type="button" class="raised" id="chPeriodBtn"></button></div>
             <!-- 쿠팡윙 수집(11-19 사용자) · 크롬 확장이 쿠팡 광고센터에서 이번 달 1일~오늘 · 일별 · 모든 캠페인 · 캠페인·광고그룹·상품·키워드 ·
                  클릭 발생 키워드만 보고서를 만들어 내려받으면 ERP 에 넣는다 · 사람은 로그인만 -->
-            <div class="ca-hero-side" id="caHeroSide" hidden><button type="button" class="ui-btn" id="caFetch" title="쿠팡 광고센터에서 이번 달 1일~오늘 키워드 보고서를 만들어 가져옵니다 · 크롬 확장 필요">
+            <div class="ca-hero-side" id="caHeroSide" hidden><button type="button" class="ui-btn" id="caFetch" title="쿠팡 광고센터에서 이번 달 1일~오늘 키워드 보고서를 만들어 가져옵니다 · 크롬 확장이 없으면(모바일) 서버가 대신 가져옵니다 · 매일 00:30 에는 서버가 저절로 받습니다">
               <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></span>
               <span class="lb">쿠팡윙 수집</span><span class="at" id="caFetchAt"></span></button></div>
           </div>
@@ -15138,6 +15138,9 @@ window.CsGuide=(function(){
     {name:'당일판매현황 수집', cat:'collect', where:'ERP 판매·재고 · 당일판매현황', days:[0,1,2,3,4,5,6], times:['11:00','14:00'], record:'당일판매현황 수집',
      desc:'낮 중간에 이지어드민 당일판매분요약표를 읽어 당일판매현황 화면만 새로 채워요(슬랙에는 보내지 않음).', task:'cron'},
     /* caffeinnos-automation/inventory_report.js · 막힌 날은 재고현황의 "어드민 수집" 단추(크롬 확장 ezadmin-extension · 사람은 로그인만) */
+    /* caffeinnos-automation/coupang_ads_report.js · 로그인은 VPS .env CP_ID·CP_PW(vps/coupang_pw.ps1) · 쿠팡윙 수집 단추(확장 없을 때 · 모바일)도 ezadmin_request.js 가 같은 것을 돌림 */
+    {name:'쿠팡광고 수집', cat:'collect', where:'ERP 판매채널 · 쿠팡 · 쿠팡광고성과', days:[0,1,2,3,4,5,6], times:['00:30'], record:'쿠팡광고 수집',
+     desc:'쿠팡 광고센터에서 이번 달 1일~어제 키워드 보고서(일별 · 모든 캠페인 · 캠페인>광고그룹>상품>키워드)를 만들어 내려받아 쿠팡광고성과 화면을 채워요.', task:'cron'},
     {name:'재고현황 수집', cat:'collect', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
     /* caffeinnos-automation/insta_insights.js · 토큰은 VPS instagram_token.json(7일마다 스스로 갱신) */
@@ -30953,11 +30956,37 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     if(fbtn.classList.contains('busy')){ msg('수집 중입니다 · 쿠팡 창에서 로그인해 주세요(그만두려면 그 창을 닫으세요)'); return; }
     const ext=document.documentElement.dataset.baroyamInvExt;
     const ver=(ext||'0').split('.').map(Number);
-    if(!ext){ msg('<b>크롬 확장 "김비서AI 확장프로그램"이 필요합니다</b> · 이 PC 크롬에 설치(재고현황 어드민 수집과 같은 확장)한 뒤 새로고침해 주세요. 지금은 쿠팡 광고센터에서 보고서를 직접 받아 "파일 올리기"로 넣을 수 있습니다.'); return; }
+    /* 크롬 확장이 없으면(모바일·확장 없는 PC) 서버가 수집 · 어드민 수집과 같은 길(brand-files ezjob/req → VPS ezadmin_request.js → coupang_ads_report.js) */
+    if(!ext){ serverFetch(); return; }
     if((ver[0]||0)*1000+(ver[1]||0)<1006){ msg('크롬 확장을 새 버전(1.6.0)으로 바꿔야 쿠팡윙 수집을 할 수 있습니다 · chrome://extensions 에서 이 확장의 새로고침(↻)을 누른 뒤 이 화면도 새로고침해 주세요'); return; }
     busy(true); msg('쿠팡 광고센터를 여는 중 · 이번 달 1일~오늘 · 일별 · 모든 캠페인 · 키워드(클릭 발생만)');
     window.postMessage({source:'baroyam-dashboard',type:'coupang-start',from:firstOfMonth(),to:kst()},location.origin);
   });
+  async function serverFetch(){
+    const DB=window.BAROYAM_DB;
+    busy(true);
+    try{
+      if(!DB||!DB.fileUpload||!(await DB.ensureSession())) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 눌러 주세요');
+      const name=Date.now()+'.'+Math.random().toString(36).slice(2,8)+'.json', t0=Date.now();
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      await DB.fileUpload('brand-files','ezjob/req/'+name,new Blob([JSON.stringify({v:1,kind:'coupang',at:new Date().toISOString(),by})],{type:'application/json'}));
+      msg('서버에 쿠팡윙 수집을 요청했습니다 · 쿠팡이 보고서를 만드는 데 몇 분 걸립니다(이 화면을 닫아도 서버는 계속 받아요)');
+      for(;;){
+        await new Promise(r=>setTimeout(r,4000));
+        const sec=(Date.now()-t0)/1000;
+        let res=null;
+        try{ const u=await DB.fileUrl('brand-files','ezjob/res/'+name,60); const r=await fetch(u,{cache:'no-store'}); res=r.ok?await r.json():null; }catch(e){}
+        if(res&&res.state==='failed') throw new Error(res.message||'쿠팡 광고센터에서 받지 못했습니다');
+        if(res&&res.state==='done') break;
+        if(res&&res.state==='running') msg('서버가 쿠팡 광고센터에서 보고서를 만들고 받는 중입니다 · '+Math.max(1,Math.round(sec/60))+'분째');
+        if(!res&&sec>150) throw new Error('서버가 요청을 받지 않았습니다(다른 수집이 도는 중일 수 있어요) · 잠시 뒤 다시 눌러 주세요');
+        if(sec>25*60) throw new Error('25분이 지나도 끝나지 않았습니다 · 잠시 뒤 새로고침해 주세요');
+      }
+      st.months={}; st.index=null; await paint();
+      msg('쿠팡윙 수집 완료(서버) · 화면을 새 숫자로 바꿨습니다',true);
+    }catch(e){ console.error(e); msg('<b>수집하지 못했습니다</b> · '+esc(e&&e.message||e)); }
+    busy(false); paintAt();
+  }
   window.addEventListener('message',async e=>{
     const d=e.data;
     if(e.source!==window||!d||d.source!=='baroyam-inv-ext') return;
