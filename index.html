@@ -6368,70 +6368,84 @@ window.BAROYAM_FONT=(function(){
   }
   /* 바로얌 AI 채팅 · 로고 버튼을 누르면 오른쪽 아래에 뜨는 채팅 창(2026-11-20 · 상담 콘솔 대신) ·
      보내면 VPS 대본 서비스(content_writer.js kind:'chat' · 지침 prompts/바로얌AI.md)가 Claude 로 답한다 ·
-     왼쪽은 대화 목록(이 브라우저에만 · 새 대화·이름 바꾸기·삭제 · 길면 스크롤), 오른쪽은 지금 대화 */
-  .aic{position:fixed;right:24px;bottom:116px;z-index:75;width:660px;max-width:calc(100vw - 32px);
-    height:min(700px,calc(100vh - 140px));display:flex;overflow:hidden;
-    background:var(--paper);border:1px solid var(--line);border-radius:20px;
-    box-shadow:0 24px 60px -18px rgba(0,0,0,.35);transform-origin:right bottom;animation:aicIn .18s ease-out}
+     왼쪽은 대화 목록(회원별 서버 기록 · 날짜로 묶음 · 길면 스크롤), 오른쪽은 지금 대화 · 머리는 baroyam AI 로고(logos/baroyam-ai.png) */
+  .aic{position:fixed;right:24px;bottom:116px;z-index:75;width:780px;max-width:calc(100vw - 32px);
+    height:min(800px,calc(100vh - 140px));display:flex;overflow:hidden;
+    background:var(--paper);border:1px solid var(--line);border-radius:22px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.38);transform-origin:right bottom;animation:aicIn .2s ease-out}
   .aic[hidden]{display:none}
-  @keyframes aicIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  @keyframes aicIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
   /* 왼쪽 대화 목록 */
-  .aic-side{flex:none;width:210px;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--line);min-height:0}
+  .aic-side{flex:none;width:236px;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--line);min-height:0}
   .aic.no-side .aic-side{display:none}
-  .aic-side-top{padding:14px 12px 8px}
-  .aic-side-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;font-size:11.5px;font-weight:500;color:var(--mute)}
+  .aic-side-top{padding:16px 14px 10px}
+  .aic-side-top .ui-btn{font-size:14.5px;height:40px}
+  .aic-side-head{display:flex;align-items:center;justify-content:space-between;padding:6px 12px 4px 18px;font-size:12.5px;font-weight:500;color:var(--mute)}
   .aic-side-head .ui-btn{color:var(--mute)}
-  .aic-list{flex:1;min-height:0;overflow-y:auto;padding:0 8px 12px;display:flex;flex-direction:column;gap:2px}
-  .aic-it{display:flex;align-items:center;gap:6px;padding:8px 8px 8px 10px;border-radius:10px;cursor:pointer;color:var(--body);font-size:13px}
+  .aic-list{flex:1;min-height:0;overflow-y:auto;padding:0 10px 14px;display:flex;flex-direction:column;gap:2px}
+  .aic-grp{font-size:12px;font-weight:500;color:var(--mute);padding:12px 8px 4px}
+  .aic-it{display:flex;align-items:center;gap:8px;padding:9px 8px 9px 10px;border-radius:10px;cursor:pointer;color:var(--body);font-size:14px;transition:background .12s}
   .aic-it:hover{background:var(--btn-soft)}
   .aic-it.on{background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:500}
-  .aic-it svg{flex:none;width:15px;height:15px;opacity:.7}
+  .aic-it svg{flex:none;width:16px;height:16px;opacity:.65}
   .aic-it .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .aic-it .act{display:none;flex:none;gap:2px}
   .aic-it:hover .act,.aic-it.on .act{display:flex}
-  .aic-it .act button{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:var(--mute)}
+  .aic-it .act button{all:unset;cursor:pointer;width:24px;height:24px;display:grid;place-items:center;border-radius:6px;color:var(--mute)}
   .aic-it .act button:hover{background:var(--paper);color:var(--ink)}
-  .aic-it .act svg{width:14px;height:14px;opacity:1}
-  .aic-it input{all:unset;flex:1;min-width:0;font:inherit;font-size:13px;color:var(--ink);border-bottom:1px solid var(--btn)}
+  .aic-it .act svg{width:15px;height:15px;opacity:1}
+  .aic-it input{all:unset;flex:1;min-width:0;font:inherit;font-size:14px;color:var(--ink);border-bottom:1px solid var(--btn)}
   .aic-it.wait .nm::after{content:' …';color:var(--mute)}
-  .aic-empty{padding:10px;font-size:12px;color:var(--mute)}
+  .aic-empty{padding:12px 10px;font-size:13px;color:var(--mute)}
   /* 오른쪽 대화 */
   .aic-main{flex:1;min-width:0;display:flex;flex-direction:column}
-  .aic-head{display:flex;align-items:center;gap:8px;padding:12px 12px 10px 12px;border-bottom:1px solid var(--line)}
-  .aic-head img{width:30px;height:30px;border-radius:50%;flex:none}
-  .aic-head .t{flex:1;min-width:0}
-  .aic-head b{display:block;font-size:14.5px;font-weight:600;color:var(--ink)}
-  .aic-head small{display:block;font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .aic-body{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:10px}
-  .aic-intro{background:var(--btn-soft);border-radius:14px;padding:12px 14px;font-size:12.5px;color:var(--body);line-height:1.6}
-  .aic-intro b{display:block;font-size:13.5px;font-weight:600;color:var(--ink);text-align:center;margin-bottom:4px}
-  .aic-intro ul{margin:0;padding-left:16px}
-  .aic-sugs{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
-  .aic-sugs .ui-chip{max-width:90%;white-space:normal;text-align:left;height:auto;min-height:30px;padding:6px 12px}
-  .aic-msg{max-width:86%;font-size:13.5px;line-height:1.6;padding:9px 13px;border-radius:16px;white-space:pre-wrap;word-break:break-word}
-  .aic-msg.me{align-self:flex-end;background:var(--btn);color:#fff;border-bottom-right-radius:5px}
-  .aic-msg.ai{align-self:flex-start;background:var(--chip-flat,var(--btn-soft));color:var(--ink);border-bottom-left-radius:5px}
+  .aic-head{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;border-bottom:1px solid var(--line)}
+  .aic-brand{height:26px;width:auto;display:block;flex:none}
+  .aic-head .t{flex:1;min-width:0;font-size:13.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px}
+  .aic-body{flex:1;overflow-y:auto;padding:20px 22px 10px;display:flex;flex-direction:column;gap:14px}
+  /* 처음 화면 · 가운데 인사 + 추천 질문 카드 */
+  .aic-hello{margin:auto 0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:10px 0}
+  .aic-hello img{height:34px;margin-bottom:8px}
+  .aic-hello h3{margin:0;font-size:21px;font-weight:600;color:var(--ink)}
+  .aic-hello p{margin:0;font-size:14px;color:var(--mute);line-height:1.6}
+  .aic-sugs{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:18px}
+  .aic-sug{all:unset;box-sizing:border-box;cursor:pointer;text-align:left;padding:13px 15px;border:1px solid var(--line);border-radius:14px;
+    font-size:14px;line-height:1.5;color:var(--body);background:var(--paper);transition:border-color .15s,background .15s}
+  .aic-sug:hover{border-color:var(--btn);background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .aic-note{margin-top:16px;font-size:12.5px;color:var(--mute);line-height:1.6}
+  /* 말풍선 · 내 질문은 오른쪽 색 말풍선, 답은 왼쪽 동그란 로고 + 연한 카드 */
+  .aic-msg{font-size:15px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+  .aic-msg.me{align-self:flex-end;max-width:78%;background:var(--btn);color:#fff;padding:11px 16px;border-radius:18px 18px 6px 18px}
+  .aic-row-ai{display:flex;gap:10px;align-items:flex-start;max-width:92%}
+  .aic-av{flex:none;width:32px;height:32px;border-radius:50%;object-fit:cover;margin-top:2px}
+  .aic-ai{min-width:0;display:flex;flex-direction:column;gap:4px}
+  .aic-msg.ai{background:var(--bg);color:var(--ink);padding:12px 16px;border-radius:6px 18px 18px 18px}
   .aic-msg.ai b{font-weight:600}
-  .aic-msg.err{align-self:flex-start;background:transparent;border:1px solid var(--neg,#d33);color:var(--neg,#d33);font-size:12.5px}
-  .aic-msg.wait{color:var(--mute)}
-  .aic-msg.wait i{display:inline-block;width:6px;height:6px;margin-right:3px;border-radius:50%;background:currentColor;animation:aicDot 1s infinite}
+  .aic-msg.err{background:transparent;border:1px solid var(--neg,#d33);color:var(--neg,#d33);font-size:14px;padding:10px 14px;border-radius:12px}
+  .aic-msg.wait{color:var(--mute);font-size:14px}
+  .aic-msg.wait i{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:currentColor;animation:aicDot 1s infinite}
   .aic-msg.wait i:nth-child(2){animation-delay:.15s}.aic-msg.wait i:nth-child(3){animation-delay:.3s}
   @keyframes aicDot{0%,80%,100%{opacity:.25}40%{opacity:1}}
-  .aic-copy{all:unset;cursor:pointer;font-size:11px;color:var(--mute);margin:-4px 0 0 6px;align-self:flex-start}
-  .aic-copy:hover{color:var(--ink)}
-  .aic-foot{padding:10px 12px 12px}
-  .aic-box{border:1.5px solid var(--line);border-radius:16px;padding:10px 12px 8px;background:var(--paper);transition:border-color .15s}
-  .aic-box:focus-within{border-color:var(--btn)}
-  .aic-box textarea{all:unset;box-sizing:border-box;display:block;width:100%;min-height:58px;max-height:160px;overflow-y:auto;
-    font:inherit;font-size:13.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap}
+  .aic-copy{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--mute);padding:2px 6px;border-radius:6px;align-self:flex-start}
+  .aic-copy:hover{color:var(--ink);background:var(--bg)}
+  .aic-copy svg{width:13px;height:13px}
+  .aic-foot{padding:12px 18px 16px}
+  .aic-box{border:1.5px solid var(--line);border-radius:18px;padding:12px 14px 10px;background:var(--paper);transition:border-color .15s,box-shadow .15s}
+  .aic-box:focus-within{border-color:var(--btn);box-shadow:0 0 0 4px var(--btn-soft)}
+  .aic-box textarea{all:unset;box-sizing:border-box;display:block;width:100%;min-height:64px;max-height:180px;overflow-y:auto;
+    font:inherit;font-size:15px;line-height:1.6;color:var(--ink);white-space:pre-wrap}
   .aic-box textarea::placeholder{color:var(--mute)}
-  .aic-row{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
-  .aic-row small{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
-  @media (max-width:1280px),(max-height:720px){ .aic{right:18px;bottom:90px;height:min(640px,calc(100vh - 110px))} }
+  .aic-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+  .aic-row small{font-size:12.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+  .aic-row .ui-btn{font-size:14px;gap:6px}
+  .aic-row .ui-btn svg{width:15px;height:15px}
+  .aic-hint{margin:8px 4px 0;font-size:12px;color:var(--mute);text-align:center}
+  @media (max-width:1280px),(max-height:720px){ .aic{right:18px;bottom:90px;height:min(680px,calc(100vh - 110px))} }
   /* 좁은 화면은 목록을 대화 위에 겹쳐 띄운다(☰ 로 열고 닫음) */
-  @media (max-width:700px){
+  @media (max-width:760px){
     .aic{right:8px;left:8px;width:auto;max-width:none;bottom:84px}
     .aic-side{position:absolute;inset:0 auto 0 0;z-index:2;box-shadow:8px 0 24px -12px rgba(0,0,0,.3)}
+    .aic-sugs{grid-template-columns:1fr}
   }
   @media (prefers-reduced-motion:reduce){ .aic{animation:none} .aic-msg.wait i{animation:none} }
   /* 브랜드전략실 진행도 상자 · 로고 버튼 왼쪽에 가로로 긴 네모 · 전체 진행도 막대 하나 ·
@@ -12947,18 +12961,19 @@ window.BAROYAM_FONT=(function(){
     </aside>
     <div class="aic-main">
       <div class="aic-head">
-        <button type="button" class="ui-btn ghost sm icon" id="aiChatSide" aria-label="대화 목록 열고 닫기" title="대화 목록"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <img id="aiChatLogo" alt="" aria-hidden="true">
-        <div class="t"><b>바로얌 AI</b><small id="aiChatSub">궁금한 것을 물어보면 Claude 가 답해요</small></div>
+        <button type="button" class="ui-btn ghost sm icon" id="aiChatSide" aria-label="대화 목록 열고 닫기" title="대화 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <img class="aic-brand" src="logos/baroyam-ai.png" alt="baroyam AI">
+        <div class="t" id="aiChatSub"></div>
         <button type="button" class="ui-btn ghost sm icon" id="aiChatClose" aria-label="닫기" title="닫기">✕</button>
       </div>
       <div class="aic-body" id="aiChatBody"></div>
       <div class="aic-foot">
         <div class="aic-box">
-          <textarea id="aiChatInput" maxlength="600" rows="3" placeholder="궁금한 것을 구체적으로 적어 주세요.&#10;(예: 홀떡피자 인스타 캡션 아이디어 3개 줘)"></textarea>
+          <textarea id="aiChatInput" maxlength="600" rows="3" placeholder="궁금한 것을 구체적으로 적어 주세요.&#10;(예: 메타광고 바로얌블프 캠페인 분석해 줘)"></textarea>
           <div class="aic-row"><small id="aiChatCount">0/600</small>
-            <button type="button" class="ui-btn primary sm" id="aiChatSend">보내기</button></div>
+            <button type="button" class="ui-btn primary sm" id="aiChatSend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>보내기</button></div>
         </div>
+        <p class="aic-hint">Enter 보내기 · Shift+Enter 줄바꿈 · AI 답변은 틀릴 수 있어요</p>
       </div>
     </div>
   </section>
@@ -14333,12 +14348,20 @@ syncFromSheets(false).catch(err=>{
   const titleOf=c=>c.title||(((c.msgs||[]).find(m=>m.role==='user')||{}).text||'새 대화').replace(/\s+/g,' ').slice(0,40);
   const cur=()=>S.convs[S.cur]||null;
 
+  /* 날짜로 묶는다 · 오늘 / 어제 / 지난 7일 / 지난 30일 / 이전 */
+  function grpOf(at){
+    const d0=new Date(); d0.setHours(0,0,0,0);
+    const t=d0.getTime(), x=+at||0;
+    return x>=t?'오늘':x>=t-864e5?'어제':x>=t-7*864e5?'지난 7일':x>=t-30*864e5?'지난 30일':'이전';
+  }
   function paintList(){
     const ids=Object.keys(S.convs).filter(id=>{ const c=S.convs[id]; return c.msgs==null||c.msgs.length||pending[id]; }).sort((a,b)=>S.convs[b].at-S.convs[a].at);
+    let last='';
     list.innerHTML=ids.length?ids.map(id=>{
-      const c=S.convs[id], on=id===S.cur;
-      if(editing===id) return '<div class="aic-it on" data-id="'+id+'">'+IC_CHAT+'<input value="'+esc(titleOf(c))+'" maxlength="40" aria-label="대화 이름"></div>';
-      return '<div class="aic-it'+(on?' on':'')+(pending[id]?' wait':'')+'" data-id="'+id+'" title="'+esc(titleOf(c))+'">'+IC_CHAT
+      const c=S.convs[id], on=id===S.cur, g=grpOf(c.at), head=g!==last?'<div class="aic-grp">'+g+'</div>':'';
+      last=g;
+      if(editing===id) return head+'<div class="aic-it on" data-id="'+id+'">'+IC_CHAT+'<input value="'+esc(titleOf(c))+'" maxlength="40" aria-label="대화 이름"></div>';
+      return head+'<div class="aic-it'+(on?' on':'')+(pending[id]?' wait':'')+'" data-id="'+id+'" title="'+esc(titleOf(c))+'">'+IC_CHAT
         +'<span class="nm">'+esc(titleOf(c))+'</span><span class="act">'
         +'<button type="button" data-ren aria-label="이름 바꾸기" title="이름 바꾸기">'+IC_PEN+'</button>'
         +'<button type="button" data-del aria-label="삭제" title="삭제">'+IC_DEL+'</button></span></div>';
@@ -14355,27 +14378,31 @@ syncFromSheets(false).catch(err=>{
       ed.addEventListener('blur',()=>done(true));
     }
   }
-  function paintHead(){ const c=cur(); sub.textContent=c&&(c.msgs==null||c.msgs.length)?titleOf(c):'궁금한 것을 물어보면 Claude 가 답해요'; }
+  function paintHead(){ const c=cur(); sub.textContent=c&&(c.msgs==null||c.msgs.length)?titleOf(c):''; }
+  const AV=()=>{ try{ return document.querySelector('.sb-logo').src; }catch(e){ return ''; } };
+  const IC_COPY='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+  const aiRow=inner=>'<div class="aic-row-ai"><img class="aic-av" src="'+AV()+'" alt="" aria-hidden="true"><div class="aic-ai">'+inner+'</div></div>';
   function paint(){
     const c=cur(), msgs=c&&c.msgs?c.msgs:[];
     let h='';
     if(!mid){
-      h='<div class="aic-intro"><b>프로필을 먼저 골라 주세요</b>대화 기록은 프로필마다 따로 저장돼요.</div>';
+      h='<div class="aic-hello"><img src="logos/baroyam-ai.png" alt=""><h3>프로필을 먼저 골라 주세요</h3><p>대화 기록은 프로필마다 따로 저장돼요.</p></div>';
     }else if(c&&c.msgs==null){
-      h='<div class="aic-msg ai wait"><i></i><i></i><i></i> 대화를 불러오는 중</div>';
+      h=aiRow('<div class="aic-msg ai wait"><i></i><i></i><i></i> 대화를 불러오는 중</div>');
     }else if(!msgs.length&&!pending[S.cur]){
-      h='<div class="aic-intro"><b>무엇이든 물어보세요</b><ul>'
-        +'<li>AI 답변은 틀릴 수 있어요. 숫자·정책은 한 번 더 확인해 주세요.</li>'
-        +'<li>메타광고·쿠팡광고·자사몰 판매·재고·당일판매·인스타·유튜브·프로젝트는 ERP 데이터를 직접 읽고 답해요.</li>'
-        +'<li>대화는 회사 서버에 내 프로필 몫으로 저장돼 어느 PC에서든 이어 볼 수 있어요. 비밀번호·고객 개인정보는 적지 말아 주세요.</li></ul></div>'
-        +'<div class="aic-sugs">'+SUGS.map(q=>'<button type="button" class="ui-chip" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('')+'</div>';
+      let who=''; try{ who=meName(); }catch(e){}
+      h='<div class="aic-hello"><img src="logos/baroyam-ai.png" alt="">'
+        +'<h3>'+(who?esc(who)+'님, ':'')+'무엇을 도와드릴까요?</h3>'
+        +'<p>메타광고·쿠팡광고·자사몰 판매·재고·당일판매·인스타·유튜브·프로젝트는<br>ERP 데이터를 직접 읽고 답해요.</p>'
+        +'<div class="aic-sugs">'+SUGS.map(q=>'<button type="button" class="aic-sug" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('')+'</div>'
+        +'<p class="aic-note">대화는 회사 서버에 내 프로필 몫으로 저장돼 어느 PC에서든 이어 볼 수 있어요.<br>비밀번호·고객 개인정보는 적지 말아 주세요.</p></div>';
     }
     msgs.forEach((m,i)=>{
       if(m.role==='user') h+='<div class="aic-msg me">'+esc(m.text)+'</div>';
-      else if(m.role==='err') h+='<div class="aic-msg err">'+esc(m.text)+'</div>';
-      else h+='<div class="aic-msg ai">'+fmt(m.text)+'</div><button type="button" class="aic-copy" data-copy="'+i+'">복사</button>';
+      else if(m.role==='err') h+=aiRow('<div class="aic-msg err">'+esc(m.text)+'</div>');
+      else h+=aiRow('<div class="aic-msg ai">'+fmt(m.text)+'</div><button type="button" class="aic-copy" data-copy="'+i+'">'+IC_COPY+'<span>복사</span></button>');
     });
-    if(pending[S.cur]) h+='<div class="aic-msg ai wait"><i></i><i></i><i></i> '+esc(pending[S.cur])+'</div>';
+    if(pending[S.cur]) h+=aiRow('<div class="aic-msg ai wait"><i></i><i></i><i></i> '+esc(pending[S.cur])+'</div>');
     body.innerHTML=h;
     body.scrollTop=body.scrollHeight;
     send.disabled=!mid||!!pending[S.cur]||!!(c&&c.msgs==null);
@@ -14433,7 +14460,7 @@ syncFromSheets(false).catch(err=>{
   body.addEventListener('click',e=>{
     const q=e.target.closest('[data-q]'); if(q){ inp.value=q.dataset.q; ask(); return; }
     const b=e.target.closest('[data-copy]'), c=cur();
-    if(b&&c&&c.msgs){ const m=c.msgs[+b.dataset.copy]; if(m) navigator.clipboard.writeText(m.text).then(()=>{ b.textContent='복사됨'; setTimeout(()=>b.textContent='복사',1200); }).catch(()=>{}); }
+    if(b&&c&&c.msgs){ const m=c.msgs[+b.dataset.copy]; if(m) navigator.clipboard.writeText(m.text).then(()=>{ const t=b.querySelector('span'); t.textContent='복사됨'; setTimeout(()=>t.textContent='복사',1200); }).catch(()=>{}); }
   });
   const upd=()=>{ cnt.textContent=inp.value.length+'/600'; };
   inp.addEventListener('input',upd);
