@@ -6428,6 +6428,31 @@ window.BAROYAM_FONT=(function(){
   .sh-note[hidden]{display:none}
   .sh-note.ok{background:var(--pos-soft);color:var(--pos)} .sh-note.bad{background:var(--neg-soft);color:var(--neg)} .sh-note.run{background:var(--btn-soft);color:var(--btn-soft-ink)}
   .sh-link-note{margin:22px 0 -8px}
+  /* 쇼핑몰관리 확인 창 · 브라우저 confirm 대신 */
+  .sh-ask{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:16px;background:rgba(20,18,16,.38);animation:shAskIn .15s ease}
+  .sh-ask[hidden]{display:none}
+  @keyframes shAskIn{from{opacity:0}to{opacity:1}}
+  .sh-ask-card{width:min(520px,100%);max-height:min(640px,calc(100vh - 32px));display:flex;flex-direction:column;border-radius:18px;background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 60px -20px rgba(0,0,0,.4);overflow:hidden}
+  .sh-ask-hd{display:flex;align-items:center;gap:12px;padding:20px 22px 6px}
+  .sh-ask-hd img{width:38px;height:38px;border-radius:11px;object-fit:contain;border:1px solid var(--line);padding:3px;background:var(--paper)}
+  .sh-ask-hd .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .sh-ask-hd h3{margin:0;font-size:17px;font-weight:600;color:var(--ink)}
+  .sh-ask-hd p{margin:2px 0 0;font-size:13px;color:var(--mute)}
+  .sh-ask-bd{padding:12px 22px 4px;overflow:auto;font-size:13.5px;color:var(--body);line-height:1.6}
+  .sh-ask-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .sh-ask-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--line)}
+  .sh-ask-row:first-child{border-top:0}
+  .sh-ask-nm{flex:1;min-width:0}
+  .sh-ask-nm strong{display:block;font-size:13.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sh-ask-nm em{display:block;font-style:normal;font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sh-ask-chg{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .sh-ask-chg span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mute);white-space:nowrap}
+  .sh-ask-chg b{font-weight:600;color:var(--ink)}
+  .sh-ask-chg .sh-st{font-style:normal;height:22px;padding:0 8px;font-size:11.5px;cursor:default}
+  .sh-ask-more{padding:8px 14px;font-size:12.5px;color:var(--mute);background:var(--bg);border-top:1px solid var(--line)}
+  .sh-ask-tip{display:flex;gap:8px;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:12.5px;color:var(--mute);line-height:1.5}
+  .sh-ask-tip svg{flex:none;margin-top:2px}
+  .sh-ask-ft{display:flex;justify-content:flex-end;gap:8px;padding:16px 22px 20px}
   img.sh-thumb{object-fit:cover;background:var(--bg);border:1px solid var(--line)}
   .sh-noinv{font-size:12px;color:var(--mute)}
   .sh-link-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:22px 0 14px;font-size:13px;color:var(--mute)}
@@ -36325,6 +36350,25 @@ window.baroyamAsk=function(title,body,okText){
   }
   function paint(){ paintChans(); paintState(); paintBody(); paintDock(); }
 
+  /* 확인 창 · ask({logo|icon, title, sub, html, ok, cancel}) → Promise<boolean> · Esc·바깥 누르기 = 취소 */
+  function ask(o){
+    let el=$('shAsk');
+    if(!el){ el=document.createElement('div'); el.id='shAsk'; el.className='sh-ask'; el.hidden=true; document.body.appendChild(el); }
+    const icon=o.logo?'<img src="'+o.logo+'" alt="">':'<span class="ic"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg></span>';
+    el.innerHTML='<div class="sh-ask-card" role="dialog" aria-modal="true" aria-labelledby="shAskT"><div class="sh-ask-hd">'+icon+'<div><h3 id="shAskT">'+esc(o.title)+'</h3>'+(o.sub?'<p>'+esc(o.sub)+'</p>':'')+'</div></div>'
+      +'<div class="sh-ask-bd">'+(o.html||'')+'</div>'
+      +'<div class="sh-ask-ft"><button type="button" class="ui-btn ghost" data-a="0">'+esc(o.cancel||'취소')+'</button><button type="button" class="ui-btn primary" data-a="1">'+esc(o.ok||'확인')+'</button></div></div>';
+    el.hidden=false;
+    return new Promise(res=>{
+      const done=v=>{ el.hidden=true; el.onclick=null; document.removeEventListener('keydown',key,true); res(v); };
+      const key=e=>{ if(e.key==='Escape'){ e.preventDefault(); done(false); } };
+      el.onclick=e=>{ const b=e.target.closest('[data-a]'); if(b) done(b.dataset.a==='1'); else if(e.target===el) done(false); };
+      document.addEventListener('keydown',key,true);
+      setTimeout(()=>{ const b=el.querySelector('[data-a="1"]'); if(b) b.focus(); },30);
+    });
+  }
+  const TIP=t=>'<div class="sh-ask-tip"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><span>'+t+'</span></div>';
+
   /* 알림 줄 · kind: ok / bad / run(진행 중 · 저절로 안 사라짐) */
   function note(t,kind,box){
     const n=$(box||'shNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(box==='shLinkNote'?' sh-link-note':'')+(kind?' '+kind:'');
@@ -36352,8 +36396,18 @@ window.baroyamAsk=function(title,body,okText){
     if(!REAL[S.chan]){ note('예시 화면이라 판매처에 보내지 않았습니다. 이 판매처는 아직 연결되지 않았어요.','bad'); return; }
     const ch=changesOf(S.chan);
     if(!ch.length){ note('보낼 고침이 없습니다.','bad'); return; }
-    const lines=ch.slice(0,8).map(c=>'· '+c.label+(c.qty?' 재고 '+c.qty.from+' → '+c.qty.to:'')+(c.sell?(c.sell.to?' 판매중으로':' 판매안함으로'):'')+(c.prod?(c.prod.to?' 판매함으로':' 판매안함으로'):'')).join('\n');
-    if(!confirm('카페24에 '+ch.length+'개를 바로 반영합니다.\n\n'+lines+(ch.length>8?'\n… 외 '+(ch.length-8)+'개':'')+'\n\n그사이 주문으로 카페24 재고가 바뀐 옵션은 덮어쓰지 않고 건너뜁니다.')) return;
+    const pill=(on,t)=>'<i class="sh-st '+(on?'on':'stop')+'">'+t+'</i>';
+    const rows=ch.slice(0,30).map(c=>{
+      const i=c.label.lastIndexOf(' · '), prod=c.prod?c.label.replace(/ \(상품\)$/,''):(i>0?c.label.slice(0,i):c.label), opt=c.prod?'상품 전체':(i>0?c.label.slice(i+3):'');
+      const parts=[];
+      if(c.qty) parts.push('<span>재고 '+c.qty.from+'개 → <b>'+c.qty.to+'개</b></span>');
+      if(c.sell) parts.push('<span>'+pill(c.sell.from,c.sell.from?'판매중':'판매안함')+' → '+pill(c.sell.to,c.sell.to?'판매중':'판매안함')+'</span>');
+      if(c.prod) parts.push('<span>'+pill(c.prod.from,c.prod.from?'판매함':'판매안함')+' → '+pill(c.prod.to,c.prod.to?'판매함':'판매안함')+'</span>');
+      return '<div class="sh-ask-row"><div class="sh-ask-nm"><strong title="'+esc(prod)+'">'+esc(prod)+'</strong><em title="'+esc(opt)+'">'+esc(opt)+'</em></div><div class="sh-ask-chg">'+parts.join('')+'</div></div>';
+    }).join('');
+    const go=await ask({logo:'logos/cafe24.png',title:'카페24에 반영할까요?',sub:ch.length+'개를 바로 바꿉니다',ok:'반영하기',
+      html:'<div class="sh-ask-list">'+rows+(ch.length>30?'<div class="sh-ask-more">… 외 '+(ch.length-30)+'개</div>':'')+'</div>'+TIP('그사이 주문으로 카페24 재고가 바뀐 옵션은 덮어쓰지 않고 건너뜁니다. 1분 안팎 걸려요.')});
+    if(!go) return;
     busy=true; paintDock(); note('카페24에 보내는 중…','run');
     try{
       const name=await upload('shop/req',{v:1,kind:'push',chan:S.chan,by:meName(),at:new Date().toISOString(),changes:ch});
@@ -36369,7 +36423,7 @@ window.baroyamAsk=function(title,body,okText){
   async function fetchNow(){
     if(S.chan!=='cafe24'){ note('이 판매처는 아직 연결되지 않았습니다. 연동 설정 탭에서 판매처마다 필요한 것을 봅니다.','bad'); return; }
     if(!STATUS||!STATUS.read){ note('카페24 상품 권한이 아직 없습니다 · 연동 설정 탭에서 카페24 연결하기를 눌러 주세요','bad'); return; }
-    if(dirtyIn('cafe24')&&!confirm('반영하지 않은 고침이 있어요. 새로 받으면 고친 값이 사라집니다. 계속할까요?')) return;
+    if(dirtyIn('cafe24')&&!(await ask({logo:'logos/cafe24.png',title:'고친 값을 버리고 새로 받을까요?',sub:'반영하지 않은 고침 '+dirtyIn('cafe24')+'개',ok:'새로 받기',html:TIP('새로 받으면 아직 카페24에 반영하지 않은 고침이 사라집니다.')}))) return;
     const b=$('shFetch'); b.disabled=true; note('카페24 상품을 받는 중…','run');
     try{
       const name=await upload('shop/req',{v:1,kind:'sync',chan:'cafe24',by:meName(),at:new Date().toISOString()});
@@ -36399,7 +36453,8 @@ window.baroyamAsk=function(title,body,okText){
     if(id!=='cafe24'){ alert(c.name+' 연결은 아직 준비 중입니다. 준비물: '+c.need); return; }
     if(!STATUS||!STATUS.authUrl) await loadCafe24();   /* 아직 못 읽었으면 지금 한 번 더 읽는다 */
     if(!STATUS||!STATUS.authUrl){ alert('서버의 카페24 연결 정보를 읽지 못했어요. 로그인이 끝났는지 확인하고 잠시 뒤 다시 눌러 주세요.'); return; }
-    if(!confirm('카페24 승인 화면으로 갑니다.\n\n쇼핑몰 관리자로 로그인된 상태에서 "동의"를 누르면 이 ERP 로 돌아와 연결을 저절로 마무리합니다(1분 안에).\n\n먼저 카페24 개발자센터 앱 권한에 상품 읽기·쓰기를 켜 두어야 합니다.')) return;
+    if(!(await ask({logo:'logos/cafe24.png',title:'카페24 승인 화면으로 갈까요?',sub:'쇼핑몰 관리자로 로그인된 브라우저에서 해 주세요',ok:'승인하러 가기',
+      html:'"동의"를 누르면 이 ERP 로 돌아와 연결을 저절로 마무리합니다. 돌아온 뒤 "연결 완료"가 뜰 때까지 창을 닫지 마세요.'+TIP('먼저 카페24 개발자센터 앱 권한에 상품 읽기·쓰기가 켜져 있어야 합니다.')}))) return;
     location.href=STATUS.authUrl;
   }
   /* 카페24 승인 뒤 돌아왔을 때 · ?code=…&state=baroyam-shop → code 를 서버로 넘기고 주소에서 지운다 */
