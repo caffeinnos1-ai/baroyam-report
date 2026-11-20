@@ -31879,18 +31879,16 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         draw(); return;
       }
       if(e.target.closest('[data-more]')){ st.kmax+=200; draw(); return; }
-      /* 키워드 고르기 · 그냥 누르기 = 그 줄만(다시 누르면 해제) · Ctrl/⌘ = 더하고 빼기 · Shift = 마지막으로 누른 줄부터 범위 */
+      /* 키워드 고르기(11-20 사용자) · 누를 때마다 그 줄을 더하고, 같은 줄을 다시 누르면 뺀다 · 다른 줄을 눌러도 고른 것은 그대로 ·
+         Shift = 마지막으로 누른 줄부터 범위를 더함 · 모두 풀기는 선택 해제(또는 Esc) */
       const tr=e.target.closest('tr[data-i]'); if(!tr) return;
       if(kdragged){ kdragged=false; return; }   /* 끌어서 고른 뒤 따라오는 click 은 무시 */
       const i=+tr.dataset.i, kw=kshow[i]; if(kw==null) return;
       if(e.shiftKey&&st.kanc!=null&&kshow.includes(st.kanc)){
         const a=kshow.indexOf(st.kanc), lo=Math.min(a,i), hi=Math.max(a,i);
-        if(!(e.ctrlKey||e.metaKey)) st.ksel.clear();
         for(let j=lo;j<=hi;j++) st.ksel.add(kshow[j]);
-      }else if(e.ctrlKey||e.metaKey){
-        if(st.ksel.has(kw)) st.ksel.delete(kw); else st.ksel.add(kw); st.kanc=kw;
       }else{
-        const only=st.ksel.size===1&&st.ksel.has(kw); st.ksel.clear(); if(!only) st.ksel.add(kw); st.kanc=kw;
+        if(st.ksel.has(kw)) st.ksel.delete(kw); else st.ksel.add(kw); st.kanc=kw;
       }
       paintKsel();
     });
@@ -31911,7 +31909,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       const tr=e.target.closest('tr[data-i]'); if(!tr||e.button!==0) return;
       e.preventDefault();   /* 글자가 드래그 선택되지 않게 */
       if(e.shiftKey) return;
-      kdrag={start:+tr.dataset.i,last:+tr.dataset.i,moved:false,base:(e.ctrlKey||e.metaKey)?new Set(st.ksel):new Set(),x:e.clientX,y:e.clientY,t:0};
+      kdrag={start:+tr.dataset.i,last:+tr.dataset.i,moved:false,base:new Set(st.ksel),x:e.clientX,y:e.clientY,t:0};
       const tick=()=>{
         if(!kdrag) return;
         const edge=70, y=kdrag.y, v=y<edge?-(edge-y):y>innerHeight-edge?(y-(innerHeight-edge)):0;
@@ -32260,7 +32258,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const k=st.ksort.k, dir=st.ksort.dir;
     kws.sort((a,b)=>(k==='kw'?a.kw.localeCompare(b.kw,'ko'):(a[k]-b[k]))*dir||(b.cost-a.cost));
     const wasteCost=kws.filter(o=>o.cost>0&&!o.rev).reduce((a,o)=>a+o.cost,0);
-    $('caKwSub').textContent=won(kws.length)+'개'+(wasteCost?' · 매출 없이 쓴 광고비 '+won(wasteCost)+'원':'')+' · 줄을 눌러 고르고(Shift 범위 · Ctrl 더하기) Ctrl+C 로 복사';
+    $('caKwSub').textContent=won(kws.length)+'개'+(wasteCost?' · 매출 없이 쓴 광고비 '+won(wasteCost)+'원':'')+' · 누를 때마다 더해 고름(다시 누르면 뺌 · Shift 범위 · 끌기)';
     const th=(key,label,cls)=>'<th class="'+(cls||'')+(k===key?' on':'')+'"><button type="button" data-sort="'+key+'">'+label+(k===key?(dir<0?DOWN_SVG:UP_SVG):SORT_SVG)+'</button></th>';
     /* 키워드는 모두 그린다(11-20 사용자 · 더 보기 없음) */
     const show=kws;
