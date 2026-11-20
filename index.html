@@ -5251,6 +5251,14 @@ window.BAROYAM_FONT=(function(){
   .ca-plot .xl{font-size:11px;fill:var(--mute);text-anchor:middle}
   .ca-plot .ln{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
   .ca-plot .ar{opacity:.08;stroke:none}
+  /* 기간을 바꾸면 선이 왼쪽부터 그려지고(pathLength=1) 면·점선·글자가 떠오른다 */
+  .ca-plot svg.anim .ln{stroke-dasharray:1;animation:caDraw .9s cubic-bezier(.3,.7,.2,1) both}
+  .ca-plot svg.anim .ar{animation:caArea .9s ease both}
+  .ca-plot svg.anim :is(.mo,.mol,.xl,.yl){animation:caFade .5s ease both}
+  @keyframes caDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+  @keyframes caArea{from{opacity:0;transform:translateY(8px)}to{opacity:.08;transform:none}}
+  @keyframes caFade{from{opacity:0}to{opacity:1}}
+  .ca-plot-empty{height:254px;display:grid;place-items:center;font-size:13.5px;color:var(--mute);border:1px dashed var(--line);border-radius:12px}
   .ca-plot .cx{stroke:var(--mute);stroke-width:1;stroke-dasharray:3 3}
   .ca-plot .dt{stroke:var(--paper);stroke-width:2}
   .ca-plot .hit{fill:transparent;cursor:crosshair}
@@ -31788,12 +31796,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       mode:'range', value:st.range, max:kst(), placeholder:'기간 선택',
       presets:['yesterday','last7','last30','month','prevMonth','custom'],
       resetValue:{start:firstOfMonth(),end:kst()},
-      onChange:v=>{ st.range=v||{start:firstOfMonth(),end:kst()}; st.day=''; paint(); },
+      onChange:v=>{ st.range=v||{start:firstOfMonth(),end:kst()}; st.day=''; st.anim=true; paint(); },
     });
     /* 일별 추이 머리 오른쪽 빠른 기간(11-20 사용자) · 1일 = 데이터가 있는 마지막 날 */
     $('caQuick').addEventListener('click',e=>{
       const b=e.target.closest('[data-q]'); if(!b) return;
-      st.range=quickRange(b.dataset.q); st.day='';
+      st.range=quickRange(b.dataset.q); st.day=''; st.anim=true;
       if(st.picker&&st.picker.set) st.picker.set(st.range);
       paint();
     });
@@ -32011,7 +32019,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   function paintTrend(){
     paintLegend();
-    const box=$('caPlot'); if(!box||!trendDays.length){ if(box) box.innerHTML=''; return; }
+    const box=$('caPlot'); if(!box) return;
+    /* 기간에 데이터가 없어도 상자는 그대로 두고 안내만(11-20 사용자 · 저번달 등) */
+    if(!trendDays.length){ box.innerHTML='<div class="ca-plot-empty">이 기간에는 광고 기록이 없습니다</div>'; st.anim=false; return; }
+    /* 빠른 기간·달력으로 기간을 바꾼 직후에만 선이 왼쪽부터 그려지고 면이 떠오른다 */
+    const anim=st.anim&&!matchMedia('(prefers-reduced-motion: reduce)').matches; st.anim=false;
     const W=Math.max(320,box.clientWidth||900), H=254, L=54, R=14, Tp=28, B=30;
     const days=trendDays, n=days.length, on=SER.filter(x=>!off.has(x.k));
     const mx=niceMax(Math.max(1,...days.map(o=>Math.max(...on.map(x=>o[x.k]||0),0))));
@@ -32031,9 +32043,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(!pts.length) return;
       const n=pts.length;
       if(x.k==='rev'&&pts.length>1) lines+='<path class="ar" d="'+smooth(pts)+' L'+pts[n-1][0].toFixed(1)+','+Y(0).toFixed(1)+' L'+pts[0][0].toFixed(1)+','+Y(0).toFixed(1)+' Z" style="fill:'+x.c+'"/>';
-      lines+=pts.length>1?'<path class="ln" d="'+smooth(pts)+'" style="stroke:'+x.c+'"/>':'<circle cx="'+pts[0][0]+'" cy="'+pts[0][1]+'" r="4" style="fill:'+x.c+'"/>';
+      lines+=pts.length>1?'<path class="ln" pathLength="1" d="'+smooth(pts)+'" style="stroke:'+x.c+'"/>':'<circle cx="'+pts[0][0]+'" cy="'+pts[0][1]+'" r="4" style="fill:'+x.c+'"/>';
     });
-    box.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="일별 광고매출·광고비">'+g+lines
+    box.innerHTML='<svg'+(anim?' class="anim"':'')+' width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="일별 광고매출·광고비">'+g+lines
       +'<line class="cx" id="caCx" y1="'+Tp+'" y2="'+(H-B)+'" x1="0" x2="0" style="opacity:0"/><g id="caDots"></g>'
       +'<rect class="hit" x="'+L+'" y="0" width="'+(W-L-R)+'" height="'+(H-B)+'"/></svg><div class="ca-tip" id="caTip" hidden></div>';
     const svg=box.querySelector('svg'), tip=$('caTip'), cx=$('caCx'), dots=$('caDots');
@@ -32080,7 +32092,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     gd.forEach(d=>{ if(!dm.has(d)) dm.set(d,blank()); });
     trendDays=[...dm.keys()].sort().map(d=>Object.assign({d:d,tot:data.gmv[d]?data.gmv[d][0]:null,adg:data.gmv[d]?data.gmv[d][1]:null},dm.get(d)));
     trendHasG=gd.length>0; trendG={tot:gT,adg:gA};
-    $('caDayBox').hidden=!trendDays.length;
+    $('caDayBox').hidden=false;
     trendTot=T;
     paintTrend();
     /* 날짜별 기록 · 최근 날이 위 · 주말 빨강 · 오늘은 진행 중 */
