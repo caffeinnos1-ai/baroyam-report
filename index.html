@@ -5206,6 +5206,7 @@ window.BAROYAM_FONT=(function(){
   @media (max-width:1500px){ .ca-area-wrap{grid-template-columns:1fr} .ca-share{justify-content:center;flex-wrap:wrap} }
   /* 키워드 고르기(누르기 · Shift 범위 · Ctrl 더하기) → Ctrl+C·복사 단추로 한 줄에 하나씩 */
   #caKws .cs-tbl tbody tr[data-i]{cursor:pointer;user-select:none}
+  #caKws .cs-tbl tbody tr[data-i] td{transition:background .14s ease,color .14s ease}
   #caKws .cs-tbl tbody tr.sel td{background:color-mix(in srgb,var(--btn) 10%,transparent)}
   #caKws .cs-tbl tbody tr.sel td.k{color:var(--btn)}
   #caKsel{display:flex;align-items:center;gap:6px}
@@ -31782,6 +31783,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       if(e.target.closest('[data-more]')){ st.kmax+=200; draw(); return; }
       /* 키워드 고르기 · 그냥 누르기 = 그 줄만(다시 누르면 해제) · Ctrl/⌘ = 더하고 빼기 · Shift = 마지막으로 누른 줄부터 범위 */
       const tr=e.target.closest('tr[data-i]'); if(!tr) return;
+      if(kdragged){ kdragged=false; return; }   /* 끌어서 고른 뒤 따라오는 click 은 무시 */
       const i=+tr.dataset.i, kw=kshow[i]; if(kw==null) return;
       if(e.shiftKey&&st.kanc!=null&&kshow.includes(st.kanc)){
         const a=kshow.indexOf(st.kanc), lo=Math.min(a,i), hi=Math.max(a,i);
@@ -31794,8 +31796,34 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       }
       paintKsel();
     });
-    /* Shift 로 누를 때 글자가 드래그 선택되지 않게 */
-    $('caKws').addEventListener('mousedown',e=>{ if((e.shiftKey||e.ctrlKey||e.metaKey)&&e.target.closest('tr[data-i]')) e.preventDefault(); });
+    /* 끌어서 고르기(11-20 사용자) · 줄을 누른 채 위아래로 끌면 지나간 줄이 부드럽게 골라진다 · Ctrl 을 누르고 끌면 지금 고른 것에 더함 ·
+       화면 위·아래 끝에 가까이 끌면 저절로 스크롤 · Shift 누르기는 click 의 범위 고르기 그대로 */
+    let kdrag=null, kdragged=false;
+    const dragTo=i=>{
+      if(!kdrag||i==null||i===kdrag.last) return;
+      kdrag.last=i; if(i!==kdrag.start) kdrag.moved=true;
+      if(!kdrag.moved) return;
+      st.ksel=new Set(kdrag.base);
+      const lo=Math.min(kdrag.start,i), hi=Math.max(kdrag.start,i);
+      for(let j=lo;j<=hi;j++) if(kshow[j]!=null) st.ksel.add(kshow[j]);
+      st.kanc=kshow[kdrag.start]; paintKsel();
+    };
+    const rowAt=(x,y)=>{ const el=document.elementFromPoint(x,y), tr=el&&el.closest&&el.closest('#caKws tr[data-i]'); return tr?+tr.dataset.i:null; };
+    $('caKws').addEventListener('mousedown',e=>{
+      const tr=e.target.closest('tr[data-i]'); if(!tr||e.button!==0) return;
+      e.preventDefault();   /* 글자가 드래그 선택되지 않게 */
+      if(e.shiftKey) return;
+      kdrag={start:+tr.dataset.i,last:+tr.dataset.i,moved:false,base:(e.ctrlKey||e.metaKey)?new Set(st.ksel):new Set(),x:e.clientX,y:e.clientY,t:0};
+      const tick=()=>{
+        if(!kdrag) return;
+        const edge=70, y=kdrag.y, v=y<edge?-(edge-y):y>innerHeight-edge?(y-(innerHeight-edge)):0;
+        if(v){ scrollBy(0,Math.round(v/3)); dragTo(rowAt(kdrag.x,kdrag.y)); }
+        kdrag.t=requestAnimationFrame(tick);
+      };
+      kdrag.t=requestAnimationFrame(tick);
+    });
+    document.addEventListener('mousemove',e=>{ if(!kdrag) return; kdrag.x=e.clientX; kdrag.y=e.clientY; dragTo(rowAt(e.clientX,e.clientY)); });
+    document.addEventListener('mouseup',()=>{ if(!kdrag) return; cancelAnimationFrame(kdrag.t); kdragged=kdrag.moved; kdrag=null; setTimeout(()=>{ kdragged=false; },0); });
     $('caKcopy').addEventListener('click',copyKws);
     $('caKclear').addEventListener('click',()=>{ st.ksel.clear(); st.kanc=null; paintKsel(); });
     document.addEventListener('keydown',e=>{
