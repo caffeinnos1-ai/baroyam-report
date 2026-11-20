@@ -6415,7 +6415,10 @@ window.BAROYAM_FONT=(function(){
   .aic-note{margin-top:16px;font-size:12.5px;color:var(--mute);line-height:1.6}
   /* 말풍선 · 내 질문은 오른쪽 색 말풍선, 답은 왼쪽 동그란 로고 + 연한 카드 */
   .aic-msg{font-size:15px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
-  .aic-msg.me{align-self:flex-end;max-width:78%;background:var(--btn);color:#fff;padding:11px 16px;border-radius:18px 18px 6px 18px}
+  .aic-row-me{align-self:flex-end;display:flex;gap:10px;align-items:flex-start;justify-content:flex-end;max-width:86%}
+  .aic-av.me{border:1px solid var(--line)}
+  .aic-av.txt{display:grid;place-items:center;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:14px;font-weight:600}
+  .aic-msg.me{min-width:0;background:var(--btn);color:#fff;padding:11px 16px;border-radius:18px 6px 18px 18px}
   .aic-row-ai{display:flex;gap:10px;align-items:flex-start;max-width:92%}
   .aic-av{flex:none;width:32px;height:32px;border-radius:50%;object-fit:cover;margin-top:2px}
   .aic-ai{min-width:0;display:flex;flex-direction:column;gap:4px}
@@ -14382,8 +14385,16 @@ syncFromSheets(false).catch(err=>{
   const AV=()=>{ try{ return document.querySelector('.sb-logo').src; }catch(e){ return ''; } };
   const IC_COPY='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
   const aiRow=inner=>'<div class="aic-row-ai"><img class="aic-av" src="'+AV()+'" alt="" aria-hidden="true"><div class="aic-ai">'+inner+'</div></div>';
+  /* 질문자 아이콘 · 내 프로필 사진(없으면 이름 첫 글자) */
+  function myAv(){
+    let a='', n='';
+    try{ a=window.BAROYAM_PROFILES.get(mid).avatar||''; }catch(e){}
+    try{ n=meName(); }catch(e){}
+    return a?'<img class="aic-av me" src="'+esc(a)+'" alt="" aria-hidden="true">'
+      :'<span class="aic-av me txt" aria-hidden="true">'+esc((n||'나').trim().charAt(0))+'</span>';
+  }
   function paint(){
-    const c=cur(), msgs=c&&c.msgs?c.msgs:[];
+    const c=cur(), msgs=c&&c.msgs?c.msgs:[], meAv=myAv();
     let h='';
     if(!mid){
       h='<div class="aic-hello"><img src="logos/baroyam-word.png" alt=""><h3>프로필을 먼저 골라 주세요</h3><p>대화 기록은 프로필마다 따로 저장돼요.</p></div>';
@@ -14398,7 +14409,7 @@ syncFromSheets(false).catch(err=>{
         +'<p class="aic-note">대화는 회사 서버에 내 프로필 몫으로 저장돼 어느 PC에서든 이어 볼 수 있어요.<br>비밀번호·고객 개인정보는 적지 말아 주세요.</p></div>';
     }
     msgs.forEach((m,i)=>{
-      if(m.role==='user') h+='<div class="aic-msg me">'+esc(m.text)+'</div>';
+      if(m.role==='user') h+='<div class="aic-row-me"><div class="aic-msg me">'+esc(m.text)+'</div>'+meAv+'</div>';
       else if(m.role==='err') h+=aiRow('<div class="aic-msg err">'+esc(m.text)+'</div>');
       else h+=aiRow('<div class="aic-msg ai">'+fmt(m.text)+'</div><button type="button" class="aic-copy" data-copy="'+i+'">'+IC_COPY+'<span>복사</span></button>');
     });
