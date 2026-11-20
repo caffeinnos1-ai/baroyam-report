@@ -6460,6 +6460,8 @@ window.BAROYAM_FONT=(function(){
   @keyframes shSpin{to{transform:rotate(360deg)}}
   .sh-cs-t .rf:disabled{opacity:.35;cursor:default;background:none}
   .sh-cs-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--mute)}
+  .sh-sk{display:inline-block;width:34px;height:14px;border-radius:6px;vertical-align:middle;background:linear-gradient(90deg,var(--bg) 0%,var(--line) 50%,var(--bg) 100%);background-size:200% 100%;animation:shSk 1.1s ease-in-out infinite}
+  @keyframes shSk{from{background-position:100% 0}to{background-position:-100% 0}}
   .sh-cs-need{margin-top:14px;padding:14px 16px;border-radius:14px;background:var(--bg);font-size:13px;line-height:1.6;color:var(--body)}
   .sh-cs-need b{color:var(--ink);font-weight:600}
 
@@ -12683,7 +12685,7 @@ window.BAROYAM_FONT=(function(){
               <button type="button" class="ui-btn sm soft" id="csFetch" title="카페24에서 지금 숫자를 다시 받아 옵니다"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>지금 새로 받기</button>
             </div>
             <div class="sh-note" id="csNote" hidden></div>
-            <div id="csBody"><div class="sh-empty">숫자를 불러오는 중입니다…</div></div>
+            <div id="csBody"></div>
           </div>
           <div class="sh-pane" data-shop-pane="stock" hidden>
             <div class="sh-chans" id="shChans" role="tablist" aria-label="판매처"></div>
@@ -36639,7 +36641,7 @@ window.baroyamAsk=function(title,body,okText){
   const $=id=>document.getElementById(id);
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const BUCKET='brand-files', DB=()=>window.BAROYAM_DB;
-  let data=null, loadedAt=0, busy=false;
+  let data=null, loadedAt=0, busy=false, tried=false;   /* tried = 서버 파일을 한 번이라도 읽어 봤는지(그 전에는 표만 그리고 숫자 칸은 불러오는 중) */
   async function readJson(path){
     try{ const db=DB(); if(!db||!db.fileUrl) return null; const u=await db.fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
   }
@@ -36677,8 +36679,9 @@ window.baroyamAsk=function(title,body,okText){
   function paint(){
     const box=$('csBody'); if(!box) return;
     const rows=CH.map(ch=>({ch,r:rowOf(ch.id)}));
+    const wait=!data&&!tried;
     const on=rows.filter(x=>x.r);
-    $('csAt').textContent='판매처 '+CH.length+'곳 중 '+on.length+'곳 연결 · 10분마다 새로 받음'+(data?' · 최근 90일 주문 기준':'');
+    $('csAt').textContent=wait?'숫자를 불러오는 중…':'판매처 '+CH.length+'곳 중 '+on.length+'곳 연결 · 10분마다 새로 받음'+(data?' · 최근 90일 주문 기준':'');
     const tot={}; COLS.forEach(c=>{ tot[c.k]=on.reduce((a,x)=>a+(typeof x.r[c.k]==='number'?x.r[c.k]:0),0); });
     const cell=(c,v)=>{
       if(v==null) return '<td class="na"></td>';
@@ -36688,17 +36691,19 @@ window.baroyamAsk=function(title,body,okText){
     let h='<div class="sh-cs-wrap"><table class="sh-cs-t"><thead><tr><th class="nm">판매처</th>'
       +COLS.map(c=>'<th class="g-'+c.g+'" title="'+esc(c.tip)+'">'+c.lb+'</th>').join('')+'<th style="width:46px"></th></tr></thead><tbody>';
     rows.forEach(({ch,r},i)=>{
-      h+='<tr class="'+(r?'':'off')+'"><td class="nm"><div class="sh-cs-ch"><img src="'+ch.logo+'" alt=""><span><span class="nmx">'+(i+1)+'. '+esc(ch.name)+'</span><span class="at">'+(r?ago(r.at):'연결 전')+'</span></span></div></td>'
-        +COLS.map(c=>r?cell(c,r[c.k]):'<td class="na">-</td>').join('')
+      const ld=wait&&ch.id==='cafe24';   /* 카페24 는 연결돼 있으니 읽는 동안 칸만 반짝인다 */
+      h+='<tr class="'+(r||ld?'':'off')+'"><td class="nm"><div class="sh-cs-ch"><img src="'+ch.logo+'" alt=""><span><span class="nmx">'+(i+1)+'. '+esc(ch.name)+'</span><span class="at">'+(r?ago(r.at):ld?'불러오는 중…':ch.id==='cafe24'?'아직 숫자 없음':'연결 전')+'</span></span></div></td>'
+        +COLS.map(c=>r?cell(c,r[c.k]):ld?'<td><span class="sh-sk"></span></td>':'<td class="na">-</td>').join('')
         +'<td>'+(r?'<button type="button" class="rf'+(busy?' spin':'')+'" data-rf="'+ch.id+'" title="'+esc(ch.name)+' 지금 새로 받기"'+(busy?' disabled':'')+'>'+RF+'</button>':'')+'</td></tr>';
     });
-    h+='<tr class="sum"><td class="nm">합계</td>'+COLS.map(c=>'<td>'+tot[c.k].toLocaleString('ko-KR')+'</td>').join('')+'<td></td></tr></tbody></table></div>';
+    h+='<tr class="sum"><td class="nm">합계</td>'+COLS.map(c=>'<td>'+(wait?'<span class="sh-sk"></span>':tot[c.k].toLocaleString('ko-KR'))+'</td>').join('')+'<td></td></tr></tbody></table></div>';
     h+='<div class="sh-cs-legend"><span>칸 이름에 마우스를 올리면 뜻이 보입니다</span><span>빈칸 = 그 판매처에 없는 항목</span><span>- = 아직 연결하지 않은 판매처</span></div>';
     const inq=(data&&data.inq)||{};
     if(inq.need) h+='<div class="sh-cs-need">카페24 <b>게시판</b> 칸을 채우려면 권한을 하나 더 켜야 합니다.<br>① 카페24 개발자센터 → 앱 → 권한 관리에서 <b>게시판(Community) 읽기</b>를 켜고 저장<br>② 이 화면 오른쪽 위 <b>연동 설정</b> → 카페24 <b>다시 승인</b> → 카페24에서 동의</div>';
     box.innerHTML=h;
   }
-  async function load(){ const d=await readJson('shop/cafe24/cs.json'); if(d){ data=d; } paint(); return !!d; }
+  async function load(){ const db=DB(); const d=await readJson('shop/cafe24/cs.json'); if(d){ data=d; } if(db&&db.fileUrl&&(d||Date.now()-t0>15e3)) tried=true; paint(); return !!d; }
+  const t0=Date.now();   /* 로그인이 늦으면 못 읽으니 15초까지는 "불러오는 중"으로 둔다 */
   function note(t,kind){ const n=$('csNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(kind?' '+kind:''); clearTimeout(n._t); if(t&&kind!=='run') n._t=setTimeout(()=>{ n.hidden=true; },8000); }
   async function fetchNow(){
     if(busy) return; busy=true; const b=$('csFetch'); b.disabled=true; paint(); note('카페24에서 숫자를 받는 중…','run');
@@ -36722,6 +36727,7 @@ window.baroyamAsk=function(title,body,okText){
   function bind(){
     if(!$('csBody')) return;
     $('csFetch').addEventListener('click',fetchNow);
+    paint();
     $('csBody').addEventListener('click',e=>{ if(e.target.closest('[data-rf]')) fetchNow(); });
     /* 이 탭이 보일 때 · 1분마다 서버 파일을 다시 읽는다(서버는 10분마다 새로 씀) · 로그인 전이라 못 읽었으면 4초 뒤 다시 */
     setInterval(()=>{ if(!visible()||busy) return; if(Date.now()-loadedAt<(data?60e3:4e3)) return; loadedAt=Date.now(); load(); },2000);
