@@ -36402,12 +36402,14 @@ window.baroyamAsk=function(title,body,okText){
       const i=c.label.lastIndexOf(' · '), prod=c.prod?c.label.replace(/ \(상품\)$/,''):(i>0?c.label.slice(0,i):c.label), opt=c.prod?'상품 전체':(i>0?c.label.slice(i+3):'');
       const parts=[];
       if(c.qty) parts.push('<span>재고 '+c.qty.from+'개 → <b>'+c.qty.to+'개</b></span>');
-      if(c.sell) parts.push('<span>'+pill(c.sell.from,c.sell.from?'판매중':'판매안함')+' → '+pill(c.sell.to,c.sell.to?'판매중':'판매안함')+'</span>');
-      if(c.prod) parts.push('<span>'+pill(c.prod.from,c.prod.from?'판매함':'판매안함')+' → '+pill(c.prod.to,c.prod.to?'판매함':'판매안함')+'</span>');
+      if(c.sell) parts.push('<span>옵션만 '+pill(c.sell.from,c.sell.from?'판매중':'판매안함')+' → '+pill(c.sell.to,c.sell.to?'판매중':'판매안함')+'</span>');
+      if(c.prod) parts.push('<span>상품 '+pill(c.prod.from,c.prod.from?'판매함':'판매안함')+' → '+pill(c.prod.to,c.prod.to?'판매함':'판매안함')+'</span>');
       return '<div class="sh-ask-row"><div class="sh-ask-nm"><strong title="'+esc(prod)+'">'+esc(prod)+'</strong><em title="'+esc(opt)+'">'+esc(opt)+'</em></div><div class="sh-ask-chg">'+parts.join('')+'</div></div>';
     }).join('');
     const go=await ask({logo:'logos/cafe24.png',title:'카페24에 반영할까요?',sub:ch.length+'개를 바로 바꿉니다',ok:'반영하기',
-      html:'<div class="sh-ask-list">'+rows+(ch.length>30?'<div class="sh-ask-more">… 외 '+(ch.length-30)+'개</div>':'')+'</div>'+TIP('그사이 주문으로 카페24 재고가 바뀐 옵션은 덮어쓰지 않고 건너뜁니다. 1분 안팎 걸려요.')});
+      html:'<div class="sh-ask-list">'+rows+(ch.length>30?'<div class="sh-ask-more">… 외 '+(ch.length-30)+'개</div>':'')+'</div>'
+        +(ch.some(c=>c.sell&&!c.sell.to)?TIP('<b>옵션만</b> 판매안함으로 바꾸면 카페24 상품 목록에는 계속 <b>판매함</b>으로 보입니다(상품 상세의 옵션에서만 꺼짐). 상품을 통째로 내리려면 상품 줄의 판매상태를 바꿔 주세요.'):'')
+        +TIP('그사이 주문으로 카페24 재고가 바뀐 옵션은 덮어쓰지 않고 건너뜁니다. 1분 안팎 걸려요.')});
     if(!go) return;
     busy=true; paintDock(); note('카페24에 보내는 중…','run');
     try{
@@ -36524,15 +36526,19 @@ window.baroyamAsk=function(title,body,okText){
       if(pb){
         e.stopPropagation();
         const p=DATA[S.chan].prods.find(x=>x.id===pb.dataset.pst); if(!p) return;
-        window.UI.menu(pb,[{value:'on',label:'판매함',sub:'상품 전체'},{value:'stop',label:'판매안함',sub:'상품 전체 · 옵션 상태는 그대로'}],psell(p)?'on':'stop',v=>{ setPedit(p,v==='on'); paint(); });
+        window.UI.menu(pb,[{value:'on',label:'판매함',sub:'상품 전체 · 카페24 상품 목록'},{value:'stop',label:'판매안함',sub:'상품 전체 · 카페24 상품 목록'}],psell(p)?'on':'stop',v=>{ setPedit(p,v==='on'); paint(); });
         return;
       }
       const sb=e.target.closest('[data-stb]');
       if(sb){
         e.stopPropagation();
         const f=findOpt(sb.dataset.stb); if(!f) return;
-        const opts=[{value:'on',label:'판매중'}].concat(f.o.inv?[{value:'out',label:'품절',sub:'재고 0 으로'}]:[]).concat([{value:'stop',label:'판매안함',sub:'이 옵션만'}]);
+        /* 카페24 상품 목록의 판매함/판매안함은 상품 단위라, 옵션만 끄면 목록에는 판매함으로 남는다(11-20 사용자 혼동) → 상품 전체도 여기서 고르게 */
+        const opts=[{value:'on',label:'판매중',sub:'이 옵션'}].concat(f.o.inv?[{value:'out',label:'품절',sub:'이 옵션 재고 0'}]:[])
+          .concat([{value:'stop',label:'이 옵션만 판매안함',sub:'상품 목록에는 판매함으로 남음'}])
+          .concat(f.o.par&&f.o.par.no?[{value:'pstop',label:'상품 전체 판매안함',sub:'카페24 상품 목록의 판매안함'}]:[]);
         window.UI.menu(sb,opts,isOut(cur(f.o))?'out':cur(f.o).st,v=>{
+          if(v==='pstop'){ setPedit(f.o.par,false); paint(); return; }
           setEdit(f.o,v==='out'?{st:'on',qty:0}:{st:v}); paint();   /* 품절 = 판매중 + 재고 0 (카페24 에는 품절 상태가 따로 없음) */
         });
         return;
