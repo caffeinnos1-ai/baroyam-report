@@ -1775,6 +1775,7 @@ window.BAROYAM_FONT=(function(){
     --neg:#cf5a50; --neg-soft:#fbeae8;
     --c1:#c8622e; --c2:#e28e56; --c3:#f5c9a6; --chip-flat:#f0ece5;
     --coupang:#2f77cc; --naver:#00734d; --self:#e07234; --talk:#8a5cd6;
+    --kakao:#f2c500;   /* 카카오톡 상담 배너(CS 현황) */
     --panel-dark:#241a14; --indigo-rgb:205,100,40; --indigo-lite:#e5824a;
     /* 은은한 그라데이션 표면 · 대시보드 배경과 사이드바 */
     --app-bg:linear-gradient(168deg,#fcfcfd 0%,#f7f7f9 45%,#f0f0f3 100%);
@@ -1796,6 +1797,7 @@ window.BAROYAM_FONT=(function(){
     --line:#30363d; --indigo:#4493f8; --indigo-soft:#172a45;
     --prev:#30363d; --prev-ink:#6e7681; --curr:#388bfd;
     --coupang:#4493f8; --naver:#2ea043; --self:#db6d28; --talk:#a371f7;
+    --kakao:#e3b900;
     --pos:#3fb950; --pos-soft:#15291d; --warn:#d29922; --warn-soft:#2b2414;
     --neg:#f85149; --neg-soft:#2d1b1e;
     --c1:#1f6feb; --c2:#58a6ff; --c3:#3b5f8f; --chip-flat:rgba(177,186,196,.12);
@@ -6462,6 +6464,26 @@ window.BAROYAM_FONT=(function(){
   .sh-cs-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--mute)}
   .sh-sk{display:inline-block;width:34px;height:14px;border-radius:6px;vertical-align:middle;background:linear-gradient(90deg,var(--bg) 0%,var(--line) 50%,var(--bg) 100%);background-size:200% 100%;animation:shSk 1.1s ease-in-out infinite}
   @keyframes shSk{from{background-position:100% 0}to{background-position:-100% 0}}
+  /* 톡상담 배너 · 왼쪽 카카오톡, 오른쪽 네이버 톡톡 · 판매처 색을 은은하게 깔고 말풍선 모양을 뒤에 띄움 */
+  .sh-talk{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  .sh-talk a{--c:var(--kakao);position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:18px;text-decoration:none;color:var(--ink);
+    border:1px solid color-mix(in srgb,var(--c) 38%,var(--line));background:linear-gradient(120deg,color-mix(in srgb,var(--c) 20%,var(--paper)) 0%,color-mix(in srgb,var(--c) 6%,var(--paper)) 70%);
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s}
+  .sh-talk a.nv{--c:var(--naver)}
+  .sh-talk a:hover{transform:translateY(-2px);box-shadow:0 14px 30px -18px color-mix(in srgb,var(--c) 80%,transparent);border-color:color-mix(in srgb,var(--c) 65%,var(--line))}
+  .sh-talk a::before,.sh-talk a::after{content:'';position:absolute;pointer-events:none;border-radius:50%;background:color-mix(in srgb,var(--c) 22%,transparent)}
+  .sh-talk a::before{right:-26px;top:-34px;width:150px;height:110px;border-radius:55% 55% 55% 55%/60% 60% 40% 40%}
+  .sh-talk a::after{right:84px;bottom:-14px;width:34px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-12deg);background:color-mix(in srgb,var(--c) 16%,transparent)}
+  .sh-talk .ic{position:relative;z-index:1;flex:none;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--paper);box-shadow:0 6px 16px -10px color-mix(in srgb,var(--c) 90%,transparent);border:1px solid color-mix(in srgb,var(--c) 30%,var(--line))}
+  .sh-talk .ic img{width:34px;height:34px;border-radius:9px;object-fit:contain}
+  .sh-talk .ic i{position:absolute;right:-5px;bottom:-5px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:var(--paper);border:2px solid var(--paper)}
+  .sh-talk .tx{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:0;gap:0;margin:0}   /* 다른 화면의 .tx 규칙(여백 62px)이 새어 들어와 막음 */
+  .sh-talk .tx strong{display:block;font-size:16.5px;font-weight:600;letter-spacing:-.2px}
+  .sh-talk .tx span{display:block;margin-top:3px;font-size:12.5px;color:var(--body)}
+  .sh-talk .go{position:relative;z-index:1;flex:none;display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--paper);color:var(--ink);border:1px solid color-mix(in srgb,var(--c) 35%,var(--line));transition:background .15s,color .15s}
+  .sh-talk a:hover .go{background:var(--c);color:var(--paper);border-color:var(--c)}
+  .sh-talk a.kk:hover .go{color:var(--ink)}
+  @media (max-width:760px){ .sh-talk{grid-template-columns:1fr} }
   .sh-cs-need{margin-top:14px;padding:14px 16px;border-radius:14px;background:var(--bg);font-size:13px;line-height:1.6;color:var(--body)}
   .sh-cs-need b{color:var(--ink);font-weight:600}
 
@@ -36698,6 +36720,13 @@ window.baroyamAsk=function(title,body,okText){
     });
     h+='<tr class="sum"><td class="nm">합계</td>'+COLS.map(c=>'<td>'+(wait?'<span class="sh-sk"></span>':tot[c.k].toLocaleString('ko-KR'))+'</td>').join('')+'<td></td></tr></tbody></table></div>';
     h+='<div class="sh-cs-legend"><span>칸 이름에 마우스를 올리면 뜻이 보입니다</span><span>빈칸 = 그 판매처에 없는 항목</span><span>- = 아직 연결하지 않은 판매처</span></div>';
+    /* 톡상담 바로가기 · 카카오톡 채널 관리자센터 / 네이버 톡톡 파트너센터(새 창) */
+    const BUB='<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M12 4C7 4 3 7.1 3 11c0 2.4 1.5 4.5 3.8 5.8L6 20l3.7-2.2c.7.1 1.5.2 2.3.2 5 0 9-3.1 9-7s-4-7-9-7Z"/></svg>';
+    const ARR='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+    h+='<div class="sh-talk">'
+      +'<a class="kk" href="https://center-pf.kakao.com/" target="_blank" rel="noopener"><span class="ic"><img src="logos/kakao.png" alt="">'+'<i>'+BUB+'</i></span><span class="tx"><strong>카카오톡 상담</strong><span>카카오톡 채널 관리자센터 · 1:1 채팅</span></span><span class="go">상담 열기'+ARR+'</span></a>'
+      +'<a class="nv" href="https://partner.talk.naver.com/" target="_blank" rel="noopener"><span class="ic"><img src="logos/naver.png" alt="">'+'<i>'+BUB+'</i></span><span class="tx"><strong>네이버 톡톡 상담</strong><span>네이버 톡톡 파트너센터 · 고객 채팅</span></span><span class="go">상담 열기'+ARR+'</span></a>'
+      +'</div>';
     const inq=(data&&data.inq)||{};
     if(inq.need) h+='<div class="sh-cs-need">카페24 <b>게시판</b> 칸을 채우려면 권한을 하나 더 켜야 합니다.<br>① 카페24 개발자센터 → 앱 → 권한 관리에서 <b>게시판(Community) 읽기</b>를 켜고 저장<br>② 이 화면 오른쪽 위 <b>연동 설정</b> → 카페24 <b>다시 승인</b> → 카페24에서 동의</div>';
     box.innerHTML=h;
