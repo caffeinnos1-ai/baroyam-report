@@ -5216,9 +5216,14 @@ window.BAROYAM_FONT=(function(){
   @keyframes caKcopy{from{background-size:0 0}to{background-size:100% 100%}}
   @media (prefers-reduced-motion:reduce){ #caKws .cs-tbl tbody tr.sel{animation:none} }
   #caKws .cs-tbl tbody tr.sel td.k{color:var(--btn)}
-  #caKsel{display:flex;align-items:center;gap:6px}
-  #caKsel[hidden]{display:none}
-  #caKsel .n{font-size:12.5px;color:var(--btn);font-weight:500}
+  /* 키워드 고르면 화면 아래 가운데에 떠 있는 줄(스크롤해도 그대로 · 11-20 사용자) · .paper 가 overflow:hidden 이라 body 에 붙인다 */
+  #caKsel{position:fixed;left:50%;bottom:28px;z-index:60;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 18px;border-radius:999px;
+    background:var(--paper);border:1px solid var(--line);box-shadow:0 12px 32px -10px color-mix(in srgb,var(--ink) 35%,transparent);
+    transform:translate(-50%,16px);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s ease}
+  #caKsel.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+  #caKsel .n{font-size:13.5px;color:var(--ink);font-weight:500;margin-right:6px;white-space:nowrap}
+  #caKsel .n b{color:var(--btn);font-weight:600}
+  #caKsel .ui-btn{border-radius:999px}
   #caAreas .cs-tbl td.k em{font-style:normal;font-weight:400;font-size:12px;color:var(--mute);margin-left:6px}
   #caRoot[data-view="detail"] .cs-bar{border-bottom:0}
   #caRoot .cs-tbl td.dd{color:var(--ink);font-weight:500}
@@ -31764,7 +31769,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>캠페인별 성과</h3><span class="sub">줄을 누르면 그 캠페인의 키워드만 봅니다</span></div><div class="cs-tbl-wrap" id="caCamps"></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>검색 / 비검색 영역</h3><span class="sub">키워드 칸이 \'-\' 인 줄(비검색 영역·오디언스 플러스)이 비검색 영역입니다</span></div><div class="ca-area-wrap"><div class="cs-tbl-wrap" id="caAreas"></div><div class="ca-share" id="caShare"></div></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>키워드별 성과</h3><span class="sub" id="caKwSub"></span>'
-      +'<div class="right"><div id="caKsel" hidden><span class="n" id="caKselN"></span><button type="button" class="ui-btn soft sm" id="caKcopy" title="Ctrl+C 로도 복사합니다 · 붙여 넣으면 한 줄에 키워드 하나">복사</button><button type="button" class="ui-btn ghost sm" id="caKclear">선택 해제</button></div>'
+      +'<div class="right">'
       +'<div class="ui-chips" id="caKf" role="group" aria-label="키워드 거르기"></div><input class="ui-field" id="caKq" placeholder="키워드 찾기"></div></div>'
       +'<div class="cs-tbl-wrap" id="caKws"></div></section>';
     st.picker=window.UI.datePicker($('caPeriod'),{
@@ -31847,7 +31852,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     });
     document.addEventListener('mousemove',e=>{ if(!kdrag) return; kdrag.x=e.clientX; kdrag.y=e.clientY; dragTo(rowAt(e.clientX,e.clientY)); });
     document.addEventListener('mouseup',()=>{ if(!kdrag) return; cancelAnimationFrame(kdrag.t); kdragged=kdrag.moved; kdrag=null; setTimeout(()=>{ kdragged=false; },0); });
-    $('caKcopy').addEventListener('click',copyKws);
+    kbar(); $('caKcopy').addEventListener('click',copyKws);
     $('caKclear').addEventListener('click',()=>{ st.ksel.clear(); st.kanc=null; paintKsel(); });
     document.addEventListener('keydown',e=>{
       if(!st.ksel.size||st.view!=='detail'||!root.offsetParent) return;
@@ -31890,9 +31895,22 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   /* 고른 키워드 · 표에 보이는 순서대로(안 보이는 것은 뒤에) 한 줄에 하나 */
   let kshow=[];
+  function kbar(){
+    let b=document.getElementById('caKsel');
+    if(!b){
+      b=document.createElement('div'); b.id='caKsel'; b.setAttribute('role','toolbar'); b.setAttribute('aria-label','고른 키워드');
+      b.innerHTML='<span class="n" id="caKselN"></span><button type="button" class="ui-btn primary" id="caKcopy" title="Ctrl+C 로도 복사합니다 · 붙여 넣으면 한 줄에 키워드 하나">복사하기</button><button type="button" class="ui-btn ghost" id="caKclear">선택 해제하기</button>';
+      document.body.appendChild(b);
+    }
+    return b;
+  }
+  /* 떠 있는 줄은 정밀성과 화면이 보일 때만 · 다른 탭·메뉴로 가면 숨김 */
+  function kbarVis(){ const b=document.getElementById('caKsel'); if(b) b.classList.toggle('on',!!st.ksel.size&&st.view==='detail'&&!!root.offsetParent); }
+  document.addEventListener('click',()=>setTimeout(kbarVis,0),true);
+  window.addEventListener('hashchange',()=>setTimeout(kbarVis,0));
   function paintKsel(){
     const n=st.ksel.size;
-    $('caKsel').hidden=!n; $('caKselN').textContent=n?won(n)+'개 선택':'';
+    kbar(); if(n) $('caKselN').innerHTML='<b>'+won(n)+'개</b> 선택'; kbarVis();
     /* 복사된 줄(.cp)은 선택이 풀릴 때까지 진한 색으로 남는다(지우면 차오르는 움직임이 다시 돌아서) */
     document.querySelectorAll('#caKws tbody tr[data-i]').forEach(tr=>{ const on=st.ksel.has(kshow[+tr.dataset.i]); tr.classList.toggle('sel',on); if(!on) tr.classList.remove('cp'); });
   }
@@ -31906,7 +31924,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     }
     /* 복사되면 고른 줄이 아래에서 위로 진하게 한 번 더 차오른다 */
     if(ok){ const rs=[...document.querySelectorAll('#caKws tbody tr.sel')]; rs.forEach(r=>r.classList.remove('cp')); void document.body.offsetWidth; rs.forEach(r=>r.classList.add('cp')); }
-    const b=$('caKcopy'); b.textContent=ok?won(list.length)+'개 복사됨':'복사 실패'; clearTimeout(copyKws.t); copyKws.t=setTimeout(()=>{ b.textContent='복사'; },1600);
+    const b=$('caKcopy'); b.textContent=ok?won(list.length)+'개 복사됨':'복사 실패'; clearTimeout(copyKws.t); copyKws.t=setTimeout(()=>{ b.textContent='복사하기'; },1600);
   }
   async function paint(){
     if(!st.built) build();
@@ -32196,7 +32214,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     busy(false); paintAt(); ack(r.ok,r.message);
   });
   /* view · 'day' = 쿠팡광고성과(날짜별) / 'detail' = 정밀성과(캠페인·키워드) */
-  window.baroyamCoupangAds={show:v=>{ st.view=v==='detail'?'detail':'day'; root.dataset.view=st.view; return paint(); }};
+  window.baroyamCoupangAds={show:v=>{ st.view=v==='detail'?'detail':'day'; root.dataset.view=st.view; setTimeout(kbarVis,0); return paint(); }};
 })();
 
 /* 회의 안건 메모 · 직접 수정 + 자동 저장 + 회의 기록 저장/불러오기 + PNG 공유 */
