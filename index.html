@@ -15871,7 +15871,15 @@ window.CsGuide=(function(){
         if(run) last=`${esc(fmt(run.run_at))} <span class="wt-sub">확인</span>`;
       }else{
         const nx=nextRun(a), mins=[...new Set(a.times.map(t=>t.slice(3)))];
-        sched=dayLabel(a.days)+' '+(a.times.length>=12&&mins.length===1?'매시 '+mins[0]+'분':a.times.join(' · '));
+        /* 시각이 많으면 줄여 씀 · 같은 간격이면 "10분마다", 아니면 앞 4개 + 외 n번 (144개를 다 적으면 표가 끝없이 길어짐) */
+        const tm=a.times.map(t=>+t.slice(0,2)*60+ +t.slice(3,5)).sort((x,y)=>x-y);
+        const gaps=tm.slice(1).map((m,i)=>m-tm[i]), even=gaps.length&&gaps.every(g=>g===gaps[0]);
+        let tl;
+        if(a.times.length>=12&&mins.length===1) tl='매시 '+mins[0]+'분';
+        else if(a.times.length>=6&&even) tl=gaps[0]<60?gaps[0]+'분마다':(gaps[0]%60?gaps[0]+'분마다':gaps[0]/60+'시간마다');
+        else if(a.times.length>6) tl=a.times.slice(0,4).join(' · ')+' 외 '+(a.times.length-4)+'번';
+        else tl=a.times.join(' · ');
+        sched=dayLabel(a.days)+' '+tl;
         if(nx) next=esc(nx.label);
         const hist=a.record?(by[a.record]||[]):[], run=hist[0];
         if(!run) st='<span class="wt-st">기록 없음</span>';
