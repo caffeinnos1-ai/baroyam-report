@@ -5227,10 +5227,13 @@ window.BAROYAM_FONT=(function(){
   #caRoot .cs-tbl tr.today td{background:color-mix(in srgb,var(--btn) 5%,transparent)}
   #caRoot .cs-tbl tr.today td.dd{color:var(--btn)}
   /* 일별 추이 · 왼쪽 선 그래프 | 오른쪽 범례(켜고 끄기 + 합계) · 11-20 사용자 */
-  .ca-trend{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:8px 18px;padding:14px 20px 14px 10px;align-items:center}
+  .ca-trend{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:8px 22px;padding:16px 20px 16px 10px;align-items:stretch}
   .ca-plot{position:relative;min-width:0}
   .ca-plot svg{display:block;width:100%;height:auto}
   .ca-plot .gl{stroke:var(--line);stroke-width:1}
+  .ca-plot .mo{stroke:color-mix(in srgb,var(--btn) 45%,transparent);stroke-width:1;stroke-dasharray:4 4}
+  .ca-plot .mol{font-size:11px;fill:var(--btn-soft-ink);font-weight:500;text-anchor:middle}
+  #caDayBox .ca-box-head .ui-tab{height:28px;padding:0 12px;font-size:12.5px}
   .ca-plot .yl{font-size:11px;fill:var(--mute);text-anchor:end}
   .ca-plot .xl{font-size:11px;fill:var(--mute);text-anchor:middle}
   .ca-plot .ln{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
@@ -5246,8 +5249,9 @@ window.BAROYAM_FONT=(function(){
   .ca-tip .r b{margin-left:auto;padding-left:14px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
   .ca-tip .r.sep{border-top:1px solid var(--line);margin-top:4px;padding-top:4px}
   .ca-tip .sw,.ca-lg .sw{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
-  .ca-legend{display:flex;flex-direction:column;gap:6px}
-  .ca-lg{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line)}
+  /* 오른쪽 합계 칸 · 같은 간격으로 위아래를 채우고 ROAS 도 같은 모양의 칸으로(11-20 사용자) */
+  .ca-legend{display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .ca-lg{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 8px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);transition:border-color .15s,opacity .15s}
   .ca-lg:hover{border-color:color-mix(in srgb,var(--ink) 25%,var(--line))}
   .ca-lg .nm{font-size:13px;color:var(--body)}
   .ca-lg .nm em{font-style:normal;font-size:11px;color:var(--mute)}
@@ -5256,7 +5260,7 @@ window.BAROYAM_FONT=(function(){
   .ca-lg .rt{grid-column:1/-1;font-size:12px;color:var(--mute)}
   .ca-lg[aria-pressed="false"]{opacity:.45}
   .ca-lg[aria-pressed="false"] .sw{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
-  .ca-lg-roas{display:flex;align-items:baseline;justify-content:space-between;padding:8px 12px 0;font-size:12.5px;color:var(--mute)}
+  .ca-lg-roas{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;background:var(--btn-soft);font-size:12.5px;color:var(--btn-soft-ink)}
   .ca-lg-roas b{font-size:18px;font-weight:600;color:var(--ink)}
   @media (max-width:900px){ .ca-trend{grid-template-columns:1fr;padding:12px} .ca-legend{flex-direction:row;flex-wrap:wrap} .ca-lg{flex:1 1 160px} }
   .ch-cal{margin-top:12px;box-shadow:none;border:1px solid var(--line)}
@@ -31751,7 +31755,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<label class="ui-btn soft sm ca-up" title="쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀·CSV 를 직접 넣기(수동)"><input type="file" id="caFile" accept=".xlsx,.xls,.csv,.txt,.tsv">파일 올리기</label></div>'
       +'<div class="cs-kpis" id="caKpis"></div></div>'
       +'<div id="caMsg"></div><div id="caNote"></div>'
-      +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3>일별 추이</h3><span class="sub">광고매출(14일)·광고비 · 선 위에 올리면 그날 ROAS·클릭</span></div>'
+      +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3>일별 추이</h3><span class="sub">광고매출(14일)·광고비 · 선 위에 올리면 그날 ROAS·클릭 · 점선은 월요일</span>'
+      +'<div class="right"><div class="ui-tabs" id="caQuick" role="group" aria-label="빠른 기간">'
+      +[['d1','1일'],['d7','최근 7일'],['m0','이번달'],['m1','저번달']].map(x=>'<button type="button" class="ui-tab" data-q="'+x[0]+'" aria-selected="false">'+x[1]+'</button>').join('')
+      +'</div></div></div>'
       +'<div class="ca-trend"><div class="ca-plot" id="caPlot"></div><div class="ca-legend" id="caLegend"></div></div></section>'
       +'<section class="ca-box ca-daily"><div class="ca-box-head"><h3>날짜별 기록</h3><span class="sub" id="caDaySub"></span></div><div class="cs-tbl-wrap" id="caDays"></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>캠페인별 성과</h3><span class="sub">줄을 누르면 그 캠페인의 키워드만 봅니다</span></div><div class="cs-tbl-wrap" id="caCamps"></div></section>'
@@ -31765,6 +31772,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       presets:['yesterday','last7','last30','month','prevMonth','custom'],
       resetValue:{start:firstOfMonth(),end:kst()},
       onChange:v=>{ st.range=v||{start:firstOfMonth(),end:kst()}; st.day=''; paint(); },
+    });
+    /* 일별 추이 머리 오른쪽 빠른 기간(11-20 사용자) · 1일 = 데이터가 있는 마지막 날 */
+    $('caQuick').addEventListener('click',e=>{
+      const b=e.target.closest('[data-q]'); if(!b) return;
+      st.range=quickRange(b.dataset.q); st.day='';
+      if(st.picker&&st.picker.set) st.picker.set(st.range);
+      paint();
     });
     $('caCamp').addEventListener('click',e=>{
       e.stopPropagation();
@@ -31856,6 +31870,23 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     let qt=null;
     $('caKq').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{ st.kq=e.target.value.trim(); st.kmax=100; draw(); },150); });
     st.built=true;
+  }
+  /* 빠른 기간 · 데이터가 있는 마지막 날 기준(없으면 어제) */
+  const dAdd=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().slice(0,10);
+  function lastDataDay(){
+    const ms=(st.index&&st.index.months)||{}, to=Object.keys(ms).map(k=>ms[k].to||'').sort().pop();
+    return to||dAdd(kst(),-1);
+  }
+  function quickRange(q){
+    const L=lastDataDay(), t=kst();
+    if(q==='d1') return {start:L,end:L};
+    if(q==='d7') return {start:dAdd(L,-6),end:L};
+    if(q==='m0') return {start:firstOfMonth(),end:t};
+    const pe=dAdd(firstOfMonth(),-1); return {start:pe.slice(0,8)+'01',end:pe};
+  }
+  function paintQuick(){
+    const r=st.range;
+    document.querySelectorAll('#caQuick [data-q]').forEach(b=>{ const q=quickRange(b.dataset.q); b.setAttribute('aria-selected',q.start===r.start&&q.end===r.end?'true':'false'); });
   }
   /* 고른 키워드 · 표에 보이는 순서대로(안 보이는 것은 뒤에) 한 줄에 하나 */
   let kshow=[];
@@ -31951,13 +31982,16 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function paintTrend(){
     paintLegend();
     const box=$('caPlot'); if(!box||!trendDays.length){ if(box) box.innerHTML=''; return; }
-    const W=Math.max(320,box.clientWidth||900), H=240, L=54, R=14, Tp=14, B=30;
+    const W=Math.max(320,box.clientWidth||900), H=254, L=54, R=14, Tp=28, B=30;
     const days=trendDays, n=days.length, on=SER.filter(x=>!off.has(x.k));
     const mx=niceMax(Math.max(1,...days.map(o=>Math.max(...on.map(x=>o[x.k]||0),0))));
     const X=i=>n<2?(L+W-R)/2:L+(W-L-R)*i/(n-1), Y=v=>Tp+(H-Tp-B)*(1-v/mx);
     let g='';
     for(let t=0;t<=4;t++){ const v=mx*t/4, y=Y(v);
       g+='<line class="gl" x1="'+L+'" x2="'+(W-R)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'"/><text class="yl" x="'+(L-8)+'" y="'+(y+4).toFixed(1)+'">'+axisWon(v)+'</text>'; }
+    /* 월요일 · 세로 점선 + 위에 "월 11/9" (11-20 사용자 · 주가 바뀌는 자리) */
+    days.forEach((o,i)=>{ if(dow(o.d)!=='월') return; const x=X(i).toFixed(1);
+      g+='<line class="mo" x1="'+x+'" x2="'+x+'" y1="'+Tp+'" y2="'+(H-B)+'"/><text class="mol" x="'+x+'" y="'+(Tp-7)+'">월 '+(+o.d.slice(5,7))+'/'+(+o.d.slice(8))+'</text>'; });
     const step=Math.max(1,Math.ceil(n/(W<600?5:10)));
     days.forEach((o,i)=>{ if(i%step&&i!==n-1) return; if(i!==n-1&&n-1-i<step*.6&&i) return;
       g+='<text class="xl" x="'+X(i).toFixed(1)+'" y="'+(H-8)+'">'+(+o.d.slice(5,7))+'/'+(+o.d.slice(8))+'</text>'; });
@@ -31990,7 +32024,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     svg.addEventListener('mouseleave',()=>{ tip.hidden=true; cx.style.opacity=0; dots.innerHTML=''; });
   }
   function draw(){
-    when(); paintAt();
+    when(); paintAt(); paintQuick();
     const camps=campList();
     if(st.camp&&!camps.some(c=>c.id===st.camp)) st.camp='';
     const cur=st.camp?camps.find(c=>c.id===st.camp):null;
