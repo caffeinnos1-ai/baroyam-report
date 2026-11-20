@@ -6426,6 +6426,10 @@ window.BAROYAM_FONT=(function(){
   .sh-dock-sel b,.sh-dock-n b{color:var(--ink);font-weight:600}
   .sh-note{margin-top:10px;padding:10px 14px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:13px}
   .sh-note[hidden]{display:none}
+  .sh-note.ok{background:var(--pos-soft);color:var(--pos)} .sh-note.bad{background:var(--neg-soft);color:var(--neg)} .sh-note.run{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .sh-link-note{margin:22px 0 -8px}
+  img.sh-thumb{object-fit:cover;background:var(--bg);border:1px solid var(--line)}
+  .sh-noinv{font-size:12px;color:var(--mute)}
   .sh-link-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:22px 0 14px;font-size:13px;color:var(--mute)}
   .sh-link-cnt{font-size:15px;font-weight:600;color:var(--ink)}
   .sh-link-cnt b{color:var(--btn-soft-ink);font-weight:600}
@@ -12613,7 +12617,7 @@ window.BAROYAM_FONT=(function(){
           <div class="sh-pane" data-shop-pane="stock">
             <div class="sh-chans" id="shChans" role="tablist" aria-label="판매처"></div>
             <div class="iv-meta sh-meta">
-              <span class="iv-demo">예시 화면</span><span class="sh-at" id="shAt"></span>
+              <span class="iv-demo" id="shDemo">예시 화면</span><span class="sh-at" id="shAt"></span>
               <span class="pf-grow"></span><span class="iv-sum" id="shSum"></span>
               <button type="button" class="ui-btn sm soft" id="shFetch" title="판매처에서 지금 상품·옵션을 받아 옵니다"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>지금 가져오기</button>
             </div>
@@ -12650,7 +12654,8 @@ window.BAROYAM_FONT=(function(){
             <div class="profit-empty">상품 등록은 판매처 연결 뒤에 만듭니다.<br>상품을 한 번 작성해 고른 판매처에 각 규칙대로 올리는 화면입니다.</div>
           </div>
           <div class="sh-pane" data-shop-pane="link" hidden>
-            <div class="sh-link-head"><span class="iv-demo">예시 화면</span><span class="sh-link-cnt" id="shLinkCnt"></span><span class="pf-grow"></span><span class="sh-link-tip">연결 순서대로 하나씩 붙입니다 · 키는 서버(VPS)에만 두고 화면에는 남기지 않습니다</span></div>
+            <div class="sh-note sh-link-note" id="shLinkNote" hidden></div>
+            <div class="sh-link-head"><span class="sh-link-cnt" id="shLinkCnt"></span><span class="pf-grow"></span><span class="sh-link-tip">연결 순서대로 하나씩 붙입니다 · 키는 서버(VPS)에만 두고 화면에는 남기지 않습니다</span></div>
             <div class="sh-links" id="shLink"></div>
           </div>
         </section>
@@ -15711,6 +15716,9 @@ window.CsGuide=(function(){
     {name:'카페24 매출 수집', cat:'collect', where:'ERP 매출 · 자사몰', days:[0,1,2,3,4,5,6],
      times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':07'), record:'카페24 매출 수집',
      desc:'카페24 주문을 받아 날짜별 실결제금액(취소·환불 차감)을 저장해요. 매출 화면의 자사몰 숫자가 이 값으로 바뀌어요.', task:'cron'},
+    {name:'카페24 상품 수집', cat:'collect', where:'ERP 쇼핑몰관리 · 카페24', days:[0,1,2,3,4,5,6],
+     times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':47'), record:'카페24 상품 수집',
+     desc:'카페24 상품·옵션의 설정된 재고와 판매상태를 받아 쇼핑몰관리에 보여 줘요. 쇼핑몰관리에서 고친 재고·상태는 1분 안에 서버가 카페24에 반영해요(카페24 지금 값이 화면과 다르면 건너뜀).', task:'cron'},
     {name:'김비서 대화', cat:'kimbiseo', where:'김비서 개인 메시지', always:true,
      record:'김비서 대화',
      desc:'슬랙 ID가 연결된 회원이 김비서에게 말을 걸면 답해요. 서버에서 늘 켜져 있고, 꺼지면 10초 뒤 저절로 다시 켜져요.', task:'systemd',
@@ -36111,16 +36119,18 @@ window.baroyamAsk=function(title,body,okText){
 })();
 </script>
 <script>
-/* 쇼핑몰관리 · 판매처마다 상품 → 옵션 재고수량·판매가·판매상태 (11-20 임시 구현)
-   판매처와 아직 연결되지 않아 고정 씨앗 예시 데이터로 그린다 · 고친 값은 이 창 메모리에만 있고 "판매처에 반영"은 안내만 한다 ·
-   연결하면 VPS 가 판매처 API 로 받아 둔 목록을 읽고, 반영은 brand-files 요청 → VPS 가 판매처에 보내는 길로 바꾼다 */
+/* 쇼핑몰관리 · 판매처마다 상품 → 옵션 설정된 재고·판매가·판매상태 (11-20)
+   카페24 는 실제로 연결한다: VPS cafe24_products.js 가 brand-files 의 shop/cafe24/products.json(목록)·status.json(연결 상태·승인 주소)을 쓰고,
+   반영·지금 가져오기는 shop/req/<이름>.json → shop/res/<같은 이름> 으로 주고받는다(서버가 카페24 의 지금 값이 화면과 같을 때만 바꿈) ·
+   승인은 카페24 → erp.baroyam.com/?code=…&state=baroyam-shop 으로 돌아오면 이 화면이 code 를 shop/auth/ 로 넘긴다(code 는 1분 유효) ·
+   나머지 판매처는 아직 고정 씨앗 예시 데이터이고, 고친 값은 이 창 메모리에만 있다 */
 (function(){
   const $=id=>document.getElementById(id);
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const won=n=>Number(n||0).toLocaleString('ko-KR')+'원';
   const LOW=10;
   const CHANS=[
-    {id:'cafe24', name:'카페24', logo:'logos/cafe24.png', how:'카페24 Admin API', need:'이미 연결된 앱에 상품 읽기·쓰기 권한(mall.read_product · mall.write_product) 추가', lv:1},
+    {id:'cafe24', name:'카페24', logo:'logos/cafe24.png', how:'카페24 Admin API', need:'개발자센터 앱 권한에 상품 읽기·쓰기(mall.read_product · mall.write_product)를 켠 뒤 연결하기로 다시 승인', lv:1},
     {id:'coupang',name:'쿠팡윙', logo:'logos/coupang-sq.png', how:'쿠팡 WING Open API', need:'WING 에서 Open API 키(Access·Secret) 발급', lv:2},
     {id:'naver',  name:'네이버', logo:'logos/naver.png', how:'네이버 커머스API', need:'커머스API센터에 애플리케이션 등록', lv:2},
     {id:'talk',   name:'톡딜',   logo:'logos/kakao.png', how:'확인 필요', need:'판매자용 공개 API 가 없으면 엑셀 올리기로 보기만', lv:3},
@@ -36151,7 +36161,7 @@ window.baroyamAsk=function(title,body,okText){
       const opt=opts.map((o,oi)=>{
         const v=r(); const qty=v<0.12?0:v<0.3?Math.floor(r()*LOW)+1:Math.floor(r()*180)+12;
         const st=r()<0.06?'stop':qty===0?'out':'on';
-        return {id:c.id+'-'+pi+'-'+oi,name:o,price:price+(opts.length<=3?oi*Math.round(price*.8/100)*100:0),qty,st};
+        return {id:c.id+'-'+pi+'-'+oi,name:o,price:price+(opts.length<=3?oi*Math.round(price*.8/100)*100:0),qty,st,inv:true};
       });
       prods.push({id:c.id+'-'+pi,brand,name,opt});
     });
@@ -36159,21 +36169,77 @@ window.baroyamAsk=function(title,body,okText){
   });
 
   const S={chan:'cafe24',q:'',brand:'',state:'all',open:new Set(),sel:new Set(),edit:{}};   /* edit = {옵션id:{qty,st}} · 원래 값과 다를 때만 */
+
+  /* ---------- 카페24 실제 데이터 ---------- */
+  const BUCKET='brand-files', DB=()=>window.BAROYAM_DB;
+  const REAL={}; let STATUS=null, busy=false;
+  const BRANDS=['쫀득란빵','홀떡피자','잡채랑','이응떡볶이','오꾸밥','바비쿡','방구석포차','밥카츠','파스타스','통스카츠'];
+  function brandOf(name){
+    const t=String(name||'').replace(/\s+/g,''); let best='', at=1e9;
+    BRANDS.forEach(b=>{ const i=t.indexOf(b); if(i>=0&&i<at){ at=i; best=b; } });
+    if(best) return best;
+    const m=String(name||'').match(/^\s*[\[(]([^\])]{1,12})[\])]/); return m?m[1].trim():'기타';
+  }
+  async function readJson(path){
+    try{ const db=DB(); if(!db||!db.fileUrl) return null; const u=await db.fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
+  }
+  const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const meName=()=>{ try{ const m=window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  async function upload(dir,obj){
+    const db=DB();
+    if(!db||!db.fileUpload||(db.ensureSession&&!(await db.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 해 주세요');
+    const name=rid()+'.json';
+    await db.fileUpload(BUCKET,dir+'/'+name,new Blob([JSON.stringify(obj)],{type:'application/json'}));
+    return name;
+  }
+  /* 서버 답 기다리기 · onStep 으로 진행 글을 넘김 · 서버가 75초 안에 안 받으면 꺼진 것으로 봄 */
+  async function waitRes(name,onStep,limit){
+    const t0=Date.now(), end=t0+(limit||240e3); let seen=false;
+    while(Date.now()<end){
+      await new Promise(r=>setTimeout(r,2000));
+      const r=await readJson('shop/res/'+name);
+      if(!r){ if(!seen&&Date.now()-t0>75e3) return {state:'failed',message:'서버가 요청을 받지 않았어요 · 잠시 뒤 다시 해 주세요'}; continue; }
+      seen=true;
+      if(r.state==='done'||r.state==='failed') return r;
+      if(onStep) onStep(r.message||'처리 중');
+    }
+    return {state:'failed',message:'시간이 오래 걸려 기다리기를 멈췄어요 · 잠시 뒤 새로고침해 보세요'};
+  }
+  function fromCafe24(snap){
+    return {at:Date.parse(snap.at)||Date.now(),prods:(snap.prods||[]).map(p=>({
+      id:'cafe24-'+p.no,no:p.no,brand:brandOf(p.name),name:p.name,img:p.img,
+      opt:(p.opts||[]).map(o=>{ const qty=o.qty==null?0:o.qty;
+        return {id:'cafe24-'+p.no+'-'+o.v,p:p.no,v:o.v,name:o.name,price:(p.price||0)+(o.add||0),qty,inv:o.inv!==false,st:!o.sell?'stop':(o.inv!==false&&qty<=0)?'out':'on'}; })
+    }))};
+  }
+  async function loadCafe24(){
+    const [st,snap]=await Promise.all([readJson('shop/cafe24/status.json'),readJson('shop/cafe24/products.json')]);
+    STATUS=st;
+    if(snap&&Array.isArray(snap.prods)){
+      Object.keys(S.edit).filter(id=>id.startsWith('cafe24-')).forEach(id=>delete S.edit[id]);
+      DATA.cafe24=fromCafe24(snap); REAL.cafe24=true;
+    }
+    paintLink(); paint();
+  }
+
   const findOpt=id=>{ for(const c of CHANS) for(const p of DATA[c.id].prods) for(const o of p.opt) if(o.id===id) return {c:c.id,p,o}; return null; };
   const cur=o=>Object.assign({},o,S.edit[o.id]||{});
   function setEdit(o,patch){
     const e=Object.assign({},S.edit[o.id]||{},patch);
+    if(!o.inv) delete e.qty;   /* 재고 관리를 끈 옵션은 숫자를 바꾸지 않는다 */
     Object.keys(e).forEach(k=>{ if(e[k]===o[k]) delete e[k]; });
     if(Object.keys(e).length) S.edit[o.id]=e; else delete S.edit[o.id];
   }
   const dirtyIn=cid=>Object.keys(S.edit).filter(id=>id.startsWith(cid+'-')).length;
+  const isOut=v=>v.st==='out'||(v.st==='on'&&v.inv&&v.qty===0);
+  const isLow=v=>v.st!=='stop'&&v.inv&&v.qty<=LOW;
 
   function optPass(o){
     const v=cur(o);
-    if(S.state==='on') return v.st==='on';
-    if(S.state==='out') return v.st==='out'||(v.st==='on'&&v.qty===0);
+    if(S.state==='on') return v.st==='on'&&!isOut(v);
+    if(S.state==='out') return isOut(v);
     if(S.state==='stop') return v.st==='stop';
-    if(S.state==='low') return v.st!=='stop'&&v.qty<=LOW;
+    if(S.state==='low') return isLow(v);
     if(S.state==='dirty') return !!S.edit[o.id];
     return true;
   }
@@ -36192,14 +36258,15 @@ window.baroyamAsk=function(title,body,okText){
   }
   function paintState(){
     const all=DATA[S.chan].prods.flatMap(p=>p.opt).map(cur);
-    const n={all:all.length,on:all.filter(v=>v.st==='on').length,out:all.filter(v=>v.st==='out'||(v.st==='on'&&v.qty===0)).length,
-      stop:all.filter(v=>v.st==='stop').length,low:all.filter(v=>v.st!=='stop'&&v.qty<=LOW).length,dirty:dirtyIn(S.chan)};
+    const n={all:all.length,on:all.filter(v=>v.st==='on'&&!isOut(v)).length,out:all.filter(isOut).length,
+      stop:all.filter(v=>v.st==='stop').length,low:all.filter(isLow).length,dirty:dirtyIn(S.chan)};
     const L=[['all','전체'],['on','판매중'],['out','품절'],['stop','판매중지'],['low','재고 '+LOW+'개 이하'],['dirty','고친 것']];
     $('shState').innerHTML=L.filter(([k])=>k!=='dirty'||n.dirty||S.state==='dirty').map(([k,l])=>'<button type="button" class="ui-chip" data-st="'+k+'" aria-pressed="'+(S.state===k)+'">'+l+' <b>'+n[k]+'</b></button>').join('');
     const prods=DATA[S.chan].prods;
     $('shSum').innerHTML='<i>상품<b>'+prods.length+'</b></i><i>옵션<b>'+n.all+'</b></i>'+(n.out?'<i class="neg">품절<b>'+n.out+'</b></i>':'')+(n.low?'<i class="warn">재고 적음<b>'+n.low+'</b></i>':'');
     const d=new Date(DATA[S.chan].at);
     $('shAt').textContent=CHANS.find(c=>c.id===S.chan).name+' · '+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' 기준';
+    $('shDemo').hidden=!!REAL[S.chan];
   }
   function stPill(st,attr){ return '<button type="button" class="sh-st '+st+'" '+attr+'>'+ST[st]+'</button>'; }
   function paintBody(){
@@ -36208,22 +36275,27 @@ window.baroyamAsk=function(title,body,okText){
     let h='';
     rows.forEach(({p,opts})=>{
       const open=S.open.has(p.id)||!!ws||S.state!=='all';
-      const vs=p.opt.map(cur); const tot=vs.reduce((a,v)=>a+(v.st==='stop'?0:v.qty),0);
-      const sts=[...new Set(vs.map(v=>v.st))];
+      const vs=p.opt.map(cur); const tot=vs.reduce((a,v)=>a+(v.st==='stop'||!v.inv?0:v.qty),0);
+      const sts=[...new Set(vs.map(v=>isOut(v)?'out':v.st))];
       const prices=vs.map(v=>v.price); const pmin=Math.min(...prices), pmax=Math.max(...prices);
       const allSel=opts.every(o=>S.sel.has(o.id));
+      const thumb=p.img?'<img class="sh-thumb" src="'+esc(p.img)+'" alt="" loading="lazy">':'<span class="sh-thumb">'+esc(p.brand.slice(0,1))+'</span>';
       h+='<tr class="sh-prod'+(open?' open':'')+'" data-p="'+p.id+'"><td class="ck"><input type="checkbox" data-selp="'+p.id+'"'+(allSel?' checked':'')+' aria-label="이 상품 옵션 모두 고르기"></td>'
-        +'<td class="nm"><div class="sh-pn"><span class="sh-tog">▸</span><span class="sh-thumb">'+esc(p.brand.slice(0,1))+'</span><span><strong>'+esc(p.name)+'</strong><em>'+esc(p.brand)+' · 옵션 '+p.opt.length+'개</em></span></div></td>'
-        +'<td>'+(pmin===pmax?won(pmin):won(pmin)+' ~')+'</td><td class="sh-sum-qty">'+tot.toLocaleString('ko-KR')+'개</td>'
+        +'<td class="nm"><div class="sh-pn"><span class="sh-tog">▸</span>'+thumb+'<span><strong>'+esc(p.name)+'</strong><em>'+esc(p.brand)+' · 옵션 '+p.opt.length+'개</em></span></div></td>'
+        +'<td>'+(!prices.length?'-':pmin===pmax?won(pmin):won(pmin)+' ~')+'</td><td class="sh-sum-qty">'+(vs.some(v=>v.inv)?tot.toLocaleString('ko-KR')+'개':'<span class="sh-noinv">관리 안 함</span>')+'</td>'
         +'<td>'+(sts.length===1?'<span class="sh-st '+sts[0]+'" style="cursor:default">'+ST[sts[0]]+'</span>':'<span class="sh-st mix">옵션마다 다름</span>')+'</td></tr>';
       if(!open) return;
       opts.forEach(o=>{
         const v=cur(o), e=S.edit[o.id];
         const cls=v.qty===0?' zero':v.qty<=LOW?' low':'';
+        const qtyCell=v.inv
+          ?'<input class="sh-qty'+cls+'" type="number" min="0" inputmode="numeric" value="'+v.qty+'" data-qty="'+o.id+'" aria-label="설정된 재고">'+(e&&'qty' in e?'<span class="sh-was">'+o.qty+'개</span>':'')
+          :'<span class="sh-noinv" title="판매처에서 재고 관리를 끈 옵션이라 숫자와 상관없이 팔립니다">재고 관리 안 함</span>';
+        const st=isOut(v)?'out':v.st;
         h+='<tr class="sh-opt'+(e?' is-dirty':'')+'" data-o="'+o.id+'"><td class="ck"><input type="checkbox" data-sel="'+o.id+'"'+(S.sel.has(o.id)?' checked':'')+' aria-label="옵션 고르기"></td>'
           +'<td class="nm">'+esc(o.name)+'</td><td>'+won(v.price)+'</td>'
-          +'<td><input class="sh-qty'+cls+'" type="number" min="0" inputmode="numeric" value="'+v.qty+'" data-qty="'+o.id+'" aria-label="설정된 재고">'+(e&&'qty' in e?'<span class="sh-was">'+o.qty+'개</span>':'')+'</td>'
-          +'<td>'+stPill(v.st,'data-stb="'+o.id+'" title="눌러서 판매상태 바꾸기"')+(e&&'st' in e?'<span class="sh-was">'+ST[o.st]+'</span>':'')+'</td></tr>';
+          +'<td>'+qtyCell+'</td>'
+          +'<td>'+stPill(st,'data-stb="'+o.id+'" title="눌러서 판매상태 바꾸기"')+(e&&'st' in e?'<span class="sh-was">'+ST[o.st]+'</span>':'')+'</td></tr>';
       });
     });
     $('shBody').innerHTML=h;
@@ -36238,10 +36310,105 @@ window.baroyamAsk=function(title,body,okText){
     $('shSelInfo').innerHTML=ns?'고른 옵션 <b>'+ns+'</b>개':'';
     $('shDirtyInfo').innerHTML=nd?'바꾼 옵션 <b>'+nd+'</b>개 · 아직 판매처에 반영 안 됨':'';
     $('shUndo').hidden=!nd; $('shPush').hidden=!nd;
+    $('shPush').disabled=busy;
   }
   function paint(){ paintChans(); paintState(); paintBody(); paintDock(); }
 
-  function note(t){ const n=$('shNote'); n.textContent=t; n.hidden=!t; clearTimeout(note.t); if(t) note.t=setTimeout(()=>{ n.hidden=true; },6000); }
+  /* 알림 줄 · kind: ok / bad / run(진행 중 · 저절로 안 사라짐) */
+  function note(t,kind,box){
+    const n=$(box||'shNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(box==='shLinkNote'?' sh-link-note':'')+(kind?' '+kind:'');
+    clearTimeout(n._t); if(t&&kind!=='run') n._t=setTimeout(()=>{ n.hidden=true; },kind==='bad'?15000:8000);
+  }
+
+  /* ---------- 반영 · 지금 가져오기 ---------- */
+  function changesOf(cid){
+    const out=[];
+    Object.keys(S.edit).filter(id=>id.startsWith(cid+'-')).forEach(id=>{
+      const f=findOpt(id); if(!f) return;
+      const o=f.o, v=cur(o), c={p:o.p,v:o.v,label:f.p.name+' · '+o.name};
+      if(o.inv&&v.qty!==o.qty) c.qty={from:o.qty,to:v.qty};
+      const was=o.st!=='stop', now=v.st!=='stop';
+      if(was!==now) c.sell={from:was,to:now};
+      if(c.qty||c.sell) out.push(c);
+    });
+    return out;
+  }
+  async function push(){
+    if(!REAL[S.chan]){ note('예시 화면이라 판매처에 보내지 않았습니다. 이 판매처는 아직 연결되지 않았어요.','bad'); return; }
+    const ch=changesOf(S.chan);
+    if(!ch.length){ note('보낼 고침이 없습니다.','bad'); return; }
+    const lines=ch.slice(0,8).map(c=>'· '+c.label+(c.qty?' 재고 '+c.qty.from+' → '+c.qty.to:'')+(c.sell?(c.sell.to?' 판매중으로':' 판매중지로'):'')).join('\n');
+    if(!confirm('카페24에 옵션 '+ch.length+'개를 바로 반영합니다.\n\n'+lines+(ch.length>8?'\n… 외 '+(ch.length-8)+'개':'')+'\n\n그사이 주문으로 카페24 재고가 바뀐 옵션은 덮어쓰지 않고 건너뜁니다.')) return;
+    busy=true; paintDock(); note('카페24에 보내는 중…','run');
+    try{
+      const name=await upload('shop/req',{v:1,kind:'push',chan:S.chan,by:meName(),at:new Date().toISOString(),changes:ch});
+      const r=await waitRes(name,m=>note(m,'run'));
+      if(r.state==='done'){
+        await loadCafe24();
+        const skip=(r.skip||[]).map(x=>x.label+' · '+x.why).join(' / '), fail=(r.fail||[]).map(x=>x.label+' · '+x.why).join(' / ');
+        note(r.message+(skip?' · 건너뜀: '+skip:'')+(fail?' · 실패: '+fail:''),fail||skip?'bad':'ok');
+      }else note('반영하지 못했어요 · '+r.message,'bad');
+    }catch(e){ note('반영하지 못했어요 · '+e.message,'bad'); }
+    busy=false; paintDock();
+  }
+  async function fetchNow(){
+    if(S.chan!=='cafe24'){ note('이 판매처는 아직 연결되지 않았습니다. 연동 설정 탭에서 판매처마다 필요한 것을 봅니다.','bad'); return; }
+    if(!STATUS||!STATUS.read){ note('카페24 상품 권한이 아직 없습니다 · 연동 설정 탭에서 카페24 연결하기를 눌러 주세요','bad'); return; }
+    if(dirtyIn('cafe24')&&!confirm('반영하지 않은 고침이 있어요. 새로 받으면 고친 값이 사라집니다. 계속할까요?')) return;
+    const b=$('shFetch'); b.disabled=true; note('카페24 상품을 받는 중…','run');
+    try{
+      const name=await upload('shop/req',{v:1,kind:'sync',chan:'cafe24',by:meName(),at:new Date().toISOString()});
+      const r=await waitRes(name,m=>note(m,'run'));
+      if(r.state==='done'){ await loadCafe24(); note(r.message,'ok'); } else note(r.message,'bad');
+    }catch(e){ note(e.message,'bad'); }
+    b.disabled=false;
+  }
+
+  /* ---------- 연동 설정 ---------- */
+  const TAG={1:['t1','바로 가능'],2:['t2','키 발급 필요'],3:['t3','확인 필요']};
+  const hm=t=>{ const d=new Date(t); return isNaN(d)?'—':(d.getMonth()+1)+'.'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  function paintLink(){
+    const on=c=>c.id==='cafe24'&&STATUS&&STATUS.read;
+    $('shLinkCnt').innerHTML='판매처 7곳 중 <b>'+CHANS.filter(on).length+'</b>곳 연결됨';
+    let rk=0;   /* 연결 순서 · 확인 필요(톡딜·G마켓·옥션)는 순서 없이 맨 뒤 */
+    $('shLink').innerHTML=CHANS.slice().sort((x,y)=>(x.lv===3)-(y.lv===3)).map(c=>{ const t=TAG[c.lv]; const i=c.lv<3?rk++:-1;
+      const ok=on(c), half=c.id==='cafe24'&&STATUS&&STATUS.read&&!STATUS.write;
+      const pill=ok?(half?'<span class="sh-st mix">읽기만 연결</span>':'<span class="sh-st on">연결됨</span>'):'<span class="sh-st stop">연결 안 됨</span>';
+      const last=ok?'마지막 수집 '+hm(STATUS.synced||STATUS.at)+(STATUS.count!=null?' · 상품 '+STATUS.count+'개':''):'마지막 수집 —';
+      return '<div class="sh-lc"><div class="sh-lc-top"><img src="'+c.logo+'" alt=""><div class="sh-lc-nm"><strong>'+esc(c.name)+'</strong><em>'+(i>=0?(i+1)+'순위 · ':'')+esc(c.how)+'</em></div><span class="sh-lc-tag '+t[0]+'">'+t[1]+'</span></div>'
+        +'<div class="sh-lc-need"><span>'+(ok?'연결 정보':'준비물')+'</span>'+(ok?'쇼핑몰 '+esc(STATUS.mall||'')+' · 권한 '+esc((STATUS.scopes||'').replace(/mall\./g,'')):esc(c.need))+'</div>'
+        +'<div class="sh-lc-foot">'+pill+last+'<span class="pf-grow"></span><button type="button" class="ui-btn sm soft" data-link="'+c.id+'">'+(ok?'다시 승인':'연결하기')+'</button></div></div>'; }).join('');
+  }
+  function connect(id){
+    const c=CHANS.find(x=>x.id===id);
+    if(id!=='cafe24'){ alert(c.name+' 연결은 아직 준비 중입니다. 준비물: '+c.need); return; }
+    if(!STATUS||!STATUS.authUrl){ alert('서버가 아직 카페24 연결을 준비하지 못했어요. 잠시 뒤 새로고침해 주세요.'); return; }
+    if(!confirm('카페24 승인 화면으로 갑니다.\n\n쇼핑몰 관리자로 로그인된 상태에서 "동의"를 누르면 이 ERP 로 돌아와 연결을 저절로 마무리합니다(1분 안에).\n\n먼저 카페24 개발자센터 앱 권한에 상품 읽기·쓰기를 켜 두어야 합니다.')) return;
+    location.href=STATUS.authUrl;
+  }
+  /* 카페24 승인 뒤 돌아왔을 때 · ?code=…&state=baroyam-shop → code 를 서버로 넘기고 주소에서 지운다 */
+  async function catchAuth(){
+    const q=new URLSearchParams(location.search);
+    if(q.get('state')!=='baroyam-shop') return;
+    const code=q.get('code'), err=q.get('error');
+    history.replaceState(history.state,'',location.pathname+'#shop');
+    const go=()=>{ const sb=document.querySelector('.sidebar .sb-item[data-view="shop"]'); if(sb) sb.click(); const t=document.querySelector('#shopTabs [data-shop="link"]'); if(t) t.click(); };
+    go();
+    if(!code){ note('카페24 승인을 하지 않았어요'+(err?' · '+(q.get('error_description')||err):''),'bad','shLinkNote'); return; }
+    note('카페24 승인 코드를 서버로 넘기는 중… (로그인을 기다림)','run','shLinkNote');
+    const t0=Date.now();
+    while(Date.now()-t0<50e3){   /* 로그인 세션이 잡힐 때까지 · code 는 1분만 쓸 수 있다 */
+      const db=DB(); if(db&&db.fileUpload&&(!db.ensureSession||await db.ensureSession().catch(()=>false))) break;
+      await new Promise(r=>setTimeout(r,1000));
+    }
+    try{
+      const name=await upload('shop/auth',{v:1,code,by:meName(),at:new Date().toISOString()});
+      go();
+      const r=await waitRes(name,m=>note(m,'run','shLinkNote'),180e3);
+      note(r.message,r.state==='done'?'ok':'bad','shLinkNote');
+      await loadCafe24();
+    }catch(e){ note('승인을 넘기지 못했어요 · '+e.message+' · 다시 연결하기를 눌러 주세요','bad','shLinkNote'); }
+  }
 
   function bind(){
     $('shopTabs').addEventListener('click',e=>{
@@ -36285,8 +36452,9 @@ window.baroyamAsk=function(title,body,okText){
       if(sb){
         e.stopPropagation();
         const f=findOpt(sb.dataset.stb); if(!f) return;
-        window.UI.menu(sb,[{value:'on',label:'판매중'},{value:'out',label:'품절',sub:'재고 0 으로'},{value:'stop',label:'판매중지',sub:'목록에서 내림'}],cur(f.o).st,v=>{
-          setEdit(f.o,v==='out'?{st:'out',qty:0}:{st:v}); paint();
+        const opts=[{value:'on',label:'판매중'}].concat(f.o.inv?[{value:'out',label:'품절',sub:'재고 0 으로'}]:[]).concat([{value:'stop',label:'판매중지',sub:'팔지 않음'}]);
+        window.UI.menu(sb,opts,isOut(cur(f.o))?'out':cur(f.o).st,v=>{
+          setEdit(f.o,v==='out'?{st:'on',qty:0}:{st:v}); paint();   /* 품절 = 판매중 + 재고 0 (카페24 에는 품절 상태가 따로 없음) */
         });
         return;
       }
@@ -36296,43 +36464,35 @@ window.baroyamAsk=function(title,body,okText){
     body.addEventListener('change',e=>{
       const q=e.target.closest('[data-qty]'); if(!q) return;
       const f=findOpt(q.dataset.qty); if(!f) return;
-      const n=Math.max(0,Math.floor(Number(q.value)||0));
-      const v=cur(f.o); const patch={qty:n};
-      if(n===0&&v.st==='on') patch.st='out'; else if(n>0&&v.st==='out') patch.st='on';   /* 숫자를 0 으로 = 품절, 품절에 숫자를 넣으면 판매중 */
-      setEdit(f.o,patch); paint();
+      setEdit(f.o,{qty:Math.max(0,Math.floor(Number(q.value)||0))}); paint();
     });
     body.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('.sh-qty')){ e.preventDefault(); e.target.blur(); } });
     $('shBulkSet').addEventListener('click',()=>{
       const raw=$('shBulkN').value; if(raw===''){ $('shBulkN').focus(); return; }
       const n=Math.max(0,Math.floor(Number(raw)||0));
-      S.sel.forEach(id=>{ const f=findOpt(id); if(!f) return; const v=cur(f.o); const patch={qty:n}; if(n===0&&v.st==='on') patch.st='out'; else if(n>0&&v.st==='out') patch.st='on'; setEdit(f.o,patch); });
+      S.sel.forEach(id=>{ const f=findOpt(id); if(f) setEdit(f.o,{qty:n}); });
       $('shBulkN').value=''; paint();
     });
     $('shBulk').addEventListener('click',e=>{
       const b=e.target.closest('[data-bulk-st]'); if(!b) return;
       const st=b.dataset.bulkSt;
-      S.sel.forEach(id=>{ const f=findOpt(id); if(f) setEdit(f.o,st==='out'?{st:'out',qty:0}:{st}); });
+      S.sel.forEach(id=>{ const f=findOpt(id); if(!f) return; if(st==='out'){ if(f.o.inv) setEdit(f.o,{st:'on',qty:0}); } else setEdit(f.o,{st}); });
       paint();
     });
-    $('shUndo').addEventListener('click',()=>{ S.edit={}; if(S.state==='dirty') S.state='all'; paint(); });
-    $('shPush').addEventListener('click',()=>{
-      const n=Object.keys(S.edit).length;
-      note('예시 화면이라 판매처에 보내지 않았습니다(바꾼 옵션 '+n+'개). 판매처를 연결하면 이 단추가 실제로 재고·상태를 바꿉니다.');
-    });
-    $('shFetch').addEventListener('click',()=>note('아직 판매처와 연결되지 않았습니다. 연동 설정 탭에서 판매처마다 필요한 것을 봅니다.'));
-    /* 연동 설정 · 판매처마다 카드(로고·이름·연결 방식 · 쉬움/보통/확인 필요 · 준비물 · 상태·마지막 수집 · 연결하기) */
-    const TAG={1:['t1','바로 가능'],2:['t2','키 발급 필요'],3:['t3','확인 필요']};
-    $('shLinkCnt').innerHTML='판매처 7곳 중 <b>0</b>곳 연결됨';
-    let rk=0;   /* 연결 순서 · 확인 필요(톡딜·G마켓·옥션)는 순서 없이 맨 뒤 */
-    $('shLink').innerHTML=CHANS.slice().sort((x,y)=>(x.lv===3)-(y.lv===3)).map(c=>{ const t=TAG[c.lv]; const i=c.lv<3?rk++:-1;
-      return '<div class="sh-lc"><div class="sh-lc-top"><img src="'+c.logo+'" alt=""><div class="sh-lc-nm"><strong>'+esc(c.name)+'</strong><em>'+(i>=0?(i+1)+'순위 · ':'')+esc(c.how)+'</em></div><span class="sh-lc-tag '+t[0]+'">'+t[1]+'</span></div>'
-        +'<div class="sh-lc-need"><span>준비물</span>'+esc(c.need)+'</div>'
-        +'<div class="sh-lc-foot"><span class="sh-st stop">연결 안 됨</span>마지막 수집 —<span class="pf-grow"></span><button type="button" class="ui-btn sm soft" data-link="'+c.id+'">연결하기</button></div></div>'; }).join('');
-    $('shLink').addEventListener('click',e=>{ const b=e.target.closest('[data-link]'); if(!b) return; const c=CHANS.find(x=>x.id===b.dataset.link);
-      alert(c.name+' 연결은 아직 준비 중입니다. 준비물: '+c.need); });
+    $('shUndo').addEventListener('click',()=>{ Object.keys(S.edit).filter(id=>id.startsWith(S.chan+'-')).forEach(id=>delete S.edit[id]); if(S.state==='dirty') S.state='all'; paint(); });
+    $('shPush').addEventListener('click',push);
+    $('shFetch').addEventListener('click',fetchNow);
+    $('shLink').addEventListener('click',e=>{ const b=e.target.closest('[data-link]'); if(b) connect(b.dataset.link); });
+    paintLink();
     let t=''; try{ t=localStorage.getItem('baroyam_shop_tab')||''; }catch(_){}
     const tb=t&&document.querySelector('#shopTabs [data-shop="'+t+'"]'); if(tb) tb.click();
     paint();
+    catchAuth();
+    /* 로그인 뒤 · 이 화면을 열 때마다(5분에 한 번) 카페24 목록을 읽는다 */
+    let loaded=0;
+    const tryLoad=()=>{ if(Date.now()-loaded<5*60e3||busy) return; const v=$('view-shop'); if(!v||v.style.display==='none') return; if(dirtyIn('cafe24')) return; loaded=Date.now(); loadCafe24(); };
+    document.querySelector('.sidebar .sb-item[data-view="shop"]')?.addEventListener('click',()=>setTimeout(tryLoad,300));
+    setInterval(tryLoad,4000);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
 })();
