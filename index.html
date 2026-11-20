@@ -5171,7 +5171,17 @@ window.BAROYAM_FONT=(function(){
   :is(#caKws,#caAreas) .cs-tbl :is(th,td)+:is(th,td){border-left:1px solid var(--line)}
   #caAreas .cs-tbl tr.sum td{background:color-mix(in srgb,var(--btn) 4%,transparent);color:var(--ink);font-weight:600}
   #caAreas .cs-tbl tr.sum td.k{font-weight:600}
-  #caAreas .cs-tbl tr.sub td.k{padding-left:40px;color:var(--mute);font-weight:400}
+  #caAreas .cs-tbl tr.diff td{color:var(--body);background:color-mix(in srgb,var(--mute) 6%,transparent)}
+  #caAreas .cs-tbl tr.diff td.k{color:var(--ink)}
+  #caAreas .cs-tbl tr.diff td .up{color:var(--btn)}
+  #caAreas .cs-tbl tr.diff td .dn{color:var(--neg)}
+  /* 키워드 고르기(누르기 · Shift 범위 · Ctrl 더하기) → Ctrl+C·복사 단추로 한 줄에 하나씩 */
+  #caKws .cs-tbl tbody tr[data-i]{cursor:pointer;user-select:none}
+  #caKws .cs-tbl tbody tr.sel td{background:color-mix(in srgb,var(--btn) 10%,transparent)}
+  #caKws .cs-tbl tbody tr.sel td.k{color:var(--btn)}
+  #caKsel{display:flex;align-items:center;gap:6px}
+  #caKsel[hidden]{display:none}
+  #caKsel .n{font-size:12.5px;color:var(--btn);font-weight:500}
   #caAreas .cs-tbl td.k em{font-style:normal;font-weight:400;font-size:12px;color:var(--mute);margin-left:6px}
   #caRoot[data-view="detail"] .cs-bar{border-bottom:0}
   #caRoot .cs-tbl td.dd{color:var(--ink);font-weight:500}
@@ -31519,7 +31529,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const pct=(a,b,d)=>b?(a/b*100).toFixed(d==null?0:d)+'%':'-';
   const IDX='coupang_ads_v1', MKEY=m=>IDX+':'+m;
   const firstOfMonth=()=>kst().slice(0,8)+'01';
-  const st={view:'day',day:'',range:{start:firstOfMonth(),end:kst()},camp:'',kq:'',kf:'all',ksort:{k:'cost',dir:-1},kmax:100,months:{},index:null,built:false,seq:0,busy:false};
+  const st={view:'day',day:'',ksel:new Set(),kanc:null,range:{start:firstOfMonth(),end:kst()},camp:'',kq:'',kf:'all',ksort:{k:'cost',dir:-1},kmax:100,months:{},index:null,built:false,seq:0,busy:false};
   try{ const s=JSON.parse(localStorage.getItem('baroyam_ca_sort')||'null'); if(s&&s.k) st.ksort=s; }catch(e){}
   let data={rows:[],camps:{},gmv:{}};
   const DB=()=>window.BAROYAM_DB;
@@ -31674,7 +31684,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>캠페인별 성과</h3><span class="sub">줄을 누르면 그 캠페인의 키워드만 봅니다</span></div><div class="cs-tbl-wrap" id="caCamps"></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>검색 / 비검색 영역</h3><span class="sub">키워드 칸이 \'-\' 인 줄(비검색 영역·오디언스 플러스)이 비검색 영역입니다</span></div><div class="cs-tbl-wrap" id="caAreas"></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>키워드별 성과</h3><span class="sub" id="caKwSub"></span>'
-      +'<div class="right"><div class="ui-chips" id="caKf" role="group" aria-label="키워드 거르기"></div><input class="ui-field" id="caKq" placeholder="키워드 찾기"></div></div>'
+      +'<div class="right"><div id="caKsel" hidden><span class="n" id="caKselN"></span><button type="button" class="ui-btn soft sm" id="caKcopy" title="Ctrl+C 로도 복사합니다 · 붙여 넣으면 한 줄에 키워드 하나">복사</button><button type="button" class="ui-btn ghost sm" id="caKclear">선택 해제</button></div>'
+      +'<div class="ui-chips" id="caKf" role="group" aria-label="키워드 거르기"></div><input class="ui-field" id="caKq" placeholder="키워드 찾기"></div></div>'
       +'<div class="cs-tbl-wrap" id="caKws"></div></section>';
     st.picker=window.UI.datePicker($('caPeriod'),{
       mode:'range', value:st.range, max:kst(), placeholder:'기간 선택',
@@ -31705,7 +31716,33 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         try{ localStorage.setItem('baroyam_ca_sort',JSON.stringify(st.ksort)); }catch(e){}
         draw(); return;
       }
-      if(e.target.closest('[data-more]')){ st.kmax+=200; draw(); }
+      if(e.target.closest('[data-more]')){ st.kmax+=200; draw(); return; }
+      /* 키워드 고르기 · 그냥 누르기 = 그 줄만(다시 누르면 해제) · Ctrl/⌘ = 더하고 빼기 · Shift = 마지막으로 누른 줄부터 범위 */
+      const tr=e.target.closest('tr[data-i]'); if(!tr) return;
+      const i=+tr.dataset.i, kw=kshow[i]; if(kw==null) return;
+      if(e.shiftKey&&st.kanc!=null&&kshow.includes(st.kanc)){
+        const a=kshow.indexOf(st.kanc), lo=Math.min(a,i), hi=Math.max(a,i);
+        if(!(e.ctrlKey||e.metaKey)) st.ksel.clear();
+        for(let j=lo;j<=hi;j++) st.ksel.add(kshow[j]);
+      }else if(e.ctrlKey||e.metaKey){
+        if(st.ksel.has(kw)) st.ksel.delete(kw); else st.ksel.add(kw); st.kanc=kw;
+      }else{
+        const only=st.ksel.size===1&&st.ksel.has(kw); st.ksel.clear(); if(!only) st.ksel.add(kw); st.kanc=kw;
+      }
+      paintKsel();
+    });
+    /* Shift 로 누를 때 글자가 드래그 선택되지 않게 */
+    $('caKws').addEventListener('mousedown',e=>{ if((e.shiftKey||e.ctrlKey||e.metaKey)&&e.target.closest('tr[data-i]')) e.preventDefault(); });
+    $('caKcopy').addEventListener('click',copyKws);
+    $('caKclear').addEventListener('click',()=>{ st.ksel.clear(); st.kanc=null; paintKsel(); });
+    document.addEventListener('keydown',e=>{
+      if(!st.ksel.size||st.view!=='detail'||!root.offsetParent) return;
+      const ae=document.activeElement, typing=ae&&(/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)||ae.isContentEditable);
+      if(typing) return;
+      if((e.ctrlKey||e.metaKey)&&(e.key==='c'||e.key==='C')){
+        if(String(window.getSelection&&window.getSelection()||'').trim()) return;   /* 글자를 드래그해 둔 때는 브라우저 복사 그대로 */
+        e.preventDefault(); copyKws();
+      }else if(e.key==='Escape'){ st.ksel.clear(); st.kanc=null; paintKsel(); }
     });
     $('caLegend').addEventListener('click',e=>{
       const b=e.target.closest('[data-ser]'); if(!b) return;
@@ -31719,6 +31756,23 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     let qt=null;
     $('caKq').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{ st.kq=e.target.value.trim(); st.kmax=100; draw(); },150); });
     st.built=true;
+  }
+  /* 고른 키워드 · 표에 보이는 순서대로(안 보이는 것은 뒤에) 한 줄에 하나 */
+  let kshow=[];
+  function paintKsel(){
+    const n=st.ksel.size;
+    $('caKsel').hidden=!n; $('caKselN').textContent=n?won(n)+'개 선택':'';
+    document.querySelectorAll('#caKws tbody tr[data-i]').forEach(tr=>tr.classList.toggle('sel',st.ksel.has(kshow[+tr.dataset.i])));
+  }
+  async function copyKws(){
+    if(!st.ksel.size) return;
+    const list=kshow.filter(k=>st.ksel.has(k)).concat([...st.ksel].filter(k=>!kshow.includes(k)));
+    const txt=list.join('\n');
+    let ok=false;
+    try{ await navigator.clipboard.writeText(txt); ok=true; }catch(e){
+      try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.cssText='position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e2){}
+    }
+    const b=$('caKcopy'); b.textContent=ok?won(list.length)+'개 복사됨':'복사 실패'; clearTimeout(copyKws.t); copyKws.t=setTimeout(()=>{ b.textContent='복사'; },1600);
   }
   async function paint(){
     if(!st.built) build();
@@ -31892,15 +31946,24 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const SA=Object.assign(blank(),{kw:'검색 영역 합계',n:kws.length}), NA=Object.assign(blank(),{kw:'비검색 영역 합계'});
     const raw=o=>[0,0,0,o.imp,o.clk,o.cost,o.ord,o.rev,o.qty];
     kws.forEach(o=>add(SA,raw(o))); autos.forEach(o=>add(NA,raw(o)));
-    const allCost=SA.cost+NA.cost;
-    const arow=(o,cls,name,camp)=>'<tr class="'+cls+'"><td class="k">'+name+'</td><td class="c"'+(o.cs?' title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'"':'')+'>'+camp+'</td>'
+    /* 합계 · 검색 · 비검색 · 차이(검색 − 비검색) 네 줄 · 11-20 사용자("같은 걸 또 보는 꼴 · 뺀 값과 합산값") */
+    const AL=add(add(blank(),raw(SA)),raw(NA)), allCost=AL.cost;
+    const roasV=o=>o.cost?o.rev/o.cost*100:0, ctrV=o=>o.imp?o.clk/o.imp*100:0, cpcV=o=>o.clk?o.cost/o.clk:0, shV=o=>allCost?o.cost/allCost*100:0;
+    const arow=(o,cls,name)=>'<tr class="'+cls+'"><td class="k">'+name+'</td>'
       +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
       +'<td class="r v">'+won(o.cost)+'원</td><td class="r">'+pct(o.cost,allCost,1)+'</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cost/o.clk)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>';
+    const sg=(v,u,d)=>{ const a=Math.abs(v), t=d?a.toFixed(d):won(a); return '<span class="'+(v>0?'up':v<0?'dn':'')+'">'+(v>0?'+':v<0?'−':'±')+t+u+'</span>'; };
+    const drow='<tr class="diff"><td class="k">차이 <em>검색 − 비검색</em></td>'
+      +'<td class="r">'+sg(SA.imp-NA.imp,'')+'</td><td class="r">'+sg(SA.clk-NA.clk,'')+'</td><td class="r">'+sg(ctrV(SA)-ctrV(NA),'%p',2)+'</td>'
+      +'<td class="r">'+sg(SA.cost-NA.cost,'원')+'</td><td class="r">'+sg(shV(SA)-shV(NA),'%p',1)+'</td><td class="r">'+sg(SA.rev-NA.rev,'원')+'</td>'
+      +'<td class="r">'+sg(cpcV(SA)-cpcV(NA),'원')+'</td><td class="r">'+sg(roasV(SA)-roasV(NA),'%p')+'</td></tr>';
+    const autoNames=autos.map(o=>o.kw.replace(/^\(|\)$/g,'')).join('·');
     $('caAreas').innerHTML=(SA.imp||NA.imp||SA.cost||NA.cost)
-      ?'<table class="cs-tbl"><thead><tr><th>영역</th><th>캠페인</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r">광고비</th><th class="r">광고비 비중</th><th class="r">광고매출(14일)</th><th class="r">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
-        +arow(SA,'sum','검색 영역 합계<em>키워드 '+won(SA.n)+'개</em>','')
-        +arow(NA,'sum','비검색 영역 합계','')
-        +autos.map(o=>arow(o,'sub',esc(o.kw.replace(/^\(|\)$/g,'')),esc(campName(o)))).join('')
+      ?'<table class="cs-tbl"><thead><tr><th>영역</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r">광고비</th><th class="r">광고비 비중</th><th class="r">광고매출(14일)</th><th class="r">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
+        +arow(AL,'sum','전체 합계')
+        +arow(SA,'','검색 영역<em>키워드 '+won(SA.n)+'개</em>')
+        +arow(NA,'','비검색 영역'+(autos.length>1?'<em>'+esc(autoNames)+'</em>':''))
+        +drow
         +'</tbody></table>'
       :'<div class="cs-empty">고른 기간에 광고 기록이 없습니다</div>';
     /* 키워드별 성과는 검색 영역 키워드만 */
@@ -31915,17 +31978,19 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const k=st.ksort.k, dir=st.ksort.dir;
     kws.sort((a,b)=>(k==='kw'?a.kw.localeCompare(b.kw,'ko'):(a[k]-b[k]))*dir||(b.cost-a.cost));
     const wasteCost=kws.filter(o=>o.cost>0&&!o.rev).reduce((a,o)=>a+o.cost,0);
-    $('caKwSub').textContent=won(kws.length)+'개'+(wasteCost?' · 매출 없이 쓴 광고비 '+won(wasteCost)+'원':'');
+    $('caKwSub').textContent=won(kws.length)+'개'+(wasteCost?' · 매출 없이 쓴 광고비 '+won(wasteCost)+'원':'')+' · 줄을 눌러 고르고(Shift 범위 · Ctrl 더하기) Ctrl+C 로 복사';
     const th=(key,label,cls)=>'<th class="'+(cls||'')+(k===key?' on':'')+'"><button type="button" data-sort="'+key+'">'+label+(k===key?(dir<0?DOWN_SVG:UP_SVG):SORT_SVG)+'</button></th>';
     const show=kws.slice(0,st.kmax);
+    kshow=kws.map(o=>o.kw);
     $('caKws').innerHTML=kws.length
       ?'<table class="cs-tbl"><thead><tr>'+th('kw','키워드')+(st.camp?'':'<th>캠페인</th>')+th('imp','노출수','r')+th('clk','클릭수','r')+th('ctr','클릭률','r')
         +th('cost','광고비','r')+th('rev','광고매출(14일)','r')+th('cpc','CPC','r')+th('roas','ROAS','r')+'</tr></thead><tbody>'
-        +show.map(o=>'<tr><td class="k'+(isAuto(o)?' dim':'')+'">'+esc(o.kw)+'</td>'+(st.camp?'':'<td class="c" title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'">'+esc(campName(o))+'</td>')
+        +show.map((o,i)=>'<tr data-i="'+i+'"><td class="k'+(isAuto(o)?' dim':'')+'">'+esc(o.kw)+'</td>'+(st.camp?'':'<td class="c" title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'">'+esc(campName(o))+'</td>')
           +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
           +'<td class="r v">'+won(o.cost)+'원</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cpc)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>').join('')
         +'</tbody></table>'+(kws.length>show.length?'<button type="button" class="ui-btn ghost sm ca-more" data-more>더 보기 ('+won(show.length)+' / '+won(kws.length)+')</button>':'')
       :'<div class="cs-empty">'+(data.rows.length?'조건에 맞는 키워드가 없습니다':'고른 기간에 키워드 기록이 없습니다')+'</div>';
+    paintKsel();
   }
   /* ---------- 쿠팡윙 수집 (크롬 확장 1.6.0~) ---------- */
   const fbtn=document.getElementById('caFetch');
