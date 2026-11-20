@@ -6367,6 +6367,71 @@ window.BAROYAM_FONT=(function(){
   @media (prefers-reduced-motion:reduce){
     .logo-fab::after{animation:none}
   }
+  /* 쇼핑몰관리 · 판매처 칩 → 거르기 줄 → 상품(펼치면 옵션) 표 → 아래 붙는 반영 줄 */
+  .sh-pane[hidden]{display:none}
+  .sh-chans{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 14px}
+  .sh-chan{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 6px;
+    border-radius:999px;border:1.5px solid var(--line);background:var(--paper);font-size:13.5px;font-weight:500;color:var(--body);transition:border-color .15s,background .15s}
+  .sh-chan img{width:28px;height:28px;border-radius:50%;object-fit:contain;background:var(--paper);border:1px solid var(--line)}
+  .sh-chan b{font-size:12px;font-weight:600;color:var(--mute)}
+  .sh-chan:hover{border-color:var(--btn)}
+  .sh-chan[aria-selected="true"]{border-color:var(--btn);background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:600}
+  .sh-chan[aria-selected="true"] b{color:var(--btn-soft-ink)}
+  .sh-chan .dirty{width:7px;height:7px;border-radius:50%;background:var(--warn)}
+  .sh-at{font-size:13px;color:var(--mute)}
+  .sh-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 12px}
+  .sh-search{width:240px}
+  .sh-search input{all:unset;flex:1;min-width:0;font-size:13.5px;color:var(--ink)}
+  .sh-table-wrap{border:1px solid var(--line);border-radius:14px;overflow:auto}
+  .sh-table{width:100%;border-collapse:collapse;font-size:14px;color:var(--ink)}
+  .sh-table th{position:sticky;top:0;z-index:1;background:var(--bg);text-align:center;font-size:12.5px;font-weight:600;color:var(--mute);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .sh-table th.nm{text-align:left}
+  .sh-table td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .sh-table tr:last-child td{border-bottom:0}
+  .sh-table td.nm{text-align:left;white-space:normal}
+  .sh-table .ck{width:40px}
+  .sh-table input[type=checkbox]{width:16px;height:16px;accent-color:var(--btn);cursor:pointer}
+  .sh-prod{cursor:pointer}
+  .sh-prod td{background:color-mix(in srgb,var(--bg) 55%,var(--paper))}
+  .sh-prod:hover td{background:var(--bg)}
+  .sh-pn{display:flex;align-items:center;gap:10px}
+  .sh-tog{flex:none;width:18px;color:var(--mute);transition:transform .15s;display:inline-block;text-align:center}
+  .sh-prod.open .sh-tog{transform:rotate(90deg)}
+  .sh-thumb{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:13px;font-weight:600}
+  .sh-pn em{font-style:normal;display:block;font-size:12px;color:var(--mute);margin-top:1px}
+  .sh-pn strong{font-weight:600}
+  .sh-opt td.nm{padding-left:74px;color:var(--body)}
+  .sh-opt.is-dirty td{background:color-mix(in srgb,var(--warn-soft) 60%,var(--paper))}
+  .sh-qty{all:unset;box-sizing:border-box;width:84px;height:32px;padding:0 10px;border-radius:8px;border:1px solid transparent;text-align:right;font-size:14px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;cursor:text}
+  .sh-opt:hover .sh-qty{border-color:var(--line);background:var(--paper)}
+  .sh-qty:focus{border-color:var(--btn);background:var(--paper)}
+  .sh-qty.low{color:var(--warn)} .sh-qty.zero{color:var(--neg)}
+  .sh-was{display:block;font-size:11px;color:var(--mute);text-decoration:line-through}
+  .sh-st{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .sh-st::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+  .sh-st.on{background:var(--pos-soft);color:var(--pos)}
+  .sh-st.out{background:var(--neg-soft);color:var(--neg)}
+  .sh-st.stop{background:color-mix(in srgb,var(--mute) 16%,var(--paper));color:var(--mute)}
+  .sh-st.mix{background:var(--warn-soft);color:var(--warn);cursor:default}
+  .sh-sum-qty{font-weight:600}
+  .sh-empty{padding:60px 0;text-align:center;color:var(--mute);font-size:14px}
+  .sh-empty[hidden]{display:none}
+  .sh-dock{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:min(980px,calc(100vw - 48px));z-index:40;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px 10px 16px;
+    border-radius:14px;background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.25);font-size:13px;color:var(--body)}
+  .sh-dock[hidden]{display:none}
+  .sh-dock-bulk{display:inline-flex;align-items:center;gap:6px}
+  .sh-dock-bulk[hidden]{display:none}
+  .sh-dock-bulk .ui-field{width:84px}
+  .sh-dock-sel b,.sh-dock-n b{color:var(--ink);font-weight:600}
+  .sh-note{margin-top:10px;padding:10px 14px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:13px}
+  .sh-note[hidden]{display:none}
+  .sh-link td.nm .sh-pn img{width:30px;height:30px;border-radius:50%;object-fit:contain;border:1px solid var(--line);background:var(--paper)}
+  .sh-link td{white-space:normal}
+  .sh-link .off{color:var(--mute)}
+  @media (max-width:1240px){ .sh-dock{left:24px;transform:none;width:calc(100vw - 150px)} }
+  .sh-pane[data-shop-pane="stock"]{padding-bottom:70px}
+  @media (max-width:760px){ .sh-search{width:100%} .sh-opt td.nm{padding-left:40px} }
+
   /* 바로얌 AI 채팅 · 로고 버튼을 누르면 오른쪽 아래에 뜨는 채팅 창(2026-11-20 · 상담 콘솔 대신) ·
      보내면 VPS 대본 서비스(content_writer.js kind:'chat' · 지침 prompts/바로얌AI.md)가 Claude 로 답한다 ·
      왼쪽은 대화 목록(회원별 서버 기록 · 날짜로 묶음 · 길면 스크롤), 오른쪽은 지금 대화 · 머리는 baroyam AI 로고(logos/baroyam-word.png) */
@@ -12514,15 +12579,65 @@ window.BAROYAM_FONT=(function(){
           </div>
         </div>
       </div><!-- /view-insta -->
-      <!-- 쇼핑몰관리 · 자리만 있다(내용은 아직 비어 있다 · 11-20) -->
+      <!-- 쇼핑몰관리 · 판매처(카페24·쿠팡윙·네이버·톡딜·11번가·G마켓·옥션)마다 상품 → 옵션의 재고수량·판매가·판매상태를 보고 고친다 ·
+           11-20 임시 구현: 판매처와 아직 연결되지 않아 예시 데이터로 그리고, 고친 값은 이 창 메모리에만 있다(반영 누르면 안내만) -->
       <div id="view-shop" style="display:none">
+        <div class="hero-view-tabs" id="shopTabs" role="tablist" aria-label="쇼핑몰관리 화면">
+          <button type="button" class="hero-view-tab active" role="tab" data-shop="stock" data-sub="판매처마다 상품의 옵션 재고수량·판매가·판매상태를 한 화면에서 보고 고칩니다.">상품·옵션 재고</button>
+          <button type="button" class="hero-view-tab" role="tab" data-shop="register" data-sub="ERP 에서 상품을 한 번 작성해 여러 판매처에 등록합니다.">상품 등록</button>
+          <button type="button" class="hero-view-tab" role="tab" data-shop="link" data-sub="판매처마다 연결 상태와 마지막 수집 시각을 봅니다.">연동 설정</button>
+        </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
             <div class="ptag">쇼핑몰</div>
-            <div class="ptitle">쇼핑몰관리</div>
-            <div class="psub">자사몰 상품·주문·고객을 한곳에서 관리합니다.</div>
+            <div class="ptitle" id="shopTitle">상품·옵션 재고</div>
+            <div class="psub" id="shopSub">판매처마다 상품의 옵션 재고수량·판매가·판매상태를 한 화면에서 보고 고칩니다.</div>
           </div>
-          <div class="profit-empty">아직 준비 중인 화면입니다.</div>
+          <div class="sh-pane" data-shop-pane="stock">
+            <div class="sh-chans" id="shChans" role="tablist" aria-label="판매처"></div>
+            <div class="iv-meta sh-meta">
+              <span class="iv-demo">예시 화면</span><span class="sh-at" id="shAt"></span>
+              <span class="pf-grow"></span><span class="iv-sum" id="shSum"></span>
+              <button type="button" class="ui-btn sm soft" id="shFetch" title="판매처에서 지금 상품·옵션을 받아 옵니다"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>지금 가져오기</button>
+            </div>
+            <div class="sh-bar">
+              <label class="ui-field sh-search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input type="search" id="shQ" placeholder="상품명·옵션 찾기"></label>
+              <button type="button" class="ui-field" id="shBrand">브랜드 전체 ▾</button>
+              <div class="ui-chips" id="shState"></div>
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn sm ghost" id="shFold">모두 펼치기</button>
+            </div>
+            <div class="sh-table-wrap"><table class="sh-table">
+              <thead><tr><th class="ck"><input type="checkbox" id="shAll" aria-label="보이는 옵션 모두 고르기"></th><th class="nm">상품 · 옵션</th><th>판매가</th><th>재고수량</th><th>판매상태</th></tr></thead>
+              <tbody id="shBody"></tbody>
+            </table></div>
+            <div class="sh-empty" id="shEmpty" hidden>조건에 맞는 상품이 없습니다.</div>
+            <!-- 고른 옵션 한꺼번에 · 바꾼 값 반영 · 아래에 붙어 따라다님 -->
+            <div class="sh-dock" id="shDock" hidden>
+              <span class="sh-dock-sel" id="shSelInfo"></span>
+              <span class="sh-dock-bulk" id="shBulk">
+                <input class="ui-field sm" id="shBulkN" type="number" min="0" inputmode="numeric" placeholder="재고">
+                <button type="button" class="ui-btn sm soft" id="shBulkSet">재고 넣기</button>
+                <button type="button" class="ui-btn sm ghost" data-bulk-st="out">품절</button>
+                <button type="button" class="ui-btn sm ghost" data-bulk-st="stop">판매중지</button>
+                <button type="button" class="ui-btn sm ghost" data-bulk-st="on">판매중</button>
+              </span>
+              <span class="pf-grow"></span>
+              <span class="sh-dock-n" id="shDirtyInfo"></span>
+              <button type="button" class="ui-btn sm ghost" id="shUndo">되돌리기</button>
+              <button type="button" class="ui-btn sm primary" id="shPush">판매처에 반영</button>
+            </div>
+            <div class="sh-note" id="shNote" hidden></div>
+          </div>
+          <div class="sh-pane" data-shop-pane="register" hidden>
+            <div class="profit-empty">상품 등록은 판매처 연결 뒤에 만듭니다.<br>상품을 한 번 작성해 고른 판매처에 각 규칙대로 올리는 화면입니다.</div>
+          </div>
+          <div class="sh-pane" data-shop-pane="link" hidden>
+            <div class="sh-table-wrap"><table class="sh-table sh-link">
+              <thead><tr><th class="nm">판매처</th><th>연결 방식</th><th>준비물</th><th>상태</th></tr></thead>
+              <tbody id="shLink"></tbody>
+            </table></div>
+          </div>
         </section>
       </div><!-- /view-shop -->
       <!-- 견적서 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
@@ -35978,6 +36093,224 @@ window.baroyamAsk=function(title,body,okText){
   av.clear.addEventListener('click',function(){ setImage(''); avPaintPreview(); avSay('이미지를 지웠어요',true); });
 
   window.baroyamBrandOpen=open;
+})();
+</script>
+<script>
+/* 쇼핑몰관리 · 판매처마다 상품 → 옵션 재고수량·판매가·판매상태 (11-20 임시 구현)
+   판매처와 아직 연결되지 않아 고정 씨앗 예시 데이터로 그린다 · 고친 값은 이 창 메모리에만 있고 "판매처에 반영"은 안내만 한다 ·
+   연결하면 VPS 가 판매처 API 로 받아 둔 목록을 읽고, 반영은 brand-files 요청 → VPS 가 판매처에 보내는 길로 바꾼다 */
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const won=n=>Number(n||0).toLocaleString('ko-KR')+'원';
+  const LOW=10;
+  const CHANS=[
+    {id:'cafe24', name:'카페24', logo:'logos/cafe24.png', how:'카페24 Admin API', need:'이미 연결된 앱에 상품 읽기·쓰기 권한(mall.read_product · mall.write_product) 추가'},
+    {id:'coupang',name:'쿠팡윙', logo:'logos/coupang-sq.png', how:'쿠팡 WING Open API', need:'WING 에서 Open API 키(Access·Secret) 발급'},
+    {id:'naver',  name:'네이버', logo:'logos/naver.png', how:'네이버 커머스API', need:'커머스API센터에 애플리케이션 등록'},
+    {id:'talk',   name:'톡딜',   logo:'logos/kakao.png', how:'확인 필요', need:'판매자용 공개 API 가 없으면 엑셀 올리기로 보기만'},
+    {id:'11st',   name:'11번가', logo:'logos/11st.png', how:'11번가 셀러 Open API', need:'셀러오피스에서 API 키 발급'},
+    {id:'gmarket',name:'G마켓',  logo:'logos/gmarket.png', how:'ESM API(확인 필요)', need:'ESM Plus 에서 판매자 API 사용 가능 여부 확인'},
+    {id:'auction',name:'옥션',   logo:'logos/auction.png', how:'ESM API(확인 필요)', need:'G마켓과 같은 ESM Plus 계정'},
+  ];
+  const ST={on:'판매중',out:'품절',stop:'판매중지'};
+  /* 예시 데이터 · 씨앗 고정이라 새로고침해도 같다(실제 숫자 아님) */
+  const CATALOG=[
+    ['홀떡피자','홀떡피자 4종 세트',['페퍼로니','고구마','불고기','콤비네이션'],12900],
+    ['홀떡피자','홀떡피자 페퍼로니',['1팩','2팩','4팩'],5900],
+    ['쫀득란빵','쫀득란빵 콘치즈 계란빵',['5개입','10개입','20개입'],8900],
+    ['쫀득란빵','쫀득란빵 3종 골라담기',['콘치즈','햄치즈','베이컨'],9900],
+    ['오꾸밥','오꾸밥 주먹밥 6종',['참치마요','불고기','김치','스팸','멸치','치즈닭갈비'],2500],
+    ['이응떡볶이','이응떡볶이 국물떡볶이',['순한맛','보통맛','매운맛'],6900],
+    ['잡채랑','잡채랑 간편 잡채',['1팩','3팩','5팩'],7500],
+    ['바비쿡','바비쿡 직화 바비큐',['오리지널','매콤','갈릭'],13900],
+    ['방구석포차','방구석포차 안주 세트',['닭발','오돌뼈','곱창볶음','쭈꾸미'],11900],
+  ];
+  function rnd(seed){ let x=seed>>>0||1; return ()=>{ x^=x<<13; x>>>=0; x^=x>>17; x^=x<<5; x>>>=0; return x/4294967296; }; }
+  const DATA={};
+  CHANS.forEach((c,ci)=>{
+    const r=rnd(97+ci*131);
+    const prods=[];
+    CATALOG.forEach(([brand,name,opts,price],pi)=>{
+      if(r()<0.18&&ci>0) return;              /* 판매처마다 등록 안 된 상품이 조금 있음 */
+      const opt=opts.map((o,oi)=>{
+        const v=r(); const qty=v<0.12?0:v<0.3?Math.floor(r()*LOW)+1:Math.floor(r()*180)+12;
+        const st=r()<0.06?'stop':qty===0?'out':'on';
+        return {id:c.id+'-'+pi+'-'+oi,name:o,price:price+(opts.length<=3?oi*Math.round(price*.8/100)*100:0),qty,st};
+      });
+      prods.push({id:c.id+'-'+pi,brand,name,opt});
+    });
+    DATA[c.id]={at:Date.now()-Math.floor(r()*90+5)*60000,prods};
+  });
+
+  const S={chan:'cafe24',q:'',brand:'',state:'all',open:new Set(),sel:new Set(),edit:{}};   /* edit = {옵션id:{qty,st}} · 원래 값과 다를 때만 */
+  const findOpt=id=>{ for(const c of CHANS) for(const p of DATA[c.id].prods) for(const o of p.opt) if(o.id===id) return {c:c.id,p,o}; return null; };
+  const cur=o=>Object.assign({},o,S.edit[o.id]||{});
+  function setEdit(o,patch){
+    const e=Object.assign({},S.edit[o.id]||{},patch);
+    Object.keys(e).forEach(k=>{ if(e[k]===o[k]) delete e[k]; });
+    if(Object.keys(e).length) S.edit[o.id]=e; else delete S.edit[o.id];
+  }
+  const dirtyIn=cid=>Object.keys(S.edit).filter(id=>id.startsWith(cid+'-')).length;
+
+  function optPass(o){
+    const v=cur(o);
+    if(S.state==='on') return v.st==='on';
+    if(S.state==='out') return v.st==='out'||(v.st==='on'&&v.qty===0);
+    if(S.state==='stop') return v.st==='stop';
+    if(S.state==='low') return v.st!=='stop'&&v.qty<=LOW;
+    if(S.state==='dirty') return !!S.edit[o.id];
+    return true;
+  }
+  function visible(){
+    const ws=S.q.toLowerCase().split(/\s+/).filter(Boolean);
+    return DATA[S.chan].prods.map(p=>{
+      if(S.brand&&p.brand!==S.brand) return null;
+      const nameHit=ws.length&&ws.every(w=>(p.brand+' '+p.name).toLowerCase().includes(w));
+      const opts=p.opt.filter(o=>optPass(o)&&(!ws.length||nameHit||ws.every(w=>(p.name+' '+o.name).toLowerCase().includes(w))));
+      return opts.length?{p,opts}:null;
+    }).filter(Boolean);
+  }
+
+  function paintChans(){
+    $('shChans').innerHTML=CHANS.map(c=>'<button type="button" class="sh-chan" role="tab" data-ch="'+c.id+'" aria-selected="'+(c.id===S.chan)+'"><img src="'+c.logo+'" alt="">'+esc(c.name)+'<b>'+DATA[c.id].prods.length+'</b>'+(dirtyIn(c.id)?'<i class="dirty" title="반영 안 한 고침"></i>':'')+'</button>').join('');
+  }
+  function paintState(){
+    const all=DATA[S.chan].prods.flatMap(p=>p.opt).map(cur);
+    const n={all:all.length,on:all.filter(v=>v.st==='on').length,out:all.filter(v=>v.st==='out'||(v.st==='on'&&v.qty===0)).length,
+      stop:all.filter(v=>v.st==='stop').length,low:all.filter(v=>v.st!=='stop'&&v.qty<=LOW).length,dirty:dirtyIn(S.chan)};
+    const L=[['all','전체'],['on','판매중'],['out','품절'],['stop','판매중지'],['low','재고 '+LOW+'개 이하'],['dirty','고친 것']];
+    $('shState').innerHTML=L.filter(([k])=>k!=='dirty'||n.dirty||S.state==='dirty').map(([k,l])=>'<button type="button" class="ui-chip" data-st="'+k+'" aria-pressed="'+(S.state===k)+'">'+l+' <b>'+n[k]+'</b></button>').join('');
+    const prods=DATA[S.chan].prods;
+    $('shSum').innerHTML='<i>상품<b>'+prods.length+'</b></i><i>옵션<b>'+n.all+'</b></i>'+(n.out?'<i class="neg">품절<b>'+n.out+'</b></i>':'')+(n.low?'<i class="warn">재고 적음<b>'+n.low+'</b></i>':'');
+    const d=new Date(DATA[S.chan].at);
+    $('shAt').textContent=CHANS.find(c=>c.id===S.chan).name+' · '+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' 기준';
+  }
+  function stPill(st,attr){ return '<button type="button" class="sh-st '+st+'" '+attr+'>'+ST[st]+'</button>'; }
+  function paintBody(){
+    const rows=visible(); const ws=S.q.trim();
+    $('shEmpty').hidden=rows.length>0;
+    let h='';
+    rows.forEach(({p,opts})=>{
+      const open=S.open.has(p.id)||!!ws||S.state!=='all';
+      const vs=p.opt.map(cur); const tot=vs.reduce((a,v)=>a+(v.st==='stop'?0:v.qty),0);
+      const sts=[...new Set(vs.map(v=>v.st))];
+      const prices=vs.map(v=>v.price); const pmin=Math.min(...prices), pmax=Math.max(...prices);
+      const allSel=opts.every(o=>S.sel.has(o.id));
+      h+='<tr class="sh-prod'+(open?' open':'')+'" data-p="'+p.id+'"><td class="ck"><input type="checkbox" data-selp="'+p.id+'"'+(allSel?' checked':'')+' aria-label="이 상품 옵션 모두 고르기"></td>'
+        +'<td class="nm"><div class="sh-pn"><span class="sh-tog">▸</span><span class="sh-thumb">'+esc(p.brand.slice(0,1))+'</span><span><strong>'+esc(p.name)+'</strong><em>'+esc(p.brand)+' · 옵션 '+p.opt.length+'개</em></span></div></td>'
+        +'<td>'+(pmin===pmax?won(pmin):won(pmin)+' ~')+'</td><td class="sh-sum-qty">'+tot.toLocaleString('ko-KR')+'개</td>'
+        +'<td>'+(sts.length===1?'<span class="sh-st '+sts[0]+'" style="cursor:default">'+ST[sts[0]]+'</span>':'<span class="sh-st mix">옵션마다 다름</span>')+'</td></tr>';
+      if(!open) return;
+      opts.forEach(o=>{
+        const v=cur(o), e=S.edit[o.id];
+        const cls=v.qty===0?' zero':v.qty<=LOW?' low':'';
+        h+='<tr class="sh-opt'+(e?' is-dirty':'')+'" data-o="'+o.id+'"><td class="ck"><input type="checkbox" data-sel="'+o.id+'"'+(S.sel.has(o.id)?' checked':'')+' aria-label="옵션 고르기"></td>'
+          +'<td class="nm">'+esc(o.name)+'</td><td>'+won(v.price)+'</td>'
+          +'<td><input class="sh-qty'+cls+'" type="number" min="0" inputmode="numeric" value="'+v.qty+'" data-qty="'+o.id+'" aria-label="재고수량">'+(e&&'qty' in e?'<span class="sh-was">'+o.qty+'개</span>':'')+'</td>'
+          +'<td>'+stPill(v.st,'data-stb="'+o.id+'" title="눌러서 판매상태 바꾸기"')+(e&&'st' in e?'<span class="sh-was">'+ST[o.st]+'</span>':'')+'</td></tr>';
+      });
+    });
+    $('shBody').innerHTML=h;
+    const vis=rows.flatMap(r=>r.opts.map(o=>o.id));
+    $('shAll').checked=vis.length>0&&vis.every(id=>S.sel.has(id));
+    $('shFold').textContent=S.open.size?'모두 접기':'모두 펼치기';
+  }
+  function paintDock(){
+    const nd=Object.keys(S.edit).length, ns=S.sel.size;
+    $('shDock').hidden=!nd&&!ns;
+    $('shBulk').hidden=!ns;
+    $('shSelInfo').innerHTML=ns?'고른 옵션 <b>'+ns+'</b>개':'';
+    $('shDirtyInfo').innerHTML=nd?'바꾼 옵션 <b>'+nd+'</b>개 · 아직 판매처에 반영 안 됨':'';
+    $('shUndo').hidden=!nd; $('shPush').hidden=!nd;
+  }
+  function paint(){ paintChans(); paintState(); paintBody(); paintDock(); }
+
+  function note(t){ const n=$('shNote'); n.textContent=t; n.hidden=!t; clearTimeout(note.t); if(t) note.t=setTimeout(()=>{ n.hidden=true; },6000); }
+
+  function bind(){
+    $('shopTabs').addEventListener('click',e=>{
+      const b=e.target.closest('[data-shop]'); if(!b) return;
+      document.querySelectorAll('#shopTabs .hero-view-tab').forEach(x=>x.classList.toggle('active',x===b));
+      document.querySelectorAll('#view-shop [data-shop-pane]').forEach(x=>{ x.hidden=x.dataset.shopPane!==b.dataset.shop; });
+      $('shopTitle').textContent=b.textContent; $('shopSub').textContent=b.dataset.sub;
+      try{ localStorage.setItem('baroyam_shop_tab',b.dataset.shop); }catch(_){}
+    });
+    $('shChans').addEventListener('click',e=>{
+      const b=e.target.closest('[data-ch]'); if(!b) return;
+      S.chan=b.dataset.ch; S.brand=''; S.sel.clear(); S.open.clear(); $('shBrand').textContent='브랜드 전체 ▾';
+      if(S.state==='dirty'&&!dirtyIn(S.chan)) S.state='all';
+      paint();
+    });
+    $('shQ').addEventListener('input',e=>{ S.q=e.target.value; paintBody(); });
+    $('shBrand').addEventListener('click',e=>{
+      e.stopPropagation();
+      const brands=[...new Set(DATA[S.chan].prods.map(p=>p.brand))];
+      const opts=[{value:'',label:'브랜드 전체'}].concat(brands.map(b=>({value:b,label:b,sub:DATA[S.chan].prods.filter(p=>p.brand===b).length+'개'})));
+      window.UI.menu($('shBrand'),opts,S.brand,v=>{ S.brand=v; $('shBrand').textContent=(v||'브랜드 전체')+' ▾'; paintBody(); });
+    });
+    $('shState').addEventListener('click',e=>{ const b=e.target.closest('[data-st]'); if(!b) return; S.state=b.dataset.st; paintState(); paintBody(); });
+    $('shFold').addEventListener('click',()=>{
+      if(S.open.size) S.open.clear(); else DATA[S.chan].prods.forEach(p=>S.open.add(p.id));
+      paintBody();
+    });
+    $('shAll').addEventListener('change',e=>{
+      visible().forEach(r=>r.opts.forEach(o=>{ if(e.target.checked) S.sel.add(o.id); else S.sel.delete(o.id); }));
+      paintBody(); paintDock();
+    });
+    const body=$('shBody');
+    body.addEventListener('click',e=>{
+      const ck=e.target.closest('input[type=checkbox]');
+      if(ck){
+        if(ck.dataset.sel){ if(ck.checked) S.sel.add(ck.dataset.sel); else S.sel.delete(ck.dataset.sel); }
+        if(ck.dataset.selp){ const r=visible().find(x=>x.p.id===ck.dataset.selp); if(r) r.opts.forEach(o=>{ if(ck.checked) S.sel.add(o.id); else S.sel.delete(o.id); }); S.open.add(ck.dataset.selp); }
+        paintBody(); paintDock(); return;
+      }
+      const sb=e.target.closest('[data-stb]');
+      if(sb){
+        e.stopPropagation();
+        const f=findOpt(sb.dataset.stb); if(!f) return;
+        window.UI.menu(sb,[{value:'on',label:'판매중'},{value:'out',label:'품절',sub:'재고 0 으로'},{value:'stop',label:'판매중지',sub:'목록에서 내림'}],cur(f.o).st,v=>{
+          setEdit(f.o,v==='out'?{st:'out',qty:0}:{st:v}); paint();
+        });
+        return;
+      }
+      const pr=e.target.closest('.sh-prod');
+      if(pr&&!e.target.closest('input')){ const id=pr.dataset.p; if(S.open.has(id)) S.open.delete(id); else S.open.add(id); paintBody(); }
+    });
+    body.addEventListener('change',e=>{
+      const q=e.target.closest('[data-qty]'); if(!q) return;
+      const f=findOpt(q.dataset.qty); if(!f) return;
+      const n=Math.max(0,Math.floor(Number(q.value)||0));
+      const v=cur(f.o); const patch={qty:n};
+      if(n===0&&v.st==='on') patch.st='out'; else if(n>0&&v.st==='out') patch.st='on';   /* 숫자를 0 으로 = 품절, 품절에 숫자를 넣으면 판매중 */
+      setEdit(f.o,patch); paint();
+    });
+    body.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('.sh-qty')){ e.preventDefault(); e.target.blur(); } });
+    $('shBulkSet').addEventListener('click',()=>{
+      const raw=$('shBulkN').value; if(raw===''){ $('shBulkN').focus(); return; }
+      const n=Math.max(0,Math.floor(Number(raw)||0));
+      S.sel.forEach(id=>{ const f=findOpt(id); if(!f) return; const v=cur(f.o); const patch={qty:n}; if(n===0&&v.st==='on') patch.st='out'; else if(n>0&&v.st==='out') patch.st='on'; setEdit(f.o,patch); });
+      $('shBulkN').value=''; paint();
+    });
+    $('shBulk').addEventListener('click',e=>{
+      const b=e.target.closest('[data-bulk-st]'); if(!b) return;
+      const st=b.dataset.bulkSt;
+      S.sel.forEach(id=>{ const f=findOpt(id); if(f) setEdit(f.o,st==='out'?{st:'out',qty:0}:{st}); });
+      paint();
+    });
+    $('shUndo').addEventListener('click',()=>{ S.edit={}; if(S.state==='dirty') S.state='all'; paint(); });
+    $('shPush').addEventListener('click',()=>{
+      const n=Object.keys(S.edit).length;
+      note('예시 화면이라 판매처에 보내지 않았습니다(바꾼 옵션 '+n+'개). 판매처를 연결하면 이 단추가 실제로 재고·상태를 바꿉니다.');
+    });
+    $('shFetch').addEventListener('click',()=>note('아직 판매처와 연결되지 않았습니다. 연동 설정 탭에서 판매처마다 필요한 것을 봅니다.'));
+    $('shLink').innerHTML=CHANS.map(c=>'<tr><td class="nm"><div class="sh-pn"><img src="'+c.logo+'" alt=""><strong>'+esc(c.name)+'</strong></div></td><td>'+esc(c.how)+'</td><td class="off">'+esc(c.need)+'</td><td><span class="sh-st stop" style="cursor:default">연결 안 됨</span></td></tr>').join('');
+    let t=''; try{ t=localStorage.getItem('baroyam_shop_tab')||''; }catch(_){}
+    const tb=t&&document.querySelector('#shopTabs [data-shop="'+t+'"]'); if(tb) tb.click();
+    paint();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
 })();
 </script>
 <script>
