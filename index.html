@@ -5207,10 +5207,13 @@ window.BAROYAM_FONT=(function(){
   /* 키워드 고르기(누르기 · Shift 범위 · Ctrl 더하기) → Ctrl+C·복사 단추로 한 줄에 하나씩 */
   #caKws .cs-tbl tbody tr[data-i]{cursor:pointer;user-select:none}
   #caKws .cs-tbl tbody tr[data-i] td{transition:background .14s ease,color .14s ease}
-  /* 고른 줄 · 왼쪽에서 오른쪽으로 그라데이션이 차오른다(11-20 사용자) · 줄(tr) 배경이 한 판으로 그려지므로 칸(td)은 비운다 */
-  #caKws .cs-tbl tbody tr.sel{background:linear-gradient(90deg,color-mix(in srgb,var(--btn) 22%,transparent),color-mix(in srgb,var(--btn) 6%,transparent)) no-repeat 0 0/100% 100%;animation:caKfill .32s cubic-bezier(.2,.8,.2,1) both}
+  /* 고른 줄 · 왼쪽 아래에서 위로(오른쪽 위로 번지며) 그라데이션이 차오른다(11-20 사용자) · 줄(tr) 배경이 한 판으로 그려지므로 칸(td)은 비운다 ·
+     Ctrl+C 로 복사하면 고른 줄이 더 진한 색으로 다시 한 번 차올라 복사된 것을 알린다(.cp) */
+  #caKws .cs-tbl tbody tr.sel{background:linear-gradient(45deg,color-mix(in srgb,var(--btn) 22%,transparent),color-mix(in srgb,var(--btn) 6%,transparent)) no-repeat 0 100%/100% 100%;animation:caKfill .36s cubic-bezier(.2,.8,.2,1) both}
+  #caKws .cs-tbl tbody tr.sel.cp{background-image:linear-gradient(45deg,color-mix(in srgb,var(--btn) 38%,transparent),color-mix(in srgb,var(--btn) 12%,transparent));animation:caKcopy .5s cubic-bezier(.2,.8,.2,1) both}
   #caKws .cs-tbl tbody tr.sel td,#caKws .cs-tbl tbody tr.sel:hover td{background:transparent}
-  @keyframes caKfill{from{background-size:0 100%}to{background-size:100% 100%}}
+  @keyframes caKfill{from{background-size:0 0}to{background-size:100% 100%}}
+  @keyframes caKcopy{from{background-size:0 0}to{background-size:100% 100%}}
   @media (prefers-reduced-motion:reduce){ #caKws .cs-tbl tbody tr.sel{animation:none} }
   #caKws .cs-tbl tbody tr.sel td.k{color:var(--btn)}
   #caKsel{display:flex;align-items:center;gap:6px}
@@ -31857,7 +31860,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function paintKsel(){
     const n=st.ksel.size;
     $('caKsel').hidden=!n; $('caKselN').textContent=n?won(n)+'개 선택':'';
-    document.querySelectorAll('#caKws tbody tr[data-i]').forEach(tr=>tr.classList.toggle('sel',st.ksel.has(kshow[+tr.dataset.i])));
+    /* 복사된 줄(.cp)은 선택이 풀릴 때까지 진한 색으로 남는다(지우면 차오르는 움직임이 다시 돌아서) */
+    document.querySelectorAll('#caKws tbody tr[data-i]').forEach(tr=>{ const on=st.ksel.has(kshow[+tr.dataset.i]); tr.classList.toggle('sel',on); if(!on) tr.classList.remove('cp'); });
   }
   async function copyKws(){
     if(!st.ksel.size) return;
@@ -31867,6 +31871,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     try{ await navigator.clipboard.writeText(txt); ok=true; }catch(e){
       try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.cssText='position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e2){}
     }
+    /* 복사되면 고른 줄이 아래에서 위로 진하게 한 번 더 차오른다 */
+    if(ok){ const rs=[...document.querySelectorAll('#caKws tbody tr.sel')]; rs.forEach(r=>r.classList.remove('cp')); void document.body.offsetWidth; rs.forEach(r=>r.classList.add('cp')); }
     const b=$('caKcopy'); b.textContent=ok?won(list.length)+'개 복사됨':'복사 실패'; clearTimeout(copyKws.t); copyKws.t=setTimeout(()=>{ b.textContent='복사'; },1600);
   }
   async function paint(){
