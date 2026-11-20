@@ -5207,7 +5207,11 @@ window.BAROYAM_FONT=(function(){
   /* 키워드 고르기(누르기 · Shift 범위 · Ctrl 더하기) → Ctrl+C·복사 단추로 한 줄에 하나씩 */
   #caKws .cs-tbl tbody tr[data-i]{cursor:pointer;user-select:none}
   #caKws .cs-tbl tbody tr[data-i] td{transition:background .14s ease,color .14s ease}
-  #caKws .cs-tbl tbody tr.sel td{background:color-mix(in srgb,var(--btn) 10%,transparent)}
+  /* 고른 줄 · 왼쪽에서 오른쪽으로 그라데이션이 차오른다(11-20 사용자) · 줄(tr) 배경이 한 판으로 그려지므로 칸(td)은 비운다 */
+  #caKws .cs-tbl tbody tr.sel{background:linear-gradient(90deg,color-mix(in srgb,var(--btn) 22%,transparent),color-mix(in srgb,var(--btn) 6%,transparent)) no-repeat 0 0/100% 100%;animation:caKfill .32s cubic-bezier(.2,.8,.2,1) both}
+  #caKws .cs-tbl tbody tr.sel td,#caKws .cs-tbl tbody tr.sel:hover td{background:transparent}
+  @keyframes caKfill{from{background-size:0 100%}to{background-size:100% 100%}}
+  @media (prefers-reduced-motion:reduce){ #caKws .cs-tbl tbody tr.sel{animation:none} }
   #caKws .cs-tbl tbody tr.sel td.k{color:var(--btn)}
   #caKsel{display:flex;align-items:center;gap:6px}
   #caKsel[hidden]{display:none}
