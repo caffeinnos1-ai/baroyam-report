@@ -5129,8 +5129,15 @@ window.BAROYAM_FONT=(function(){
   .ca-msg-ok{color:var(--btn-soft-ink);background:var(--btn-soft)}
   #caRoot .cs-bar #caCamp{min-width:200px;max-width:320px;justify-content:space-between}
   #caRoot .cs-bar #caCamp .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #caRoot .cs-kpis{gap:12px 44px}
-  #caRoot .cs-kpi .v{font-size:23px}
+  /* 숫자 일곱 칸 · 한 줄에 늘어놓으면 어디까지가 한 숫자인지 헷갈려 칸마다 상자로 나눈다(11-20 사용자) */
+  #caRoot .cs-kpis{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;padding:16px 20px 18px}
+  #caRoot .cs-kpi{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--paper);min-width:0}
+  #caRoot .cs-kpi .l{font-size:12px;white-space:nowrap}
+  #caRoot .cs-kpi .v{font-size:21px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #caRoot .cs-kpi .v small{font-size:12px}
+  #caRoot .cs-kpi:nth-child(-n+3){background:color-mix(in srgb,var(--btn) 5%,var(--paper));border-color:color-mix(in srgb,var(--btn) 22%,var(--line))}
+  @media (max-width:1280px){ #caRoot .cs-kpis{grid-template-columns:repeat(4,minmax(0,1fr))} }
+  @media (max-width:640px){ #caRoot .cs-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} #caRoot .cs-kpi .v{font-size:18px} }
   .ca-up input{display:none}
   .ca-box{border:1px solid var(--line);border-radius:16px;background:var(--paper)}
   .ca-box-head{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:16px 22px;border-bottom:1px solid var(--line)}
