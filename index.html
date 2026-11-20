@@ -5166,13 +5166,11 @@ window.BAROYAM_FONT=(function(){
   #caRoot .cs-tbl.ca-cards tbody tr.on td{background:color-mix(in srgb,var(--btn) 8%,var(--paper));border-color:var(--btn)}
   #caRoot .ca-rocket{display:inline-flex;vertical-align:-3px;margin-right:6px;color:var(--naver)}
   /* 로켓프레시 줄 · 연두색(초록 --naver 에 노랑 --kakao 를 섞음 · 다크 모드도 따라감) */
-  #caRoot{--rk:color-mix(in srgb,var(--naver) 58%,var(--kakao))}
-  #caRoot .cs-tbl.ca-cards tbody tr.rk td{background:color-mix(in srgb,var(--rk) 16%,var(--paper));border-color:color-mix(in srgb,var(--rk) 55%,var(--line))}
-  #caRoot .cs-tbl.ca-cards tbody tr.rk:hover td{background:color-mix(in srgb,var(--rk) 24%,var(--paper));border-color:color-mix(in srgb,var(--rk) 65%,var(--line))}
-  #caRoot .cs-tbl.ca-cards tbody tr.rk.on td{border-color:var(--rk)}
+  #caRoot{--rk:color-mix(in srgb,var(--naver) 45%,var(--kakao))}
+  #caRoot .cs-tbl.ca-cards tbody tr.rk td{background:color-mix(in srgb,var(--rk) 8%,var(--paper));border-color:color-mix(in srgb,var(--rk) 30%,var(--line))}
+  #caRoot .cs-tbl.ca-cards tbody tr.rk:hover td{background:color-mix(in srgb,var(--rk) 13%,var(--paper));border-color:color-mix(in srgb,var(--rk) 45%,var(--line))}
+  #caRoot .cs-tbl.ca-cards tbody tr.rk.on td{background:color-mix(in srgb,var(--rk) 16%,var(--paper));border-color:color-mix(in srgb,var(--rk) 65%,var(--line))}
   #caRoot .cs-tbl.ca-cards tbody tr.rk td.k{color:color-mix(in srgb,var(--naver) 80%,var(--ink))}
-  #caKws .cs-tbl tbody tr.rk:not(.sel) td{background:color-mix(in srgb,var(--rk) 10%,transparent)}
-  #caKws .cs-tbl tbody tr.rk:not(.sel) td.c{color:color-mix(in srgb,var(--naver) 80%,var(--ink))}
   #caRoot .ca-rocket svg{width:17px;height:17px}
   #caRoot .cs-tbl tr.on td{background:color-mix(in srgb,var(--btn) 7%,transparent)}
   .ca-roas{display:inline-block;min-width:58px;padding:3px 8px;border-radius:999px;font-weight:600;text-align:center;
@@ -32061,9 +32059,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     data.rows.forEach(x=>{ let c=m.get(x[1]); if(!c){ const cc=data.camps[x[1]]||{}; m.set(x[1],c=Object.assign(blank(),{id:x[1],n:cc.n||x[1],t:cc.t||''})); } add(c,x); });
     return [...m.values()].sort((a,b)=>b.cost-a.cost);
   }
-  /* 로켓프레시 캠페인 · 이름 앞 초록 로켓 + 줄에 연두색(11-20 사용자 · 구분되게) · 키워드는 쓴 캠페인이 모두 로켓프레시일 때 */
+  /* 로켓프레시 캠페인 · 이름 앞 초록 로켓 + 캠페인 카드만 연두색(11-20 사용자 · 키워드 줄은 칠하지 않음) */
   const isRk=n=>/로켓\s*프레시/.test(n||'');
-  const rkKw=o=>o.cs&&o.cs.size&&[...o.cs].every(id=>isRk((data.camps[id]||{}).n));
   const ROCKET_SVG='<span class="ca-rocket" title="로켓프레시"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></span>';
   function roasPill(o){
     if(!o.cost) return '<span class="ca-roas none">-</span>';
@@ -32271,7 +32268,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     $('caKws').innerHTML=kws.length
       ?'<table class="cs-tbl"><thead><tr>'+th('kw','키워드')+(st.camp?'':'<th>캠페인</th>')+th('imp','노출수','r')+th('clk','클릭수','r')+th('ctr','클릭률','r')
         +th('cost','광고비','r')+th('rev','광고매출(14일)','r')+th('cpc','CPC','r')+th('roas','ROAS','r')+'</tr></thead><tbody>'
-        +show.map((o,i)=>'<tr data-i="'+i+'"'+(rkKw(o)?' class="rk"':'')+'><td class="k'+(isAuto(o)?' dim':'')+'">'+esc(o.kw)+'</td>'+(st.camp?'':'<td class="c" title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'">'+esc(campName(o))+'</td>')
+        +show.map((o,i)=>'<tr data-i="'+i+'"><td class="k'+(isAuto(o)?' dim':'')+'">'+esc(o.kw)+'</td>'+(st.camp?'':'<td class="c" title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'">'+esc(campName(o))+'</td>')
           +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
           +'<td class="r v">'+won(o.cost)+'원</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cpc)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>').join('')
         +'</tbody></table>'
