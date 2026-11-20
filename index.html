@@ -5167,6 +5167,11 @@ window.BAROYAM_FONT=(function(){
   #caRoot[data-view="detail"] #caKpis,#caRoot[data-view="detail"] #caDayBox{display:none}
   /* 빈 안내 칸이 flex gap 을 두 번 더 먹어 상자 사이가 벌어지던 것 · 정밀성과는 숫자 칸이 없어 기간 줄 밑줄도 뺌 */
   #caRoot>#caMsg:empty,#caRoot>#caNote:empty{display:none}
+  /* 키워드별 성과 · 세로 칼선(11-20 사용자) · 검색/비검색 영역 합계 줄 */
+  #caKws .cs-tbl :is(th,td)+:is(th,td){border-left:1px solid var(--line)}
+  #caKws .cs-tbl tr.sum td{background:color-mix(in srgb,var(--btn) 4%,transparent);color:var(--ink);font-weight:600}
+  #caKws .cs-tbl tr.sum td.k{font-weight:600}
+  #caKws .cs-tbl tr.sum.last td{border-bottom:2px solid var(--line)}
   #caRoot[data-view="detail"] .cs-bar{border-bottom:0}
   #caRoot .cs-tbl td.dd{color:var(--ink);font-weight:500}
   #caRoot .cs-tbl td.dd.we{color:var(--neg)}
@@ -31878,13 +31883,16 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const km=new Map();
     rows.forEach(x=>{ let o=km.get(x[2]); if(!o) km.set(x[2],o=Object.assign(blank(),{kw:x[2],cs:new Set()})); add(o,x); o.cs.add(x[1]); });
     let kws=[...km.values()];
-    const cnt={all:kws.length,rev:0,waste:0,auto:0};
+    const cnt={all:kws.length,search:0,rev:0,waste:0,auto:0};
     const isAuto=o=>o.kw.charAt(0)==='(';
-    kws.forEach(o=>{ if(o.rev>0) cnt.rev++; if(o.cost>0&&!o.rev) cnt.waste++; if(isAuto(o)) cnt.auto++; });
-    const KF=[['all','전체'],['rev','매출 난 키워드'],['waste','광고비만 나간 키워드'],['auto','비검색·키워드 없음']];
+    kws.forEach(o=>{ if(o.rev>0) cnt.rev++; if(o.cost>0&&!o.rev) cnt.waste++; if(isAuto(o)) cnt.auto++; else cnt.search++; });
+    /* 검색 영역 = 실제 키워드 줄 · 비검색 영역 = 키워드 칸이 '-' 인 줄(비검색·오디언스 플러스 등 · 11-20 사용자) */
+    const SA=Object.assign(blank(),{kw:'검색 영역 합계'}), NA=Object.assign(blank(),{kw:'비검색 영역 합계'});
+    kws.forEach(o=>add(isAuto(o)?NA:SA,[0,0,0,o.imp,o.clk,o.cost,o.ord,o.rev,o.qty]));
+    const KF=[['all','전체'],['search','검색 영역'],['auto','비검색 영역'],['rev','매출 난 키워드'],['waste','광고비만 나간 키워드']];
     if(!KF.some(k=>k[0]===st.kf)) st.kf='all';
     $('caKf').innerHTML=KF.map(k=>'<button type="button" class="ui-chip" data-kf="'+k[0]+'" aria-pressed="'+(st.kf===k[0])+'">'+k[1]+' <b>'+won(cnt[k[0]])+'</b></button>').join('');
-    kws=kws.filter(o=>st.kf==='rev'?o.rev>0:st.kf==='waste'?(o.cost>0&&!o.rev):st.kf==='auto'?isAuto(o):true);
+    kws=kws.filter(o=>st.kf==='rev'?o.rev>0:st.kf==='waste'?(o.cost>0&&!o.rev):st.kf==='auto'?isAuto(o):st.kf==='search'?!isAuto(o):true);
     if(st.kq){ const q=st.kq.replace(/\s+/g,'').toLowerCase(); kws=kws.filter(o=>o.kw.replace(/\s+/g,'').toLowerCase().includes(q)); }
     kws.forEach(o=>{ o.ctr=o.imp?o.clk/o.imp:0; o.cpc=o.clk?o.cost/o.clk:0; o.roas=o.cost?o.rev/o.cost:(o.rev?1e9:0); });
     const k=st.ksort.k, dir=st.ksort.dir;
@@ -31897,6 +31905,10 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     $('caKws').innerHTML=kws.length
       ?'<table class="cs-tbl"><thead><tr>'+th('kw','키워드')+(st.camp?'':'<th>캠페인</th>')+th('imp','노출수','r')+th('clk','클릭수','r')+th('ctr','클릭률','r')
         +th('cost','광고비','r')+th('rev','광고매출(14일)','r')+th('cpc','CPC','r')+th('roas','ROAS','r')+'</tr></thead><tbody>'
+        /* 전체 보기 맨 위에 검색/비검색 영역 합계 두 줄(검색어로 거를 때는 뺌) */
+        +(st.kf==='all'&&!st.kq?[SA,NA].map((o,i)=>'<tr class="sum'+(i?' last':'')+'"><td class="k">'+o.kw+'</td>'+(st.camp?'':'<td class="c"></td>')
+          +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
+          +'<td class="r v">'+won(o.cost)+'원</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cost/o.clk)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>').join(''):'')
         +show.map(o=>'<tr><td class="k'+(isAuto(o)?' dim':'')+'">'+esc(o.kw)+'</td>'+(st.camp?'':'<td class="c" title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'">'+esc(campName(o))+'</td>')
           +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
           +'<td class="r v">'+won(o.cost)+'원</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cpc)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>').join('')
