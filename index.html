@@ -6646,13 +6646,16 @@ window.BAROYAM_FONT=(function(){
   .rg-hist{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--body)}
   .rg-hist div{display:flex;align-items:center;gap:8px}
   .rg-hist span{flex:1;min-width:0;color:var(--mute)}
-  .rg-what{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
-  .rg-what .rg-link{align-items:flex-start;cursor:pointer;transition:border-color .12s,background .12s}
+  /* 무엇을 수정하시겠습니까? · 세로 한 줄씩(11-20 사용자 요청) */
+  .rg-what{display:flex;flex-direction:column;gap:6px;max-width:520px}
+  .rg-what .rg-link{gap:12px;padding:11px 14px;cursor:pointer;transition:border-color .12s,background .12s}
   .rg-what .rg-link:hover{border-color:var(--btn)}
   .rg-what .rg-link.on{border-color:var(--btn);background:var(--btn-soft)}
-  .rg-what .rg-link input{margin-top:2px}
-  .rg-what .rg-link span{display:flex;flex-direction:column;gap:2px}
-  .rg-what .rg-link em{margin-left:0;font-size:11.5px}
+  .rg-what .rg-link span{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0}
+  .rg-what .rg-link b{font-size:13.5px}
+  .rg-what .rg-link em{margin-left:auto;font-size:12px}
+  .rg-head{min-height:40px;padding:4px 2px 0}
+  .rg-sec>.rg-hint:last-child{margin:12px 0 0}
   .rg-now{margin:0 0 12px;padding:9px 12px;border-radius:10px;background:var(--bg);font-size:13px;color:var(--body)}
   .rg-cur{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
   .rg-cur img{flex:none;width:90px;height:120px;object-fit:cover;object-position:top;border-radius:9px;border:1px solid var(--line);background:var(--bg)}
@@ -6663,7 +6666,7 @@ window.BAROYAM_FONT=(function(){
   .rg-it:hover{background:var(--bg)}
   .rg-it.on{background:var(--btn-soft)}
   .rg-it .th{flex:none;width:40px;height:40px;border-radius:9px;background:var(--bg) center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;font-size:13px;color:var(--mute)}
-  .rg-it .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .rg-it .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:0;margin:0}   /* 다른 화면의 .tx(왼쪽 여백 62px)가 새어 들어와 막음 */
   .rg-it .tx b{font-weight:500;font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rg-it .tx em{font-style:normal;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rg-it .tx em i{font-style:normal;color:var(--pos)}
@@ -37165,7 +37168,7 @@ window.baroyamAsk=function(title,body,okText){
   const LINKS=[{id:'cafe24',name:'카페24',logo:'logos/cafe24.png',on:true},{id:'naver',name:'네이버 스마트스토어',logo:'logos/naver.png'},{id:'11st',name:'11번가',logo:'logos/11st.png'}];
   const linkNo=(x,ch)=>x&&x.reg&&x.reg[ch]&&x.reg[ch].no;
   /* "무엇을 수정하시겠습니까?" · 판매처에서 칸 하나로 바뀌어 잘 안 깨지는 것만(옵션·재고·판매상태는 상품·옵션 재고 탭) · 열쇠는 서버 fields 이름 */
-  const WHAT=[['detail','상세페이지','사진을 통째로 바꾸기'],['name','상품명',''],['price','가격','판매가 · 정가'],['summary','한 줄 설명','목록에서 이름 아래 글'],['main','대표 사진','목록·작은 사진도 같이']];
+  const WHAT=[['detail','상세페이지','사진을 통째로 바꾸기'],['name','상품명',''],['price','가격','판매가 · 정가'],['main','대표 사진','목록·작은 사진도 같이']];   /* 한 줄 설명은 11-20 사용자 요청으로 뺌(서버는 summary 를 받을 수 있게 둠) */
   const hasDetail=x=>(x.detail||[]).length>0||!!String(x.top||'').trim();
   let ITEMS={}, cur='', q='', loaded=false, loading=false;
   const dirty=new Set(); let saveT=null, saving=false, saveErr='', savedAt=0;
@@ -37368,7 +37371,6 @@ window.baroyamAsk=function(title,body,okText){
       if(w.name) h+='<section class="rg-sec"><h4>상품명</h4>'+now(c.name!=null?esc(c.name):'—')+'<div class="rg-grid">'+field('새 상품명','name',x,{w:'w3',req:true,em:'<span id="rgNameN">'+String(x.name||'').length+'</span>/250'})+'</div></section>';
       if(w.price) h+='<section class="rg-sec"><h4>가격</h4>'+now(c.price!=null?'판매가 '+won(c.price)+(c.retail?' · 정가 '+won(c.retail):''):'—')+'<div class="rg-grid">'
         +field('새 판매가','price',x,{won:true,req:true,ph:'0'})+field('새 정가','retail',x,{won:true,ph:'비우면 그대로',hint:'할인 전 값 · 비우면 바꾸지 않아요'})+'</div></section>';
-      if(w.summary) h+='<section class="rg-sec"><h4>한 줄 설명</h4>'+now(c.summary!=null?esc(c.summary||'(비어 있음)'):'—')+'<div class="rg-grid">'+field('새 한 줄 설명','summary',x,{w:'w3',max:255,ph:'비우면 설명을 지워요'})+'</div></section>';
       if(w.main) h+='<section class="rg-sec"><h4>대표 사진<span>목록·작은 사진은 카페24가 이 사진으로 다시 만듦</span></h4><div class="rg-pic-row">'
         +'<div><p>지금 카페24</p><div class="rg-pics"><div class="rg-pic main"'+((c.image||x.img)?' style="background-image:url(&quot;'+esc(c.image||x.img)+'&quot;)"':'')+'></div></div></div>'
         +'<div><p>새 대표 사진</p><div class="rg-pics">'+(x.main?'<div class="rg-pic main" data-img="'+esc(x.main)+'"><button type="button" class="x" data-rm="main|0" aria-label="빼기">✕</button></div>':drop('main','main','새 대표 사진'))+'</div></div></div></section>';
