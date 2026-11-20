@@ -6654,7 +6654,17 @@ window.BAROYAM_FONT=(function(){
   .rg-what .rg-link span{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0}
   .rg-what .rg-link b{font-size:13.5px}
   .rg-what .rg-link em{margin-left:auto;font-size:12px}
+  /* 배너와 띄우고(인스타처럼 22px) 세 칸을 확실히 나눈다 · 가운데 머리도 상자로(11-20 사용자 요청) */
+  .rg{margin-top:22px}
+  .rg-main{padding:14px;border-radius:18px;background:var(--bg)}
+  .rg-head.card{min-height:0;padding:14px 18px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
   .rg-head{min-height:40px;padding:4px 2px 0}
+  .rg-no{flex:none;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-style:normal;font-size:12px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .rg-what .rg-link.on .rg-no{background:var(--btn);color:var(--paper)}
+  .rg-sub{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:13px;color:var(--ink)}
+  .rg-sub b{font-weight:600}
+  .rg-sub span{font-size:12px;color:var(--mute)}
+  .rg-sub.new{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
   .rg-sec>.rg-hint:last-child{margin:12px 0 0}
   .rg-now{margin:0 0 12px;padding:9px 12px;border-radius:10px;background:var(--bg);font-size:13px;color:var(--body)}
   .rg-cur{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
@@ -37168,7 +37178,7 @@ window.baroyamAsk=function(title,body,okText){
   const LINKS=[{id:'cafe24',name:'카페24',logo:'logos/cafe24.png',on:true},{id:'naver',name:'네이버 스마트스토어',logo:'logos/naver.png'},{id:'11st',name:'11번가',logo:'logos/11st.png'}];
   const linkNo=(x,ch)=>x&&x.reg&&x.reg[ch]&&x.reg[ch].no;
   /* "무엇을 수정하시겠습니까?" · 판매처에서 칸 하나로 바뀌어 잘 안 깨지는 것만(옵션·재고·판매상태는 상품·옵션 재고 탭) · 열쇠는 서버 fields 이름 */
-  const WHAT=[['detail','상세페이지','사진을 통째로 바꾸기'],['name','상품명',''],['price','가격','판매가 · 정가'],['main','대표 사진','목록·작은 사진도 같이']];   /* 한 줄 설명은 11-20 사용자 요청으로 뺌(서버는 summary 를 받을 수 있게 둠) */
+  const WHAT=[['name','상품명',''],['main','대표 이미지','목록·작은 이미지도 같이'],['detail','상세페이지','이미지를 통째로 바꾸기'],['price','판매가','정가도 함께 바꿀 수 있어요']];   /* 순서 = 화면에 열리는 순서(11-20 사용자 요청) */   /* 한 줄 설명은 11-20 사용자 요청으로 뺌(서버는 summary 를 받을 수 있게 둠) */
   const hasDetail=x=>(x.detail||[]).length>0||!!String(x.top||'').trim();
   let ITEMS={}, cur='', q='', loaded=false, loading=false;
   const dirty=new Set(); let saveT=null, saving=false, saveErr='', savedAt=0;
@@ -37364,17 +37374,19 @@ window.baroyamAsk=function(title,body,okText){
       if(!CUR[reg]) loadCur();
       const w=x.what||{}, c=CUR[reg]||{};
       const now=(t)=>'<p class="rg-now">지금 카페24 · '+(c.busy?'받는 중…':c.err?'<span style="color:var(--neg)">'+esc(c.err)+'</span>':t)+'</p>';
-      let h='<div class="rg-head"><h3>'+esc(x.name||'이름 없는 상품')+'</h3><span class="rg-save" id="rgSave"></span><button type="button" class="ui-btn sm ghost" data-act="del">목록에서 빼기</button></div>'
+      const n=k=>WHAT.findIndex(z=>z[0]===k)+1;   /* 체크란 번호 = 아래 칸 번호 */
+      const sec=(k,body,sub)=>'<section class="rg-sec"><h4><i class="rg-no">'+n(k)+'</i>'+WHAT[n(k)-1][1]+(sub?'<span>'+sub+'</span>':'')+'</h4>'+body+'</section>';
+      let h='<div class="rg-head card"><h3>'+esc(x.name||'이름 없는 상품')+'</h3><span class="rg-save" id="rgSave"></span><button type="button" class="ui-btn sm ghost" data-act="del">목록에서 빼기</button></div>'
         +'<section class="rg-sec"><h4>무엇을 수정하시겠습니까?<span>체크한 것만 아래에 열리고, 그것만 판매처에 보냅니다</span></h4><div class="rg-what">'
-        +WHAT.map(([k,l,d])=>'<label class="rg-link'+(w[k]?' on':'')+'"><input type="checkbox" data-what="'+k+'"'+(w[k]?' checked':'')+'><span><b>'+l+'</b><em>'+d+'</em></span></label>').join('')+'</div>'
+        +WHAT.map(([k,l,d],i)=>'<label class="rg-link'+(w[k]?' on':'')+'"><input type="checkbox" data-what="'+k+'"'+(w[k]?' checked':'')+'><i class="rg-no">'+(i+1)+'</i><span><b>'+l+'</b><em>'+d+'</em></span></label>').join('')+'</div>'
         +'<p class="rg-hint">옵션·재고·판매상태는 <b>상품·옵션 재고</b> 탭에서 고칩니다 · 카페24 상품번호 '+esc(reg)+'</p></section>';
-      if(w.name) h+='<section class="rg-sec"><h4>상품명</h4>'+now(c.name!=null?esc(c.name):'—')+'<div class="rg-grid">'+field('새 상품명','name',x,{w:'w3',req:true,em:'<span id="rgNameN">'+String(x.name||'').length+'</span>/250'})+'</div></section>';
-      if(w.price) h+='<section class="rg-sec"><h4>가격</h4>'+now(c.price!=null?'판매가 '+won(c.price)+(c.retail?' · 정가 '+won(c.retail):''):'—')+'<div class="rg-grid">'
-        +field('새 판매가','price',x,{won:true,req:true,ph:'0'})+field('새 정가','retail',x,{won:true,ph:'비우면 그대로',hint:'할인 전 값 · 비우면 바꾸지 않아요'})+'</div></section>';
-      if(w.main) h+='<section class="rg-sec"><h4>대표 사진<span>목록·작은 사진은 카페24가 이 사진으로 다시 만듦</span></h4><div class="rg-pic-row">'
+      if(w.name) h+=sec('name',now(c.name!=null?esc(c.name):'—')+'<div class="rg-grid">'+field('새 상품명','name',x,{w:'w3',req:true,em:'<span id="rgNameN">'+String(x.name||'').length+'</span>/250'})+'</div>');
+      if(w.main) h+=sec('main','<div class="rg-pic-row">'
         +'<div><p>지금 카페24</p><div class="rg-pics"><div class="rg-pic main"'+((c.image||x.img)?' style="background-image:url(&quot;'+esc(c.image||x.img)+'&quot;)"':'')+'></div></div></div>'
-        +'<div><p>새 대표 사진</p><div class="rg-pics">'+(x.main?'<div class="rg-pic main" data-img="'+esc(x.main)+'"><button type="button" class="x" data-rm="main|0" aria-label="빼기">✕</button></div>':drop('main','main','새 대표 사진'))+'</div></div></div></section>';
-      if(w.detail) h+=curSec(x)+detailSec(x);
+        +'<div><p>새 대표 이미지</p><div class="rg-pics">'+(x.main?'<div class="rg-pic main" data-img="'+esc(x.main)+'"><button type="button" class="x" data-rm="main|0" aria-label="빼기">✕</button></div>':drop('main','main','새 대표 이미지'))+'</div></div></div>','목록·작은 이미지는 카페24가 이 이미지로 다시 만듦');
+      if(w.detail) h+=sec('detail',curBody(x)+detailBody(x),'지금 상세를 확인하고, 새 이미지로 통째로 바꿉니다');
+      if(w.price) h+=sec('price',now(c.price!=null?'판매가 '+won(c.price)+(c.retail?' · 정가 '+won(c.retail):''):'—')+'<div class="rg-grid">'
+        +field('새 판매가','price',x,{won:true,req:true,ph:'0'})+field('새 정가','retail',x,{won:true,ph:'비우면 그대로',hint:'할인 전 값 · 비우면 바꾸지 않아요'})+'</div>');
       m.innerHTML=h;
       paintSave(); fillThumbs(m); return;
     }
@@ -37433,14 +37445,15 @@ window.baroyamAsk=function(title,body,okText){
   }
   /* 지금 판매처에 걸려 있는 상세(카페24) · 눌러야 받아 온다(상세 HTML 이 커서 목록에 담지 않음) */
   const CUR={};
-  function curSec(x){
+  /* 상세페이지 칸 안 · 위는 지금 카페24 상세(확인용), 아래는 새 상세 */
+  function curBody(x){
     const no=linkNo(x,'cafe24'); if(!no) return '';
     const c=CUR[no];
-    return '<section class="rg-sec"><h4>지금 카페24 상세<span>바꾸기 전에 맞는 상품인지 확인</span><span class="pf-grow"></span><button type="button" class="ui-btn sm ghost" data-act="cur"'+(c&&c.busy?' disabled':'')+'>'+(c&&c.busy?'받는 중…':c?'다시 받기':'불러와 보기')+'</button></h4>'
+    return '<div class="rg-sub"><b>지금 카페24 상세</b><span>바꾸기 전에 맞는 상품인지 확인</span><span class="pf-grow"></span><button type="button" class="ui-btn sm ghost" data-act="cur"'+(c&&c.busy?' disabled':'')+'>'+(c&&c.busy?'받는 중…':c?'다시 받기':'불러와 보기')+'</button></div>'
       +(c&&c.err?'<p class="rg-hint" style="color:var(--neg)">'+esc(c.err)+'</p>':'')
-      +(c&&c.imgs?(c.imgs.length?'<div class="rg-cur">'+c.imgs.map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="" loading="lazy"></a>').join('')+'</div>':'<p class="rg-hint">상세에 사진이 없어요</p>')
+      +(c&&c.imgs?(c.imgs.length?'<div class="rg-cur">'+c.imgs.map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="" loading="lazy"></a>').join('')+'</div>':'<p class="rg-hint">상세에 이미지가 없어요</p>')
         +(c.text?'<p class="rg-hint">글: '+esc(c.text.slice(0,160))+(c.text.length>160?'…':'')+'</p>':''):'')
-      +(!c?'<p class="rg-hint" style="margin:0">불러와 보기를 누르면 지금 카페24 상세의 사진이 여기에 보입니다.</p>':'')+'</section>';
+      +(!c?'<p class="rg-hint" style="margin:0">불러와 보기를 누르면 지금 카페24 상세의 이미지가 여기에 보입니다.</p>':'');
   }
   async function loadCur(){
     const x=it(); const no=linkNo(x,'cafe24'); if(!no) return;
@@ -37460,16 +37473,18 @@ window.baroyamAsk=function(title,body,okText){
     const a=document.activeElement;   /* 적는 중이면 그 칸을 지킨다 */
     if(linkNo(it(),'cafe24')===no&&!(a&&$('rgMain').contains(a)&&/INPUT|TEXTAREA/.test(a.tagName))) paintMain();
   }
-  function detailSec(x){
-    return '<section class="rg-sec"><h4>'+(linkNo(x,'cafe24')?'새 상세페이지':'상세페이지')+'<span>위 글 → 사진(위에서 아래 순서) → 아래 글</span></h4>'
-      +field('위 글','top',x,{area:true,w:'w3',ph:'사진 위에 넣을 글(없으면 비워 두기)'})
-      +'<div class="rg-det">'+(x.detail||[]).map((p,i,a)=>'<div class="rg-dimg"><span class="th" data-img="'+esc(p)+'"></span><span class="nm">상세 사진 '+(i+1)+'<em>'+esc(p.split('/').pop())+'</em></span><span class="act">'
+  function detailBody(x){
+    return (linkNo(x,'cafe24')?'<div class="rg-sub new"><b>새 상세페이지</b><span>위 글 → 이미지(위에서 아래 순서) → 아래 글</span></div>':'')
+      +field('위 글','top',x,{area:true,w:'w3',ph:'이미지 위에 넣을 글(없으면 비워 두기)'})
+      +'<div class="rg-det">'+(x.detail||[]).map((p,i,a)=>'<div class="rg-dimg"><span class="th" data-img="'+esc(p)+'"></span><span class="nm">상세 이미지 '+(i+1)+'<em>'+esc(p.split('/').pop())+'</em></span><span class="act">'
         +'<button type="button" class="ui-btn sm ghost icon" data-mv="'+i+'|-1"'+(i?'':' disabled')+' aria-label="위로">▲</button>'
         +'<button type="button" class="ui-btn sm ghost icon" data-mv="'+i+'|1"'+(i<a.length-1?'':' disabled')+' aria-label="아래로">▼</button>'
         +'<button type="button" class="ui-btn sm ghost icon" data-rm="detail|'+i+'" aria-label="빼기">✕</button></span></div>').join('')
-      +((x.detail||[]).length<MAX.detail?drop('detail','wide','상세 사진 넣기 · 여러 장을 한 번에 골라도 돼요 ('+(x.detail||[]).length+'/'+MAX.detail+')'):'')+'</div>'
-      +field('아래 글','bottom',x,{area:true,w:'w3',ph:'사진 아래에 넣을 글(없으면 비워 두기)'})
-      +'</section>';
+      +((x.detail||[]).length<MAX.detail?drop('detail','wide','상세 이미지 넣기 · 여러 장을 한 번에 골라도 돼요 ('+(x.detail||[]).length+'/'+MAX.detail+')'):'')+'</div>'
+      +field('아래 글','bottom',x,{area:true,w:'w3',ph:'이미지 아래에 넣을 글(없으면 비워 두기)'});
+  }
+  function detailSec(x){
+    return '<section class="rg-sec"><h4>상세페이지<span>위 글 → 사진(위에서 아래 순서) → 아래 글</span></h4>'+detailBody(x)+'</section>';
   }
   function paintSide(){
     const s=$('rgSide'); const x=it();
