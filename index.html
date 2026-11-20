@@ -185,7 +185,7 @@ window.BAROYAM_DB=(function(){
       /* 드라이브 색인·사전과 계정관리 목록은 그 화면만 쓰므로 여기서 빼고, 그 화면을 열 때만 따로 읽는다 ·
          계정관리(accounts_v1)는 아이디·비밀번호와 올린 로고 그림이 들어 있어, 첫 화면에서 받으면
          느려지고 계정관리 비밀번호를 통과하기 전에 브라우저에 와 버린다 */
-      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,meta_ads_v1,youtube_insights_v1)').not('key','like','coupang_ads_v1:%');
+      const r=await c.from('app_settings').select('key,value').not('key','in','(drive_assets_v1,drive_dict_v1,accounts_v1,brand_strategy_v1,brand_images_v1,content_jobs_v1,meta_ads_v1,youtube_insights_v1,shop_products_v1)').not('key','like','coupang_ads_v1:%');
       if(r.error){ console.error(r.error); return null; }
       const out={};
       (r.data||[]).forEach(function(row){ out[row.key]=valueOut(row.value); });
@@ -6585,6 +6585,118 @@ window.BAROYAM_FONT=(function(){
   .sh-pane[data-shop-pane="stock"]{padding-bottom:70px}
   @media (max-width:760px){ .sh-search{width:100%} .sh-opt td.nm{padding-left:40px} }
 
+  /* 쇼핑몰통합관리 › 상품 등록(11-20) · 왼쪽 작성한 상품 목록 | 가운데 상품 작성 | 오른쪽 판매처에 등록 */
+  .rg{display:grid;grid-template-columns:250px minmax(0,1fr) 330px;gap:18px;align-items:start}
+  .rg-list,.rg-side{position:sticky;top:76px;display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .rg-list{max-height:calc(100vh - 110px)}
+  .rg-list-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--ink)}
+  .rg-list-hd strong{font-weight:600}
+  .rg-q{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box}
+  .rg-q input{all:unset;flex:1;min-width:0;font-size:13px}
+  .rg-items{flex:1;min-height:60px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;margin:0 -6px;padding:0 6px}
+  .rg-it{display:flex;align-items:center;gap:10px;padding:8px;border-radius:11px;cursor:pointer;transition:background .12s}
+  .rg-it:hover{background:var(--bg)}
+  .rg-it.on{background:var(--btn-soft)}
+  .rg-it .th{flex:none;width:40px;height:40px;border-radius:9px;background:var(--bg) center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;font-size:13px;color:var(--mute)}
+  .rg-it .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .rg-it .tx b{font-weight:500;font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rg-it .tx em{font-style:normal;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rg-it .tx em i{font-style:normal;color:var(--pos)}
+  .rg-none{padding:26px 6px;text-align:center;font-size:13px;color:var(--mute);line-height:1.6}
+  .rg-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+  .rg-empty{padding:90px 20px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--mute);font-size:14px;line-height:1.7}
+  .rg-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .rg-head h3{margin:0;flex:1;min-width:0;font-size:19px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rg-save{font-size:12.5px;color:var(--mute)}
+  .rg-save.bad{color:var(--neg)}
+  .rg-sec{padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .rg-sec>h4{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:14.5px;font-weight:600;color:var(--ink)}
+  .rg-sec>h4 span{font-size:12.5px;font-weight:400;color:var(--mute)}
+  .rg-sec>h4 .pf-grow{flex:1}
+  .rg-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+  .rg-f{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .rg-f.w2{grid-column:span 2} .rg-f.w3{grid-column:1/-1}
+  .rg-f>span{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--body)}
+  .rg-f>span em{font-style:normal;font-weight:400;color:var(--mute)}
+  .rg-f>span .req{color:var(--neg)}
+  .rg-f .ui-field{width:100%;box-sizing:border-box}
+  .rg-f textarea.ui-field{min-height:70px;height:auto;padding:9px 12px;line-height:1.55;resize:vertical}
+  .rg-won{position:relative}
+  .rg-won input{padding-right:30px}
+  .rg-won::after{content:'원';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12.5px;color:var(--mute);pointer-events:none}
+  .rg-hint{margin:2px 0 0;font-size:12px;color:var(--mute);line-height:1.5}
+  /* 옵션 */
+  .rg-sw{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:400;color:var(--body);cursor:pointer}
+  .rg-groups{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+  .rg-g{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:10px;align-items:start}
+  .rg-vals{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:var(--ui-h);box-sizing:border-box;padding:4px 6px;border:1px solid var(--line);border-radius:var(--ui-r);background:var(--paper)}
+  .rg-vals:focus-within{border-color:var(--btn)}
+  .rg-val{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 4px 0 10px;border-radius:999px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12.5px}
+  .rg-val button{all:unset;cursor:pointer;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;font-size:11px;opacity:.7}
+  .rg-val button:hover{opacity:1;background:color-mix(in srgb,var(--btn) 18%,transparent)}
+  .rg-vals input{all:unset;flex:1;min-width:120px;height:26px;font-size:13px;padding:0 4px}
+  .rg-vt-wrap{border:1px solid var(--line);border-radius:12px;overflow:auto}
+  .rg-vt{width:100%;border-collapse:collapse;font-size:13px}
+  .rg-vt th{position:sticky;top:0;background:var(--bg);font-weight:500;font-size:12px;color:var(--mute);text-align:center;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .rg-vt td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:center;color:var(--body)}
+  .rg-vt tr:last-child td{border-bottom:0}
+  .rg-vt td.nm{text-align:left;color:var(--ink)}
+  .rg-vt td.off{color:var(--mute)}
+  .rg-vt input.ui-field{width:110px;height:30px;text-align:right}
+  .rg-vt tr.is-off td.nm,.rg-vt tr.is-off td.pr{color:var(--mute);text-decoration:line-through}
+  /* 사진 */
+  .rg-pics{display:flex;flex-wrap:wrap;gap:10px}
+  .rg-pic{position:relative;width:110px;height:110px;border-radius:12px;border:1px solid var(--line);background:var(--bg) center/cover no-repeat;overflow:hidden}
+  .rg-pic.main{width:150px;height:150px}
+  .rg-pic .x{all:unset;position:absolute;top:5px;right:5px;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:11px;cursor:pointer;opacity:0;transition:opacity .12s}
+  .rg-pic:hover .x{opacity:1}
+  .rg-pic .tag{position:absolute;left:6px;bottom:6px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:11px}
+  .rg-drop{all:unset;box-sizing:border-box;width:110px;height:110px;border:1.5px dashed var(--line);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:var(--mute);cursor:pointer;text-align:center;line-height:1.4;transition:border-color .12s,background .12s}
+  .rg-drop.main{width:150px;height:150px}
+  .rg-drop:hover,.rg-drop.over{border-color:var(--btn);background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .rg-drop svg{opacity:.7}
+  .rg-pic-row{display:flex;gap:18px;flex-wrap:wrap}
+  .rg-pic-row>div>p{margin:0 0 8px;font-size:12.5px;font-weight:500;color:var(--body)}
+  .rg-pic-row>div>p em{font-style:normal;font-weight:400;color:var(--mute)}
+  /* 상세페이지 · 사진을 위에서 아래로 */
+  .rg-det{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+  .rg-dimg{display:flex;align-items:center;gap:12px;padding:8px;border:1px solid var(--line);border-radius:12px}
+  .rg-dimg .th{flex:none;width:64px;height:64px;border-radius:8px;background:var(--bg) top center/cover no-repeat;border:1px solid var(--line)}
+  .rg-dimg .nm{flex:1;min-width:0;font-size:13px;color:var(--body)}
+  .rg-dimg .nm em{display:block;font-style:normal;font-size:12px;color:var(--mute)}
+  .rg-dimg .act{display:flex;gap:4px}
+  .rg-drop.wide{width:100%;height:64px;flex-direction:row;gap:8px}
+  /* 오른쪽 판매처에 등록 */
+  .rg-side h4{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+  .rg-ch{border:1px solid var(--line);border-radius:13px;padding:13px;display:flex;flex-direction:column;gap:11px}
+  .rg-ch-hd{display:flex;align-items:center;gap:9px}
+  .rg-ch-hd img{width:26px;height:26px;border-radius:7px;object-fit:contain}
+  .rg-ch-hd strong{flex:1;font-size:14px;font-weight:600;color:var(--ink)}
+  .rg-ch-hd .sh-st{cursor:default;height:22px;font-size:11.5px}
+  .rg-lab{font-size:12px;font-weight:500;color:var(--mute)}
+  .rg-cats{display:flex;flex-wrap:wrap;gap:6px}
+  .rg-cat{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:4px 4px 4px 10px;border-radius:9px;background:var(--bg);font-size:12.5px;color:var(--body)}
+  .rg-cat span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rg-cat button{all:unset;cursor:pointer;flex:none;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;font-size:11px;color:var(--mute)}
+  .rg-cat button:hover{background:var(--line)}
+  .rg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--body)}
+  .rg-row em{display:block;font-style:normal;font-size:11.5px;color:var(--mute)}
+  .rg-checks{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:11px;background:var(--bg);font-size:12.5px;color:var(--body)}
+  .rg-checks div{display:flex;align-items:center;gap:7px}
+  .rg-checks i{font-style:normal;width:16px;height:16px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:10px;background:var(--pos-soft);color:var(--pos)}
+  .rg-checks .no i{background:var(--neg-soft);color:var(--neg)}
+  .rg-checks .opt i{background:var(--warn-soft);color:var(--warn)}
+  .rg-checks .no{color:var(--neg)}
+  .rg-done{padding:11px 12px;border-radius:11px;background:var(--pos-soft);color:var(--pos);font-size:12.5px;line-height:1.55}
+  .rg-done b{font-weight:600}
+  .rg-warn{margin:6px 0 0;padding-left:16px;color:var(--warn)}
+  .rg-soon{display:flex;flex-direction:column;gap:4px}
+  .rg-soon div{display:flex;align-items:center;gap:9px;padding:7px 4px;font-size:13px;color:var(--mute)}
+  .rg-soon img{width:20px;height:20px;border-radius:5px;object-fit:contain;opacity:.55}
+  .rg-soon span{margin-left:auto;font-size:11.5px}
+  @media (max-width:1300px){ .rg{grid-template-columns:220px minmax(0,1fr)} .rg-side{grid-column:1/-1;position:static} }
+  @media (max-width:900px){ .rg{grid-template-columns:1fr} .rg-list{position:static;max-height:300px} .rg-grid{grid-template-columns:1fr 1fr} .rg-g{grid-template-columns:1fr} }
+
   /* 바로얌 AI 채팅 · 로고 버튼을 누르면 오른쪽 아래에 뜨는 채팅 창(2026-11-20 · 상담 콘솔 대신) ·
      보내면 VPS 대본 서비스(content_writer.js kind:'chat' · 지침 prompts/바로얌AI.md)가 Claude 로 답한다 ·
      왼쪽은 대화 목록(회원별 서버 기록 · 날짜로 묶음 · 길면 스크롤), 오른쪽은 지금 대화 · 머리는 baroyam AI 로고(logos/baroyam-word.png) */
@@ -12793,8 +12905,20 @@ window.BAROYAM_FONT=(function(){
             </div>
             <div class="sh-note" id="shNote" hidden></div>
           </div>
+          <!-- 상품 등록 · 상품을 한 번 작성해 판매처에 올린다(11-20 · 지금은 카페24) · 작성한 상품은 app_settings 의 shop_products_v1 = {items:{id:{…}}} ·
+               등록은 shop/req {kind:'create'} → VPS cafe24_products.js 가 사진 올리기·상품 만들기·옵션 맞추기 -->
           <div class="sh-pane" data-shop-pane="register" hidden>
-            <div class="profit-empty">상품 등록은 판매처 연결 뒤에 만듭니다.<br>상품을 한 번 작성해 고른 판매처에 각 규칙대로 올리는 화면입니다.</div>
+            <div class="rg">
+              <aside class="rg-list">
+                <div class="rg-list-hd"><strong>등록할 상품</strong><button type="button" class="ui-btn sm primary" id="rgNew">+ 새 상품</button></div>
+                <label class="ui-field sm rg-q"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input type="search" id="rgQ" placeholder="상품 찾기"></label>
+                <div class="rg-items" id="rgItems"></div>
+              </aside>
+              <div class="rg-main" id="rgMain"></div>
+              <aside class="rg-side" id="rgSide"></aside>
+            </div>
+            <div class="sh-note" id="rgNote" hidden></div>
+            <input type="file" id="rgFile" accept="image/*" multiple hidden>
           </div>
           <div class="sh-pane" data-shop-pane="link" hidden>
             <div class="sh-note sh-link-note" id="shLinkNote" hidden></div>
@@ -36369,7 +36493,7 @@ window.baroyamAsk=function(title,body,okText){
   const won=n=>Number(n||0).toLocaleString('ko-KR')+'원';
   const LOW=10;
   const CHANS=[
-    {id:'cafe24', name:'카페24', logo:'logos/cafe24.png', how:'카페24 Admin API', need:'개발자센터 앱 권한에 상품 읽기·쓰기(mall.read_product · mall.write_product)를 켠 뒤 연결하기로 다시 승인', lv:1},
+    {id:'cafe24', name:'카페24', logo:'logos/cafe24.png', how:'카페24 Admin API', need:'개발자센터 앱 권한에 상품 읽기·쓰기(mall.read_product · mall.write_product)·분류 읽기(mall.read_category)를 켠 뒤 연결하기로 다시 승인', lv:1},
     {id:'coupang',name:'쿠팡윙', logo:'logos/coupang-sq.png', how:'쿠팡 WING Open API', need:'WING 에서 Open API 키(Access·Secret) 발급', lv:2},
     {id:'naver',  name:'네이버', logo:'logos/naver.png', how:'네이버 커머스API', need:'커머스API센터에 애플리케이션 등록', lv:2},
     {id:'talk',   name:'톡딜',   logo:'logos/kakao.png', how:'확인 필요', need:'판매자용 공개 API 가 없으면 엑셀 올리기로 보기만', lv:3},
@@ -36583,6 +36707,8 @@ window.baroyamAsk=function(title,body,okText){
     });
   }
   const TIP=t=>'<div class="sh-ask-tip"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><span>'+t+'</span></div>';
+  /* 상품 등록 화면(아래 스크립트)이 같은 확인 창·목록 다시 읽기를 빌려 쓴다 */
+  window.baroyamShopKit={ask,TIP,reload:()=>loadCafe24(),show:q=>{ const t=document.querySelector('#shopTabs [data-shop="stock"]'); if(t) t.click(); S.chan='cafe24'; S.state='all'; S.brand=''; $('shBrand').textContent='브랜드 전체 ▾'; S.q=q||''; $('shQ').value=S.q; paint(); }};
 
   /* 알림 줄 · kind: ok / bad / run(진행 중 · 저절로 안 사라짐) */
   function note(t,kind,box){
@@ -36827,6 +36953,446 @@ window.baroyamAsk=function(title,body,okText){
     const tryLoad=()=>{ if(Date.now()-loaded<5*60e3||busy) return; const v=$('view-shop'); if(!v||v.style.display==='none') return; if(dirtyIn('cafe24')) return; loaded=Date.now(); loadCafe24().then(ok=>{ if(!ok) loaded=0; }); };   /* 로그인 전이라 못 읽었으면 4초 뒤 다시 */
     document.querySelector('.sidebar .sb-item[data-view="shop"]')?.addEventListener('click',()=>setTimeout(tryLoad,300));
     setInterval(tryLoad,4000);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
+})();
+</script>
+<script>
+/* 쇼핑몰통합관리 › 상품 등록 (11-20) · 상품을 ERP 에서 한 번 작성하고 판매처에 올린다 · 지금은 카페24 만
+   작성한 상품 = app_settings 의 shop_products_v1 = {items:{id:{id,name,brand,summary,tags,price,retail,supply,optOn,groups:[{name,values}],
+     vars:{조합 열쇠:{add,qty,off}},invOn,qty,main,adds,detail(사진은 brand-files 의 shop/img/<id>/ 경로),top,bottom,
+     cafe24:{cats,display,selling},reg:{cafe24:{no,at,by,warn}},ord,at,by,del}}} · 저장은 saveMerged 로 고친 상품 한 줄만 · 지우기는 del 표시만
+   등록 = shop/req {v:1,kind:'create',chan:'cafe24',by,item} → VPS cafe24_products.js(사진을 카페24에 올리고 상품 만들기 · 옵션마다 추가금액·재고) → shop/res
+   같은 상품은 카페24 자체 상품코드 ERP<id> 로 알아봐 두 번 눌러도 하나만 생긴다 */
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const won=n=>Number(n||0).toLocaleString('ko-KR')+'원';
+  const num=v=>{ const n=Number(String(v==null?'':v).replace(/[^\d.-]/g,'')); return isFinite(n)?Math.round(n):0; };
+  const KEY='shop_products_v1', BUCKET='brand-files', DB=()=>window.BAROYAM_DB, KIT=()=>window.baroyamShopKit||{};
+  const BRANDS=['쫀득란빵','홀떡피자','잡채랑','이응떡볶이','오꾸밥','바비쿡','방구석포차','밥카츠','파스타스','통스카츠','기타'];
+  const SOON=[['스마트스토어','logos/naver.png'],['쿠팡','logos/coupang-sq.png'],['11번가','logos/11st.png'],['G마켓·옥션','logos/gmarket.png'],['톡스토어','logos/kakao.png']];
+  const MAX={adds:10,detail:30};
+  let ITEMS={}, cur='', q='', loaded=false, loading=false;
+  const dirty=new Set(); let saveT=null, saving=false, saveErr='', savedAt=0;
+  let CATS=null, catsAsked=false;
+  const busy={}; const urls={};
+  const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const meName=()=>{ try{ const m=window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const it=()=>ITEMS[cur]&&!ITEMS[cur].del?ITEMS[cur]:null;
+  const blank=()=>({id:'p'+rid(),name:'',brand:'',summary:'',tags:'',price:'',retail:'',supply:'',optOn:false,groups:[{name:'구성',values:[]}],vars:{},
+    invOn:false,qty:'',main:'',adds:[],detail:[],top:'',bottom:'',cafe24:{cats:[],display:false,selling:false},reg:{},ord:Date.now(),at:new Date().toISOString(),by:meName()});
+
+  function note(t,kind){
+    const n=$('rgNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(kind?' '+kind:'');
+    clearTimeout(n._t); if(t&&kind!=='run') n._t=setTimeout(()=>{ n.hidden=true; },kind==='bad'?15000:8000);
+  }
+
+  /* ---------- 옵션 조합 ---------- */
+  const groupsOf=x=>x.optOn?(x.groups||[]).map(g=>({name:String(g.name||'').trim(),values:(g.values||[]).filter(Boolean)})).filter(g=>g.name||g.values.length):[];
+  function combos(x){
+    const gs=groupsOf(x).filter(g=>g.values.length); if(!gs.length) return [];
+    return gs.reduce((acc,g)=>acc.flatMap(a=>g.values.map(v=>a.concat([v]))),[[]]);
+  }
+  const vkey=vals=>vals.map(encodeURIComponent).join('|');   /* 조합 열쇠 · HTML 속성에 그대로 넣을 수 있게 */
+
+  /* ---------- 읽기·저장 ---------- */
+  async function load(){
+    if(loading||dirty.size||saving) return false;
+    const db=DB(); if(!db||!db.loadSetting) return false;
+    loading=true;
+    let v=null; try{ v=await db.loadSetting(KEY,true); }catch(e){ loading=false; return false; }
+    loading=false;
+    if(dirty.size||saving) return false;   /* 읽는 사이에 고치기 시작했으면 내 것을 지킨다 */
+    ITEMS=(v&&v.items)||{}; loaded=true;
+    if(!it()) cur=(list()[0]||{}).id||'';
+    paint(); loadCats();
+    return true;
+  }
+  function touch(id){
+    const x=ITEMS[id]; if(!x) return;
+    x.at=new Date().toISOString(); x.by=meName(); dirty.add(id);
+    paintSave(); clearTimeout(saveT); saveT=setTimeout(flush,700);
+  }
+  async function flush(){
+    clearTimeout(saveT);
+    if(saving){ await new Promise(r=>setTimeout(r,300)); return flush(); }
+    if(!dirty.size) return true;
+    const db=DB(); if(!db||!db.saveMerged) return false;
+    saving=true; const ids=[...dirty]; dirty.clear(); paintSave();
+    const snap={}; ids.forEach(id=>{ snap[id]=JSON.parse(JSON.stringify(ITEMS[id])); });
+    const r=await db.saveMerged(KEY,c=>{ const n=Object.assign({},c||{}); n.items=Object.assign({},n.items||{},snap); return n; });
+    saving=false;
+    if(!r){ ids.forEach(id=>dirty.add(id)); saveErr='저장하지 못했어요 · 5초 뒤 다시 보냅니다'; paintSave(); saveT=setTimeout(flush,5000); return false; }
+    saveErr=''; savedAt=Date.now(); paintSave(); return true;
+  }
+  window.addEventListener('beforeunload',e=>{ if(dirty.size||saving){ e.preventDefault(); e.returnValue=''; } });
+
+  /* ---------- 서버(카페24) 파일 ---------- */
+  async function readJson(path){
+    try{ const db=DB(); if(!db||!db.fileUrl) return null; const u=await db.fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
+  }
+  async function upload(dir,obj){
+    const db=DB();
+    if(!db||!db.fileUpload||(db.ensureSession&&!(await db.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 해 주세요');
+    const name=rid()+'.json';
+    await db.fileUpload(BUCKET,dir+'/'+name,new Blob([JSON.stringify(obj)],{type:'application/json'}));
+    return name;
+  }
+  async function waitRes(name,onStep,limit){
+    const t0=Date.now(), end=t0+(limit||240e3); let seen=false, last=null;
+    while(Date.now()<end){
+      await new Promise(r=>setTimeout(r,2500));
+      const r=await readJson('shop/res/'+name);
+      if(!r){ if(!seen&&Date.now()-t0>90e3) return {state:'failed',message:'서버가 요청을 받지 않았어요 · 잠시 뒤 다시 해 주세요'}; continue; }
+      seen=true; last=r;
+      if(r.state==='done'||r.state==='failed') return r;
+      if(onStep) onStep(r.message||'처리 중',r);
+    }
+    return {state:'failed',message:'시간이 오래 걸려 기다리기를 멈췄어요 · 잠시 뒤 다시 눌러 보세요(같은 상품이 두 번 생기지는 않아요)',no:last&&last.no};
+  }
+  let catsErr='';
+  async function loadCats(force){
+    if(CATS&&!force) return;
+    if(!force){ const c=await readJson('shop/cafe24/categories.json'); if(c&&Array.isArray(c.cats)){ CATS=c.cats; paintSide(); return; } }
+    if(catsAsked&&!force) return;
+    catsAsked=true; catsErr=''; paintSide();   /* 서버에 아직 없으면 한 번 받아 달라고 한다 */
+    try{
+      const name=await upload('shop/req',{v:1,kind:'cats',chan:'cafe24',by:meName(),at:new Date().toISOString()});
+      const r=await waitRes(name,null,180e3);
+      if(r.state==='done'){ const c2=await readJson('shop/cafe24/categories.json'); if(c2&&Array.isArray(c2.cats)) CATS=c2.cats; }
+      else catsErr=r.message||'카테고리를 받지 못했어요';
+    }catch(e){ catsErr=e.message||'카테고리를 받지 못했어요'; }
+    paintSide();
+  }
+  const catName=no=>{ const c=(CATS||[]).find(x=>String(x.no)===String(no)); return c?c.full:'카테고리 '+no; };
+
+  /* ---------- 사진 ---------- */
+  function imgOf(file){
+    return new Promise((res,rej)=>{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>{ URL.revokeObjectURL(u); res(im); }; im.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error('사진을 읽지 못했어요 · '+file.name)); }; im.src=u; });
+  }
+  /* 폭 1000px 까지 줄여 JPEG 로(투명한 곳은 흰 바탕) · 상세 사진처럼 긴 그림은 높이 14000px 까지 · GIF 는 움직임을 살리려고 그대로 */
+  async function shrink(file){
+    if(file.type==='image/gif'&&file.size<4.5e6) return {blob:file,ext:'gif'};
+    const im=await imgOf(file);
+    let s=Math.min(1,1000/im.naturalWidth); if(im.naturalHeight*s>14000) s=14000/im.naturalHeight;
+    for(let k=0;k<4;k++){
+      const w=Math.round(im.naturalWidth*s), h=Math.round(im.naturalHeight*s);
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      const g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,w,h); g.drawImage(im,0,0,w,h);
+      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',k?0.8:0.9));
+      if(blob&&blob.size<3.2e6) return {blob,ext:'jpg'};
+      s*=0.82;
+    }
+    throw new Error('사진이 너무 커요 · '+file.name);
+  }
+  async function addFiles(kind,files){
+    const x=it(); if(!x) return;
+    const id=x.id;
+    let list=[...files].filter(f=>/^image\//.test(f.type));
+    if(!list.length){ note('사진 파일만 넣을 수 있어요','bad'); return; }
+    if(kind==='main') list=list.slice(0,1);
+    else { const room=MAX[kind]-(x[kind]||[]).length; if(room<=0){ note((kind==='adds'?'추가 사진':'상세 사진')+'은 '+MAX[kind]+'장까지예요','bad'); return; } list=list.slice(0,room); }
+    for(const [i,f] of list.entries()){
+      note('사진 올리는 중 '+(i+1)+'/'+list.length,'run');
+      try{
+        const {blob,ext}=await shrink(f);
+        const path='shop/img/'+id+'/'+rid()+'.'+ext;
+        await DB().fileUpload(BUCKET,path,blob);
+        const y=ITEMS[id]; if(!y) return;
+        if(kind==='main') y.main=path; else (y[kind]=y[kind]||[]).push(path);
+        touch(id); if(cur===id){ paintMain(); paintSide(); paintList(); }
+      }catch(e){ note('사진을 올리지 못했어요 · '+(e.message||e),'bad'); return; }
+    }
+    note('사진을 넣었어요','ok');
+  }
+  /* 미리보기 · 비공개 보관함이라 서명 주소(1시간)를 받아 바탕 그림으로 */
+  function fillThumbs(root){
+    (root||document).querySelectorAll('[data-img]').forEach(async el=>{
+      const p=el.dataset.img; if(!p) return;
+      try{
+        if(!urls[p]||urls[p].t<Date.now()-50*60e3) urls[p]={u:await DB().fileUrl(BUCKET,p,3600),t:Date.now()};
+        el.style.backgroundImage='url("'+urls[p].u+'")';
+      }catch(e){}
+    });
+  }
+
+  /* ---------- 확인 ---------- */
+  function checks(x){
+    const gs=groupsOf(x);
+    const optOk=!x.optOn||(gs.length>0&&gs.every(g=>g.name&&g.values.length));
+    const on=combos(x).filter(v=>!((x.vars||{})[vkey(v)]||{}).off).length;
+    return [
+      {ok:!!String(x.name||'').trim(),t:'상품명'},
+      {ok:num(x.price)>0,t:'판매가'},
+      {ok:!!x.main,t:'대표 사진'},
+      {ok:optOk&&(!x.optOn||on>0),t:x.optOn?'옵션 '+combos(x).length+'개'+(on<combos(x).length?' 중 판매 '+on+'개':''):'옵션 없음(단일 상품)'},
+      {ok:(x.cafe24.cats||[]).length>0,t:'카페24 카테고리',opt:true},
+      {ok:(x.detail||[]).length>0||!!String(x.top||'').trim(),t:'상세페이지',opt:true},
+    ];
+  }
+
+  /* ---------- 그리기 ---------- */
+  const list=()=>Object.values(ITEMS).filter(x=>x&&!x.del).sort((a,b)=>(b.ord||0)-(a.ord||0));
+  function paintList(){
+    const ws=q.toLowerCase().split(/\s+/).filter(Boolean);
+    const xs=list().filter(x=>!ws.length||ws.every(w=>((x.brand||'')+' '+(x.name||'')).toLowerCase().includes(w)));
+    $('rgItems').innerHTML=xs.length?xs.map(x=>{
+      const reg=x.reg&&x.reg.cafe24&&x.reg.cafe24.no;
+      return '<div class="rg-it'+(x.id===cur?' on':'')+'" data-id="'+x.id+'"><span class="th"'+(x.main?' data-img="'+esc(x.main)+'"':'')+'>'+(x.main?'':esc((x.brand||x.name||'?').slice(0,1)))+'</span>'
+        +'<span class="tx"><b>'+esc(x.name||'이름 없는 상품')+'</b><em>'+esc(x.brand||'브랜드 없음')+' · '+(reg?'<i>카페24 등록됨</i>':'작성 중')+'</em></span></div>';
+    }).join(''):'<div class="rg-none">'+(loaded?(ws.length?'찾는 상품이 없어요':'아직 작성한 상품이 없어요<br>+ 새 상품으로 시작하세요'):'불러오는 중…')+'</div>';
+    fillThumbs($('rgItems'));
+  }
+  function paintSave(){
+    const el=$('rgSave'); if(!el) return;
+    el.className='rg-save'+(saveErr?' bad':'');
+    el.textContent=saveErr||(saving||dirty.size?'저장 중…':savedAt?'저장됨 · '+new Date(savedAt).toTimeString().slice(0,5):'자동 저장');
+  }
+  const UP_ICON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>';
+  function field(label,key,x,o){
+    o=o||{};
+    const v=x[key]==null?'':x[key];
+    const inp=o.area?'<textarea class="ui-field" data-f="'+key+'" maxlength="'+(o.max||2000)+'" placeholder="'+esc(o.ph||'')+'">'+esc(v)+'</textarea>'
+      :'<input class="ui-field" data-f="'+key+'" '+(o.won?'inputmode="numeric" ':'')+'maxlength="'+(o.max||250)+'" placeholder="'+esc(o.ph||'')+'" value="'+esc(o.won&&v!==''?num(v).toLocaleString('ko-KR'):v)+'">';
+    return '<label class="rg-f'+(o.w?' '+o.w:'')+'"><span>'+label+(o.req?' <b class="req">*</b>':'')+(o.em?' <em>'+o.em+'</em>':'')+'</span>'+(o.won?'<div class="rg-won">'+inp+'</div>':inp)+(o.hint?'<p class="rg-hint">'+o.hint+'</p>':'')+'</label>';
+  }
+  function paintMain(){
+    const m=$('rgMain'); const x=it();
+    if(!x){ m.innerHTML='<div class="rg-empty">'+(loaded?'왼쪽 <b>+ 새 상품</b>으로 등록할 상품을 만드세요.<br>한 번 작성하면 카페24에 올리고, 다음 단계에서 스마트스토어·쿠팡에도 올립니다.':'불러오는 중…')+'</div>'; return; }
+    const reg=x.reg&&x.reg.cafe24&&x.reg.cafe24.no;
+    let h='<div class="rg-head"><h3>'+esc(x.name||'이름 없는 상품')+'</h3><span class="rg-save" id="rgSave"></span>'
+      +'<button type="button" class="ui-btn sm ghost" data-act="copy">복제</button><button type="button" class="ui-btn sm ghost danger" data-act="del">삭제</button></div>';
+    /* ① 기본 정보 */
+    h+='<section class="rg-sec"><h4>기본 정보</h4><div class="rg-grid">'
+      +'<div class="rg-f"><span>브랜드</span><button type="button" class="ui-field" data-act="brand">'+esc(x.brand||'브랜드 고르기')+' ▾</button></div>'
+      +field('상품명','name',x,{w:'w2',req:true,ph:'예: 홀떡피자 페퍼로니 4팩',em:'<span id="rgNameN">'+String(x.name||'').length+'</span>/250'})
+      +field('한 줄 설명','summary',x,{w:'w3',max:255,ph:'상품 목록에 이름 아래 보이는 짧은 설명'})
+      +field('검색어','tags',x,{w:'w3',max:500,ph:'쉼표로 나눠 적기 · 예: 냉동피자, 간식, 에어프라이어',hint:'쇼핑몰 안에서 이 낱말로 찾으면 이 상품이 나옵니다'})
+      +'</div></section>';
+    /* ② 가격 */
+    h+='<section class="rg-sec"><h4>가격</h4><div class="rg-grid">'
+      +field('판매가','price',x,{won:true,req:true,ph:'0',hint:'고객이 실제로 내는 값'})
+      +field('정가','retail',x,{won:true,ph:'비우면 판매가',hint:'할인 전 값 · 판매가보다 크면 할인처럼 보여요'})
+      +field('공급가','supply',x,{won:true,ph:'비우면 판매가',hint:'카페24가 꼭 받는 칸 · 내부용'})
+      +'</div></section>';
+    /* ③ 옵션 */
+    h+='<section class="rg-sec"><h4>옵션<span>맛·수량처럼 고객이 고르는 것</span><span class="pf-grow"></span>'
+      +'<label class="rg-sw">옵션 사용<button type="button" class="ui-switch" role="switch" aria-checked="'+!!x.optOn+'" data-act="opt"></button></label>'
+      +'<label class="rg-sw">재고 관리<button type="button" class="ui-switch" role="switch" aria-checked="'+!!x.invOn+'" data-act="inv" title="켜면 재고 숫자만큼 팔리고 0 이면 품절"></button></label></h4>';
+    if(x.optOn){
+      h+='<div class="rg-groups">'+(x.groups||[]).map((g,gi)=>'<div class="rg-g">'
+        +'<input class="ui-field" data-g="'+gi+'" maxlength="50" placeholder="옵션 이름(예: 맛)" value="'+esc(g.name)+'">'
+        +'<div class="rg-vals">'+(g.values||[]).map((v,vi)=>'<span class="rg-val">'+esc(v)+'<button type="button" data-delv="'+gi+'|'+vi+'" aria-label="'+esc(v)+' 빼기">✕</button></span>').join('')
+        +'<input data-gv="'+gi+'" maxlength="50" placeholder="'+((g.values||[]).length?'더 넣기':'값을 적고 Enter · 예: 페퍼로니, 고구마')+'"></div>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-delg="'+gi+'" aria-label="이 옵션 빼기" title="이 옵션 빼기"'+((x.groups||[]).length<2?' hidden':'')+'>✕</button></div>').join('')
+        +((x.groups||[]).length<3?'<div><button type="button" class="ui-btn sm soft" data-act="addg">+ 옵션 이름 추가</button></div>':'')+'</div>';
+      const cs=combos(x);
+      if(cs.length){
+        h+='<div class="rg-vt-wrap"><table class="rg-vt"><thead><tr><th style="text-align:left">옵션</th><th>추가금액</th><th>판매가</th>'+(x.invOn?'<th>재고</th>':'')+'<th>판매</th></tr></thead><tbody>'
+          +cs.map(vals=>{ const k=vkey(vals), v=(x.vars||{})[k]||{};
+            return '<tr'+(v.off?' class="is-off"':'')+'><td class="nm">'+esc(vals.join(' / '))+'</td>'
+              +'<td><input class="ui-field sm" data-va="'+esc(k)+'" data-vf="add" inputmode="numeric" placeholder="0" value="'+(num(v.add)?num(v.add).toLocaleString('ko-KR'):'')+'"></td>'
+              +'<td class="pr">'+won(num(x.price)+num(v.add))+'</td>'
+              +(x.invOn?'<td><input class="ui-field sm" data-va="'+esc(k)+'" data-vf="qty" inputmode="numeric" placeholder="0" value="'+(v.qty!=null&&v.qty!==''?num(v.qty):'')+'"></td>':'')
+              +'<td><button type="button" class="ui-switch" role="switch" aria-checked="'+!v.off+'" data-voff="'+esc(k)+'" aria-label="판매"></button></td></tr>'; }).join('')
+          +'</tbody></table></div><p class="rg-hint">옵션 '+cs.length+'개 · 추가금액은 판매가에 더해집니다(음수면 빠짐)</p>';
+      }
+    }else{
+      h+='<p class="rg-hint" style="margin:0">옵션 없이 한 가지로 팝니다.'+(x.invOn?'':' 재고 관리를 끄면 수량과 상관없이 팔려요.')+'</p>'
+        +(x.invOn?'<div class="rg-grid" style="margin-top:12px">'+field('재고','qty',x,{ph:'0',hint:'0 이면 품절로 보여요'})+'</div>':'');
+    }
+    h+='</section>';
+    /* ④ 사진 */
+    const drop=(kind,cls,txt)=>'<button type="button" class="rg-drop '+cls+'" data-up="'+kind+'">'+UP_ICON+'<span>'+txt+'</span></button>';
+    h+='<section class="rg-sec"><h4>사진<span>끌어다 놓거나 눌러서 고르기 · 폭 1000px 로 줄여 올라가요</span></h4><div class="rg-pic-row">'
+      +'<div><p>대표 사진 <b class="req" style="color:var(--neg)">*</b> <em>목록·작은 사진은 카페24가 이 사진으로 만듦</em></p><div class="rg-pics">'
+      +(x.main?'<div class="rg-pic main" data-img="'+esc(x.main)+'"><button type="button" class="x" data-rm="main|0" aria-label="빼기">✕</button><span class="tag">대표</span></div>':drop('main','main','대표 사진'))+'</div></div>'
+      +'<div style="flex:1;min-width:240px"><p>추가 사진 <em>'+(x.adds||[]).length+'/'+MAX.adds+'</em></p><div class="rg-pics">'
+      +(x.adds||[]).map((p,i)=>'<div class="rg-pic" data-img="'+esc(p)+'"><button type="button" class="x" data-rm="adds|'+i+'" aria-label="빼기">✕</button></div>').join('')
+      +((x.adds||[]).length<MAX.adds?drop('adds','','추가 사진'):'')+'</div></div></div></section>';
+    /* ⑤ 상세페이지 */
+    h+='<section class="rg-sec"><h4>상세페이지<span>위 글 → 사진(위에서 아래 순서) → 아래 글</span></h4>'
+      +field('위 글','top',x,{area:true,w:'w3',ph:'사진 위에 넣을 글(없으면 비워 두기)'})
+      +'<div class="rg-det">'+(x.detail||[]).map((p,i,a)=>'<div class="rg-dimg"><span class="th" data-img="'+esc(p)+'"></span><span class="nm">상세 사진 '+(i+1)+'<em>'+esc(p.split('/').pop())+'</em></span><span class="act">'
+        +'<button type="button" class="ui-btn sm ghost icon" data-mv="'+i+'|-1"'+(i?'':' disabled')+' aria-label="위로">▲</button>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-mv="'+i+'|1"'+(i<a.length-1?'':' disabled')+' aria-label="아래로">▼</button>'
+        +'<button type="button" class="ui-btn sm ghost icon" data-rm="detail|'+i+'" aria-label="빼기">✕</button></span></div>').join('')
+      +((x.detail||[]).length<MAX.detail?drop('detail','wide','상세 사진 넣기 · 여러 장을 한 번에 골라도 돼요 ('+(x.detail||[]).length+'/'+MAX.detail+')'):'')+'</div>'
+      +field('아래 글','bottom',x,{area:true,w:'w3',ph:'사진 아래에 넣을 글(없으면 비워 두기)'})
+      +'</section>';
+    if(reg) h='<div class="sh-note ok" style="margin:0">카페24에 등록된 상품이에요(상품번호 '+esc(reg)+'). 여기서 고친 내용은 카페24에 저절로 바뀌지 않아요 · 수정 보내기는 다음 단계에서 만듭니다.</div>'+h;
+    m.innerHTML=h;
+    paintSave(); fillThumbs(m);
+  }
+  function paintSide(){
+    const s=$('rgSide'); const x=it();
+    if(!x){ s.innerHTML='<h4>판매처에 등록</h4><div class="rg-none">상품을 고르면<br>여기서 판매처에 올립니다</div>'; return; }
+    const c=x.cafe24||(x.cafe24={cats:[],display:false,selling:false});
+    const reg=x.reg&&x.reg.cafe24;
+    const ck=checks(x), miss=ck.filter(k=>!k.ok&&!k.opt);
+    let h='<h4>판매처에 등록</h4><div class="rg-ch"><div class="rg-ch-hd"><img src="logos/cafe24.png" alt=""><strong>카페24</strong>'
+      +(reg&&reg.no?'<span class="sh-st on">등록됨</span>':'<span class="sh-st stop">등록 전</span>')+'</div>'
+      +'<div><div class="rg-lab" style="margin-bottom:6px">카테고리</div><div class="rg-cats">'
+      +(c.cats||[]).map(n=>'<span class="rg-cat" title="'+esc(catName(n))+'"><span>'+esc(catName(n))+'</span><button type="button" data-rmcat="'+esc(n)+'" aria-label="빼기">✕</button></span>').join('')
+      +(CATS?'<button type="button" class="ui-btn sm soft" data-act="cat">+ 카테고리</button>'
+        :catsErr?'<button type="button" class="ui-btn sm ghost" data-act="catre">다시 불러오기</button>':'<button type="button" class="ui-btn sm soft" disabled>카테고리 불러오는 중…</button>')+'</div>'
+      +(catsErr&&!CATS?'<p class="rg-hint" style="color:var(--warn)">'+esc(catsErr)+'</p>':'')+'</div>'
+      +'<div class="rg-row"><span>쇼핑몰에 진열<em>끄면 고객 화면에 안 보여요</em></span><button type="button" class="ui-switch" role="switch" aria-checked="'+!!c.display+'" data-act="disp"></button></div>'
+      +'<div class="rg-row"><span>판매함<em>끄면 보여도 살 수 없어요</em></span><button type="button" class="ui-switch" role="switch" aria-checked="'+!!c.selling+'" data-act="sell"></button></div>'
+      +'<div class="rg-checks">'+ck.map(k=>'<div class="'+(k.ok?'':k.opt?'opt':'no')+'"><i>'+(k.ok?'✓':k.opt?'!':'✕')+'</i>'+esc(k.t)+(k.ok?'':k.opt?' · 없어도 등록돼요':' · 필요')+'</div>').join('')+'</div>';
+    if(reg&&reg.no){
+      h+='<div class="rg-done"><b>카페24 상품번호 '+esc(reg.no)+'</b><br>'+esc((reg.at||'').slice(0,10))+(reg.by?' · '+esc(reg.by):'')+' 등록'
+        +((reg.warn||[]).length?'<ul class="rg-warn">'+reg.warn.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>':'')+'</div>'
+        +'<button type="button" class="ui-btn soft block" data-act="see">상품·옵션 재고에서 보기</button>';
+    }else{
+      h+='<button type="button" class="ui-btn primary block" data-act="reg"'+(miss.length||busy[x.id]?' disabled':'')+'>'+(busy[x.id]?'카페24에 올리는 중…':'카페24에 등록')+'</button>'
+        +(!c.display&&!c.selling?'<p class="rg-hint" style="margin:0">진열·판매를 끈 채로 올라가요. 카페24 화면에서 확인한 뒤 켜세요.</p>':'');
+    }
+    h+='</div><div class="rg-soon">'+SOON.map(([n,l])=>'<div><img src="'+l+'" alt="">'+n+'<span>다음 단계</span></div>').join('')+'</div>';
+    s.innerHTML=h;
+  }
+  function paint(){ paintList(); paintMain(); paintSide(); }
+
+  /* ---------- 등록 ---------- */
+  function payload(x){
+    const cs=combos(x), vs=x.vars||{};
+    return {id:x.id,name:String(x.name||'').trim(),brand:x.brand||'',summary:x.summary||'',
+      tags:String(x.tags||'').split(/[,\n]/).map(t=>t.trim()).filter(Boolean),
+      price:num(x.price),retail:num(x.retail),supply:num(x.supply),
+      groups:cs.length?groupsOf(x).filter(g=>g.values.length):[],
+      vars:cs.map(vals=>{ const v=vs[vkey(vals)]||{}; return {vals,add:num(v.add),qty:num(v.qty),inv:!!x.invOn,sell:!v.off}; }),
+      invOn:!!x.invOn,qty:num(x.qty),main:x.main,adds:x.adds||[],detail:x.detail||[],top:x.top||'',bottom:x.bottom||'',
+      cafe24:{cats:(x.cafe24.cats||[]).map(Number),display:!!x.cafe24.display,selling:!!x.cafe24.selling}};
+  }
+  async function register(){
+    const x=it(); if(!x||busy[x.id]) return;
+    const miss=checks(x).filter(k=>!k.ok&&!k.opt);
+    if(miss.length){ note('먼저 채워 주세요 · '+miss.map(k=>k.t).join(', '),'bad'); return; }
+    const p=payload(x), K=KIT();
+    const row=(a,b)=>'<div class="sh-ask-row"><div class="sh-ask-nm"><strong>'+a+'</strong></div><div class="sh-ask-chg"><span>'+b+'</span></div></div>';
+    const ok=K.ask?await K.ask({logo:'logos/cafe24.png',title:'카페24에 등록할까요?',sub:p.name,ok:'등록하기',
+      html:'<div class="sh-ask-list">'+row('판매가',won(p.price))+row('옵션',p.vars.length?p.vars.filter(v=>v.sell).length+'개':'없음(단일 상품)')
+        +row('사진','대표 1장'+(p.adds.length?' · 추가 '+p.adds.length+'장':'')+(p.detail.length?' · 상세 '+p.detail.length+'장':''))
+        +row('카테고리',p.cafe24.cats.length?p.cafe24.cats.map(catName).map(esc).join('<br>'):'없음')
+        +row('상태',(p.cafe24.display?'진열':'진열 안 함')+' · '+(p.cafe24.selling?'판매함':'판매안함'))+'</div>'
+        +(K.TIP?K.TIP('사진 수에 따라 1~3분 걸려요. 같은 상품을 두 번 눌러도 카페24에는 하나만 생깁니다.'):'')}):confirm('카페24에 등록할까요?');
+    if(!ok) return;
+    const id=x.id; busy[id]=true; paintSide(); note('카페24에 보내는 중…','run');
+    try{
+      if(!(await flush())) throw new Error('작성한 내용을 먼저 저장하지 못했어요 · 로그인을 확인해 주세요');
+      const name=await upload('shop/req',{v:1,kind:'create',chan:'cafe24',by:meName(),at:new Date().toISOString(),item:p});
+      const r=await waitRes(name,m=>note(m,'run'),8*60e3);
+      if(r.state==='done'&&r.no){
+        const y=ITEMS[id]; y.reg=Object.assign({},y.reg,{cafe24:{no:r.no,at:new Date().toISOString(),by:meName(),warn:r.warn||[]}});
+        touch(id); await flush();
+        if(K.reload) K.reload();
+        note(r.message,(r.warn||[]).length?'bad':'ok');
+      }else note('등록하지 못했어요 · '+r.message,'bad');
+    }catch(e){ note('등록하지 못했어요 · '+(e.message||e),'bad'); }
+    busy[id]=false; if(cur===id){ paintMain(); paintSide(); } paintList();
+  }
+
+  /* ---------- 누르기·적기 ---------- */
+  let upKind='';
+  function bind(){
+    $('rgNew').addEventListener('click',()=>{ const x=blank(); ITEMS[x.id]=x; cur=x.id; touch(x.id); paint(); const n=document.querySelector('#rgMain [data-f="name"]'); if(n) n.focus(); });
+    $('rgQ').addEventListener('input',e=>{ q=e.target.value; paintList(); });
+    $('rgItems').addEventListener('click',e=>{ const r=e.target.closest('[data-id]'); if(!r) return; cur=r.dataset.id; paint(); });
+    $('rgFile').addEventListener('change',e=>{ const f=e.target.files; if(f&&f.length) addFiles(upKind,f); e.target.value=''; });
+    const main=$('rgMain'), side=$('rgSide');
+    main.addEventListener('input',e=>{
+      const x=it(); if(!x) return; const t=e.target;
+      if(t.dataset.f){
+        const k=t.dataset.f;
+        x[k]=['price','retail','supply'].includes(k)?t.value.replace(/[^\d]/g,''):t.value;
+        if(k==='name'){ const h=main.querySelector('.rg-head h3'); if(h) h.textContent=t.value||'이름 없는 상품'; const n=$('rgNameN'); if(n) n.textContent=t.value.length; paintList(); }
+        touch(x.id); paintSide();
+        if(k==='price') main.querySelectorAll('.rg-vt tbody tr').forEach(tr=>{ const a=tr.querySelector('[data-vf="add"]'), pr=tr.querySelector('.pr'); if(a&&pr) pr.textContent=won(num(x.price)+num(a.value)); });
+      }else if(t.dataset.g!=null){ x.groups[+t.dataset.g].name=t.value; touch(x.id); }
+      else if(t.dataset.va!=null){
+        const v=(x.vars=x.vars||{})[t.dataset.va]=Object.assign({},x.vars[t.dataset.va]);
+        v[t.dataset.vf]=t.value.replace(/[^\d-]/g,'');
+        if(t.dataset.vf==='add'){ const pr=t.closest('tr').querySelector('.pr'); if(pr) pr.textContent=won(num(x.price)+num(v.add)); }
+        touch(x.id);
+      }
+    });
+    /* 금액 칸은 나갈 때 천 단위 쉼표로 */
+    main.addEventListener('focusout',e=>{ const t=e.target; if((t.dataset.f&&['price','retail','supply'].includes(t.dataset.f))||t.dataset.vf==='add'){ const n=num(t.value); t.value=t.value===''?'':n.toLocaleString('ko-KR'); } });
+    /* 옵션 값 · Enter 나 쉼표로 넣고, 빈 칸에서 Backspace 면 마지막 값 빼기 */
+    main.addEventListener('keydown',e=>{
+      const t=e.target; if(t.dataset.gv==null) return;
+      const x=it(); const g=x.groups[+t.dataset.gv];
+      if(e.key==='Enter'||e.key===','){
+        e.preventDefault();
+        const vs=t.value.split(',').map(s=>s.trim().slice(0,50)).filter(Boolean).filter(v=>!g.values.includes(v));
+        if(!vs.length) return;
+        g.values=g.values.concat(vs); touch(x.id); paintMain(); paintSide();
+        const n=main.querySelector('[data-gv="'+t.dataset.gv+'"]'); if(n) n.focus();
+      }else if(e.key==='Backspace'&&!t.value&&g.values.length){
+        g.values.pop(); touch(x.id); paintMain(); paintSide();
+        const n=main.querySelector('[data-gv="'+t.dataset.gv+'"]'); if(n) n.focus();
+      }
+    });
+    main.addEventListener('paste',e=>{   /* 여러 값을 쉼표·줄로 붙여 넣으면 한꺼번에 */
+      const t=e.target; if(t.dataset.gv==null) return;
+      const s=(e.clipboardData||window.clipboardData).getData('text'); if(!/[,\n]/.test(s)) return;
+      e.preventDefault(); const x=it(); const g=x.groups[+t.dataset.gv];
+      g.values=g.values.concat(s.split(/[,\n\t]/).map(v=>v.trim().slice(0,50)).filter(v=>v&&!g.values.includes(v))); touch(x.id); paintMain(); paintSide();
+    });
+    main.addEventListener('click',async e=>{
+      const x=it(); if(!x) return;
+      const b=e.target.closest('button'); if(!b) return;
+      const a=b.dataset.act;
+      if(a==='brand'){ e.stopPropagation(); window.UI.menu(b,BRANDS.map(v=>({value:v,label:v})),x.brand,v=>{ x.brand=v; touch(x.id); paintMain(); paintList(); }); return; }
+      if(a==='opt'){ x.optOn=!x.optOn; if(!(x.groups||[]).length) x.groups=[{name:'구성',values:[]}]; touch(x.id); paintMain(); paintSide(); return; }
+      if(a==='inv'){ x.invOn=!x.invOn; touch(x.id); paintMain(); return; }
+      if(a==='addg'){ x.groups.push({name:'',values:[]}); touch(x.id); paintMain(); const n=main.querySelector('[data-g="'+(x.groups.length-1)+'"]'); if(n) n.focus(); return; }
+      if(a==='copy'){ const y=JSON.parse(JSON.stringify(x)); Object.assign(y,{id:'p'+rid(),name:(x.name||'')+' 복사',reg:{},ord:Date.now(),del:false}); ITEMS[y.id]=y; cur=y.id; touch(y.id); paint(); note('복제했어요 · 사진도 같이 씁니다','ok'); return; }
+      if(a==='del'){
+        const K=KIT(); const reg=x.reg&&x.reg.cafe24&&x.reg.cafe24.no;
+        const ok=K.ask?await K.ask({title:'이 상품을 목록에서 지울까요?',sub:x.name||'이름 없는 상품',ok:'지우기',html:reg?K.TIP('카페24에 등록된 상품(번호 '+esc(reg)+')은 그대로 남아요. 이 목록에서만 빠집니다.'):''}):confirm('지울까요?');
+        if(!ok) return;
+        x.del=true; touch(x.id); cur=(list()[0]||{}).id||''; paint(); return;
+      }
+      if(b.dataset.delg!=null){ x.groups.splice(+b.dataset.delg,1); touch(x.id); paintMain(); paintSide(); return; }
+      if(b.dataset.delv){ const [gi,vi]=b.dataset.delv.split('|').map(Number); x.groups[gi].values.splice(vi,1); touch(x.id); paintMain(); paintSide(); return; }
+      if(b.dataset.voff!=null){ const k=b.dataset.voff; const v=(x.vars=x.vars||{})[k]=Object.assign({},x.vars[k]); v.off=!v.off; touch(x.id); paintMain(); paintSide(); return; }
+      if(b.dataset.up){ upKind=b.dataset.up; const f=$('rgFile'); f.multiple=upKind!=='main'; f.click(); return; }
+      if(b.dataset.rm){ const [k,i]=b.dataset.rm.split('|'); if(k==='main') x.main=''; else x[k].splice(+i,1); touch(x.id); paintMain(); paintSide(); paintList(); return; }
+      if(b.dataset.mv){ const [i,d]=b.dataset.mv.split('|').map(Number); const j=i+d; if(j<0||j>=x.detail.length) return; [x.detail[i],x.detail[j]]=[x.detail[j],x.detail[i]]; touch(x.id); paintMain(); return; }
+    });
+    /* 사진 끌어다 놓기 · 놓은 자리(대표·추가·상세)로, 빗나가면 상세로 */
+    main.addEventListener('dragover',e=>{ if(!it()||!e.dataTransfer||![...e.dataTransfer.types].includes('Files')) return; e.preventDefault(); const d=e.target.closest('.rg-drop'); main.querySelectorAll('.rg-drop.over').forEach(x=>x.classList.toggle('over',x===d)); if(d) d.classList.add('over'); });
+    main.addEventListener('dragleave',e=>{ if(!main.contains(e.relatedTarget)) main.querySelectorAll('.rg-drop.over').forEach(x=>x.classList.remove('over')); });
+    main.addEventListener('drop',e=>{
+      if(!it()||!e.dataTransfer||!e.dataTransfer.files.length) return; e.preventDefault();
+      main.querySelectorAll('.rg-drop.over').forEach(x=>x.classList.remove('over'));
+      const d=e.target.closest('[data-up]'); const x=it();
+      addFiles(d?d.dataset.up:(!x.main?'main':'detail'),e.dataTransfer.files);
+    });
+    side.addEventListener('click',e=>{
+      const x=it(); if(!x) return;
+      const b=e.target.closest('button'); if(!b) return;
+      const a=b.dataset.act;
+      if(a==='cat'){
+        e.stopPropagation(); if(!CATS) return;
+        const have=new Set((x.cafe24.cats||[]).map(String));
+        window.UI.menu(b,CATS.filter(c=>!have.has(String(c.no))).map(c=>({value:c.no,label:c.full,sub:c.show===false?'숨김':''})),'',v=>{ x.cafe24.cats=(x.cafe24.cats||[]).concat([v]); touch(x.id); paintSide(); },{search:true,placeholder:'카테고리 찾기',limit:80});
+        return;
+      }
+      if(a==='catre'){ loadCats(true); return; }
+      if(b.dataset.rmcat){ x.cafe24.cats=(x.cafe24.cats||[]).filter(n=>String(n)!==b.dataset.rmcat); touch(x.id); paintSide(); return; }
+      if(a==='disp'){ x.cafe24.display=!x.cafe24.display; touch(x.id); paintSide(); return; }
+      if(a==='sell'){ x.cafe24.selling=!x.cafe24.selling; touch(x.id); paintSide(); return; }
+      if(a==='reg'){ register(); return; }
+      if(a==='see'){ const K=KIT(); if(K.show) K.show(x.name||''); return; }
+    });
+    paint();
+    /* 상품 등록 탭을 볼 때 읽는다(로그인 전이면 4초마다 다시) · 고치는 중이 아니면 2분마다 새로 */
+    let at=0;
+    const visible=()=>{ const v=$('view-shop'), p=document.querySelector('#view-shop [data-shop-pane="register"]'); return v&&v.style.display!=='none'&&p&&!p.hidden; };
+    setInterval(()=>{ if(!visible()) return; if(loaded&&Date.now()-at<120e3) return; if(document.activeElement&&$('rgMain').contains(document.activeElement)) return; at=Date.now(); load().then(ok=>{ if(!ok&&!loaded) at=0; }); },4000);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
 })();
