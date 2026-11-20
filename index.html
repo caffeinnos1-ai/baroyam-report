@@ -6401,6 +6401,7 @@ window.BAROYAM_FONT=(function(){
   .sh-thumb{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:13px;font-weight:600}
   .sh-pn em{font-style:normal;display:block;font-size:12px;color:var(--mute);margin-top:1px}
   .sh-pn strong{font-weight:600}
+  .sh-pn em b.sh-hit{font-weight:600;color:var(--btn-soft-ink)}
   .sh-opt td.nm{padding-left:74px;color:var(--body)}
   .sh-opt.is-dirty td{background:color-mix(in srgb,var(--warn-soft) 60%,var(--paper))}
   .sh-qty{all:unset;box-sizing:border-box;width:84px;height:32px;padding:0 10px;border-radius:8px;border:1px solid transparent;text-align:right;font-size:14px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums;cursor:text}
@@ -36306,7 +36307,7 @@ window.baroyamAsk=function(title,body,okText){
     $('shEmpty').hidden=rows.length>0;
     let h='';
     rows.forEach(({p,opts})=>{
-      const open=S.open.has(p.id)||!!ws||S.state!=='all';
+      const open=S.open.has(p.id);   /* 옵션은 상품 줄을 눌러야 열린다(11-20 사용자 요청 · 거르기·검색으로 저절로 열지 않음) */
       const vs=p.opt.map(cur); const tot=vs.reduce((a,v)=>a+(v.st==='stop'||!v.inv?0:v.qty),0);
       const sts=[...new Set(vs.map(v=>isOut(v)?'out':v.st))];
       const prices=vs.map(v=>v.price); const pmin=Math.min(...prices), pmax=Math.max(...prices);
@@ -36317,7 +36318,7 @@ window.baroyamAsk=function(title,body,okText){
         :'<button type="button" class="sh-st mix" data-pst="'+p.id+'" title="상품 판매상태 · 눌러서 바꾸기">옵션마다 다름</button>';
       const thumb=p.img?'<img class="sh-thumb" src="'+esc(p.img)+'" alt="" loading="lazy">':'<span class="sh-thumb">'+esc(p.brand.slice(0,1))+'</span>';
       h+='<tr class="sh-prod'+(open?' open':'')+(pe?' is-dirty':'')+'" data-p="'+p.id+'"><td class="ck"><input type="checkbox" data-selp="'+p.id+'"'+(allSel?' checked':'')+' aria-label="이 상품 옵션 모두 고르기"></td>'
-        +'<td class="nm"><div class="sh-pn"><span class="sh-tog">▸</span>'+thumb+'<span><strong>'+esc(p.name)+'</strong><em>'+esc(p.brand)+' · 옵션 '+p.opt.length+'개</em></span></div></td>'
+        +'<td class="nm"><div class="sh-pn"><span class="sh-tog">▸</span>'+thumb+'<span><strong>'+esc(p.name)+'</strong><em>'+esc(p.brand)+' · 옵션 '+p.opt.length+'개'+(opts.length<p.opt.length?' 중 <b class="sh-hit">'+opts.length+'개 해당</b>':'')+'</em></span></div></td>'
         +'<td>'+(!prices.length?'-':pmin===pmax?won(pmin):won(pmin)+' ~')+'</td><td class="sh-sum-qty">'+(vs.some(v=>v.inv)?tot.toLocaleString('ko-KR')+'개':'<span class="sh-noinv">관리 안 함</span>')+'</td>'
         +'<td>'+pPill+(pe?'<span class="sh-was">'+(p.sell!==false?'판매중':'판매안함')+'</span>':'')+'</td></tr>';
       if(!open) return;
