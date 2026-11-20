@@ -5232,6 +5232,29 @@ window.BAROYAM_FONT=(function(){
   #caKsel .n{font-size:13.5px;color:var(--ink);font-weight:500;margin-right:6px;white-space:nowrap}
   #caKsel .n b{color:var(--btn);font-weight:600}
   #caKsel .ui-btn{border-radius:999px}
+  #caKsel[data-mode="sel"] [data-bag-only],#caKsel[data-mode="bag"] [data-sel-only]{display:none}
+  #caKsel .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+  #caKsel .bagbtn{display:inline-flex;align-items:center;gap:6px}
+  #caKsel .bagbtn b{min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:inline-grid;place-items:center;background:var(--btn);color:var(--paper);font-size:12px;font-weight:600}
+  #caKsel .bagbtn.pop b{animation:caBagPop .45s cubic-bezier(.2,.8,.2,1.4)}
+  @keyframes caBagPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+  #caKsel .toast{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);white-space:nowrap;padding:7px 12px;border-radius:999px;
+    background:var(--ink);color:var(--paper);font-size:12.5px;opacity:0;transition:opacity .2s;pointer-events:none}
+  #caKsel .toast.on{opacity:1}
+  /* 담은 키워드 목록 · 떠 있는 줄 위에 펼침 */
+  #caKbag{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);width:340px;max-height:360px;display:flex;flex-direction:column}
+  #caKbag[hidden]{display:none}
+  #caKbag .hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink);font-weight:600}
+  #caKbag .hd span{font-weight:400;color:var(--mute);font-size:12px}
+  #caKbag ul{list-style:none;margin:0;padding:6px;overflow:auto}
+  #caKbag li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:13px;color:var(--body)}
+  #caKbag li:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+  #caKbag li .i{width:22px;color:var(--mute);font-size:11.5px;text-align:right;flex:none}
+  #caKbag li .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #caKbag li button{all:unset;cursor:pointer;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--mute)}
+  #caKbag li button:hover{color:var(--neg);background:color-mix(in srgb,var(--neg) 10%,transparent)}
+  /* 담은 키워드 줄 표시 · 키워드 앞 작은 점 */
+  #caKws .cs-tbl tbody tr.bag td.k::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--btn);margin-right:8px;vertical-align:2px}
   #caAreas .cs-tbl td.k em{font-style:normal;font-weight:400;font-size:12px;color:var(--mute);margin-left:6px}
   #caRoot[data-view="detail"] .cs-bar{border-bottom:0}
   #caRoot .cs-tbl td.dd{color:var(--ink);font-weight:500}
@@ -31895,8 +31918,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     document.addEventListener('mouseup',()=>{ if(!kdrag) return; cancelAnimationFrame(kdrag.t); kdragged=kdrag.moved; kdrag=null; setTimeout(()=>{ kdragged=false; },0); });
     kbar(); $('caKcopy').addEventListener('click',copyKws);
     $('caKclear').addEventListener('click',()=>{ st.ksel.clear(); st.kanc=null; paintKsel(); });
+    $('caKput').addEventListener('click',putBag);
+    $('caKbagBtn').addEventListener('click',e=>{ e.stopPropagation(); $('caKbag').hidden=!$('caKbag').hidden; });
+    $('caKempty').addEventListener('click',()=>{ if(!confirm('담은 키워드 '+won(kbag.length)+'개를 모두 비울까요?')) return; kbag=[]; saveBag(); paintBag(); kbarVis(); });
+    $('caKbagList').addEventListener('click',e=>{ const x=e.target.closest('[data-kout]'); if(!x) return; e.stopPropagation(); kbag.splice(+x.dataset.kout,1); saveBag(); paintBag(); kbarVis(); });
+    document.addEventListener('click',e=>{ const p=$('caKbag'); if(p&&!p.hidden&&!e.target.closest('#caKsel')) p.hidden=true; });
     document.addEventListener('keydown',e=>{
-      if(!st.ksel.size||st.view!=='detail'||!root.offsetParent) return;
+      if((!st.ksel.size&&!kbag.length)||st.view!=='detail'||!root.offsetParent) return;
       const ae=document.activeElement, typing=ae&&(/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)||ae.isContentEditable);
       if(typing) return;
       if((e.ctrlKey||e.metaKey)&&(e.key==='c'||e.key==='C')){
@@ -31940,32 +31968,74 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     let b=document.getElementById('caKsel');
     if(!b){
       b=document.createElement('div'); b.id='caKsel'; b.setAttribute('role','toolbar'); b.setAttribute('aria-label','고른 키워드');
-      b.innerHTML='<span class="n" id="caKselN"></span><button type="button" class="ui-btn primary" id="caKcopy" title="Ctrl+C 로도 복사합니다 · 붙여 넣으면 한 줄에 키워드 하나">복사하기</button><button type="button" class="ui-btn ghost" id="caKclear">선택 해제하기</button>';
+      /* 담아두기(11-20 사용자) · 여러 정렬·거르기에서 고른 키워드를 차례로 담고(겹치는 건 빼고) 마지막에 한 번에 복사 */
+      b.innerHTML='<div class="toast" id="caKtoast"></div>'
+        +'<div class="ui-pop" id="caKbag" hidden><div class="hd">담은 키워드 <span id="caKbagN"></span></div><ul id="caKbagList"></ul></div>'
+        +'<span class="n" id="caKselN" data-sel-only></span>'
+        +'<button type="button" class="ui-btn primary" id="caKput" data-sel-only title="고른 키워드를 담아 둡니다 · 이미 담긴 키워드는 다시 담지 않습니다">담아두기</button>'
+        +'<button type="button" class="ui-btn ghost" id="caKclear" data-sel-only>선택 해제</button>'
+        +'<span class="sep" data-sel-only data-bag-only></span>'
+        +'<button type="button" class="ui-btn soft bagbtn" id="caKbagBtn" data-bag-only title="담은 키워드 보기·빼기">담은 키워드 <b id="caKbagCnt">0</b></button>'
+        +'<button type="button" class="ui-btn soft" id="caKcopy" data-bag-only title="담은 키워드를 한 줄에 하나씩 복사합니다(Ctrl+C)">복사하기</button>'
+        +'<button type="button" class="ui-btn ghost" id="caKempty" data-bag-only>비우기</button>';
       document.body.appendChild(b);
     }
     return b;
   }
   /* 떠 있는 줄은 정밀성과 화면이 보일 때만 · 다른 탭·메뉴로 가면 숨김 */
-  function kbarVis(){ const b=document.getElementById('caKsel'); if(b) b.classList.toggle('on',!!st.ksel.size&&st.view==='detail'&&!!root.offsetParent); }
+  function kbarVis(){
+    const b=document.getElementById('caKsel'); if(!b) return;
+    const sel=!!st.ksel.size, bag=!!kbag.length;
+    b.dataset.mode=sel&&bag?'both':sel?'sel':'bag';
+    /* 고른 게 없을 때는 복사하기가 이 줄의 주 단추 */
+    const c=$('caKcopy'); if(c){ c.classList.toggle('primary',!sel); c.classList.toggle('soft',sel); }
+    const on=(sel||bag)&&st.view==='detail'&&!!root.offsetParent;
+    b.classList.toggle('on',on); if(!on) $('caKbag').hidden=true;
+  }
+  /* 담은 키워드 · 담은 순서대로 · 이 브라우저에 기억(새로고침해도 남음) */
+  const KBAG_KEY='baroyam_ca_bag';
+  let kbag=[]; try{ const a=JSON.parse(localStorage.getItem(KBAG_KEY)||'[]'); if(Array.isArray(a)) kbag=a.filter(x=>typeof x==='string'); }catch(e){}
+  const saveBag=()=>{ try{ localStorage.setItem(KBAG_KEY,JSON.stringify(kbag)); }catch(e){} };
+  function toast(t){ const el=$('caKtoast'); if(!el) return; el.textContent=t; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),1800); }
+  function paintBag(pop){
+    $('caKbagCnt').textContent=won(kbag.length);
+    $('caKbagN').textContent=won(kbag.length)+'개';
+    $('caKbagList').innerHTML=kbag.map((k,i)=>'<li><span class="i">'+(i+1)+'</span><span class="t" title="'+esc(k)+'">'+esc(k)+'</span><button type="button" data-kout="'+i+'" aria-label="빼기">✕</button></li>').join('');
+    if(!kbag.length) $('caKbag').hidden=true;
+    if(pop){ const bb=$('caKbagBtn'); bb.classList.remove('pop'); void bb.offsetWidth; bb.classList.add('pop'); }
+    const inBag=new Set(kbag);
+    document.querySelectorAll('#caKws tbody tr[data-i]').forEach(tr=>tr.classList.toggle('bag',inBag.has(kshow[+tr.dataset.i])));
+  }
+  function putBag(){
+    if(!st.ksel.size) return;
+    const list=kshow.filter(k=>st.ksel.has(k)).concat([...st.ksel].filter(k=>!kshow.includes(k)));
+    const have=new Set(kbag); let add=0, dup=0;
+    list.forEach(k=>{ if(have.has(k)) dup++; else { kbag.push(k); have.add(k); add++; } });
+    saveBag();
+    st.ksel.clear(); st.kanc=null; paintKsel(); paintBag(!!add);
+    toast(add?won(add)+'개 담음'+(dup?' · '+won(dup)+'개는 이미 담겨 있어 뺐습니다':''):'모두 이미 담겨 있습니다');
+  }
   document.addEventListener('click',()=>setTimeout(kbarVis,0),true);
   window.addEventListener('hashchange',()=>setTimeout(kbarVis,0));
   function paintKsel(){
     const n=st.ksel.size;
-    kbar(); if(n) $('caKselN').innerHTML='<b>'+won(n)+'개</b> 선택'; kbarVis();
+    kbar(); if(n) $('caKselN').innerHTML='<b>'+won(n)+'개</b> 선택'; paintBag(); kbarVis();
     /* 복사된 줄(.cp)은 선택이 풀릴 때까지 진한 색으로 남는다(지우면 차오르는 움직임이 다시 돌아서) */
     document.querySelectorAll('#caKws tbody tr[data-i]').forEach(tr=>{ const on=st.ksel.has(kshow[+tr.dataset.i]); tr.classList.toggle('sel',on); if(!on) tr.classList.remove('cp'); });
   }
   async function copyKws(){
-    if(!st.ksel.size) return;
-    const list=kshow.filter(k=>st.ksel.has(k)).concat([...st.ksel].filter(k=>!kshow.includes(k)));
+    if(!kbag.length&&!st.ksel.size) return;
+    const fromBag=!!kbag.length;
+    const list=fromBag?kbag.slice():kshow.filter(k=>st.ksel.has(k)).concat([...st.ksel].filter(k=>!kshow.includes(k)));
     const txt=list.join('\n');
     let ok=false;
     try{ await navigator.clipboard.writeText(txt); ok=true; }catch(e){
       try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.cssText='position:fixed;left:-9999px'; document.body.appendChild(ta); ta.select(); ok=document.execCommand('copy'); ta.remove(); }catch(e2){}
     }
     /* 복사되면 고른 줄이 아래에서 위로 진하게 한 번 더 차오른다 */
-    if(ok){ const rs=[...document.querySelectorAll('#caKws tbody tr.sel')]; rs.forEach(r=>r.classList.remove('cp')); void document.body.offsetWidth; rs.forEach(r=>r.classList.add('cp')); }
-    const b=$('caKcopy'); b.textContent=ok?won(list.length)+'개 복사됨':'복사 실패'; clearTimeout(copyKws.t); copyKws.t=setTimeout(()=>{ b.textContent='복사하기'; },1600);
+    if(ok&&!fromBag){ const rs=[...document.querySelectorAll('#caKws tbody tr.sel')]; rs.forEach(r=>r.classList.remove('cp')); void document.body.offsetWidth; rs.forEach(r=>r.classList.add('cp')); }
+    toast(ok?(fromBag?'담은 키워드 ':'')+won(list.length)+'개 복사됨 · 붙여 넣으면 한 줄에 하나씩':'복사하지 못했습니다');
+    const b=$('caKcopy'); b.textContent=ok?'복사됨':'복사 실패'; clearTimeout(copyKws.t); copyKws.t=setTimeout(()=>{ b.textContent='복사하기'; },1600);
   }
   async function paint(){
     if(!st.built) build();
