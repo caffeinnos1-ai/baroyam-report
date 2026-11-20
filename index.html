@@ -6647,6 +6647,14 @@ window.BAROYAM_FONT=(function(){
   .rg-hist{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--body)}
   .rg-hist div{display:flex;align-items:center;gap:8px}
   .rg-hist span{flex:1;min-width:0;color:var(--mute)}
+  .rg-what{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+  .rg-what .rg-link{align-items:flex-start;cursor:pointer;transition:border-color .12s,background .12s}
+  .rg-what .rg-link:hover{border-color:var(--btn)}
+  .rg-what .rg-link.on{border-color:var(--btn);background:var(--btn-soft)}
+  .rg-what .rg-link input{margin-top:2px}
+  .rg-what .rg-link span{display:flex;flex-direction:column;gap:2px}
+  .rg-what .rg-link em{margin-left:0;font-size:11.5px}
+  .rg-now{margin:0 0 12px;padding:9px 12px;border-radius:10px;background:var(--bg);font-size:13px;color:var(--body)}
   .rg-cur{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
   .rg-cur img{flex:none;width:90px;height:120px;object-fit:cover;object-position:top;border-radius:9px;border:1px solid var(--line);background:var(--bg)}
   .rg-q{display:flex;align-items:center;gap:6px;width:100%;box-sizing:border-box}
@@ -37158,6 +37166,8 @@ window.baroyamAsk=function(title,body,okText){
   /* 상세 바꾸기 판매처 · on 이 아닌 곳은 연동 전이라 체크할 수 없다 */
   const LINKS=[{id:'cafe24',name:'카페24',logo:'logos/cafe24.png',on:true},{id:'naver',name:'네이버 스마트스토어',logo:'logos/naver.png'},{id:'11st',name:'11번가',logo:'logos/11st.png'}];
   const linkNo=(x,ch)=>x&&x.reg&&x.reg[ch]&&x.reg[ch].no;
+  /* "무엇을 수정하시겠습니까?" · 판매처에서 칸 하나로 바뀌어 잘 안 깨지는 것만(옵션·재고·판매상태는 상품·옵션 재고 탭) · 열쇠는 서버 fields 이름 */
+  const WHAT=[['detail','상세페이지','사진을 통째로 바꾸기'],['name','상품명',''],['price','가격','판매가 · 정가'],['summary','한 줄 설명','목록에서 이름 아래 글'],['main','대표 사진','목록·작은 사진도 같이']];
   const hasDetail=x=>(x.detail||[]).length>0||!!String(x.top||'').trim();
   let ITEMS={}, cur='', q='', loaded=false, loading=false;
   const dirty=new Set(); let saveT=null, saving=false, saveErr='', savedAt=0;
@@ -37349,10 +37359,23 @@ window.baroyamAsk=function(title,body,okText){
     const m=$('rgMain'); const x=it();
     if(!x){ m.innerHTML='<div class="rg-empty">'+(loaded?'왼쪽 <b>+ 새 상품</b>으로 등록할 상품을 만드세요.<br>한 번 작성하면 카페24에 올리고, 다음 단계에서 스마트스토어·쿠팡에도 올립니다.':'불러오는 중…')+'</div>'; return; }
     const reg=x.reg&&x.reg.cafe24&&x.reg.cafe24.no;
-    if(x.src==='cafe24'){   /* 불러온 상품 · 상세페이지만 여기서 바꾼다 */
-      m.innerHTML='<div class="rg-head"><h3>'+esc(x.name||'이름 없는 상품')+'</h3><span class="rg-save" id="rgSave"></span><button type="button" class="ui-btn sm ghost" data-act="del">목록에서 빼기</button></div>'
-        +'<div class="sh-note ok" style="margin:0">카페24에서 불러온 상품이에요(상품번호 '+esc(reg)+(x.price?' · '+won(x.price):'')+'). 이름·가격·옵션은 카페24에서 고치고, 여기서는 상세페이지를 바꿉니다.</div>'
-        +curSec(x)+detailSec(x);
+    if(reg){   /* 판매처에 연결된 상품 · "무엇을 수정하시겠습니까?"에서 고른 칸만 보이고 그것만 보낸다 */
+      if(!CUR[reg]) loadCur();
+      const w=x.what||{}, c=CUR[reg]||{};
+      const now=(t)=>'<p class="rg-now">지금 카페24 · '+(c.busy?'받는 중…':c.err?'<span style="color:var(--neg)">'+esc(c.err)+'</span>':t)+'</p>';
+      let h='<div class="rg-head"><h3>'+esc(x.name||'이름 없는 상품')+'</h3><span class="rg-save" id="rgSave"></span><button type="button" class="ui-btn sm ghost" data-act="del">목록에서 빼기</button></div>'
+        +'<section class="rg-sec"><h4>무엇을 수정하시겠습니까?<span>체크한 것만 아래에 열리고, 그것만 판매처에 보냅니다</span></h4><div class="rg-what">'
+        +WHAT.map(([k,l,d])=>'<label class="rg-link'+(w[k]?' on':'')+'"><input type="checkbox" data-what="'+k+'"'+(w[k]?' checked':'')+'><span><b>'+l+'</b><em>'+d+'</em></span></label>').join('')+'</div>'
+        +'<p class="rg-hint">옵션·재고·판매상태는 <b>상품·옵션 재고</b> 탭에서 고칩니다 · 카페24 상품번호 '+esc(reg)+'</p></section>';
+      if(w.name) h+='<section class="rg-sec"><h4>상품명</h4>'+now(c.name!=null?esc(c.name):'—')+'<div class="rg-grid">'+field('새 상품명','name',x,{w:'w3',req:true,em:'<span id="rgNameN">'+String(x.name||'').length+'</span>/250'})+'</div></section>';
+      if(w.price) h+='<section class="rg-sec"><h4>가격</h4>'+now(c.price!=null?'판매가 '+won(c.price)+(c.retail?' · 정가 '+won(c.retail):''):'—')+'<div class="rg-grid">'
+        +field('새 판매가','price',x,{won:true,req:true,ph:'0'})+field('새 정가','retail',x,{won:true,ph:'비우면 그대로',hint:'할인 전 값 · 비우면 바꾸지 않아요'})+'</div></section>';
+      if(w.summary) h+='<section class="rg-sec"><h4>한 줄 설명</h4>'+now(c.summary!=null?esc(c.summary||'(비어 있음)'):'—')+'<div class="rg-grid">'+field('새 한 줄 설명','summary',x,{w:'w3',max:255,ph:'비우면 설명을 지워요'})+'</div></section>';
+      if(w.main) h+='<section class="rg-sec"><h4>대표 사진<span>목록·작은 사진은 카페24가 이 사진으로 다시 만듦</span></h4><div class="rg-pic-row">'
+        +'<div><p>지금 카페24</p><div class="rg-pics"><div class="rg-pic main"'+((c.image||x.img)?' style="background-image:url(&quot;'+esc(c.image||x.img)+'&quot;)"':'')+'></div></div></div>'
+        +'<div><p>새 대표 사진</p><div class="rg-pics">'+(x.main?'<div class="rg-pic main" data-img="'+esc(x.main)+'"><button type="button" class="x" data-rm="main|0" aria-label="빼기">✕</button></div>':drop('main','main','새 대표 사진'))+'</div></div></div></section>';
+      if(w.detail) h+=curSec(x)+detailSec(x);
+      m.innerHTML=h;
       paintSave(); fillThumbs(m); return;
     }
     let h='<div class="rg-head"><h3>'+esc(x.name||'이름 없는 상품')+'</h3><span class="rg-save" id="rgSave"></span>'
@@ -37405,7 +37428,6 @@ window.baroyamAsk=function(title,body,okText){
       +(x.adds||[]).map((p,i)=>'<div class="rg-pic" data-img="'+esc(p)+'"><button type="button" class="x" data-rm="adds|'+i+'" aria-label="빼기">✕</button></div>').join('')
       +((x.adds||[]).length<MAX.adds?drop('adds','','추가 사진'):'')+'</div></div></div></section>';
     h+=detailSec(x);
-    if(reg) h='<div class="sh-note ok" style="margin:0">카페24에 등록된 상품이에요(상품번호 '+esc(reg)+'). 상세페이지는 오른쪽 "체크한 곳 상세 바꾸기"로 보내고, 이름·가격·옵션은 카페24에서 고쳐 주세요.</div>'+h+curSec(x);
     m.innerHTML=h;
     paintSave(); fillThumbs(m);
   }
@@ -37426,9 +37448,17 @@ window.baroyamAsk=function(title,body,okText){
     try{
       const name=await upload('shop/req',{v:1,kind:'getdetail',chan:'cafe24',no,by:meName(),at:new Date().toISOString()});
       const r=await waitRes(name,null,120e3);
-      CUR[no]=r.state==='done'?{imgs:r.imgs||[],text:r.text||''}:{err:r.message};
+      CUR[no]=r.state==='done'?{imgs:r.imgs||[],text:r.text||'',name:r.name,price:r.price,retail:r.retail,summary:r.summary||'',image:r.image||''}:{err:r.message};
+      /* 불러온 상품은 처음 한 번 지금 값으로 칸을 채운다(고칠 때 처음부터 적지 않게) */
+      const y=Object.values(ITEMS).find(z=>z&&!z.del&&z.src==='cafe24'&&String(linkNo(z,'cafe24'))===String(no));
+      if(r.state==='done'&&y&&!y.filled){
+        y.filled=true; if(r.name) y.name=r.name; if(r.price) y.price=String(r.price);
+        if(r.retail&&r.retail!==r.price) y.retail=String(r.retail); y.summary=r.summary||''; if(r.image) y.img=r.image;
+        touch(y.id); paintList(); paintSide();
+      }
     }catch(e){ CUR[no]={err:e.message||String(e)}; }
-    if(linkNo(it(),'cafe24')===no) paintMain();
+    const a=document.activeElement;   /* 적는 중이면 그 칸을 지킨다 */
+    if(linkNo(it(),'cafe24')===no&&!(a&&$('rgMain').contains(a)&&/INPUT|TEXTAREA/.test(a.tagName))) paintMain();
   }
   function detailSec(x){
     return '<section class="rg-sec"><h4>'+(linkNo(x,'cafe24')?'새 상세페이지':'상세페이지')+'<span>위 글 → 사진(위에서 아래 순서) → 아래 글</span></h4>'
@@ -37469,59 +37499,87 @@ window.baroyamAsk=function(title,body,okText){
     h+='</div><div class="rg-soon">'+SOON.map(([n,l])=>'<div><img src="'+l+'" alt="">'+n+'<span>다음 단계</span></div>').join('')+'</div>';
     s.innerHTML=h;
   }
-  /* 판매처에 연결된 상품 · 체크한 곳의 상세를 한 번에 바꾸고, 바꾼 기록에서 되돌린다 */
+  /* 판매처에 연결된 상품 · 체크한 칸을 체크한 판매처에 한 번에 보내고, 바꾼 기록에서 되돌린다 */
   const picked=x=>LINKS.filter(l=>l.on&&linkNo(x,l.id)&&!((x.pick||{})[l.id]===false));
+  const WNAME=k=>(WHAT.find(w=>w[0]===k)||[k,k])[1];
+  const whatKeys=x=>WHAT.map(w=>w[0]).filter(k=>(x.what||{})[k]);
+  /* 고른 칸 중 비어 있는 것 */
+  function editMiss(x){
+    const m=[];
+    whatKeys(x).forEach(k=>{
+      if(k==='detail'&&!hasDetail(x)) m.push('새 상세페이지 사진');
+      if(k==='name'&&!String(x.name||'').trim()) m.push('새 상품명');
+      if(k==='price'&&!(num(x.price)>0)) m.push('새 판매가');
+      if(k==='main'&&!x.main) m.push('새 대표 사진');
+    });
+    return m;
+  }
   function linkedSide(x){
-    const reg=x.reg.cafe24, b=busy[x.id];
-    let h='<h4>판매처</h4><div class="rg-ch"><div class="rg-lab">상세를 바꿀 곳</div>'
+    const reg=x.reg.cafe24, b=busy[x.id], keys=whatKeys(x), miss=editMiss(x);
+    let h='<h4>판매처</h4><div class="rg-ch"><div class="rg-lab">보낼 곳</div>'
       +LINKS.map(l=>{ const no=linkNo(x,l.id), can=l.on&&no, on=can&&(x.pick||{})[l.id]!==false;
         return '<label class="rg-link'+(can?'':' off')+'"><input type="checkbox" data-pick="'+l.id+'"'+(on?' checked':'')+(can?'':' disabled')+'><img src="'+l.logo+'" alt=""><b>'+esc(l.name)+'</b><em>'+(can?'#'+esc(no):l.on?'연결 안 됨':'연동 전')+'</em></label>'; }).join('')
-      +'<button type="button" class="ui-btn primary block" data-act="push"'+(!picked(x).length||!hasDetail(x)||b?' disabled':'')+'>'+(b?'바꾸는 중…':'체크한 곳 상세 바꾸기')+'</button>'
-      +(!hasDetail(x)?'<p class="rg-hint" style="margin:0">가운데 "새 상세페이지"에 사진을 넣으면 보낼 수 있어요.</p>':'<p class="rg-hint" style="margin:0">지금 상세를 통째로 새 상세로 바꿔요 · 바꾸기 전 상세는 보관돼 되돌릴 수 있어요.</p>')
-      +'</div>';
+      +'<div class="rg-lab">보낼 것</div><div class="rg-checks">'+(keys.length?keys.map(k=>{ const bad=editMiss(Object.assign({},x,{what:{[k]:true}})).length;
+        return '<div class="'+(bad?'no':'')+'"><i>'+(bad?'✕':'✓')+'</i>'+WNAME(k)+(bad?' · 비어 있음':'')+'</div>'; }).join(''):'<div class="opt"><i>!</i>가운데에서 수정할 것을 체크하세요</div>')+'</div>'
+      +'<button type="button" class="ui-btn primary block" data-act="push"'+(!picked(x).length||!keys.length||miss.length||b?' disabled':'')+'>'+(b?'보내는 중…':'체크한 곳에 수정 보내기')+'</button>'
+      +'<p class="rg-hint" style="margin:0">고른 칸만 바뀌어요 · 바꾸기 전 값은 보관돼 되돌릴 수 있어요.</p></div>';
     if(x.src!=='cafe24'&&(reg.warn||[]).length) h+='<div class="rg-done"><b>카페24 등록 때 주의</b><ul class="rg-warn">'+reg.warn.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul></div>';
     const hist=(x.hist||[]).map((r,i)=>({r,i})).reverse().slice(0,5);
-    if(hist.length) h+='<div class="rg-ch"><div class="rg-lab">상세를 바꾼 기록</div><div class="rg-hist">'+hist.map(({r,i})=>{ const d=new Date(r.at);
-      return '<div><span>'+(d.getMonth()+1)+'.'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' · '+(r.undo?'되돌림':'바꿈')+(r.by?' · '+esc(r.by):'')+'</span><button type="button" class="ui-btn sm ghost" data-undo="'+i+'"'+(b?' disabled':'')+' title="이때 바꾸기 직전 상세로 되돌립니다">되돌리기</button></div>'; }).join('')+'</div></div>';
+    if(hist.length) h+='<div class="rg-ch"><div class="rg-lab">수정한 기록</div><div class="rg-hist">'+hist.map(({r,i})=>{ const d=new Date(r.at);
+      return '<div><span>'+(d.getMonth()+1)+'.'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' · '+(r.undo?'되돌림':(r.keys||['detail']).map(WNAME).join('·'))+(r.by?' · '+esc(r.by):'')+'</span><button type="button" class="ui-btn sm ghost" data-undo="'+i+'"'+(b?' disabled':'')+' title="이때 바꾸기 직전 값으로 되돌립니다">되돌리기</button></div>'; }).join('')+'</div></div>';
     h+='<button type="button" class="ui-btn soft block" data-act="see">상품·옵션 재고에서 보기</button>';
     return h;
   }
   async function pushDetail(){
     const x=it(); if(!x||busy[x.id]) return;
-    const chs=picked(x); if(!chs.length||!hasDetail(x)) return;
+    const chs=picked(x), keys=whatKeys(x); if(!chs.length||!keys.length) return;
+    const miss=editMiss(x); if(miss.length){ note('비어 있어요 · '+miss.join(', '),'bad'); return; }
+    const c=CUR[linkNo(x,'cafe24')]||{};
+    const fields={};
+    if(keys.includes('name')) fields.name=String(x.name).trim();
+    if(keys.includes('price')){ fields.price=num(x.price); if(num(x.retail)) fields.retail=num(x.retail); }
+    if(keys.includes('summary')) fields.summary=x.summary||'';
+    if(keys.includes('main')) fields.main=x.main;
+    if(keys.includes('detail')) fields.detail={top:x.top||'',detail:x.detail||[],bottom:x.bottom||''};
+    const chg=k=>k==='name'?esc(c.name||'')+' → <b>'+esc(fields.name)+'</b>'
+      :k==='price'?won(c.price||0)+' → <b>'+won(fields.price)+'</b>'+(fields.retail?' · 정가 <b>'+won(fields.retail)+'</b>':'')
+      :k==='summary'?'<b>'+esc(fields.summary||'(지움)')+'</b>'
+      :k==='main'?'새 사진으로':'새 사진 '+(x.detail||[]).length+'장으로 통째로';
     const K=KIT();
-    const ok=K.ask?await K.ask({logo:'logos/cafe24.png',title:'체크한 곳 상세를 바꿀까요?',sub:x.name||'',ok:'바꾸기',
-      html:'<div class="sh-ask-list">'+chs.map(l=>'<div class="sh-ask-row"><div class="sh-ask-nm"><strong>'+esc(l.name)+'</strong><em>#'+esc(linkNo(x,l.id))+'</em></div><div class="sh-ask-chg"><span>상세를 새 사진 '+(x.detail||[]).length+'장으로 통째로</span></div></div>').join('')+'</div>'
-        +(K.TIP?K.TIP('바꾸기 전 상세는 보관돼, 오른쪽 기록의 되돌리기로 돌아갈 수 있어요. 사진 수에 따라 1~2분 걸려요.'):'')}):confirm('상세를 바꿀까요?');
+    const ok=K.ask?await K.ask({logo:'logos/cafe24.png',title:'체크한 곳에 수정을 보낼까요?',sub:(x.name||'')+' · '+chs.map(l=>l.name+' #'+linkNo(x,l.id)).join(', '),ok:'보내기',
+      html:'<div class="sh-ask-list">'+keys.map(k=>'<div class="sh-ask-row"><div class="sh-ask-nm"><strong>'+WNAME(k)+'</strong></div><div class="sh-ask-chg"><span>'+chg(k)+'</span></div></div>').join('')+'</div>'
+        +(K.TIP?K.TIP('고른 칸만 바뀌어요. 바꾸기 전 값은 보관돼 오른쪽 기록의 되돌리기로 돌아갈 수 있어요.'):'')}):confirm('수정을 보낼까요?');
     if(!ok) return;
-    const id=x.id; busy[id]=true; paintSide(); note('상세를 보내는 중…','run');
+    const id=x.id; busy[id]=true; paintSide(); note('수정을 보내는 중…','run');
     try{
       if(!(await flush())) throw new Error('작성한 내용을 먼저 저장하지 못했어요 · 로그인을 확인해 주세요');
       const nos=chs.filter(l=>l.id==='cafe24').map(l=>linkNo(x,l.id));
-      const name=await upload('shop/req',{v:1,kind:'detail',chan:'cafe24',by:meName(),at:new Date().toISOString(),targets:nos,item:{id,top:x.top||'',detail:x.detail||[],bottom:x.bottom||''}});
+      const name=await upload('shop/req',{v:1,kind:'edit',chan:'cafe24',by:meName(),at:new Date().toISOString(),targets:nos,fields});
       const r=await waitRes(name,m=>note(m,'run'),6*60e3);
       if(r.state==='done'){
-        const y=ITEMS[id]; y.hist=(y.hist||[]).concat((r.ok||[]).map(o=>({at:new Date().toISOString(),by:meName(),chan:'cafe24',no:o.no,backup:o.backup}))).slice(-10);
+        const y=ITEMS[id]; y.hist=(y.hist||[]).concat((r.ok||[]).map(o=>({at:new Date().toISOString(),by:meName(),chan:'cafe24',no:o.no,backup:o.backup,keys}))).slice(-10);
         touch(id); await flush();
         const no=linkNo(y,'cafe24'); if(no) delete CUR[no];
+        if(K.reload&&(keys.includes('name')||keys.includes('price'))) K.reload();
         note(r.message+((r.fail||[]).length?' · '+r.fail.map(f=>'#'+f.no+' '+f.why).join(' / '):''),(r.fail||[]).length?'bad':'ok');
-      }else note('바꾸지 못했어요 · '+r.message,'bad');
-    }catch(e){ note('바꾸지 못했어요 · '+(e.message||e),'bad'); }
+      }else note('보내지 못했어요 · '+r.message,'bad');
+    }catch(e){ note('보내지 못했어요 · '+(e.message||e),'bad'); }
     busy[id]=false; if(cur===id) paint();
   }
   async function undoDetail(i){
     const x=it(); if(!x||busy[x.id]) return;
     const r0=(x.hist||[])[i]; if(!r0) return;
     const K=KIT(), d=new Date(r0.at), when=(d.getMonth()+1)+'월 '+d.getDate()+'일 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-    const ok=K.ask?await K.ask({logo:'logos/cafe24.png',title:'상세를 되돌릴까요?',sub:when+'에 바꾸기 직전 상세로',ok:'되돌리기',html:K.TIP?K.TIP('지금 걸려 있는 상세도 보관한 뒤 되돌려요.'):''}):confirm('되돌릴까요?');
+    const ok=K.ask?await K.ask({logo:'logos/cafe24.png',title:'되돌릴까요?',sub:when+'에 '+(r0.undo?'되돌리기':'수정')+' 직전 값으로 · '+(r0.keys||['detail']).map(WNAME).join('·'),ok:'되돌리기',html:K.TIP?K.TIP('그 때 바꾼 칸만 되돌리고, 지금 값도 보관해 둬요.'):''}):confirm('되돌릴까요?');
     if(!ok) return;
     const id=x.id; busy[id]=true; paintSide(); note('되돌리는 중…','run');
     try{
       const name=await upload('shop/req',{v:1,kind:'detail-undo',chan:'cafe24',by:meName(),at:new Date().toISOString(),no:r0.no,backup:r0.backup});
       const r=await waitRes(name,m=>note(m,'run'),3*60e3);
       if(r.state==='done'){
-        const y=ITEMS[id]; y.hist=(y.hist||[]).concat([{at:new Date().toISOString(),by:meName(),chan:'cafe24',no:r0.no,backup:r.backup,undo:true}]).slice(-10);
+        const y=ITEMS[id]; y.hist=(y.hist||[]).concat([{at:new Date().toISOString(),by:meName(),chan:'cafe24',no:r0.no,backup:r.backup,keys:r.keys||r0.keys,undo:true}]).slice(-10);
         touch(id); await flush(); delete CUR[r0.no];
+        if(K.reload) K.reload();
         note(r.message,'ok');
       }else note('되돌리지 못했어요 · '+r.message,'bad');
     }catch(e){ note('되돌리지 못했어요 · '+(e.message||e),'bad'); }
@@ -37664,6 +37722,11 @@ window.baroyamAsk=function(title,body,okText){
       main.querySelectorAll('.rg-drop.over').forEach(x=>x.classList.remove('over'));
       const d=e.target.closest('[data-up]'); const x=it();
       addFiles(d?d.dataset.up:(!x.main?'main':'detail'),e.dataTransfer.files);
+    });
+    main.addEventListener('change',e=>{   /* 무엇을 수정하시겠습니까? 체크 */
+      const t=e.target; if(!t.dataset||!t.dataset.what) return;
+      const x=it(); if(!x) return;
+      x.what=Object.assign({},x.what,{[t.dataset.what]:t.checked}); touch(x.id); paintMain(); paintSide();
     });
     side.addEventListener('change',e=>{
       const t=e.target; if(!t.dataset||!t.dataset.pick) return;
