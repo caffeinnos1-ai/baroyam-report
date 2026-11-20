@@ -1391,7 +1391,7 @@ window.BAROYAM_ACCESS=(function(){
    화면을 가리는 수준의 잠금이다(서버는 로그인 여부만 본다) */
 window.BAROYAM_EDIT_ACCESS=(function(){
   const KEY='editAccess', LS='baroyam_edit_access_v1';
-  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'마진관리 수정',menu:'profit'},{k:'meta',name:'메타광고 관리(켜기·끄기·예산·등록)',menu:'perf'}];
+  const AREAS=[{k:'manual',name:'메뉴얼가이드 수정',menu:'manual'},{k:'profit',name:'마진관리 수정',menu:'profit'},{k:'meta',name:'메타광고 관리(켜기·끄기·예산·등록)',menu:'perf'},{k:'shop',name:'쇼핑몰통합관리 연동 설정',menu:'shop'}];
   let map={};
   try{ const o=JSON.parse(localStorage.getItem(LS)||'null'); if(o&&o.map&&typeof o.map==='object') map=o.map; }catch(e){}
   const pending={};   /* 서버에 아직 못 올린 회원별 값 · 서버본을 받아도 이 값이 이긴다 */
@@ -6464,6 +6464,18 @@ window.BAROYAM_FONT=(function(){
   .sh-cs-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--mute)}
   .sh-sk{display:inline-block;width:34px;height:14px;border-radius:6px;vertical-align:middle;background:linear-gradient(90deg,var(--bg) 0%,var(--line) 50%,var(--bg) 100%);background-size:200% 100%;animation:shSk 1.1s ease-in-out infinite}
   @keyframes shSk{from{background-position:100% 0}to{background-position:-100% 0}}
+  #shopTabs .hero-view-tab[hidden]{display:none}   /* 연동 설정은 팀장·권한 받은 회원만(교훈 9 · display 가 hidden 을 이김) */
+  .sh-tl{margin-top:22px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .sh-tl-h strong{display:block;font-size:15px;font-weight:600;color:var(--ink)}
+  .sh-tl-h span{display:block;margin-top:2px;font-size:12.5px;color:var(--mute)}
+  .sh-tl-rows{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .sh-tl-row{display:flex;align-items:center;gap:12px}
+  .sh-tl-row img{width:30px;height:30px;border-radius:9px;object-fit:contain;border:1px solid var(--line);background:var(--paper);padding:2px;flex:none}
+  .sh-tl-row .nm{flex:none;width:118px;font-size:13.5px;font-weight:500;color:var(--ink)}
+  .sh-tl-row .ui-field{flex:1;min-width:0}
+  .sh-tl-ft{display:flex;align-items:center;gap:8px;margin-top:14px}
+  .sh-tl-at{font-size:12px;color:var(--mute)}
+  @media (max-width:760px){ .sh-tl-row{flex-wrap:wrap} .sh-tl-row .nm{width:auto} }
   /* 톡상담 배너 · 왼쪽 카카오톡, 오른쪽 네이버 톡톡 · 판매처 색을 은은하게 깔고 말풍선 모양을 뒤에 띄움 */
   .sh-talk{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
   .sh-talk a{--c:var(--kakao);position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:18px;text-decoration:none;color:var(--ink);
@@ -12750,6 +12762,15 @@ window.BAROYAM_FONT=(function(){
           </div>
           <div class="sh-pane" data-shop-pane="link" hidden>
             <div class="sh-note sh-link-note" id="shLinkNote" hidden></div>
+            <!-- 톡상담 배너 링크 · CS 현황 표 아래 두 배너가 여는 주소 · app_settings 의 shop_talk_links_v1 = {kakao,naver,at,by} (saveMerged) -->
+            <section class="sh-tl">
+              <div class="sh-tl-h"><strong>톡상담 배너 링크</strong><span>CS 현황 아래 두 배너를 누르면 열리는 주소입니다 · 채팅 목록 주소를 넣으면 바로 그 화면이 열려요</span></div>
+              <div class="sh-tl-rows">
+                <label class="sh-tl-row"><img src="logos/kakao.png" alt=""><span class="nm">카카오톡 상담</span><input class="ui-field" id="tlKakao" type="url" placeholder="https://center-pf.kakao.com/…/chats" autocomplete="off"></label>
+                <label class="sh-tl-row"><img src="logos/naver.png" alt=""><span class="nm">네이버 톡톡 상담</span><input class="ui-field" id="tlNaver" type="url" placeholder="https://partner.talk.naver.com/…" autocomplete="off"></label>
+              </div>
+              <div class="sh-tl-ft"><span class="sh-tl-at" id="tlAt"></span><span class="pf-grow"></span><button type="button" class="ui-btn sm ghost" id="tlReset">기본 주소로</button><button type="button" class="ui-btn sm primary" id="tlSave">링크 저장</button></div>
+            </section>
             <div class="sh-link-head"><span class="sh-link-cnt" id="shLinkCnt"></span><span class="pf-grow"></span><span class="sh-link-tip">연결 순서대로 하나씩 붙입니다 · 키는 서버(VPS)에만 두고 화면에는 남기지 않습니다</span></div>
             <div class="sh-links" id="shLink"></div>
           </div>
@@ -36649,6 +36670,40 @@ window.baroyamAsk=function(title,body,okText){
     $('shPush').addEventListener('click',push);
     $('shFetch').addEventListener('click',fetchNow);
     $('shLink').addEventListener('click',e=>{ const b=e.target.closest('[data-link]'); if(b) connect(b.dataset.link); });
+    /* 연동 설정은 팀장과 권한설정 › 수정 권한 "쇼핑몰통합관리 연동 설정"(editAccess 영역 shop)을 받은 회원만 · 화면에서만 막음 */
+    const canLink=()=>{ try{ return !!(window.BAROYAM_EDIT_ACCESS&&window.BAROYAM_EDIT_ACCESS.can('shop')); }catch(e){ return false; } };
+    const linkTab=document.querySelector('#shopTabs [data-shop="link"]');
+    const applyPerm=()=>{
+      const ok=canLink(); if(linkTab.hidden===!ok) return;
+      linkTab.hidden=!ok;
+      if(!ok&&linkTab.classList.contains('active')){ const t=document.querySelector('#shopTabs [data-shop="cs"]'); if(t) t.click(); }
+    };
+    applyPerm();
+    ['baroyam:editaccess','baroyam:profiles'].forEach(ev=>document.addEventListener(ev,applyPerm));
+    setInterval(applyPerm,3000);   /* 팀장 비밀번호를 통과·해제했을 때 */
+    /* 톡상담 배너 링크 */
+    const TLD=window.baroyamTalkLinks?window.baroyamTalkLinks.def:{kakao:'',naver:''};
+    const fillTL=()=>{ const v=(window.baroyamTalkLinks&&window.baroyamTalkLinks.get())||{};
+      if(document.activeElement!==$('tlKakao')) $('tlKakao').value=v.kakao||TLD.kakao;
+      if(document.activeElement!==$('tlNaver')) $('tlNaver').value=v.naver||TLD.naver;
+      $('tlAt').textContent=v.at?'마지막 저장 '+hm(v.at)+(v.by?' · '+v.by:''):'아직 기본 주소(관리자센터 첫 화면)';
+    };
+    linkTab.addEventListener('click',()=>{ fillTL(); if(window.baroyamTalkLinks&&window.baroyamTalkLinks.load) window.baroyamTalkLinks.load().then(fillTL); });
+    $('tlReset').addEventListener('click',()=>{ $('tlKakao').value=TLD.kakao; $('tlNaver').value=TLD.naver; });
+    $('tlSave').addEventListener('click',async()=>{
+      if(!canLink()){ note('연동 설정 권한이 없습니다','bad','shLinkNote'); return; }
+      const k=$('tlKakao').value.trim(), n=$('tlNaver').value.trim();
+      const bad=[[k,'카카오톡'],[n,'네이버 톡톡']].find(([u])=>u&&!/^https:\/\/[^\s]+$/i.test(u));
+      if(bad){ note(bad[1]+' 주소는 https:// 로 시작해야 해요','bad','shLinkNote'); return; }
+      const b=$('tlSave'); b.disabled=true;
+      const by=meName(), at=new Date().toISOString();
+      const next=await (window.BAROYAM_DB&&window.BAROYAM_DB.saveMerged?window.BAROYAM_DB.saveMerged('shop_talk_links_v1',cur=>Object.assign({},cur||{},{kakao:k||TLD.kakao,naver:n||TLD.naver,at,by})):null);
+      b.disabled=false;
+      if(!next){ note('저장하지 못했어요 · 로그인을 확인하고 다시 눌러 주세요','bad','shLinkNote'); return; }
+      if(window.baroyamTalkLinks) window.baroyamTalkLinks.set(next);
+      fillTL(); note('톡상담 배너 링크를 저장했어요 · CS 현황 배너에 바로 반영됩니다','ok','shLinkNote');
+    });
+    setTimeout(fillTL,0);
     paintLink();
     let t=''; try{ t=localStorage.getItem('baroyam_shop_tab')||''; }catch(_){}
     const tb=t&&document.querySelector('#shopTabs [data-shop="'+t+'"]'); if(tb) tb.click();
@@ -36676,6 +36731,12 @@ window.baroyamAsk=function(title,body,okText){
     try{ const db=DB(); if(!db||!db.fileUrl) return null; const u=await db.fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
   }
   const sum=(c,ks)=>ks.reduce((a,k)=>a+(Number(c[k])||0),0);
+  /* 톡상담 배너 주소 · 연동 설정에서 고친 값(shop_talk_links_v1) · 없으면 기본(관리자센터 첫 화면) */
+  const TL_DEF={kakao:'https://center-pf.kakao.com/',naver:'https://partner.talk.naver.com/'};
+  let tl=null;
+  const TL=()=>({kakao:(tl&&tl.kakao)||TL_DEF.kakao,naver:(tl&&tl.naver)||TL_DEF.naver});
+  async function loadTL(){ try{ const db=DB(); if(db&&db.loadSetting){ const v=await db.loadSetting('shop_talk_links_v1'); if(v){ tl=v; paint(); } } }catch(e){} return tl; }
+  window.baroyamTalkLinks={get:()=>tl,def:TL_DEF,set:v=>{ tl=v; paint(); },load:loadTL};
   const ago=t=>{ const m=Math.round((Date.now()-Date.parse(t))/60000); return m<1?'방금 전':m<60?m+'분 전':Math.round(m/60)+'시간 전'; };
   /* 판매처 줄 · 연결한 곳만 숫자(지금은 카페24) · 나머지는 "연결 전" */
   const CH=[
@@ -36732,14 +36793,14 @@ window.baroyamAsk=function(title,body,okText){
     const BUB='<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M12 4C7 4 3 7.1 3 11c0 2.4 1.5 4.5 3.8 5.8L6 20l3.7-2.2c.7.1 1.5.2 2.3.2 5 0 9-3.1 9-7s-4-7-9-7Z"/></svg>';
     const ARR='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>';
     h+='<div class="sh-talk">'
-      +'<a class="kk" href="https://center-pf.kakao.com/" target="_blank" rel="noopener"><span class="ic"><img src="logos/kakao.png" alt="">'+'<i>'+BUB+'</i></span><span class="tx"><strong>카카오톡 상담</strong><span>카카오톡 채널 관리자센터 · 1:1 채팅</span></span><span class="go">상담 열기'+ARR+'</span></a>'
-      +'<a class="nv" href="https://partner.talk.naver.com/" target="_blank" rel="noopener"><span class="ic"><img src="logos/naver.png" alt="">'+'<i>'+BUB+'</i></span><span class="tx"><strong>네이버 톡톡 상담</strong><span>네이버 톡톡 파트너센터 · 고객 채팅</span></span><span class="go">상담 열기'+ARR+'</span></a>'
+      +'<a class="kk" href="'+esc(TL().kakao)+'" target="_blank" rel="noopener"><span class="ic"><img src="logos/kakao.png" alt="">'+'<i>'+BUB+'</i></span><span class="tx"><strong>카카오톡 상담</strong><span>카카오톡 채널 관리자센터 · 1:1 채팅</span></span><span class="go">상담 열기'+ARR+'</span></a>'
+      +'<a class="nv" href="'+esc(TL().naver)+'" target="_blank" rel="noopener"><span class="ic"><img src="logos/naver.png" alt="">'+'<i>'+BUB+'</i></span><span class="tx"><strong>네이버 톡톡 상담</strong><span>네이버 톡톡 파트너센터 · 고객 채팅</span></span><span class="go">상담 열기'+ARR+'</span></a>'
       +'</div>';
     const inq=(data&&data.inq)||{};
     if(inq.need) h+='<div class="sh-cs-need">카페24 <b>게시판</b> 칸을 채우려면 권한을 하나 더 켜야 합니다.<br>① 카페24 개발자센터 → 앱 → 권한 관리에서 <b>게시판(Community) 읽기</b>를 켜고 저장<br>② 이 화면 오른쪽 위 <b>연동 설정</b> → 카페24 <b>다시 승인</b> → 카페24에서 동의</div>';
     box.innerHTML=h;
   }
-  async function load(){ const db=DB(); const d=await readJson('shop/cafe24/cs.json'); if(d){ data=d; } if(db&&db.fileUrl&&(d||Date.now()-t0>15e3)) tried=true; paint(); return !!d; }
+  async function load(){ if(!tl) loadTL(); const db=DB(); const d=await readJson('shop/cafe24/cs.json'); if(d){ data=d; } if(db&&db.fileUrl&&(d||Date.now()-t0>15e3)) tried=true; paint(); return !!d; }
   const t0=Date.now();   /* 로그인이 늦으면 못 읽으니 15초까지는 "불러오는 중"으로 둔다 */
   function note(t,kind){ const n=$('csNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(kind?' '+kind:''); clearTimeout(n._t); if(t&&kind!=='run') n._t=setTimeout(()=>{ n.hidden=true; },8000); }
   async function fetchNow(){
