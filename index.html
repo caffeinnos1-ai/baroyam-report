@@ -1307,7 +1307,7 @@ window.BAROYAM_ACCESS=(function(){
     {k:'insta',     name:'인스타콘텐츠', sel:'.sidebar .sb-item[data-view="insta"]',   views:['insta']},
     {k:'sales',     name:'매출데이터',   sel:'#sbSalesToggle',                         views:['week','month']},
     {k:'goal',      name:'목표설정',     sel:'.sidebar .sb-item[data-view="goal"]',    views:['goal']},
-    {k:'ops',       name:'판매·재고',     sel:'.sidebar .sb-item[data-view="ops"]',     views:['ops']},
+    {k:'ops',       name:'어드민 판매·재고', sel:'.sidebar .sb-item[data-view="ops"]',     views:['ops']},
     {k:'profit',    name:'마진관리', sel:'.sidebar .sb-item[data-view="profit"]', views:['profit']},
     {k:'quote',     name:'견적서',       sel:'.sidebar .sb-item[data-view="quote"]',   views:['quote']},
     {k:'agenda',    name:'회의안건',     sel:'.sidebar .sb-item[data-view="agenda"]',  views:['agenda']},
@@ -6430,6 +6430,44 @@ window.BAROYAM_FONT=(function(){
   .sh-note[hidden]{display:none}
   .sh-note.ok{background:var(--pos-soft);color:var(--pos)} .sh-note.bad{background:var(--neg-soft);color:var(--neg)} .sh-note.run{background:var(--btn-soft);color:var(--btn-soft-ink)}
   .sh-link-note{margin:22px 0 -8px}
+  /* CS 현황 · 지금 처리할 것(큰 카드) → 배송 흐름(단계 줄) → 오늘 → 문의 게시판 */
+  .sh-cs-meta{margin-top:22px}
+  .sh-cs-logo{width:26px;height:26px;border-radius:8px;object-fit:contain;border:1px solid var(--line);background:var(--paper);padding:2px}
+  .sh-cs-sec{margin-top:26px}
+  .sh-cs-h{display:flex;align-items:baseline;gap:8px;margin:0 0 12px;font-size:15px;font-weight:600;color:var(--ink)}
+  .sh-cs-h small{font-size:12.5px;font-weight:400;color:var(--mute)}
+  .sh-cs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .sh-cs-card{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .sh-cs-card .lb{font-size:13.5px;font-weight:500;color:var(--body)}
+  .sh-cs-card .n{font-size:32px;font-weight:600;letter-spacing:-.5px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.15}
+  .sh-cs-card .n small{margin-left:3px;font-size:14px;font-weight:500;color:var(--mute)}
+  .sh-cs-card .sub{font-size:12.5px;color:var(--mute)}
+  .sh-cs-card.zero .n{color:var(--mute)}
+  .sh-cs-card.hot{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:color-mix(in srgb,var(--warn-soft) 70%,var(--paper))}
+  .sh-cs-card.hot .n{color:var(--warn)}
+  .sh-cs-card.hot::after{content:'처리 필요';position:absolute;top:14px;right:14px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--warn);color:var(--paper)}
+  .sh-cs-card.need .n{font-size:15px;font-weight:500;color:var(--mute);line-height:1.5}
+  .sh-cs-flow{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:16px;background:var(--paper);overflow:hidden}
+  .sh-cs-step{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 8px;position:relative}
+  .sh-cs-step+.sh-cs-step{border-left:1px solid var(--line)}
+  .sh-cs-step+.sh-cs-step::before{content:'';position:absolute;left:-7px;top:50%;width:12px;height:12px;margin-top:-6px;transform:rotate(45deg);border-top:1px solid var(--line);border-right:1px solid var(--line);background:var(--paper)}
+  .sh-cs-step .lb{font-size:12.5px;color:var(--mute);white-space:nowrap}
+  .sh-cs-step .n{font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sh-cs-step.zero .n{color:var(--mute)}
+  .sh-cs-step.warn .n{color:var(--warn)}
+  .sh-cs-today{display:flex;flex-wrap:wrap;gap:10px}
+  .sh-cs-today div{display:flex;align-items:baseline;gap:8px;padding:10px 16px;border-radius:12px;background:var(--bg);font-size:13px;color:var(--mute)}
+  .sh-cs-today b{font-size:18px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sh-cs-boards{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .sh-cs-board{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);font-size:14px;color:var(--ink)}
+  .sh-cs-board:first-child{border-top:0}
+  .sh-cs-board .nm{flex:1;min-width:0;font-weight:500}
+  .sh-cs-board .old{font-size:12.5px;color:var(--mute)}
+  .sh-cs-board .old.late{color:var(--neg);font-weight:600}
+  .sh-cs-need{padding:14px 16px;border-radius:14px;background:var(--bg);font-size:13px;line-height:1.6;color:var(--body)}
+  .sh-cs-need b{color:var(--ink);font-weight:600}
+  @media (max-width:760px){ .sh-cs-flow{flex-wrap:wrap} .sh-cs-step{flex:1 1 33%} .sh-cs-step::before{display:none} }
+
   /* 쇼핑몰관리 확인 창 · 브라우저 confirm 대신 */
   .sh-ask{position:fixed;inset:0;z-index:1200;display:grid;place-items:center;padding:16px;background:rgba(20,18,16,.38);animation:shAskIn .15s ease}
   .sh-ask[hidden]{display:none}
@@ -9383,7 +9421,7 @@ window.BAROYAM_FONT=(function(){
         <!-- 판매·재고 · 당일판매현황 / 재고현황 · 직원 모두가 보는 이지어드민 숫자 -->
         <button class="sb-item" type="button" data-view="ops">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4 19.6 7.6v8.8L12 20.6l-7.6-4.2V7.6Z"/><path d="m4.6 7.7 7.4 4.1 7.4-4.1M12 11.8v8.6"/></svg>
-          <span>판매·재고</span>
+          <span>어드민 판매·재고</span>
         </button>
         <!-- 손익·마진 관리 · 순수익 요약 / 마진 계산기 / 품목별 원가표(자리만 만들어 두었다) -->
         <button class="sb-item" type="button" data-view="profit" id="sbProfitBtn">
@@ -12249,7 +12287,7 @@ window.BAROYAM_FONT=(function(){
       </div><!-- /view-profit -->
       <!-- 판매·재고 · 당일판매현황 / 재고현황 · 직원 모두가 보는 화면(권한설정 key ops) · 숫자는 김비서 서버가 이지어드민에서 받아 채운다 -->
       <div id="view-ops" style="display:none">
-        <div class="hero-view-tabs" id="opsTabs" role="tablist" aria-label="판매·재고 화면">
+        <div class="hero-view-tabs" id="opsTabs" role="tablist" aria-label="어드민 판매·재고 화면">
           <button type="button" class="hero-view-tab active" role="tab" data-ops="stock" data-sub="이지어드민 재고를 받아 브랜드별 정상재고와 유통기한을 한눈에 봅니다.">재고현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="sales" data-sub="오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.">당일판매현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-ops="channel" data-sub="판매처별 매출을 한눈에 봅니다.">판매처매출</button>
@@ -12261,7 +12299,7 @@ window.BAROYAM_FONT=(function(){
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
-            <div class="ptag">판매·재고</div>
+            <div class="ptag">어드민 판매·재고</div>
             <div class="ptitle" id="opsViewTitle">당일판매현황</div>
             <div class="psub" id="opsViewSub">오늘 판매·출고된 상품을 이지어드민 기준으로 봅니다.</div>
           </div>
@@ -12631,17 +12669,28 @@ window.BAROYAM_FONT=(function(){
            11-20 임시 구현: 판매처와 아직 연결되지 않아 예시 데이터로 그리고, 고친 값은 이 창 메모리에만 있다(반영 누르면 안내만) -->
       <div id="view-shop" style="display:none">
         <div class="hero-view-tabs" id="shopTabs" role="tablist" aria-label="쇼핑몰통합관리 화면">
-          <button type="button" class="hero-view-tab active" role="tab" data-shop="stock" data-sub="판매처마다 상품의 옵션 설정된 재고·판매가·판매상태를 한 화면에서 보고 고칩니다.">상품·옵션 재고</button>
+          <button type="button" class="hero-view-tab active" role="tab" data-shop="cs" data-sub="취소·반품·교환 신청, 답변 안 한 문의, 배송 단계별 주문 수를 숫자로 바로 봅니다.">CS 현황</button>
+          <button type="button" class="hero-view-tab" role="tab" data-shop="stock" data-sub="판매처마다 상품의 옵션 설정된 재고·판매가·판매상태를 한 화면에서 보고 고칩니다.">상품·옵션 재고</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="register" data-sub="ERP 에서 상품을 한 번 작성해 여러 판매처에 등록합니다.">상품 등록</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="link" data-sub="판매처마다 연결 상태와 마지막 수집 시각을 봅니다.">연동 설정</button>
         </div>
         <section class="section" style="padding-top:0">
           <div class="plan-hero">
             <div class="ptag">쇼핑몰</div>
-            <div class="ptitle" id="shopTitle">상품·옵션 재고</div>
-            <div class="psub" id="shopSub">판매처마다 상품의 옵션 설정된 재고·판매가·판매상태를 한 화면에서 보고 고칩니다.</div>
+            <div class="ptitle" id="shopTitle">CS 현황</div>
+            <div class="psub" id="shopSub">취소·반품·교환 신청, 답변 안 한 문의, 배송 단계별 주문 수를 숫자로 바로 봅니다.</div>
           </div>
-          <div class="sh-pane" data-shop-pane="stock">
+          <!-- CS 현황 · 카페24 상태별 주문 건수·답변 전 문의(숫자만 · VPS cafe24_products.js --cs 가 10분마다 shop/cafe24/cs.json) -->
+          <div class="sh-pane" data-shop-pane="cs">
+            <div class="iv-meta sh-meta sh-cs-meta">
+              <img class="sh-cs-logo" src="logos/cafe24.png" alt=""><b>카페24</b><span class="sh-at" id="csAt">불러오는 중…</span>
+              <span class="pf-grow"></span>
+              <button type="button" class="ui-btn sm soft" id="csFetch" title="카페24에서 지금 숫자를 다시 받아 옵니다"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>지금 새로 받기</button>
+            </div>
+            <div class="sh-note" id="csNote" hidden></div>
+            <div id="csBody"><div class="sh-empty">숫자를 불러오는 중입니다…</div></div>
+          </div>
+          <div class="sh-pane" data-shop-pane="stock" hidden>
             <div class="sh-chans" id="shChans" role="tablist" aria-label="판매처"></div>
             <div class="iv-meta sh-meta">
               <span class="iv-demo" id="shDemo">예시 화면</span><span class="sh-at" id="shAt"></span>
@@ -15228,14 +15277,14 @@ window.CsGuide=(function(){
     ['pc',0,'회원 PC 브라우저','사무실·집 PC','대시보드를 여는 곳입니다. 브라우저마다 기기 번호(baroyam_device_id)를 만들어 보안로그에 씁니다. 같은 브라우저의 여러 창은 localStorage 를 같이 씁니다.'],
     ['glogin',0,'구글 로그인','공용 계정 하나','모두 같은 구글 계정으로 들어옵니다. Supabase 로그인 세션이 데이터 읽기·쓰기 열쇠이고, 구글 권한(drive) 하나를 드라이브·매출 시트·업로드가 같이 씁니다(1시간 · baroyam_gtoken_v1).'],
     ['member',0,'회원 고르기','프로필 · 팀장 비밀번호','로그인 뒤 회원(프로필)을 고릅니다. 역할이 팀장이면 비밀번호를 한 번 더 묻습니다. 회원마다 보이는 메뉴는 관리자 설정 › 권한설정을 따릅니다.'],
-    ['ext',3,'크롬 확장','바로얌 재고 수집','판매·재고의 "어드민 수집" 단추가 부릅니다. 이지어드민 창을 최소화로 열어 재고·당일판매 표를 읽어 대시보드로 넘깁니다. 사람은 로그인만 합니다.'],
+    ['ext',3,'크롬 확장','바로얌 재고 수집','어드민 판매·재고의 "어드민 수집" 단추가 부릅니다. 이지어드민 창을 최소화로 열어 재고·당일판매 표를 읽어 대시보드로 넘깁니다. 사람은 로그인만 합니다.'],
     ['collector',3,'리뷰 수집기','회사 PC 127.0.0.1:4317','회사 PC에서 로그인하면 자동으로 켜집니다. 판매처 리뷰를 모으고, /dashboard 로 이 저장소의 index.html 을 그대로 펴 줍니다.'],
 
     ['home',1,'마이홈','현황·퀵링크·기록노트','회원마다 퀵링크·기록노트(myhome:<회원id>)와 프로젝트 현황 카드를 봅니다.'],
     ['project',1,'프로젝트','보드판 · 캘린더','한 프로젝트 = projects 표 한 줄. 바꾼 칸만 얹어 저장하고, 삭제는 deleted_at 만 적습니다. 첨부 파일은 brand-files 보관함 project/ 아래.'],
     ['sales',1,'매출데이터','주간 · 월간','구글시트의 매출을 로그인한 사람의 구글 권한으로만 읽습니다(페이지에는 숫자를 두지 않음). 쿠팡·네이버·자사몰·톡딜 4채널.'],
     ['goal',1,'목표설정','월별 목표 · 달성률','목표는 app_settings 에 월별로 저장하고, 달성률은 매출 시트로 계산합니다.'],
-    ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
+    ['ops',1,'어드민 판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
     ['profit',1,'마진관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
     ['shop',1,'쇼핑몰통합관리','판매처 상품·옵션 재고','판매처마다 상품·옵션의 설정된 재고와 판매상태를 보고 고칩니다. 카페24 는 VPS(cafe24_products.js)가 brand-files 의 shop/cafe24/ 에 목록을 쓰고, 반영은 shop/req → shop/res 로 주고받습니다.'],
@@ -15701,13 +15750,13 @@ window.CsGuide=(function(){
     {name:'당일판매분요약표', cat:'report', where:'#재고알림', days:[0,1,2,3,4,5,6], times:['16:15'], record:'당일판매분요약표 (Slack)',
      desc:'이지어드민 당일판매분요약표를 캡처해 슬랙에 올리고, 같은 표를 ERP 당일판매현황에도 저장해요.', task:'cron'},
     /* caffeinnos-automation/daily_report.js --erp-only · 낮에는 슬랙 없이 ERP 당일판매현황(daily_sales_v1)에만 */
-    {name:'당일판매현황 수집', cat:'collect', where:'ERP 판매·재고 · 당일판매현황', days:[0,1,2,3,4,5,6], times:['11:00','14:00'], record:'당일판매현황 수집',
+    {name:'당일판매현황 수집', cat:'collect', where:'ERP 어드민 판매·재고 · 당일판매현황', days:[0,1,2,3,4,5,6], times:['11:00','14:00'], record:'당일판매현황 수집',
      desc:'낮 중간에 이지어드민 당일판매분요약표를 읽어 당일판매현황 화면만 새로 채워요(슬랙에는 보내지 않음).', task:'cron'},
     /* caffeinnos-automation/inventory_report.js · 막힌 날은 재고현황의 "어드민 수집" 단추(크롬 확장 ezadmin-extension · 사람은 로그인만) */
     /* caffeinnos-automation/coupang_ads_report.js · 로그인은 VPS .env CP_ID·CP_PW(vps/coupang_pw.ps1) · 쿠팡윙 수집 단추(확장 없을 때 · 모바일)도 ezadmin_request.js 가 같은 것을 돌림 */
     {name:'쿠팡광고 수집', cat:'collect', where:'ERP 판매채널 · 쿠팡 · 쿠팡광고성과', days:[0,1,2,3,4,5,6], times:['00:30'], record:'쿠팡광고 수집',
      desc:'쿠팡 광고센터에서 이번 달 1일~어제 키워드 보고서(일별 · 모든 캠페인 · 캠페인>광고그룹>상품>키워드)를 만들어 내려받아 쿠팡광고성과 화면을 채워요.', task:'cron'},
-    {name:'재고현황 수집', cat:'collect', where:'ERP 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
+    {name:'재고현황 수집', cat:'collect', where:'ERP 어드민 판매·재고 · 재고현황', days:[0,1,2,3,4,5,6], times:['07:00','16:30'], record:'재고현황 수집',
      desc:'이지어드민 현 재고조회에서 상품명·정상재고·유통기한을 읽어 재고현황 화면을 새로 채워요.', task:'cron'},
     /* caffeinnos-automation/insta_insights.js · 토큰은 VPS instagram_token.json(7일마다 스스로 갱신) */
     {name:'인스타 성과 수집', cat:'collect', where:'ERP 인스타콘텐츠 · 성과', days:[0,1,2,3,4,5,6], times:['00:05','07:20','13:20','19:20'], record:'인스타 성과 수집',
@@ -15743,6 +15792,9 @@ window.CsGuide=(function(){
     {name:'카페24 매출 수집', cat:'collect', where:'ERP 매출 · 자사몰', days:[0,1,2,3,4,5,6],
      times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':07'), record:'카페24 매출 수집',
      desc:'카페24 주문을 받아 날짜별 실결제금액(취소·환불 차감)을 저장해요. 매출 화면의 자사몰 숫자가 이 값으로 바뀌어요.', task:'cron'},
+    {name:'카페24 CS 현황', cat:'collect', where:'ERP 쇼핑몰통합관리 · CS 현황', days:[0,1,2,3,4,5,6],
+     times:Array.from({length:144},(_,i)=>(i/6<10?'0':'')+Math.floor(i/6)+':'+(i%6?i%6*10:'00')), record:'카페24 CS 현황',
+     desc:'카페24 주문을 모으지 않고 상태별 건수(취소·반품·교환 신청, 배송 단계)와 답변 전 문의 수만 받아 CS 현황에 보여 줘요.', task:'cron'},
     {name:'카페24 상품 수집', cat:'collect', where:'ERP 쇼핑몰통합관리 · 카페24', days:[0,1,2,3,4,5,6],
      times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':47'), record:'카페24 상품 수집',
      desc:'카페24 상품·옵션의 설정된 재고와 판매상태를 받아 쇼핑몰통합관리에 보여 줘요. 쇼핑몰통합관리에서 고친 재고·상태는 1분 안에 서버가 카페24에 반영해요(카페24 지금 값이 화면과 다르면 건너뜀).', task:'cron'},
@@ -36580,6 +36632,88 @@ window.baroyamAsk=function(title,body,okText){
     const tryLoad=()=>{ if(Date.now()-loaded<5*60e3||busy) return; const v=$('view-shop'); if(!v||v.style.display==='none') return; if(dirtyIn('cafe24')) return; loaded=Date.now(); loadCafe24().then(ok=>{ if(!ok) loaded=0; }); };   /* 로그인 전이라 못 읽었으면 4초 뒤 다시 */
     document.querySelector('.sidebar .sb-item[data-view="shop"]')?.addEventListener('click',()=>setTimeout(tryLoad,300));
     setInterval(tryLoad,4000);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
+})();
+</script>
+<script>
+/* 쇼핑몰통합관리 › CS 현황 (11-20) · 주문은 모으지 않고 숫자만 · VPS cafe24_products.js --cs 가 10분마다 brand-files 의 shop/cafe24/cs.json 을 쓴다 ·
+   = {at, range:{from,to}, counts:{카페24 주문상태 코드:건수 (최근 90일)}, today:{orders,paid,cancelDone,returnDone,exchangeDone}, inq:{boards:[{name,open,total,oldest}]} | {need:true}} ·
+   "지금 새로 받기"는 shop/req {kind:'cs'} → shop/res */
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const BUCKET='brand-files', DB=()=>window.BAROYAM_DB;
+  let data=null, loadedAt=0, busy=false;
+  async function readJson(path){
+    try{ const db=DB(); if(!db||!db.fileUrl) return null; const u=await db.fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
+  }
+  const sum=(c,ks)=>ks.reduce((a,k)=>a+(Number(c[k])||0),0);
+  const ago=t=>{ const m=Math.round((Date.now()-Date.parse(t))/60000); return m<1?'방금':m<60?m+'분 전':Math.round(m/60)+'시간 전'; };
+  function card(lb,n,sub,hot){
+    const z=!n;
+    return '<div class="sh-cs-card'+(hot&&n?' hot':'')+(z?' zero':'')+'"><span class="lb">'+esc(lb)+'</span><span class="n">'+(n||0).toLocaleString('ko-KR')+'<small>건</small></span>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</div>';
+  }
+  function paint(){
+    const box=$('csBody'); if(!box) return;
+    if(!data){ box.innerHTML='<div class="sh-empty">아직 CS 숫자가 없습니다. 카페24 연결 뒤 10분 안에 들어옵니다.</div>'; $('csAt').textContent=''; return; }
+    const c=data.counts||{}, t=data.today||{}, inq=data.inq||{};
+    const d=new Date(data.at);
+    $('csAt').textContent=(d.getMonth()+1)+'월 '+d.getDate()+'일 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' 기준 ('+ago(data.at)+') · 10분마다 새로 받음';
+    const cIng=sum(c,['C10','C34']), rIng=sum(c,['R10','R12','R30']), eIng=sum(c,['E10','E12','E20','E30']);
+    const boards=inq.boards||[], open=boards.reduce((a,b)=>a+(b.open||0),0);
+    const inqCard=inq.need?'<div class="sh-cs-card need"><span class="lb">답변 안 한 문의</span><span class="n">게시판 권한이 필요해요</span><span class="sub">아래 안내를 봐 주세요</span></div>'
+      :card('답변 안 한 문의',open,boards.length?'최근 30일 · 게시판 '+boards.length+'곳':'문의 게시판을 찾지 못했어요',true);
+    let h='<section class="sh-cs-sec"><h4 class="sh-cs-h">지금 처리할 것 <small>최근 90일 주문 기준</small></h4><div class="sh-cs-grid">'
+      +card('취소 신청',c.C00,cIng?'처리 중 '+cIng+'건':'처리 중 없음',true)
+      +card('반품 신청',c.R00,rIng?'처리 중 '+rIng+'건':'처리 중 없음',true)
+      +card('교환 신청',c.E00,eIng?'처리 중 '+eIng+'건':'처리 중 없음',true)
+      +inqCard
+      +card('입금 확인 전',c.N00,'무통장 입금 기다림',false)
+      +'</div></section>';
+    const steps=[['입금전','N00'],['상품준비중','N10'],['배송준비중','N20'],['배송대기','N21'],['배송보류','N22',1],['배송중','N30']];
+    h+='<section class="sh-cs-sec"><h4 class="sh-cs-h">배송 흐름 <small>지금 그 단계에 있는 주문</small></h4><div class="sh-cs-flow">'
+      +steps.map(([lb,k,w])=>{ const n=Number(c[k])||0; return '<div class="sh-cs-step'+(!n?' zero':w?' warn':'')+'"><span class="lb">'+lb+'</span><span class="n">'+n.toLocaleString('ko-KR')+'</span></div>'; }).join('')
+      +'</div></section>';
+    const T=[['오늘 주문',t.orders],['오늘 결제',t.paid],['오늘 취소 완료',t.cancelDone],['오늘 반품 완료',t.returnDone],['오늘 교환 완료',t.exchangeDone]];
+    h+='<section class="sh-cs-sec"><h4 class="sh-cs-h">오늘</h4><div class="sh-cs-today">'+T.map(([lb,n])=>'<div>'+lb+' <b>'+(n==null?'-':Number(n).toLocaleString('ko-KR'))+'</b></div>').join('')+'</div></section>';
+    h+='<section class="sh-cs-sec"><h4 class="sh-cs-h">문의 게시판 <small>최근 30일 · 답변 전 글</small></h4>';
+    if(inq.need) h+='<div class="sh-cs-need">카페24 게시판 문의를 보려면 권한을 하나 더 켜야 합니다.<br>① 카페24 개발자센터 → 앱 → 권한 관리에서 <b>게시판(Community) 읽기</b>를 켜고 저장<br>② 이 화면 오른쪽 위 <b>연동 설정</b> → 카페24 <b>다시 승인</b> → 카페24에서 동의</div>';
+    else if(!boards.length) h+='<div class="sh-cs-need">이름에 "문의"·"Q&A"가 들어간 게시판을 찾지 못했어요.</div>';
+    else h+='<div class="sh-cs-boards">'+boards.map(b=>{
+      const days=b.oldest?Math.floor((Date.now()-Date.parse(String(b.oldest).replace(' ','T')))/864e5):null;
+      return '<div class="sh-cs-board"><span class="nm">'+esc(b.name)+'</span>'+(b.err?'<span class="old">읽지 못함</span>':
+        (b.open?'<span class="old'+(days>=1?' late':'')+'">'+(days==null?'':days>=1?'가장 오래된 글 '+days+'일 전':'오늘 들어온 글')+'</span><span class="sh-st out" style="cursor:default">답변 전 '+b.open+'</span>':'<span class="sh-st on" style="cursor:default">모두 답변</span>'))+'</div>'; }).join('')+'</div>';
+    h+='</section>';
+    box.innerHTML=h;
+  }
+  async function load(){ const d=await readJson('shop/cafe24/cs.json'); if(d){ data=d; } paint(); return !!d; }
+  function note(t,kind){ const n=$('csNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(kind?' '+kind:''); clearTimeout(n._t); if(t&&kind!=='run') n._t=setTimeout(()=>{ n.hidden=true; },8000); }
+  async function fetchNow(){
+    if(busy) return; busy=true; const b=$('csFetch'); b.disabled=true; note('카페24에서 숫자를 받는 중…','run');
+    try{
+      const db=DB();
+      if(!db||!db.fileUpload||(db.ensureSession&&!(await db.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 해 주세요');
+      const name=Date.now().toString(36)+Math.random().toString(36).slice(2,7)+'.json';
+      await db.fileUpload(BUCKET,'shop/req/'+name,new Blob([JSON.stringify({v:1,kind:'cs',chan:'cafe24',at:new Date().toISOString()})],{type:'application/json'}));
+      const t0=Date.now(); let r=null;
+      while(Date.now()-t0<150e3){
+        await new Promise(x=>setTimeout(x,2000));
+        r=await readJson('shop/res/'+name);
+        if(r&&(r.state==='done'||r.state==='failed')) break;
+        if(!r&&Date.now()-t0>75e3){ r={state:'failed',message:'서버가 요청을 받지 않았어요 · 잠시 뒤 다시 해 주세요'}; break; }
+      }
+      if(r&&r.state==='done'){ await load(); note(r.message,'ok'); } else note((r&&r.message)||'시간이 오래 걸려 멈췄어요','bad');
+    }catch(e){ note(e.message,'bad'); }
+    busy=false; b.disabled=false;
+  }
+  function visible(){ const v=$('view-shop'), p=document.querySelector('#view-shop [data-shop-pane="cs"]'); return v&&v.style.display!=='none'&&p&&!p.hidden; }
+  function bind(){
+    if(!$('csBody')) return;
+    $('csFetch').addEventListener('click',fetchNow);
+    /* 이 탭이 보일 때 · 1분마다 서버 파일을 다시 읽는다(서버는 10분마다 새로 씀) · 로그인 전이라 못 읽었으면 4초 뒤 다시 */
+    setInterval(()=>{ if(!visible()||busy) return; if(Date.now()-loadedAt<(data?60e3:4e3)) return; loadedAt=Date.now(); load(); },2000);
+    setInterval(()=>{ if(visible()&&data) paint(); },30e3);   /* "n분 전" 글자 */
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
 })();
