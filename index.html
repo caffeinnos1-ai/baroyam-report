@@ -14233,44 +14233,108 @@ syncFromSheets(false).catch(err=>{
 })();
 
 /* 바로얌 AI 채팅 · 로고 버튼을 누르면 연다(2026-11-20 사용자 요청 · 상담 콘솔 대신) ·
-   보내기 → brand-files cmjob/req/<이름>.json (kind:'chat' · 지난 대화 함께) → VPS·PC 대본 서비스(content_writer.js)가
-   Claude 로 답을 cmjob/res/<같은 이름> 에 적는다 → 2초마다 확인 ·
-   대화 기록은 이 브라우저에만 남는다(서버에 저장하지 않음 · baroyam_ai_chat_v2 = {cur, convs:{id:{title,msgs,at}}}) ·
-   왼쪽 목록에서 대화를 고르고, 연필로 이름을 바꾸고, 휴지통으로 지운다 */
+   보내기 → brand-files aichat/req/<이름>.json (kind:'chat' · 지난 대화·회원·대화 id 함께) → VPS·PC 대본 서비스(content_writer.js)가
+   Claude 로 답을 aichat/res/<같은 이름> 에 적고, 회원별 대화 기록(aichat/<회원id>/)에 질문과 답을 남긴다 → 화면은 2초마다 확인 ·
+   대화 기록은 회원(프로필)마다 서버에 있다: aichat/<회원>/index.json = {convs:{id:{title,at,n,del}}} · aichat/<회원>/<id>.json = {id,title,at,msgs} ·
+   화면은 이 보관함에 덮어쓰거나 지울 수 없어서 이름 바꾸기·삭제도 서버에 요청(kind:'chatop')으로 보낸다 ·
+   이 브라우저에는 빨리 보여 주는 사본만 둔다(baroyam_ai_chat_v3:<회원> · 오류 줄은 사본에만) */
 (function(){
   const btn=document.getElementById('logoFab'), box=document.getElementById('aiChat');
   if(!btn||!box) return;
   const $=id=>document.getElementById(id);
   const body=$('aiChatBody'), list=$('aiChatList'), inp=$('aiChatInput'), send=$('aiChatSend'), cnt=$('aiChatCount'), sub=$('aiChatSub');
-  const KEY='baroyam_ai_chat_v2', MAX_MSG=60, MAX_CONV=100;
+  const BUCKET='brand-files', MAX_MSG=60, MAX_CONV=100;
   const SUGS=['메타광고 최근 7일 캠페인별 성과 분석해 줘','재고가 부족한 상품 알려 줘','고객 배송 지연 사과 문구 써 줘','쿠팡 상품명 짓는 요령 알려 줘'];
   const IC_CHAT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>';
   const IC_PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>';
   const IC_DEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
-  let S={cur:null,convs:{}};
-  try{ const x=JSON.parse(localStorage.getItem(KEY)||'null'); if(x&&x.convs) S=x; }catch(e){}
-  /* 바로 앞 판(v1 · 대화 하나)에 남은 대화는 첫 기록으로 옮긴다 */
-  try{
-    const old=JSON.parse(localStorage.getItem('baroyam_ai_chat_v1')||'[]');
-    if(Array.isArray(old)&&old.length){ const id='c'+Date.now().toString(36); S.convs[id]={title:'',msgs:old,at:Date.now()}; S.cur=id; }
-    localStorage.removeItem('baroyam_ai_chat_v1');
-  }catch(e){}
-  const pending={};   /* 대화 id → 기다리는 중 안내 */
-  let sideOn=window.innerWidth>700, editing=null;
+  const DB=()=>window.BAROYAM_DB;
+  const meId=()=>{ try{ return String(window.BAROYAM_PROFILES.meId()||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,40); }catch(e){ return ''; } };
+  const meName=()=>{ try{ const m=window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmt=s=>esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
+
+  /* 회원마다 상태 · msgs 가 null 이면 아직 서버에서 받지 않은 대화(누를 때 받음) */
+  let mid=null, S={cur:null,convs:{}};
+  const pending={}, loading={};
+  let sideOn=window.innerWidth>700, editing=null, synced=0;
+  const LKEY=()=>'baroyam_ai_chat_v3:'+(mid||'none');
   const keep=()=>{
     const ids=Object.keys(S.convs).sort((a,b)=>S.convs[b].at-S.convs[a].at);
     ids.slice(MAX_CONV).forEach(id=>delete S.convs[id]);
-    ids.forEach(id=>{ const c=S.convs[id]; if(c&&c.msgs.length>MAX_MSG) c.msgs=c.msgs.slice(-MAX_MSG); });
-    try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){}
+    ids.forEach(id=>{ const c=S.convs[id]; if(c&&c.msgs&&c.msgs.length>MAX_MSG) c.msgs=c.msgs.slice(-MAX_MSG); });
+    try{ localStorage.setItem(LKEY(),JSON.stringify(S)); }catch(e){}
   };
-  try{ $('aiChatLogo').src=document.querySelector('.sb-logo').src; }catch(e){}
-  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const fmt=s=>esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
-  const titleOf=c=>c.title||((c.msgs.find(m=>m.role==='user')||{}).text||'새 대화').replace(/\s+/g,' ').slice(0,40);
+  const pure=msgs=>(msgs||[]).filter(m=>m.role==='user'||m.role==='ai').slice(-MAX_MSG).map(m=>({role:m.role,text:String(m.text).slice(0,12000),at:m.at}));
+  async function upload(dir,obj){
+    const db=DB();
+    if(!db||!db.fileUpload||(db.ensureSession&&!(await db.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 해 주세요');
+    const name=(obj.kind==='chat'?'chat':'op')+rid()+'.json';
+    await db.fileUpload(BUCKET,dir+'/'+name,new Blob([JSON.stringify(obj)],{type:'application/json'}));
+    return name;
+  }
+  async function readJson(path){
+    try{ const u=await DB().fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
+  }
+  /* 이름 바꾸기·삭제·옮겨 담기는 서버가 한다 · 화면은 바로 고쳐 보이고 요청만 보낸다 */
+  function op(o){ if(!mid) return; upload('aichat/req',Object.assign({v:1,kind:'chatop',member:mid,by:meName(),at:new Date().toISOString()},o)).catch(e=>console.warn('[바로얌 AI] 대화 기록 요청 실패',e)); }
+
+  /* 프로필이 바뀌면(또는 처음) 그 회원의 사본을 읽고 서버 목록과 맞춘다 */
+  function loadMember(){
+    const id=meId();
+    if(id===mid) return;
+    mid=id; S={cur:null,convs:{}}; synced=0;
+    try{ const x=JSON.parse(localStorage.getItem(LKEY())||'null'); if(x&&x.convs) S=x; }catch(e){}
+    /* 바로 앞 판(v2 · 이 브라우저 공용)의 대화는 지금 프로필 몫으로 서버에 옮긴다(한 번만) */
+    if(mid){
+      try{
+        const old=JSON.parse(localStorage.getItem('baroyam_ai_chat_v2')||'null');
+        if(old&&old.convs){
+          const mv=Object.entries(old.convs).filter(([,c])=>c.msgs&&c.msgs.length).map(([cid,c])=>({id:cid,title:c.title||'',at:c.at,msgs:pure(c.msgs)}));
+          mv.forEach(c=>{ if(!S.convs[c.id]) S.convs[c.id]={title:c.title,at:c.at,msgs:c.msgs}; });
+          if(mv.length) op({op:'save',convs:mv});
+          keep();
+        }
+        localStorage.removeItem('baroyam_ai_chat_v2'); localStorage.removeItem('baroyam_ai_chat_v1');
+      }catch(e){}
+    }
+  }
+  async function syncServer(){
+    if(!mid||Date.now()-synced<20000) return;
+    synced=Date.now();
+    const ix=await readJson('aichat/'+mid+'/index.json');
+    if(!ix||!ix.convs) return;
+    let changed=false; const toSave=[];
+    for(const [id,s] of Object.entries(ix.convs)){
+      const c=S.convs[id];
+      if(s.del){ if(c&&!pending[id]){ delete S.convs[id]; if(S.cur===id) S.cur=null; changed=true; } continue; }
+      if(!c){ S.convs[id]={title:s.title||'',at:s.at,msgs:null}; changed=true; }
+      else if(!pending[id]&&(s.at>c.at||(c.msgs&&s.n>pure(c.msgs).length))){ c.title=s.title||c.title; c.at=s.at; c.msgs=null; changed=true; }
+      else if((s.title||'')!==(c.title||'')&&!pending[id]){ c.title=s.title||''; changed=true; }
+    }
+    /* 서버에 없는 대화(답 받기 전에 끊긴 것 등)는 올려 둔다 */
+    for(const [id,c] of Object.entries(S.convs)) if(!ix.convs[id]&&c.msgs&&pure(c.msgs).length&&!pending[id]) toSave.push({id,title:c.title||'',at:c.at,msgs:pure(c.msgs)});
+    if(toSave.length) op({op:'save',convs:toSave});
+    if(changed){ keep(); if(!box.hidden) paint(); }
+    if(S.cur&&S.convs[S.cur]&&S.convs[S.cur].msgs==null) fetchConv(S.cur);
+  }
+  async function fetchConv(id){
+    if(loading[id]||!mid) return;
+    loading[id]=true; if(S.cur===id) paint();
+    const x=await readJson('aichat/'+mid+'/'+id+'.json');
+    delete loading[id];
+    const c=S.convs[id]; if(!c) return;
+    if(x&&Array.isArray(x.msgs)){ c.msgs=x.msgs; c.title=x.title||c.title; }
+    else if(c.msgs==null) c.msgs=[{role:'err',text:'이 대화를 서버에서 불러오지 못했습니다 · 잠시 뒤 다시 눌러 주세요',at:Date.now()}];
+    keep(); if(!box.hidden) paint();
+  }
+
+  const titleOf=c=>c.title||(((c.msgs||[]).find(m=>m.role==='user')||{}).text||'새 대화').replace(/\s+/g,' ').slice(0,40);
   const cur=()=>S.convs[S.cur]||null;
 
   function paintList(){
-    const ids=Object.keys(S.convs).filter(id=>S.convs[id].msgs.length||pending[id]).sort((a,b)=>S.convs[b].at-S.convs[a].at);
+    const ids=Object.keys(S.convs).filter(id=>{ const c=S.convs[id]; return c.msgs==null||c.msgs.length||pending[id]; }).sort((a,b)=>S.convs[b].at-S.convs[a].at);
     list.innerHTML=ids.length?ids.map(id=>{
       const c=S.convs[id], on=id===S.cur;
       if(editing===id) return '<div class="aic-it on" data-id="'+id+'">'+IC_CHAT+'<input value="'+esc(titleOf(c))+'" maxlength="40" aria-label="대화 이름"></div>';
@@ -14282,21 +14346,28 @@ syncFromSheets(false).catch(err=>{
     const ed=list.querySelector('input');
     if(ed){
       ed.focus(); ed.select();
-      const done=ok=>{ if(editing==null) return; const id=editing; editing=null; if(ok&&S.convs[id]){ S.convs[id].title=ed.value.trim(); keep(); } paintList(); paintHead(); };
+      const done=ok=>{
+        if(editing==null) return; const id=editing; editing=null;
+        if(ok&&S.convs[id]&&ed.value.trim()!==(S.convs[id].title||'')){ S.convs[id].title=ed.value.trim(); keep(); op({op:'rename',conv:id,title:S.convs[id].title}); }
+        paintList(); paintHead();
+      };
       ed.addEventListener('keydown',e=>{ if(e.isComposing) return; if(e.key==='Enter'){ e.preventDefault(); done(true); } if(e.key==='Escape'){ e.stopPropagation(); done(false); } });
       ed.addEventListener('blur',()=>done(true));
     }
   }
-  function paintHead(){ const c=cur(); sub.textContent=c&&c.msgs.length?titleOf(c):'궁금한 것을 물어보면 Claude 가 답해요'; }
+  function paintHead(){ const c=cur(); sub.textContent=c&&(c.msgs==null||c.msgs.length)?titleOf(c):'궁금한 것을 물어보면 Claude 가 답해요'; }
   function paint(){
-    const c=cur(), msgs=c?c.msgs:[];
+    const c=cur(), msgs=c&&c.msgs?c.msgs:[];
     let h='';
-    if(!msgs.length&&!pending[S.cur]){
+    if(!mid){
+      h='<div class="aic-intro"><b>프로필을 먼저 골라 주세요</b>대화 기록은 프로필마다 따로 저장돼요.</div>';
+    }else if(c&&c.msgs==null){
+      h='<div class="aic-msg ai wait"><i></i><i></i><i></i> 대화를 불러오는 중</div>';
+    }else if(!msgs.length&&!pending[S.cur]){
       h='<div class="aic-intro"><b>무엇이든 물어보세요</b><ul>'
         +'<li>AI 답변은 틀릴 수 있어요. 숫자·정책은 한 번 더 확인해 주세요.</li>'
         +'<li>메타광고·쿠팡광고·자사몰 판매·재고·당일판매·인스타·유튜브·프로젝트는 ERP 데이터를 직접 읽고 답해요.</li>'
-        +'<li>대화 기록은 이 브라우저에만 남고, 왼쪽 목록에서 지울 수 있어요.</li>'
-        +'<li>비밀번호·고객 개인정보는 적지 말아 주세요.</li></ul></div>'
+        +'<li>대화는 회사 서버에 내 프로필 몫으로 저장돼 어느 PC에서든 이어 볼 수 있어요. 비밀번호·고객 개인정보는 적지 말아 주세요.</li></ul></div>'
         +'<div class="aic-sugs">'+SUGS.map(q=>'<button type="button" class="ui-chip" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('')+'</div>';
     }
     msgs.forEach((m,i)=>{
@@ -14307,7 +14378,7 @@ syncFromSheets(false).catch(err=>{
     if(pending[S.cur]) h+='<div class="aic-msg ai wait"><i></i><i></i><i></i> '+esc(pending[S.cur])+'</div>';
     body.innerHTML=h;
     body.scrollTop=body.scrollHeight;
-    send.disabled=!!pending[S.cur];
+    send.disabled=!mid||!!pending[S.cur]||!!(c&&c.msgs==null);
     paintHead(); paintList();
   }
   function setSide(on){ sideOn=on; box.classList.toggle('no-side',!on); }
@@ -14315,12 +14386,16 @@ syncFromSheets(false).catch(err=>{
     box.hidden=!on;
     btn.classList.toggle('is-active',on);
     btn.setAttribute('aria-expanded',on?'true':'false');
-    if(on){ setSide(window.innerWidth>700?sideOn:false); paint(); setTimeout(()=>inp.focus(),30); }
+    if(on){
+      loadMember(); setSide(window.innerWidth>700?sideOn:false); paint(); setTimeout(()=>inp.focus(),30);
+      syncServer();
+    }
   }
+  const newId=()=>'c'+rid();
   function newConv(){
     const c=cur();
-    if(c&&!c.msgs.length&&!pending[S.cur]){ paint(); inp.focus(); return; }   /* 빈 대화를 또 만들지 않는다 */
-    const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    if(c&&c.msgs&&!c.msgs.length&&!pending[S.cur]){ paint(); inp.focus(); return; }   /* 빈 대화를 또 만들지 않는다 */
+    const id=newId();
     S.convs[id]={title:'',msgs:[],at:Date.now()}; S.cur=id; keep(); paint(); inp.focus();
     if(window.innerWidth<=700) setSide(false);
   }
@@ -14332,10 +14407,11 @@ syncFromSheets(false).catch(err=>{
   $('aiChatNew').addEventListener('click',newConv);
   $('aiChatSide').addEventListener('click',()=>setSide(!sideOn));
   $('aiChatClear').addEventListener('click',()=>{
-    const n=Object.values(S.convs).filter(c=>c.msgs.length).length;
-    if(!n||!confirm('대화 기록 '+n+'개를 모두 지울까요? 되돌릴 수 없습니다.')) return;
+    const n=Object.values(S.convs).filter(c=>c.msgs==null||c.msgs.length).length;
+    if(!n||!confirm('내 대화 기록 '+n+'개를 모두 지울까요? 되돌릴 수 없습니다.')) return;
     Object.keys(S.convs).forEach(id=>{ if(!pending[id]) delete S.convs[id]; });
     if(!S.convs[S.cur]) S.cur=null; keep(); paint();
+    op({op:'clear'});
   });
   list.addEventListener('click',e=>{
     const it=e.target.closest('.aic-it'); if(!it||editing) return;
@@ -14344,16 +14420,20 @@ syncFromSheets(false).catch(err=>{
     if(e.target.closest('[data-del]')){
       if(pending[id]){ alert('답을 기다리는 대화는 답이 온 뒤에 지울 수 있어요.'); return; }
       if(!confirm('"'+titleOf(c)+'" 대화를 지울까요?')) return;
-      delete S.convs[id]; if(S.cur===id) S.cur=null; keep(); paint(); return;
+      delete S.convs[id]; if(S.cur===id) S.cur=null; keep(); paint();
+      op({op:'delete',conv:id}); return;
     }
-    S.cur=id; paint(); inp.focus();
+    S.cur=id; keep(); paint(); inp.focus();
+    if(c.msgs==null) fetchConv(id);
     if(window.innerWidth<=700) setSide(false);
   });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!box.hidden&&editing==null&&!document.querySelector('.settings-overlay:not([hidden])')) setOpen(false); });
+  /* 프로필을 바꾸면 그 회원의 기록으로 바꿔 그린다 */
+  document.addEventListener('baroyam:profiles',()=>{ if(meId()!==mid){ loadMember(); if(!box.hidden){ paint(); syncServer(); } } });
   body.addEventListener('click',e=>{
     const q=e.target.closest('[data-q]'); if(q){ inp.value=q.dataset.q; ask(); return; }
     const b=e.target.closest('[data-copy]'), c=cur();
-    if(b&&c){ const m=c.msgs[+b.dataset.copy]; if(m) navigator.clipboard.writeText(m.text).then(()=>{ b.textContent='복사됨'; setTimeout(()=>b.textContent='복사',1200); }).catch(()=>{}); }
+    if(b&&c&&c.msgs){ const m=c.msgs[+b.dataset.copy]; if(m) navigator.clipboard.writeText(m.text).then(()=>{ b.textContent='복사됨'; setTimeout(()=>b.textContent='복사',1200); }).catch(()=>{}); }
   });
   const upd=()=>{ cnt.textContent=inp.value.length+'/600'; };
   inp.addEventListener('input',upd);
@@ -14363,28 +14443,25 @@ syncFromSheets(false).catch(err=>{
 
   async function ask(){
     const text=inp.value.trim();
-    if(!text) return;
-    if(!cur()){ const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); S.convs[id]={title:'',msgs:[],at:Date.now()}; S.cur=id; }
+    if(!text||!mid) return;
+    if(!cur()){ const id=newId(); S.convs[id]={title:'',msgs:[],at:Date.now()}; S.cur=id; }
     const id=S.cur, c=S.convs[id];
-    if(pending[id]) return;
-    const DB=window.BAROYAM_DB;
+    if(pending[id]||c.msgs==null) return;
     c.msgs.push({role:'user',text,at:Date.now()}); c.at=Date.now(); keep();
     inp.value=''; upd();
     const show=m=>{ pending[id]=m; if(!box.hidden&&S.cur===id) paint(); };
     show('보내는 중');
     const t0=Date.now();
     try{
-      if(!DB||!DB.fileUpload||(DB.ensureSession&&!(await DB.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 보내 주세요');
-      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
       let page=''; try{ page=(document.querySelector('.sb-item.active')||{}).textContent||''; }catch(e){}
-      /* 지난 대화는 최근 12개(질문·답)만 · 오류 줄은 빼고 보낸다 */
-      const hist=c.msgs.filter(m=>m.role==='user'||m.role==='ai').slice(-12).map(m=>({role:m.role,text:String(m.text).slice(0,3000)}));
-      const name='chat'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.1.json';
-      await DB.fileUpload('brand-files','cmjob/req/'+name,new Blob([JSON.stringify({v:1,kind:'chat',job:'ai-chat',round:1,at:new Date().toISOString(),by,input:{messages:hist,page:page.trim().slice(0,40)}})],{type:'application/json'}));
+      /* Claude 에게는 최근 12개(질문·답)만 · 서버 기록에는 대화 전체(60줄까지)를 함께 보낸다 · 오류 줄은 빼고 */
+      const all=pure(c.msgs), hist=all.slice(-12).map(m=>({role:m.role,text:m.text.slice(0,3000)}));
+      const name=await upload('aichat/req',{v:1,kind:'chat',job:'ai-chat',round:1,at:new Date().toISOString(),by:meName(),
+        input:{messages:hist,page:page.trim().slice(0,40),member:mid,conv:{id,title:c.title||'',msgs:all}}});
       show('바로얌 AI 가 읽는 중');
       for(;;){
         await new Promise(z=>setTimeout(z,2000));
-        let r=null; try{ const u=await DB.fileUrl('brand-files','cmjob/res/'+name,60); const x=await fetch(u,{cache:'no-store'}); r=x.ok?await x.json():null; }catch(e){}
+        const r=await readJson('aichat/res/'+name);
         const sec=(Date.now()-t0)/1000;
         if(r&&r.state==='done'&&r.ok){ c.msgs.push({role:'ai',text:String(r.answer||'(빈 답)'),at:Date.now()}); break; }
         if(r&&r.state==='failed') throw new Error(r.message||'답하지 못했습니다');
