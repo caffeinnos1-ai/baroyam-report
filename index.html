@@ -5161,14 +5161,39 @@ window.BAROYAM_FONT=(function(){
   .ca-roas.low{color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
   .ca-roas.none{color:var(--mute);background:color-mix(in srgb,var(--mute) 12%,transparent);font-weight:500}
   .ca-more{display:block;margin:0 auto;padding:14px 0 18px}
-  /* 하루 광고비 막대(얇게 · 위만 둥글게 · 올리면 나머지 흐림) + ROAS 숫자 */
-  .ca-days{display:flex;align-items:flex-end;gap:6px;height:170px;padding:22px 22px 12px;overflow-x:auto}
-  .ca-day{flex:1 1 0;min-width:30px;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;cursor:default}
-  .ca-day .bar{width:100%;max-width:44px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--ca,var(--btn)),var(--cb,var(--btn)));transition:opacity .15s}
-  .ca-day .ro{font-size:10.5px;color:var(--mute);white-space:nowrap}
-  .ca-day .d{font-size:11px;color:var(--mute);white-space:nowrap}
-  .ca-days:hover .ca-day .bar{opacity:.35}
-  .ca-days .ca-day:hover .bar{opacity:1}
+  /* 일별 추이 · 왼쪽 선 그래프 | 오른쪽 범례(켜고 끄기 + 합계) · 11-20 사용자 */
+  .ca-trend{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:8px 18px;padding:14px 20px 14px 10px;align-items:center}
+  .ca-plot{position:relative;min-width:0}
+  .ca-plot svg{display:block;width:100%;height:auto}
+  .ca-plot .gl{stroke:var(--line);stroke-width:1}
+  .ca-plot .yl{font-size:11px;fill:var(--mute);text-anchor:end}
+  .ca-plot .xl{font-size:11px;fill:var(--mute);text-anchor:middle}
+  .ca-plot .ln{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+  .ca-plot .ar{opacity:.08;stroke:none}
+  .ca-plot .cx{stroke:var(--mute);stroke-width:1;stroke-dasharray:3 3}
+  .ca-plot .dt{stroke:var(--paper);stroke-width:2}
+  .ca-plot .hit{fill:transparent;cursor:crosshair}
+  .ca-tip{position:absolute;top:8px;min-width:180px;padding:10px 12px;border-radius:10px;background:var(--paper);border:1px solid var(--line);
+    box-shadow:0 8px 24px -8px color-mix(in srgb,var(--ink) 30%,transparent);font-size:12.5px;color:var(--body);pointer-events:none;z-index:2}
+  .ca-tip[hidden]{display:none}
+  .ca-tip .h{font-weight:600;color:var(--ink);margin-bottom:6px}
+  .ca-tip .r{display:flex;align-items:center;gap:6px;line-height:1.8}
+  .ca-tip .r b{margin-left:auto;padding-left:14px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .ca-tip .r.sep{border-top:1px solid var(--line);margin-top:4px;padding-top:4px}
+  .ca-tip .sw,.ca-lg .sw{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+  .ca-legend{display:flex;flex-direction:column;gap:6px}
+  .ca-lg{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line)}
+  .ca-lg:hover{border-color:color-mix(in srgb,var(--ink) 25%,var(--line))}
+  .ca-lg .nm{font-size:13px;color:var(--body)}
+  .ca-lg .nm em{font-style:normal;font-size:11px;color:var(--mute)}
+  .ca-lg .vl{grid-column:1/-1;font-size:20px;font-weight:600;color:var(--ink)}
+  .ca-lg .vl small{font-size:12px;font-weight:400;color:var(--mute);margin-left:2px}
+  .ca-lg .rt{grid-column:1/-1;font-size:12px;color:var(--mute)}
+  .ca-lg[aria-pressed="false"]{opacity:.45}
+  .ca-lg[aria-pressed="false"] .sw{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c)}
+  .ca-lg-roas{display:flex;align-items:baseline;justify-content:space-between;padding:8px 12px 0;font-size:12.5px;color:var(--mute)}
+  .ca-lg-roas b{font-size:18px;font-weight:600;color:var(--ink)}
+  @media (max-width:900px){ .ca-trend{grid-template-columns:1fr;padding:12px} .ca-legend{flex-direction:row;flex-wrap:wrap} .ca-lg{flex:1 1 160px} }
   .ch-cal{margin-top:12px;box-shadow:none;border:1px solid var(--line)}
   /* 판매채널 화면 · 위에 KPI 네 칸, 아래에 퀵링크 / 판매처 기록노트 / 프로젝트 달성률 / 마감 알림 ·
      카드 생김새는 마이홈(.mh-card·.mh-link·.mh-note·.mh-proj)을 그대로 빌려 쓰고,
@@ -31492,7 +31517,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<label class="ui-btn soft sm ca-up" title="쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀·CSV 를 직접 넣기(수동)"><input type="file" id="caFile" accept=".xlsx,.xls,.csv,.txt,.tsv">파일 올리기</label></div>'
       +'<div class="cs-kpis" id="caKpis"></div></div>'
       +'<div id="caMsg"></div><div id="caNote"></div>'
-      +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3>일별 광고비</h3><span class="sub">막대 = 광고비 · 아래 숫자 = 그날 ROAS(14일)</span></div><div class="ca-days ch-coupang" id="caDays"></div></section>'
+      +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3>일별 추이</h3><span class="sub">광고매출(14일)·광고비 · 선 위에 올리면 그날 ROAS·클릭</span></div>'
+      +'<div class="ca-trend"><div class="ca-plot" id="caPlot"></div><div class="ca-legend" id="caLegend"></div></div></section>'
       +'<section class="ca-box"><div class="ca-box-head"><h3>캠페인별 성과</h3><span class="sub">줄을 누르면 그 캠페인의 키워드만 봅니다</span></div><div class="cs-tbl-wrap" id="caCamps"></div></section>'
       +'<section class="ca-box"><div class="ca-box-head"><h3>키워드별 성과</h3><span class="sub" id="caKwSub"></span>'
       +'<div class="right"><div class="ui-chips" id="caKf" role="group" aria-label="키워드 거르기"></div><input class="ui-field" id="caKq" placeholder="키워드 찾기"></div></div>'
@@ -31523,6 +31549,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       }
       if(e.target.closest('[data-more]')){ st.kmax+=200; draw(); }
     });
+    $('caLegend').addEventListener('click',e=>{
+      const b=e.target.closest('[data-ser]'); if(!b) return;
+      const k=b.dataset.ser;
+      if(off.has(k)) off.delete(k); else if(off.size<SER.length-1) off.add(k);   /* 둘 다 끄지는 않는다 */
+      try{ localStorage.setItem('baroyam_ca_off',JSON.stringify([...off])); }catch(e){}
+      paintTrend();
+    });
+    let rt=null; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(root.offsetParent) paintTrend(); },150); });
     $('caKf').addEventListener('click',e=>{ const b=e.target.closest('[data-kf]'); if(!b) return; st.kf=b.dataset.kf; st.kmax=100; draw(); });
     let qt=null;
     $('caKq').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{ st.kq=e.target.value.trim(); st.kmax=100; draw(); },150); });
@@ -31562,6 +31596,75 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     /* 마지막 날짜가 사흘 넘게 지났으면 주황 */
     if(to&&(Date.parse(kst())-Date.parse(to))/864e5>3) el.classList.add('warn');
   }
+  /* ---------- 일별 추이 그래프 ---------- */
+  const SER=[{k:'rev',n:'광고매출',sub:'14일',c:'var(--coupang)'},{k:'cost',n:'광고비',c:'var(--self)'}];
+  const off=new Set();
+  try{ (JSON.parse(localStorage.getItem('baroyam_ca_off')||'[]')||[]).forEach(k=>off.add(k)); }catch(e){}
+  let trendDays=[], trendTot=null;
+  const DOW=['일','월','화','수','목','금','토'];
+  const dow=d=>DOW[new Date(d+'T00:00:00Z').getUTCDay()];
+  const axisWon=n=>n>=1e8?(Math.round(n/1e7)/10)+'억':n>=1e4?Math.round(n/1e4).toLocaleString('ko-KR')+'만':won(n);
+  function niceMax(v){ if(v<=0) return 1; const e=Math.pow(10,Math.floor(Math.log10(v))), f=v/e; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e; }
+  /* 부드러운 선(모노톤 · 넘치지 않음) */
+  function smooth(pts){
+    if(pts.length<2) return '';
+    const n=pts.length, d=[], m=[];
+    for(let i=0;i<n-1;i++) d.push((pts[i+1][1]-pts[i][1])/(pts[i+1][0]-pts[i][0]));
+    m[0]=d[0]; m[n-1]=d[n-2];
+    for(let i=1;i<n-1;i++) m[i]=d[i-1]*d[i]<=0?0:(d[i-1]+d[i])/2;
+    let p='M'+pts[0][0].toFixed(1)+','+pts[0][1].toFixed(1);
+    for(let i=0;i<n-1;i++){
+      const h=(pts[i+1][0]-pts[i][0])/3;
+      p+=' C'+(pts[i][0]+h).toFixed(1)+','+(pts[i][1]+m[i]*h).toFixed(1)+' '+(pts[i+1][0]-h).toFixed(1)+','+(pts[i+1][1]-m[i+1]*h).toFixed(1)+' '+pts[i+1][0].toFixed(1)+','+pts[i+1][1].toFixed(1);
+    }
+    return p;
+  }
+  function paintLegend(){
+    const T=trendTot||blank();
+    $('caLegend').innerHTML=SER.map(x=>'<button type="button" class="ca-lg" data-ser="'+x.k+'" aria-pressed="'+(!off.has(x.k))+'">'
+        +'<span class="sw" style="--c:'+x.c+'"></span><span class="nm">'+x.n+(x.sub?' <em>'+x.sub+'</em>':'')+'</span>'
+        +'<span class="vl num">'+won(T[x.k])+'<small>원</small></span>'
+        +(x.k==='cost'&&T.rev?'<span class="rt">광고매출의 '+(T.cost/T.rev*100).toFixed(1)+'%</span>':'')+'</button>').join('')
+      +'<div class="ca-lg-roas"><span>기간 ROAS</span><b class="num">'+(T.cost?won(T.rev/T.cost*100)+'%':'-')+'</b></div>';
+  }
+  function paintTrend(){
+    paintLegend();
+    const box=$('caPlot'); if(!box||!trendDays.length){ if(box) box.innerHTML=''; return; }
+    const W=Math.max(320,box.clientWidth||900), H=240, L=54, R=14, Tp=14, B=30;
+    const days=trendDays, n=days.length, on=SER.filter(x=>!off.has(x.k));
+    const mx=niceMax(Math.max(1,...days.map(o=>Math.max(...on.map(x=>o[x.k]),0))));
+    const X=i=>n<2?(L+W-R)/2:L+(W-L-R)*i/(n-1), Y=v=>Tp+(H-Tp-B)*(1-v/mx);
+    let g='';
+    for(let t=0;t<=4;t++){ const v=mx*t/4, y=Y(v);
+      g+='<line class="gl" x1="'+L+'" x2="'+(W-R)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'"/><text class="yl" x="'+(L-8)+'" y="'+(y+4).toFixed(1)+'">'+axisWon(v)+'</text>'; }
+    const step=Math.max(1,Math.ceil(n/(W<600?5:10)));
+    days.forEach((o,i)=>{ if(i%step&&i!==n-1) return; if(i!==n-1&&n-1-i<step*.6&&i) return;
+      g+='<text class="xl" x="'+X(i).toFixed(1)+'" y="'+(H-8)+'">'+(+o.d.slice(5,7))+'/'+(+o.d.slice(8))+'</text>'; });
+    let lines='';
+    on.forEach(x=>{
+      const pts=days.map((o,i)=>[X(i),Y(o[x.k])]);
+      if(x.k==='rev'&&pts.length>1) lines+='<path class="ar" d="'+smooth(pts)+' L'+pts[n-1][0].toFixed(1)+','+Y(0).toFixed(1)+' L'+pts[0][0].toFixed(1)+','+Y(0).toFixed(1)+' Z" style="fill:'+x.c+'"/>';
+      lines+=pts.length>1?'<path class="ln" d="'+smooth(pts)+'" style="stroke:'+x.c+'"/>':'<circle cx="'+pts[0][0]+'" cy="'+pts[0][1]+'" r="4" style="fill:'+x.c+'"/>';
+    });
+    box.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="일별 광고매출·광고비">'+g+lines
+      +'<line class="cx" id="caCx" y1="'+Tp+'" y2="'+(H-B)+'" x1="0" x2="0" style="opacity:0"/><g id="caDots"></g>'
+      +'<rect class="hit" x="'+L+'" y="0" width="'+(W-L-R)+'" height="'+(H-B)+'"/></svg><div class="ca-tip" id="caTip" hidden></div>';
+    const svg=box.querySelector('svg'), tip=$('caTip'), cx=$('caCx'), dots=$('caDots');
+    const show=ev=>{
+      const r=svg.getBoundingClientRect(), mxp=(ev.clientX-r.left)*W/r.width;
+      const i=Math.max(0,Math.min(n-1,Math.round(n<2?0:(mxp-L)/(W-L-R)*(n-1)))), o=days[i], x=X(i);
+      cx.setAttribute('x1',x); cx.setAttribute('x2',x); cx.style.opacity=1;
+      dots.innerHTML=on.map(s=>'<circle cx="'+x+'" cy="'+Y(o[s.k])+'" r="5" style="fill:'+s.c+'" class="dt"/>').join('');
+      tip.innerHTML='<div class="h">'+(+o.d.slice(5,7))+'월 '+(+o.d.slice(8))+'일 ('+dow(o.d)+')</div>'
+        +SER.map(s=>'<div class="r"><span class="sw" style="--c:'+s.c+'"></span>'+s.n+'<b>'+won(o[s.k])+'원</b></div>').join('')
+        +'<div class="r sep">ROAS<b>'+pct(o.rev,o.cost)+'</b></div><div class="r">클릭 · CPC<b>'+won(o.clk)+' · '+(o.clk?won(o.cost/o.clk)+'원':'-')+'</b></div>';
+      tip.hidden=false;
+      const bw=box.clientWidth, tw=tip.offsetWidth, px=x*r.width/W;
+      tip.style.left=Math.max(0,Math.min(bw-tw,px+(px+tw+16>bw?-tw-14:14)))+'px';
+    };
+    svg.addEventListener('mousemove',show);
+    svg.addEventListener('mouseleave',()=>{ tip.hidden=true; cx.style.opacity=0; dots.innerHTML=''; });
+  }
   function draw(){
     when(); paintAt();
     const camps=campList();
@@ -31577,14 +31680,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     $('caNote').innerHTML=!has
       ?'<div class="cs-note"><b>아직 올린 보고서가 없습니다</b> · 배너 오른쪽 <b>쿠팡윙 수집</b>을 누르거나, 쿠팡 광고센터 › 보고서에서 키워드 보고서(일별 CSV)를 받아 "파일 올리기"로 넣어 주세요. 같은 날짜를 다시 넣으면 새 파일로 바뀝니다.</div>'
       :(!data.rows.length?'<div class="cs-note">고른 기간에 올린 광고 기록이 없습니다 · 기간을 바꾸거나 그 기간 보고서를 올려 주세요</div>':'');
-    /* 일별 광고비 */
+    /* 일별 추이 · 광고매출·광고비 두 선(같은 원 단위라 한 축) · 오른쪽 범례에서 켜고 끄며 합계를 크게 · ROAS 는 축을 따로 두지 않고 말풍선·범례에 */
     const dm=new Map(); rows.forEach(x=>{ let o=dm.get(x[0]); if(!o) dm.set(x[0],o=blank()); add(o,x); });
-    const ds=[...dm.keys()].sort(), mx=Math.max(1,...ds.map(d=>dm.get(d).cost));
-    $('caDayBox').hidden=!ds.length;
-    const DOW=['일','월','화','수','목','금','토'];
-    $('caDays').innerHTML=ds.map(d=>{ const o=dm.get(d), w=DOW[new Date(d+'T00:00:00Z').getUTCDay()];
-      return '<div class="ca-day" title="'+d+' ('+w+')\n광고비 '+won(o.cost)+'원\n광고매출(14일) '+won(o.rev)+'원\nROAS '+pct(o.rev,o.cost)+'\n클릭 '+won(o.clk)+' · CPC '+(o.clk?won(o.cost/o.clk)+'원':'-')+'">'
-        +'<div class="bar" style="height:'+Math.max(2,o.cost/mx*100)+'px"></div><span class="ro">'+pct(o.rev,o.cost)+'</span><span class="d">'+(+d.slice(8))+'('+w+')</span></div>'; }).join('');
+    trendDays=[...dm.keys()].sort().map(d=>Object.assign({d:d},dm.get(d)));
+    $('caDayBox').hidden=!trendDays.length;
+    trendTot=T;
+    paintTrend();
     /* 캠페인 표 */
     const tr=c=>'<tr class="pick'+(c.id===st.camp?' on':'')+'" data-cid="'+esc(c.id)+'"><td class="k">'+esc(c.n)+'</td><td class="c">'+esc(c.t||'-')+'</td>'
       +'<td class="r">'+won(c.imp)+'</td><td class="r">'+won(c.clk)+'</td><td class="r">'+pct(c.clk,c.imp,2)+'</td>'
