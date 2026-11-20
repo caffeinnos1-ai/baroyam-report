@@ -752,3 +752,8 @@
 ### 2026-11-03 · 어드민 수집을 모바일에서도(서버 수집)
 - 11-01부터 VPS 의 이지어드민 자동 로그인(재고현황·당일판매)이 "로그인 오류"로 거절됐습니다. 비밀번호는 맞았고, 로그인 화면이 도메인마다 캡챠 제외 여부(`/check_captcha.php` · black845 는 제외 아님)를 묻고 구글 reCAPTCHA v3 점수를 붙여 보내는데 화면 없는 브라우저는 점수가 낮아 거절된 것이었습니다. 서버에서 가상 화면(xvfb) 위 진짜 크롬을 창 있는 채로 띄우니 통과해, 수집기를 그 방식으로 바꿨습니다(caffeinnos-automation `ezadmin_guard.js`).
 - 사용자 요청으로 **어드민 수집** 단추를 크롬 확장 없이(모바일·확장 없는 PC) 누르면 설치 안내 대신 서버가 수집합니다: 메타광고 지금 가져오기와 같이 brand-files `ezjob/req/<임의>.json`(`kind:'inventory'|'sales'`)을 올리면 VPS `ezadmin_request.js`(1분마다)가 돌리고 `ezjob/res/` 에 결과를 적습니다 · 끝나면 그 탭 칸을 다시 읽어 그립니다(1분 안팎). 확장이 있는 PC 는 예전처럼 확장으로 가져옵니다.
+
+### 2026-11-20 · 로고 버튼을 바로얌 AI 채팅으로
+- 사용자 요청으로 오른쪽 아래 로고 버튼이 상담 콘솔 대신 **바로얌 AI 채팅 창**(`#aiChat` · 오른쪽 아래에 뜨는 400px 창)을 엽니다. 안내 · 추천 질문 칩 · 600자 입력칸(Enter 보내기 · Shift+Enter 줄바꿈) · 답 복사 · 새 대화.
+- 보내면 `brand-files` 의 `cmjob/req` 에 `kind:'chat'`(지난 대화 최근 12개·지금 화면 이름)을 올리고, 대본 서비스(`caffeinnos-automation/content_writer.js` · VPS·PC)가 Claude(구독 · `CW_CHAT_MODEL` 기본 sonnet)로 답을 `cmjob/res` 에 적습니다(약 7초). 지침은 `prompts/바로얌AI.md`, 질문에 브랜드 이름이 있으면 그 브랜드 소구점 md 를 함께 줍니다. 대화는 이 브라우저(`baroyam_ai_chat_v1`)에만 남고 서버에 저장하지 않습니다.
+- 상담 콘솔 창·코드와 상담가이드 데이터는 지우지 않고 로고 버튼에서만 뗐습니다(`window.openConsole` 은 남음).

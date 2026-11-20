@@ -6366,6 +6366,47 @@ window.BAROYAM_FONT=(function(){
   @media (prefers-reduced-motion:reduce){
     .logo-fab::after{animation:none}
   }
+  /* 바로얌 AI 채팅 · 로고 버튼을 누르면 오른쪽 아래에 뜨는 채팅 창(2026-11-20 · 상담 콘솔 대신) ·
+     보내면 VPS 대본 서비스(content_writer.js kind:'chat' · 지침 prompts/바로얌AI.md)가 Claude 로 답한다 */
+  .aic{position:fixed;right:24px;bottom:116px;z-index:75;width:400px;max-width:calc(100vw - 32px);
+    height:min(680px,calc(100vh - 140px));display:flex;flex-direction:column;overflow:hidden;
+    background:var(--paper);border:1px solid var(--line);border-radius:20px;
+    box-shadow:0 24px 60px -18px rgba(0,0,0,.35);transform-origin:right bottom;animation:aicIn .18s ease-out}
+  .aic[hidden]{display:none}
+  @keyframes aicIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  .aic-head{display:flex;align-items:center;gap:10px;padding:14px 14px 12px 16px;border-bottom:1px solid var(--line)}
+  .aic-head img{width:30px;height:30px;border-radius:50%;flex:none}
+  .aic-head .t{flex:1;min-width:0}
+  .aic-head b{display:block;font-size:14.5px;font-weight:600;color:var(--ink)}
+  .aic-head small{display:block;font-size:11.5px;color:var(--mute)}
+  .aic-body{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:10px}
+  .aic-intro{background:var(--btn-soft);border-radius:14px;padding:12px 14px;font-size:12.5px;color:var(--body);line-height:1.6}
+  .aic-intro b{display:block;font-size:13.5px;font-weight:600;color:var(--ink);text-align:center;margin-bottom:4px}
+  .aic-intro ul{margin:0;padding-left:16px}
+  .aic-sugs{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+  .aic-sugs .ui-chip{max-width:90%;white-space:normal;text-align:left;height:auto;min-height:30px;padding:6px 12px}
+  .aic-msg{max-width:86%;font-size:13.5px;line-height:1.6;padding:9px 13px;border-radius:16px;white-space:pre-wrap;word-break:break-word}
+  .aic-msg.me{align-self:flex-end;background:var(--btn);color:#fff;border-bottom-right-radius:5px}
+  .aic-msg.ai{align-self:flex-start;background:var(--chip-flat,var(--btn-soft));color:var(--ink);border-bottom-left-radius:5px}
+  .aic-msg.ai b{font-weight:600}
+  .aic-msg.err{align-self:flex-start;background:transparent;border:1px solid var(--neg,#d33);color:var(--neg,#d33);font-size:12.5px}
+  .aic-msg.wait{color:var(--mute)}
+  .aic-msg.wait i{display:inline-block;width:6px;height:6px;margin-right:3px;border-radius:50%;background:currentColor;animation:aicDot 1s infinite}
+  .aic-msg.wait i:nth-child(2){animation-delay:.15s}.aic-msg.wait i:nth-child(3){animation-delay:.3s}
+  @keyframes aicDot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  .aic-copy{all:unset;cursor:pointer;font-size:11px;color:var(--mute);margin:-4px 0 0 6px;align-self:flex-start}
+  .aic-copy:hover{color:var(--ink)}
+  .aic-foot{padding:10px 12px 12px}
+  .aic-box{border:1.5px solid var(--line);border-radius:16px;padding:10px 12px 8px;background:var(--paper);transition:border-color .15s}
+  .aic-box:focus-within{border-color:var(--btn)}
+  .aic-box textarea{all:unset;box-sizing:border-box;display:block;width:100%;min-height:58px;max-height:160px;overflow-y:auto;
+    font:inherit;font-size:13.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap}
+  .aic-box textarea::placeholder{color:var(--mute)}
+  .aic-row{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+  .aic-row small{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
+  @media (max-width:1280px),(max-height:720px){ .aic{right:18px;bottom:90px;height:min(640px,calc(100vh - 110px))} }
+  @media (max-width:560px){ .aic{right:8px;left:8px;width:auto;max-width:none;bottom:84px} }
+  @media (prefers-reduced-motion:reduce){ .aic{animation:none} .aic-msg.wait i{animation:none} }
   /* 브랜드전략실 진행도 상자 · 로고 버튼 왼쪽에 가로로 긴 네모 · 전체 진행도 막대 하나 ·
      처음 보일 때·브랜드를 바꿀 때 막대가 0%에서 달성률까지 차오른다(.filling 동안 빛이 지나가고 끝이 빛난다 · 숫자는 스크립트가 함께 센다) */
   .bs-float{all:unset;box-sizing:border-box;position:fixed;right:116px;bottom:44px;z-index:70;width:340px;max-width:calc(100vw - 260px);min-height:76px;
@@ -12869,6 +12910,23 @@ window.BAROYAM_FONT=(function(){
     <img class="logo-fab-white" src="data:image/png;base64,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" alt="" aria-hidden="true">
   </button>
   <script>document.getElementById('logoFabImg').src=document.querySelector('.sb-logo').src;</script>
+  <!-- 바로얌 AI 채팅 · 로고 버튼으로 연다(2026-11-20 · 예전 상담 콘솔은 열지 않음) -->
+  <section class="aic" id="aiChat" hidden role="dialog" aria-label="바로얌 AI">
+    <div class="aic-head">
+      <img id="aiChatLogo" alt="" aria-hidden="true">
+      <div class="t"><b>바로얌 AI</b><small>궁금한 것을 물어보면 Claude 가 답해요</small></div>
+      <button type="button" class="ui-btn ghost sm" id="aiChatNew" title="대화 새로 시작">새 대화</button>
+      <button type="button" class="ui-btn ghost sm icon" id="aiChatClose" aria-label="닫기" title="닫기">✕</button>
+    </div>
+    <div class="aic-body" id="aiChatBody"></div>
+    <div class="aic-foot">
+      <div class="aic-box">
+        <textarea id="aiChatInput" maxlength="600" rows="3" placeholder="궁금한 것을 구체적으로 적어 주세요.&#10;(예: 홀떡피자 인스타 캡션 아이디어 3개 줘)"></textarea>
+        <div class="aic-row"><small id="aiChatCount">0/600</small>
+          <button type="button" class="ui-btn primary sm" id="aiChatSend">보내기</button></div>
+      </div>
+    </div>
+  </section>
   <!-- 브랜드전략실 진행도 · 로고 버튼 바로 왼쪽에 떠 있어 스크롤해도 늘 보인다 · 누르면 지금 단계로 내려간다 -->
   <button type="button" class="bs-float" id="bsFloat" hidden></button>
 
@@ -14128,9 +14186,7 @@ syncFromSheets(false).catch(err=>{
     try{ if(window.BAROYAM_LINKS) window.BAROYAM_LINKS.render(); }catch(e){ console.error(e); }
   }
 
-  btn.setAttribute('aria-controls','consoleOverlay');
-  btn.setAttribute('aria-expanded','false');
-  btn.addEventListener('click',()=>setOpen(ov.hidden));
+  /* 2026-11-20 사용자 요청 · 로고 버튼은 이제 바로얌 AI 채팅을 연다(아래) · 상담 콘솔 창·코드는 지우지 않고 버튼에서만 뗐다 */
   if(closeBtn) closeBtn.addEventListener('click',()=>setOpen(false));
   /* 어두워진 바깥을 누르면 닫힌다 · 창 안쪽 클릭은 새어나가지 않게 막는다 */
   ov.addEventListener('click',e=>{ if(e.target===ov) setOpen(false); });
@@ -14139,6 +14195,102 @@ syncFromSheets(false).catch(err=>{
     if(e.key==='Escape'&&!ov.hidden) setOpen(false);
   });
   window.openConsole=()=>setOpen(true);
+})();
+
+/* 바로얌 AI 채팅 · 로고 버튼을 누르면 연다(2026-11-20 사용자 요청 · 상담 콘솔 대신) ·
+   보내기 → brand-files cmjob/req/<이름>.json (kind:'chat' · 지난 대화 함께) → VPS·PC 대본 서비스(content_writer.js)가
+   Claude 로 답을 cmjob/res/<같은 이름> 에 적는다 → 2초마다 확인 · 대화는 이 브라우저에만 남는다(서버에 저장하지 않음) */
+(function(){
+  const btn=document.getElementById('logoFab'), box=document.getElementById('aiChat');
+  if(!btn||!box) return;
+  const body=document.getElementById('aiChatBody'), inp=document.getElementById('aiChatInput'),
+    send=document.getElementById('aiChatSend'), cnt=document.getElementById('aiChatCount');
+  const KEY='baroyam_ai_chat_v1', MAX=40;
+  const SUGS=['홀떡피자 인스타 캡션 아이디어 3개 줘','고객 배송 지연 사과 문구 써 줘','메타광고 ROAS 가 떨어질 때 먼저 볼 것은?','쿠팡 상품명 짓는 요령 알려 줘'];
+  let msgs=[], busy=false;
+  try{ msgs=JSON.parse(localStorage.getItem(KEY)||'[]')||[]; }catch(e){ msgs=[]; }
+  const keep=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(msgs.slice(-MAX))); }catch(e){} };
+  try{ document.getElementById('aiChatLogo').src=document.querySelector('.sb-logo').src; }catch(e){}
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmt=s=>esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
+
+  function paint(waitMsg){
+    let h='';
+    if(!msgs.length){
+      h='<div class="aic-intro"><b>무엇이든 물어보세요</b><ul>'
+        +'<li>AI 답변은 틀릴 수 있어요. 숫자·정책은 한 번 더 확인해 주세요.</li>'
+        +'<li>대화는 이 브라우저에만 남고, "새 대화"로 지울 수 있어요.</li>'
+        +'<li>비밀번호·고객 개인정보는 적지 말아 주세요.</li></ul></div>'
+        +'<div class="aic-sugs">'+SUGS.map(q=>'<button type="button" class="ui-chip" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('')+'</div>';
+    }
+    msgs.forEach((m,i)=>{
+      if(m.role==='user') h+='<div class="aic-msg me">'+esc(m.text)+'</div>';
+      else if(m.role==='err') h+='<div class="aic-msg err">'+esc(m.text)+'</div>';
+      else h+='<div class="aic-msg ai">'+fmt(m.text)+'</div><button type="button" class="aic-copy" data-copy="'+i+'">복사</button>';
+    });
+    if(busy) h+='<div class="aic-msg ai wait"><i></i><i></i><i></i> '+esc(waitMsg||'생각하는 중')+'</div>';
+    body.innerHTML=h;
+    body.scrollTop=body.scrollHeight;
+  }
+  function setOpen(on){
+    box.hidden=!on;
+    btn.classList.toggle('is-active',on);
+    btn.setAttribute('aria-expanded',on?'true':'false');
+    if(on){ paint(); setTimeout(()=>inp.focus(),30); }
+  }
+  btn.setAttribute('aria-controls','aiChat');
+  btn.setAttribute('aria-expanded','false');
+  btn.setAttribute('aria-label','바로얌 AI'); btn.title='바로얌 AI';
+  btn.addEventListener('click',()=>setOpen(box.hidden));
+  document.getElementById('aiChatClose').addEventListener('click',()=>setOpen(false));
+  document.getElementById('aiChatNew').addEventListener('click',()=>{
+    if(busy) return;
+    msgs=[]; keep(); paint(); inp.focus();
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!box.hidden&&!document.querySelector('.settings-overlay:not([hidden])')) setOpen(false); });
+  body.addEventListener('click',e=>{
+    const q=e.target.closest('[data-q]'); if(q){ inp.value=q.dataset.q; ask(); return; }
+    const c=e.target.closest('[data-copy]');
+    if(c){ const m=msgs[+c.dataset.copy]; if(m) navigator.clipboard.writeText(m.text).then(()=>{ c.textContent='복사됨'; setTimeout(()=>c.textContent='복사',1200); }).catch(()=>{}); }
+  });
+  const upd=()=>{ cnt.textContent=inp.value.length+'/600'; };
+  inp.addEventListener('input',upd);
+  /* Enter 보내기 · Shift+Enter 줄바꿈 · 한글 조합 중 Enter 는 무시 */
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){ e.preventDefault(); ask(); } });
+  send.addEventListener('click',ask);
+
+  async function ask(){
+    const text=inp.value.trim();
+    if(!text||busy) return;
+    const DB=window.BAROYAM_DB;
+    msgs.push({role:'user',text,at:Date.now()}); keep();
+    inp.value=''; upd();
+    busy=true; send.disabled=true; paint('보내는 중');
+    const t0=Date.now();
+    try{
+      if(!DB||!DB.fileUpload||(DB.ensureSession&&!(await DB.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 보내 주세요');
+      let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
+      let page=''; try{ page=(document.querySelector('.sb-item.active,.sb-item.is-active')||{}).textContent||''; }catch(e){}
+      /* 지난 대화는 최근 12개(질문·답)만 · 오류 줄은 빼고 보낸다 */
+      const hist=msgs.filter(m=>m.role==='user'||m.role==='ai').slice(-12).map(m=>({role:m.role,text:String(m.text).slice(0,3000)}));
+      const name='chat'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.1.json';
+      await DB.fileUpload('brand-files','cmjob/req/'+name,new Blob([JSON.stringify({v:1,kind:'chat',job:'ai-chat',round:1,at:new Date().toISOString(),by,input:{messages:hist,page:page.trim().slice(0,40)}})],{type:'application/json'}));
+      paint('바로얌 AI 가 읽는 중');
+      for(;;){
+        await new Promise(z=>setTimeout(z,2000));
+        let r=null; try{ const u=await DB.fileUrl('brand-files','cmjob/res/'+name,60); const x=await fetch(u,{cache:'no-store'}); r=x.ok?await x.json():null; }catch(e){}
+        const sec=(Date.now()-t0)/1000;
+        if(r&&r.state==='done'&&r.ok){ msgs.push({role:'ai',text:String(r.answer||'(빈 답)'),at:Date.now()}); break; }
+        if(r&&r.state==='failed') throw new Error(r.message||'답하지 못했습니다');
+        if(!r&&sec>60) throw new Error('바로얌 AI 서비스가 응답하지 않습니다 · 잠시 뒤 다시 보내 주세요');
+        if(sec>300) throw new Error('너무 오래 걸려 멈췄습니다 · 다시 보내 주세요');
+        if(!box.hidden) paint(r?'답을 쓰는 중 · '+Math.round(sec)+'초':'바로얌 AI 가 읽는 중');
+      }
+    }catch(e){
+      msgs.push({role:'err',text:String(e&&e.message||e),at:Date.now()});
+    }
+    busy=false; send.disabled=false; keep(); paint();
+  }
 })();
 
 /* 상담가이드 데이터 · 구글시트 '상담가이드' 탭(한 건 = 한 행)이 원본이고 이 기기(localStorage)에도 사본을 둔다 ·
