@@ -6711,6 +6711,27 @@ window.BAROYAM_FONT=(function(){
   .rg-sub b{font-weight:600}
   .rg-sub span{font-size:12px;color:var(--mute)}
   .rg-sub.new{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line)}
+  /* 상세 목록 편집 · 번호·끌기로 순서, ✕ 빼기, 새 이미지는 고른 자리에(11-20 사용자 요청) */
+  .rg-dtools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px}
+  .rg-dtools+.rg-more,.rg-dl+.rg-dtools{margin-top:14px}
+  .rg-dsum{font-size:13px;color:var(--body)} .rg-dsum b{font-weight:600;color:var(--ink)} .rg-dsum .nw{color:var(--btn-soft-ink)}
+  .rg-lab2{font-size:13px;color:var(--body)}
+  .rg-pos{width:70px!important;text-align:center}
+  .rg-dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+  .rg-dc{position:relative;height:158px;border-radius:12px;cursor:grab}
+  .rg-dc .th{position:absolute;inset:0;border-radius:12px;border:1px solid var(--line);background:var(--bg) center top/cover no-repeat}
+  .rg-dc.new .th{border:2px solid var(--btn)}
+  .rg-dc.dragging{opacity:.35}
+  .rg-dc.over::before,.rg-dc-add.over::before{content:'';position:absolute;left:-8px;top:4px;bottom:4px;width:4px;border-radius:2px;background:var(--btn)}
+  .rg-dc-add{position:relative;width:auto!important;height:158px!important}
+  .rg-dno{all:unset;box-sizing:border-box;position:absolute;left:6px;top:6px;width:34px;height:24px;border-radius:99px;background:var(--paper);color:var(--ink);text-align:center;font-size:12px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:text;-moz-appearance:textfield}
+  .rg-dno::-webkit-inner-spin-button,.rg-dno::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  .rg-dno:focus{outline:2px solid var(--btn)}
+  .rg-dc .tag{position:absolute;left:6px;bottom:6px;padding:2px 8px;border-radius:99px;background:var(--btn);color:var(--paper);font-size:11px;font-style:normal;font-weight:600}
+  .rg-dc .x{all:unset;position:absolute;top:6px;right:6px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:11px;cursor:pointer;opacity:0;transition:opacity .12s}
+  .rg-dc:hover .x,.rg-dc .x:focus{opacity:1}
+  .rg-more{margin-top:14px;font-size:13px;color:var(--body)}
+  .rg-more summary{cursor:pointer;color:var(--mute);margin-bottom:10px}
   .rg-sec>.rg-hint:last-child{margin:12px 0 0}
   .rg-now{margin:0 0 12px;padding:9px 12px;border-radius:10px;background:var(--bg);font-size:13px;color:var(--body)}
   .rg-cur{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
@@ -37312,7 +37333,11 @@ window.baroyamAsk=function(title,body,okText){
   const linkNo=(x,ch)=>x&&x.reg&&x.reg[ch]&&x.reg[ch].no;
   /* "무엇을 수정하시겠습니까?" · 판매처에서 칸 하나로 바뀌어 잘 안 깨지는 것만(옵션·재고·판매상태는 상품·옵션 재고 탭) · 열쇠는 서버 fields 이름 */
   const WHAT=[['name','상품명',''],['main','대표 이미지','목록·작은 이미지도 같이'],['detail','상세페이지','이미지를 통째로 바꾸기'],['price','판매가','정가도 함께 바꿀 수 있어요']];   /* 순서 = 화면에 열리는 순서(11-20 사용자 요청) */   /* 한 줄 설명은 11-20 사용자 요청으로 뺌(서버는 summary 를 받을 수 있게 둠) */
-  const hasDetail=x=>(x.detail||[]).length>0||!!String(x.top||'').trim();
+  const hasDetail=x=>(linkNo(x,'cafe24')?(x.dlist||[]).length:(x.detail||[]).length)>0||!!String(x.top||'').trim();
+  /* 연결된 상품의 상세 목록 · [{t:'old',u:카페24 주소}|{t:'new',p:Storage 경로}] · 처음엔 지금 카페24 상세 이미지 순서 그대로 */
+  const DMAX=60;
+  function initD(x,force){ const c=CUR[linkNo(x,'cafe24')]; if(!c||!c.imgs) return false; if(x.dlist&&!force) return false; x.dlist=c.imgs.map(u=>({t:'old',u})); return true; }
+  function moveD(arr,from,to){ if(from===to||from<0||from>=arr.length) return; const [v]=arr.splice(from,1); arr.splice(Math.max(0,Math.min(arr.length,to)),0,v); }
   let ITEMS={}, cur='', q='', loaded=false, loading=false;
   const dirty=new Set(); let saveT=null, saving=false, saveErr='', savedAt=0;
   let CATS=null, catsAsked=false;
@@ -37426,13 +37451,14 @@ window.baroyamAsk=function(title,body,okText){
     }
     throw new Error('사진이 너무 커요 · '+file.name);
   }
-  async function addFiles(kind,files){
+  async function addFiles(kind,files,pos){
     const x=it(); if(!x) return;
     const id=x.id;
     let list=[...files].filter(f=>/^image\//.test(f.type));
     if(!list.length){ note('사진 파일만 넣을 수 있어요','bad'); return; }
     if(kind==='main') list=list.slice(0,1);
-    else { const room=MAX[kind]-(x[kind]||[]).length; if(room<=0){ note((kind==='adds'?'추가 사진':'상세 사진')+'은 '+MAX[kind]+'장까지예요','bad'); return; } list=list.slice(0,room); }
+    else if(kind==='dlist'){ const room=DMAX-(x.dlist||[]).length; if(room<=0){ note('상세 이미지는 '+DMAX+'장까지예요','bad'); return; } list=list.slice(0,room); }
+    else if(kind!=='dlist'){ const room=MAX[kind]-(x[kind]||[]).length; if(room<=0){ note((kind==='adds'?'추가 사진':'상세 사진')+'은 '+MAX[kind]+'장까지예요','bad'); return; } list=list.slice(0,room); }
     for(const [i,f] of list.entries()){
       note('사진 올리는 중 '+(i+1)+'/'+list.length,'run');
       try{
@@ -37440,11 +37466,13 @@ window.baroyamAsk=function(title,body,okText){
         const path='shop/img/'+id+'/'+rid()+'.'+ext;
         await DB().fileUpload(BUCKET,path,blob);
         const y=ITEMS[id]; if(!y) return;
-        if(kind==='main') y.main=path; else (y[kind]=y[kind]||[]).push(path);
+        if(kind==='main') y.main=path;
+        else if(kind==='dlist'){ y.dlist=y.dlist||[]; const at=pos==null?y.dlist.length:Math.min(y.dlist.length,pos+i); y.dlist.splice(at,0,{t:'new',p:path}); }
+        else (y[kind]=y[kind]||[]).push(path);
         touch(id); if(cur===id){ paintMain(); paintSide(); paintList(); }
       }catch(e){ note('사진을 올리지 못했어요 · '+(e.message||e),'bad'); return; }
     }
-    note('사진을 넣었어요','ok');
+    note(kind==='dlist'?'새 이미지를 '+(pos==null?'맨 끝':(pos+1)+'번 자리')+'에 넣었어요':'사진을 넣었어요','ok');
   }
   /* 미리보기 · 비공개 보관함이라 서명 주소(1시간)를 받아 바탕 그림으로 */
   function fillThumbs(root){
@@ -37517,7 +37545,7 @@ window.baroyamAsk=function(title,body,okText){
       if(w.main) h+=sec('main','<div class="rg-pic-row">'
         +'<div><p>지금 카페24</p><div class="rg-pics"><div class="rg-pic main"'+((c.image||x.img)?' style="background-image:url(&quot;'+esc(c.image||x.img)+'&quot;)"':'')+'></div></div></div>'
         +'<div><p>새 대표 이미지</p><div class="rg-pics">'+(x.main?'<div class="rg-pic main" data-img="'+esc(x.main)+'"><button type="button" class="x" data-rm="main|0" aria-label="빼기">✕</button></div>':drop('main','main','새 대표 이미지'))+'</div></div></div>','목록·작은 이미지는 카페24가 이 이미지로 다시 만듦');
-      if(w.detail) h+=sec('detail',curBody(x)+detailBody(x),'지금 상세를 확인하고, 새 이미지로 통째로 바꿉니다');
+      if(w.detail) h+=sec('detail',dlistBody(x),'지금 카페24 상세에서 순서를 바꾸고, 빼고, 새 이미지를 원하는 자리에 넣습니다');
       if(w.price) h+=sec('price',now(c.price!=null?'판매가 '+won(c.price)+(c.retail?' · 정가 '+won(c.retail):''):'—')+'<div class="rg-grid">'
         +field('새 판매가','price',x,{won:true,req:true,ph:'0'})+field('새 정가','retail',x,{won:true,ph:'비우면 그대로',hint:'할인 전 값 · 비우면 바꾸지 않아요'})+'</div>');
       m.innerHTML=h;
@@ -37616,6 +37644,32 @@ window.baroyamAsk=function(title,body,okText){
       +((x.detail||[]).length<MAX.detail?drop('detail','wide','상세 이미지 넣기 · 여러 장을 한 번에 골라도 돼요 ('+(x.detail||[]).length+'/'+MAX.detail+')'):'')+'</div>'
       +field('아래 글','bottom',x,{area:true,w:'w3',ph:'이미지 아래에 넣을 글(없으면 비워 두기)'});
   }
+  function dlistBody(x){
+    const no=linkNo(x,'cafe24'), c=CUR[no];
+    if(!x.dlist){
+      if(c&&c.busy) return '<p class="rg-now">지금 카페24 상세를 받는 중…</p>';
+      if(c&&c.err) return '<p class="rg-now"><span style="color:var(--neg)">'+esc(c.err)+'</span> <button type="button" class="ui-btn sm ghost" data-act="cur">다시 받기</button></p>';
+      if(!initD(x)) return '<p class="rg-now">지금 카페24 상세를 받으면 여기서 고칠 수 있어요 <button type="button" class="ui-btn sm ghost" data-act="cur">불러오기</button></p>';
+      touch(x.id);
+    }
+    const L=x.dlist, olds=L.filter(e=>e.t==='old').length, news=L.length-olds, cut=c&&c.imgs?c.imgs.filter(u=>!L.some(e=>e.u===u)).length:0;
+    return '<div class="rg-dtools"><span class="rg-dsum">모두 <b>'+L.length+'장</b> · 기존 '+olds+(news?' · <b class="nw">새 '+news+'</b>':'')+(cut?' · 뺀 것 '+cut:'')+'</span><span class="pf-grow"></span>'
+        +'<button type="button" class="ui-btn sm ghost" data-act="dreset" title="지금 카페24 상세 순서로 처음부터 다시">처음 상태로</button>'
+        +'<button type="button" class="ui-btn sm ghost" data-act="cur" title="카페24에서 지금 상세를 다시 받아 확인">카페24 다시 받기</button></div>'
+      +'<p class="rg-hint" style="margin:0 0 10px">번호를 바꾸거나 끌어서 순서를 바꾸고, ✕로 뺍니다 · 컴퓨터의 이미지 파일을 어떤 이미지 위에 끌어다 놓으면 그 앞 자리에 들어가요.</p>'
+      +'<div class="rg-dl">'+L.map((e,i)=>'<div class="rg-dc'+(e.t==='new'?' new':'')+'" draggable="true" data-di="'+i+'">'
+          +'<span class="th"'+(e.t==='old'?' style="background-image:url(&quot;'+esc(e.u)+'&quot;)"':' data-img="'+esc(e.p)+'"')+'></span>'
+          +'<input class="rg-dno" type="number" min="1" max="'+L.length+'" value="'+(i+1)+'" data-dno="'+i+'" title="번호를 바꾸면 그 자리로 옮겨요" aria-label="'+(i+1)+'번째 · 순서 바꾸기">'
+          +(e.t==='new'?'<em class="tag">새</em>':'')
+          +'<button type="button" class="x" data-drm="'+i+'" aria-label="'+(i+1)+'번째 빼기" title="빼기">✕</button></div>').join('')
+        +(L.length<DMAX?'<button type="button" class="rg-drop rg-dc-add" data-up="dlist">'+UP_ICON+'<span>맨 끝에<br>넣기</span></button>':'')+'</div>'
+      +'<div class="rg-dtools"><span class="rg-lab2">새 이미지를</span><input class="ui-field sm rg-pos" id="rgPos" type="number" min="1" max="'+(L.length+1)+'" placeholder="'+(L.length+1)+'">'
+        +'<span class="rg-lab2">번 자리에</span><button type="button" class="ui-btn sm soft" data-up="dlist" data-pos="1">'+UP_ICON+' 새 이미지 넣기</button><span class="rg-hint" style="margin:0">비우면 맨 끝 · 여러 장이면 그 자리부터 차례로</span></div>'
+      +'<details class="rg-more"'+(String(x.top||'').trim()||String(x.bottom||'').trim()?' open':'')+'><summary>이미지 위·아래에 글 넣기 (선택)</summary><div class="rg-grid">'
+        +field('위 글','top',x,{area:true,w:'w3',ph:'이미지 위에 넣을 글'})+field('아래 글','bottom',x,{area:true,w:'w3',ph:'이미지 아래에 넣을 글'})+'</div></details>'
+      +TIPD;
+  }
+  const TIPD='<p class="rg-hint" style="margin:10px 0 0">보내면 이 순서대로 상세를 다시 짭니다 · 기존 상세 안의 글·꾸밈(에디봇 등)은 빠지고 이미지만 남아요 · 바꾸기 전 상세는 보관돼 되돌릴 수 있어요.</p>';
   function detailSec(x){
     return '<section class="rg-sec"><h4>상세페이지<span>위 글 → 사진(위에서 아래 순서) → 아래 글</span></h4>'+detailBody(x)+'</section>';
   }
@@ -37655,7 +37709,7 @@ window.baroyamAsk=function(title,body,okText){
   function editMiss(x){
     const m=[];
     whatKeys(x).forEach(k=>{
-      if(k==='detail'&&!hasDetail(x)) m.push('새 상세페이지 사진');
+      if(k==='detail'&&!hasDetail(x)) m.push('상세 이미지');
       if(k==='name'&&!String(x.name||'').trim()) m.push('새 상품명');
       if(k==='price'&&!(num(x.price)>0)) m.push('새 판매가');
       if(k==='main'&&!x.main) m.push('새 대표 사진');
@@ -37688,11 +37742,11 @@ window.baroyamAsk=function(title,body,okText){
     if(keys.includes('price')){ fields.price=num(x.price); if(num(x.retail)) fields.retail=num(x.retail); }
     if(keys.includes('summary')) fields.summary=x.summary||'';
     if(keys.includes('main')) fields.main=x.main;
-    if(keys.includes('detail')) fields.detail={top:x.top||'',detail:x.detail||[],bottom:x.bottom||''};
+    if(keys.includes('detail')) fields.detail={top:x.top||'',detail:(x.dlist||[]).map(e=>e.t==='old'?{u:e.u}:e.p),bottom:x.bottom||''};
     const chg=k=>k==='name'?esc(c.name||'')+' → <b>'+esc(fields.name)+'</b>'
       :k==='price'?won(c.price||0)+' → <b>'+won(fields.price)+'</b>'+(fields.retail?' · 정가 <b>'+won(fields.retail)+'</b>':'')
       :k==='summary'?'<b>'+esc(fields.summary||'(지움)')+'</b>'
-      :k==='main'?'새 사진으로':'새 사진 '+(x.detail||[]).length+'장으로 통째로';
+      :k==='main'?'새 이미지로':(()=>{ const L=x.dlist||[], n=L.filter(e=>e.t==='new').length, cut=c.imgs?c.imgs.filter(u=>!L.some(e=>e.u===u)).length:0; return '모두 <b>'+L.length+'장</b>'+(n?' · 새 '+n+'장':'')+(cut?' · 뺀 것 '+cut+'장':'')+' · 이 순서대로'; })();
     const K=KIT();
     const ok=K.ask?await K.ask({logo:'logos/cafe24.png',title:'체크한 곳에 수정을 보낼까요?',sub:(x.name||'')+' · '+chs.map(l=>l.name+' #'+linkNo(x,l.id)).join(', '),ok:'보내기',
       html:'<div class="sh-ask-list">'+keys.map(k=>'<div class="sh-ask-row"><div class="sh-ask-nm"><strong>'+WNAME(k)+'</strong></div><div class="sh-ask-chg"><span>'+chg(k)+'</span></div></div>').join('')+'</div>'
@@ -37792,13 +37846,13 @@ window.baroyamAsk=function(title,body,okText){
   }
 
   /* ---------- 누르기·적기 ---------- */
-  let upKind='';
+  let upKind='', upPos=null, dragFrom=null;
   function bind(){
     $('rgNew').addEventListener('click',()=>{ const x=blank(); ITEMS[x.id]=x; cur=x.id; touch(x.id); paint(); const n=document.querySelector('#rgMain [data-f="name"]'); if(n) n.focus(); });
     $('rgQ').addEventListener('input',e=>{ q=e.target.value; paintList(); });
     $('rgImport').addEventListener('click',e=>{ e.stopPropagation(); if(!loaded){ note('목록을 읽는 중이에요 · 잠시 뒤 다시 눌러 주세요','bad'); return; } importPick(e.currentTarget); });
     $('rgItems').addEventListener('click',e=>{ const r=e.target.closest('[data-id]'); if(!r) return; cur=r.dataset.id; paint(); });
-    $('rgFile').addEventListener('change',e=>{ const f=e.target.files; if(f&&f.length) addFiles(upKind,f); e.target.value=''; });
+    $('rgFile').addEventListener('change',e=>{ const f=e.target.files; if(f&&f.length) addFiles(upKind,f,upKind==='dlist'?upPos:undefined); e.target.value=''; });
     const main=$('rgMain'), side=$('rgSide');
     main.addEventListener('input',e=>{
       const x=it(); if(!x) return; const t=e.target;
@@ -37820,7 +37874,9 @@ window.baroyamAsk=function(title,body,okText){
     main.addEventListener('focusout',e=>{ const t=e.target; if((t.dataset.f&&['price','retail','supply'].includes(t.dataset.f))||t.dataset.vf==='add'){ const n=num(t.value); t.value=t.value===''?'':n.toLocaleString('ko-KR'); } });
     /* 옵션 값 · Enter 나 쉼표로 넣고, 빈 칸에서 Backspace 면 마지막 값 빼기 */
     main.addEventListener('keydown',e=>{
-      const t=e.target; if(t.dataset.gv==null) return;
+      const t=e.target;
+      if(t.dataset.dno!=null&&e.key==='Enter'){ e.preventDefault(); t.blur(); return; }
+      if(t.dataset.gv==null) return;
       const x=it(); const g=x.groups[+t.dataset.gv];
       if(e.key==='Enter'||e.key===','){
         e.preventDefault();
@@ -37858,21 +37914,43 @@ window.baroyamAsk=function(title,body,okText){
       if(b.dataset.delg!=null){ x.groups.splice(+b.dataset.delg,1); touch(x.id); paintMain(); paintSide(); return; }
       if(b.dataset.delv){ const [gi,vi]=b.dataset.delv.split('|').map(Number); x.groups[gi].values.splice(vi,1); touch(x.id); paintMain(); paintSide(); return; }
       if(b.dataset.voff!=null){ const k=b.dataset.voff; const v=(x.vars=x.vars||{})[k]=Object.assign({},x.vars[k]); v.off=!v.off; touch(x.id); paintMain(); paintSide(); return; }
-      if(b.dataset.up){ upKind=b.dataset.up; const f=$('rgFile'); f.multiple=upKind!=='main'; f.click(); return; }
+      if(a==='dreset'){
+        if((x.dlist||[]).some(e=>e.t==='new')&&!confirm('넣은 새 이미지와 바꾼 순서를 버리고 지금 카페24 상세 순서로 돌아갈까요?')) return;
+        if(initD(x,true)){ touch(x.id); paintMain(); paintSide(); } else loadCur(); return;
+      }
+      if(b.dataset.drm!=null){ x.dlist.splice(+b.dataset.drm,1); touch(x.id); paintMain(); paintSide(); return; }
+      if(b.dataset.up){ upKind=b.dataset.up; upPos=null;
+        if(upKind==='dlist'&&b.dataset.pos){ const v=parseInt(($('rgPos')||{}).value,10); if(v>0) upPos=v-1; }
+        const f=$('rgFile'); f.multiple=upKind!=='main'; f.click(); return; }
       if(b.dataset.rm){ const [k,i]=b.dataset.rm.split('|'); if(k==='main') x.main=''; else x[k].splice(+i,1); touch(x.id); paintMain(); paintSide(); paintList(); return; }
       if(b.dataset.mv){ const [i,d]=b.dataset.mv.split('|').map(Number); const j=i+d; if(j<0||j>=x.detail.length) return; [x.detail[i],x.detail[j]]=[x.detail[j],x.detail[i]]; touch(x.id); paintMain(); return; }
     });
-    /* 사진 끌어다 놓기 · 놓은 자리(대표·추가·상세)로, 빗나가면 상세로 */
-    main.addEventListener('dragover',e=>{ if(!it()||!e.dataTransfer||![...e.dataTransfer.types].includes('Files')) return; e.preventDefault(); const d=e.target.closest('.rg-drop'); main.querySelectorAll('.rg-drop.over').forEach(x=>x.classList.toggle('over',x===d)); if(d) d.classList.add('over'); });
-    main.addEventListener('dragleave',e=>{ if(!main.contains(e.relatedTarget)) main.querySelectorAll('.rg-drop.over').forEach(x=>x.classList.remove('over')); });
-    main.addEventListener('drop',e=>{
-      if(!it()||!e.dataTransfer||!e.dataTransfer.files.length) return; e.preventDefault();
-      main.querySelectorAll('.rg-drop.over').forEach(x=>x.classList.remove('over'));
-      const d=e.target.closest('[data-up]'); const x=it();
-      addFiles(d?d.dataset.up:(!x.main?'main':'detail'),e.dataTransfer.files);
+    /* 끌어다 놓기 · 파일은 놓은 자리(대표·추가·상세 · 상세 목록은 그 이미지 앞), 상세 목록 칸끼리는 순서 바꾸기 */
+    const isFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes('Files');
+    const clearOver=()=>main.querySelectorAll('.over').forEach(z=>z.classList.remove('over'));
+    main.addEventListener('dragstart',e=>{ const c=e.target.closest&&e.target.closest('.rg-dc'); if(!c) return; dragFrom=+c.dataset.di; c.classList.add('dragging'); try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',String(dragFrom)); }catch(_){} });
+    main.addEventListener('dragend',()=>{ dragFrom=null; clearOver(); main.querySelectorAll('.dragging').forEach(z=>z.classList.remove('dragging')); });
+    main.addEventListener('dragover',e=>{
+      if(!it()) return;
+      const card=e.target.closest('.rg-dc,.rg-dc-add'), d=e.target.closest('.rg-drop');
+      if(dragFrom==null&&!isFiles(e)) return;
+      if(dragFrom!=null&&!card) return;
+      e.preventDefault(); clearOver(); const t=card||d; if(t) t.classList.add('over');
     });
-    main.addEventListener('change',e=>{   /* 무엇을 수정하시겠습니까? 체크 */
-      const t=e.target; if(!t.dataset||!t.dataset.what) return;
+    main.addEventListener('dragleave',e=>{ if(!main.contains(e.relatedTarget)) clearOver(); });
+    main.addEventListener('drop',e=>{
+      const x=it(); if(!x) return;
+      const card=e.target.closest('.rg-dc'), add=e.target.closest('.rg-dc-add');
+      if(dragFrom!=null){ e.preventDefault(); clearOver(); const to=card?+card.dataset.di:x.dlist.length; const from=dragFrom; dragFrom=null; moveD(x.dlist,from,from<to?to-1:to); touch(x.id); paintMain(); return; }
+      if(!e.dataTransfer||!e.dataTransfer.files.length) return; e.preventDefault(); clearOver();
+      if(card||add){ addFiles('dlist',e.dataTransfer.files,card?+card.dataset.di:null); return; }
+      const d=e.target.closest('[data-up]');
+      addFiles(d?d.dataset.up:(!x.main&&!linkNo(x,'cafe24')?'main':linkNo(x,'cafe24')?'dlist':'detail'),e.dataTransfer.files);
+    });
+    main.addEventListener('change',e=>{   /* 무엇을 수정하시겠습니까? 체크 · 상세 이미지 번호 */
+      const t=e.target; if(!t.dataset) return;
+      if(t.dataset.dno!=null){ const x=it(); if(!x||!x.dlist) return; const v=parseInt(t.value,10); if(v>0){ moveD(x.dlist,+t.dataset.dno,v-1); touch(x.id); } paintMain(); return; }
+      if(!t.dataset.what) return;
       const x=it(); if(!x) return;
       x.what=Object.assign({},x.what,{[t.dataset.what]:t.checked}); touch(x.id); paintMain(); paintSide();
     });
