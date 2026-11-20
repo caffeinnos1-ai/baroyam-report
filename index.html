@@ -12640,7 +12640,7 @@ window.BAROYAM_FONT=(function(){
                 <input class="ui-field sm" id="shBulkN" type="number" min="0" inputmode="numeric" placeholder="재고">
                 <button type="button" class="ui-btn sm soft" id="shBulkSet">재고 넣기</button>
                 <button type="button" class="ui-btn sm ghost" data-bulk-st="out">품절</button>
-                <button type="button" class="ui-btn sm ghost" data-bulk-st="stop">판매중지</button>
+                <button type="button" class="ui-btn sm ghost" data-bulk-st="stop">판매안함</button>
                 <button type="button" class="ui-btn sm ghost" data-bulk-st="on">판매중</button>
               </span>
               <span class="pf-grow"></span>
@@ -36138,7 +36138,7 @@ window.baroyamAsk=function(title,body,okText){
     {id:'gmarket',name:'G마켓',  logo:'logos/gmarket.png', how:'ESM API(확인 필요)', need:'ESM Plus 에서 판매자 API 사용 가능 여부 확인', lv:3},
     {id:'auction',name:'옥션',   logo:'logos/auction.png', how:'ESM API(확인 필요)', need:'G마켓과 같은 ESM Plus 계정', lv:3},
   ];
-  const ST={on:'판매중',out:'품절',stop:'판매중지'};
+  const ST={on:'판매중',out:'품절',stop:'판매안함'};
   /* 예시 데이터 · 씨앗 고정이라 새로고침해도 같다(실제 숫자 아님) */
   const CATALOG=[
     ['홀떡피자','홀떡피자 4종 세트',['페퍼로니','고구마','불고기','콤비네이션'],12900],
@@ -36163,12 +36163,12 @@ window.baroyamAsk=function(title,body,okText){
         const st=r()<0.06?'stop':qty===0?'out':'on';
         return {id:c.id+'-'+pi+'-'+oi,name:o,price:price+(opts.length<=3?oi*Math.round(price*.8/100)*100:0),qty,st,inv:true};
       });
-      prods.push({id:c.id+'-'+pi,brand,name,opt});
+      const pr={id:c.id+'-'+pi,brand,name,opt,sell:true}; opt.forEach(o=>{ o.par=pr; }); prods.push(pr);
     });
     DATA[c.id]={at:Date.now()-Math.floor(r()*90+5)*60000,prods};
   });
 
-  const S={chan:'cafe24',q:'',brand:'',state:'all',open:new Set(),sel:new Set(),edit:{}};   /* edit = {옵션id:{qty,st}} · 원래 값과 다를 때만 */
+  const S={chan:'cafe24',q:'',brand:'',state:'all',open:new Set(),sel:new Set(),edit:{},pedit:{}};   /* edit = {옵션id:{qty,st}} · pedit = {상품id:{sell}} (상품 단위 판매함/판매안함) · 원래 값과 다를 때만 */
 
   /* ---------- 카페24 실제 데이터 ---------- */
   const BUCKET='brand-files', DB=()=>window.BAROYAM_DB;
@@ -36177,8 +36177,7 @@ window.baroyamAsk=function(title,body,okText){
   function brandOf(name){
     const t=String(name||'').replace(/\s+/g,''); let best='', at=1e9;
     BRANDS.forEach(b=>{ const i=t.indexOf(b); if(i>=0&&i<at){ at=i; best=b; } });
-    if(best) return best;
-    const m=String(name||'').match(/^\s*[\[(]([^\])]{1,12})[\])]/); return m?m[1].trim():'기타';
+    return best||'기타';
   }
   async function readJson(path){
     try{ const db=DB(); if(!db||!db.fileUrl) return null; const u=await db.fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
@@ -36205,18 +36204,22 @@ window.baroyamAsk=function(title,body,okText){
     }
     return {state:'failed',message:'시간이 오래 걸려 기다리기를 멈췄어요 · 잠시 뒤 새로고침해 보세요'};
   }
+  const plain=t=>String(t||'').replace(/<br\s*\/?>/gi,' ').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+  /* 카페24 판매상태는 두 곳 · 상품(p.sell · 상품 목록의 판매함/판매안함)과 옵션(o.sell) · 상품이 판매안함이면 옵션도 판매안함으로 본다 */
   function fromCafe24(snap){
-    return {at:Date.parse(snap.at)||Date.now(),prods:(snap.prods||[]).map(p=>({
-      id:'cafe24-'+p.no,no:p.no,brand:brandOf(p.name),name:p.name,img:p.img,
-      opt:(p.opts||[]).map(o=>{ const qty=o.qty==null?0:o.qty;
-        return {id:'cafe24-'+p.no+'-'+o.v,p:p.no,v:o.v,name:o.name,price:(p.price||0)+(o.add||0),qty,inv:o.inv!==false,st:!o.sell?'stop':(o.inv!==false&&qty<=0)?'out':'on'}; })
-    }))};
+    return {at:Date.parse(snap.at)||Date.now(),prods:(snap.prods||[]).map(p=>{
+      const pr={id:'cafe24-'+p.no,no:p.no,brand:brandOf(p.name),name:plain(p.name),img:p.img,sell:p.sell!==false};
+      pr.opt=(p.opts||[]).map(o=>{ const qty=o.qty==null?0:o.qty;
+        return {id:'cafe24-'+p.no+'-'+o.v,p:p.no,v:o.v,par:pr,name:plain(o.name),price:(p.price||0)+(o.add||0),qty,inv:o.inv!==false,st:!o.sell?'stop':(o.inv!==false&&qty<=0)?'out':'on'}; });
+      return pr;
+    })};
   }
   async function loadCafe24(){
     const [st,snap]=await Promise.all([readJson('shop/cafe24/status.json'),readJson('shop/cafe24/products.json')]);
     if(st) STATUS=st;
     if(snap&&Array.isArray(snap.prods)){
       Object.keys(S.edit).filter(id=>id.startsWith('cafe24-')).forEach(id=>delete S.edit[id]);
+      Object.keys(S.pedit).filter(id=>id.startsWith('cafe24-')).forEach(id=>delete S.pedit[id]);
       DATA.cafe24=fromCafe24(snap); REAL.cafe24=true;
     }
     paintLink(); paint();
@@ -36224,14 +36227,17 @@ window.baroyamAsk=function(title,body,okText){
   }
 
   const findOpt=id=>{ for(const c of CHANS) for(const p of DATA[c.id].prods) for(const o of p.opt) if(o.id===id) return {c:c.id,p,o}; return null; };
-  const cur=o=>Object.assign({},o,S.edit[o.id]||{});
+  const psell=p=>{ const e=S.pedit[p.id]; return e&&'sell' in e?e.sell:p.sell!==false; };
+  const cur=o=>{ const v=Object.assign({},o,S.edit[o.id]||{}); if(o.par&&!psell(o.par)){ v.st='stop'; v.pstop=true; } return v; };
+  function setPedit(p,sell){ if(sell===(p.sell!==false)) delete S.pedit[p.id]; else S.pedit[p.id]={sell}; }
   function setEdit(o,patch){
     const e=Object.assign({},S.edit[o.id]||{},patch);
     if(!o.inv) delete e.qty;   /* 재고 관리를 끈 옵션은 숫자를 바꾸지 않는다 */
     Object.keys(e).forEach(k=>{ if(e[k]===o[k]) delete e[k]; });
     if(Object.keys(e).length) S.edit[o.id]=e; else delete S.edit[o.id];
   }
-  const dirtyIn=cid=>Object.keys(S.edit).filter(id=>id.startsWith(cid+'-')).length;
+  const dirtyIds=cid=>Object.keys(S.edit).concat(Object.keys(S.pedit)).filter(id=>!cid||id.startsWith(cid+'-'));
+  const dirtyIn=cid=>dirtyIds(cid).length;
   const isOut=v=>v.st==='out'||(v.st==='on'&&v.inv&&v.qty===0);
   const isLow=v=>v.st!=='stop'&&v.inv&&v.qty<=LOW;
 
@@ -36241,7 +36247,7 @@ window.baroyamAsk=function(title,body,okText){
     if(S.state==='out') return isOut(v);
     if(S.state==='stop') return v.st==='stop';
     if(S.state==='low') return isLow(v);
-    if(S.state==='dirty') return !!S.edit[o.id];
+    if(S.state==='dirty') return !!S.edit[o.id]||!!(o.par&&S.pedit[o.par.id]);
     return true;
   }
   function visible(){
@@ -36261,7 +36267,7 @@ window.baroyamAsk=function(title,body,okText){
     const all=DATA[S.chan].prods.flatMap(p=>p.opt).map(cur);
     const n={all:all.length,on:all.filter(v=>v.st==='on'&&!isOut(v)).length,out:all.filter(isOut).length,
       stop:all.filter(v=>v.st==='stop').length,low:all.filter(isLow).length,dirty:dirtyIn(S.chan)};
-    const L=[['all','전체'],['on','판매중'],['out','품절'],['stop','판매중지'],['low','재고 '+LOW+'개 이하'],['dirty','고친 것']];
+    const L=[['all','전체'],['on','판매중'],['out','품절'],['stop','판매안함'],['low','재고 '+LOW+'개 이하'],['dirty','고친 것']];
     $('shState').innerHTML=L.filter(([k])=>k!=='dirty'||n.dirty||S.state==='dirty').map(([k,l])=>'<button type="button" class="ui-chip" data-st="'+k+'" aria-pressed="'+(S.state===k)+'">'+l+' <b>'+n[k]+'</b></button>').join('');
     const prods=DATA[S.chan].prods;
     $('shSum').innerHTML='<i>상품<b>'+prods.length+'</b></i><i>옵션<b>'+n.all+'</b></i>'+(n.out?'<i class="neg">품절<b>'+n.out+'</b></i>':'')+(n.low?'<i class="warn">재고 적음<b>'+n.low+'</b></i>':'');
@@ -36280,11 +36286,15 @@ window.baroyamAsk=function(title,body,okText){
       const sts=[...new Set(vs.map(v=>isOut(v)?'out':v.st))];
       const prices=vs.map(v=>v.price); const pmin=Math.min(...prices), pmax=Math.max(...prices);
       const allSel=opts.every(o=>S.sel.has(o.id));
+      const pe=S.pedit[p.id], pOn=psell(p);
+      const pPill=!pOn?'<button type="button" class="sh-st stop" data-pst="'+p.id+'" title="상품 판매상태 · 눌러서 바꾸기">판매안함</button>'
+        :sts.length===1?'<button type="button" class="sh-st '+sts[0]+'" data-pst="'+p.id+'" title="상품 판매상태 · 눌러서 바꾸기">'+ST[sts[0]]+'</button>'
+        :'<button type="button" class="sh-st mix" data-pst="'+p.id+'" title="상품 판매상태 · 눌러서 바꾸기">옵션마다 다름</button>';
       const thumb=p.img?'<img class="sh-thumb" src="'+esc(p.img)+'" alt="" loading="lazy">':'<span class="sh-thumb">'+esc(p.brand.slice(0,1))+'</span>';
-      h+='<tr class="sh-prod'+(open?' open':'')+'" data-p="'+p.id+'"><td class="ck"><input type="checkbox" data-selp="'+p.id+'"'+(allSel?' checked':'')+' aria-label="이 상품 옵션 모두 고르기"></td>'
+      h+='<tr class="sh-prod'+(open?' open':'')+(pe?' is-dirty':'')+'" data-p="'+p.id+'"><td class="ck"><input type="checkbox" data-selp="'+p.id+'"'+(allSel?' checked':'')+' aria-label="이 상품 옵션 모두 고르기"></td>'
         +'<td class="nm"><div class="sh-pn"><span class="sh-tog">▸</span>'+thumb+'<span><strong>'+esc(p.name)+'</strong><em>'+esc(p.brand)+' · 옵션 '+p.opt.length+'개</em></span></div></td>'
         +'<td>'+(!prices.length?'-':pmin===pmax?won(pmin):won(pmin)+' ~')+'</td><td class="sh-sum-qty">'+(vs.some(v=>v.inv)?tot.toLocaleString('ko-KR')+'개':'<span class="sh-noinv">관리 안 함</span>')+'</td>'
-        +'<td>'+(sts.length===1?'<span class="sh-st '+sts[0]+'" style="cursor:default">'+ST[sts[0]]+'</span>':'<span class="sh-st mix">옵션마다 다름</span>')+'</td></tr>';
+        +'<td>'+pPill+(pe?'<span class="sh-was">'+(p.sell!==false?'판매중':'판매안함')+'</span>':'')+'</td></tr>';
       if(!open) return;
       opts.forEach(o=>{
         const v=cur(o), e=S.edit[o.id];
@@ -36296,7 +36306,7 @@ window.baroyamAsk=function(title,body,okText){
         h+='<tr class="sh-opt'+(e?' is-dirty':'')+'" data-o="'+o.id+'"><td class="ck"><input type="checkbox" data-sel="'+o.id+'"'+(S.sel.has(o.id)?' checked':'')+' aria-label="옵션 고르기"></td>'
           +'<td class="nm">'+esc(o.name)+'</td><td>'+won(v.price)+'</td>'
           +'<td>'+qtyCell+'</td>'
-          +'<td>'+stPill(st,'data-stb="'+o.id+'" title="눌러서 판매상태 바꾸기"')+(e&&'st' in e?'<span class="sh-was">'+ST[o.st]+'</span>':'')+'</td></tr>';
+          +'<td>'+(v.pstop?'<span class="sh-st stop" style="cursor:default" title="상품이 판매안함이라 옵션도 팔리지 않아요 · 상품 줄에서 바꿔요">판매안함</span>':stPill(st,'data-stb="'+o.id+'" title="눌러서 판매상태 바꾸기"'))+(e&&'st' in e?'<span class="sh-was">'+ST[o.st]+'</span>':'')+'</td></tr>';
       });
     });
     $('shBody').innerHTML=h;
@@ -36305,11 +36315,11 @@ window.baroyamAsk=function(title,body,okText){
     $('shFold').textContent=S.open.size?'모두 접기':'모두 펼치기';
   }
   function paintDock(){
-    const nd=Object.keys(S.edit).length, ns=S.sel.size;
+    const nd=dirtyIn(), ns=S.sel.size;
     $('shDock').hidden=!nd&&!ns;
     $('shBulk').hidden=!ns;
     $('shSelInfo').innerHTML=ns?'고른 옵션 <b>'+ns+'</b>개':'';
-    $('shDirtyInfo').innerHTML=nd?'바꾼 옵션 <b>'+nd+'</b>개 · 아직 판매처에 반영 안 됨':'';
+    $('shDirtyInfo').innerHTML=nd?'바꾼 것 <b>'+nd+'</b>개 · 아직 판매처에 반영 안 됨':'';
     $('shUndo').hidden=!nd; $('shPush').hidden=!nd;
     $('shPush').disabled=busy;
   }
@@ -36324,6 +36334,10 @@ window.baroyamAsk=function(title,body,okText){
   /* ---------- 반영 · 지금 가져오기 ---------- */
   function changesOf(cid){
     const out=[];
+    Object.keys(S.pedit).filter(id=>id.startsWith(cid+'-')).forEach(id=>{
+      const p=DATA[cid].prods.find(x=>x.id===id); if(!p) return;
+      out.push({p:p.no,label:p.name+' (상품)',prod:{from:p.sell!==false,to:S.pedit[id].sell}});
+    });
     Object.keys(S.edit).filter(id=>id.startsWith(cid+'-')).forEach(id=>{
       const f=findOpt(id); if(!f) return;
       const o=f.o, v=cur(o), c={p:o.p,v:o.v,label:f.p.name+' · '+o.name};
@@ -36338,8 +36352,8 @@ window.baroyamAsk=function(title,body,okText){
     if(!REAL[S.chan]){ note('예시 화면이라 판매처에 보내지 않았습니다. 이 판매처는 아직 연결되지 않았어요.','bad'); return; }
     const ch=changesOf(S.chan);
     if(!ch.length){ note('보낼 고침이 없습니다.','bad'); return; }
-    const lines=ch.slice(0,8).map(c=>'· '+c.label+(c.qty?' 재고 '+c.qty.from+' → '+c.qty.to:'')+(c.sell?(c.sell.to?' 판매중으로':' 판매중지로'):'')).join('\n');
-    if(!confirm('카페24에 옵션 '+ch.length+'개를 바로 반영합니다.\n\n'+lines+(ch.length>8?'\n… 외 '+(ch.length-8)+'개':'')+'\n\n그사이 주문으로 카페24 재고가 바뀐 옵션은 덮어쓰지 않고 건너뜁니다.')) return;
+    const lines=ch.slice(0,8).map(c=>'· '+c.label+(c.qty?' 재고 '+c.qty.from+' → '+c.qty.to:'')+(c.sell?(c.sell.to?' 판매중으로':' 판매안함으로'):'')+(c.prod?(c.prod.to?' 판매함으로':' 판매안함으로'):'')).join('\n');
+    if(!confirm('카페24에 '+ch.length+'개를 바로 반영합니다.\n\n'+lines+(ch.length>8?'\n… 외 '+(ch.length-8)+'개':'')+'\n\n그사이 주문으로 카페24 재고가 바뀐 옵션은 덮어쓰지 않고 건너뜁니다.')) return;
     busy=true; paintDock(); note('카페24에 보내는 중…','run');
     try{
       const name=await upload('shop/req',{v:1,kind:'push',chan:S.chan,by:meName(),at:new Date().toISOString(),changes:ch});
@@ -36450,11 +36464,18 @@ window.baroyamAsk=function(title,body,okText){
         if(ck.dataset.selp){ const r=visible().find(x=>x.p.id===ck.dataset.selp); if(r) r.opts.forEach(o=>{ if(ck.checked) S.sel.add(o.id); else S.sel.delete(o.id); }); S.open.add(ck.dataset.selp); }
         paintBody(); paintDock(); return;
       }
+      const pb=e.target.closest('[data-pst]');
+      if(pb){
+        e.stopPropagation();
+        const p=DATA[S.chan].prods.find(x=>x.id===pb.dataset.pst); if(!p) return;
+        window.UI.menu(pb,[{value:'on',label:'판매함',sub:'상품 전체'},{value:'stop',label:'판매안함',sub:'상품 전체 · 옵션 상태는 그대로'}],psell(p)?'on':'stop',v=>{ setPedit(p,v==='on'); paint(); });
+        return;
+      }
       const sb=e.target.closest('[data-stb]');
       if(sb){
         e.stopPropagation();
         const f=findOpt(sb.dataset.stb); if(!f) return;
-        const opts=[{value:'on',label:'판매중'}].concat(f.o.inv?[{value:'out',label:'품절',sub:'재고 0 으로'}]:[]).concat([{value:'stop',label:'판매중지',sub:'팔지 않음'}]);
+        const opts=[{value:'on',label:'판매중'}].concat(f.o.inv?[{value:'out',label:'품절',sub:'재고 0 으로'}]:[]).concat([{value:'stop',label:'판매안함',sub:'이 옵션만'}]);
         window.UI.menu(sb,opts,isOut(cur(f.o))?'out':cur(f.o).st,v=>{
           setEdit(f.o,v==='out'?{st:'on',qty:0}:{st:v}); paint();   /* 품절 = 판매중 + 재고 0 (카페24 에는 품절 상태가 따로 없음) */
         });
@@ -36481,7 +36502,7 @@ window.baroyamAsk=function(title,body,okText){
       S.sel.forEach(id=>{ const f=findOpt(id); if(!f) return; if(st==='out'){ if(f.o.inv) setEdit(f.o,{st:'on',qty:0}); } else setEdit(f.o,{st}); });
       paint();
     });
-    $('shUndo').addEventListener('click',()=>{ Object.keys(S.edit).filter(id=>id.startsWith(S.chan+'-')).forEach(id=>delete S.edit[id]); if(S.state==='dirty') S.state='all'; paint(); });
+    $('shUndo').addEventListener('click',()=>{ Object.keys(S.edit).filter(id=>id.startsWith(S.chan+'-')).forEach(id=>delete S.edit[id]); Object.keys(S.pedit).filter(id=>id.startsWith(S.chan+'-')).forEach(id=>delete S.pedit[id]); if(S.state==='dirty') S.state='all'; paint(); });
     $('shPush').addEventListener('click',push);
     $('shFetch').addEventListener('click',fetchNow);
     $('shLink').addEventListener('click',e=>{ const b=e.target.closest('[data-link]'); if(b) connect(b.dataset.link); });
