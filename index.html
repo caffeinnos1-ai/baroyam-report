@@ -12583,7 +12583,7 @@ window.BAROYAM_FONT=(function(){
            11-20 임시 구현: 판매처와 아직 연결되지 않아 예시 데이터로 그리고, 고친 값은 이 창 메모리에만 있다(반영 누르면 안내만) -->
       <div id="view-shop" style="display:none">
         <div class="hero-view-tabs" id="shopTabs" role="tablist" aria-label="쇼핑몰관리 화면">
-          <button type="button" class="hero-view-tab active" role="tab" data-shop="stock" data-sub="판매처마다 상품의 옵션 재고수량·판매가·판매상태를 한 화면에서 보고 고칩니다.">상품·옵션 재고</button>
+          <button type="button" class="hero-view-tab active" role="tab" data-shop="stock" data-sub="판매처마다 상품의 옵션 설정된 재고·판매가·판매상태를 한 화면에서 보고 고칩니다.">상품·옵션 재고</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="register" data-sub="ERP 에서 상품을 한 번 작성해 여러 판매처에 등록합니다.">상품 등록</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="link" data-sub="판매처마다 연결 상태와 마지막 수집 시각을 봅니다.">연동 설정</button>
         </div>
@@ -12591,7 +12591,7 @@ window.BAROYAM_FONT=(function(){
           <div class="plan-hero">
             <div class="ptag">쇼핑몰</div>
             <div class="ptitle" id="shopTitle">상품·옵션 재고</div>
-            <div class="psub" id="shopSub">판매처마다 상품의 옵션 재고수량·판매가·판매상태를 한 화면에서 보고 고칩니다.</div>
+            <div class="psub" id="shopSub">판매처마다 상품의 옵션 설정된 재고·판매가·판매상태를 한 화면에서 보고 고칩니다.</div>
           </div>
           <div class="sh-pane" data-shop-pane="stock">
             <div class="sh-chans" id="shChans" role="tablist" aria-label="판매처"></div>
@@ -12608,7 +12608,7 @@ window.BAROYAM_FONT=(function(){
               <button type="button" class="ui-btn sm ghost" id="shFold">모두 펼치기</button>
             </div>
             <div class="sh-table-wrap"><table class="sh-table">
-              <thead><tr><th class="ck"><input type="checkbox" id="shAll" aria-label="보이는 옵션 모두 고르기"></th><th class="nm">상품 · 옵션</th><th>판매가</th><th>재고수량</th><th>판매상태</th></tr></thead>
+              <thead><tr><th class="ck"><input type="checkbox" id="shAll" aria-label="보이는 옵션 모두 고르기"></th><th class="nm">상품 · 옵션</th><th>판매가</th><th>설정된 재고</th><th>판매상태</th></tr></thead>
               <tbody id="shBody"></tbody>
             </table></div>
             <div class="sh-empty" id="shEmpty" hidden>조건에 맞는 상품이 없습니다.</div>
@@ -36207,7 +36207,7 @@ window.baroyamAsk=function(title,body,okText){
         const cls=v.qty===0?' zero':v.qty<=LOW?' low':'';
         h+='<tr class="sh-opt'+(e?' is-dirty':'')+'" data-o="'+o.id+'"><td class="ck"><input type="checkbox" data-sel="'+o.id+'"'+(S.sel.has(o.id)?' checked':'')+' aria-label="옵션 고르기"></td>'
           +'<td class="nm">'+esc(o.name)+'</td><td>'+won(v.price)+'</td>'
-          +'<td><input class="sh-qty'+cls+'" type="number" min="0" inputmode="numeric" value="'+v.qty+'" data-qty="'+o.id+'" aria-label="재고수량">'+(e&&'qty' in e?'<span class="sh-was">'+o.qty+'개</span>':'')+'</td>'
+          +'<td><input class="sh-qty'+cls+'" type="number" min="0" inputmode="numeric" value="'+v.qty+'" data-qty="'+o.id+'" aria-label="설정된 재고">'+(e&&'qty' in e?'<span class="sh-was">'+o.qty+'개</span>':'')+'</td>'
           +'<td>'+stPill(v.st,'data-stb="'+o.id+'" title="눌러서 판매상태 바꾸기"')+(e&&'st' in e?'<span class="sh-was">'+ST[o.st]+'</span>':'')+'</td></tr>';
       });
     });
