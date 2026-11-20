@@ -5186,22 +5186,26 @@ window.BAROYAM_FONT=(function(){
   .ca-box .ca-area-wrap #caAreas{border:1px solid var(--line);border-radius:12px;min-width:0}
   .ca-share{display:flex;gap:12px}
   .ca-share:empty{display:none}
-  .ca-share .pie{border:1px solid var(--line);border-radius:12px;padding:0 4px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .ca-share .pie h4{margin:0;padding-top:14px;align-self:center;font-size:15px;font-weight:600;color:var(--ink)}
-  #caRoot .ca-share .donut-wrap{padding:30px 168px 54px;margin:0;zoom:.66}
+  /* 원형 그래프 상자 · 이름표는 조각 위치와 상관없이 비검색 = 왼쪽 위, 검색 = 오른쪽 아래에 고정(11-20 사용자) ·
+     작은 조각의 이름표가 상자 위로 잘려 나가던 것을 없앰 · ringDonut 의 선 이름표(.rcall)는 여기서는 숨김 */
+  .ca-share .pie{border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;min-width:340px}
+  #caRoot .ca-share .donut-wrap{padding:0;margin:0;align-self:center}
+  #caRoot .ca-share .donut.is-ring svg.rcall{display:none}
+  .ca-share .lab{display:flex;flex-direction:column;gap:2px;white-space:nowrap}
+  .ca-share .lab.l{align-self:start;align-items:flex-end;text-align:right}
+  .ca-share .lab.r{align-self:end;align-items:flex-start}
+  .ca-share .lab .p{font-size:30px;font-weight:600;color:var(--ink);letter-spacing:-.8px;line-height:1.1}
+  .ca-share .lab .nm{display:inline-flex;align-items:center;gap:6px;font-size:14.5px;font-weight:600;color:var(--ink)}
+  .ca-share .lab .nm i{width:10px;height:10px;border-radius:50%;background:linear-gradient(160deg,var(--ca),var(--cb))}
+  .ca-share .lab .a{font-size:12.5px;color:var(--mute)}
   #caAreas .cs-tbl{min-width:0}
   #caAreas .cs-tbl :is(th,td){padding-left:10px;padding-right:10px}
   #caAreas .cs-tbl :is(th,td):first-child{padding-left:18px}
   #caAreas .cs-tbl :is(th,td):last-child{padding-right:14px}
   #caAreas .cs-tbl td.k{min-width:0}
-  /* 0.74배로 줄여 넣는다 · 이름표 글자를 키우면 좌우 여백(168px)을 넘어 상자 밖으로 나가므로 이름표는 기본 크기, 가운데 글자만 조금 키움 */
   #caRoot .ca-share .donut .center{padding:0}
-  /* 쌓은 이름표 글자 · 0.66배로 그려지므로 크게 */
-  #caRoot .ca-share .rcl .rp{font-size:40px}
-  #caRoot .ca-share .rcl .rn2{font-size:22px;fill:var(--ink);font-weight:600}
-  #caRoot .ca-share .rcl .ra{font-size:18px}
-  #caRoot .ca-share .donut .center .c-amt{font-size:28px}
-  #caRoot .ca-share .donut .center .c-lab{font-size:16px;color:var(--body);font-weight:600}
+  #caRoot .ca-share .donut .center .c-amt{font-size:21px}
+  #caRoot .ca-share .donut .center .c-lab{font-size:12px;color:var(--body);font-weight:600}
   .ca-share .pie{overflow:hidden}
   #caAreas .cs-tbl td.k em{display:block;margin:2px 0 0}
   .ca-area-wrap{align-items:stretch}
@@ -32119,11 +32123,13 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<td class="r v">'+won(o.cost)+'원</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cost/o.clk)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>';
     /* 오른쪽 원형 그래프 두 개 · 광고비 / 광고매출(14일)을 검색·비검색으로(그래프 규칙 ringDonut · 검색 = 쿠팡 색, 비검색 = 회색) */
     const hasArea=SA.imp||NA.imp||SA.cost||NA.cost;
-    const pie=(id,t,k)=>'<div class="pie"><div class="donut-wrap"><div class="donut" id="'+id+'"><div class="center"><div class="c-amt num" data-nocount>'+eokCheon(SA[k]+NA[k])+'원</div><div class="c-lab">'+t+'</div></div></div></div></div>';
+    const pc=(a,b)=>a+b?Math.round(a/(a+b)*100):0;
+    const lab=(side,cls,name,v,o)=>'<div class="lab '+side+'"><span class="p num" data-nocount>'+pc(v,o)+'%</span><span class="nm '+cls+'"><i></i>'+name+'</span><span class="a">'+eokCheon(v)+'원</span></div>';
+    const pie=(id,t,k)=>'<div class="pie">'+lab('l','ch-none','비검색 영역',NA[k],SA[k])+'<div class="donut-wrap"><div class="donut" id="'+id+'"><div class="center"><div class="c-amt num" data-nocount>'+eokCheon(SA[k]+NA[k])+'원</div><div class="c-lab">'+t+'</div></div></div></div>'+lab('r','ch-coupang','검색 영역',SA[k],NA[k])+'</div>';
     $('caShare').innerHTML=hasArea?pie('caPieCost','광고비','cost')+pie('caPieRev','광고매출(14일)','rev'):'';
     if(hasArea) [['caPieCost','cost'],['caPieRev','rev']].forEach(([id,k])=>ringDonut(id,id+'L',[
       {name:'검색 영역',key:'coupang',v:SA[k],color:'var(--coupang)',amt:eokCheon(SA[k])+'원'},
-      {name:'비검색 영역',key:'none',v:NA[k],color:'var(--mute)',amt:eokCheon(NA[k])+'원'}],190,{stack:true}));
+      {name:'비검색 영역',key:'none',v:NA[k],color:'var(--mute)',amt:eokCheon(NA[k])+'원'}],150));
     const autoNames=autos.map(o=>o.kw.replace(/^\(|\)$/g,'')).join('·');
     $('caAreas').innerHTML=(SA.imp||NA.imp||SA.cost||NA.cost)
       ?'<table class="cs-tbl"><thead><tr><th>영역</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r">광고비</th><th class="r">광고매출(14일)</th><th class="r">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
