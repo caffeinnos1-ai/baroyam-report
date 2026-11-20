@@ -6426,9 +6426,25 @@ window.BAROYAM_FONT=(function(){
   .sh-dock-sel b,.sh-dock-n b{color:var(--ink);font-weight:600}
   .sh-note{margin-top:10px;padding:10px 14px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:13px}
   .sh-note[hidden]{display:none}
-  .sh-link td.nm .sh-pn img{width:30px;height:30px;border-radius:50%;object-fit:contain;border:1px solid var(--line);background:var(--paper)}
-  .sh-link td{white-space:normal}
-  .sh-link .off{color:var(--mute)}
+  .sh-link-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:22px 0 14px;font-size:13px;color:var(--mute)}
+  .sh-link-cnt{font-size:15px;font-weight:600;color:var(--ink)}
+  .sh-link-cnt b{color:var(--btn-soft-ink);font-weight:600}
+  .sh-links{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .sh-lc{display:flex;flex-direction:column;gap:14px;padding:18px 18px 16px;border:1px solid var(--line);border-radius:16px;background:var(--paper);transition:border-color .15s,box-shadow .15s}
+  .sh-lc:hover{border-color:color-mix(in srgb,var(--btn) 40%,var(--line));box-shadow:0 8px 22px -14px rgba(0,0,0,.25)}
+  .sh-lc-top{display:flex;align-items:center;gap:12px}
+  .sh-lc-top img{width:42px;height:42px;border-radius:12px;object-fit:contain;border:1px solid var(--line);background:var(--paper);padding:3px}
+  .sh-lc-nm{flex:1;min-width:0}
+  .sh-lc-nm strong{display:block;font-size:16px;font-weight:600;color:var(--ink)}
+  .sh-lc-nm em{font-style:normal;font-size:12.5px;color:var(--mute)}
+  .sh-lc-tag{flex:none;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600}
+  .sh-lc-tag.t1{background:var(--btn-soft);color:var(--btn-soft-ink)}
+  .sh-lc-tag.t2{background:color-mix(in srgb,var(--chip-flat) 70%,var(--paper));color:var(--body)}
+  .sh-lc-tag.t3{background:var(--warn-soft);color:var(--warn)}
+  .sh-lc-need{flex:1;padding:11px 13px;border-radius:11px;background:var(--bg);font-size:13px;line-height:1.55;color:var(--body)}
+  .sh-lc-need span{display:block;margin-bottom:3px;font-size:11.5px;font-weight:600;color:var(--mute)}
+  .sh-lc-foot{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mute)}
+  .sh-lc-foot .sh-st{cursor:default}
   @media (max-width:1240px){ .sh-dock{left:24px;transform:none;width:calc(100vw - 150px)} }
   .sh-pane[data-shop-pane="stock"]{padding-bottom:70px}
   @media (max-width:760px){ .sh-search{width:100%} .sh-opt td.nm{padding-left:40px} }
@@ -12634,10 +12650,8 @@ window.BAROYAM_FONT=(function(){
             <div class="profit-empty">상품 등록은 판매처 연결 뒤에 만듭니다.<br>상품을 한 번 작성해 고른 판매처에 각 규칙대로 올리는 화면입니다.</div>
           </div>
           <div class="sh-pane" data-shop-pane="link" hidden>
-            <div class="sh-table-wrap"><table class="sh-table sh-link">
-              <thead><tr><th class="nm">판매처</th><th>연결 방식</th><th>준비물</th><th>상태</th></tr></thead>
-              <tbody id="shLink"></tbody>
-            </table></div>
+            <div class="sh-link-head"><span class="iv-demo">예시 화면</span><span class="sh-link-cnt" id="shLinkCnt"></span><span class="pf-grow"></span><span class="sh-link-tip">연결 순서대로 하나씩 붙입니다 · 키는 서버(VPS)에만 두고 화면에는 남기지 않습니다</span></div>
+            <div class="sh-links" id="shLink"></div>
           </div>
         </section>
       </div><!-- /view-shop -->
@@ -36106,13 +36120,13 @@ window.baroyamAsk=function(title,body,okText){
   const won=n=>Number(n||0).toLocaleString('ko-KR')+'원';
   const LOW=10;
   const CHANS=[
-    {id:'cafe24', name:'카페24', logo:'logos/cafe24.png', how:'카페24 Admin API', need:'이미 연결된 앱에 상품 읽기·쓰기 권한(mall.read_product · mall.write_product) 추가'},
-    {id:'coupang',name:'쿠팡윙', logo:'logos/coupang-sq.png', how:'쿠팡 WING Open API', need:'WING 에서 Open API 키(Access·Secret) 발급'},
-    {id:'naver',  name:'네이버', logo:'logos/naver.png', how:'네이버 커머스API', need:'커머스API센터에 애플리케이션 등록'},
-    {id:'talk',   name:'톡딜',   logo:'logos/kakao.png', how:'확인 필요', need:'판매자용 공개 API 가 없으면 엑셀 올리기로 보기만'},
-    {id:'11st',   name:'11번가', logo:'logos/11st.png', how:'11번가 셀러 Open API', need:'셀러오피스에서 API 키 발급'},
-    {id:'gmarket',name:'G마켓',  logo:'logos/gmarket.png', how:'ESM API(확인 필요)', need:'ESM Plus 에서 판매자 API 사용 가능 여부 확인'},
-    {id:'auction',name:'옥션',   logo:'logos/auction.png', how:'ESM API(확인 필요)', need:'G마켓과 같은 ESM Plus 계정'},
+    {id:'cafe24', name:'카페24', logo:'logos/cafe24.png', how:'카페24 Admin API', need:'이미 연결된 앱에 상품 읽기·쓰기 권한(mall.read_product · mall.write_product) 추가', lv:1},
+    {id:'coupang',name:'쿠팡윙', logo:'logos/coupang-sq.png', how:'쿠팡 WING Open API', need:'WING 에서 Open API 키(Access·Secret) 발급', lv:2},
+    {id:'naver',  name:'네이버', logo:'logos/naver.png', how:'네이버 커머스API', need:'커머스API센터에 애플리케이션 등록', lv:2},
+    {id:'talk',   name:'톡딜',   logo:'logos/kakao.png', how:'확인 필요', need:'판매자용 공개 API 가 없으면 엑셀 올리기로 보기만', lv:3},
+    {id:'11st',   name:'11번가', logo:'logos/11st.png', how:'11번가 셀러 Open API', need:'셀러오피스에서 API 키 발급', lv:2},
+    {id:'gmarket',name:'G마켓',  logo:'logos/gmarket.png', how:'ESM API(확인 필요)', need:'ESM Plus 에서 판매자 API 사용 가능 여부 확인', lv:3},
+    {id:'auction',name:'옥션',   logo:'logos/auction.png', how:'ESM API(확인 필요)', need:'G마켓과 같은 ESM Plus 계정', lv:3},
   ];
   const ST={on:'판매중',out:'품절',stop:'판매중지'};
   /* 예시 데이터 · 씨앗 고정이라 새로고침해도 같다(실제 숫자 아님) */
@@ -36306,7 +36320,16 @@ window.baroyamAsk=function(title,body,okText){
       note('예시 화면이라 판매처에 보내지 않았습니다(바꾼 옵션 '+n+'개). 판매처를 연결하면 이 단추가 실제로 재고·상태를 바꿉니다.');
     });
     $('shFetch').addEventListener('click',()=>note('아직 판매처와 연결되지 않았습니다. 연동 설정 탭에서 판매처마다 필요한 것을 봅니다.'));
-    $('shLink').innerHTML=CHANS.map(c=>'<tr><td class="nm"><div class="sh-pn"><img src="'+c.logo+'" alt=""><strong>'+esc(c.name)+'</strong></div></td><td>'+esc(c.how)+'</td><td class="off">'+esc(c.need)+'</td><td><span class="sh-st stop" style="cursor:default">연결 안 됨</span></td></tr>').join('');
+    /* 연동 설정 · 판매처마다 카드(로고·이름·연결 방식 · 쉬움/보통/확인 필요 · 준비물 · 상태·마지막 수집 · 연결하기) */
+    const TAG={1:['t1','바로 가능'],2:['t2','키 발급 필요'],3:['t3','확인 필요']};
+    $('shLinkCnt').innerHTML='판매처 7곳 중 <b>0</b>곳 연결됨';
+    let rk=0;   /* 연결 순서 · 확인 필요(톡딜·G마켓·옥션)는 순서 없이 맨 뒤 */
+    $('shLink').innerHTML=CHANS.slice().sort((x,y)=>(x.lv===3)-(y.lv===3)).map(c=>{ const t=TAG[c.lv]; const i=c.lv<3?rk++:-1;
+      return '<div class="sh-lc"><div class="sh-lc-top"><img src="'+c.logo+'" alt=""><div class="sh-lc-nm"><strong>'+esc(c.name)+'</strong><em>'+(i>=0?(i+1)+'순위 · ':'')+esc(c.how)+'</em></div><span class="sh-lc-tag '+t[0]+'">'+t[1]+'</span></div>'
+        +'<div class="sh-lc-need"><span>준비물</span>'+esc(c.need)+'</div>'
+        +'<div class="sh-lc-foot"><span class="sh-st stop">연결 안 됨</span>마지막 수집 —<span class="pf-grow"></span><button type="button" class="ui-btn sm soft" data-link="'+c.id+'">연결하기</button></div></div>'; }).join('');
+    $('shLink').addEventListener('click',e=>{ const b=e.target.closest('[data-link]'); if(!b) return; const c=CHANS.find(x=>x.id===b.dataset.link);
+      alert(c.name+' 연결은 아직 준비 중입니다. 준비물: '+c.need); });
     let t=''; try{ t=localStorage.getItem('baroyam_shop_tab')||''; }catch(_){}
     const tb=t&&document.querySelector('#shopTabs [data-shop="'+t+'"]'); if(tb) tb.click();
     paint();
