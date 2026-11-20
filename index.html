@@ -36214,12 +36214,13 @@ window.baroyamAsk=function(title,body,okText){
   }
   async function loadCafe24(){
     const [st,snap]=await Promise.all([readJson('shop/cafe24/status.json'),readJson('shop/cafe24/products.json')]);
-    STATUS=st;
+    if(st) STATUS=st;
     if(snap&&Array.isArray(snap.prods)){
       Object.keys(S.edit).filter(id=>id.startsWith('cafe24-')).forEach(id=>delete S.edit[id]);
       DATA.cafe24=fromCafe24(snap); REAL.cafe24=true;
     }
     paintLink(); paint();
+    return !!st;
   }
 
   const findOpt=id=>{ for(const c of CHANS) for(const p of DATA[c.id].prods) for(const o of p.opt) if(o.id===id) return {c:c.id,p,o}; return null; };
@@ -36379,10 +36380,11 @@ window.baroyamAsk=function(title,body,okText){
         +'<div class="sh-lc-need"><span>'+(ok?'연결 정보':'준비물')+'</span>'+(ok?'쇼핑몰 '+esc(STATUS.mall||'')+' · 권한 '+esc((STATUS.scopes||'').replace(/mall\./g,'')):esc(c.need))+'</div>'
         +'<div class="sh-lc-foot">'+pill+last+'<span class="pf-grow"></span><button type="button" class="ui-btn sm soft" data-link="'+c.id+'">'+(ok?'다시 승인':'연결하기')+'</button></div></div>'; }).join('');
   }
-  function connect(id){
+  async function connect(id){
     const c=CHANS.find(x=>x.id===id);
     if(id!=='cafe24'){ alert(c.name+' 연결은 아직 준비 중입니다. 준비물: '+c.need); return; }
-    if(!STATUS||!STATUS.authUrl){ alert('서버가 아직 카페24 연결을 준비하지 못했어요. 잠시 뒤 새로고침해 주세요.'); return; }
+    if(!STATUS||!STATUS.authUrl) await loadCafe24();   /* 아직 못 읽었으면 지금 한 번 더 읽는다 */
+    if(!STATUS||!STATUS.authUrl){ alert('서버의 카페24 연결 정보를 읽지 못했어요. 로그인이 끝났는지 확인하고 잠시 뒤 다시 눌러 주세요.'); return; }
     if(!confirm('카페24 승인 화면으로 갑니다.\n\n쇼핑몰 관리자로 로그인된 상태에서 "동의"를 누르면 이 ERP 로 돌아와 연결을 저절로 마무리합니다(1분 안에).\n\n먼저 카페24 개발자센터 앱 권한에 상품 읽기·쓰기를 켜 두어야 합니다.')) return;
     location.href=STATUS.authUrl;
   }
@@ -36490,7 +36492,7 @@ window.baroyamAsk=function(title,body,okText){
     catchAuth();
     /* 로그인 뒤 · 이 화면을 열 때마다(5분에 한 번) 카페24 목록을 읽는다 */
     let loaded=0;
-    const tryLoad=()=>{ if(Date.now()-loaded<5*60e3||busy) return; const v=$('view-shop'); if(!v||v.style.display==='none') return; if(dirtyIn('cafe24')) return; loaded=Date.now(); loadCafe24(); };
+    const tryLoad=()=>{ if(Date.now()-loaded<5*60e3||busy) return; const v=$('view-shop'); if(!v||v.style.display==='none') return; if(dirtyIn('cafe24')) return; loaded=Date.now(); loadCafe24().then(ok=>{ if(!ok) loaded=0; }); };   /* 로그인 전이라 못 읽었으면 4초 뒤 다시 */
     document.querySelector('.sidebar .sb-item[data-view="shop"]')?.addEventListener('click',()=>setTimeout(tryLoad,300));
     setInterval(tryLoad,4000);
   }
