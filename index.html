@@ -6367,18 +6367,41 @@ window.BAROYAM_FONT=(function(){
     .logo-fab::after{animation:none}
   }
   /* 바로얌 AI 채팅 · 로고 버튼을 누르면 오른쪽 아래에 뜨는 채팅 창(2026-11-20 · 상담 콘솔 대신) ·
-     보내면 VPS 대본 서비스(content_writer.js kind:'chat' · 지침 prompts/바로얌AI.md)가 Claude 로 답한다 */
-  .aic{position:fixed;right:24px;bottom:116px;z-index:75;width:400px;max-width:calc(100vw - 32px);
-    height:min(680px,calc(100vh - 140px));display:flex;flex-direction:column;overflow:hidden;
+     보내면 VPS 대본 서비스(content_writer.js kind:'chat' · 지침 prompts/바로얌AI.md)가 Claude 로 답한다 ·
+     왼쪽은 대화 목록(이 브라우저에만 · 새 대화·이름 바꾸기·삭제 · 길면 스크롤), 오른쪽은 지금 대화 */
+  .aic{position:fixed;right:24px;bottom:116px;z-index:75;width:660px;max-width:calc(100vw - 32px);
+    height:min(700px,calc(100vh - 140px));display:flex;overflow:hidden;
     background:var(--paper);border:1px solid var(--line);border-radius:20px;
     box-shadow:0 24px 60px -18px rgba(0,0,0,.35);transform-origin:right bottom;animation:aicIn .18s ease-out}
   .aic[hidden]{display:none}
   @keyframes aicIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
-  .aic-head{display:flex;align-items:center;gap:10px;padding:14px 14px 12px 16px;border-bottom:1px solid var(--line)}
+  /* 왼쪽 대화 목록 */
+  .aic-side{flex:none;width:210px;display:flex;flex-direction:column;background:var(--bg);border-right:1px solid var(--line);min-height:0}
+  .aic.no-side .aic-side{display:none}
+  .aic-side-top{padding:14px 12px 8px}
+  .aic-side-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;font-size:11.5px;font-weight:500;color:var(--mute)}
+  .aic-side-head .ui-btn{color:var(--mute)}
+  .aic-list{flex:1;min-height:0;overflow-y:auto;padding:0 8px 12px;display:flex;flex-direction:column;gap:2px}
+  .aic-it{display:flex;align-items:center;gap:6px;padding:8px 8px 8px 10px;border-radius:10px;cursor:pointer;color:var(--body);font-size:13px}
+  .aic-it:hover{background:var(--btn-soft)}
+  .aic-it.on{background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:500}
+  .aic-it svg{flex:none;width:15px;height:15px;opacity:.7}
+  .aic-it .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .aic-it .act{display:none;flex:none;gap:2px}
+  .aic-it:hover .act,.aic-it.on .act{display:flex}
+  .aic-it .act button{all:unset;cursor:pointer;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;color:var(--mute)}
+  .aic-it .act button:hover{background:var(--paper);color:var(--ink)}
+  .aic-it .act svg{width:14px;height:14px;opacity:1}
+  .aic-it input{all:unset;flex:1;min-width:0;font:inherit;font-size:13px;color:var(--ink);border-bottom:1px solid var(--btn)}
+  .aic-it.wait .nm::after{content:' …';color:var(--mute)}
+  .aic-empty{padding:10px;font-size:12px;color:var(--mute)}
+  /* 오른쪽 대화 */
+  .aic-main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .aic-head{display:flex;align-items:center;gap:8px;padding:12px 12px 10px 12px;border-bottom:1px solid var(--line)}
   .aic-head img{width:30px;height:30px;border-radius:50%;flex:none}
   .aic-head .t{flex:1;min-width:0}
   .aic-head b{display:block;font-size:14.5px;font-weight:600;color:var(--ink)}
-  .aic-head small{display:block;font-size:11.5px;color:var(--mute)}
+  .aic-head small{display:block;font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .aic-body{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:10px}
   .aic-intro{background:var(--btn-soft);border-radius:14px;padding:12px 14px;font-size:12.5px;color:var(--body);line-height:1.6}
   .aic-intro b{display:block;font-size:13.5px;font-weight:600;color:var(--ink);text-align:center;margin-bottom:4px}
@@ -6405,7 +6428,11 @@ window.BAROYAM_FONT=(function(){
   .aic-row{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
   .aic-row small{font-size:11.5px;color:var(--mute);font-variant-numeric:tabular-nums}
   @media (max-width:1280px),(max-height:720px){ .aic{right:18px;bottom:90px;height:min(640px,calc(100vh - 110px))} }
-  @media (max-width:560px){ .aic{right:8px;left:8px;width:auto;max-width:none;bottom:84px} }
+  /* 좁은 화면은 목록을 대화 위에 겹쳐 띄운다(☰ 로 열고 닫음) */
+  @media (max-width:700px){
+    .aic{right:8px;left:8px;width:auto;max-width:none;bottom:84px}
+    .aic-side{position:absolute;inset:0 auto 0 0;z-index:2;box-shadow:8px 0 24px -12px rgba(0,0,0,.3)}
+  }
   @media (prefers-reduced-motion:reduce){ .aic{animation:none} .aic-msg.wait i{animation:none} }
   /* 브랜드전략실 진행도 상자 · 로고 버튼 왼쪽에 가로로 긴 네모 · 전체 진행도 막대 하나 ·
      처음 보일 때·브랜드를 바꿀 때 막대가 0%에서 달성률까지 차오른다(.filling 동안 빛이 지나가고 끝이 빛난다 · 숫자는 스크립트가 함께 센다) */
@@ -12910,20 +12937,28 @@ window.BAROYAM_FONT=(function(){
     <img class="logo-fab-white" src="data:image/png;base64,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" alt="" aria-hidden="true">
   </button>
   <script>document.getElementById('logoFabImg').src=document.querySelector('.sb-logo').src;</script>
-  <!-- 바로얌 AI 채팅 · 로고 버튼으로 연다(2026-11-20 · 예전 상담 콘솔은 열지 않음) -->
+  <!-- 바로얌 AI 채팅 · 로고 버튼으로 연다(2026-11-20 · 예전 상담 콘솔은 열지 않음) · 왼쪽 대화 목록 | 오른쪽 대화 -->
   <section class="aic" id="aiChat" hidden role="dialog" aria-label="바로얌 AI">
-    <div class="aic-head">
-      <img id="aiChatLogo" alt="" aria-hidden="true">
-      <div class="t"><b>바로얌 AI</b><small>궁금한 것을 물어보면 Claude 가 답해요</small></div>
-      <button type="button" class="ui-btn ghost sm" id="aiChatNew" title="대화 새로 시작">새 대화</button>
-      <button type="button" class="ui-btn ghost sm icon" id="aiChatClose" aria-label="닫기" title="닫기">✕</button>
-    </div>
-    <div class="aic-body" id="aiChatBody"></div>
-    <div class="aic-foot">
-      <div class="aic-box">
-        <textarea id="aiChatInput" maxlength="600" rows="3" placeholder="궁금한 것을 구체적으로 적어 주세요.&#10;(예: 홀떡피자 인스타 캡션 아이디어 3개 줘)"></textarea>
-        <div class="aic-row"><small id="aiChatCount">0/600</small>
-          <button type="button" class="ui-btn primary sm" id="aiChatSend">보내기</button></div>
+    <aside class="aic-side">
+      <div class="aic-side-top"><button type="button" class="ui-btn soft block" id="aiChatNew">+ 새 대화</button></div>
+      <div class="aic-side-head"><span>대화 기록</span>
+        <button type="button" class="ui-btn ghost sm icon" id="aiChatClear" aria-label="대화 기록 모두 지우기" title="대화 기록 모두 지우기"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>
+      <div class="aic-list" id="aiChatList"></div>
+    </aside>
+    <div class="aic-main">
+      <div class="aic-head">
+        <button type="button" class="ui-btn ghost sm icon" id="aiChatSide" aria-label="대화 목록 열고 닫기" title="대화 목록"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <img id="aiChatLogo" alt="" aria-hidden="true">
+        <div class="t"><b>바로얌 AI</b><small id="aiChatSub">궁금한 것을 물어보면 Claude 가 답해요</small></div>
+        <button type="button" class="ui-btn ghost sm icon" id="aiChatClose" aria-label="닫기" title="닫기">✕</button>
+      </div>
+      <div class="aic-body" id="aiChatBody"></div>
+      <div class="aic-foot">
+        <div class="aic-box">
+          <textarea id="aiChatInput" maxlength="600" rows="3" placeholder="궁금한 것을 구체적으로 적어 주세요.&#10;(예: 홀떡피자 인스타 캡션 아이디어 3개 줘)"></textarea>
+          <div class="aic-row"><small id="aiChatCount">0/600</small>
+            <button type="button" class="ui-btn primary sm" id="aiChatSend">보내기</button></div>
+        </div>
       </div>
     </div>
   </section>
@@ -14199,27 +14234,67 @@ syncFromSheets(false).catch(err=>{
 
 /* 바로얌 AI 채팅 · 로고 버튼을 누르면 연다(2026-11-20 사용자 요청 · 상담 콘솔 대신) ·
    보내기 → brand-files cmjob/req/<이름>.json (kind:'chat' · 지난 대화 함께) → VPS·PC 대본 서비스(content_writer.js)가
-   Claude 로 답을 cmjob/res/<같은 이름> 에 적는다 → 2초마다 확인 · 대화는 이 브라우저에만 남는다(서버에 저장하지 않음) */
+   Claude 로 답을 cmjob/res/<같은 이름> 에 적는다 → 2초마다 확인 ·
+   대화 기록은 이 브라우저에만 남는다(서버에 저장하지 않음 · baroyam_ai_chat_v2 = {cur, convs:{id:{title,msgs,at}}}) ·
+   왼쪽 목록에서 대화를 고르고, 연필로 이름을 바꾸고, 휴지통으로 지운다 */
 (function(){
   const btn=document.getElementById('logoFab'), box=document.getElementById('aiChat');
   if(!btn||!box) return;
-  const body=document.getElementById('aiChatBody'), inp=document.getElementById('aiChatInput'),
-    send=document.getElementById('aiChatSend'), cnt=document.getElementById('aiChatCount');
-  const KEY='baroyam_ai_chat_v1', MAX=40;
+  const $=id=>document.getElementById(id);
+  const body=$('aiChatBody'), list=$('aiChatList'), inp=$('aiChatInput'), send=$('aiChatSend'), cnt=$('aiChatCount'), sub=$('aiChatSub');
+  const KEY='baroyam_ai_chat_v2', MAX_MSG=60, MAX_CONV=100;
   const SUGS=['홀떡피자 인스타 캡션 아이디어 3개 줘','고객 배송 지연 사과 문구 써 줘','메타광고 ROAS 가 떨어질 때 먼저 볼 것은?','쿠팡 상품명 짓는 요령 알려 줘'];
-  let msgs=[], busy=false;
-  try{ msgs=JSON.parse(localStorage.getItem(KEY)||'[]')||[]; }catch(e){ msgs=[]; }
-  const keep=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(msgs.slice(-MAX))); }catch(e){} };
-  try{ document.getElementById('aiChatLogo').src=document.querySelector('.sb-logo').src; }catch(e){}
+  const IC_CHAT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>';
+  const IC_PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>';
+  const IC_DEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+  let S={cur:null,convs:{}};
+  try{ const x=JSON.parse(localStorage.getItem(KEY)||'null'); if(x&&x.convs) S=x; }catch(e){}
+  /* 바로 앞 판(v1 · 대화 하나)에 남은 대화는 첫 기록으로 옮긴다 */
+  try{
+    const old=JSON.parse(localStorage.getItem('baroyam_ai_chat_v1')||'[]');
+    if(Array.isArray(old)&&old.length){ const id='c'+Date.now().toString(36); S.convs[id]={title:'',msgs:old,at:Date.now()}; S.cur=id; }
+    localStorage.removeItem('baroyam_ai_chat_v1');
+  }catch(e){}
+  const pending={};   /* 대화 id → 기다리는 중 안내 */
+  let sideOn=window.innerWidth>700, editing=null;
+  const keep=()=>{
+    const ids=Object.keys(S.convs).sort((a,b)=>S.convs[b].at-S.convs[a].at);
+    ids.slice(MAX_CONV).forEach(id=>delete S.convs[id]);
+    ids.forEach(id=>{ const c=S.convs[id]; if(c&&c.msgs.length>MAX_MSG) c.msgs=c.msgs.slice(-MAX_MSG); });
+    try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){}
+  };
+  try{ $('aiChatLogo').src=document.querySelector('.sb-logo').src; }catch(e){}
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const fmt=s=>esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
+  const titleOf=c=>c.title||((c.msgs.find(m=>m.role==='user')||{}).text||'새 대화').replace(/\s+/g,' ').slice(0,40);
+  const cur=()=>S.convs[S.cur]||null;
 
-  function paint(waitMsg){
+  function paintList(){
+    const ids=Object.keys(S.convs).filter(id=>S.convs[id].msgs.length||pending[id]).sort((a,b)=>S.convs[b].at-S.convs[a].at);
+    list.innerHTML=ids.length?ids.map(id=>{
+      const c=S.convs[id], on=id===S.cur;
+      if(editing===id) return '<div class="aic-it on" data-id="'+id+'">'+IC_CHAT+'<input value="'+esc(titleOf(c))+'" maxlength="40" aria-label="대화 이름"></div>';
+      return '<div class="aic-it'+(on?' on':'')+(pending[id]?' wait':'')+'" data-id="'+id+'" title="'+esc(titleOf(c))+'">'+IC_CHAT
+        +'<span class="nm">'+esc(titleOf(c))+'</span><span class="act">'
+        +'<button type="button" data-ren aria-label="이름 바꾸기" title="이름 바꾸기">'+IC_PEN+'</button>'
+        +'<button type="button" data-del aria-label="삭제" title="삭제">'+IC_DEL+'</button></span></div>';
+    }).join(''):'<p class="aic-empty">아직 대화가 없어요.</p>';
+    const ed=list.querySelector('input');
+    if(ed){
+      ed.focus(); ed.select();
+      const done=ok=>{ if(editing==null) return; const id=editing; editing=null; if(ok&&S.convs[id]){ S.convs[id].title=ed.value.trim(); keep(); } paintList(); paintHead(); };
+      ed.addEventListener('keydown',e=>{ if(e.isComposing) return; if(e.key==='Enter'){ e.preventDefault(); done(true); } if(e.key==='Escape'){ e.stopPropagation(); done(false); } });
+      ed.addEventListener('blur',()=>done(true));
+    }
+  }
+  function paintHead(){ const c=cur(); sub.textContent=c&&c.msgs.length?titleOf(c):'궁금한 것을 물어보면 Claude 가 답해요'; }
+  function paint(){
+    const c=cur(), msgs=c?c.msgs:[];
     let h='';
-    if(!msgs.length){
+    if(!msgs.length&&!pending[S.cur]){
       h='<div class="aic-intro"><b>무엇이든 물어보세요</b><ul>'
         +'<li>AI 답변은 틀릴 수 있어요. 숫자·정책은 한 번 더 확인해 주세요.</li>'
-        +'<li>대화는 이 브라우저에만 남고, "새 대화"로 지울 수 있어요.</li>'
+        +'<li>대화 기록은 이 브라우저에만 남고, 왼쪽 목록에서 지울 수 있어요.</li>'
         +'<li>비밀번호·고객 개인정보는 적지 말아 주세요.</li></ul></div>'
         +'<div class="aic-sugs">'+SUGS.map(q=>'<button type="button" class="ui-chip" data-q="'+esc(q)+'">'+esc(q)+'</button>').join('')+'</div>';
     }
@@ -14228,30 +14303,56 @@ syncFromSheets(false).catch(err=>{
       else if(m.role==='err') h+='<div class="aic-msg err">'+esc(m.text)+'</div>';
       else h+='<div class="aic-msg ai">'+fmt(m.text)+'</div><button type="button" class="aic-copy" data-copy="'+i+'">복사</button>';
     });
-    if(busy) h+='<div class="aic-msg ai wait"><i></i><i></i><i></i> '+esc(waitMsg||'생각하는 중')+'</div>';
+    if(pending[S.cur]) h+='<div class="aic-msg ai wait"><i></i><i></i><i></i> '+esc(pending[S.cur])+'</div>';
     body.innerHTML=h;
     body.scrollTop=body.scrollHeight;
+    send.disabled=!!pending[S.cur];
+    paintHead(); paintList();
   }
+  function setSide(on){ sideOn=on; box.classList.toggle('no-side',!on); }
   function setOpen(on){
     box.hidden=!on;
     btn.classList.toggle('is-active',on);
     btn.setAttribute('aria-expanded',on?'true':'false');
-    if(on){ paint(); setTimeout(()=>inp.focus(),30); }
+    if(on){ setSide(window.innerWidth>700?sideOn:false); paint(); setTimeout(()=>inp.focus(),30); }
+  }
+  function newConv(){
+    const c=cur();
+    if(c&&!c.msgs.length&&!pending[S.cur]){ paint(); inp.focus(); return; }   /* 빈 대화를 또 만들지 않는다 */
+    const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    S.convs[id]={title:'',msgs:[],at:Date.now()}; S.cur=id; keep(); paint(); inp.focus();
+    if(window.innerWidth<=700) setSide(false);
   }
   btn.setAttribute('aria-controls','aiChat');
   btn.setAttribute('aria-expanded','false');
   btn.setAttribute('aria-label','바로얌 AI'); btn.title='바로얌 AI';
   btn.addEventListener('click',()=>setOpen(box.hidden));
-  document.getElementById('aiChatClose').addEventListener('click',()=>setOpen(false));
-  document.getElementById('aiChatNew').addEventListener('click',()=>{
-    if(busy) return;
-    msgs=[]; keep(); paint(); inp.focus();
+  $('aiChatClose').addEventListener('click',()=>setOpen(false));
+  $('aiChatNew').addEventListener('click',newConv);
+  $('aiChatSide').addEventListener('click',()=>setSide(!sideOn));
+  $('aiChatClear').addEventListener('click',()=>{
+    const n=Object.values(S.convs).filter(c=>c.msgs.length).length;
+    if(!n||!confirm('대화 기록 '+n+'개를 모두 지울까요? 되돌릴 수 없습니다.')) return;
+    Object.keys(S.convs).forEach(id=>{ if(!pending[id]) delete S.convs[id]; });
+    if(!S.convs[S.cur]) S.cur=null; keep(); paint();
   });
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!box.hidden&&!document.querySelector('.settings-overlay:not([hidden])')) setOpen(false); });
+  list.addEventListener('click',e=>{
+    const it=e.target.closest('.aic-it'); if(!it||editing) return;
+    const id=it.dataset.id, c=S.convs[id]; if(!c) return;
+    if(e.target.closest('[data-ren]')){ editing=id; paintList(); return; }
+    if(e.target.closest('[data-del]')){
+      if(pending[id]){ alert('답을 기다리는 대화는 답이 온 뒤에 지울 수 있어요.'); return; }
+      if(!confirm('"'+titleOf(c)+'" 대화를 지울까요?')) return;
+      delete S.convs[id]; if(S.cur===id) S.cur=null; keep(); paint(); return;
+    }
+    S.cur=id; paint(); inp.focus();
+    if(window.innerWidth<=700) setSide(false);
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!box.hidden&&editing==null&&!document.querySelector('.settings-overlay:not([hidden])')) setOpen(false); });
   body.addEventListener('click',e=>{
     const q=e.target.closest('[data-q]'); if(q){ inp.value=q.dataset.q; ask(); return; }
-    const c=e.target.closest('[data-copy]');
-    if(c){ const m=msgs[+c.dataset.copy]; if(m) navigator.clipboard.writeText(m.text).then(()=>{ c.textContent='복사됨'; setTimeout(()=>c.textContent='복사',1200); }).catch(()=>{}); }
+    const b=e.target.closest('[data-copy]'), c=cur();
+    if(b&&c){ const m=c.msgs[+b.dataset.copy]; if(m) navigator.clipboard.writeText(m.text).then(()=>{ b.textContent='복사됨'; setTimeout(()=>b.textContent='복사',1200); }).catch(()=>{}); }
   });
   const upd=()=>{ cnt.textContent=inp.value.length+'/600'; };
   inp.addEventListener('input',upd);
@@ -14261,35 +14362,43 @@ syncFromSheets(false).catch(err=>{
 
   async function ask(){
     const text=inp.value.trim();
-    if(!text||busy) return;
+    if(!text) return;
+    if(!cur()){ const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); S.convs[id]={title:'',msgs:[],at:Date.now()}; S.cur=id; }
+    const id=S.cur, c=S.convs[id];
+    if(pending[id]) return;
     const DB=window.BAROYAM_DB;
-    msgs.push({role:'user',text,at:Date.now()}); keep();
+    c.msgs.push({role:'user',text,at:Date.now()}); c.at=Date.now(); keep();
     inp.value=''; upd();
-    busy=true; send.disabled=true; paint('보내는 중');
+    const show=m=>{ pending[id]=m; if(!box.hidden&&S.cur===id) paint(); };
+    show('보내는 중');
     const t0=Date.now();
     try{
       if(!DB||!DB.fileUpload||(DB.ensureSession&&!(await DB.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 보내 주세요');
       let by=''; try{ const m=window.BAROYAM_PROFILES&&window.BAROYAM_PROFILES.meMember(); by=m?m.name:''; }catch(e){}
-      let page=''; try{ page=(document.querySelector('.sb-item.active,.sb-item.is-active')||{}).textContent||''; }catch(e){}
+      let page=''; try{ page=(document.querySelector('.sb-item.active')||{}).textContent||''; }catch(e){}
       /* 지난 대화는 최근 12개(질문·답)만 · 오류 줄은 빼고 보낸다 */
-      const hist=msgs.filter(m=>m.role==='user'||m.role==='ai').slice(-12).map(m=>({role:m.role,text:String(m.text).slice(0,3000)}));
+      const hist=c.msgs.filter(m=>m.role==='user'||m.role==='ai').slice(-12).map(m=>({role:m.role,text:String(m.text).slice(0,3000)}));
       const name='chat'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)+'.1.json';
       await DB.fileUpload('brand-files','cmjob/req/'+name,new Blob([JSON.stringify({v:1,kind:'chat',job:'ai-chat',round:1,at:new Date().toISOString(),by,input:{messages:hist,page:page.trim().slice(0,40)}})],{type:'application/json'}));
-      paint('바로얌 AI 가 읽는 중');
+      show('바로얌 AI 가 읽는 중');
       for(;;){
         await new Promise(z=>setTimeout(z,2000));
         let r=null; try{ const u=await DB.fileUrl('brand-files','cmjob/res/'+name,60); const x=await fetch(u,{cache:'no-store'}); r=x.ok?await x.json():null; }catch(e){}
         const sec=(Date.now()-t0)/1000;
-        if(r&&r.state==='done'&&r.ok){ msgs.push({role:'ai',text:String(r.answer||'(빈 답)'),at:Date.now()}); break; }
+        if(r&&r.state==='done'&&r.ok){ c.msgs.push({role:'ai',text:String(r.answer||'(빈 답)'),at:Date.now()}); break; }
         if(r&&r.state==='failed') throw new Error(r.message||'답하지 못했습니다');
         if(!r&&sec>60) throw new Error('바로얌 AI 서비스가 응답하지 않습니다 · 잠시 뒤 다시 보내 주세요');
         if(sec>300) throw new Error('너무 오래 걸려 멈췄습니다 · 다시 보내 주세요');
-        if(!box.hidden) paint(r?'답을 쓰는 중 · '+Math.round(sec)+'초':'바로얌 AI 가 읽는 중');
+        show(r?'답을 쓰는 중 · '+Math.round(sec)+'초':'바로얌 AI 가 읽는 중');
       }
     }catch(e){
-      msgs.push({role:'err',text:String(e&&e.message||e),at:Date.now()});
+      c.msgs.push({role:'err',text:String(e&&e.message||e),at:Date.now()});
     }
-    busy=false; send.disabled=false; keep(); paint();
+    delete pending[id];
+    /* 기다리는 동안 대화가 지워졌으면 되살려 답을 잃지 않는다 */
+    if(!S.convs[id]) S.convs[id]=c;
+    c.at=Date.now(); keep();
+    if(!box.hidden) paint();
   }
 })();
 
