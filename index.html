@@ -1301,6 +1301,7 @@ window.BAROYAM_ACCESS=(function(){
   const MENUS=[
     {k:'project',   name:'프로젝트',     sel:'.sidebar .sb-item[data-view="project"]', views:['project']},
     {k:'channel',   name:'판매채널',     sel:'#sbChannelGroup',                        views:['channel']},
+    {k:'shop',      name:'쇼핑몰관리',   sel:'.sidebar .sb-item[data-view="shop"]',    views:['shop']},
     {k:'perf',      name:'메타광고관리', sel:'.sidebar .sb-item[data-view="perf"]',  views:['perf']},
     {k:'content',   name:'유튜브콘텐츠', sel:'.sidebar .sb-item[data-view="content"]', views:['content']},
     {k:'insta',     name:'인스타콘텐츠', sel:'.sidebar .sb-item[data-view="insta"]',   views:['insta']},
@@ -9239,6 +9240,11 @@ window.BAROYAM_FONT=(function(){
             <button class="sb-subitem" type="button" data-channel="톡딜">톡딜</button>
           </div>
         </div>
+        <!-- 쇼핑몰관리 · 11-20 사용자 요청으로 자리만 만들어 두었다(내용은 아직 비어 있다) -->
+        <button class="sb-item" type="button" data-view="shop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 9.2 5.4 4.5h13.2l1.2 4.7"/><path d="M4.2 9.2c0 1.4 1.1 2.4 2.5 2.4s2.6-1 2.6-2.4c0 1.4 1.1 2.4 2.7 2.4s2.7-1 2.7-2.4c0 1.4 1.1 2.4 2.6 2.4s2.5-1 2.5-2.4"/><path d="M5.4 11.5v8h13.2v-8M10 19.5v-4.6h4v4.6"/></svg>
+          <span>쇼핑몰관리</span>
+        </button>
         <!-- 메타광고관리(옛 이름 퍼포먼스마케팅 · 11-11 사용자 요청으로 이름·메타 로고 · key perf 그대로) -->
         <button class="sb-item" type="button" data-view="perf" id="sbPerfBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9.6C10.4 7.2 9 6 7.3 6 4.9 6 3 9.4 3 13.2 3 15.9 4.2 17.6 6.1 17.6c1.8 0 3.1-1.6 5.9-6.6 2.6-4.6 3.9-5 5.4-5 2.6 0 3.6 3.9 3.6 6.9 0 3.1-1.3 4.3-3 4.3-1.9 0-3.3-2.4-5.2-5.9"/></svg>
@@ -12508,6 +12514,17 @@ window.BAROYAM_FONT=(function(){
           </div>
         </div>
       </div><!-- /view-insta -->
+      <!-- 쇼핑몰관리 · 자리만 있다(내용은 아직 비어 있다 · 11-20) -->
+      <div id="view-shop" style="display:none">
+        <section class="section" style="padding-top:0">
+          <div class="plan-hero">
+            <div class="ptag">쇼핑몰</div>
+            <div class="ptitle">쇼핑몰관리</div>
+            <div class="psub">자사몰 상품·주문·고객을 한곳에서 관리합니다.</div>
+          </div>
+          <div class="profit-empty">아직 준비 중인 화면입니다.</div>
+        </section>
+      </div><!-- /view-shop -->
       <!-- 견적서 · 대시보드 자리만 있다(내용은 아직 비어 있다) -->
       <div id="view-quote" style="display:none">
         <section class="section" style="padding-top:0">
@@ -15059,6 +15076,7 @@ window.CsGuide=(function(){
     ['ops',1,'판매·재고','당일판매 · 재고현황','화면은 inventory_v1 · daily_sales_v1 을 읽기만 합니다. VPS 가 하루 몇 번 채우고, 모자라면 어드민 수집(크롬 확장)으로 채웁니다. 표시 이름·숨김·위험재고는 따로 저장.'],
     ['profit',1,'마진관리','마진표 · 원가표','원가표(profit_cost_v1)와 마진표(profit_calc_v1)를 바꾼 칸만 얹어 저장합니다. 고치기는 팀장·수정 권한 회원만.'],
     ['quote',1,'견적서','자리만 있음','아직 내용이 없습니다.'],
+    ['shop',1,'쇼핑몰관리','자리만 있음','아직 내용이 없습니다.'],
     ['insta',1,'인스타콘텐츠','성과 · 일정 · 업로드','일정은 업로드 예정 캘린더(insta_schedule_v1 · 프로젝트와 따로) · 바꾼 일정만 얹어 저장하고 지우기는 del 표시만. 성과는 VPS 가 인스타그램 API 로 받아 채운 insta_insights_v1 을 읽기만 합니다(비어 있으면 예시 화면). 업로드는 파일을 brand-files 의 insta/up 에 올리고 insta_upload_v1 에 예약을 적으면, VPS(insta_publish.js · 2분마다)가 그 시각에 인스타그램에 올립니다. 쓰레드 업로드는 threads/up 과 threads_upload_v1 로 따로 적고 VPS(threads_publish.js · 2분마다)가 쓰레드에 올립니다.'],
     ['brand',1,'브랜드전략실','브랜드 · 출시 체크리스트','브랜드(brand_strategy_v1)·대표 이미지(brand_images_v1)·체크리스트 틀(brand_template_v1). 항목 파일은 brand-files, 드라이브 연동은 드라이브 색인을 빌려 씁니다.'],
     ['drive',1,'드라이브','자산 찾기 · 업로드','구글드라이브 색인(drive_assets_v1)을 브랜드·종류로 거릅니다. 업로드·삭제(휴지통)는 구글 권한으로 드라이브에 직접 합니다.'],
@@ -16732,6 +16750,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     document.getElementById('view-content').style.display=v==='content'?'':'none';
     document.getElementById('view-profit').style.display=v==='profit'?'':'none';
     document.getElementById('view-quote').style.display=v==='quote'?'':'none';
+    document.getElementById('view-shop').style.display=v==='shop'?'':'none';
     document.getElementById('view-insta').style.display=v==='insta'?'':'none';
     document.getElementById('view-ops').style.display=v==='ops'?'':'none';
     document.getElementById('view-brand').style.display=v==='brand'?'':'none';
@@ -16748,7 +16767,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     document.body.classList.toggle('view-is-wide',v==='home'||v==='project'||v==='drive');
     document.body.classList.toggle('view-is-project',v==='project');
     document.body.classList.toggle('view-is-brand',v==='brand');
-    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta'||v==='perf'||v==='content'||v==='channel'||v==='account');   /* 판매채널도 마진표처럼 흰 판 + 배너(11-04) */   /* 인스타콘텐츠·퍼포먼스마케팅·유튜브콘텐츠도 손익처럼 흰 판을 넓게 */
+    document.body.classList.toggle('view-is-profit',v==='profit'||v==='insta'||v==='perf'||v==='content'||v==='channel'||v==='account'||v==='shop');   /* 판매채널도 마진표처럼 흰 판 + 배너(11-04) */   /* 인스타콘텐츠·퍼포먼스마케팅·유튜브콘텐츠도 손익처럼 흰 판을 넓게 */
     if(v==='perf'&&window.baroyamMetaAds) window.baroyamMetaAds.open();
     if(v==='profit'&&window.baroyamProfitOpen) window.baroyamProfitOpen();
     if(v==='ops'&&window.baroyamOpsOpen) window.baroyamOpsOpen();
@@ -16759,7 +16778,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     document.getElementById('view-agenda-host').style.display=v==='agenda'?'':'none';
     /* 회의 기록은 여기 들어올 때 처음 받아 온다(1MB가 넘어 첫 화면에서는 받지 않는다) */
     if(v==='agenda') document.dispatchEvent(new CustomEvent('baroyam-agenda-refresh'));
-    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda'||v==='perf'||v==='content'||v==='profit'||v==='quote'||v==='insta'||v==='ops'||v==='brand');
+    const hideHero=(v==='home'||v==='project'||v==='channel'||v==='goal'||v==='trend'||v==='review'||v==='collector'||v==='admin'||v==='manual'||v==='drive'||v==='account'||v==='agenda'||v==='perf'||v==='content'||v==='profit'||v==='quote'||v==='shop'||v==='insta'||v==='ops'||v==='brand');
     document.getElementById('mainHero').style.display=hideHero?'none':'';
     document.getElementById('heroViewTabs').style.display=hideHero?'none':'';
     document.getElementById('heroTitle').textContent=v==='month'?'월간 성과보고서':'주간 데이터 보고서';
@@ -35964,7 +35983,7 @@ window.baroyamAsk=function(title,body,okText){
 <script>
 /* 배너 제목 왼쪽 아이콘 · 화면마다 사이드바 메뉴의 같은 아이콘을 붙인다(제목 글자는 다른 코드가 바꾸므로 글 안에 넣지 않고 ::before/::after 로 그림) */
 (function(){
-  const MAP={goal:'goal',trend:'trend',collector:'review',review:'review',drive:'drive',perf:'perf',content:'content',ops:'ops',insta:'insta',quote:'quote',brand:'brand',account:'account',agenda:'agenda'};
+  const MAP={goal:'goal',trend:'trend',collector:'review',review:'review',drive:'drive',perf:'perf',content:'content',ops:'ops',insta:'insta',quote:'quote',shop:'shop',brand:'brand',account:'account',agenda:'agenda'};
   function icoOf(sel){
     const svg=document.querySelector(sel); if(!svg) return '';
     const c=svg.cloneNode(true); c.removeAttribute('class'); c.setAttribute('xmlns','http://www.w3.org/2000/svg');
