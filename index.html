@@ -5171,10 +5171,27 @@ window.BAROYAM_FONT=(function(){
   :is(#caKws,#caAreas) .cs-tbl :is(th,td)+:is(th,td){border-left:1px solid var(--line)}
   #caAreas .cs-tbl tr.sum td{background:color-mix(in srgb,var(--btn) 4%,transparent);color:var(--ink);font-weight:600}
   #caAreas .cs-tbl tr.sum td.k{font-weight:600}
-  #caAreas .cs-tbl tr.diff td{color:var(--body);background:color-mix(in srgb,var(--mute) 6%,transparent)}
-  #caAreas .cs-tbl tr.diff td.k{color:var(--ink)}
-  #caAreas .cs-tbl tr.diff td .up{color:var(--btn)}
-  #caAreas .cs-tbl tr.diff td .dn{color:var(--neg)}
+  /* 검색/비검색 표 | 오른쪽 비중 상자(11-20 사용자 · 차이 줄 대신) */
+  .ca-area-wrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;padding:0 16px 16px 0;align-items:start}
+  .ca-area-wrap #caAreas{border-radius:0 0 0 16px;min-width:0}
+  .ca-share{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:16px;display:flex;flex-direction:column;gap:14px}
+  .ca-share:empty{display:none}
+  .ca-share h4{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
+  .ca-share .big{display:flex;justify-content:space-between;gap:10px}
+  .ca-share .big div{display:flex;flex-direction:column;gap:2px}
+  .ca-share .big div+div{text-align:right}
+  .ca-share .big span{font-size:12px;color:var(--mute);display:inline-flex;align-items:center;gap:5px}
+  .ca-share .big div+div span{justify-content:flex-end}
+  .ca-share .big b{font-size:24px;font-weight:600;color:var(--ink)}
+  .ca-share .dot{width:8px;height:8px;border-radius:50%;background:var(--btn)}
+  .ca-share .dot.n{background:color-mix(in srgb,var(--mute) 45%,transparent)}
+  .ca-share .row{display:flex;flex-direction:column;gap:5px}
+  .ca-share .row .t{display:flex;justify-content:space-between;font-size:12px;color:var(--body)}
+  .ca-share .row .t em{font-style:normal;color:var(--mute)}
+  .ca-share .bar{display:flex;height:10px;border-radius:999px;overflow:hidden;gap:2px;background:var(--line)}
+  .ca-share .bar i{display:block;height:100%;background:var(--btn)}
+  .ca-share .bar i+i{background:color-mix(in srgb,var(--mute) 45%,transparent)}
+  @media (max-width:1100px){ .ca-area-wrap{grid-template-columns:1fr;padding:0 16px 16px} .ca-area-wrap #caAreas{border-radius:0} }
   /* 키워드 고르기(누르기 · Shift 범위 · Ctrl 더하기) → Ctrl+C·복사 단추로 한 줄에 하나씩 */
   #caKws .cs-tbl tbody tr[data-i]{cursor:pointer;user-select:none}
   #caKws .cs-tbl tbody tr.sel td{background:color-mix(in srgb,var(--btn) 10%,transparent)}
@@ -31682,7 +31699,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<div class="ca-trend"><div class="ca-plot" id="caPlot"></div><div class="ca-legend" id="caLegend"></div></div></section>'
       +'<section class="ca-box ca-daily"><div class="ca-box-head"><h3>날짜별 기록</h3><span class="sub" id="caDaySub"></span></div><div class="cs-tbl-wrap" id="caDays"></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>캠페인별 성과</h3><span class="sub">줄을 누르면 그 캠페인의 키워드만 봅니다</span></div><div class="cs-tbl-wrap" id="caCamps"></div></section>'
-      +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>검색 / 비검색 영역</h3><span class="sub">키워드 칸이 \'-\' 인 줄(비검색 영역·오디언스 플러스)이 비검색 영역입니다</span></div><div class="cs-tbl-wrap" id="caAreas"></div></section>'
+      +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>검색 / 비검색 영역</h3><span class="sub">키워드 칸이 \'-\' 인 줄(비검색 영역·오디언스 플러스)이 비검색 영역입니다</span></div><div class="ca-area-wrap"><div class="cs-tbl-wrap" id="caAreas"></div><div class="ca-share" id="caShare"></div></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>키워드별 성과</h3><span class="sub" id="caKwSub"></span>'
       +'<div class="right"><div id="caKsel" hidden><span class="n" id="caKselN"></span><button type="button" class="ui-btn soft sm" id="caKcopy" title="Ctrl+C 로도 복사합니다 · 붙여 넣으면 한 줄에 키워드 하나">복사</button><button type="button" class="ui-btn ghost sm" id="caKclear">선택 해제</button></div>'
       +'<div class="ui-chips" id="caKf" role="group" aria-label="키워드 거르기"></div><input class="ui-field" id="caKq" placeholder="키워드 찾기"></div></div>'
@@ -31952,18 +31969,20 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const arow=(o,cls,name)=>'<tr class="'+cls+'"><td class="k">'+name+'</td>'
       +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
       +'<td class="r v">'+won(o.cost)+'원</td><td class="r">'+pct(o.cost,allCost,1)+'</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cost/o.clk)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>';
-    const sg=(v,u,d)=>{ const a=Math.abs(v), t=d?a.toFixed(d):won(a); return '<span class="'+(v>0?'up':v<0?'dn':'')+'">'+(v>0?'+':v<0?'−':'±')+t+u+'</span>'; };
-    const drow='<tr class="diff"><td class="k">차이 <em>검색 − 비검색</em></td>'
-      +'<td class="r">'+sg(SA.imp-NA.imp,'')+'</td><td class="r">'+sg(SA.clk-NA.clk,'')+'</td><td class="r">'+sg(ctrV(SA)-ctrV(NA),'%p',2)+'</td>'
-      +'<td class="r">'+sg(SA.cost-NA.cost,'원')+'</td><td class="r">'+sg(shV(SA)-shV(NA),'%p',1)+'</td><td class="r">'+sg(SA.rev-NA.rev,'원')+'</td>'
-      +'<td class="r">'+sg(cpcV(SA)-cpcV(NA),'원')+'</td><td class="r">'+sg(roasV(SA)-roasV(NA),'%p')+'</td></tr>';
+    /* 오른쪽 비중 상자 · 광고비 비중을 크게, 아래 광고비·광고매출·클릭·노출 비중 막대 */
+    const sh=(a,b)=>a+b?a/(a+b)*100:0, f1=v=>v.toFixed(1)+'%';
+    const brow=(l,a,b)=>{ const v=sh(a,b); return '<div class="row"><div class="t">'+l+'<em>검색 '+f1(v)+' · 비검색 '+f1(a+b?100-v:0)+'</em></div><div class="bar">'+(a+b?'<i style="width:'+v+'%"></i><i style="width:'+(100-v)+'%"></i>':'')+'</div></div>'; };
+    const cs=sh(SA.cost,NA.cost);
+    $('caShare').innerHTML=(SA.imp||NA.imp||SA.cost||NA.cost)
+      ?'<h4>영역 비중</h4><div class="big"><div><span><i class="dot"></i>검색 영역</span><b class="num">'+f1(cs)+'</b></div><div><span><i class="dot n"></i>비검색 영역</span><b class="num">'+f1(allCost?100-cs:0)+'</b></div></div>'
+        +brow('광고비',SA.cost,NA.cost)+brow('광고매출(14일)',SA.rev,NA.rev)+brow('클릭수',SA.clk,NA.clk)+brow('노출수',SA.imp,NA.imp)
+      :'';
     const autoNames=autos.map(o=>o.kw.replace(/^\(|\)$/g,'')).join('·');
     $('caAreas').innerHTML=(SA.imp||NA.imp||SA.cost||NA.cost)
       ?'<table class="cs-tbl"><thead><tr><th>영역</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r">광고비</th><th class="r">광고비 비중</th><th class="r">광고매출(14일)</th><th class="r">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
         +arow(AL,'sum','전체 합계')
         +arow(SA,'','검색 영역<em>키워드 '+won(SA.n)+'개</em>')
         +arow(NA,'','비검색 영역'+(autos.length>1?'<em>'+esc(autoNames)+'</em>':''))
-        +drow
         +'</tbody></table>'
       :'<div class="cs-empty">고른 기간에 광고 기록이 없습니다</div>';
     /* 키워드별 성과는 검색 영역 키워드만 */
