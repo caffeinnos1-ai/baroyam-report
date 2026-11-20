@@ -5163,7 +5163,8 @@ window.BAROYAM_FONT=(function(){
   .ca-roas.none{color:var(--mute);background:color-mix(in srgb,var(--mute) 12%,transparent);font-weight:500}
   .ca-more{display:block;margin:0 auto;padding:14px 0 18px}
   /* 쿠팡광고성과 = 일별 / 정밀성과 = 캠페인·키워드 (11-20 사용자) · 한 화면(#caRoot)에서 보기만 바꾼다 */
-  #caRoot[data-view="day"] .ca-detail,#caRoot[data-view="detail"] .ca-daily{display:none}
+  #caRoot[data-view="day"] .ca-detail,#caRoot[data-view="detail"] .ca-daily,
+  #caRoot[data-view="detail"] #caKpis,#caRoot[data-view="detail"] #caDayBox{display:none}
   #caRoot .cs-tbl td.dd{color:var(--ink);font-weight:500}
   #caRoot .cs-tbl td.dd.we{color:var(--neg)}
   #caRoot .cs-tbl td.dd em{font-style:normal;font-weight:400;font-size:12px;color:var(--btn)}
