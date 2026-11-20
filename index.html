@@ -32265,7 +32265,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const wasteCost=kws.filter(o=>o.cost>0&&!o.rev).reduce((a,o)=>a+o.cost,0);
     $('caKwSub').textContent=won(kws.length)+'개'+(wasteCost?' · 매출 없이 쓴 광고비 '+won(wasteCost)+'원':'')+' · 줄을 눌러 고르고(Shift 범위 · Ctrl 더하기) Ctrl+C 로 복사';
     const th=(key,label,cls)=>'<th class="'+(cls||'')+(k===key?' on':'')+'"><button type="button" data-sort="'+key+'">'+label+(k===key?(dir<0?DOWN_SVG:UP_SVG):SORT_SVG)+'</button></th>';
-    const show=kws.slice(0,st.kmax);
+    /* 키워드는 모두 그린다(11-20 사용자 · 더 보기 없음) */
+    const show=kws;
     kshow=kws.map(o=>o.kw);
     $('caKws').innerHTML=kws.length
       ?'<table class="cs-tbl"><thead><tr>'+th('kw','키워드')+(st.camp?'':'<th>캠페인</th>')+th('imp','노출수','r')+th('clk','클릭수','r')+th('ctr','클릭률','r')
@@ -32273,7 +32274,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         +show.map((o,i)=>'<tr data-i="'+i+'"'+(rkKw(o)?' class="rk"':'')+'><td class="k'+(isAuto(o)?' dim':'')+'">'+esc(o.kw)+'</td>'+(st.camp?'':'<td class="c" title="'+esc([...o.cs].map(id=>(data.camps[id]||{}).n||id).join('\n'))+'">'+esc(campName(o))+'</td>')
           +'<td class="r">'+won(o.imp)+'</td><td class="r">'+won(o.clk)+'</td><td class="r">'+pct(o.clk,o.imp,2)+'</td>'
           +'<td class="r v">'+won(o.cost)+'원</td><td class="r v">'+won(o.rev)+'원</td><td class="r">'+(o.clk?won(o.cpc)+'원':'-')+'</td><td class="r">'+roasPill(o)+'</td></tr>').join('')
-        +'</tbody></table>'+(kws.length>show.length?'<button type="button" class="ui-btn ghost sm ca-more" data-more>더 보기 ('+won(show.length)+' / '+won(kws.length)+')</button>':'')
+        +'</tbody></table>'
       :'<div class="cs-empty">'+(data.rows.length?'조건에 맞는 키워드가 없습니다':'고른 기간에 키워드 기록이 없습니다')+'</div>';
     paintKsel();
   }
