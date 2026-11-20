@@ -5172,6 +5172,10 @@ window.BAROYAM_FONT=(function(){
   #caRoot .cs-tbl.ca-cards tbody tr.rk.on td{background:color-mix(in srgb,var(--rk) 16%,var(--paper));border-color:color-mix(in srgb,var(--rk) 65%,var(--line))}
   #caRoot .cs-tbl.ca-cards tbody tr.rk td.k{color:color-mix(in srgb,var(--naver) 80%,var(--ink))}
   #caRoot .ca-rocket svg{width:17px;height:17px}
+  /* 캠페인별 성과 · 광고비·CPC 칸을 진하게(11-20 사용자 · 굵기는 600 까지라 크기·색으로) */
+  #caRoot .cs-tbl.ca-cards :is(th,td).em{color:var(--ink);font-weight:600}
+  #caRoot .cs-tbl.ca-cards td.em{font-size:14.5px}
+  #caRoot .cs-tbl.ca-cards th.em{color:var(--btn-soft-ink)}
   #caRoot .cs-tbl tr.on td{background:color-mix(in srgb,var(--btn) 7%,transparent)}
   .ca-roas{display:inline-block;min-width:58px;padding:3px 8px;border-radius:999px;font-weight:600;text-align:center;
     color:var(--btn-soft-ink);background:var(--btn-soft)}
@@ -32207,9 +32211,9 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     /* 캠페인 표 */
     const tr=c=>'<tr class="pick'+(c.id===st.camp?' on':'')+(isRk(c.n)?' rk':'')+'" data-cid="'+esc(c.id)+'"><td class="k">'+(isRk(c.n)?ROCKET_SVG:'')+esc(c.n)+'</td><td class="c">'+esc(c.t||'-')+'</td>'
       +'<td class="r">'+won(c.imp)+'</td><td class="r">'+won(c.clk)+'</td><td class="r">'+pct(c.clk,c.imp,2)+'</td>'
-      +'<td class="r v">'+won(c.cost)+'원</td><td class="r v">'+won(c.rev)+'원</td><td class="r">'+(c.clk?won(c.cost/c.clk)+'원':'-')+'</td><td class="r">'+roasPill(c)+'</td></tr>';
+      +'<td class="r v em">'+won(c.cost)+'원</td><td class="r v">'+won(c.rev)+'원</td><td class="r em">'+(c.clk?won(c.cost/c.clk)+'원':'-')+'</td><td class="r">'+roasPill(c)+'</td></tr>';
     $('caCamps').innerHTML=camps.length
-      ?'<table class="cs-tbl ca-cards"><thead><tr><th>캠페인</th><th>광고유형</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r">광고비</th><th class="r">광고매출(14일)</th><th class="r">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
+      ?'<table class="cs-tbl ca-cards"><thead><tr><th>캠페인</th><th>광고유형</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r em">광고비</th><th class="r">광고매출(14일)</th><th class="r em">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
         +camps.map(tr).join('')+'</tbody></table>'
       :'<div class="cs-empty">고른 기간에 캠페인 기록이 없습니다</div>';
     /* 키워드 표 · 캠페인을 넘어 키워드로 묶는다(전체 캠페인일 때 · 몇 개 캠페인에서 썼는지 함께) */
