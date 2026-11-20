@@ -6384,14 +6384,16 @@ window.BAROYAM_FONT=(function(){
   .aic-side-head .ui-btn{color:var(--mute)}
   .aic-list{flex:1;min-height:0;overflow-y:auto;padding:0 10px 14px;display:flex;flex-direction:column;gap:2px}
   .aic-grp{font-size:12px;font-weight:500;color:var(--mute);padding:12px 8px 4px}
-  .aic-it{display:flex;align-items:center;gap:8px;padding:9px 8px 9px 10px;border-radius:10px;cursor:pointer;color:var(--body);font-size:14px;transition:background .12s}
+  .aic-it{position:relative;display:flex;align-items:center;gap:8px;height:40px;box-sizing:border-box;padding:0 10px;border-radius:10px;cursor:pointer;color:var(--body);font-size:14px;transition:background .12s}
   .aic-it:hover{background:var(--btn-soft)}
   .aic-it.on{background:var(--btn-soft);color:var(--btn-soft-ink);font-weight:500}
   .aic-it svg{flex:none;width:16px;height:16px;opacity:.65}
   .aic-it .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .aic-it .act{display:none;flex:none;gap:2px}
-  .aic-it:hover .act,.aic-it.on .act{display:flex}
-  .aic-it .act button{all:unset;cursor:pointer;width:24px;height:24px;display:grid;place-items:center;border-radius:6px;color:var(--mute)}
+  /* 연필·휴지통은 줄 위에 겹쳐 띄운다(자리를 차지하지 않아 올려도 줄 높이·글자 폭이 그대로) · 글자 끝은 바탕색으로 흐리게 덮는다 */
+  .aic-it .act{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;gap:2px;padding-left:22px;
+    background:linear-gradient(to right,transparent,var(--btn-soft) 18px),linear-gradient(to right,transparent,var(--bg) 18px);opacity:0;pointer-events:none;transition:opacity .12s}
+  .aic-it:hover .act,.aic-it.on .act,.aic-it:focus-within .act{opacity:1;pointer-events:auto}
+  .aic-it .act button{all:unset;cursor:pointer;width:26px;height:26px;display:grid;place-items:center;border-radius:6px;color:var(--mute)}
   .aic-it .act button:hover{background:var(--paper);color:var(--ink)}
   .aic-it .act svg{width:15px;height:15px;opacity:1}
   .aic-it input{all:unset;flex:1;min-width:0;font:inherit;font-size:14px;color:var(--ink);border-bottom:1px solid var(--btn)}
