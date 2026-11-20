@@ -6433,7 +6433,7 @@ window.BAROYAM_FONT=(function(){
   /* CS 현황 · 판매처 = 줄, 처리할 일 = 칸(이지어드민 첫 화면 표처럼 · 11-20 사용자 요청) */
   .sh-cs-meta{margin-top:22px}
   .sh-cs-wrap{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:auto}
-  .sh-cs-t{width:100%;border-collapse:collapse;font-size:14px;color:var(--ink);min-width:860px}
+  .sh-cs-t{width:100%;border-collapse:collapse;font-size:14px;color:var(--ink);min-width:680px}
   .sh-cs-t th{text-align:center;padding:10px 8px;font-size:12.5px;font-weight:600;color:var(--body);background:var(--bg);border-bottom:1px solid var(--line);white-space:nowrap}
   .sh-cs-t th.g-ord{background:color-mix(in srgb,var(--btn-soft) 70%,var(--paper));color:var(--btn-soft-ink)}
   .sh-cs-t th.g-clm{background:color-mix(in srgb,var(--neg-soft) 70%,var(--paper));color:var(--neg)}
@@ -12664,7 +12664,7 @@ window.BAROYAM_FONT=(function(){
            11-20 임시 구현: 판매처와 아직 연결되지 않아 예시 데이터로 그리고, 고친 값은 이 창 메모리에만 있다(반영 누르면 안내만) -->
       <div id="view-shop" style="display:none">
         <div class="hero-view-tabs" id="shopTabs" role="tablist" aria-label="쇼핑몰통합관리 화면">
-          <button type="button" class="hero-view-tab active" role="tab" data-shop="cs" data-sub="판매처마다 신규주문·발주확인·취소·반품·교환 요청과 답변 안 한 문의를 한 표로 봅니다.">CS 현황</button>
+          <button type="button" class="hero-view-tab active" role="tab" data-shop="cs" data-sub="판매처마다 취소·반품·교환 요청과 답변 안 한 문의를 한 표로 봅니다.">CS 현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="stock" data-sub="판매처마다 상품의 옵션 설정된 재고·판매가·판매상태를 한 화면에서 보고 고칩니다.">상품·옵션 재고</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="register" data-sub="ERP 에서 상품을 한 번 작성해 여러 판매처에 등록합니다.">상품 등록</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="link" data-sub="판매처마다 연결 상태와 마지막 수집 시각을 봅니다.">연동 설정</button>
@@ -12673,7 +12673,7 @@ window.BAROYAM_FONT=(function(){
           <div class="plan-hero">
             <div class="ptag">쇼핑몰</div>
             <div class="ptitle" id="shopTitle">CS 현황</div>
-            <div class="psub" id="shopSub">판매처마다 신규주문·발주확인·취소·반품·교환 요청과 답변 안 한 문의를 한 표로 봅니다.</div>
+            <div class="psub" id="shopSub">판매처마다 취소·반품·교환 요청과 답변 안 한 문의를 한 표로 봅니다.</div>
           </div>
           <!-- CS 현황 · 카페24 상태별 주문 건수·답변 전 문의(숫자만 · VPS cafe24_products.js --cs 가 10분마다 shop/cafe24/cs.json) -->
           <div class="sh-pane" data-shop-pane="cs">
@@ -36658,8 +36658,6 @@ window.baroyamAsk=function(title,body,okText){
   ];
   /* 칸 · g = 묶음(주문/클레임/문의) · 카페24 에 없는 칸은 null(빈칸) */
   const COLS=[
-    {k:'new',  lb:'신규주문',  g:'ord', tip:'결제가 끝나 처리를 기다리는 주문 (카페24: 상품준비중)'},
-    {k:'conf', lb:'발주확인',  g:'ord', tip:'발주 확인 뒤 보내기 전 (카페24: 배송준비중 + 배송대기)'},
     {k:'cxl',  lb:'취소요청',  g:'clm', tip:'고객이 취소를 신청한 주문'},
     {k:'ret',  lb:'반품요청',  g:'clm', tip:'고객이 반품을 신청한 주문'},
     {k:'exc',  lb:'교환요청',  g:'clm', tip:'고객이 교환을 신청한 주문'},
@@ -36671,7 +36669,6 @@ window.baroyamAsk=function(title,body,okText){
     if(id!=='cafe24'||!data) return null;
     const c=data.counts||{}, inq=data.inq||{};
     return {at:data.at,
-      new:Number(c.N10)||0, conf:sum(c,['N20','N21']),
       cxl:Number(c.C00)||0, ret:Number(c.R00)||0, exc:Number(c.E00)||0,
       board:inq.need||inq.err?'need':(inq.boards||[]).reduce((a,b)=>a+(b.open||0),0),
       msg:null, urg:null};
