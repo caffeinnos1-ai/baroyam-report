@@ -31920,7 +31920,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     $('caKclear').addEventListener('click',()=>{ st.ksel.clear(); st.kanc=null; paintKsel(); });
     $('caKput').addEventListener('click',putBag);
     $('caKbagBtn').addEventListener('click',e=>{ e.stopPropagation(); $('caKbag').hidden=!$('caKbag').hidden; });
-    $('caKempty').addEventListener('click',()=>{ if(!confirm('담은 키워드 '+won(kbag.length)+'개를 모두 비울까요?')) return; kbag=[]; saveBag(); paintBag(); kbarVis(); });
+    $('caKempty').addEventListener('click',()=>{ kbag=[]; saveBag(); paintBag(); kbarVis(); });
     $('caKbagList').addEventListener('click',e=>{ const x=e.target.closest('[data-kout]'); if(!x) return; e.stopPropagation(); kbag.splice(+x.dataset.kout,1); saveBag(); paintBag(); kbarVis(); });
     document.addEventListener('click',e=>{ const p=$('caKbag'); if(p&&!p.hidden&&!e.target.closest('#caKsel')) p.hidden=true; });
     document.addEventListener('keydown',e=>{
