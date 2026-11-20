@@ -5187,8 +5187,8 @@ window.BAROYAM_FONT=(function(){
   .ca-share{display:flex;gap:12px}
   .ca-share:empty{display:none}
   .ca-share .pie{border:1px solid var(--line);border-radius:12px;padding:0 4px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .ca-share .pie h4{margin:0 0 10px;align-self:flex-start;padding-left:14px;font-size:13px;font-weight:600;color:var(--ink)}
-  #caRoot .ca-share .donut-wrap{padding:12px 168px;margin:0;zoom:.66}
+  .ca-share .pie h4{margin:0;padding-top:14px;align-self:center;font-size:15px;font-weight:600;color:var(--ink)}
+  #caRoot .ca-share .donut-wrap{padding:30px 168px 54px;margin:0;zoom:.66}
   #caAreas .cs-tbl{min-width:0}
   #caAreas .cs-tbl :is(th,td){padding-left:10px;padding-right:10px}
   #caAreas .cs-tbl :is(th,td):first-child{padding-left:18px}
@@ -5196,6 +5196,10 @@ window.BAROYAM_FONT=(function(){
   #caAreas .cs-tbl td.k{min-width:0}
   /* 0.74배로 줄여 넣는다 · 이름표 글자를 키우면 좌우 여백(168px)을 넘어 상자 밖으로 나가므로 이름표는 기본 크기, 가운데 글자만 조금 키움 */
   #caRoot .ca-share .donut .center{padding:0}
+  /* 쌓은 이름표 글자 · 0.66배로 그려지므로 크게 */
+  #caRoot .ca-share .rcl .rp{font-size:40px}
+  #caRoot .ca-share .rcl .rn2{font-size:22px;fill:var(--ink);font-weight:600}
+  #caRoot .ca-share .rcl .ra{font-size:18px}
   #caRoot .ca-share .donut .center .c-amt{font-size:28px}
   #caRoot .ca-share .donut .center .c-lab{font-size:16px;color:var(--body);font-weight:600}
   .ca-share .pie{overflow:hidden}
@@ -13881,7 +13885,9 @@ function countUpVisibleReport(){
 
 /* 월간 도넛 · 얇은 SVG 고리에 조각 사이 틈을 둔다 ·
    조각이나 옆 목록 줄에 올리면 그 플랫폼만 진하게, 가운데 숫자가 그 플랫폼 비중·금액으로 바뀐다 */
-function ringDonut(donutId,listId,parts,size=196){
+/* opt.stack(11-20 · 쿠팡 정밀성과) · 이름표를 옆으로 늘어놓지 않고 선 위 큰 비중% · 선 아래 이름 · 그 아래 금액으로 쌓는다(좁은 칸에서 글자를 크게) */
+function ringDonut(donutId,listId,parts,size=196,opt){
+  const stack=!!(opt&&opt.stack);
   const el=document.getElementById(donutId), list=document.getElementById(listId);
   if(!el) return;
   el.classList.add('is-ring'); el.style.background='';
@@ -13939,7 +13945,7 @@ function ringDonut(donutId,listId,parts,size=196){
       const g=calls.filter(k=>k.right===side).sort((a,b)=>a.ey-b.ey);
       g.forEach((k,j)=>{ if(j&&k.ey-g[j-1].ey<GAPY) k.ey=g[j-1].ey+GAPY; });
       /* 아래로 밀다 그림 밖으로 나가면 전체를 위로 당긴다 */
-      const over=g.length?g[g.length-1].ey-(H-24):0;
+      const over=g.length?g[g.length-1].ey-(H-(stack?62:24)):0;
       if(over>0) g.forEach(k=>k.ey-=over);
       const under=g.length?34-g[0].ey:0;
       if(under>0) g.forEach(k=>k.ey+=under);
@@ -13951,10 +13957,12 @@ function ringDonut(donutId,listId,parts,size=196){
         <polyline points="${k.ax.toFixed(1)},${k.ay.toFixed(1)} ${ex.toFixed(1)},${k.ey.toFixed(1)} ${tx.toFixed(1)},${k.ey.toFixed(1)}"/>
         <circle class="rdot" cx="${k.ax.toFixed(1)}" cy="${k.ay.toFixed(1)}" r="3.6"/>
         <circle class="rend" cx="${tx.toFixed(1)}" cy="${k.ey.toFixed(1)}" r="3"/>
-        <text x="${lx}" y="${(k.ey-9).toFixed(1)}" text-anchor="${anc}">${k.right
+        ${stack?`<text x="${lx}" y="${(k.ey-10).toFixed(1)}" text-anchor="${anc}"><tspan class="rp">${k.pc}%</tspan></text>
+        <text class="rn2" x="${lx}" y="${(k.ey+26).toFixed(1)}" text-anchor="${anc}">${k.p.name}</text>
+        <text class="ra" x="${lx}" y="${(k.ey+50).toFixed(1)}" text-anchor="${anc}">${k.p.amt||''}</text></g>`:''}${stack?'':`<text x="${lx}" y="${(k.ey-9).toFixed(1)}" text-anchor="${anc}">${k.right
           ?`<tspan class="rn">${k.p.name}</tspan><tspan class="rp" dx="7">${k.pc}%</tspan>`
           :`<tspan class="rp">${k.pc}%</tspan><tspan class="rn" dx="7">${k.p.name}</tspan>`}</text>
-        <text class="ra" x="${lx}" y="${(k.ey+20).toFixed(1)}" text-anchor="${anc}">${k.p.amt||''}</text></g>`;
+        <text class="ra" x="${lx}" y="${(k.ey+20).toFixed(1)}" text-anchor="${anc}">${k.p.amt||''}</text></g>`}`;
     }).join('');
     el.insertAdjacentHTML('beforeend',`<svg class="rcall" viewBox="0 0 ${W} ${H}" style="left:${-PX}px;top:${-PY}px;width:${W}px;height:${H}px" aria-hidden="true">${tags}</svg>`);
   }
@@ -32115,7 +32123,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     $('caShare').innerHTML=hasArea?pie('caPieCost','광고비','cost')+pie('caPieRev','광고매출(14일)','rev'):'';
     if(hasArea) [['caPieCost','cost'],['caPieRev','rev']].forEach(([id,k])=>ringDonut(id,id+'L',[
       {name:'검색 영역',key:'coupang',v:SA[k],color:'var(--coupang)',amt:eokCheon(SA[k])+'원'},
-      {name:'비검색 영역',key:'none',v:NA[k],color:'var(--mute)',amt:eokCheon(NA[k])+'원'}],200));
+      {name:'비검색 영역',key:'none',v:NA[k],color:'var(--mute)',amt:eokCheon(NA[k])+'원'}],190,{stack:true}));
     const autoNames=autos.map(o=>o.kw.replace(/^\(|\)$/g,'')).join('·');
     $('caAreas').innerHTML=(SA.imp||NA.imp||SA.cost||NA.cost)
       ?'<table class="cs-tbl"><thead><tr><th>영역</th><th class="r">노출수</th><th class="r">클릭수</th><th class="r">클릭률</th><th class="r">광고비</th><th class="r">광고매출(14일)</th><th class="r">CPC</th><th class="r">ROAS</th></tr></thead><tbody>'
