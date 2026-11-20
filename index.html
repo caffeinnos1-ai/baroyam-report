@@ -31685,7 +31685,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const pct=(a,b,d)=>b?(a/b*100).toFixed(d==null?0:d)+'%':'-';
   const IDX='coupang_ads_v1', MKEY=m=>IDX+':'+m;
   const firstOfMonth=()=>kst().slice(0,8)+'01';
-  const st={view:'day',day:'',ksel:new Set(),kanc:null,range:{start:firstOfMonth(),end:kst()},camp:'',kq:'',kf:'all',ksort:{k:'cost',dir:-1},kmax:100,months:{},index:null,built:false,seq:0,busy:false};
+  const st={view:'day',day:'',brand:(()=>{ try{ return localStorage.getItem('baroyam_ca_brand')||''; }catch(e){ return ''; } })(),ksel:new Set(),kanc:null,range:{start:firstOfMonth(),end:kst()},camp:'',kq:'',kf:'all',ksort:{k:'cost',dir:-1},kmax:100,months:{},index:null,built:false,seq:0,busy:false};
   try{ const s=JSON.parse(localStorage.getItem('baroyam_ca_sort')||'null'); if(s&&s.k) st.ksort=s; }catch(e){}
   let data={rows:[],camps:{},gmv:{}};
   const DB=()=>window.BAROYAM_DB;
@@ -31829,7 +31829,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   function build(){
     root.innerHTML='<div class="cs-top">'
       +'<div class="cs-bar"><label>기간</label><button type="button" id="caPeriod"></button><span class="sep"></span>'
-      +'<label>캠페인</label><button type="button" class="ui-field" id="caCamp"></button>'
+      +'<label>브랜드</label><button type="button" class="ui-field" id="caCamp"></button>'
       +'<span class="cs-when" id="caWhen"></span>'
       +'<label class="ui-btn soft sm ca-up" title="쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀·CSV 를 직접 넣기(수동)"><input type="file" id="caFile" accept=".xlsx,.xls,.csv,.txt,.tsv">파일 올리기</label></div>'
       +'<div class="cs-kpis" id="caKpis"></div></div>'
@@ -31861,8 +31861,11 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     });
     $('caCamp').addEventListener('click',e=>{
       e.stopPropagation();
-      const opts=[{value:'',label:'전체 캠페인'}].concat(campList().map(c=>({value:c.id,label:c.n,sub:won(c.cost)+'원'})));
-      window.UI.menu(e.currentTarget,opts,st.camp,v=>{ st.camp=v; st.kmax=100; draw(); });
+      /* 브랜드마다 캠페인 수·광고비 · 광고비 큰 순(기타는 맨 뒤) */
+      const bm=new Map(); campList().forEach(c=>{ const b=campBrand(c.id); let o=bm.get(b); if(!o) bm.set(b,o={b:b,n:0,cost:0}); o.n++; o.cost+=c.cost; });
+      const list=[...bm.values()].sort((a,b)=>(a.b==='기타')-(b.b==='기타')||b.cost-a.cost);
+      const opts=[{value:'',label:'전체 브랜드'}].concat(list.map(o=>({value:o.b,label:o.b,sub:'캠페인 '+o.n+'개 · '+won(o.cost)+'원'})));
+      window.UI.menu(e.currentTarget,opts,st.brand,v=>{ st.brand=v; st.camp=''; try{ localStorage.setItem('baroyam_ca_brand',v); }catch(e){} draw(); });
     });
     $('caFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(f) upload(f); });
     $('caCamps').addEventListener('click',e=>{
@@ -32056,9 +32059,17 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   const blank=()=>({imp:0,clk:0,cost:0,ord:0,rev:0,qty:0});
   const add=(o,x)=>{ o.imp+=x[3]; o.clk+=x[4]; o.cost+=x[5]; o.ord+=x[6]; o.rev+=x[7]; o.qty+=x[8]; return o; };
   /* 기간 안 캠페인 · 광고비 큰 순 */
-  function campList(){
+  /* 캠페인 브랜드 · 캠페인 이름에 든 브랜드 이름(띄어쓰기 무시 · 가장 앞에 나오는 것) · 없으면 기타(11-20 사용자 · 위 거르기를 브랜드로) */
+  const CA_BRANDS=['쫀득란빵','홀떡피자','잡채랑','이응떡볶이','오꾸밥','바비쿡','방구석포차','밥카츠','파스타스','통스카츠'];
+  const campBrand=id=>{
+    const n=String(((data.camps[id]||{}).n)||id).replace(/\s+/g,'');
+    let best='기타', at=1e9; CA_BRANDS.forEach(b=>{ const i=n.indexOf(b); if(i>=0&&i<at){ at=i; best=b; } });
+    return best;
+  };
+  const brandRows=()=>st.brand?data.rows.filter(x=>campBrand(x[1])===st.brand):data.rows;
+  function campList(src){
     const m=new Map();
-    data.rows.forEach(x=>{ let c=m.get(x[1]); if(!c){ const cc=data.camps[x[1]]||{}; m.set(x[1],c=Object.assign(blank(),{id:x[1],n:cc.n||x[1],t:cc.t||''})); } add(c,x); });
+    (src||data.rows).forEach(x=>{ let c=m.get(x[1]); if(!c){ const cc=data.camps[x[1]]||{}; m.set(x[1],c=Object.assign(blank(),{id:x[1],n:cc.n||x[1],t:cc.t||''})); } add(c,x); });
     return [...m.values()].sort((a,b)=>b.cost-a.cost);
   }
   /* 로켓프레시 캠페인 · 이름 앞 초록 로켓 + 캠페인 카드만 연두색(11-20 사용자 · 키워드 줄은 칠하지 않음) */
@@ -32167,11 +32178,12 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
   }
   function draw(){
     when(); paintAt(); paintQuick();
-    const camps=campList();
+    /* 브랜드로 거른 줄 → 캠페인 카드를 누르면 그 캠페인만 */
+    const bRows=brandRows();
+    const camps=campList(bRows);
     if(st.camp&&!camps.some(c=>c.id===st.camp)) st.camp='';
-    const cur=st.camp?camps.find(c=>c.id===st.camp):null;
-    $('caCamp').innerHTML='<span class="t">'+esc(cur?cur.n:'전체 캠페인')+'</span>';
-    const rows=st.camp?data.rows.filter(x=>x[1]===st.camp):data.rows;
+    $('caCamp').innerHTML='<span class="t">'+esc(st.brand||'전체 브랜드')+'</span>';
+    const rows=st.camp?bRows.filter(x=>x[1]===st.camp):bRows;
     const T=rows.reduce(add,blank());
     /* 날짜별 기록에서 고른 날이 있으면 위 숫자 칸은 그날만(쿠팡광고성과 보기에서만) */
     if(st.day&&!rows.some(x=>x[0]===st.day)) st.day='';
