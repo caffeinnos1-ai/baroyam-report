@@ -6369,6 +6369,7 @@ window.BAROYAM_FONT=(function(){
   }
   /* 쇼핑몰관리 · 판매처 칩 → 거르기 줄 → 상품(펼치면 옵션) 표 → 아래 붙는 반영 줄 */
   .sh-pane[hidden]{display:none}
+  #shopTabs [data-shop="link"]{margin-left:auto}   /* 연동 설정은 단추 줄 오른쪽 끝(11-20 사용자 요청) */
   .sh-chans{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 14px}
   .sh-chan{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 6px;
     border-radius:999px;border:1.5px solid var(--line);background:var(--paper);font-size:13.5px;font-weight:500;color:var(--body);transition:border-color .15s,background .15s}
