@@ -5184,7 +5184,7 @@ window.BAROYAM_FONT=(function(){
   .ca-more{display:block;margin:0 auto;padding:14px 0 18px}
   /* 쿠팡광고성과 = 일별 / 정밀성과 = 캠페인·키워드 (11-20 사용자) · 한 화면(#caRoot)에서 보기만 바꾼다 */
   #caRoot[data-view="day"] .ca-detail,#caRoot[data-view="detail"] .ca-daily,
-  #caRoot[data-view="detail"] #caKpis,#caRoot[data-view="detail"] #caDayBox{display:none}
+  #caRoot[data-view="detail"] #caKpis{display:none}
   /* 빈 안내 칸이 flex gap 을 두 번 더 먹어 상자 사이가 벌어지던 것 · 정밀성과는 숫자 칸이 없어 기간 줄 밑줄도 뺌 */
   #caRoot>#caMsg:empty,#caRoot>#caNote:empty{display:none}
   /* 키워드별 성과·검색/비검색 영역 · 세로 칼선(11-20 사용자) */
@@ -31834,14 +31834,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       +'<label class="ui-btn soft sm ca-up" title="쿠팡 광고센터 › 보고서 › 키워드 보고서(일별) 엑셀·CSV 를 직접 넣기(수동)"><input type="file" id="caFile" accept=".xlsx,.xls,.csv,.txt,.tsv">파일 올리기</label></div>'
       +'<div class="cs-kpis" id="caKpis"></div></div>'
       +'<div id="caMsg"></div><div id="caNote"></div>'
-      +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3>일별 추이</h3><span class="sub">광고매출(14일)·광고비 · 선 위에 올리면 그날 ROAS·클릭 · 점선은 월요일</span>'
+      +'<section class="ca-box" id="caDayBox"><div class="ca-box-head"><h3 id="caDayH">일별 추이</h3><span class="sub" id="caDayHs">광고매출(14일)·광고비 · 선 위에 올리면 그날 ROAS·클릭 · 점선은 월요일</span>'
       +'<div class="right"><div class="ui-tabs" id="caQuick" role="group" aria-label="빠른 기간">'
       +[['d1','1일'],['d7','최근 7일'],['m0','이번달'],['m1','저번달']].map(x=>'<button type="button" class="ui-tab" data-q="'+x[0]+'" aria-selected="false">'+x[1]+'</button>').join('')
       +'</div></div></div>'
       +'<div class="ca-trend"><div class="ca-plot" id="caPlot"></div><div class="ca-legend" id="caLegend"></div></div></section>'
-      +'<section class="ca-box ca-daily"><div class="ca-box-head"><h3>날짜별 기록</h3><span class="sub" id="caDaySub"></span></div><div class="cs-tbl-wrap" id="caDays"></div></section>'
+      +'<section class="ca-box ca-daily" id="caDaysBox"><div class="ca-box-head"><h3>날짜별 기록</h3><span class="sub" id="caDaySub"></span></div><div class="cs-tbl-wrap" id="caDays"></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>캠페인별 성과</h3><span class="sub">줄을 누르면 그 캠페인의 키워드만 봅니다</span></div><div class="cs-tbl-wrap" id="caCamps"></div></section>'
-      +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>검색 / 비검색 영역</h3><span class="sub">키워드 칸이 \'-\' 인 줄(비검색 영역·오디언스 플러스)이 비검색 영역입니다</span></div><div class="ca-area-wrap"><div class="cs-tbl-wrap" id="caAreas"></div><div class="ca-share" id="caShare"></div></div></section>'
+      +'<section class="ca-box ca-detail" id="caAreaBox"><div class="ca-box-head"><h3>검색 / 비검색 영역</h3><span class="sub">키워드 칸이 \'-\' 인 줄(비검색 영역·오디언스 플러스)이 비검색 영역입니다</span></div><div class="ca-area-wrap"><div class="cs-tbl-wrap" id="caAreas"></div><div class="ca-share" id="caShare"></div></div></section>'
       +'<section class="ca-box ca-detail"><div class="ca-box-head"><h3>키워드별 성과</h3><span class="sub" id="caKwSub"></span>'
       +'<div class="right">'
       +'<div class="ui-chips" id="caKf" role="group" aria-label="키워드 거르기"></div><input class="ui-field" id="caKq" placeholder="키워드 찾기"></div></div>'
@@ -31955,6 +31955,14 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     let qt=null;
     $('caKq').addEventListener('input',e=>{ clearTimeout(qt); qt=setTimeout(()=>{ st.kq=e.target.value.trim(); st.kmax=100; draw(); },150); });
     st.built=true;
+  }
+  /* 일별 추이 상자 자리 · 쿠팡광고성과는 날짜별 기록 위, 정밀성과는 캠페인별 성과와 검색/비검색 영역 사이(11-24 사용자 · 같은 상자를 옮겨 씀) ·
+     정밀성과에서는 고른 캠페인(없으면 고른 브랜드 전체)의 추이 */
+  function placeDayBox(){
+    const box=$('caDayBox'), det=st.view==='detail', at=det?$('caAreaBox'):$('caDaysBox');
+    if(box&&at&&box.nextElementSibling!==at) at.parentNode.insertBefore(box,at);
+    $('caDayH').textContent=det?'캠페인 추이':'일별 추이';
+    $('caDayHs').textContent=det?'고른 캠페인(없으면 '+(st.brand||'전체')+' 캠페인 모두)의 광고매출(14일)·광고비 · 점선은 월요일':'광고매출(14일)·광고비 · 선 위에 올리면 그날 ROAS·클릭 · 점선은 월요일';
   }
   /* 빠른 기간 · 데이터가 있는 마지막 날 기준(없으면 어제) */
   const dAdd=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*864e5).toISOString().slice(0,10);
@@ -32177,7 +32185,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     svg.addEventListener('mouseleave',()=>{ tip.hidden=true; cx.style.opacity=0; dots.innerHTML=''; });
   }
   function draw(){
-    when(); paintAt(); paintQuick();
+    when(); paintAt(); paintQuick(); placeDayBox();
     /* 브랜드로 거른 줄 → 캠페인 카드를 누르면 그 캠페인만 */
     const bRows=brandRows();
     const camps=campList(bRows);
@@ -32203,7 +32211,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     const dm=new Map(); rows.forEach(x=>{ let o=dm.get(x[0]); if(!o) dm.set(x[0],o=blank()); add(o,x); });
     gd.forEach(d=>{ if(!dm.has(d)) dm.set(d,blank()); });
     trendDays=[...dm.keys()].sort().map(d=>Object.assign({d:d,tot:data.gmv[d]?data.gmv[d][0]:null,adg:data.gmv[d]?data.gmv[d][1]:null},dm.get(d)));
-    trendHasG=gd.length>0; trendG={tot:gT,adg:gA};
+    /* 정밀성과(캠페인 추이)에는 계정 전체 매출 회색 선을 넣지 않는다 */
+    trendHasG=gd.length>0&&st.view!=='detail'; trendG={tot:gT,adg:gA};
     $('caDayBox').hidden=false;
     trendTot=T;
     paintTrend();
