@@ -37528,9 +37528,13 @@ window.baroyamAsk=function(title,body,okText){
   function imgOf(file){
     return new Promise((res,rej)=>{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>{ URL.revokeObjectURL(u); res(im); }; im.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error('사진을 읽지 못했어요 · '+file.name)); }; im.src=u; });
   }
-  /* 폭 1000px 까지 줄여 JPEG 로(투명한 곳은 흰 바탕) · 상세 사진처럼 긴 그림은 높이 14000px 까지 · GIF 는 움직임을 살리려고 그대로 */
+  /* 폭 1000px 까지 줄여 JPEG 로(투명한 곳은 흰 바탕) · 상세 사진처럼 긴 그림은 높이 14000px 까지
+     GIF 는 움직임을 살리려고 늘 그대로 · 카페24가 10MB(10485760바이트) 넘는 이미지를 받지 않아 그보다 크면 알림(11-23 · 전에는 4.5MB 넘으면 몰래 JPG 정지 그림으로 바꿨음) */
   async function shrink(file){
-    if(file.type==='image/gif'&&file.size<4.5e6) return {blob:file,ext:'gif'};
+    if(file.type==='image/gif'){
+      if(file.size<10e6) return {blob:file,ext:'gif'};
+      throw new Error('GIF 가 10MB 를 넘어요('+(file.size/1048576).toFixed(1)+'MB) · 카페24가 받지 않으니 줄여서 넣어 주세요 · '+file.name);
+    }
     const im=await imgOf(file);
     let s=Math.min(1,1000/im.naturalWidth); if(im.naturalHeight*s>14000) s=14000/im.naturalHeight;
     for(let k=0;k<4;k++){
