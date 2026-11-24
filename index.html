@@ -37794,6 +37794,8 @@ window.baroyamAsk=function(title,body,okText){
       +(catsErr&&!CATS?'<p class="rg-hint" style="color:var(--warn)">'+esc(catsErr)+'</p>':'')+'</div>'
       +'<div class="rg-row"><span>쇼핑몰에 진열<em>끄면 고객 화면에 안 보여요</em></span><button type="button" class="ui-switch" role="switch" aria-checked="'+!!c.display+'" data-act="disp"></button></div>'
       +'<div class="rg-row"><span>판매함<em>끄면 보여도 살 수 없어요</em></span><button type="button" class="ui-switch" role="switch" aria-checked="'+!!c.selling+'" data-act="sell"></button></div>'
+      /* 11-25 사용자 요청 · 카페24 "모바일 상품 상세설명" 을 처음 등록 때 '상품 상세설명 동일'로(켜면 모바일 상세를 따로 보내지 않음) */
+      +'<div class="rg-row"><span>모바일 상세설명 · PC 와 동일<em>끄면 같은 내용을 모바일 상세로 따로 넣어요</em></span><button type="button" class="ui-switch" role="switch" aria-checked="'+(c.mobSame!==false)+'" data-act="mobsame"></button></div>'
       +'<div class="rg-checks">'+ck.map(k=>'<div class="'+(k.ok?'':k.opt?'opt':'no')+'"><i>'+(k.ok?'✓':k.opt?'!':'✕')+'</i>'+esc(k.t)+(k.ok?'':k.opt?' · 없어도 등록돼요':' · 필요')+'</div>').join('')+'</div>';
     if(reg&&reg.no){
       h+='<div class="rg-done"><b>카페24 상품번호 '+esc(reg.no)+'</b><br>'+esc((reg.at||'').slice(0,10))+(reg.by?' · '+esc(reg.by):'')+' 등록'
@@ -37920,7 +37922,7 @@ window.baroyamAsk=function(title,body,okText){
       groups:cs.length?groupsOf(x).filter(g=>g.values.length):[],
       vars:cs.map(vals=>{ const v=vs[vkey(vals)]||{}; return {vals,add:num(v.add),qty:num(v.qty),inv:!!x.invOn,sell:!v.off}; }),
       invOn:!!x.invOn,qty:num(x.qty),main:x.main,adds:x.adds||[],detail:x.detail||[],top:x.top||'',bottom:x.bottom||'',
-      cafe24:{cats:(x.cafe24.cats||[]).map(Number),display:!!x.cafe24.display,selling:!!x.cafe24.selling}};
+      cafe24:{cats:(x.cafe24.cats||[]).map(Number),display:!!x.cafe24.display,selling:!!x.cafe24.selling,mobSame:x.cafe24.mobSame!==false}};
   }
   async function register(){
     const x=it(); if(!x||busy[x.id]) return;
@@ -37932,6 +37934,8 @@ window.baroyamAsk=function(title,body,okText){
       html:'<div class="sh-ask-list">'+row('판매가',won(p.price))+row('옵션',p.vars.length?p.vars.filter(v=>v.sell).length+'개':'없음(단일 상품)')
         +row('사진','대표 1장'+(p.adds.length?' · 추가 '+p.adds.length+'장':'')+(p.detail.length?' · 상세 '+p.detail.length+'장':''))
         +row('카테고리',p.cafe24.cats.length?p.cafe24.cats.map(catName).map(esc).join('<br>'):'없음')
+        +row('검색어',p.tags.length?esc(p.tags.join(', ')):'없음')
+        +row('모바일 상세',p.cafe24.mobSame?'상품 상세설명 동일':'따로 등록(같은 내용)')
         +row('상태',(p.cafe24.display?'진열':'진열 안 함')+' · '+(p.cafe24.selling?'판매함':'판매안함'))+'</div>'
         +(K.TIP?K.TIP('사진 수에 따라 1~3분 걸려요. 같은 상품을 두 번 눌러도 카페24에는 하나만 생깁니다.'):'')}):confirm('카페24에 등록할까요?');
     if(!ok) return;
@@ -38080,6 +38084,7 @@ window.baroyamAsk=function(title,body,okText){
       if(b.dataset.rmcat){ x.cafe24.cats=(x.cafe24.cats||[]).filter(n=>String(n)!==b.dataset.rmcat); touch(x.id); paintSide(); return; }
       if(a==='disp'){ x.cafe24.display=!x.cafe24.display; touch(x.id); paintSide(); return; }
       if(a==='sell'){ x.cafe24.selling=!x.cafe24.selling; touch(x.id); paintSide(); return; }
+      if(a==='mobsame'){ x.cafe24.mobSame=x.cafe24.mobSame===false; touch(x.id); paintSide(); return; }
       if(a==='reg'){ register(); return; }
       if(a==='see'){ const K=KIT(); if(K.show) K.show(x.name||''); return; }
     });
