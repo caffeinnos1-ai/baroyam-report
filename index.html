@@ -38137,6 +38137,7 @@ window.baroyamAsk=function(title,body,okText){
   ];
   /* 칸 · g = 묶음(주문/클레임/문의) · 카페24 에 없는 칸은 null(빈칸) */
   const COLS=[
+    {k:'today',lb:'당일주문', g:'ord', tip:'오늘 0시부터 지금까지 들어온 주문 수(주문 내용은 모으지 않고 숫자만 · 11-25)'},
     {k:'cxl',  lb:'취소요청',  g:'clm', tip:'고객이 취소를 신청한 주문'},
     {k:'ret',  lb:'반품요청',  g:'clm', tip:'고객이 반품을 신청한 주문'},
     {k:'exc',  lb:'교환요청',  g:'clm', tip:'고객이 교환을 신청한 주문'},
@@ -38146,10 +38147,10 @@ window.baroyamAsk=function(title,body,okText){
   ];
   function rowOf(id){
     /* 11번가 · 최근 30일 취소·반품·교환 신청 + 답변 전 상품 Q&A · 쪽지·긴급알리미는 API 가 없어 빈칸 */
-    if(id==='11st'){ if(!st11) return null; const n=v=>typeof v==='number'?v:null; return {at:st11.at,cxl:n(st11.cxl),ret:n(st11.ret),exc:n(st11.exc),board:n(st11.qna),msg:null,urg:null,err:st11.err||''}; }
+    if(id==='11st'){ if(!st11) return null; const n=v=>typeof v==='number'?v:null; return {at:st11.at,today:st11.todayErr==='ip'?'ip':n(st11.today),cxl:n(st11.cxl),ret:n(st11.ret),exc:n(st11.exc),board:n(st11.qna),msg:null,urg:null,err:st11.err||''}; }
     if(id!=='cafe24'||!data) return null;
     const c=data.counts||{}, inq=data.inq||{};
-    return {at:data.at,
+    return {at:data.at, today:data.today&&typeof data.today.orders==='number'?data.today.orders:null,
       cxl:Number(c.C00)||0, ret:Number(c.R00)||0, exc:Number(c.E00)||0,
       board:inq.need||inq.err?'need':(inq.boards||[]).reduce((a,b)=>a+(b.open||0),0),
       msg:null, urg:null};
@@ -38164,6 +38165,7 @@ window.baroyamAsk=function(title,body,okText){
     const tot={}; COLS.forEach(c=>{ tot[c.k]=on.reduce((a,x)=>a+(typeof x.r[c.k]==='number'?x.r[c.k]:0),0); });
     const cell=(c,v)=>{
       if(v==null) return '<td class="na"></td>';
+      if(v==='ip') return '<td class="na" title="11번가 Open API 센터에서 주문 API 허용 IP 에 서버 IP(180.70.116.29)를 넣어야 해요">IP 필요</td>';
       if(v==='need') return '<td class="na" title="게시판 권한이 필요해요 · 아래 안내">권한 필요</td>';
       return '<td class="'+(v?'v '+(c.g==='clm'?'clm':c.g==='inq'?'inq':''):'')+'">'+Number(v).toLocaleString('ko-KR')+'</td>';
     };
