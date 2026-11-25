@@ -16181,6 +16181,9 @@ window.CsGuide=(function(){
     {name:'카페24 CS 현황', cat:'collect', where:'ERP 쇼핑몰통합관리 · CS 현황', days:[0,1,2,3,4,5,6],
      times:Array.from({length:144},(_,i)=>(i/6<10?'0':'')+Math.floor(i/6)+':'+(i%6?i%6*10:'00')), record:'카페24 CS 현황',
      desc:'카페24 주문을 모으지 않고 상태별 건수(취소·반품·교환 신청, 배송 단계)와 답변 전 문의 수만 받아 CS 현황에 보여 줘요.', task:'cron'},
+    {name:'11번가 CS 현황', cat:'collect', where:'ERP 쇼핑몰통합관리 · CS 현황', days:[0,1,2,3,4,5,6],
+     times:Array.from({length:144},(_,i)=>(i/6<10?'0':'')+Math.floor(i/6)+':'+(i%6?i%6*10:'00')), record:'11번가 CS 현황',
+     desc:'11번가 Open API 로 최근 30일 취소·반품·교환 신청 수와 답변 안 한 상품 Q&A 수만 받아 CS 현황의 11번가 줄에 보여 줘요(읽기만).', task:'cron'},
     {name:'카페24 상품 수집', cat:'collect', where:'ERP 쇼핑몰통합관리 · 카페24', days:[0,1,2,3,4,5,6],
      times:Array.from({length:24},(_,h)=>(h<10?'0':'')+h+':47'), record:'카페24 상품 수집',
      desc:'카페24 상품·옵션의 설정된 재고와 판매상태를 받아 쇼핑몰통합관리에 보여 줘요. 쇼핑몰통합관리에서 고친 재고·상태는 1분 안에 서버가 카페24에 반영해요(카페24 지금 값이 화면과 다르면 건너뜀).', task:'cron'},
@@ -36987,7 +36990,7 @@ window.baroyamAsk=function(title,body,okText){
 
   /* ---------- 카페24 실제 데이터 ---------- */
   const BUCKET='brand-files', DB=()=>window.BAROYAM_DB;
-  const REAL={}; let STATUS=null, busy=false;
+  const REAL={}; let STATUS=null, ST11=null, busy=false;   /* ST11 = 11번가 CS 숫자 파일(받아지면 연결됨으로 봄 · 11-25) */
   const BRANDS=['쫀득란빵','홀떡피자','잡채랑','이응떡볶이','오꾸밥','바비쿡','방구석포차','밥카츠','파스타스','통스카츠'];
   function brandOf(name){
     const t=String(name||'').replace(/\s+/g,''); let best='', at=1e9;
@@ -37030,8 +37033,9 @@ window.baroyamAsk=function(title,body,okText){
     })};
   }
   async function loadCafe24(){
-    const [st,snap]=await Promise.all([readJson('shop/cafe24/status.json'),readJson('shop/cafe24/products.json')]);
+    const [st,snap,s11]=await Promise.all([readJson('shop/cafe24/status.json'),readJson('shop/cafe24/products.json'),readJson('shop/st11/cs.json')]);
     if(st) STATUS=st;
+    if(s11) ST11=s11;
     if(snap&&Array.isArray(snap.prods)){
       Object.keys(S.edit).filter(id=>id.startsWith('cafe24-')).forEach(id=>delete S.edit[id]);
       Object.keys(S.pedit).filter(id=>id.startsWith('cafe24-')).forEach(id=>delete S.pedit[id]);
@@ -37232,12 +37236,15 @@ window.baroyamAsk=function(title,body,okText){
   const TAG={1:['t1','바로 가능'],2:['t2','키 발급 필요'],3:['t3','확인 필요']};
   const hm=t=>{ const d=new Date(t); return isNaN(d)?'—':(d.getMonth()+1)+'.'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
   function paintLink(){
-    const on=c=>c.id==='cafe24'&&STATUS&&STATUS.read;
+    const on=c=>(c.id==='cafe24'&&STATUS&&STATUS.read)||(c.id==='11st'&&ST11&&!(ST11.cxl==null&&ST11.qna==null));
     $('shLinkCnt').innerHTML='판매처 7곳 중 <b>'+CHANS.filter(on).length+'</b>곳 연결됨';
     let rk=0;   /* 연결 순서 · 확인 필요(톡딜·G마켓·옥션)는 순서 없이 맨 뒤 */
     $('shLink').innerHTML=CHANS.slice().sort((x,y)=>(x.lv===3)-(y.lv===3)).map(c=>{ const t=TAG[c.lv]; const i=c.lv<3?rk++:-1;
       const ok=on(c), half=c.id==='cafe24'&&STATUS&&STATUS.read&&!STATUS.write;
       const pill=ok?(half?'<span class="sh-st mix">읽기만 연결</span>':'<span class="sh-st on">연결됨</span>'):'<span class="sh-st stop">연결 안 됨</span>';
+      if(ok&&c.id==='11st') return '<div class="sh-lc"><div class="sh-lc-top"><img src="'+c.logo+'" alt=""><div class="sh-lc-nm"><strong>'+esc(c.name)+'</strong><em>'+(i>=0?(i+1)+'순위 · ':'')+esc(c.how)+'</em></div><span class="sh-lc-tag '+t[0]+'">'+t[1]+'</span></div>'
+        +'<div class="sh-lc-need"><span>연결 정보</span>API 키 · 서버 IP 등록 · 지금은 CS 현황(취소·반품·교환·Q&amp;A)만 씀</div>'
+        +'<div class="sh-lc-foot"><span class="sh-st on">연결됨</span>마지막 수집 '+hm(ST11.at)+'<span class="pf-grow"></span></div></div>';
       const last=ok?'마지막 수집 '+hm(STATUS.synced||STATUS.at)+(STATUS.count!=null?' · 상품 '+STATUS.count+'개':''):'마지막 수집 —';
       return '<div class="sh-lc"><div class="sh-lc-top"><img src="'+c.logo+'" alt=""><div class="sh-lc-nm"><strong>'+esc(c.name)+'</strong><em>'+(i>=0?(i+1)+'순위 · ':'')+esc(c.how)+'</em></div><span class="sh-lc-tag '+t[0]+'">'+t[1]+'</span></div>'
         +'<div class="sh-lc-need"><span>'+(ok?'연결 정보':'준비물')+'</span>'+(ok?'쇼핑몰 '+esc(STATUS.mall||'')+' · 권한 '+esc((STATUS.scopes||'').replace(/mall\./g,'')):esc(c.need))+'</div>'
@@ -38105,7 +38112,7 @@ window.baroyamAsk=function(title,body,okText){
   const $=id=>document.getElementById(id);
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const BUCKET='brand-files', DB=()=>window.BAROYAM_DB;
-  let data=null, loadedAt=0, busy=false, tried=false;   /* tried = 서버 파일을 한 번이라도 읽어 봤는지(그 전에는 표만 그리고 숫자 칸은 불러오는 중) */
+  let data=null, st11=null, loadedAt=0, busy=false, tried=false;   /* st11 = 11번가 숫자(VPS st11_cs.js → shop/st11/cs.json · 11-25) */   /* tried = 서버 파일을 한 번이라도 읽어 봤는지(그 전에는 표만 그리고 숫자 칸은 불러오는 중) */
   async function readJson(path){
     try{ const db=DB(); if(!db||!db.fileUrl) return null; const u=await db.fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; }
   }
@@ -38138,6 +38145,8 @@ window.baroyamAsk=function(title,body,okText){
     {k:'urg',  lb:'긴급메세지', g:'inq', tip:'판매처 긴급 알림(오픈마켓)'},
   ];
   function rowOf(id){
+    /* 11번가 · 최근 30일 취소·반품·교환 신청 + 답변 전 상품 Q&A · 쪽지·긴급알리미는 API 가 없어 빈칸 */
+    if(id==='11st'){ if(!st11) return null; const n=v=>typeof v==='number'?v:null; return {at:st11.at,cxl:n(st11.cxl),ret:n(st11.ret),exc:n(st11.exc),board:n(st11.qna),msg:null,urg:null,err:st11.err||''}; }
     if(id!=='cafe24'||!data) return null;
     const c=data.counts||{}, inq=data.inq||{};
     return {at:data.at,
@@ -38149,9 +38158,9 @@ window.baroyamAsk=function(title,body,okText){
   function paint(){
     const box=$('csBody'); if(!box) return;
     const rows=CH.map(ch=>({ch,r:rowOf(ch.id)}));
-    const wait=!data&&!tried;
+    const wait=!data&&!st11&&!tried;
     const on=rows.filter(x=>x.r);
-    $('csAt').textContent=wait?'숫자를 불러오는 중…':'판매처 '+CH.length+'곳 중 '+on.length+'곳 연결 · 10분마다 새로 받음'+(data?' · 최근 90일 주문 기준':'');
+    $('csAt').textContent=wait?'숫자를 불러오는 중…':'판매처 '+CH.length+'곳 중 '+on.length+'곳 연결 · 10분마다 새로 받음'+(data?' · 카페24 최근 90일 주문 · 11번가 최근 30일 기준':'');
     const tot={}; COLS.forEach(c=>{ tot[c.k]=on.reduce((a,x)=>a+(typeof x.r[c.k]==='number'?x.r[c.k]:0),0); });
     const cell=(c,v)=>{
       if(v==null) return '<td class="na"></td>';
@@ -38161,8 +38170,8 @@ window.baroyamAsk=function(title,body,okText){
     let h='<div class="sh-cs-wrap"><table class="sh-cs-t"><thead><tr><th class="nm">판매처</th>'
       +COLS.map(c=>'<th class="g-'+c.g+'" title="'+esc(c.tip)+'">'+c.lb+'</th>').join('')+'<th style="width:46px"></th></tr></thead><tbody>';
     rows.forEach(({ch,r},i)=>{
-      const ld=wait&&ch.id==='cafe24';   /* 카페24 는 연결돼 있으니 읽는 동안 칸만 반짝인다 */
-      h+='<tr class="'+(r||ld?'':'off')+'"><td class="nm"><div class="sh-cs-ch"><img src="'+ch.logo+'" alt=""><span><span class="nmx">'+(i+1)+'. '+esc(ch.name)+'</span><span class="at">'+(r?ago(r.at):ld?'불러오는 중…':ch.id==='cafe24'?'아직 숫자 없음':'연결 전')+'</span></span></div></td>'
+      const ld=wait&&(ch.id==='cafe24'||ch.id==='11st');   /* 카페24 는 연결돼 있으니 읽는 동안 칸만 반짝인다 */
+      h+='<tr class="'+(r||ld?'':'off')+'"><td class="nm"><div class="sh-cs-ch"><img src="'+ch.logo+'" alt=""><span><span class="nmx">'+(i+1)+'. '+esc(ch.name)+'</span><span class="at"'+(r&&r.err?' title="'+esc(r.err)+'" style="color:var(--warn)"':'')+'>'+(r?ago(r.at)+(r.err?' · 일부 못 읽음':''):ld?'불러오는 중…':(ch.id==='cafe24'||ch.id==='11st')?'아직 숫자 없음':'연결 전')+'</span></span></div></td>'
         +COLS.map(c=>r?cell(c,r[c.k]):ld?'<td><span class="sh-sk"></span></td>':'<td class="na">-</td>').join('')
         +'<td>'+(r?'<button type="button" class="rf'+(busy?' spin':'')+'" data-rf="'+ch.id+'" title="'+esc(ch.name)+' 지금 새로 받기"'+(busy?' disabled':'')+'>'+RF+'</button>':'')+'</td></tr>';
     });
@@ -38180,11 +38189,11 @@ window.baroyamAsk=function(title,body,okText){
     if(inq.need) h+='<div class="sh-cs-need">카페24 <b>게시판</b> 칸을 채우려면 권한을 하나 더 켜야 합니다.<br>① 카페24 개발자센터 → 앱 → 권한 관리에서 <b>게시판(Community) 읽기</b>를 켜고 저장<br>② 이 화면 오른쪽 위 <b>연동 설정</b> → 카페24 <b>다시 승인</b> → 카페24에서 동의</div>';
     box.innerHTML=h;
   }
-  async function load(){ if(!tl) loadTL(); const db=DB(); const d=await readJson('shop/cafe24/cs.json'); if(d){ data=d; } if(db&&db.fileUrl&&(d||Date.now()-t0>15e3)) tried=true; paint(); return !!d; }
+  async function load(){ if(!tl) loadTL(); const db=DB(); const [d,e]=await Promise.all([readJson('shop/cafe24/cs.json'),readJson('shop/st11/cs.json')]); if(d){ data=d; } if(e){ st11=e; } if(db&&db.fileUrl&&(d||Date.now()-t0>15e3)) tried=true; paint(); return !!d; }
   const t0=Date.now();   /* 로그인이 늦으면 못 읽으니 15초까지는 "불러오는 중"으로 둔다 */
   function note(t,kind){ const n=$('csNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(kind?' '+kind:''); clearTimeout(n._t); if(t&&kind!=='run') n._t=setTimeout(()=>{ n.hidden=true; },8000); }
   async function fetchNow(){
-    if(busy) return; busy=true; const b=$('csFetch'); b.disabled=true; paint(); note('카페24에서 숫자를 받는 중…','run');
+    if(busy) return; busy=true; const b=$('csFetch'); b.disabled=true; paint(); note('카페24·11번가에서 숫자를 받는 중…','run');
     try{
       const db=DB();
       if(!db||!db.fileUpload||(db.ensureSession&&!(await db.ensureSession()))) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 해 주세요');
