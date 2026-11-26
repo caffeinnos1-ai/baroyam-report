@@ -23107,7 +23107,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const pp=G3?(G3.run?'평일 최근 ':'게재 1일째부터 ')+G3.w+'일':'';
       const grpV=(G3||vdBox)?'<section class="ma-grp"><h3 class="ma-grp-h"><span>영상</span></h3>'+(G3?'<div class="gd-card"><h4>후킹·유지 <small>최근 60일</small></h4>'+gdVideoHtml(G3)+'</div>':'')+vdBox+'</section>':'';
       const grpP=(G3||cvBox||lp)?'<section class="ma-grp"><h3 class="ma-grp-h"><span>상세페이지</span></h3>'+(G3?'<div class="gd-card"><h4>체류 등급 <small>'+pp+'</small></h4>'+gdPageHtml(G3)+'</div>':'')+cvBox+(lp?'<div class="ma-grp-f">'+lp+'</div>':'')+'</section>':'';
-      return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+grpV+grpP+postBtn+'</div><div class="ma-pv-info">'
+      return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+postBtn+'</div><div class="ma-pv-side">'+grpV+grpP+'</div><div class="ma-pv-info">'
 
         /* 노출 → 클릭 → 장바구니 → 구매 칸은 11-26 사용자 요청으로 행동지침으로 옮김(gdFunnelHtml) */
         +bdHtml
