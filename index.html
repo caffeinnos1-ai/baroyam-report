@@ -3387,13 +3387,20 @@ window.BAROYAM_FONT=(function(){
   /* 큰 창(11-26) · 소재 상세 / 행동지침 두 모드 · 화면을 거의 채운다 */
   .ma-table tr.ma-guide-row{cursor:pointer}
   .settings-panel.ma-big{max-width:min(1680px,96vw);width:96vw;height:94vh;max-height:94vh;display:flex;flex-direction:column}
-  .ma-big .gd-head{gap:16px}
-  .ma-big .gd-hd{flex:1;min-width:0}
-  .ma-big .gd-lv{font-size:15px;padding:8px 16px}
-  .ma-big .gd-hd h2{font-size:19px}
-  .ma-big-mode{flex:none;display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--chip-flat)}
-  .ma-big-mode button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;height:var(--ui-h);padding:0 16px;border-radius:9px;font-size:14px;font-weight:500;color:var(--body);cursor:pointer}
-  .ma-big-mode button svg{width:17px;height:17px}
+  .ma-big .gd-head{gap:12px;padding:10px 14px 10px 20px;min-height:0;align-items:center}
+  .ma-big .gd-hd{flex:1;min-width:0;gap:10px}
+  .ma-big .gd-hd-t{min-width:0;gap:10px}
+  .ma-big .gd-lv{font-size:12.5px;padding:4px 10px;border-radius:8px}
+  .ma-big .gd-hd h2{font-size:16px;min-width:60px}
+  .ma-big .gd-sub-t{font-size:12px}
+  .gd-per-t{flex:none;display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12px;white-space:nowrap}
+  .gd-per-t svg{width:14px;height:14px}
+  .gd-per-t b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .gd-per-t:empty,.gd-per-t[hidden]{display:none}
+  .ma-big .settings-close{flex:none}
+  .ma-big-mode{flex:none;margin-left:auto;display:flex;gap:3px;padding:3px;border-radius:10px;background:var(--chip-flat)}
+  .ma-big-mode button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:var(--ui-h-sm);padding:0 13px;border-radius:8px;font-size:13px;font-weight:500;color:var(--body);cursor:pointer}
+  .ma-big-mode button svg{width:15px;height:15px}
   .ma-big-mode button:hover{color:var(--ink)}
   .ma-big-mode button.is-on{background:var(--paper);color:var(--btn-soft-ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
   .ma-big-mode button:focus-visible{outline:2px solid var(--btn);outline-offset:1px}
@@ -3402,7 +3409,8 @@ window.BAROYAM_FONT=(function(){
   .ma-big .ma-pv-col{width:420px}
   .ma-big .ma-asset-open.is-still .ma-pv-col{width:480px}
   .ma-big .ma-pv{max-height:76vh}
-  .ma-big .gd-body{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:20px;padding:20px 28px 24px;font-size:14px}
+  .ma-big .gd-body{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:20px;padding:16px 24px 22px;font-size:14px}
+  @media (max-width:1300px){ .ma-big .gd-sub-t,.gd-per-t span{display:none} }
   .ma-big .gd-right{align-self:stretch}
   .no-ai .ma-big .gd-body{grid-template-columns:minmax(0,1fr)}
   .no-ai .ma-big .gd-right{display:none}
@@ -23747,7 +23755,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     if(cardBox) return;
     cardBox=document.createElement('div');
     cardBox.className='settings-overlay ma-big-ov'+(GD_AI_OFF?' no-ai':''); cardBox.hidden=true;
-    cardBox.innerHTML='<div class="settings-panel ma-dialog gd-dlg ma-big" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span></div></div>'
+    cardBox.innerHTML='<div class="settings-panel ma-dialog gd-dlg ma-big" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span><span class="gd-per-t"></span></div></div>'
       +'<div class="ma-big-mode" role="tablist" aria-label="보기 모드"><button type="button" role="tab" data-big="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>소재 상세</button>'
       +'<button type="button" role="tab" data-big="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>행동지침</button></div>'
       +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div>'
@@ -23772,6 +23780,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     bigMode=m;
     cardBox.querySelectorAll('[data-big]').forEach(b=>{ const on=b.dataset.big===m; b.classList.toggle('is-on',on); b.setAttribute('aria-selected',on); });
     cardBox.querySelectorAll('[data-big-pane]').forEach(p=>{ p.hidden=p.dataset.bigPane!==m; });
+    cardBox.querySelector('.gd-per-t').hidden=m!=='guide';
     const body=cardBox.querySelector('[data-big-pane="card"]');
     if(m==='card'&&curCard){
       if(!body.innerHTML){ body.innerHTML=cardHtml(curCard); body.scrollTop=0; playVideo(); }
@@ -23785,7 +23794,12 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     cardBox.querySelector('#gdT').textContent=name||'';
     const pill=cardBox.querySelector('.gd-pill'), sub=cardBox.querySelector('.gd-sub-t');
     pill.hidden=!g; sub.textContent='';
-    if(g){ pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k]; sub.textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':''); }
+    const per=cardBox.querySelector('.gd-per-t'); per.innerHTML='';
+    if(g){ pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k]; sub.textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'');
+      /* 판정 기간 · 예전엔 행동지침 왼쪽 맨 위 띠였는데 머리 한 줄로 올림(11-26 사용자 요청 · 공간) */
+      if(g.from){ const WD='일월화수목금토', dw=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10))+'('+WD[new Date(d+'T00:00:00').getDay()]+')';
+        per.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+          +'<b>'+dw(g.from)+' ~ '+dw(g.to)+'</b><span>'+(g.run?'평일 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+' · 영상 최근 60일</span>'; } }
   }
   function openCard(r){
     bigEnsure();
@@ -24539,12 +24553,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const kpi=(k,l,v,cls,sub)=>'<button type="button" class="gd-k'+cls+(gdKey===k?' is-sel':'')+'" data-gd-k="'+k+'" aria-pressed="'+(gdKey===k)+'" title="눌러서 일자별 '+l+' 보기"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></button>';
     const has=g.sp>0&&g.imp>0;
     const note={wait:'게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.',none:'이 기간에 광고비·노출이 없습니다.',low:'광고비 '+money(g.sp,cur)+' · '+money(GUIDE.minSp,cur)+' 이상 써야 판정합니다. 아래 숫자는 참고만 하세요.'}[g.k];
-    /* 데이터 기준 기간을 왼쪽 맨 위 띠로 크게(11-05 사용자 요청 · 머리 작은 글씨로는 안 보임) · 날짜에 요일 · 운영은 주말 뺀 평일 */
-    const WD='일월화수목금토', dw=d=>md(d)+'('+WD[new Date(d+'T00:00:00').getDay()]+')';
-    const when='<div class="gd-when"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
-      +'<span class="l">데이터 기준</span><b>'+dw(g.from)+' ~ '+dw(g.to)+'</b><span class="n">'+(g.run?'평일 '+g.w+'일 · 주말 제외':'게재 1일째부터 '+g.w+'일')+'</span>'
-      +'<span class="r">영상은 최근 60일</span></div>';
-    gdBox.querySelector('.gd-left').innerHTML=when+
+    /* 데이터 기준 기간은 창 머리 한 줄(.gd-per-t · bigHead)로 옮김(11-26) */
+    gdBox.querySelector('.gd-left').innerHTML=
       (note?'<p class="gd-note is-'+g.k+'">'+note+'</p>':'')
       +(has?'<div class="gd-kpis">'
         +kpi('roas','ROAS',gdPct(g.roas,0),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.rOk:null),(g.run?'손익분기 '+Math.round(be)+'%':'기준 '+GUIDE.roas+'%')+(g.run?' '+sg(chg(g.roas,g.pRoas)):''))
@@ -24561,15 +24571,14 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 일자별 막대(11-05 사용자 요청) · 위 네 칸을 누르면 그 값을 판정 기간의 날마다(운영 = 평일 7일 · 테스트 = 게재 1일째부터) 막대로 · 처음엔 ROAS ·
      막대는 아래에서 위로 자란다(움직임 줄이기 설정이면 바로) · ROAS 는 손익분기(테스트는 200%) 점선, 클릭률은 2% 점선 */
   const GD_KEYS={roas:'ROAS',sp:'광고비',rev:'광고매출',ctr:'클릭률'};
-  let gdKey='roas', gdRng='base';   /* 11-11 사용자 요청 · 기간 고르기: base = 판정 기간(평일 7일 / 게재 1일째부터) · 30 = 최근 30일(주말 포함) */
+  let gdKey='roas', gdRng='7';   /* 11-26 사용자 요청 · 기간 단추: 최근 3일 · 7일 · 30일(오늘 포함) · 지난주 · 지지난주(월~일) */   /* 11-11 사용자 요청 · 기간 고르기: base = 판정 기간(평일 7일 / 게재 1일째부터) · 30 = 최근 30일(주말 포함) */
   function gdPaintChart(){
     const box=gdBox&&gdBox.querySelector('.gd-chart'); if(!box) return;
     const g=shownGuide[gdCur]; if(!g) return;
     const a=acc(), D=a.adDaily||{}, cur=a.currency, WD='일월화수목금토';
     const r30=gdRng==='30';
-    let days=g.days||[];
-    if(r30&&g.to){ const e=new Date(g.to+'T00:00:00'); days=[];
-      for(let i=29;i>=0;i--){ const t=new Date(e); t.setDate(e.getDate()-i); days.push(t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')); } }
+    const T=kst(), back=(e,n)=>Array.from({length:n},(_,i)=>dayAdd(e,i-n+1)), mon=dayAdd(T,-((dowOf(T)+6)%7));
+    const days=gdRng==='3'?back(T,3):gdRng==='30'?back(T,30):gdRng==='lw'?back(dayAdd(mon,-1),7):gdRng==='llw'?back(dayAdd(mon,-8),7):back(T,7);
     const rows=days.map(d=>{ const m=[0,0,0,0,0], day=D[d]; if(day) g.ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; });
       const val={roas:m[0]?m[1]/m[0]*100:null,sp:m[0],rev:m[1],ctr:m[4]?m[3]/m[4]*100:null}[gdKey];
       return {d,val,buy:m[2],sp:m[0]}; });
@@ -24577,10 +24586,10 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const line=gdKey==='roas'?(g.run?g.be:GUIDE.roas):gdKey==='ctr'?GUIDE.ctr:null;
     const max=Math.max(1,line||0,...rows.map(r=>r.val||0))*1.12;
     const good=v=>line==null||v==null?'':v>=line?' ok':' no';
-    const baseTxt=g.run?'평일 최근 '+g.w+'일':'게재 1일째부터 '+g.w+'일';
+    const md2=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10))+'('+WD[dowOf(d)]+')', baseTxt=md2(days[0])+' ~ '+md2(days[days.length-1]);
     const tab=(v,t)=>'<button type="button" class="ui-tab" data-gd-rng="'+v+'" aria-selected="'+(gdRng===v)+'">'+t+'</button>';
-    box.innerHTML='<div class="gd-chart-h"><h4>'+GD_KEYS[gdKey]+' · 일자별 <small>'+(r30?'최근 30일 · 주말 포함':baseTxt)+(line!=null?' · 점선 = '+(gdKey==='roas'?(g.run?'손익분기 ':'기준 ')+Math.round(line)+'%':'기준 '+line+'%'):'')+'</small></h4>'
-      +'<div class="ui-tabs gd-rng" role="tablist">'+tab('base',g.run?'평일 최근 7일':'게재 1일째부터')+tab('30','최근 30일')+'</div></div>'
+    box.innerHTML='<div class="gd-chart-h"><h4>'+GD_KEYS[gdKey]+' · 일자별 <small>'+baseTxt+(line!=null?' · 점선 = '+(gdKey==='roas'?(g.run?'손익분기 ':'기준 ')+Math.round(line)+'%':'기준 '+line+'%'):'')+'</small></h4>'
+      +'<div class="ui-tabs gd-rng" role="tablist">'+tab('3','최근 3일')+tab('7','최근 7일')+tab('30','최근 30일')+tab('lw','지난주')+tab('llw','지지난주')+'</div></div>'
       +'<div class="gd-bars'+(r30?' is-30':'')+'">'+(line!=null?'<span class="gd-line" style="bottom:'+(line/max*100).toFixed(1)+'%"></span>':'')
       +rows.map((r,i)=>{ const dt=new Date(r.d+'T00:00:00'), wk=dt.getDay()===0||dt.getDay()===6;
         /* 30일은 막대가 좁아 값 글씨는 숨기고(올리면 말풍선) 날짜는 5일마다·주말은 흐리게 */
