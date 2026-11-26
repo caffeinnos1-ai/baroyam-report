@@ -3386,35 +3386,40 @@ window.BAROYAM_FONT=(function(){
   .settings-panel.gd-dlg{max-width:1180px;width:100%;height:auto;max-height:92vh;display:flex;flex-direction:column}
   /* 큰 창(11-26) · 소재 상세 / 행동지침 두 모드 · 화면을 거의 채운다 */
   .ma-table tr.ma-guide-row{cursor:pointer}
-  .settings-panel.ma-big{max-width:min(1680px,96vw);width:96vw;height:94vh;max-height:94vh;display:flex;flex-direction:column}
-  .ma-big .gd-head{gap:12px;padding:10px 14px 10px 20px;min-height:0;align-items:center}
-  .ma-big .gd-hd{flex:1;min-width:0;gap:10px}
-  .ma-big .gd-hd-t{min-width:0;gap:10px}
-  .ma-big .gd-lv{font-size:12.5px;padding:4px 10px;border-radius:8px}
-  .ma-big .gd-hd h2{font-size:16px;min-width:60px}
-  .ma-big .gd-sub-t{font-size:12px}
+  .settings-panel.ma-xl{max-width:min(1680px,96vw);width:96vw;height:94vh;max-height:94vh;display:flex;flex-direction:column}
+  .ma-xl .gd-head{gap:12px;padding:10px 14px 10px 20px;min-height:0;align-items:center}
+  .ma-xl .gd-hd{flex:1;min-width:0;gap:10px}
+  .ma-xl .gd-hd-t{min-width:0;gap:10px}
+  .ma-xl .gd-lv{font-size:12.5px;padding:4px 10px;border-radius:8px}
+  .ma-xl .gd-hd h2{font-size:16px;min-width:60px}
+  .ma-xl .gd-sub-t{font-size:12px}
   .gd-per-t{flex:none;display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;background:var(--btn-soft);color:var(--btn-soft-ink);font-size:12px;white-space:nowrap}
   .gd-per-t svg{width:14px;height:14px}
   .gd-per-t b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .gd-per-t:empty,.gd-per-t[hidden]{display:none}
-  .ma-big .settings-close{flex:none}
-  .ma-big-mode{flex:none;margin-left:auto;display:flex;gap:3px;padding:3px;border-radius:10px;background:var(--chip-flat)}
-  .ma-big-mode button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:var(--ui-h-sm);padding:0 13px;border-radius:8px;font-size:13px;font-weight:500;color:var(--body);cursor:pointer}
-  .ma-big-mode button svg{width:15px;height:15px}
-  .ma-big-mode button:hover{color:var(--ink)}
-  .ma-big-mode button.is-on{background:var(--paper);color:var(--btn-soft-ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-  .ma-big-mode button:focus-visible{outline:2px solid var(--btn);outline-offset:1px}
-  .ma-big-mode button[hidden],.ma-big [data-big-pane][hidden],.ma-big .gd-pill[hidden]{display:none}
-  .ma-big .ma-dialog-body{padding:24px 30px;font-size:14px}
-  .ma-big .ma-pv-col{width:420px}
-  .ma-big .ma-asset-open.is-still .ma-pv-col{width:480px}
-  .ma-big .ma-pv{max-height:76vh}
-  .ma-big .gd-body{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:20px;padding:16px 24px 22px;font-size:14px}
-  @media (max-width:1300px){ .ma-big .gd-sub-t,.gd-per-t span{display:none} }
-  .ma-big .gd-right{align-self:stretch}
-  .no-ai .ma-big .gd-body{grid-template-columns:minmax(0,1fr)}
-  .no-ai .ma-big .gd-right{display:none}
-  @media (max-width:980px){ .settings-panel.ma-big{width:100vw;height:100vh;max-height:100vh;border-radius:0} .ma-big .gd-head{flex-wrap:wrap} .ma-big-mode{order:3;width:100%} .ma-big-mode button{flex:1;justify-content:center} .ma-big .ma-pv-col,.ma-big .ma-asset-open.is-still .ma-pv-col{width:100%;position:static} }
+  .ma-xl .settings-close{flex:none}
+  .ma-xl-mode{flex:none;margin-left:auto;display:flex;gap:3px;padding:3px;border-radius:10px;background:var(--chip-flat)}
+  .ma-xl-mode button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:var(--ui-h-sm);padding:0 13px;border-radius:8px;font-size:13px;font-weight:500;color:var(--body);cursor:pointer}
+  .ma-xl-mode button svg{width:15px;height:15px}
+  .ma-xl-mode button:hover{color:var(--ink)}
+  .ma-xl-mode button.is-on{background:var(--paper);color:var(--btn-soft-ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .ma-xl-mode button:focus-visible{outline:2px solid var(--btn);outline-offset:1px}
+  .ma-xl-mode button[hidden],.ma-xl [data-big-pane][hidden],.ma-xl .gd-pill[hidden]{display:none}
+  .ma-xl .ma-dialog-body{padding:16px 24px 22px;font-size:14px}
+  .ma-card-kpis{margin-bottom:14px}
+  .ma-xl .gd-k{padding:14px 18px}
+  .ma-xl .gd-k b{font-size:26px;letter-spacing:-.3px}
+  .ma-xl .gd-k small{font-size:12.5px}
+  .ma-xl .gd-k span{font-size:12px}
+  .ma-xl .ma-pv-col{width:420px}
+  .ma-xl .ma-asset-open.is-still .ma-pv-col{width:480px}
+  .ma-xl .ma-pv{max-height:76vh}
+  .ma-xl .gd-body{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:20px;padding:16px 24px 22px;font-size:14px}
+  @media (max-width:1300px){ .ma-xl .gd-sub-t,.gd-per-t span{display:none} }
+  .ma-xl .gd-right{align-self:stretch}
+  .no-ai .ma-xl .gd-body{grid-template-columns:minmax(0,1fr)}
+  .no-ai .ma-xl .gd-right{display:none}
+  @media (max-width:980px){ .settings-panel.ma-xl{width:100vw;height:100vh;max-height:100vh;border-radius:0} .ma-xl .gd-head{flex-wrap:wrap} .ma-xl-mode{order:3;width:100%} .ma-xl-mode button{flex:1;justify-content:center} .ma-xl .ma-pv-col,.ma-xl .ma-asset-open.is-still .ma-pv-col{width:100%;position:static} }
   .gd-head{padding:16px 22px}
   .gd-hd{display:flex;align-items:center;gap:14px;min-width:0}
   .gd-lv{flex:none;padding:7px 14px;border-radius:10px;font-size:14px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
@@ -22936,9 +22941,17 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +txRow('t','제목')+txRow('b','본문')+txRow('d','설명')+'</div>':'';
       /* 색 기준은 문구 줄 대신 말풍선으로(사용자 요청 · 줄이 길어짐) */
       const bdHtml=agBox||plBox||hrBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+hrBox+'</div>':'';
-      return '<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
-        +'<p class="ma-pv-range">'+RANGE_TXT[range]+'</p>'
-        +'<div class="ma-big">'+big.map(m=>'<div><small>'+m[0]+'</small><b class="'+m[2]+'">'+m[1]+'</b>'+(m[3]?'<span class="sub">'+m[3]+'</span>':'')+'</div>').join('')+'</div>'
+      /* 11-26 사용자 요청 · 큰 창 두 모드의 위쪽을 같은 모양으로 · 행동지침과 같은 네 칸(ROAS · 광고비 · 광고매출 · 클릭률)을 창 폭 전체에 ·
+         기간은 목록의 기간 탭(창 머리 기간 알약에 보임) · 예전 ROAS·지출·구매 전환값 세 칸(ma-big)은 이 줄로 바뀜 */
+      const kp=(l,v,cls,sub)=>'<div class="gd-k'+cls+'"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></div>';
+      const kR=r.x.roas==null||!(r.x.spend>0)?'':(r.x.roas>=(R&&R.roas!=null?R.roas:GUIDE.roas)?' ok':' no');
+      const kC=X.ctr==null?'':X.ctr>=GUIDE.ctr?' ok':' no';
+      const top='<div class="gd-kpis ma-card-kpis">'
+        +kp('ROAS',pct(r.x.roas),kR,R&&R.roas!=null?'대표 ROAS '+Math.round(R.roas)+'%'+(gap==null?'':' <em class="'+(gap<0?'dn':'up')+'">'+(gap>=0?'▲':'▼')+Math.abs(gap)+'%p</em>'):'기준 '+GUIDE.roas+'% (대표 ROAS 미연결)')
+        +kp('광고비',money(r.x.spend,cur),'',int(X.imp)+' 노출')
+        +kp('광고매출',money(r.x.rev,cur),'','구매 '+int(X.buy)+'건'+(X.buy?' · CPA '+money(X.spend/X.buy,cur):''))
+        +kp('클릭률',X.ctr==null?'-':X.ctr.toFixed(2)+'%',kC,'기준 '+GUIDE.ctr+'% · 클릭 '+int(X.clicks))+'</div>';
+      return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
         +bdHtml+tgBox
         +txBox
@@ -23748,15 +23761,16 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   /* 11-26 사용자 요청 · 소재 팝업과 행동지침 분석 창을 화면을 거의 채우는 큰 창 하나로 합침 ·
      머리 오른쪽 단추로 '소재 상세'(예전 소재 팝업) / '행동지침'(예전 행동지침 창)을 고른다 · 고른 모드는 브라우저에 기억(baroyam_ma_bigmode) ·
      소재 줄은 두 모드 모두, 캠페인·광고 세트 줄은 행동지침만 · 바로얌AI 판단은 행동지침 모드를 볼 때만 받는다 */
-  let bigMode='card', bigBoth=false;
+  let bigMode='card', bigBoth=false, bigPerG='';
+  const CAL_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
   /* 11-26 사용자 요청 · 바로얌AI 판단은 우선 쓰지 않음(오른쪽 칸을 숨기고 AI 를 부르지 않음 · 코드는 남겨 둠 · 다시 쓰려면 false) */
   const GD_AI_OFF=true;
   function bigEnsure(){
     if(cardBox) return;
     cardBox=document.createElement('div');
-    cardBox.className='settings-overlay ma-big-ov'+(GD_AI_OFF?' no-ai':''); cardBox.hidden=true;
-    cardBox.innerHTML='<div class="settings-panel ma-dialog gd-dlg ma-big" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span><span class="gd-per-t"></span></div></div>'
-      +'<div class="ma-big-mode" role="tablist" aria-label="보기 모드"><button type="button" role="tab" data-big="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>소재 상세</button>'
+    cardBox.className='settings-overlay ma-xl-ov'+(GD_AI_OFF?' no-ai':''); cardBox.hidden=true;
+    cardBox.innerHTML='<div class="settings-panel ma-dialog gd-dlg ma-xl" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span><span class="gd-per-t"></span></div></div>'
+      +'<div class="ma-xl-mode" role="tablist" aria-label="보기 모드"><button type="button" role="tab" data-big="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>소재 상세</button>'
       +'<button type="button" role="tab" data-big="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>행동지침</button></div>'
       +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div>'
       +'<div class="ma-dialog-body" data-big-pane="card"></div><div class="gd-body" data-big-pane="guide"><div class="gd-left"></div><aside class="gd-right"></aside></div></div>';
@@ -23780,7 +23794,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     bigMode=m;
     cardBox.querySelectorAll('[data-big]').forEach(b=>{ const on=b.dataset.big===m; b.classList.toggle('is-on',on); b.setAttribute('aria-selected',on); });
     cardBox.querySelectorAll('[data-big-pane]').forEach(p=>{ p.hidden=p.dataset.bigPane!==m; });
-    cardBox.querySelector('.gd-per-t').hidden=m!=='guide';
+    { const per=cardBox.querySelector('.gd-per-t');
+      per.innerHTML=m==='guide'?bigPerG:curCard?CAL_ICO+'<b>'+RANGE_TXT[range]+'</b><span>목록 기간 탭 기준 · 아래 칸은 최근 60일</span>':''; }
     const body=cardBox.querySelector('[data-big-pane="card"]');
     if(m==='card'&&curCard){
       if(!body.innerHTML){ body.innerHTML=cardHtml(curCard); body.scrollTop=0; playVideo(); }
@@ -23794,12 +23809,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     cardBox.querySelector('#gdT').textContent=name||'';
     const pill=cardBox.querySelector('.gd-pill'), sub=cardBox.querySelector('.gd-sub-t');
     pill.hidden=!g; sub.textContent='';
-    const per=cardBox.querySelector('.gd-per-t'); per.innerHTML='';
+    bigPerG='';
     if(g){ pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k]; sub.textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'');
       /* 판정 기간 · 예전엔 행동지침 왼쪽 맨 위 띠였는데 머리 한 줄로 올림(11-26 사용자 요청 · 공간) */
       if(g.from){ const WD='일월화수목금토', dw=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10))+'('+WD[new Date(d+'T00:00:00').getDay()]+')';
-        per.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
-          +'<b>'+dw(g.from)+' ~ '+dw(g.to)+'</b><span>'+(g.run?'평일 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+' · 영상 최근 60일</span>'; } }
+        bigPerG=CAL_ICO+'<b>'+dw(g.from)+' ~ '+dw(g.to)+'</b><span>'+(g.run?'평일 '+g.w+'일':'게재 1일째부터 '+g.w+'일')+' · 영상 최근 60일</span>'; } }
   }
   function openCard(r){
     bigEnsure();
