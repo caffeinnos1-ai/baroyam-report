@@ -3488,7 +3488,7 @@ window.BAROYAM_FONT=(function(){
   .gd-bars{transition:gap .3s}
   .gd-bars.is-30{gap:3px}
   .gd-bars.is-30 .gd-bar i{width:80%;border-radius:4px 4px 1px 1px}
-  .gd-bars.is-30 .gd-bar em{display:none}
+  .gd-bars.is-30 .gd-bar em{font-size:9.5px;font-weight:500;color:var(--body);letter-spacing:-.3px;margin-bottom:2px}
   .gd-bars.is-30 .gd-bar.nolab span{visibility:hidden}
   .gd-bars.is-30 .gd-bar.wk i{opacity:.55}
   .gd-bars.is-30 .gd-bar:hover i{opacity:1;filter:brightness(1.08)}
@@ -3507,6 +3507,14 @@ window.BAROYAM_FONT=(function(){
   @media (prefers-reduced-motion:reduce){ .gd-bar i,.gd-bar em{animation:none} }
   .gd-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .gd-chart-tip{font-size:11.5px;color:var(--mute)}
+  /* 행동지침 노출→구매 칸 크게·진하게(11-26 · 100% 화면에서 잘 안 보임) */
+  .gd-left>*,.gd-top>*{flex-shrink:0}   /* 내용이 길면 칸이 0 으로 눌려 노출→구매가 사라지던 것 */
+  .gd-left .ma-funnel>div{padding:14px 18px 14px 22px;gap:4px}
+  .gd-left .ma-funnel small{font-size:13px;color:var(--body);font-weight:500}
+  .gd-left .ma-funnel b{font-size:24px;letter-spacing:-.3px}
+  .gd-left .ma-funnel dl{font-size:13px;gap:4px 10px;margin-top:8px;padding-top:9px}
+  .gd-left .ma-funnel dt{color:var(--body)}
+  .gd-left .ma-funnel dd{color:var(--ink);font-weight:600}
   .gd-two.gd-three{grid-template-columns:repeat(3,minmax(0,1fr))}
   .gd-three .gd-div-sum small{margin-left:0;flex-basis:100%}
   @media (max-width:1200px){ .gd-two.gd-three{grid-template-columns:repeat(2,minmax(0,1fr))} .gd-three>.gd-div{grid-column:1/-1} }
@@ -23854,7 +23862,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const kb=e.target.closest('[data-gd-k]');
       const rb=e.target.closest('[data-gd-rng]');
       if(rb){ if(rb.dataset.gdRng!==gdRng){ gdRng=rb.dataset.gdRng; gdPaintChart(); } return; }
-      if(kb){ gdKey=kb.dataset.gdK; cardBox.querySelectorAll('[data-gd-k]').forEach(b=>{ const on=b===kb; b.classList.toggle('is-sel',on); b.setAttribute('aria-pressed',on); }); gdPaintChart(); }
+      if(kb){ gdKey=kb.dataset.gdK; cardBox.querySelectorAll('[data-gd-k]').forEach(b=>{ const on=b===kb; b.classList.toggle('is-sel',on); b.setAttribute('aria-pressed',on); }); const sb=cardBox.querySelector('[data-gd-chart="sub"]'); if(sb) gdPaintOne(sb,gdKey,false); }   /* 위 ROAS 는 그대로(움직임 없음) */
     });
     document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
   }
@@ -23872,7 +23880,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       if(m==='guide'){ cardBox.querySelector('.gd-left').scrollTop=0; gdPaint(); const g=shownGuide[gdCur]; if(!GD_AI_OFF&&g&&!AI_RES[gdCur]&&g.k!=='none') gdAsk(); }
     }
     /* 행동지침에서도 소재면 영상·이미지를 왼쪽에 고정하고 나머지는 오른쪽(11-26 사용자 요청) · 영상은 한 곳에만 두어 하나만 재생 */
-    { const gm=cardBox.querySelector('.gd-media'), on=m==='guide'&&!!curCard;
+    /* 11-26 사용자 요청으로 행동지침에서는 영상을 다시 뺌(자리·코드는 남김 · 다시 쓰려면 on 조건을 되돌림) */
+    { const gm=cardBox.querySelector('.gd-media'), on=false;
       gm.innerHTML=on?cardMedia(curCard):''; gm.hidden=!on; cardBox.querySelector('.gd-body').classList.toggle('has-media',on); if(on) playVideo(); }
   }
   function bigHead(g,lv,name){
@@ -24693,6 +24702,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const val={roas:m[0]?m[1]/m[0]*100:null,sp:m[0],rev:m[1],ctr:m[4]?m[3]/m[4]*100:null,imp:m[4],cpc:m[3]?m[0]/m[3]:null}[key];
       return {d,val,buy:m[2],sp:m[0]}; });
     const fmt=v=>v==null?'-':key==='roas'?Math.round(v)+'%':key==='ctr'?v.toFixed(2)+'%':key==='imp'?int(v):key==='cpc'?money(v,cur):short(v,cur);
+    /* 30일은 막대가 좁아 짧게(11-26 사용자 요청 · 작게라도 값이 보이게) · 정확한 값은 말풍선 */
+    const kn=v=>Math.abs(v)>=1e8?(Math.round(v/1e7)/10)+'억':Math.abs(v)>=1e4?(Math.abs(v)>=1e5?Math.round(v/1e4):Math.round(v/1e3)/10)+'만':Math.abs(v)>=1e3?(Math.round(v/100)/10)+'천':String(Math.round(v));
+    const fmtS=v=>v==null?'':key==='roas'?Math.round(v)+'%':key==='ctr'?v.toFixed(1)+'%':kn(v);
     const line=key==='roas'?(g.run?g.be:GUIDE.roas):key==='ctr'?GUIDE.ctr:null;
     const max=Math.max(1,line||0,...rows.map(r=>r.val||0))*1.12;
     const good=v=>line==null||v==null?'':v>=line?' ok':' no';
@@ -24709,7 +24721,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         /* 30일은 막대가 좁아 값 글씨는 숨기고(올리면 말풍선) 날짜는 5일마다·주말은 흐리게 */
         /* 월요일은 왼쪽 점선 + 날짜를 진하게(11-26 사용자 요청) · 30일은 월요일과 마지막 날만 날짜 */
         const mo=dt.getDay()===1, lab=!r30||mo||i===rows.length-1;
-        return '<div class="gd-bar'+good(r.val)+(r30&&wk?' wk':'')+(lab?'':' nolab')+(mo&&i>0?' mon':'')+(mo?' is-mo':'')+'" title="'+r.d+' ('+WD[dt.getDay()]+') · '+GD_KEYS[key]+' '+fmt(r.val)+' · 광고비 '+money(r.sp,cur)+' · 구매 '+int(r.buy)+'건"><em>'+fmt(r.val)+'</em>'
+        return '<div class="gd-bar'+good(r.val)+(r30&&wk?' wk':'')+(lab?'':' nolab')+(mo&&i>0?' mon':'')+(mo?' is-mo':'')+'" title="'+r.d+' ('+WD[dt.getDay()]+') · '+GD_KEYS[key]+' '+fmt(r.val)+' · 광고비 '+money(r.sp,cur)+' · 구매 '+int(r.buy)+'건"><em>'+(r30?fmtS(r.val):fmt(r.val))+'</em>'
           +'<i style="height:'+(r.val?Math.max(1.5,r.val/max*100).toFixed(1):0)+'%;animation-delay:'+(i*(r30?14:60))+'ms"></i>'
           +'<span>'+(+r.d.slice(5,7))+'.'+(+r.d.slice(8,10))+'<small>'+WD[dt.getDay()]+'</small></span></div>'; }).join('')+'</div>';
   }
