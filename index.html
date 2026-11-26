@@ -3407,6 +3407,7 @@ window.BAROYAM_FONT=(function(){
   .ma-xl-mode button[hidden],.ma-xl [data-big-pane][hidden],.ma-xl .gd-pill[hidden]{display:none}
   .ma-xl .ma-dialog-body{padding:16px 24px 22px;font-size:14px}
   .ma-card-kpis{margin-bottom:14px}
+  .ma-card-three{margin-bottom:14px}
   .ma-xl .gd-k{padding:14px 18px}
   .ma-xl .gd-k b{font-size:26px;letter-spacing:-.3px}
   .ma-xl .gd-k small{font-size:12.5px}
@@ -22976,7 +22977,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kp('클릭률',X.ctr==null?'-':X.ctr.toFixed(2)+'%',kC,'기준 '+GUIDE.ctr+'%')
         +kp('노출수',int(X.imp),'','클릭 '+int(X.clicks))
         +kp('CPC',X.clicks?money(X.spend/X.clicks,cur):'-','','링크 클릭 1번에 든 돈')+'</div>';
-      return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
+      const G3=shownGuide[r.id];
+      return top+(G3?gdThreeHtml(G3):'')+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
         +bdHtml
         /* 11-26 사용자 요청 · 타깃 | 광고 문구 양옆으로 */
@@ -24499,6 +24501,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +(d.groups.length?'<div class="gd-div-chips">'+d.groups.map(x=>'<span class="'+(x.mine?'is-mine':'')+(x.assets.size>1?' is-dup':'')+'" title="'+esc(x.k)+' · '+[...x.fmt].map(F).join('·')+' · 소재 '+x.assets.size+'개">'+esc(x.k)+(x.assets.size>1?' <i>×'+x.assets.size+'</i>':'')+'</span>').join('')+'</div>':'')
       +'</section>';
   }
+  /* 상세페이지 | 영상 | 크리에이티브 다양성 세 칸 · 소재 상세 위쪽 네 칸 아래에 놓인다(11-26 · 예전엔 행동지침) */
+  function gdThreeHtml(g){
+    return '<div class="gd-two gd-three ma-card-three"><section class="gd-card"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일</small></h4>'+gdPageHtml(g)+'</section>'
+      +'<section class="gd-card"><h4>영상 <small>최근 60일</small></h4>'+gdVideoHtml(g)+'</section>'+gdDivHtml(g)+'</div>';
+  }
   /* 상세페이지 칸 */
   function gdPageHtml(g){
     const c=g.cv;
@@ -24603,8 +24610,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kpi('ctr','클릭률',gdPct(g.ctr,2),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.cOk:null),'기준 '+GUIDE.ctr+'%'+(g.run?' '+sg(chg(g.ctr,g.pCtr)):''))
         +kpi('imp','노출수',int(g.imp),'','클릭 '+int(g.clk))
         +kpi('cpc','CPC',g.clk?money(g.sp/g.clk,cur):'-','','링크 클릭 1번에 든 돈')+'</div>':'')
-      +'<div class="gd-two gd-three"><section class="gd-card"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일</small></h4>'+gdPageHtml(g)+'</section>'
-      +'<section class="gd-card"><h4>영상 <small>최근 60일</small></h4>'+gdVideoHtml(g)+'</section>'+gdDivHtml(g)+'</div>'
+      /* 상세페이지 | 영상 | 크리에이티브 다양성 세 칸은 11-26 사용자 요청으로 소재 상세로 옮김(gdThreeHtml) */
       +(has?'<section class="gd-card gd-chart"></section>':'');
     gdPaintChart();
     gdPaintAi();
