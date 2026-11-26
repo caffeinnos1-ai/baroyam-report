@@ -3406,7 +3406,7 @@ window.BAROYAM_FONT=(function(){
   .ma-xl-mode button:focus-visible{outline:2px solid var(--btn);outline-offset:1px}
   .ma-xl-mode button[hidden],.ma-xl [data-big-pane][hidden],.ma-xl .gd-pill[hidden]{display:none}
   .ma-xl .ma-dialog-body{padding:16px 24px 22px;font-size:14px}
-  .ma-card-kpis{margin-bottom:14px}
+  .ma-card-kpis{margin-bottom:16px}
   .ma-card-three{margin-bottom:14px}
   .ma-xl .gd-k{padding:14px 18px}
   .ma-xl .gd-k b{font-size:26px;letter-spacing:-.3px}
@@ -3415,7 +3415,7 @@ window.BAROYAM_FONT=(function(){
   /* 11-26 · 영상 | 영상 체류·상세페이지 체류·바로가기 | 나머지 숫자 세 칸 */
   .ma-pv-side{flex:none;width:300px;display:flex;flex-direction:column;gap:10px;position:sticky;top:0}
   .ma-xl .ma-pv-col{width:300px}
-  .ma-xl .ma-asset-open.is-still .ma-pv-col{width:340px}
+  .ma-xl .ma-asset-open.is-still .ma-pv-col{width:300px}
   .ma-xl .ma-pv-side{width:360px;position:static}
   .ma-bd.has-div{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr)}
   .ma-bd .gd-div h4 small{display:block;margin:3px 0 0}
@@ -3441,8 +3441,14 @@ window.BAROYAM_FONT=(function(){
   .no-ai .ma-xl .gd-body.has-media{grid-template-columns:300px minmax(0,1fr)}
   .gd-media{min-height:0;overflow:auto}
   .gd-media[hidden]{display:none}
-  .ma-xl .gd-body.has-media .gd-k b{font-size:22px}
-  .ma-xl .gd-body.has-media .gd-k{padding:12px 14px}
+  /* 간격(11-26) · 두 모드 모두 위 여섯 칸 → 16px → 영상 | 나머지 · 칸 사이 12px */
+  .ma-xl .gd-body{grid-template-rows:auto minmax(0,1fr);gap:16px}
+  .gd-top{grid-column:1/-1;display:flex;flex-direction:column;gap:12px;min-width:0}
+  .gd-top:empty{display:none}
+  .ma-xl .gd-kpis{gap:12px}
+  .ma-xl .gd-left{gap:16px}
+  .ma-xl .ma-asset-open{gap:16px}
+  .ma-xl .ma-pv-side,.ma-xl .ma-pv-info{gap:16px}
   .gd-media .ma-pv{max-height:calc(94vh - 120px)}
   @media (max-width:980px){ .ma-xl .gd-body.has-media{grid-template-columns:1fr} }
   @media (max-width:980px){ .settings-panel.ma-xl{width:100vw;height:100vh;max-height:100vh;border-radius:0} .ma-xl .gd-head{flex-wrap:wrap} .ma-xl-mode{order:3;width:100%} .ma-xl-mode button{flex:1;justify-content:center} .ma-xl .ma-pv-col,.ma-xl .ma-asset-open.is-still .ma-pv-col,.ma-xl .ma-pv-side{width:100%;position:static} .ma-xl .ma-pv-info{min-width:0} }
@@ -23833,7 +23839,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +'<div class="ma-xl-mode" role="tablist" aria-label="보기 모드"><button type="button" role="tab" data-big="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>소재 상세</button>'
       +'<button type="button" role="tab" data-big="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>행동지침</button></div>'
       +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div>'
-      +'<div class="ma-dialog-body" data-big-pane="card"></div><div class="gd-body" data-big-pane="guide"><div class="gd-media"></div><div class="gd-left"></div><aside class="gd-right"></aside></div></div>';
+      +'<div class="ma-dialog-body" data-big-pane="card"></div><div class="gd-body" data-big-pane="guide"><div class="gd-top"></div><div class="gd-media"></div><div class="gd-left"></div><aside class="gd-right"></aside></div></div>';
     document.body.appendChild(cardBox);
     gdBox=cardBox;
     /* 닫을 때 재생 중인 영상을 멈추려고 소재 칸을 비운다 */
@@ -24645,7 +24651,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const has=g.sp>0&&g.imp>0;
     const note={wait:'게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.',none:'이 기간에 광고비·노출이 없습니다.',low:'광고비 '+money(g.sp,cur)+' · '+money(GUIDE.minSp,cur)+' 이상 써야 판정합니다. 아래 숫자는 참고만 하세요.'}[g.k];
     /* 데이터 기준 기간은 창 머리 한 줄(.gd-per-t · bigHead)로 옮김(11-26) */
-    gdBox.querySelector('.gd-left').innerHTML=
+    /* 11-26 사용자 요청 · 위 여섯 칸은 소재 상세처럼 창 폭 전체로 크게(영상 위) · 나머지는 영상 오른쪽 */
+    gdBox.querySelector('.gd-top').innerHTML=
       (note?'<p class="gd-note is-'+g.k+'">'+note+'</p>':'')
       +(has?'<div class="gd-kpis">'
         +kpi('roas','ROAS',gdPct(g.roas,0),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.rOk:null),(g.run?'손익분기 '+Math.round(be)+'%':'기준 '+GUIDE.roas+'%')+(g.run?' '+sg(chg(g.roas,g.pRoas)):''))
@@ -24653,7 +24660,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kpi('rev','광고매출',money(g.rev,cur),'','구매 '+int(g.buy)+'건'+(g.buy?' · CPA '+money(g.sp/g.buy,cur):''))
         +kpi('ctr','클릭률',gdPct(g.ctr,2),ok(g.k==='pass'||g.k==='watch'||g.k==='risk'?g.cOk:null),'기준 '+GUIDE.ctr+'%'+(g.run?' '+sg(chg(g.ctr,g.pCtr)):''))
         +kpi('imp','노출수',int(g.imp),'','클릭 '+int(g.clk))
-        +kpi('cpc','CPC',g.clk?money(g.sp/g.clk,cur):'-','','링크 클릭 1번에 든 돈')+'</div>':'')
+        +kpi('cpc','CPC',g.clk?money(g.sp/g.clk,cur):'-','','링크 클릭 1번에 든 돈')+'</div>':'');
+    gdBox.querySelector('.gd-left').innerHTML=''
       /* 상세페이지 | 영상 | 크리에이티브 다양성 세 칸은 11-26 사용자 요청으로 소재 상세로 옮김(gdThreeHtml) */
       +(has?gdFunnelHtml(g):'')
       +(has?'<section class="gd-card gd-chart"></section>':'');
