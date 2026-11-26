@@ -3336,7 +3336,7 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-link>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--body)}
   .ma-pv-link b{font-weight:600;color:var(--ink)}
   .ma-pv-none{color:var(--mute)}
-  @media (max-width:640px){ .ma-pv-col,.ma-asset-open.is-still .ma-pv-col{width:100%;position:static} .ma-pv-info{min-width:0} .ma-pv-info .ma-asset-mets{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:640px){ .ma-pv-col,.ma-pv-side,.ma-asset-open.is-still .ma-pv-col{width:100%;position:static} .ma-pv-info{min-width:0} .ma-pv-info .ma-asset-mets{grid-template-columns:repeat(3,minmax(0,1fr))} }
   @media (max-width:900px){ .ma-link-row{grid-template-columns:44px minmax(0,1fr) 80px} .ma-link-cell{grid-column:2 / -1} }
   .ma-dialog-body{flex:1;min-height:0;overflow-y:auto;padding:20px 22px}
   .ma-dialog #maCardT{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0;min-width:0}
@@ -3411,15 +3411,21 @@ window.BAROYAM_FONT=(function(){
   .ma-xl .gd-k b{font-size:26px;letter-spacing:-.3px}
   .ma-xl .gd-k small{font-size:12.5px}
   .ma-xl .gd-k span{font-size:12px}
-  .ma-xl .ma-pv-col{width:420px}
-  .ma-xl .ma-asset-open.is-still .ma-pv-col{width:480px}
+  /* 11-26 · 영상 | 영상 체류·상세페이지 체류·바로가기 | 나머지 숫자 세 칸 */
+  .ma-pv-side{flex:none;width:300px;display:flex;flex-direction:column;gap:10px;position:sticky;top:0}
+  .ma-xl .ma-pv-col{width:340px}
+  .ma-xl .ma-asset-open.is-still .ma-pv-col{width:380px}
+  .ma-xl .ma-pv-side{width:340px}
+  .ma-xl .ma-pv-info{min-width:520px}
+  .ma-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+  @media (max-width:1100px){ .ma-two{grid-template-columns:1fr} }
   .ma-xl .ma-pv{max-height:76vh}
   .ma-xl .gd-body{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:20px;padding:16px 24px 22px;font-size:14px}
   @media (max-width:1300px){ .ma-xl .gd-sub-t,.gd-per-t span{display:none} }
   .ma-xl .gd-right{align-self:stretch}
   .no-ai .ma-xl .gd-body{grid-template-columns:minmax(0,1fr)}
   .no-ai .ma-xl .gd-right{display:none}
-  @media (max-width:980px){ .settings-panel.ma-xl{width:100vw;height:100vh;max-height:100vh;border-radius:0} .ma-xl .gd-head{flex-wrap:wrap} .ma-xl-mode{order:3;width:100%} .ma-xl-mode button{flex:1;justify-content:center} .ma-xl .ma-pv-col,.ma-xl .ma-asset-open.is-still .ma-pv-col{width:100%;position:static} }
+  @media (max-width:980px){ .settings-panel.ma-xl{width:100vw;height:100vh;max-height:100vh;border-radius:0} .ma-xl .gd-head{flex-wrap:wrap} .ma-xl-mode{order:3;width:100%} .ma-xl-mode button{flex:1;justify-content:center} .ma-xl .ma-pv-col,.ma-xl .ma-asset-open.is-still .ma-pv-col,.ma-xl .ma-pv-side{width:100%;position:static} .ma-xl .ma-pv-info{min-width:0} }
   .gd-head{padding:16px 22px}
   .gd-hd{display:flex;align-items:center;gap:14px;min-width:0}
   .gd-lv{flex:none;padding:7px 14px;border-radius:10px;font-size:14px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
@@ -22970,10 +22976,11 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kp('클릭률',X.ctr==null?'-':X.ctr.toFixed(2)+'%',kC,'기준 '+GUIDE.ctr+'%')
         +kp('노출수',int(X.imp),'','클릭 '+int(X.clicks))
         +kp('CPC',X.clicks?money(X.spend/X.clicks,cur):'-','','링크 클릭 1번에 든 돈')+'</div>';
-      return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
+      return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
         +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
-        +bdHtml+tgBox
-        +txBox
+        +bdHtml
+        /* 11-26 사용자 요청 · 타깃 | 광고 문구 양옆으로 */
+        +(tgBox&&txBox?'<div class="ma-two">'+tgBox+txBox+'</div>':tgBox+txBox)
         +'</div></div>';
     };
     /* ROAS 칸 · 대표 ROAS 가 이어졌으면 그 아래 빨강·이상 파랑, 아니면 예전처럼 100% 아래만 빨강 */
