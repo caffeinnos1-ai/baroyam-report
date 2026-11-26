@@ -3416,7 +3416,13 @@ window.BAROYAM_FONT=(function(){
   .ma-pv-side{flex:none;width:300px;display:flex;flex-direction:column;gap:10px;position:sticky;top:0}
   .ma-xl .ma-pv-col{width:340px}
   .ma-xl .ma-asset-open.is-still .ma-pv-col{width:380px}
-  .ma-xl .ma-pv-side{width:340px}
+  .ma-xl .ma-pv-side{width:400px;position:static}
+  .ma-grp{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
+  .ma-grp>.gd-card,.ma-grp>.ma-sec{border:0;border-radius:0;background:transparent}
+  .ma-grp>*+*:not(.ma-grp-f){border-top:1px solid var(--line)}
+  .ma-grp-h{margin:0;padding:9px 16px;font-size:14px;font-weight:600;color:var(--btn-soft-ink);background:var(--btn-soft);border-bottom:1px solid var(--line)}
+  .ma-grp-h+*{border-top:0!important}
+  .ma-grp-f{padding:0 14px 14px}
   .ma-xl .ma-pv-info{min-width:520px}
   .ma-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
   @media (max-width:1100px){ .ma-two{grid-template-columns:1fr} }
@@ -22978,7 +22984,13 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kp('노출수',int(X.imp),'','클릭 '+int(X.clicks))
         +kp('CPC',X.clicks?money(X.spend/X.clicks,cur):'-','','링크 클릭 1번에 든 돈')+'</div>';
       const G3=shownGuide[r.id];
-      return top+(G3?gdThreeHtml(G3):'')+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
+      /* 11-26 사용자 요청 · 영상은 영상끼리, 상세페이지는 상세페이지끼리 한 상자로 붙여 영상 바로 오른쪽에(흩어져 보기 어려움) ·
+         크리에이티브 다양성은 오른쪽 숫자 칸 맨 위 */
+      const pp=G3?(G3.run?'평일 최근 ':'게재 1일째부터 ')+G3.w+'일':'';
+      const grpV=(G3||vdBox)?'<section class="ma-grp"><h3 class="ma-grp-h"><span>영상</span></h3>'+(G3?'<div class="gd-card"><h4>후킹·유지 <small>최근 60일</small></h4>'+gdVideoHtml(G3)+'</div>':'')+vdBox+'</section>':'';
+      const grpP=(G3||cvBox||lp)?'<section class="ma-grp"><h3 class="ma-grp-h"><span>상세페이지</span></h3>'+(G3?'<div class="gd-card"><h4>체류 등급 <small>'+pp+'</small></h4>'+gdPageHtml(G3)+'</div>':'')+cvBox+(lp?'<div class="ma-grp-f">'+lp+'</div>':'')+'</section>':'';
+      return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+grpV+grpP+postBtn+'</div><div class="ma-pv-info">'
+        +(G3?gdDivHtml(G3):'')
         /* 노출 → 클릭 → 장바구니 → 구매 칸은 11-26 사용자 요청으로 행동지침으로 옮김(gdFunnelHtml) */
         +bdHtml
         /* 11-26 사용자 요청 · 타깃 | 광고 문구 양옆으로 */
