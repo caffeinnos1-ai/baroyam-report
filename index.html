@@ -5700,6 +5700,15 @@ window.BAROYAM_FONT=(function(){
   .pj-mcal-grip.is-r::after{content:"";position:absolute;right:2px;top:6px;bottom:6px;width:2px;border-radius:2px;
     background:var(--bar);opacity:0;transition:opacity .12s}
   .pj-mcal-bar:hover .pj-mcal-grip.is-r::after{opacity:.7}
+  /* 막대 오른쪽 복제 단추 · 올렸을 때만 보인다(누르면 예정 상태로 복제) */
+  .pj-mcal-nm{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis}
+  .pj-mcal-copy{flex:none;display:none;align-items:center;justify-content:center;width:18px;height:18px;margin:0 6px 0 4px;border-radius:5px;
+    color:var(--body);cursor:pointer}
+  .pj-mcal-copy svg{width:12px;height:12px}
+  .pj-mcal-copy:hover{background:color-mix(in srgb,var(--bar) 30%,var(--paper));color:var(--ink)}
+  .pj-mcal-bar:hover .pj-mcal-copy,.pj-mcal-bar:focus-visible .pj-mcal-copy{display:flex}
+  body.pj-mcal-dragging .pj-mcal-copy{display:none}
+  @media(hover:none){.pj-mcal-copy{display:flex}}
   .pj-mcal-bar.is-dragging{box-shadow:0 0 0 2px var(--bar),0 6px 16px rgba(0,0,0,.14)}
   body.pj-mcal-dragging,body.pj-mcal-dragging *{cursor:grabbing!important;user-select:none}
   body.pj-mcal-dragging.is-resize,body.pj-mcal-dragging.is-resize *{cursor:ew-resize!important}
@@ -30720,6 +30729,17 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
     while(used.has(out)&&n<99){ n++; out=make(n); }
     return out;
   }
+  /* 프로젝트 복제 · 적어 둔 값을 물려받되 번호·작성일은 새로 잡고 원본 바로 뒤에 넣는다 ·
+     캘린더에서 복제하면 상태는 예정·진행도 0 으로 시작한다(완료 날짜도 지움) */
+  function pjDuplicate(t,o){
+    if(!t||!canManageProject(t)) return null;
+    const at=state.projects.indexOf(t);
+    const copy=Object.assign({},t,{id:uid(),name:pjCopyName(t.name),created:kstToday(),owner:projectOwner(t.owner)});
+    if(o&&o.planned){ copy.status='예정'; copy.progress=0; delete copy.doneAt; }
+    state.projects.splice(at<0?state.projects.length:at+1,0,copy);
+    save();
+    return copy;
+  }
   function cardHtml(p){
     const today=kstToday();
     const pct=Math.max(0,Math.min(100,Math.round(+p.progress||0)));
@@ -30843,7 +30863,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         const grips=drag?(sp.s>=ws?'<i class="pj-mcal-grip is-l" data-grip="l"></i>':'')+(sp.e<=we?'<i class="pj-mcal-grip is-r" data-grip="r"></i>':''):'';
         bars+=`<button type="button" class="pj-mcal-bar${sp.s<ws?' is-cont-l':''}${sp.e>we?' is-cont-r':''}${drag?' can-drag':''}${calDrag&&calDrag.moved&&calDrag.id===p.id?' is-dragging':''}" data-id="${esc(p.id)}"
           style="grid-column:${c0+1}/${c1+2};grid-row:${lane+2};--bar:${esc(colorOf(p.status))}"
-          title="${esc(p.name)} · ${esc(p.status||'')} · 진행 ${range}${drag?' · 끌어서 옮기기, 끝을 끌어 늘이기':''}">${grips}${esc(p.name||'이름 없음')}</button>`;
+          title="${esc(p.name)} · ${esc(p.status||'')} · 진행 ${range}${drag?' · 끌어서 옮기기, 끝을 끌어 늘이기':''}">${grips}<span class="pj-mcal-nm">${esc(p.name||'이름 없음')}</span>${drag?`<span class="pj-mcal-copy" role="button" data-cal-copy aria-label="${esc(p.name)} 복제" title="복제 · 예정 상태로">${ICON_COPY}</span>`:''}</button>`;
       });
       let cells='';
       for(let i=0;i<7;i++){
@@ -30887,12 +30907,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         if(tool.dataset.act==='copy'){
           /* 적어 둔 값을 그대로 물려받되 번호와 작성일은 새로 잡는다 ·
              원본 바로 뒤에 넣고 새 카드를 골라 둬서 어느 것이 방금 만든 것인지 보이게 한다 */
-          const at=state.projects.indexOf(t);
-          if(!canManageProject(t)) return;
-          const copy=Object.assign({},t,{id:uid(),name:pjCopyName(t.name),created:kstToday(),owner:projectOwner(t.owner)});
-          state.projects.splice(at<0?state.projects.length:at+1,0,copy);
-          save();
-          pickCard(copy.id);
+          const copy=pjDuplicate(t);
+          if(copy) pickCard(copy.id);
           return;
         }
         if(tool.dataset.act==='del'){
@@ -31027,6 +31043,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
         openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,due:d});
         return;
       }
+      const cp=e.target.closest('[data-cal-copy]');
+      if(cp){ pjDuplicate(state.projects.find(x=>x.id===cp.closest('.pj-mcal-bar').dataset.id),{planned:true}); renderCal(); return; }
       const bar=e.target.closest('.pj-mcal-bar');
       if(!bar) return;
       /* 방금 끌어 옮긴 뒤 따라오는 click은 창을 열지 않는다 */
@@ -31070,7 +31088,7 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       [cal,$('chCal')].filter(Boolean).forEach(host=>host.addEventListener('pointerdown',e=>{
         if(e.button!==0) return;
         const bar=e.target.closest('.pj-mcal-bar.can-drag');
-        if(!bar) return;
+        if(!bar||e.target.closest('[data-cal-copy]')) return;
         const t=state.projects.find(x=>x.id===bar.dataset.id);
         if(!t||!canManageProject(t)) return;
         const anchor=calDateAt(e.clientX,e.clientY,host);
@@ -31787,6 +31805,8 @@ const AGENDA_API_URL='https'+':'+'/'+'/'+'scrip'+'t.google.com/macros/s/AKfycbwr
       openProjectDialog(null,{status:d>kstToday()?'예정':'진행중',progress:0,due:d,channel:chActive,owner:myName()});
       return;
     }
+    const cp=e.target.closest('[data-cal-copy]');
+    if(cp){ pjDuplicate(state.projects.find(x=>x.id===cp.closest('.pj-mcal-bar').dataset.id),{planned:true}); renderChTab(); return; }
     const bar=e.target.closest('.pj-mcal-bar'); if(!bar) return;
     if(calDragJust){ calDragJust=false; return; }        /* 방금 끌어 옮긴 뒤 따라오는 click 은 창을 열지 않는다 */
     const t=state.projects.find(x=>x.id===bar.dataset.id);
