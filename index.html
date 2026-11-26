@@ -22979,7 +22979,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kp('CPC',X.clicks?money(X.spend/X.clicks,cur):'-','','링크 클릭 1번에 든 돈')+'</div>';
       const G3=shownGuide[r.id];
       return top+(G3?gdThreeHtml(G3):'')+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+vdBox+cvBox+lp+postBtn+'</div><div class="ma-pv-info">'
-        +'<div class="ma-funnel">'+funnel.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>'
+        /* 노출 → 클릭 → 장바구니 → 구매 칸은 11-26 사용자 요청으로 행동지침으로 옮김(gdFunnelHtml) */
         +bdHtml
         /* 11-26 사용자 요청 · 타깃 | 광고 문구 양옆으로 */
         +(tgBox&&txBox?'<div class="ma-two">'+tgBox+txBox+'</div>':tgBox+txBox)
@@ -23035,8 +23035,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const guideDays=n=>Array.from({length:n},(_,i)=>new Date(today-(n-1-i)*864e5).toISOString().slice(0,10));
     const guideWk=(()=>{ const L=[]; for(let i=0;i<70&&L.length<GUIDE.wk*2;i++){ const d=new Date(today-i*864e5), w=d.getUTCDay(); if(w>=1&&w<=5) L.push(d.toISOString().slice(0,10)); } return L; })();
     const guideSum=(ids,days)=>{
-      const m=[0,0,0,0,0]; days.forEach(d=>{ const day=D[d]; if(day) ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; }); });
-      return {sp:m[0],rev:m[1],buy:m[2],clk:m[3],imp:m[4],ctr:m[4]?m[3]/m[4]*100:null,roas:m[0]?m[1]/m[0]*100:null};
+      const m=[0,0,0,0,0,0]; days.forEach(d=>{ const day=D[d]; if(day) ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<6;i++) m[i]+=v[i]||0; }); });
+      return {sp:m[0],rev:m[1],buy:m[2],clk:m[3],imp:m[4],cart:m[5],ctr:m[4]?m[3]/m[4]*100:null,roas:m[0]?m[1]/m[0]*100:null};
     };
     const guideOf=r=>{
       const ids=r.adIds||(tab==='campaign'?(a.ads||[]).filter(y=>y.c===r.id):(a.ads||[]).filter(y=>y.s===r.id)).map(y=>y.id);
@@ -24501,6 +24501,15 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       +(d.groups.length?'<div class="gd-div-chips">'+d.groups.map(x=>'<span class="'+(x.mine?'is-mine':'')+(x.assets.size>1?' is-dup':'')+'" title="'+esc(x.k)+' · '+[...x.fmt].map(F).join('·')+' · 소재 '+x.assets.size+'개">'+esc(x.k)+(x.assets.size>1?' <i>×'+x.assets.size+'</i>':'')+'</span>').join('')+'</div>':'')
       +'</section>';
   }
+  /* 노출 → 클릭 → 장바구니 → 구매(11-26 사용자 요청 · 소재 상세에서 옮김) · 판정 기간 값(adDaily · 장바구니는 6번째 칸) */
+  function gdFunnelHtml(g){
+    const cur=acc().currency, rate=(a1,b1)=>b1?(a1/b1*100).toFixed(a1/b1<.1?2:1)+'%':'-', per=(v,n)=>n?money(v/n,cur):'-';
+    const F=[['노출',int(g.imp),[['CPM',g.imp?money(g.sp/g.imp*1000,cur):'-']]],
+      ['클릭',int(g.clk),[['CTR',rate(g.clk,g.imp)],['CPC',per(g.sp,g.clk)]]],
+      ['장바구니',int(g.cart)+'건',[['담기율',rate(g.cart,g.clk)],['건당',per(g.sp,g.cart)]]],
+      ['구매',int(g.buy)+'건',[['전환율',rate(g.buy,g.clk)],['CPA',per(g.sp,g.buy)]]]];
+    return '<div class="ma-funnel">'+F.map(f=>'<div><small>'+f[0]+'</small><b>'+f[1]+'</b><dl>'+f[2].map(q=>'<dt>'+q[0]+'</dt><dd>'+q[1]+'</dd>').join('')+'</dl></div>').join('')+'</div>';
+  }
   /* 상세페이지 | 영상 | 크리에이티브 다양성 세 칸 · 소재 상세 위쪽 네 칸 아래에 놓인다(11-26 · 예전엔 행동지침) */
   function gdThreeHtml(g){
     return '<div class="gd-two gd-three ma-card-three"><section class="gd-card"><h4>상세페이지 <small>'+(g.run?'평일 최근 ':'게재 1일째부터 ')+g.w+'일</small></h4>'+gdPageHtml(g)+'</section>'
@@ -24611,6 +24620,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kpi('imp','노출수',int(g.imp),'','클릭 '+int(g.clk))
         +kpi('cpc','CPC',g.clk?money(g.sp/g.clk,cur):'-','','링크 클릭 1번에 든 돈')+'</div>':'')
       /* 상세페이지 | 영상 | 크리에이티브 다양성 세 칸은 11-26 사용자 요청으로 소재 상세로 옮김(gdThreeHtml) */
+      +(has?gdFunnelHtml(g):'')
       +(has?'<section class="gd-card gd-chart"></section>':'');
     gdPaintChart();
     gdPaintAi();
