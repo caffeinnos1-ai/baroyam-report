@@ -3404,6 +3404,8 @@ window.BAROYAM_FONT=(function(){
   .ma-big .ma-pv{max-height:76vh}
   .ma-big .gd-body{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:20px;padding:20px 28px 24px;font-size:14px}
   .ma-big .gd-right{align-self:stretch}
+  .no-ai .ma-big .gd-body{grid-template-columns:minmax(0,1fr)}
+  .no-ai .ma-big .gd-right{display:none}
   @media (max-width:980px){ .settings-panel.ma-big{width:100vw;height:100vh;max-height:100vh;border-radius:0} .ma-big .gd-head{flex-wrap:wrap} .ma-big-mode{order:3;width:100%} .ma-big-mode button{flex:1;justify-content:center} .ma-big .ma-pv-col,.ma-big .ma-asset-open.is-still .ma-pv-col{width:100%;position:static} }
   .gd-head{padding:16px 22px}
   .gd-hd{display:flex;align-items:center;gap:14px;min-width:0}
@@ -23739,10 +23741,12 @@ window.BAROYAM_PJ_CHANNELS=(function(){
      머리 오른쪽 단추로 '소재 상세'(예전 소재 팝업) / '행동지침'(예전 행동지침 창)을 고른다 · 고른 모드는 브라우저에 기억(baroyam_ma_bigmode) ·
      소재 줄은 두 모드 모두, 캠페인·광고 세트 줄은 행동지침만 · 바로얌AI 판단은 행동지침 모드를 볼 때만 받는다 */
   let bigMode='card', bigBoth=false;
+  /* 11-26 사용자 요청 · 바로얌AI 판단은 우선 쓰지 않음(오른쪽 칸을 숨기고 AI 를 부르지 않음 · 코드는 남겨 둠 · 다시 쓰려면 false) */
+  const GD_AI_OFF=true;
   function bigEnsure(){
     if(cardBox) return;
     cardBox=document.createElement('div');
-    cardBox.className='settings-overlay ma-big-ov'; cardBox.hidden=true;
+    cardBox.className='settings-overlay ma-big-ov'+(GD_AI_OFF?' no-ai':''); cardBox.hidden=true;
     cardBox.innerHTML='<div class="settings-panel ma-dialog gd-dlg ma-big" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span></div></div>'
       +'<div class="ma-big-mode" role="tablist" aria-label="보기 모드"><button type="button" role="tab" data-big="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>소재 상세</button>'
       +'<button type="button" role="tab" data-big="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>행동지침</button></div>'
@@ -23773,7 +23777,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       if(!body.innerHTML){ body.innerHTML=cardHtml(curCard); body.scrollTop=0; playVideo(); }
     }else{
       body.innerHTML='';   /* 행동지침으로 가면 영상을 멈춘다(돌아오면 다시 그림 · 받은 영상은 기억해 둠) */
-      if(m==='guide'){ cardBox.querySelector('.gd-left').scrollTop=0; gdPaint(); const g=shownGuide[gdCur]; if(g&&!AI_RES[gdCur]&&g.k!=='none') gdAsk(); }
+      if(m==='guide'){ cardBox.querySelector('.gd-left').scrollTop=0; gdPaint(); const g=shownGuide[gdCur]; if(!GD_AI_OFF&&g&&!AI_RES[gdCur]&&g.k!=='none') gdAsk(); }
     }
   }
   function bigHead(g,lv,name){
@@ -24586,7 +24590,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
           +'<span>'+(+r.d.slice(5,7))+'.'+(+r.d.slice(8,10))+'<small>'+WD[dt.getDay()]+'</small></span></div>'; }).join('')+'</div>';
   }
   function gdPaintAi(){
-    if(!gdBox||gdBox.hidden||bigMode!=='guide') return;
+    if(!gdBox||gdBox.hidden||bigMode!=='guide'||GD_AI_OFF) return;
     const g=shownGuide[gdCur]; if(!g) return;
     gdBox.querySelector('.gd-right').innerHTML='<h4 class="gd-ai-h"><span class="gd-ai-badge">AI</span>바로얌AI 판단</h4>'+gdAiHtml(g);
     clearTimeout(gdTick);
