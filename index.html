@@ -3506,6 +3506,7 @@ window.BAROYAM_FONT=(function(){
   @keyframes gdFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){ .gd-bar i,.gd-bar em{animation:none} }
   .gd-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .gd-chart-tip{font-size:11.5px;color:var(--mute)}
   .gd-two.gd-three{grid-template-columns:repeat(3,minmax(0,1fr))}
   .gd-three .gd-div-sum small{margin-left:0;flex-basis:100%}
   @media (max-width:1200px){ .gd-two.gd-three{grid-template-columns:repeat(2,minmax(0,1fr))} .gd-three>.gd-div{grid-column:1/-1} }
@@ -24648,7 +24649,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const cur=acc().currency, md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
     const chg=(a1,b1)=>a1==null||b1==null||!b1?null:(a1-b1)/b1*100, sg=v=>v==null?'':'<em class="'+(v>=0?'up':'dn')+'">'+(v>=0?'▲':'▼')+Math.abs(Math.round(v))+'%</em>';
     const be=g.run?g.be:GUIDE.roas, ok=(c)=>c==null?'':c?' ok':' no';
-    const kpi=(k,l,v,cls,sub)=>'<button type="button" class="gd-k'+cls+(gdKey===k?' is-sel':'')+'" data-gd-k="'+k+'" aria-pressed="'+(gdKey===k)+'" title="눌러서 일자별 '+l+' 보기"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></button>';
+    const kpi=(k,l,v,cls,sub)=>'<button type="button" class="gd-k'+cls+(gdKey===k?' is-sel':'')+'" data-gd-k="'+k+'" aria-pressed="'+(gdKey===k)+'" title="눌러서 아래 그래프에 일자별 '+l+' 보기"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></button>';
     const has=g.sp>0&&g.imp>0;
     const note={wait:'게재 '+g.n+'일째 · 메타가 아직 배우는 중이라 '+GUIDE.days+'일째부터 판정합니다.',none:'이 기간에 광고비·노출이 없습니다.',low:'광고비 '+money(g.sp,cur)+' · '+money(GUIDE.minSp,cur)+' 이상 써야 판정합니다. 아래 숫자는 참고만 하세요.'}[g.k];
     /* 데이터 기준 기간은 창 머리 한 줄(.gd-per-t · bigHead)로 옮김(11-26) */
@@ -24668,16 +24669,20 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         +kpi('cpc','CPC',V.clk?money(V.sp/V.clk,cur):'-','','링크 클릭 1번에 든 돈')+'</div>':'');
     gdBox.querySelector('.gd-left').innerHTML=''
       +(hasV?gdFunnelHtml(V):'')
-      +(has||hasV?'<section class="gd-card gd-chart"></section>':'');
+      +(has||hasV?'<section class="gd-card gd-chart" data-gd-chart="top"></section><section class="gd-card gd-chart" data-gd-chart="sub"></section>':'');
     gdPaintChart();
     gdPaintAi();
   }
   /* 일자별 막대(11-05 사용자 요청) · 위 네 칸을 누르면 그 값을 판정 기간의 날마다(운영 = 평일 7일 · 테스트 = 게재 1일째부터) 막대로 · 처음엔 ROAS ·
      막대는 아래에서 위로 자란다(움직임 줄이기 설정이면 바로) · ROAS 는 손익분기(테스트는 200%) 점선, 클릭률은 2% 점선 */
   const GD_KEYS={roas:'ROAS',sp:'광고비',rev:'광고매출',ctr:'클릭률',imp:'노출수',cpc:'CPC'};
-  let gdKey='roas', gdRng='7';   /* 11-26 사용자 요청 · 기간 단추: 최근 3일 · 7일 · 30일(오늘 포함) · 지난주 · 지지난주(월~일) */   /* 11-11 사용자 요청 · 기간 고르기: base = 판정 기간(평일 7일 / 게재 1일째부터) · 30 = 최근 30일(주말 포함) */
+  let gdKey='sp', gdRng='7';   /* 11-26 사용자 요청 · 기간 단추: 최근 3일 · 7일 · 30일(오늘 포함) · 지난주 · 지지난주(월~일) */   /* 11-11 사용자 요청 · 기간 고르기: base = 판정 기간(평일 7일 / 게재 1일째부터) · 30 = 최근 30일(주말 포함) */
+  /* 11-26 사용자 요청 · 그래프 두 칸: 위는 늘 ROAS(기간 단추가 두 그래프를 같이 바꿈), 아래는 위 여섯 칸에서 누른 값(처음엔 광고비) */
   function gdPaintChart(){
-    const box=gdBox&&gdBox.querySelector('.gd-chart'); if(!box) return;
+    if(!gdBox) return;
+    gdBox.querySelectorAll('.gd-chart[data-gd-chart]').forEach(b=>gdPaintOne(b,b.dataset.gdChart==='top'?'roas':gdKey,b.dataset.gdChart==='top'));
+  }
+  function gdPaintOne(box,key,withTabs){
     const g=shownGuide[gdCur]; if(!g) return;
     const a=acc(), D=a.adDaily||{}, cur=a.currency, WD='일월화수목금토';
     const r30=gdRng==='30';
@@ -24685,16 +24690,16 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const days=gdRng==='3'?back(T,3):gdRng==='30'?back(T,30):back(T,7);
     const wkOf=d=>d>=dayAdd(mon,-7)&&d<mon?'lw':d>=dayAdd(mon,-14)&&d<dayAdd(mon,-7)?'llw':'';
     const rows=days.map(d=>{ const m=[0,0,0,0,0], day=D[d]; if(day) g.ids.forEach(id=>{ const v=day[id]; if(v) for(let i=0;i<5;i++) m[i]+=v[i]||0; });
-      const val={roas:m[0]?m[1]/m[0]*100:null,sp:m[0],rev:m[1],ctr:m[4]?m[3]/m[4]*100:null,imp:m[4],cpc:m[3]?m[0]/m[3]:null}[gdKey];
+      const val={roas:m[0]?m[1]/m[0]*100:null,sp:m[0],rev:m[1],ctr:m[4]?m[3]/m[4]*100:null,imp:m[4],cpc:m[3]?m[0]/m[3]:null}[key];
       return {d,val,buy:m[2],sp:m[0]}; });
-    const fmt=v=>v==null?'-':gdKey==='roas'?Math.round(v)+'%':gdKey==='ctr'?v.toFixed(2)+'%':gdKey==='imp'?int(v):gdKey==='cpc'?money(v,cur):short(v,cur);
-    const line=gdKey==='roas'?(g.run?g.be:GUIDE.roas):gdKey==='ctr'?GUIDE.ctr:null;
+    const fmt=v=>v==null?'-':key==='roas'?Math.round(v)+'%':key==='ctr'?v.toFixed(2)+'%':key==='imp'?int(v):key==='cpc'?money(v,cur):short(v,cur);
+    const line=key==='roas'?(g.run?g.be:GUIDE.roas):key==='ctr'?GUIDE.ctr:null;
     const max=Math.max(1,line||0,...rows.map(r=>r.val||0))*1.12;
     const good=v=>line==null||v==null?'':v>=line?' ok':' no';
     const md2=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10))+'('+WD[dowOf(d)]+')', baseTxt=md2(days[0])+' ~ '+md2(days[days.length-1]);
     const tab=(v,t)=>'<button type="button" class="ui-tab" data-gd-rng="'+v+'" aria-selected="'+(gdRng===v)+'">'+t+'</button>';
-    box.innerHTML='<div class="gd-chart-h"><h4>'+GD_KEYS[gdKey]+' · 일자별 <small>'+baseTxt+(line!=null?' · 점선 = '+(gdKey==='roas'?(g.run?'손익분기 ':'기준 ')+Math.round(line)+'%':'기준 '+line+'%'):'')+'</small></h4>'
-      +'<div class="ui-tabs gd-rng" role="tablist">'+tab('3','최근 3일')+tab('7','최근 7일')+tab('30','최근 30일')+'</div></div>'
+    box.innerHTML='<div class="gd-chart-h"><h4>'+GD_KEYS[key]+' · 일자별 <small>'+baseTxt+(line!=null?' · 점선 = '+(key==='roas'?(g.run?'손익분기 ':'기준 ')+Math.round(line)+'%':'기준 '+line+'%'):'')+'</small></h4>'
+      +(withTabs?'<div class="ui-tabs gd-rng" role="tablist">'+tab('3','최근 3일')+tab('7','최근 7일')+tab('30','최근 30일')+'</div>':'<small class="gd-chart-tip">위 칸을 누르면 바뀝니다</small>')+'</div>'
       +'<div class="gd-bars'+(r30?' is-30':'')+'" style="--n:'+rows.length+'">'
       /* 11-26 사용자 요청 · 최근 30일에서는 지난주·지지난주(월~일) 자리를 띠로 표시 */
       +(r30?['llw','lw'].map(w=>{ const ix=rows.map((r,i)=>wkOf(r.d)===w?i:-1).filter(i=>i>=0); if(!ix.length) return '';
@@ -24704,7 +24709,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
         /* 30일은 막대가 좁아 값 글씨는 숨기고(올리면 말풍선) 날짜는 5일마다·주말은 흐리게 */
         /* 월요일은 왼쪽 점선 + 날짜를 진하게(11-26 사용자 요청) · 30일은 월요일과 마지막 날만 날짜 */
         const mo=dt.getDay()===1, lab=!r30||mo||i===rows.length-1;
-        return '<div class="gd-bar'+good(r.val)+(r30&&wk?' wk':'')+(lab?'':' nolab')+(mo&&i>0?' mon':'')+(mo?' is-mo':'')+'" title="'+r.d+' ('+WD[dt.getDay()]+') · '+GD_KEYS[gdKey]+' '+fmt(r.val)+' · 광고비 '+money(r.sp,cur)+' · 구매 '+int(r.buy)+'건"><em>'+fmt(r.val)+'</em>'
+        return '<div class="gd-bar'+good(r.val)+(r30&&wk?' wk':'')+(lab?'':' nolab')+(mo&&i>0?' mon':'')+(mo?' is-mo':'')+'" title="'+r.d+' ('+WD[dt.getDay()]+') · '+GD_KEYS[key]+' '+fmt(r.val)+' · 광고비 '+money(r.sp,cur)+' · 구매 '+int(r.buy)+'건"><em>'+fmt(r.val)+'</em>'
           +'<i style="height:'+(r.val?Math.max(1.5,r.val/max*100).toFixed(1):0)+'%;animation-delay:'+(i*(r30?14:60))+'ms"></i>'
           +'<span>'+(+r.d.slice(5,7))+'.'+(+r.d.slice(8,10))+'<small>'+WD[dt.getDay()]+'</small></span></div>'; }).join('')+'</div>';
   }
