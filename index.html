@@ -3384,6 +3384,27 @@ window.BAROYAM_FONT=(function(){
   .ma-guide-tip .more{margin-top:8px;color:var(--btn-soft-ink);font-weight:500}
   /* 행동지침 분석 창(11-05) · 왼쪽 숫자 / 오른쪽 바로얌AI */
   .settings-panel.gd-dlg{max-width:1180px;width:100%;height:auto;max-height:92vh;display:flex;flex-direction:column}
+  /* 큰 창(11-26) · 소재 상세 / 행동지침 두 모드 · 화면을 거의 채운다 */
+  .ma-table tr.ma-guide-row{cursor:pointer}
+  .settings-panel.ma-big{max-width:min(1680px,96vw);width:96vw;height:94vh;max-height:94vh;display:flex;flex-direction:column}
+  .ma-big .gd-head{gap:16px}
+  .ma-big .gd-hd{flex:1;min-width:0}
+  .ma-big .gd-lv{font-size:15px;padding:8px 16px}
+  .ma-big .gd-hd h2{font-size:19px}
+  .ma-big-mode{flex:none;display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--chip-flat)}
+  .ma-big-mode button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:7px;height:var(--ui-h);padding:0 16px;border-radius:9px;font-size:14px;font-weight:500;color:var(--body);cursor:pointer}
+  .ma-big-mode button svg{width:17px;height:17px}
+  .ma-big-mode button:hover{color:var(--ink)}
+  .ma-big-mode button.is-on{background:var(--paper);color:var(--btn-soft-ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .ma-big-mode button:focus-visible{outline:2px solid var(--btn);outline-offset:1px}
+  .ma-big-mode button[hidden],.ma-big [data-big-pane][hidden],.ma-big .gd-pill[hidden]{display:none}
+  .ma-big .ma-dialog-body{padding:24px 30px;font-size:14px}
+  .ma-big .ma-pv-col{width:420px}
+  .ma-big .ma-asset-open.is-still .ma-pv-col{width:480px}
+  .ma-big .ma-pv{max-height:76vh}
+  .ma-big .gd-body{grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);gap:20px;padding:20px 28px 24px;font-size:14px}
+  .ma-big .gd-right{align-self:stretch}
+  @media (max-width:980px){ .settings-panel.ma-big{width:100vw;height:100vh;max-height:100vh;border-radius:0} .ma-big .gd-head{flex-wrap:wrap} .ma-big-mode{order:3;width:100%} .ma-big-mode button{flex:1;justify-content:center} .ma-big .ma-pv-col,.ma-big .ma-asset-open.is-still .ma-pv-col{width:100%;position:static} }
   .gd-head{padding:16px 22px}
   .gd-hd{display:flex;align-items:center;gap:14px;min-width:0}
   .gd-lv{flex:none;padding:7px 14px;border-radius:10px;font-size:14px;font-weight:600;background:var(--btn-soft);color:var(--btn-soft-ink)}
@@ -22991,8 +23012,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       g.k=g.rOk?'pass':g.roas>=g.be*GUIDE.watch?'watch':'risk';
       return g;
     };
-    const guideTd=r=>{ const g=guideOf(r); shownGuide[r.id]=g;
-      return '<td class="ma-guidecol"><span class="ma-guide is-'+g.k+'" data-guide="'+esc(r.id)+'" tabindex="0">'+GUIDE_TXT[g.k]+'</span></td>'; };
+    /* 11-26 사용자 요청 · 행동지침 칸은 없애고 줄을 누르면 뜨는 큰 창의 '행동지침' 모드로 본다 · 판정은 여기서 계산해 둔다 */
+    const guideTd=r=>{ shownGuide[r.id]=guideOf(r); return ''; };
     shownGuide={};
     const sel=tab==='campaign'?selC:tab==='adset'?selS:null;
     const ck=r=>sel?'<input type="checkbox" class="ma-ck" data-ck="'+esc(r.id)+'"'+(sel.has(r.id)?' checked':'')+' aria-label="'+esc(r.name)+' 고르기">':'';
@@ -23000,14 +23021,14 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     const swOn=gvCan(), swLv=tab==='asset'?'asset':tab;
     shownSw={};
     const head='<thead><tr>'+(sel?'<th class="ma-ckcol"></th>':'')+[{k:'brand',l:'제품',cls:'ma-brandcol'},{k:'name',l:'이름',cls:'ma-namecol'}].concat(tab==='asset'?[{k:'at',l:'게재',cls:'ma-atcol'}]:[],[{k:'bud',l:'일예산',cls:'ma-budcol'}],COLS).map(c=>{ const on=sortKey===c.k;
-      return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+(swOn?'<th class="ma-swcol" title="게재 켜기·끄기 · 누르면 확인 창과 비밀번호">ON/OFF</th>':'')+'<th class="ma-guidecol">행동지침</th></tr></thead>';
+      return '<th data-k="'+c.k+'" class="'+[c.cls||'',on?'is-sort':''].join(' ').trim()+'">'+c.l+'<i class="ma-sorti">'+(on?(sortDir<0?'↓':'↑'):'⇅')+'</i></th>'; }).join('')+(swOn?'<th class="ma-swcol" title="게재 켜기·끄기 · 누르면 확인 창과 비밀번호">ON/OFF</th>':'')+'</tr></thead>';
     const body=rows.slice(0,limit).map(r=>{
       const img=tab==='asset'?(r.thumb?'<img src="'+esc(r.thumb)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="ma-noimg"></span>'):'';
       const nm=drillable?'<button type="button" class="ma-drill" data-id="'+esc(r.id)+'" title="눌러서 안쪽 '+(tab==='campaign'?'광고 세트':'소재')+' 보기">'+esc(r.name)+'</button>':'<b>'+esc(r.name)+'</b>';
       const isA=tab==='asset';
       if(isA) shownRows[r.id]=r;
-      const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':''].filter(Boolean).join(' ');
-      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 카드 보기"':'')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 평일 · 2주치) 합산 ROAS '+WIN_ROAS+'% 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.sw||r.st,r.name)+'</td>'):'')+guideTd(r)+'</tr>';
+      const cls=[sel&&sel.has(r.id)?'is-sel':'',isA?'ma-asset-row':'ma-guide-row'].filter(Boolean).join(' ');
+      return '<tr'+(cls?' class="'+cls+'"':'')+(isA?' data-asset="'+esc(r.id)+'" title="눌러서 크게 보기 · 소재 상세 / 행동지침"':' data-gd-row="'+esc(r.id)+'" title="눌러서 행동지침 크게 보기 · 이름을 누르면 안쪽으로"')+'>'+(sel?'<td class="ma-ckcol">'+ck(r)+'</td>':'')+'<td class="ma-brandcol" title="'+esc(r.brand)+'">'+esc(r.brand||'-')+'</td><td class="ma-namecol"><div class="ma-name">'+img+'<span class="ma-st'+stCls(r.st)+'" title="'+esc(stTxt(r.st))+'"></span><div>'+((w=>w?'<span class="ma-winrow">'+nm+'<span class="ma-winner'+(w==='past'?' is-past':'')+'" title="'+(w==='now'?'지금 WINNER · 최근 ':'예전 WINNER · 최근 60일 안 어느 ')+WIN_DAYS+'일(광고비 쓴 평일 · 2주치) 합산 ROAS '+WIN_ROAS+'% 이상 · 구매 '+WIN_BUY+'건 이상'+(w==='past'?' · 지금은 기준 아래이거나 꺼짐':'')+'">WINNER</span></span>':nm)(isA?winOf(r):''))+(r.sub?'<small>'+esc(r.sub)+'</small>':'')+'</div></div></td>'+(isA?atTd(r.at):'')+budTd(r)+COLS.map(c=>cell(c,r.x,repFor(r.c,tab==='campaign'?null:r.s))).join('')+(swOn?(shownSw[r.id]=r,'<td class="ma-swcol">'+gvSwitch(swLv,r.id,r.sw||r.st,r.name)+'</td>'):'')+guideTd(r)+'</tr>';
     }).join('');
     $('maTable').dataset.ids=rows.slice(0,limit).map(r=>r.id).join(',');
     $('maTable').innerHTML='<div class="ma-table-wrap"><table class="ma-table">'+head+'<tbody>'+body+'</tbody></table></div>'+more;
@@ -23714,27 +23735,67 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       return {ok:false,msg:'보내지 못했습니다: '+(e&&e.message||e)};
     }
   }
-  function openCard(r){
-    if(!cardBox){
-      cardBox=document.createElement('div');
-      cardBox.className='settings-overlay'; cardBox.hidden=true;
-      cardBox.innerHTML='<div class="settings-panel ma-dialog" role="dialog" aria-modal="true" aria-labelledby="maCardT"><div class="settings-head"><h2 id="maCardT"></h2>'
-        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="ma-dialog-body"></div></div>';
-      document.body.appendChild(cardBox);
-      /* 닫을 때 재생 중인 영상을 멈추려고 내용을 비운다 */
-      const shut=()=>{ cardBox.hidden=true; cardBox.querySelector('.ma-dialog-body').innerHTML=''; };
-      cardBox.addEventListener('click',e=>{
-        if(e.target===cardBox||e.target.closest('.settings-close')) return shut();
-      });
-      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
+  /* 11-26 사용자 요청 · 소재 팝업과 행동지침 분석 창을 화면을 거의 채우는 큰 창 하나로 합침 ·
+     머리 오른쪽 단추로 '소재 상세'(예전 소재 팝업) / '행동지침'(예전 행동지침 창)을 고른다 · 고른 모드는 브라우저에 기억(baroyam_ma_bigmode) ·
+     소재 줄은 두 모드 모두, 캠페인·광고 세트 줄은 행동지침만 · 바로얌AI 판단은 행동지침 모드를 볼 때만 받는다 */
+  let bigMode='card', bigBoth=false;
+  function bigEnsure(){
+    if(cardBox) return;
+    cardBox=document.createElement('div');
+    cardBox.className='settings-overlay ma-big-ov'; cardBox.hidden=true;
+    cardBox.innerHTML='<div class="settings-panel ma-dialog gd-dlg ma-big" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span></div></div>'
+      +'<div class="ma-big-mode" role="tablist" aria-label="보기 모드"><button type="button" role="tab" data-big="card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>소재 상세</button>'
+      +'<button type="button" role="tab" data-big="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg>행동지침</button></div>'
+      +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div>'
+      +'<div class="ma-dialog-body" data-big-pane="card"></div><div class="gd-body" data-big-pane="guide"><div class="gd-left"></div><aside class="gd-right"></aside></div></div>';
+    document.body.appendChild(cardBox);
+    gdBox=cardBox;
+    /* 닫을 때 재생 중인 영상을 멈추려고 소재 칸을 비운다 */
+    const shut=()=>{ cardBox.hidden=true; cardBox.querySelector('[data-big-pane="card"]').innerHTML=''; clearTimeout(gdTick); };
+    cardBox.addEventListener('click',e=>{
+      if(e.target===cardBox||e.target.closest('.settings-close')) return shut();
+      const mb=e.target.closest('[data-big]');
+      if(mb){ if(mb.dataset.big!==bigMode){ bigSet(mb.dataset.big); if(bigBoth) keep('baroyam_ma_bigmode',bigMode); } return; }
+      if(e.target.closest('[data-gd-ai]')) gdAsk();
+      const kb=e.target.closest('[data-gd-k]');
+      const rb=e.target.closest('[data-gd-rng]');
+      if(rb){ if(rb.dataset.gdRng!==gdRng){ gdRng=rb.dataset.gdRng; gdPaintChart(); } return; }
+      if(kb){ gdKey=kb.dataset.gdK; cardBox.querySelectorAll('[data-gd-k]').forEach(b=>{ const on=b===kb; b.classList.toggle('is-sel',on); b.setAttribute('aria-pressed',on); }); gdPaintChart(); }
+    });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&cardBox&&!cardBox.hidden) shut(); });
+  }
+  function bigSet(m){
+    bigMode=m;
+    cardBox.querySelectorAll('[data-big]').forEach(b=>{ const on=b.dataset.big===m; b.classList.toggle('is-on',on); b.setAttribute('aria-selected',on); });
+    cardBox.querySelectorAll('[data-big-pane]').forEach(p=>{ p.hidden=p.dataset.bigPane!==m; });
+    const body=cardBox.querySelector('[data-big-pane="card"]');
+    if(m==='card'&&curCard){
+      if(!body.innerHTML){ body.innerHTML=cardHtml(curCard); body.scrollTop=0; playVideo(); }
+    }else{
+      body.innerHTML='';   /* 행동지침으로 가면 영상을 멈춘다(돌아오면 다시 그림 · 받은 영상은 기억해 둠) */
+      if(m==='guide'){ cardBox.querySelector('.gd-left').scrollTop=0; gdPaint(); const g=shownGuide[gdCur]; if(g&&!AI_RES[gdCur]&&g.k!=='none') gdAsk(); }
     }
-    curCard=r;
-    cardBox.querySelector('#maCardT').textContent=r.name;
-    cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r);
+  }
+  function bigHead(g,lv,name){
+    const L=cardBox.querySelector('.gd-lv'); L.textContent=LVN[lv]||''; L.className='gd-lv lv-'+lv;
+    cardBox.querySelector('#gdT').textContent=name||'';
+    const pill=cardBox.querySelector('.gd-pill'), sub=cardBox.querySelector('.gd-sub-t');
+    pill.hidden=!g; sub.textContent='';
+    if(g){ pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k]; sub.textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':''); }
+  }
+  function openCard(r){
+    bigEnsure();
+    curCard=r; gdCur=r.id;
+    const g=shownGuide[r.id];
+    bigBoth=!!g;
+    cardBox.querySelector('[data-big="guide"]').hidden=!g;
+    cardBox.querySelector('[data-big="card"]').hidden=false;
+    bigHead(g,'asset',r.name);
+    cardBox.querySelector('[data-big-pane="card"]').innerHTML='';
     cardBox.hidden=false;
-    playVideo();
+    bigSet(g&&store('baroyam_ma_bigmode')==='guide'?'guide':'card');
     /* 상품이 이어졌는데 마진표 목록을 아직 안 읽었으면 읽고 다시 그린다(대표 ROAS) */
-    if(!profitList&&(linkC[r.c]||linkS[r.s])) loadProfit().then(()=>{ if(!cardBox.hidden) cardBox.querySelector('.ma-dialog-body').innerHTML=cardHtml(r); });
+    if(!profitList&&(linkC[r.c]||linkS[r.s])) loadProfit().then(()=>{ if(!cardBox.hidden&&curCard===r&&bigMode==='card'){ const b=cardBox.querySelector('[data-big-pane="card"]'); b.innerHTML=cardHtml(r); playVideo(); } });
   }
   /* 브랜드 · 캠페인 이름 '260825_홀떡피자_PHABO' 의 둘째 토막(날짜 뒤) · 모양이 다르면 '기타' */
   function brandMap(a){
@@ -24466,7 +24527,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
   const LVN={campaign:'캠페인',adset:'광고 세트',asset:'소재'};
   let gdTick=null;
   function gdPaint(){
-    if(!gdBox||gdBox.hidden) return;
+    if(!gdBox||gdBox.hidden||bigMode!=='guide') return;
     const g=shownGuide[gdCur]; if(!g) return;
     const cur=acc().currency, md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
     const chg=(a1,b1)=>a1==null||b1==null||!b1?null:(a1-b1)/b1*100, sg=v=>v==null?'':'<em class="'+(v>=0?'up':'dn')+'">'+(v>=0?'▲':'▼')+Math.abs(Math.round(v))+'%</em>';
@@ -24525,39 +24586,23 @@ window.BAROYAM_PJ_CHANNELS=(function(){
           +'<span>'+(+r.d.slice(5,7))+'.'+(+r.d.slice(8,10))+'<small>'+WD[dt.getDay()]+'</small></span></div>'; }).join('')+'</div>';
   }
   function gdPaintAi(){
-    if(!gdBox||gdBox.hidden) return;
+    if(!gdBox||gdBox.hidden||bigMode!=='guide') return;
     const g=shownGuide[gdCur]; if(!g) return;
     gdBox.querySelector('.gd-right').innerHTML='<h4 class="gd-ai-h"><span class="gd-ai-badge">AI</span>바로얌AI 판단</h4>'+gdAiHtml(g);
     clearTimeout(gdTick);
     if(AI_RES[gdCur]&&AI_RES[gdCur].state==='wait') gdTick=setTimeout(gdPaintAi,1000);
   }
+  /* 캠페인·광고 세트 줄(또는 예전 판정 알약) · 큰 창을 행동지침 모드로만 연다(소재 상세는 소재 줄에서) */
   function guideOpen(id){
     const g=shownGuide[id]; if(!g) return;
-    if(!gdBox){
-      gdBox=document.createElement('div'); gdBox.className='settings-overlay gd-ov'; gdBox.hidden=true;
-      gdBox.innerHTML='<div class="settings-panel gd-dlg" role="dialog" aria-modal="true" aria-labelledby="gdT"><div class="settings-head gd-head"><div class="gd-hd"><span class="gd-lv"></span><div class="gd-hd-t"><h2 id="gdT"></h2><span class="ma-guide gd-pill"></span><span class="gd-sub-t"></span></div></div>'
-        +'<button class="settings-close" type="button" aria-label="닫기" title="닫기">✕</button></div><div class="gd-body"><div class="gd-left"></div><aside class="gd-right"></aside></div></div>';
-      document.body.appendChild(gdBox);
-      const shut=()=>{ gdBox.hidden=true; clearTimeout(gdTick); };
-      gdBox.addEventListener('click',e=>{
-        if(e.target===gdBox||e.target.closest('.settings-close')) return shut();
-        if(e.target.closest('[data-gd-ai]')) gdAsk();
-        const kb=e.target.closest('[data-gd-k]');
-        const rb=e.target.closest('[data-gd-rng]');
-        if(rb){ if(rb.dataset.gdRng!==gdRng){ gdRng=rb.dataset.gdRng; gdPaintChart(); } return; }
-        if(kb){ gdKey=kb.dataset.gdK; gdBox.querySelectorAll('[data-gd-k]').forEach(b=>{ const on=b===kb; b.classList.toggle('is-sel',on); b.setAttribute('aria-pressed',on); }); gdPaintChart(); }
-      });
-      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&gdBox&&!gdBox.hidden){ e.stopPropagation(); shut(); } },true);
-    }
-    gdCur=id;
-    const md=d=>(+d.slice(5,7))+'.'+(+d.slice(8,10));
-    gdBox.querySelector('.gd-lv').textContent=LVN[g.lv]||'';
-    gdBox.querySelector('.gd-lv').className='gd-lv lv-'+g.lv;
-    gdBox.querySelector('#gdT').textContent=g.nm||'';
-    const pill=gdBox.querySelector('.gd-pill'); pill.className='ma-guide gd-pill is-'+g.k; pill.textContent=GUIDE_TXT[g.k];
-    gdBox.querySelector('.gd-sub-t').textContent=(g.run?'운영 단계':'소재 테스트')+(g.n!=null?' · 게재 '+g.n+'일째':'');
-    gdBox.hidden=false; gdBox.querySelector('.gd-left').scrollTop=0; gdPaint();
-    if(!AI_RES[id]&&g.k!=='none') gdAsk();
+    if(g.lv==='asset'&&shownRows[id]) return openCard(shownRows[id]);
+    bigEnsure();
+    curCard=null; gdCur=id; bigBoth=false;
+    cardBox.querySelector('[data-big="card"]').hidden=true;
+    cardBox.querySelector('[data-big="guide"]').hidden=false;
+    bigHead(g,g.lv,g.nm);
+    cardBox.hidden=false;
+    bigSet('guide');
   }
   $('maTable').addEventListener('mouseover',e=>{ const el=e.target.closest('[data-guide]'); if(el) guideShow(el); });
   $('maTable').addEventListener('mouseout',e=>{ const el=e.target.closest('[data-guide]'); if(el&&!el.contains(e.relatedTarget)) guideHide(); });
@@ -24596,6 +24641,8 @@ window.BAROYAM_PJ_CHANNELS=(function(){
     }
     const ar=e.target.closest('tr.ma-asset-row');
     if(ar){ const r=shownRows[ar.dataset.asset]; if(r) openCard(r); return; }
+    const gr=e.target.closest('tr.ma-guide-row');
+    if(gr&&!e.target.closest('.ma-drill,.ma-ck,a,button,input,label')){ guideOpen(gr.dataset.gdRow); return; }
     const d=e.target.closest('.ma-drill');
     if(!d) return;
     /* 이름 누르기 · 그것 하나만 골라 다음 단계로 */
