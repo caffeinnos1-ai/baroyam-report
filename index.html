@@ -3414,9 +3414,14 @@ window.BAROYAM_FONT=(function(){
   .ma-xl .gd-k span{font-size:12px}
   /* 11-26 · 영상 | 영상 체류·상세페이지 체류·바로가기 | 나머지 숫자 세 칸 */
   .ma-pv-side{flex:none;width:300px;display:flex;flex-direction:column;gap:10px;position:sticky;top:0}
-  .ma-xl .ma-pv-col{width:340px}
-  .ma-xl .ma-asset-open.is-still .ma-pv-col{width:380px}
-  .ma-xl .ma-pv-side{width:400px;position:static}
+  .ma-xl .ma-pv-col{width:300px}
+  .ma-xl .ma-asset-open.is-still .ma-pv-col{width:340px}
+  .ma-xl .ma-pv-side{width:360px;position:static}
+  .ma-bd.has-div{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr)}
+  .ma-bd .gd-div h4 small{display:block;margin:3px 0 0}
+  .ma-bd.has-div>.gd-div{align-self:stretch}
+  .ma-bd .gd-div .gd-div-sum small{margin-left:0;flex-basis:100%}
+  @media (max-width:1500px){ .ma-bd.has-div{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .ma-bd.has-div>.gd-div{grid-column:1/-1} }
   .ma-grp{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper)}
   .ma-grp>.gd-card,.ma-grp>.ma-sec{border:0;border-radius:0;background:transparent}
   .ma-grp>*+*:not(.ma-grp-f){border-top:1px solid var(--line)}
@@ -22970,7 +22975,9 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const txBox=txs.t.length+txs.b.length+txs.d.length?'<div class="ma-sec ma-tx"><h4>광고 문구 <small>메타에 입력한 그대로</small></h4>'
         +txRow('t','제목')+txRow('b','본문')+txRow('d','설명')+'</div>':'';
       /* 색 기준은 문구 줄 대신 말풍선으로(사용자 요청 · 줄이 길어짐) */
-      const bdHtml=agBox||plBox||hrBox?'<div class="ma-bd" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+hrBox+'</div>':'';
+      /* 11-26 사용자 요청 · 크리에이티브 다양성을 게재지면 오른쪽에(연령×성별 | 게재지면 | 다양성 한 줄) */
+      const divG=shownGuide[r.id]?gdDivHtml(shownGuide[r.id]):'';
+      const bdHtml=agBox||plBox||hrBox||divG?'<div class="ma-bd'+(divG?' has-div':'')+'" title="기준 ROAS '+Math.round(base)+'%'+(R&&R.roas!=null?' (대표 ROAS)':'')+' 이상 초록 · 아래 빨강">'+agBox+plBox+divG+hrBox+'</div>':'';
       /* 11-26 사용자 요청 · 큰 창 두 모드의 위쪽을 같은 모양으로 · 행동지침과 같은 네 칸(ROAS · 광고비 · 광고매출 · 클릭률)을 창 폭 전체에 ·
          기간은 목록의 기간 탭(창 머리 기간 알약에 보임) · 예전 ROAS·지출·구매 전환값 세 칸(ma-big)은 이 줄로 바뀜 */
       const kp=(l,v,cls,sub)=>'<div class="gd-k'+cls+'"><small>'+l+'</small><b>'+v+'</b><span>'+sub+'</span></div>';
@@ -22990,7 +22997,7 @@ window.BAROYAM_PJ_CHANNELS=(function(){
       const grpV=(G3||vdBox)?'<section class="ma-grp"><h3 class="ma-grp-h"><span>영상</span></h3>'+(G3?'<div class="gd-card"><h4>후킹·유지 <small>최근 60일</small></h4>'+gdVideoHtml(G3)+'</div>':'')+vdBox+'</section>':'';
       const grpP=(G3||cvBox||lp)?'<section class="ma-grp"><h3 class="ma-grp-h"><span>상세페이지</span></h3>'+(G3?'<div class="gd-card"><h4>체류 등급 <small>'+pp+'</small></h4>'+gdPageHtml(G3)+'</div>':'')+cvBox+(lp?'<div class="ma-grp-f">'+lp+'</div>':'')+'</section>':'';
       return top+'<div class="ma-asset-open'+(l.drive?'':' is-still')+'"><div class="ma-pv-col">'+media+'</div><div class="ma-pv-side">'+grpV+grpP+postBtn+'</div><div class="ma-pv-info">'
-        +(G3?gdDivHtml(G3):'')
+
         /* 노출 → 클릭 → 장바구니 → 구매 칸은 11-26 사용자 요청으로 행동지침으로 옮김(gdFunnelHtml) */
         +bdHtml
         /* 11-26 사용자 요청 · 타깃 | 광고 문구 양옆으로 */
