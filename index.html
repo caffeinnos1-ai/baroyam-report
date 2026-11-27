@@ -6806,6 +6806,36 @@ window.BAROYAM_FONT=(function(){
   .sh-sk{display:inline-block;width:34px;height:14px;border-radius:6px;vertical-align:middle;background:linear-gradient(90deg,var(--bg) 0%,var(--line) 50%,var(--bg) 100%);background-size:200% 100%;animation:shSk 1.1s ease-in-out infinite}
   @keyframes shSk{from{background-position:100% 0}to{background-position:-100% 0}}
   #shopTabs .hero-view-tab[hidden]{display:none}   /* 연동 설정은 팀장·권한 받은 회원만(교훈 9 · display 가 hidden 을 이김) */
+  /* 브랜드 페이지 편집(11-28) · 왼쪽 칸 · 오른쪽 미리보기 */
+  .bp{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:22px;align-items:start}
+  .bp-form{display:flex;flex-direction:column;gap:12px}
+  .bp-sec{border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+  .bp-sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:14px 18px;font-size:15px;font-weight:600;color:var(--ink)}
+  .bp-sec>summary::-webkit-details-marker{display:none}
+  .bp-sec>summary .hint{font-size:12.5px;font-weight:400;color:var(--mute)}
+  .bp-sec>summary::after{content:'';margin-left:auto;width:8px;height:8px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(45deg);transition:transform .2s}
+  .bp-sec[open]>summary::after{transform:rotate(-135deg)}
+  .bp-body{padding:2px 18px 18px;display:flex;flex-direction:column;gap:12px}
+  .bp-f{display:flex;flex-direction:column;gap:5px}
+  .bp-f>span{font-size:12.5px;font-weight:500;color:var(--body)}
+  .bp-f .ui-field{width:100%}
+  .bp-f textarea.ui-field{height:auto;min-height:64px;padding:9px 12px;line-height:1.55;resize:vertical;font-family:inherit}
+  .bp-item{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+  .bp-item-hd{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink)}
+  .bp-item-hd .pf-grow{flex:1}
+  .bp-img{display:flex;align-items:center;gap:8px}
+  .bp-img .th{flex:none;width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:var(--bg) center/cover no-repeat}
+  .bp-img .ui-field{flex:1;min-width:0}
+  .bp-imgs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .bp-side{position:sticky;top:96px;display:flex;flex-direction:column;gap:10px}
+  .bp-pv-hd{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+  .bp-save{font-size:12px;color:var(--mute)}
+  .bp-save.bad{color:var(--neg)}
+  .bp-pv{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--bg);height:calc(100vh - 230px);min-height:420px}
+  .bp-pv iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+  .bp-act{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .bp-pub{font-size:12px;color:var(--mute)}
+  @media (max-width:1100px){ .bp{grid-template-columns:1fr} .bp-side{position:static} .bp-pv{height:620px} }
   .sh-tl{margin-top:22px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
   .sh-tl-h strong{display:block;font-size:15px;font-weight:600;color:var(--ink)}
   .sh-tl-h span{display:block;margin-top:2px;font-size:12.5px;color:var(--mute)}
@@ -13215,6 +13245,7 @@ window.BAROYAM_FONT=(function(){
           <button type="button" class="hero-view-tab active" role="tab" data-shop="cs" data-sub="판매처마다 취소·반품·교환 요청과 답변 안 한 문의를 한 표로 봅니다.">CS 현황</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="stock" data-sub="판매처마다 상품의 옵션 설정된 재고·판매가·판매상태를 한 화면에서 보고 고칩니다.">상품·옵션 재고</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="register" data-sub="상품을 한 번 작성해 판매처에 등록하고, 상세페이지는 체크한 판매처에 한 번에 바꿉니다.">상품 관리</button>
+          <button type="button" class="hero-view-tab" role="tab" data-shop="bpage" data-sub="자사몰 브랜드 스토리 페이지(brand-info.html)의 글·사진을 칸에 적어 고치고, 미리 본 뒤 카페24에 반영합니다." hidden>브랜드 페이지</button>
           <button type="button" class="hero-view-tab" role="tab" data-shop="link" data-sub="판매처마다 연결 상태와 마지막 수집 시각을 봅니다.">연동 설정</button>
         </div>
         <section class="section" style="padding-top:0">
@@ -13283,6 +13314,25 @@ window.BAROYAM_FONT=(function(){
             </div>
             <div class="sh-note" id="rgNote" hidden></div>
             <input type="file" id="rgFile" accept="image/*" multiple hidden>
+          </div>
+          <!-- 브랜드 페이지 · 자사몰 brand-info.html(스크롤하며 보이는 브랜드 스토리)의 글·사진을 칸으로 고친다(11-28) ·
+               작성본은 app_settings 의 shop_brand_page_v1 = {data,at,by,pub} · 반영은 shop/req {kind:'theme-page'} → VPS 가 카페24 디자인 API 로 파일을 바꿈 ·
+               페이지 모양(CSS·움직임)은 아래 #bpTpl 한 곳에만 있다 -->
+          <div class="sh-pane" data-shop-pane="bpage" hidden>
+            <div class="bp">
+              <div class="bp-form" id="bpForm"></div>
+              <aside class="bp-side">
+                <div class="bp-pv-hd"><strong>미리보기</strong><span class="bp-save" id="bpSave"></span><span class="pf-grow"></span><a class="ui-btn sm ghost" href="https://baroyam.com/brand-info.html" target="_blank" rel="noopener">지금 페이지 열기</a></div>
+                <div class="bp-pv"><iframe id="bpFrame" title="브랜드 페이지 미리보기"></iframe></div>
+                <div class="bp-act">
+                  <span class="bp-pub" id="bpPub"></span><span class="pf-grow"></span>
+                  <button type="button" class="ui-btn sm ghost" id="bpCopy" title="카페24 디자인 편집에 직접 붙여넣을 코드를 복사합니다">코드 복사</button>
+                  <button type="button" class="ui-btn sm primary" id="bpPublish">카페24에 반영</button>
+                </div>
+              </aside>
+            </div>
+            <div class="sh-note" id="bpNote" hidden></div>
+            <input type="file" id="bpFile" accept="image/*" hidden>
           </div>
           <div class="sh-pane" data-shop-pane="link" hidden>
             <div class="sh-note sh-link-note" id="shLinkNote" hidden></div>
@@ -38559,6 +38609,456 @@ window.baroyamAsk=function(title,body,okText){
     put(document.getElementById('heroTitle'),icoOf('#sbSalesToggle > svg'));
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run); else run();
+})();
+</script>
+<!-- 자사몰 브랜드 스토리 페이지(brand-info.html)의 모양·움직임 · 쇼핑몰통합관리 › 브랜드 페이지가 이 틀에 작성본(JSON)을 붙여 파일을 만든다(11-28) ·
+     스크롤 효과(라라스윗 brand-info 참고): 첫 화면 사진 시차 · 읽는 만큼 밝아지는 글 · 겹쳐 쌓이는 sticky 카드 · 숫자 세기 · 흘러가는 브랜드 줄 · 떠오르기 -->
+<template id="bpTpl"><style>
+  .sample-sg { display:none !important; }   /* 스킨 견본 안내창 숨김 */
+  .xans-layout-path, #contents > .path { display:none !important; }
+
+  #bs { --o:#ea5205; --o2:#ff7a2f; --ink:#2b2b2b; background:var(--o); color:#fff; word-break:keep-all; overflow-x:clip; }
+  #bs * { box-sizing:border-box; }
+  #bs img { display:block; max-width:100%; }
+  #bs .col { width:100%; max-width:560px; margin:0 auto; padding:0 24px; }
+
+  /* 스크롤하면 아래에서 떠오르기 */
+  #bs .up { opacity:0; transform:translate3d(0,60px,0); transition:opacity .9s cubic-bezier(.25,1,.5,1), transform .9s cubic-bezier(.25,1,.5,1); }
+  #bs .up.on { opacity:1; transform:none; }
+
+  /* 1. 첫 화면 */
+  #bs .hero { position:relative; text-align:center; padding:110px 0 40px; }
+  #bs .hero .eb { font-size:14px; letter-spacing:.25em; opacity:.85; margin:0 0 18px; }
+  #bs .hero h1 { font-size:46px; line-height:1.28; font-weight:800; margin:0; color:#fff; }
+  #bs .hero .sub { font-size:17px; opacity:.9; margin:18px 0 0; }
+  #bs .float { position:relative; height:620px; margin-top:20px; }
+  #bs .float .p { position:absolute; width:52%; border-radius:22px; overflow:hidden; box-shadow:0 24px 50px rgba(0,0,0,.22); will-change:transform; }
+  #bs .float .p img { width:100%; aspect-ratio:1/1; object-fit:cover; }
+  #bs .float .p1 { left:2%;  top:0;    --r:-8deg; }
+  #bs .float .p2 { right:0;  top:120px; --r:7deg;  width:46%; }
+  #bs .float .p3 { left:14%; top:330px; --r:4deg;  width:44%; }
+  #bs .float .p4 { right:6%; top:400px; --r:-6deg; width:38%; }
+
+  /* 2. 읽는 만큼 밝아지는 글 */
+  #bs .fill { padding:80px 0 120px; }
+  #bs .fill .t { font-size:22px; font-weight:700; margin:0 0 26px; }
+  #bs .fill p { font-size:27px; line-height:1.6; font-weight:700; margin:0; }
+  #bs .fill .w { color:rgba(255,255,255,.28); transition:color .25s; }
+  #bs .fill .w.lit { color:#fff; }
+
+  /* 3. 겹쳐 쌓이는 카드 */
+  #bs .stack { padding:0 0 60px; }
+  #bs .card { position:sticky; top:calc(110px + var(--i,0)*18px); background:#fff; color:var(--ink); border-radius:28px; overflow:hidden; margin-bottom:40px; box-shadow:0 -10px 40px rgba(0,0,0,.15); }
+  #bs .card .hd { padding:26px 26px 20px; }
+  #bs .card .no { font-size:15px; font-weight:700; color:var(--o); margin:0 0 6px; letter-spacing:.04em; }
+  #bs .card h3 { font-size:32px; line-height:1.25; font-weight:800; margin:0; color:var(--o); }
+  #bs .card .pic { position:relative; }
+  #bs .card .pic img { width:100%; aspect-ratio:4/5; object-fit:cover; }
+  #bs .card .pic::after { content:""; position:absolute; inset:45% 0 0; background:linear-gradient(transparent, rgba(0,0,0,.65)); }
+  #bs .card .tx { position:absolute; left:0; right:0; bottom:0; padding:24px 26px 28px; color:#fff; z-index:1; font-size:16px; line-height:1.7; font-weight:500; }
+  #bs .card .tx b { display:block; font-size:19px; margin-bottom:8px; }
+
+  /* 4. 숫자 */
+  #bs .nums { padding:120px 0 100px; }
+  #bs .nums h2 { font-size:40px; line-height:1.25; font-weight:800; margin:0 0 14px; color:#fff; }
+  #bs .nums .lead { font-size:17px; opacity:.85; margin:0 0 40px; }
+  #bs .nums ul { list-style:none; margin:0; padding:0; border-top:1px solid rgba(255,255,255,.45); }
+  #bs .nums li { display:grid; grid-template-columns:42% 1fr; align-items:center; gap:10px; padding:30px 0; border-bottom:1px solid rgba(255,255,255,.45); }
+  #bs .nums .big { font-size:56px; font-weight:800; line-height:1; text-align:center; letter-spacing:-.02em; }
+  #bs .nums .big sup { font-size:22px; vertical-align:top; margin-left:3px; position:relative; top:4px; }
+  #bs .nums .k { font-size:18px; font-weight:700; margin:0 0 8px; }
+  #bs .nums .d { font-size:15px; line-height:1.6; opacity:.85; margin:0; }
+
+  /* 5. 흘러가는 브랜드 줄 */
+  #bs .flow { padding:30px 0 110px; overflow:hidden; }
+  #bs .flow h2 { text-align:center; font-size:34px; font-weight:800; margin:0 0 34px; color:#fff; }
+  #bs .track { display:flex; gap:16px; width:max-content; animation:bsFlow 38s linear infinite; }
+  #bs .flow:hover .track { animation-play-state:paused; }
+  #bs .bc { width:220px; flex:none; background:#fff; color:var(--ink); border-radius:20px; overflow:hidden; text-decoration:none; }
+  #bs .bc img { width:100%; aspect-ratio:1/1; object-fit:cover; }
+  #bs .bc span { display:block; padding:14px 16px 16px; font-size:17px; font-weight:700; }
+  #bs .bc em { display:block; font-style:normal; font-size:13px; font-weight:400; color:#777; margin-top:4px; }
+  @keyframes bsFlow { to { transform:translateX(-50%); } }
+
+  /* 6. 이야기 */
+  #bs .story { background:#fff3ea; color:var(--ink); padding:120px 0 0; }
+  #bs .story .eb { font-size:14px; letter-spacing:.2em; color:var(--o); font-weight:700; margin:0 0 16px; }
+  #bs .story h2 { font-size:34px; line-height:1.35; font-weight:800; margin:0 0 40px; color:var(--ink); }
+  #bs .story p { font-size:19px; line-height:1.75; font-weight:600; margin:0 0 34px; color:#444; }
+  #bs .story p.em { color:var(--o); font-size:22px; }
+  #bs .story .shot { margin-top:30px; }
+  #bs .story .shot img { width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:28px 28px 0 0; }
+
+  /* 7. 버튼 */
+  #bs .cta { background:#fff; color:var(--ink); text-align:center; padding:90px 0 110px; }
+  #bs .cta h2 { font-size:30px; font-weight:800; margin:0 0 28px; color:var(--ink); }
+  #bs .cta a { display:block; max-width:360px; margin:0 auto 12px; padding:19px; border-radius:999px; font-size:17px; font-weight:700; text-decoration:none; background:var(--o); color:#fff; }
+  #bs .cta a.line { background:#fff; color:var(--o); border:1.5px solid var(--o); }
+
+  @media (max-width:768px) {
+    #bs .hero { padding:70px 0 20px; }
+    #bs .hero h1 { font-size:34px; }
+    #bs .float { height:470px; }
+    #bs .float .p2 { top:90px; } #bs .float .p3 { top:250px; } #bs .float .p4 { top:300px; }
+    #bs .fill p { font-size:22px; }
+    #bs .card { top:calc(90px + var(--i,0)*16px); }
+    #bs .card h3 { font-size:26px; }
+    #bs .nums h2 { font-size:32px; }
+    #bs .nums .big { font-size:42px; }
+    #bs .bc { width:170px; }
+    #bs .story h2 { font-size:28px; }
+    #bs .story p { font-size:17px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #bs .up { opacity:1; transform:none; transition:none; }
+    #bs .track { animation:none; }
+  }
+</style>
+<div id="bs"></div>
+<script>
+(function () {
+  var root = document.getElementById('bs'), src = document.getElementById('bs-data');
+  if (!root || !src) return;
+  var D; try { D = JSON.parse(src.textContent); } catch (e) { return; }
+  var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function e(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function br(s) { return e(s).replace(/\n/g, '<br>'); }
+  function img(u) { return u ? '<img src="' + e(u) + '" alt="">' : ''; }
+  var h = D.hero || {}, f = D.fill || {}, n = D.nums || {}, b = D.brands || {}, s = D.story || {}, c = D.cta || {};
+  var SP = [0.18, 0.32, 0.1, 0.26], PC = ['p1', 'p2', 'p3', 'p4'];
+  var out = '';
+  out += '<section class="hero"><div class="col">' +
+    (h.eyebrow ? '<p class="eb up">' + e(h.eyebrow) + '</p>' : '') +
+    '<h1 class="up">' + br(h.title) + '</h1>' +
+    (h.sub ? '<p class="sub up">' + br(h.sub) + '</p>' : '') +
+    '<div class="float">' + (h.imgs || []).slice(0, 4).map(function (u, i) { return u ? '<div class="p ' + PC[i] + '" data-speed="' + SP[i] + '">' + img(u) + '</div>' : ''; }).join('') + '</div></div></section>';
+  if (f.text) out += '<section class="fill"><div class="col">' + (f.lead ? '<p class="t up">' + e(f.lead) + '</p>' : '') + '<p class="js-fill">' + e(f.text) + '</p></div></section>';
+  if ((D.cards || []).length) out += '<section class="stack"><div class="col">' + D.cards.map(function (k, i) {
+    return '<div class="card" style="--i:' + i + '"><div class="hd">' + (k.no ? '<p class="no">' + e(k.no) + '</p>' : '') + '<h3>' + br(k.title) + '</h3></div>' +
+      '<div class="pic">' + img(k.img) + '<div class="tx">' + (k.head ? '<b>' + br(k.head) + '</b>' : '') + br(k.body) + '</div></div></div>';
+  }).join('') + '</div></section>';
+  if ((n.items || []).length) out += '<section class="nums"><div class="col"><h2 class="up">' + br(n.title) + '</h2>' + (n.lead ? '<p class="lead up">' + br(n.lead) + '</p>' : '') +
+    '<ul>' + n.items.map(function (x) {
+      var num = parseFloat(String(x.num).replace(/,/g, ''));
+      var big = isFinite(num) ? '<span class="js-count" data-to="' + num + '">0</span>' : e(x.num);
+      return '<li class="up"><div class="big">' + big + (x.unit ? '<sup>' + e(x.unit) + '</sup>' : '') + '</div><div><p class="k">' + br(x.k) + '</p><p class="d">' + br(x.d) + '</p></div></li>';
+    }).join('') + '</ul></div></section>';
+  if ((b.items || []).length) out += '<section class="flow">' + (b.title ? '<h2 class="up">' + e(b.title) + '</h2>' : '') + '<div class="track">' + b.items.map(function (x) {
+    return '<a class="bc" href="' + e(x.link || '#') + '">' + img(x.img) + '<span>' + e(x.name) + (x.desc ? '<em>' + e(x.desc) + '</em>' : '') + '</span></a>';
+  }).join('') + '</div></section>';
+  if (s.title || (s.paras || []).length) out += '<section class="story"><div class="col">' + (s.eyebrow ? '<p class="eb up">' + e(s.eyebrow) + '</p>' : '') + '<h2 class="up">' + br(s.title) + '</h2>' +
+    (s.paras || []).map(function (p) { return p ? '<p class="up">' + br(p) + '</p>' : ''; }).join('') + (s.em ? '<p class="up em">' + br(s.em) + '</p>' : '') +
+    (s.img ? '<div class="shot up">' + img(s.img) + '</div>' : '') + '</div></section>';
+  out += '<section class="cta"><div class="col">' + (c.title ? '<h2 class="up">' + br(c.title) + '</h2>' : '') +
+    (c.b1 && c.b1.t ? '<a class="up" href="' + e(c.b1.u || '/') + '">' + e(c.b1.t) + '</a>' : '') +
+    (c.b2 && c.b2.t ? '<a class="up line" href="' + e(c.b2.u || '/') + '">' + e(c.b2.t) + '</a>' : '') + '</div></section>';
+  root.innerHTML = out;
+
+  var track = root.querySelector('.track');
+  if (track) track.innerHTML += track.innerHTML;
+  var fills = root.querySelectorAll('.js-fill');
+  for (var q = 0; q < fills.length; q++) fills[q].innerHTML = fills[q].textContent.trim().split(/\s+/).map(function (w) { return '<span class="w">' + w + '</span>'; }).join(' ');
+
+  function count(el) {
+    var to = +el.getAttribute('data-to'), dec = (String(to).split('.')[1] || '').length, t0 = null;
+    function show(v) { el.textContent = dec ? v.toFixed(dec) : Math.round(v).toLocaleString(); }
+    if (calm) { show(to); return; }
+    function step(t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / 1400); show(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+  var ups = root.querySelectorAll('.up, .js-count');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (x) {
+        if (!x.isIntersecting) return;
+        if (x.target.classList.contains('js-count')) count(x.target); else x.target.classList.add('on');
+        io.unobserve(x.target);
+      });
+    }, { threshold: 0.15 });
+    for (var i = 0; i < ups.length; i++) io.observe(ups[i]);
+  } else for (var j = 0; j < ups.length; j++) ups[j].classList.add('on');
+
+  var floats = root.querySelectorAll('.float .p'), words = root.querySelectorAll('.js-fill .w');
+  function onScroll() {
+    var vh = window.innerHeight;
+    if (!calm) for (var a = 0; a < floats.length; a++) {
+      var p = floats[a], r = p.parentNode.getBoundingClientRect();
+      p.style.transform = 'translate3d(0,' + (-(vh - r.top) * (+p.getAttribute('data-speed') || 0.2)).toFixed(1) + 'px,0) rotate(var(--r))';
+    }
+    for (var w = 0; w < words.length; w++) words[w].classList.toggle('lit', words[w].getBoundingClientRect().top < vh * 0.62);
+  }
+  var tk = false;
+  window.addEventListener('scroll', function () { if (tk) return; tk = true; requestAnimationFrame(function () { tk = false; onScroll(); }); }, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+})();
+</script></template>
+<script>
+/* 쇼핑몰통합관리 › 브랜드 페이지(11-28) · 자사몰 brand-info.html 의 글·사진을 칸으로 고친다
+   · 작성본: app_settings 의 shop_brand_page_v1 = {data,at,by,pub:{at,by}} (saveMerged · 한 장짜리라 data 를 통째로 바꿈)
+   · 페이지 = #bpTpl(모양·움직임) + data(JSON) · 미리보기는 같은 것을 iframe 에 그림
+   · 반영: shop/req {kind:'theme-page',chan:'cafe24',path:'/brand-info.html',source,images:[Storage 경로…]} → VPS 가
+     Storage 사진을 카페24 이미지 보관함에 올려 source 안 경로를 주소로 바꾸고, 바꾸기 전 파일을 shop/backup/theme/ 에 보관한 뒤
+     카페24 디자인 API(mall.write_design)로 파일을 바꿈 → shop/res
+   · 보이는 것: 팀장과 권한설정 › 쇼핑몰통합관리 연동 설정(editAccess shop) 받은 회원만(화면에서만 막음) */
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const KEY='shop_brand_page_v1', BUCKET='brand-files', DB=()=>window.BAROYAM_DB, PAGE='/brand-info.html';
+  const IMG='https://ecimg.cafe24img.com/pg667b39371627013/caffeinnos3/web/product/medium/';
+  const DEF={
+    hero:{eyebrow:'BRAND STORY',title:'바쁜 하루에도,\n바로 맛있게.',sub:'데우기만 하면 완성되는 한 끼, 바로얌',
+      imgs:[IMG+'20261102/5e65b497c8f8c92fd1d386c82410b4ff.jpg',IMG+'20261102/2e6aaf7f54173111d542664a005f7f01.jpg',IMG+'20261102/fd550e85f9fbd9406e1702cadea88364.jpg',IMG+'20261102/a58680a43f18b28f3dce5e812c371c24.jpg']},
+    fill:{lead:'간편식, 대충 먹는 음식 말고',text:'제대로 차려 먹기엔 힘들고 대충 때우기엔 아쉬운 순간. 바로얌은 그 순간을 위해 시작했어요. 에어프라이어 하나로, 먹고 나면 기분 좋아지는 한 끼. 그게 바로얌이 만드는 간편식이에요.'},
+    cards:[
+      {no:'01 DELICIOUS',title:'0순위는, 맛있게',img:IMG+'20261102/5e65b497c8f8c92fd1d386c82410b4ff.jpg',head:'간편식이라 타협하지 않아요.',body:'치즈는 넉넉하게, 소스는 진하게. 한 번 먹어 본 분이 다시 찾는 맛을 만들어요.'},
+      {no:'02 EASY',title:'15분이면, 간편하게',img:IMG+'20261102/fd550e85f9fbd9406e1702cadea88364.jpg',head:'꺼내서 넣으면 끝.',body:'설거지도 복잡한 조리도 없이 에어프라이어에서 따뜻한 한 끼가 돼요.'},
+      {no:'03 HEARTY',title:'한 끼를, 든든하게',img:IMG+'20261102/2e6aaf7f54173111d542664a005f7f01.jpg',head:'아이 간식부터 어른 야식까지.',body:'가족이 각자 좋아하는 맛을 고르도록 골라담기로 준비했어요.'},
+      {no:'04 JOYFUL',title:'먹는 순간이, 즐겁게',img:IMG+'20261105/0d8093f6065de54e31b265ccdfe91074.jpg',head:'익숙한 메뉴에 새로운 재미를.',body:'소떡 위에 피자를, 돈카츠 안에 밥을. 먹는 순간이 즐거워지도록 고민해요.'}],
+    nums:{title:'바로얌은\n숫자로 말합니다.',lead:'고객의 식탁에 쌓인 선택의 기록.',items:[
+      {num:'4000',unit:'만+',k:'누적 판매 개수',d:'4천만 개가 넘는 바로얌 간편식이\n식탁에 올랐어요.'},
+      {num:'8',unit:'만+',k:'쇼핑몰 종합 리뷰',d:'직접 먹어 본 분들이 남긴\n솔직한 이야기들.'},
+      {num:'60',unit:'%',k:'재구매율',d:'맛있으면 설명이 필요 없어요.\n다시 찾는 분들이 말해 줘요.'}]},
+    brands:{title:'바로얌의 간편식 브랜드',items:[
+      {name:'오꾸밥',desc:'오븐에 꾸운 주먹밥',img:IMG+'20260922/e8329240a621ad8338ef49d14a0f0b47.png',link:'/product/search.html?keyword=오꾸밥'},
+      {name:'홀떡피자',desc:'소떡 위에 올린 피자',img:IMG+'20261102/5e65b497c8f8c92fd1d386c82410b4ff.jpg',link:'/product/search.html?keyword=홀떡피자'},
+      {name:'밥카츠',desc:'밥을 품은 주먹밥 카츠',img:IMG+'20261102/fd550e85f9fbd9406e1702cadea88364.jpg',link:'/product/search.html?keyword=밥카츠'},
+      {name:'이응떡볶이',desc:'소스 품은 구멍 떡볶이',img:IMG+'20261102/a58680a43f18b28f3dce5e812c371c24.jpg',link:'/product/search.html?keyword=이응떡볶이'},
+      {name:'파스타스',desc:'셰프도 반한 파스타',img:IMG+'20261102/1f227ba19b1c3069fadd1a0086d99b25.jpg',link:'/product/search.html?keyword=파스타스'},
+      {name:'방구석포차',desc:'집에서 즐기는 포차 안주',img:IMG+'20261105/0d8093f6065de54e31b265ccdfe91074.jpg',link:'/product/search.html?keyword=방구석포차'}]},
+    story:{eyebrow:'OUR STORY',title:'"오늘 뭐 먹지?"에 대한\n바로얌의 대답',
+      paras:['퇴근하고 지친 저녁,\n아이 간식이 필요한 오후,\n출출한 밤.','누구나 쉽게 만들 수 있지만\n먹고 나면 기분이 좋아지는 한 끼.\n그 기준으로 메뉴 하나하나를 만들어 왔어요.'],
+      em:'바쁜 하루 끝에 가장 먼저 떠오르는\n간편식, 바로얌이에요.',img:IMG+'20261102/1f227ba19b1c3069fadd1a0086d99b25.jpg'},
+    cta:{title:'지금 바로얌을 만나 보세요',b1:{t:'베스트 상품 보러가기',u:'/category/%EB%B2%A0%EC%8A%A4%ED%8A%B8/96/'},b2:{t:'쇼핑몰 홈으로',u:'/'}}
+  };
+  /* 칸 모양 · [경로, 이름, 종류(text|area|img|imgs4|paras)] · list = 여러 개 넣는 묶음 */
+  const SECS=[
+    {k:'hero',t:'① 첫 화면',h:'큰 제목과 스크롤하면 움직이는 사진 4장',f:[['eyebrow','머리글'],['title','큰 제목 (Enter 로 줄바꿈)','area'],['sub','부제','area'],['imgs','움직이는 사진 4장','imgs4']]},
+    {k:'fill',t:'② 읽는 만큼 밝아지는 글',h:'스크롤하면 한 낱말씩 하얗게 켜짐',f:[['lead','작은 제목'],['text','본문','area']]},
+    {k:'cards',t:'③ 겹쳐 쌓이는 카드',h:'위에 멈춰 서며 다음 카드가 덮음',arr:true,max:6,name:'카드',
+      f:[['no','번호줄 (예: 01 DELICIOUS)'],['title','제목','area'],['img','사진','img'],['head','사진 위 굵은 줄','area'],['body','사진 위 설명','area']],blank:{no:'',title:'',img:'',head:'',body:''}},
+    {k:'nums',t:'④ 숫자',h:'화면에 들어오면 0부터 올라감',f:[['title','제목','area'],['lead','설명','area']],list:'items',max:5,name:'숫자',
+      lf:[['num','숫자 (예: 4000 · 1.6)'],['unit','단위 (예: 만+ · %)'],['k','제목'],['d','설명','area']],blank:{num:'',unit:'',k:'',d:''}},
+    {k:'brands',t:'⑤ 흘러가는 브랜드 줄',h:'옆으로 계속 흐르는 카드',f:[['title','제목']],list:'items',max:12,name:'브랜드',
+      lf:[['name','이름'],['desc','한 줄 설명'],['img','사진','img'],['link','누르면 갈 주소']],blank:{name:'',desc:'',img:'',link:''}},
+    {k:'story',t:'⑥ 이야기',h:'한 문단씩 떠오름',f:[['eyebrow','머리글'],['title','제목','area'],['paras','문단 (빈 줄로 문단을 나눔)','paras'],['em','강조 문단 (주황)','area'],['img','사진','img']]},
+    {k:'cta',t:'⑦ 버튼',h:'맨 아래',f:[['title','제목'],['b1.t','버튼 1 글'],['b1.u','버튼 1 주소'],['b2.t','버튼 2 글'],['b2.u','버튼 2 주소']]}
+  ];
+  let D=null, pub=null, loaded=false, dirty=false, saving=false, saveT=null, pvT=null, upPath='', busy=false;
+  const urls={};
+  const clone=o=>JSON.parse(JSON.stringify(o));
+  const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const meName=()=>{ try{ const m=window.BAROYAM_PROFILES.meMember(); return m?m.name:''; }catch(e){ return ''; } };
+  const can=()=>{ try{ return !!(window.BAROYAM_EDIT_ACCESS&&window.BAROYAM_EDIT_ACCESS.can('shop')); }catch(e){ return false; } };
+  const hm=iso=>{ const d=new Date(iso); return isNaN(d)?'':(d.getMonth()+1)+'.'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  function note(t,kind){ const n=$('bpNote'); n.textContent=t; n.hidden=!t; n.className='sh-note'+(kind?' '+kind:''); clearTimeout(n._t); if(t&&kind!=='run') n._t=setTimeout(()=>{ n.hidden=true; },kind==='bad'?15000:8000); }
+  function getP(o,p){ return p.split('.').reduce((a,k)=>a==null?a:a[k],o); }
+  function setP(o,p,v){ const ks=p.split('.'); let a=o; ks.slice(0,-1).forEach(k=>{ if(a[k]==null) a[k]={}; a=a[k]; }); a[ks[ks.length-1]]=v; }
+  const isStore=u=>typeof u==='string'&&/^shop\/img\//.test(u);
+
+  /* ---------- 페이지 만들기 ---------- */
+  function tpl(){ const t=$('bpTpl'); return t?t.innerHTML.trim():''; }
+  function source(data){
+    const json=JSON.stringify(data).replace(/</g,'\\u003c');
+    /* 주석·script 여는 글자를 그대로 적으면 브라우저가 이 script 를 잘못 끊으므로 나눠 적는다 */
+    const C='<'+'!--', S='<'+'script', E='<'+'/script>';
+    return C+'@layout(/layout/basic/layout.html)-->\n'+C+' 바로얌 브랜드 스토리 · ERP 쇼핑몰통합관리 › 브랜드 페이지에서 만든 파일입니다(여기서 직접 고치면 다음 반영 때 덮어씁니다) -->\n'+
+      S+' type="application/json" id="bs-data">'+json+E+'\n'+tpl()+'\n';
+  }
+  function images(o,acc){ acc=acc||[]; if(typeof o==='string'){ if(isStore(o)) acc.push(o); } else if(o&&typeof o==='object') Object.values(o).forEach(v=>images(v,acc)); return acc; }
+  async function signed(p){
+    if(urls[p]&&urls[p].exp>Date.now()) return urls[p].u;
+    try{ const u=await DB().fileUrl(BUCKET,p,3600); urls[p]={u,exp:Date.now()+50*60e3}; return u; }catch(e){ return ''; }
+  }
+  async function resolved(){
+    const d=clone(D); const ps=[...new Set(images(d))]; const map={};
+    await Promise.all(ps.map(async p=>{ map[p]=await signed(p); }));
+    const walk=o=>{ Object.keys(o).forEach(k=>{ const v=o[k]; if(typeof v==='string'&&isStore(v)) o[k]=map[v]||''; else if(v&&typeof v==='object') walk(v); }); };
+    walk(d); return d;
+  }
+  async function preview(){
+    const f=$('bpFrame'); if(!f||!D) return;
+    const d=await resolved();
+    let y=0; try{ y=f.contentWindow.scrollY||0; }catch(e){}
+    const head='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+      '<style>body{margin:0;font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}.fh{position:fixed;top:0;left:0;right:0;height:60px;z-index:50;background:#fff;border-bottom:1px solid #eee;display:flex;align-items:center;padding:0 18px;color:#ea5205;font-weight:800;font-size:18px}</style></head>'+
+      '<body><div class="fh">바로얌</div><div style="height:60px"></div>';
+    const body=source(d).replace(/^<\!--@layout[^>]*-->\n/,'');
+    f.onload=()=>{ try{ if(y) f.contentWindow.scrollTo(0,y); }catch(e){} };
+    f.srcdoc=head+body+'<'+'/body><'+'/html>';
+  }
+  const queuePv=()=>{ clearTimeout(pvT); pvT=setTimeout(preview,450); };
+
+  /* ---------- 읽기·저장 ---------- */
+  async function load(){
+    const db=DB(); if(!db||!db.loadSetting) return false;
+    let v=null; try{ v=await db.loadSetting(KEY,true); }catch(e){ return false; }
+    if(dirty||saving) return true;
+    D=(v&&v.data)?v.data:clone(DEF); pub=(v&&v.pub)||null; loaded=true;
+    paint(); preview(); return true;
+  }
+  function touch(){ dirty=true; paintSave(); clearTimeout(saveT); saveT=setTimeout(flush,800); queuePv(); }
+  async function flush(){
+    clearTimeout(saveT);
+    if(saving){ await new Promise(r=>setTimeout(r,300)); return flush(); }
+    if(!dirty) return true;
+    const db=DB(); if(!db||!db.saveMerged) return false;
+    saving=true; dirty=false; paintSave();
+    const data=clone(D), at=new Date().toISOString(), by=meName();
+    const r=await db.saveMerged(KEY,c=>Object.assign({},c||{},{data,at,by}));
+    saving=false;
+    if(!r){ dirty=true; paintSave('저장하지 못했어요 · 5초 뒤 다시 보냅니다'); saveT=setTimeout(flush,5000); return false; }
+    paintSave(); return true;
+  }
+  window.addEventListener('beforeunload',e=>{ if(dirty||saving){ e.preventDefault(); e.returnValue=''; } });
+  function paintSave(err){
+    const s=$('bpSave'); if(!s) return;
+    s.className='bp-save'+(err?' bad':''); s.textContent=err||(saving?'저장 중…':dirty?'고친 내용 저장 대기':'작성본 저장됨');
+    $('bpPub').textContent=pub&&pub.at?'마지막 반영 '+hm(pub.at)+(pub.by?' · '+pub.by:''):'아직 반영 안 함';
+  }
+
+  /* ---------- 칸 그리기 ---------- */
+  function fld(path,label,kind){
+    const v=getP(D,path);
+    if(kind==='imgs4'){ const a=Array.isArray(v)?v:[]; return '<div class="bp-f"><span>'+esc(label)+'</span><div class="bp-imgs">'+[0,1,2,3].map(i=>imgF(path+'.'+i,a[i]||'')).join('')+'</div></div>'; }
+    if(kind==='img') return '<div class="bp-f"><span>'+esc(label)+'</span>'+imgF(path,v||'')+'</div>';
+    if(kind==='paras') return '<label class="bp-f"><span>'+esc(label)+'</span><textarea class="ui-field" rows="7" data-paras="'+esc(path)+'">'+esc((v||[]).join('\n\n'))+'</textarea></label>';
+    if(kind==='area') return '<label class="bp-f"><span>'+esc(label)+'</span><textarea class="ui-field" rows="2" data-p="'+esc(path)+'">'+esc(v||'')+'</textarea></label>';
+    return '<label class="bp-f"><span>'+esc(label)+'</span><input class="ui-field" data-p="'+esc(path)+'" value="'+esc(v||'')+'"></label>';
+  }
+  function imgF(path,v){
+    return '<div class="bp-img" data-imgp="'+esc(path)+'"><span class="th"></span>'+
+      '<input class="ui-field sm" data-p="'+esc(path)+'" value="'+esc(isStore(v)?'(올린 사진)':v)+'" placeholder="사진 주소 https://…"'+(isStore(v)?' readonly':'')+'>'+
+      '<button type="button" class="ui-btn sm soft" data-up="'+esc(path)+'">올리기</button>'+
+      (v?'<button type="button" class="ui-btn sm ghost icon" data-clr="'+esc(path)+'" title="비우기">✕</button>':'')+'</div>';
+  }
+  function itemHd(name,i,n,base,max){
+    return '<div class="bp-item-hd">'+esc(name)+' '+(i+1)+'<span class="pf-grow"></span>'+
+      '<button type="button" class="ui-btn sm ghost icon" data-mv="'+esc(base)+'|'+i+'|-1"'+(i?'':' disabled')+' title="위로">▲</button>'+
+      '<button type="button" class="ui-btn sm ghost icon" data-mv="'+esc(base)+'|'+i+'|1"'+(i<n-1?'':' disabled')+' title="아래로">▼</button>'+
+      '<button type="button" class="ui-btn sm ghost icon" data-del="'+esc(base)+'|'+i+'" title="빼기">✕</button></div>';
+  }
+  function paint(){
+    const box=$('bpForm'); if(!box||!D) return;
+    const open=new Set([...box.querySelectorAll('details[open]')].map(x=>x.dataset.k));
+    if(!box.children.length) open.add('hero');
+    box.innerHTML=SECS.map(S=>{
+      let h='';
+      if(S.arr){
+        const arr=D[S.k]||(D[S.k]=[]);
+        h=arr.map((x,i)=>'<div class="bp-item">'+itemHd(S.name,i,arr.length,S.k,S.max)+S.f.map(([p,l,k])=>fld(S.k+'.'+i+'.'+p,l,k)).join('')+'</div>').join('');
+        if(arr.length<S.max) h+='<button type="button" class="ui-btn sm soft" data-add="'+S.k+'">+ '+esc(S.name)+' 더하기</button>';
+      }else{
+        h=S.f.map(([p,l,k])=>fld(S.k+'.'+p,l,k)).join('');
+        if(S.list){
+          const base=S.k+'.'+S.list, arr=getP(D,base)||[]; if(!getP(D,base)) setP(D,base,arr);
+          h+=arr.map((x,i)=>'<div class="bp-item">'+itemHd(S.name,i,arr.length,base,S.max)+S.lf.map(([p,l,k])=>fld(base+'.'+i+'.'+p,l,k)).join('')+'</div>').join('');
+          if(arr.length<S.max) h+='<button type="button" class="ui-btn sm soft" data-add="'+base+'">+ '+esc(S.name)+' 더하기</button>';
+        }
+      }
+      return '<details class="bp-sec" data-k="'+S.k+'"'+(open.has(S.k)?' open':'')+'><summary>'+esc(S.t)+'<span class="hint">'+esc(S.h)+'</span></summary><div class="bp-body">'+h+'</div></details>';
+    }).join('')+'<div class="bp-f"><button type="button" class="ui-btn sm ghost" id="bpReset">처음 문구·사진으로 되돌리기</button></div>';
+    thumbs(); paintSave();
+  }
+  async function thumbs(){
+    for(const el of $('bpForm').querySelectorAll('[data-imgp]')){
+      const v=getP(D,el.dataset.imgp)||''; const th=el.querySelector('.th');
+      const u=isStore(v)?await signed(v):v; th.style.backgroundImage=u?'url("'+u.replace(/"/g,'%22')+'")':'';
+    }
+  }
+  const blankOf=base=>{ const S=SECS.find(x=>x.k===base.split('.')[0]); return clone(S.blank); };
+  const maxOf=base=>SECS.find(x=>x.k===base.split('.')[0]).max;
+
+  /* ---------- 사진 올리기 · 긴 변 1600px JPEG(움직이는 그림 GIF 는 그대로) ---------- */
+  async function shrink(f){
+    if(/gif$/i.test(f.type)||f.size<600e3) return {blob:f,ext:(f.name.split('.').pop()||'jpg').toLowerCase()};
+    const bmp=await createImageBitmap(f); const k=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+    const c=document.createElement('canvas'); c.width=Math.round(bmp.width*k); c.height=Math.round(bmp.height*k);
+    const g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(bmp,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.86)); return {blob,ext:'jpg'};
+  }
+  async function upFile(f){
+    if(!f||!upPath) return;
+    if(!/^image\//.test(f.type)){ note('사진 파일만 넣을 수 있어요','bad'); return; }
+    if(f.size>10*1024*1024){ note('10MB 넘는 사진은 카페24에 올라가지 않아요 · 줄여서 넣어 주세요','bad'); return; }
+    note('사진 올리는 중…','run');
+    try{
+      const {blob,ext}=await shrink(f); const path='shop/img/brandpage/'+rid()+'.'+ext;
+      await DB().fileUpload(BUCKET,path,blob);
+      setP(D,upPath,path); touch(); paint(); note('사진을 넣었어요 · 카페24에 반영할 때 카페24 보관함으로 옮겨집니다','ok');
+    }catch(e){ note('사진을 올리지 못했어요 · '+(e.message||e),'bad'); }
+  }
+
+  /* ---------- 반영 ---------- */
+  async function readJson(path){ try{ const u=await DB().fileUrl(BUCKET,path,60); const x=await fetch(u,{cache:'no-store'}); return x.ok?await x.json():null; }catch(e){ return null; } }
+  async function waitRes(name){
+    const t0=Date.now(); let seen=false;
+    while(Date.now()-t0<300e3){
+      await new Promise(r=>setTimeout(r,2500));
+      const r=await readJson('shop/res/'+name);
+      if(!r){ if(!seen&&Date.now()-t0>90e3) return {state:'failed',message:'서버가 요청을 받지 않았어요 · 서버에 브랜드 페이지 반영이 아직 준비되지 않았을 수 있어요(코드 복사로 직접 붙여넣을 수 있음)'}; continue; }
+      seen=true; if(r.state==='done'||r.state==='failed') return r; note(r.message||'반영하는 중…','run');
+    }
+    return {state:'failed',message:'시간이 오래 걸려 기다리기를 멈췄어요 · 잠시 뒤 페이지를 열어 확인해 주세요'};
+  }
+  async function publish(){
+    if(busy) return;
+    if(!can()){ note('브랜드 페이지를 반영할 권한이 없습니다','bad'); return; }
+    if(!confirm('지금 작성본으로 자사몰 브랜드 페이지('+PAGE+')를 바꿀까요?\n바꾸기 전 파일은 서버에 보관됩니다.')) return;
+    busy=true; $('bpPublish').disabled=true; note('작성본을 저장하는 중…','run');
+    try{
+      if(!(await flush())) throw new Error('작성본을 저장하지 못했어요');
+      const db=DB(); if(db.ensureSession&&!(await db.ensureSession())) throw new Error('로그인이 풀렸습니다 · 새로고침한 뒤 다시 해 주세요');
+      const name=rid()+'.json', at=new Date().toISOString(), by=meName();
+      await db.fileUpload(BUCKET,'shop/req/'+name,new Blob([JSON.stringify({v:1,kind:'theme-page',chan:'cafe24',path:PAGE,source:source(D),images:[...new Set(images(D))],by,at})],{type:'application/json'}));
+      note('카페24에 보내는 중… (1분 안팎)','run');
+      const r=await waitRes(name);
+      if(r.state!=='done') throw new Error(r.message||'반영하지 못했어요');
+      pub={at:new Date().toISOString(),by};
+      await db.saveMerged(KEY,c=>Object.assign({},c||{},{pub}));
+      paintSave(); note((r.message||'반영했어요')+' · 페이지가 바뀌기까지 몇 분 걸릴 수 있어요','ok');
+    }catch(e){ note(e.message||String(e),'bad'); }
+    busy=false; $('bpPublish').disabled=false;
+  }
+  async function copy(){
+    const st=images(D);
+    if(st.length&&!confirm('직접 올린 사진 '+st.length+'장은 아직 ERP 보관함에만 있어 카페24 페이지에서 보이지 않아요.\n(카페24에 반영 단추를 쓰면 함께 옮겨집니다)\n그래도 코드를 복사할까요?')) return;
+    try{ await navigator.clipboard.writeText(source(D)); note('코드를 복사했어요 · 카페24 디자인 편집 › brand-info.html 에서 Ctrl+A → Ctrl+V → 저장','ok'); }
+    catch(e){ note('복사하지 못했어요 · '+(e.message||e),'bad'); }
+  }
+
+  /* ---------- 묶기 ---------- */
+  function bind(){
+    const box=$('bpForm');
+    box.addEventListener('input',e=>{
+      const t=e.target;
+      if(t.dataset.p&&!t.readOnly){ setP(D,t.dataset.p,t.value); touch(); if(t.closest('[data-imgp]')) thumbs(); }
+      else if(t.dataset.paras){ setP(D,t.dataset.paras,t.value.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean)); touch(); }
+    });
+    box.addEventListener('click',e=>{
+      const b=e.target.closest('button'); if(!b) return;
+      if(b.id==='bpReset'){ if(confirm('모든 칸을 처음 문구·사진으로 되돌릴까요? (반영하기 전까지 페이지는 그대로)')){ D=clone(DEF); touch(); paint(); } return; }
+      if(b.dataset.up){ upPath=b.dataset.up; $('bpFile').value=''; $('bpFile').click(); return; }
+      if(b.dataset.clr){ setP(D,b.dataset.clr,''); touch(); paint(); return; }
+      if(b.dataset.add){ const a=getP(D,b.dataset.add)||[]; if(a.length>=maxOf(b.dataset.add)) return; a.push(blankOf(b.dataset.add)); setP(D,b.dataset.add,a); touch(); paint(); return; }
+      if(b.dataset.del){ const [base,i]=b.dataset.del.split('|'); const a=getP(D,base); if(!a||!confirm((+i+1)+'번째를 뺄까요?')) return; a.splice(+i,1); touch(); paint(); return; }
+      if(b.dataset.mv){ const [base,i,d]=b.dataset.mv.split('|'); const a=getP(D,base), j=+i+(+d); if(!a||j<0||j>=a.length) return; [a[+i],a[j]]=[a[j],a[+i]]; touch(); paint(); return; }
+    });
+    $('bpFile').addEventListener('change',e=>upFile(e.target.files[0]));
+    $('bpPublish').addEventListener('click',publish);
+    $('bpCopy').addEventListener('click',copy);
+    const tab=document.querySelector('#shopTabs [data-shop="bpage"]');
+    tab.addEventListener('click',()=>{ if(!loaded) load(); else preview(); });
+    const applyPerm=()=>{
+      const ok=can(); if(tab.hidden===!ok) return; tab.hidden=!ok;
+      if(!ok&&tab.classList.contains('active')){ const t=document.querySelector('#shopTabs [data-shop="cs"]'); if(t) t.click(); }
+    };
+    applyPerm(); ['baroyam:editaccess','baroyam:profiles'].forEach(ev=>document.addEventListener(ev,applyPerm)); setInterval(applyPerm,3000);
+    /* 기억해 둔 탭이 브랜드 페이지면 로그인 뒤 읽기 */
+    const tryLoad=()=>{ if(loaded) return; const p=document.querySelector('#view-shop [data-shop-pane="bpage"]'); if(p&&!p.hidden&&$('view-shop').style.display!=='none') load(); };
+    setInterval(tryLoad,3000);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
 })();
 </script>
 </body>
