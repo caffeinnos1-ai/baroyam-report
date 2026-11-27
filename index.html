@@ -3555,14 +3555,16 @@ window.BAROYAM_FONT=(function(){
   .ma-xl .gd-k b{font-size:clamp(18px,1.75vw,26px)}
   .ma-xl .ma-vd-g{max-height:200px}
   @media (max-width:1500px){ .ma-bd.has-div>.gd-div{grid-column:1/-1} }
-  /* 태블릿 · 영상 | 영상·상세페이지 상자는 옆으로 두고, 나머지 숫자는 아래 한 줄 전체 */
-  @media (min-width:641px) and (max-width:1100px){
-    .ma-xl .ma-asset-open{flex-wrap:wrap}
-    .ma-xl .ma-pv-col,.ma-xl .ma-asset-open.is-still .ma-pv-col{width:260px;position:sticky}
-    .ma-xl .ma-pv-side{flex:1;width:auto;min-width:0}
-    .ma-xl .ma-pv-info{flex-basis:100%;min-width:0}
-    .ma-xl .gd-kpis.gd-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* 태블릿(가로형 포함 · 세 칸이 안 들어가는 폭) · 영상 | 영상·상세페이지 상자 두 칸, 나머지 숫자는 아래 한 줄 전체
+     11-27 · flex-wrap 으로 줄이 넘어가면 sticky 영상이 아래 숫자 칸 위로 따라 내려와 겹쳤음 → 격자 + sticky 끔 */
+  @media (min-width:641px) and (max-width:1279px){
+    .ma-xl .ma-asset-open{display:grid;grid-template-columns:minmax(220px,280px) minmax(0,1fr);align-items:start;gap:16px}
+    .ma-xl .ma-pv-col,.ma-xl .ma-asset-open.is-still .ma-pv-col{width:auto;min-width:0;position:static}
+    .ma-xl .ma-pv-side{width:auto;min-width:0;position:static}
+    .ma-xl .ma-pv-info{grid-column:1/-1;width:auto;min-width:0}
+    .ma-xl .ma-pv{max-height:64vh}
   }
+  @media (min-width:641px) and (max-width:1100px){ .ma-xl .gd-kpis.gd-kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
   @media (max-width:1400px){ .ma-xl .ma-two{grid-template-columns:minmax(0,1fr)} }
   /* 휴대폰 · 한 줄씩 · 숫자 칸 두 줄 · 영상은 화면 높이 절반 안으로 */
   @media (max-width:640px){
